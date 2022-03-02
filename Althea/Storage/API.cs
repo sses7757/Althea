@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 using System.Reflection.Metadata;
 
 using Althea.Helpers;
-using Althea.NativeTypes;
+using Althea.Linq;
 using Althea.Resources;
 
 using Althea.SourceGenerator;
@@ -225,112 +225,129 @@ namespace Althea.Storage
 	public static class StorageExtension
 	{
 		#region method generators
-		private static Action<TS, T> GetFillMethod<TS, T>(int genericCount) where TS : class, IStorage where T : unmanaged
+#pragma warning disable CS8601
+		private static readonly MethodInfo getSizeOfPointer = typeof(IStorage).GetMethod(nameof(IStorage.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null);
+#pragma warning restore CS8601
+
+		private static Action<TS, T> GetFillMethod<TS, T>() where TS : class, IStorage where T : unmanaged
 		{
 			var type = typeof(TS);
-			var pointerGetters = TS.PointerNames.Select(n => type.GetProperty(n)?.GetAccessors(false)?.FirstOrDefault());
-			var requestMethod = type.GetMethod(nameof(IStorage.Request), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long), typeof(bool) }, null);
-			DynamicMethod method = new($"Filler of {type.GetGenericString()}", null, new[] { type, typeof(T) });
-			var IL = method.GetILGenerator();
-			IL.Emit(OpCodes.Ldc_I8, 0L);
-			IL.Emit(OpCodes.Stloc_0); // long allOffset = 0;
-			foreach (var pg in pointerGetters)
+			var pointerGetters = TS.PointerGetters;
+			var pointerFill = new MethodInfo[pointerGetters.Length];
+			for (int i = 0; i < pointerGetters.Length; i++)
 			{
+				var pg = pointerGetters[i];
 				if (pg is null || pg.ReturnType.GenericTypeArguments.Length != 1)
-					throw new InvalidOperationException(StorageException.InvalidPointerName);
-				var ptrLen = pg.ReturnType.GetProperty(nameof(PointerSegment<ManagedPointer>.LengthInBytes), BindingFlags.Public | BindingFlags.Instance)?.GetAccessors(false)?.FirstOrDefault();
-				if (ptrLen is null || ptrLen.ReturnType != typeof(long))
-					throw new InvalidOperationException(StorageException.InvalidPointerName);
-				var ptrMove = pg.ReturnType.GetMethod(nameof(PointerSegment<ManagedPointer>.MoveBy), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long) }, null);
-				if (ptrMove is null)
-					throw new InvalidOperationException(StorageException.InvalidPointerName);
-				var fillMethod = typeof(ApiSelector).GetMethod(nameof(ApiSelector.FillWithValue), genericCount, BindingFlags.Public | BindingFlags.Static, null, new[] { pg.ReturnType, typeof(T) }, null)?.MakeGenericMethod(pg.ReturnType.GenericTypeArguments[0]);
+					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+				if (pg.GetParameters().Length != 0 &&
+					!(pg.GetParameters().Length == 2 && pg.GetParameters()
+														  .Select(static p => p.ParameterType)
+														  .SequenceEqual(new[] { typeof(long), typeof(bool) })))
+					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+				var fillMethod = typeof(ApiSelector).GetMethod(nameof(ApiSelector.FillWithValue), typeof(T) == typeof(byte) ? 1 : 2, BindingFlags.Public | BindingFlags.Static, null, new[] { pg.ReturnType, typeof(T) }, null)?.MakeGenericMethod(pg.ReturnType.GenericTypeArguments[0]);
 				if (fillMethod is null)
-					throw new InvalidOperationException(StorageException.InvalidPointerName);
-
-				IL.Emit(OpCodes.Ldarg_0);
-				IL.Emit(OpCodes.Callvirt, pg);
-				IL.Emit(OpCodes.Stloc_1); // var pointerN = storage.PointerN;
-				if (requestMethod is not null)
-				{
-					Label loopStart = IL.DefineLabel(), loopEnd = IL.DefineLabel();
-					IL.Emit(OpCodes.Ldarg_0);
-					IL.Emit(OpCodes.Ldc_I8, 0L);
-					IL.Emit(OpCodes.Stloc_2); // long offset = 0;
-					IL.Emit(OpCodes.Ldloc_1);
-					IL.Emit(OpCodes.Calli, ptrLen);
-					IL.Emit(OpCodes.Stloc_3); // long length = pointerN.LengthInBytes;
-
-					IL.MarkLabel(loopStart);
-					IL.Emit(OpCodes.Ldarg_0);
-					IL.Emit(OpCodes.Ldloc_0);
-					IL.Emit(OpCodes.Ldloc_2);
-					IL.Emit(OpCodes.Add);
-					IL.Emit(OpCodes.Ldloc_3);
-					IL.Emit(OpCodes.Ldc_I4_1);
-					IL.Emit(OpCodes.Callvirt, requestMethod);
-					IL.Emit(OpCodes.Stloc_S, 4); // long actual = storage.Request(allOffset + offset, length, intentWrite: true);
-					IL.Emit(OpCodes.Ldloc_S, 4);
-					IL.Emit(OpCodes.Brfalse, loopEnd); // if (actual == 0) goto LOOP_END;
-
-					IL.Emit(OpCodes.Ldarg_0);
-					IL.Emit(OpCodes.Ldloc_0);
-					IL.Emit(OpCodes.Ldloc_2);
-					IL.Emit(OpCodes.Add);
-					IL.Emit(OpCodes.Ldloc_S, 4);
-					IL.Emit(OpCodes.Ldc_I4_1);
-					IL.Emit(OpCodes.Callvirt, requestMethod);
-					IL.Emit(OpCodes.Pop); // storage.Request(allOffset + offset, actual, intentWrite: true);
-					IL.Emit(OpCodes.Ldloc_1);
-					IL.Emit(OpCodes.Ldc_I8, 0L);
-					IL.Emit(OpCodes.Ldloc_S, 4);
-					IL.Emit(OpCodes.Calli, ptrMove);
-					IL.Emit(OpCodes.Ldarg_1);
-					IL.Emit(OpCodes.Call, fillMethod); // ApiSelector.FillWithValue(pointerN.MoveBy(0, actual), value);
-
-					IL.Emit(OpCodes.Ldloc_2);
-					IL.Emit(OpCodes.Ldloc_S, 4);
-					IL.Emit(OpCodes.Add);
-					IL.Emit(OpCodes.Stloc_2); // offset += actual;
-					IL.Emit(OpCodes.Ldloc_3);
-					IL.Emit(OpCodes.Ldloc_S, 4);
-					IL.Emit(OpCodes.Sub);
-					IL.Emit(OpCodes.Stloc_3); // length -= actual;
-					IL.Emit(OpCodes.Ldloc_1);
-					IL.Emit(OpCodes.Ldloc_3);
-					IL.Emit(OpCodes.Ldc_I8, 0L);
-					IL.Emit(OpCodes.Calli, ptrMove);
-					IL.Emit(OpCodes.Stloc_1); // pointerN = pointerN.MoveBy(actual);
-
-					IL.Emit(OpCodes.Br_S, loopStart); // goto LOOP_START;
-
-					IL.MarkLabel(loopEnd);
-				}
-				IL.Emit(OpCodes.Ldloc_1);
-				IL.Emit(OpCodes.Ldarg_1);
-				IL.Emit(OpCodes.Call, fillMethod); // ApiSelector.FillWithValue(pointerN, value);
-				IL.Emit(OpCodes.Ldloc_1);
-				IL.Emit(OpCodes.Calli, ptrLen);
-				IL.Emit(OpCodes.Ldloc_0);
-				IL.Emit(OpCodes.Add);
-				if (requestMethod is not null)
-				{
-					IL.Emit(OpCodes.Ldloc_2);
-					IL.Emit(OpCodes.Add);
-				}
-				IL.Emit(OpCodes.Stloc_0); // allOffset += pointerN.LengthInBytes[ + offset];
+					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+				pointerFill[i] = fillMethod;
 			}
+
+			DynamicMethod method = new($"{typeof(T).GetGenericString()} filler of {type.GetGenericString()}", null, new[] { type, typeof(T) });
+			var IL = method.GetILGenerator();
+			(Label end, Label other)[] labels = new (Label, Label)[pointerGetters.Length];
+			for (int i = 0; i < pointerGetters.Length; i++)
+			{
+				IL.Emit(OpCodes.Ldarg_0);
+				IL.Emit(OpCodes.Ldc_I4, i);
+				IL.Emit(OpCodes.Callvirt, getSizeOfPointer);
+				IL.Emit(OpCodes.Stloc_S, i); // long sizePointerI = storage.SizeOfPointer(i);
+				labels[i] = (IL.DefineLabel(), IL.DefineLabel());
+			}
+			for (int i = 0; i < pointerGetters.Length; i++)
+			{
+				IL.Emit(OpCodes.Ldloc_S, i);
+				IL.Emit(OpCodes.Brfalse_S, labels[i].end); // if (sizePointerI == 0) goto POINTER_I_END;
+				if (pointerGetters[i].GetParameters().Length == 0)
+				{
+					IL.Emit(OpCodes.Ldloc_S, i);
+					IL.Emit(OpCodes.Ldc_I4_1);
+					IL.Emit(OpCodes.Bne_Un_S, labels[i].other); // if (sizePointerI != 1) goto POINTER_I_ERROR;
+					IL.Emit(OpCodes.Ldarg_0);
+					IL.Emit(OpCodes.Callvirt, pointerGetters[i]);
+					IL.Emit(OpCodes.Ldarg_1);
+					IL.Emit(OpCodes.Call, pointerFill[i]); // ApiSelector.FillWithValue(storage.PointerI, value);
+					IL.MarkLabel(labels[i].other);
+					IL.ThrowException(typeof(InvalidOperationException)); // POINTER_I_ERROR: throw new InvalidOperationException();
+				}
+				else
+				{
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Stloc_S, pointerGetters.Length); // long i = 0;
+					IL.MarkLabel(labels[i].other); // LOOP_I:
+					IL.Emit(OpCodes.Ldarg_0);
+					IL.Emit(OpCodes.Ldloc_S, pointerGetters.Length);
+					IL.Emit(OpCodes.Ldc_I4_1);
+					IL.Emit(OpCodes.Callvirt, pointerGetters[i]);
+					IL.Emit(OpCodes.Ldarg_1);
+					IL.Emit(OpCodes.Call, pointerFill[i]); // ApiSelector.FillWithValue(storage.PointerI(i, true), value);
+					IL.Emit(OpCodes.Ldloc_S, pointerGetters.Length);
+					IL.Emit(OpCodes.Ldc_I8, 1L);
+					IL.Emit(OpCodes.Add);
+					IL.Emit(OpCodes.Stloc_S, pointerGetters.Length);
+					IL.Emit(OpCodes.Ldloc_S, pointerGetters.Length);
+					IL.Emit(OpCodes.Ldloc_S, i); // if (++i < sizePointerI) goto LOOP_I;
+					IL.Emit(OpCodes.Blt_S, labels[i].other);
+				}
+				IL.MarkLabel(labels[i].end); // POINTER_I_END:
+			}
+
 			return method.CreateDelegate<Action<TS, T>>();
 		}
 
-		private static Func<TS1, TS2, long> GetCopyMethod<TS1, TS2>(int genericCount) where TS1 : class, IStorage where TS2 : class, IStorage
+		private static Func<TS1, TS2, long, long> GetCopyMethod<TS1, TS2>() where TS1 : class, IStorage where TS2 : class, IStorage
 		{
 			Type type1 = typeof(TS1), type2 = typeof(TS2);
-			var pointerGetters1 = TS1.PointerNames.Select(n => type1.GetProperty(n)?.GetAccessors(false)?.FirstOrDefault());
-			var pointerGetters2 = TS2.PointerNames.Select(n => type2.GetProperty(n)?.GetAccessors(false)?.FirstOrDefault());
-			var requestMethod1 = type1.GetMethod(nameof(IStorage.Request), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long), typeof(bool) }, null);
-			var requestMethod2 = type2.GetMethod(nameof(IStorage.Request), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long), typeof(bool) }, null);
-			DynamicMethod method = new($"Copier from {type1.GetGenericString()}", typeof(long), new[] { type1, type2 });
+			MethodInfo[] pointerGetters1 = TS2.PointerGetters, pointerGetters2 = TS2.PointerGetters;
+			MethodInfo[] pointerLen1 = new MethodInfo[pointerGetters1.Length], pointerMove1 = new MethodInfo[pointerGetters1.Length];
+			MethodInfo[] pointerLen2 = new MethodInfo[pointerGetters2.Length], pointerMove2 = new MethodInfo[pointerGetters2.Length];
+			MethodInfo[,] pointerCopy = new MethodInfo[pointerGetters1.Length, pointerGetters2.Length];
+			for (int i = 0; i < pointerGetters1.Length; i++)
+			{
+				var pg = pointerGetters1[i];
+				bool first = true;
+			SET_METHOD:
+				if (pg is null || pg.ReturnType.GenericTypeArguments.Length != 1)
+					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+				if (pg.GetParameters().Length != 0 &&
+					!(pg.GetParameters().Length == 2 && pg.GetParameters()
+														  .Select(static p => p.ParameterType)
+														  .SequenceEqual(new[] { typeof(long), typeof(bool) })))
+					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+				var ptrLen = pg.ReturnType.GetProperty(nameof(PointerSegment<ManagedPointer>.LengthInBytes), BindingFlags.Public | BindingFlags.Instance)?.GetAccessors(false)?.FirstOrDefault();
+				if (ptrLen is null || ptrLen.ReturnType != typeof(long))
+					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+				var ptrMove = pg.ReturnType.GetMethod(nameof(PointerSegment<ManagedPointer>.MoveBy), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long) }, null);
+				if (ptrMove is null)
+					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+				if (first)
+				{
+					pointerLen1[i] = ptrLen; pointerMove1[i] = ptrMove;
+					pg = pointerGetters2[i];
+					first = false;
+					goto SET_METHOD;
+				}
+				pointerLen2[i] = ptrLen; pointerMove2[i] = ptrMove;
+			}
+			for (int i = 0; i < pointerGetters1.Length; i++)
+			{
+				for (int j = 0; j < pointerGetters2.Length; j++)
+				{
+					var copyMethod = typeof(ApiSelector).GetMethod(nameof(ApiSelector.MemoryCopy), 2, BindingFlags.Public | BindingFlags.Static, null, new[] { pointerGetters1[i].ReturnType, pointerGetters2[j].ReturnType }, null)?.MakeGenericMethod(pointerGetters1[i].ReturnType.GenericTypeArguments[0], pointerGetters2[j].ReturnType.GenericTypeArguments[0]);
+					if (copyMethod is null)
+						throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					pointerCopy[i, j] = copyMethod;
+				}
+			}
+
+			DynamicMethod method = new($"Copier from {type1.GetGenericString()} to {type2.GetGenericString()}", typeof(long), new[] { type1, type2, typeof(long) });
 			var IL = method.GetILGenerator();
 			IL.Emit(OpCodes.Ldc_I8, 0L);
 			IL.Emit(OpCodes.Stloc_0); // long allOffset = 0;
@@ -348,7 +365,7 @@ namespace Althea.Storage
 		/// <param name="storage">The storage to be filled with <paramref name="value"/></param>
 		/// <param name="value">The byte value to fill</param>
 		/// <exception cref="ObjectDisposedException">If <paramref name="storage"/> is invalid</exception>
-		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerNames"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
 		public static void FillWith<TS>(this TS storage, byte value) where TS : class, IStorage
 		{
 			if (!storage.IsValid())
@@ -357,7 +374,7 @@ namespace Althea.Storage
 			var handle = typeof(TS).TypeHandle;
 			if (fillByteFunc.TryGetValue(handle, out var filler))
 				goto FINAL;
-			filler = GetFillMethod<TS, byte>(1);
+			filler = GetFillMethod<TS, byte>();
 			fillByteFunc[handle] = filler;
 		FINAL:
 			((Action<TS, byte>)filler).Invoke(storage, value);
@@ -373,16 +390,21 @@ namespace Althea.Storage
 		/// <param name="storage">The storage to be filled with <paramref name="value"/></param>
 		/// <param name="value">The byte value to fill</param>
 		/// <exception cref="ObjectDisposedException">If <paramref name="storage"/> is invalid</exception>
-		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerNames"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
-		public static void FillWith<T, TS>(this TS storage, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+		public static unsafe void FillWith<T, TS>(this TS storage, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!storage.IsValid())
 				throw new ObjectDisposedException(nameof(storage));
+			if (sizeof(T) == sizeof(byte) || new ReadOnlySpan<byte>(&value, sizeof(T)).AllSame())
+			{
+				FillWith(storage, *(byte*)&value);
+				return;
+			}
 
 			var handle = typeof(TS).TypeHandle;
 			if (fillTFunc.TryGetValue(handle, out var filler))
 				goto FINAL;
-			filler = GetFillMethod<TS, T>(2);
+			filler = GetFillMethod<TS, T>();
 			fillTFunc[handle] = filler;
 		FINAL:
 			((Action<TS, T>)filler).Invoke(storage, value);
@@ -399,7 +421,7 @@ namespace Althea.Storage
 		/// <param name="destination">The destination storage</param>
 		/// <returns>Actual length in bytes copied.</returns>
 		/// <exception cref="ObjectDisposedException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage.PointerNames"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
+		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
 		public static long CopyTo<TS1, TS2>(this TS1 source, TS2 destination) where TS1 : class, IStorage where TS2 : class, IStorage
 		{
 			if (!source.IsValid())
@@ -412,10 +434,10 @@ namespace Althea.Storage
 			RuntimeTypeHandle handle1 = typeof(TS1).TypeHandle, handle2 = typeof(TS2).TypeHandle;
 			if (copyByteFunc.TryGetValue((handle1, handle2), out var copier))
 				goto FINAL;
-			copier = GetCopyMethod<TS1, TS2>(2);
+			copier = GetCopyMethod<TS1, TS2>();
 			copyByteFunc[(handle1, handle2)] = copier;
 		FINAL:
-			return ((Func<TS1, TS2, long>)copier).Invoke(source, destination);
+			return ((Func<TS1, TS2, long, long>)copier).Invoke(source, destination, Math.Min(source.LengthInBytes, destination.LengthInBytes));
 		}
 		#endregion
 	}

@@ -846,7 +846,7 @@ namespace Althea.Linq
 				return true;
 			T v = span[0];
 			int len = span.Length;
-			for (int i = 0; i < len; i++)
+			for (int i = 1; i < len; i++)
 			{
 				if (!span[i].Equals(v))
 					return false;

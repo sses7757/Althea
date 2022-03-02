@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using Althea.NativeTypes;
 using Althea.Resources;
@@ -60,7 +62,9 @@ namespace Althea.Storage
 		/// </summary>
 		public static CombinationOfLocations LocationDescription => new(TP.Location);
 
-		static string[] IStorage.PointerNames => new[] { nameof(Pointer) };
+#pragma warning disable CS8619
+		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(PureStorageBase<TP>).GetProperty(nameof(Pointer))?.GetGetMethod() };
+#pragma warning restore CS8619
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -70,7 +74,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
-		public long Length => this.Pointer.LengthInBytes / Unmanaged<T>.Size;
+		public long Length => ((IStorage<T, PureStorage<T, TP>>)this).Length;
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using Althea.NativeTypes;
@@ -46,9 +47,17 @@ namespace Althea.Storage
 		abstract static CombinationOfLocations LocationDescription { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the names of the pointers' getters in defined order.
+		/// When implemented by a derived class, statically get the <see cref="MethodInfo"/> of the pointers' getter methods in defined order.
 		/// </summary>
-		internal protected abstract static string[] PointerNames { get; }
+		internal protected abstract static MethodInfo[] PointerGetters { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the size of the pointer getter method of index <paramref name="i"/> defined in <see cref="PointerGetters"/>. The default implementation simply returns 1.
+		/// </summary>
+		/// <param name="i">The index of the pointer getter method</param>
+		/// <returns>The size of the pointer getter method of index <paramref name="i"/>.</returns>
+		/// <remarks>If the implemented class returns values larger than 1 for some pointers, it shall implement pointers' getters like <c>public <see cref="PointerSegment{T}"/> PointerN(<see cref="long"/> index, <see cref="bool"/> intentWrite) { ... }</c></remarks>
+		internal protected virtual long SizeOfPointer(int i) => 1;
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this storage is valid or not after moving <paramref name="offset"/> bytes and set length to <paramref name="newLength"/> bytes.
@@ -57,16 +66,6 @@ namespace Althea.Storage
 		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/>.</returns>
 		bool IsByteOffsetValid(long offset, long newLength = 0);
-
-		/// <summary>
-		/// Request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
-		/// </summary>
-		/// <param name="offset">The starting requesting byte offset compared to this storage</param>
-		/// <param name="length">The number of bytes requested</param>
-		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
-		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
-		/// <remarks>The default implementation simply returns <see cref="long.MaxValue"/> for performance issues, invoke <see cref="IsByteOffsetValid(long, long)"/> to check parameters if necessary.</remarks>
-		public virtual long Request(long offset, long length, bool intentWrite) => long.MaxValue;
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this storage overlaps with the <paramref name="other"/> storage.
@@ -111,6 +110,15 @@ namespace Althea.Storage
 				return true;
 			}
 		}
+
+		/// <summary>
+		/// Check whether this storage is valid or not after moving <paramref name="offset"/> elements and set length to <paramref name="newLength"/>.
+		/// </summary>
+		/// <param name="offset">The offset to move in <typeparamref name="T"/>, can be negative</param>
+		/// <param name="newLength">The length to check in <typeparamref name="T"/>, default 0 means auto calculation by <paramref name="offset"/></param>
+		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public virtual bool IsOffsetValid(long offset, long newLength = 0) => this.IsByteOffsetValid(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size);
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> has same origin as the <paramref name="other"/> <typeparamref name="TSelf"/>.
@@ -213,7 +221,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="Unmanaged{T}.Size"/>.
 		/// </summary>
-		public virtual long Length => LengthInBytes / Unmanaged<T>.Size;
+		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
 
 		/// <summary>
 		/// When implemented by a derived class, make a referenced <typeparamref name="TSelf"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.
@@ -338,6 +346,6 @@ namespace Althea.Storage
 		/// Get the total offset compared to the start of the underlying reference in <typeparamref name="T"/>.
 		/// </summary>
 		/// <remarks>The default implementation does not check whether <see cref="TotalOffsetInBytes"/> can be divided by <see cref="Unmanaged{T}.Size"/> or not.</remarks>
-		public virtual long TotalOffset => TotalOffsetInBytes / Unmanaged<T>.Size;
+		public long TotalOffset => TotalOffsetInBytes / Unmanaged<T>.Size;
 	}
 }

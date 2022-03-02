@@ -114,6 +114,7 @@ namespace Althea
 		/// <summary>
 		/// The enumerator used to enumerates through all API instances of <typeparamref name="TApi"/> kind
 		/// </summary>
+		/// <remarks>The access for <see cref="APIs"/> is locked when enumerating this <see cref="ApiEnumerator"/></remarks>
 		protected struct ApiEnumerator : IEnumerator<TApi>, IDisposable
 		{
 			private int current = 0;

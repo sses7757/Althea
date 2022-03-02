@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
@@ -38,7 +39,11 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived struct, get the size of one cache line in bytes.
 		/// </summary>
-		int CacheLineSize { get; }
+		int CacheLineSize
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get;
+		}
 
 		/// <summary>
 		/// When implemented by a derived struct, calculate the cache offset of given actual storage offset, copy data if necessary, and update internal information of this <typeparamref name="TSelf"/>.
@@ -139,7 +144,11 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the size of one cache line in bytes.
 		/// </summary>
-		public int CacheLineSize => 1 << lineSizeLog2;
+		public int CacheLineSize
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => 1 << lineSizeLog2;
+		}
 
 		private DirectMappingStrategy(byte cacheLineSizeLog2, byte nCacheLinesLog2)
 		{
@@ -264,17 +273,17 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived struct, get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public abstract TS Strategy { get; }
+		protected abstract TS Strategy { get; }
 
 		/// <summary>
 		/// When implemented by a derived struct, get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public abstract PointerSegment<TPh> Cache { get; }
+		protected abstract PointerSegment<TPh> Cache { get; }
 
 		/// <summary>
 		/// Get the low speed memory storage <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public PointerSegment<TPl> Memory { get; }
+		protected PointerSegment<TPl> Memory { get; }
 
 		/// <summary>
 		/// Create a new <see cref="CachedStorageBase{TS, TPh, TPl}"/> with given memory <see cref="PointerSegment{T}"/>
@@ -316,6 +325,16 @@ namespace Althea.Storage
 	{
 		#region basic
 		/// <summary>
+		/// When implemented by a derived class, get the offset of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/> compared to the start of its cache line in bytes.
+		/// </summary>
+		protected abstract long InsideLineOffset { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the index of the cache line of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/>.
+		/// </summary>
+		protected abstract long CacheLineOffset { get; }
+
+		/// <summary>
 		/// Create a new <see cref="CachedStorage{T, TS, TPh, TPl}"/> with given memory <see cref="PointerSegment{T}"/>
 		/// </summary>
 		/// <param name="memory">The <see cref="PointerSegment{T}"/> of type <typeparamref name="TPl"/> as memory storage pointer</param>
@@ -337,7 +356,31 @@ namespace Althea.Storage
 		/// </summary>
 		public static CombinationOfLocations LocationDescription => new(stackalloc bool[] { true, false }.CreateCombinationType(), stackalloc StorageLocation[] { TPh.Location, TPl.Location });
 
-		static string[] IStorage.PointerNames => new[] { nameof(Memory) };
+#pragma warning disable CS8619
+		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(CachedStorage<T, TS, TPh, TPl>).GetMethod(nameof(MemoryPieceAt)) };
+#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (i != 1)
+				throw new ArgumentOutOfRangeException(nameof(i));
+			return (this.Memory.LengthInBytes + this.CacheLineOffset - 1) / this.Strategy.CacheLineSize + 1; // ceiling divide
+		}
+
+		/// <summary>
+		/// Get the cache pointer of memory piece indicated by <paramref name="index"/>.
+		/// </summary>
+		/// <param name="index">The piece index of the memory to be accessed</param>
+		/// <param name="intentWrite">The usage intent is to write or read-only.</param>
+		/// <returns>The <see cref="PointerSegment{T}"/> of requested memory cached in <see cref="CachedStorageBase{TS, TPh, TPl}.Cache"/>.</returns>
+		public PointerSegment<TPh> MemoryPieceAt(long index, bool intentWrite)
+		{
+			long partialLength = index == 0 ? this.Strategy.CacheLineSize - this.InsideLineOffset : this.Strategy.CacheLineSize;
+			long offset = index == 0 ? this.InsideLineOffset : 0;
+			index += this.CacheLineOffset;
+			offset = this.Strategy.GetCacheOf(offset + index * this.Strategy.CacheLineSize, this.CopyWrapper, intentWrite);
+			return this.Cache.MoveBy(offset, partialLength);
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -347,7 +390,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the total length of the presenting array in <typeparamref name="T"/>
 		/// </summary>
-		public long Length => this.Memory.LengthInBytes / Unmanaged<T>.Size;
+		public long Length => ((IStorage<T, CachedStorage<T, TS, TPh, TPl>>)this).Length;
 
 		/// <summary>
 		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
@@ -377,23 +420,6 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>The validness of this <see cref="CachedStorage{T, TS, TPh, TPl}"/></returns>
 		public bool IsValid() => !this.Disposed && this.Memory.IsValid();
-
-		/// <summary>
-		/// Request usage of a piece of storage started from <paramref name="offset"/> with <paramref name="length"/> and will be used as <paramref name="intentWrite"/>.
-		/// </summary>
-		/// <param name="offset">The starting requesting byte offset compared to this storage</param>
-		/// <param name="length">The number of bytes requested</param>
-		/// <param name="intentWrite">The usage intent is to write (true) or to read (false)</param>
-		/// <returns>The maximum length from <paramref name="offset"/> allowed for request, or 0 if <paramref name="length"/> is allowed.</returns>
-		public long Request(long offset, long length, bool intentWrite)
-		{
-			offset += this.Memory.OffsetInBytes;
-			long cacheIndex = offset / this.Strategy.CacheLineSize;
-			if (cacheIndex != (offset + length) / this.Strategy.CacheLineSize) // too large
-				return this.Strategy.CacheLineSize - offset + cacheIndex * this.Strategy.CacheLineSize;
-			this.Strategy.GetCacheOf(offset, this.CopyWrapper, intentWrite);
-			return 0;
-		}
 		#endregion
 
 		#region reference
@@ -470,7 +496,6 @@ namespace Althea.Storage
 		/// <returns>A new <see cref="CachedStorage{T, TS, TPh, TPl}"/> that likes <paramref name="storage"/></returns>
 		public static CachedStorage<T, TS, TPh, TPl> CreateAlike<TOut>(CachedStorage<TOut, TS, TPh, TPl> storage) where TOut : unmanaged, INumber<TOut>
 		{
-			var descr = CachedStorage<TOut, TS, TPh, TPl>.LocationDescription;
 			return Create(stackalloc long[] { storage.Cache.LengthInBytes / Unmanaged<TOut>.Size, storage.Length });
 		}
 		#endregion
@@ -573,6 +598,16 @@ namespace Althea.Storage
 		public override PointerSegment<TPh> Cache { get; }
 
 		/// <summary>
+		/// Get the offset of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/> compared to the start of its cache line in bytes.
+		/// </summary>
+		protected override long InsideLineOffset => 0;
+
+		/// <summary>
+		/// Get the index of the cache line of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/>.
+		/// </summary>
+		protected override long CacheLineOffset => 0;
+
+		/// <summary>
 		/// Create a new <see cref="ActualCachedStorage{T, TS, TPh, TPl}"/> of given <paramref name="length"/>
 		/// </summary>
 		/// <param name="length">The length to create in <typeparamref name="T"/></param>
@@ -601,24 +636,34 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public override TS Strategy => this.Reference_?.Strategy ?? default;
+		public override TS Strategy => this.RealRef?.Strategy ?? default;
 
 		/// <summary>
 		/// Get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public override PointerSegment<TPh> Cache => this.Reference_?.Cache ?? default;
+		public override PointerSegment<TPh> Cache => this.RealRef?.Cache ?? default;
 
 		/// <summary>
 		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceCachedStorage{T, TS, TPh, TPl}"/>
-		/// </summary>
+		/// </summary>w
 		public IStorage? Reference { get; }
 
-		private CachedStorageBase<TS, TPh, TPl>? Reference_ => (CachedStorageBase<TS, TPh, TPl>?)this.Reference;
+		private CachedStorageBase<TS, TPh, TPl>? RealRef => this.Reference as CachedStorageBase<TS, TPh, TPl>;
 
 		/// <summary>
 		/// Get the total offset of this <see cref="ReferenceCachedStorage{T, TS, TPh, TPl}"/> in bytes
 		/// </summary>
 		public long TotalOffsetInBytes => this.Memory.OffsetInBytes;
+
+		/// <summary>
+		/// Get the offset of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/> compared to the start of its cache line in bytes.
+		/// </summary>
+		protected override long InsideLineOffset { get; }
+
+		/// <summary>
+		/// Get the index of the cache line of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/>.
+		/// </summary>
+		protected override long CacheLineOffset { get; }
 
 		/// <summary>
 		/// Create a new <see cref="ReferenceCachedStorage{T, TS, TPh, TPl}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
@@ -631,8 +676,10 @@ namespace Althea.Storage
 		public ReferenceCachedStorage(IStorage? storage, long offset = 0, long newLength = 0) :
 			base(storage is CachedStorageBase<TS, TPh, TPl> p ? p.Memory.MoveBy(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size) : default)
 		{
-			var (reference, _, _) = IReferenceStorage<T, CachedStorage<T, TS, TPh, TPl>>.Create<CachedStorageBase<TS, TPh, TPl>>(storage, offset, newLength);
+			var (reference, totalOffsetBytes, _) = IReferenceStorage<T, CachedStorage<T, TS, TPh, TPl>>.Create<CachedStorageBase<TS, TPh, TPl>>(storage, offset, newLength);
 			this.Reference = reference;
+			this.CacheLineOffset = totalOffsetBytes / this.Strategy.CacheLineSize;
+			this.InsideLineOffset = (this.CacheLineOffset + 1) * this.Strategy.CacheLineSize - totalOffsetBytes;
 		}
 	}
 }

@@ -70,11 +70,11 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 The given pointer&apos;s name is invalid. 的本地化字符串。
+        ///   查找类似 The given pointer&apos;s getter method(s) is(are) invalid. 的本地化字符串。
         /// </summary>
-        internal static string InvalidPointerName {
+        internal static string InvalidPointerGetter {
             get {
-                return ResourceManager.GetString("InvalidPointerName", resourceCulture);
+                return ResourceManager.GetString("InvalidPointerGetter", resourceCulture);
             }
         }
     }
