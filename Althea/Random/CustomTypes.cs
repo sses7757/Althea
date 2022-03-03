@@ -32,7 +32,7 @@ namespace Althea.Random
 	/// The abstract class for distributions whose data type(s) contain a real type <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">An unmanaged real type as one of the data type(s)</typeparam>
-	public abstract class RealTypedDistribution<T> : IRandomDistribution where T : unmanaged
+	public abstract class RealTypedDistribution<T> : IRandomDistribution where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the random seed of this <see cref="RealTypedDistribution{T}"/>. Null means let the internal implementation determine.
@@ -96,7 +96,7 @@ namespace Althea.Random
 	/// The abstract class for distributions whose data type(s) contain a floating point type <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">An unmanaged floating point type as one of the data type(s)</typeparam>
-	public abstract class FloatTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged
+	public abstract class FloatTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void Check()
@@ -122,7 +122,7 @@ namespace Althea.Random
 	/// The abstract class for distributions whose data type(s) contain an integral type <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">An unmanaged integral type as one of the data type(s)</typeparam>
-	public abstract class IntegerTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged
+	public abstract class IntegerTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void Check()
@@ -148,7 +148,7 @@ namespace Althea.Random
 	/// The abstract class for one-dimensional distributions whose data type is a real type <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">An unmanaged real type as the data type</typeparam>
-	public abstract class OneDimensionalRealTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged
+	public abstract class OneDimensionalRealTypedDistribution<T> : RealTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Initialize a <see cref="OneDimensionalRealTypedDistribution{T}"/> with given random <paramref name="seed"/>
@@ -188,7 +188,7 @@ namespace Althea.Random
 	/// The abstract class for one-dimensional distributions whose data type is a floating point type <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">An unmanaged floating point type as the data type</typeparam>
-	public abstract class OneDimensionalFloatTypedDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged
+	public abstract class OneDimensionalFloatTypedDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		static OneDimensionalFloatTypedDistribution()
 		{
@@ -207,7 +207,7 @@ namespace Althea.Random
 	/// The abstract class for one-dimensional distributions whose data type is an integral type <typeparamref name="T"/>
 	/// </summary>
 	/// <typeparam name="T">An unmanaged integral type as the data type</typeparam>
-	public abstract class OneDimensionalIntegerTypedDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged
+	public abstract class OneDimensionalIntegerTypedDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		static OneDimensionalIntegerTypedDistribution()
 		{
@@ -227,8 +227,8 @@ namespace Althea.Random
 	/// <summary>
 	/// The class for a one-dimensional uniform distribution
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class UniformDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public class UniformDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the inclusive lower bound of this one-dimensional uniform distribution
@@ -277,8 +277,8 @@ namespace Althea.Random
 	/// <summary>
 	/// The class for a one-dimensional distribution that randomizes each bit
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public class RandomBitsDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public class RandomBitsDistribution<T> : OneDimensionalRealTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a new <see cref="UniformDistribution{T}"/> with the given random <paramref name="seed"/>

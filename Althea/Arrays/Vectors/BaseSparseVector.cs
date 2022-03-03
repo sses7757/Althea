@@ -14,10 +14,10 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract sparse vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TInd">Any integer-typed unmanaged number as the index type</typeparam>
 	public abstract class BaseSparseVector<T, TInd> : BaseVector<T>, ISparseVector<T>, ISparseArray<T, TInd>
-		where T : unmanaged
+		where T : unmanaged, INumber<T>
 		where TInd : unmanaged
 	{
 		#region basic
@@ -136,15 +136,15 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
 		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
 		/// <returns>The new sparse vector alike this one</returns>
 		public override BaseSparseVector<TOut, TInd> NewArrayAlike<TOut>() => this.NewArrayAlike<TOut, TInd>();
 
 		/// <summary>
 		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
 		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+		/// <typeparam name="TIndOut">Any integral-typed unmanaged number as the new index type</typeparam>
 		/// <returns>The new sparse vector of type (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) alike this one</returns>
 		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
 		public abstract BaseSparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
@@ -154,8 +154,8 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, cast this sparse vector into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
 		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged struct as the new index type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+		/// <typeparam name="TIndOut">Any integral-typed unmanaged number as the new index type</typeparam>
 		/// <returns>The new <see cref="BaseSparseVector{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
 		public virtual BaseSparseVector<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
 			where TOut : unmanaged, IFormattable, IEquatable<TOut>

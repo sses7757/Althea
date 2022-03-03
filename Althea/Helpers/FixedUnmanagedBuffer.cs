@@ -16,7 +16,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 8
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 8)]
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
@@ -47,7 +47,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_8<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
@@ -325,7 +325,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 12
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 12)]
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
@@ -356,7 +356,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_12<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
@@ -634,7 +634,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 16
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 16)]
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
@@ -665,7 +665,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_16<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
@@ -943,7 +943,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 24
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 24)]
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
@@ -974,7 +974,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_24<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
@@ -1252,7 +1252,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 32
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 32)]
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
@@ -1283,7 +1283,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_32<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
@@ -1561,7 +1561,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 64
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 64)]
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
@@ -1592,7 +1592,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_64<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
@@ -1870,7 +1870,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 128
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 128)]
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
@@ -1901,7 +1901,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_128<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>
@@ -2179,7 +2179,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 256
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Size = 256)]
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
@@ -2210,7 +2210,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public FixedBuffer_256<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>

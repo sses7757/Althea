@@ -210,7 +210,7 @@ namespace Althea.Backend.CSharp.Solver
 				{
 					columns[i] = (IntPtr)(p + n * ld);
 				}
-				ordered.Sort(columns, orderedVals, conjugatePairs, swapper1: orderedVecs.ColumnSwapper);
+				ordered.Sort(columns, orderedVals, conjugatePairs);
 			}
 		}
 		#endregion

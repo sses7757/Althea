@@ -81,7 +81,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{<#=pointerTypes#>}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 <# for (int j = 0; j < i; j++) { #>
 	/// <typeparam name="TP<#=j + 1#>">The <#=ordinal[j]#> pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 <# } #>
@@ -122,6 +122,19 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { <# for (int j = 1; j <= i; j++) { #>typeof(MixedStorageBase<<#=pointerTypes#>>).GetProperty(nameof(Pointer<#=j#>))?.GetGetMethod(), <# } #>};
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+<# for (int j = 0; j < i; j++) { #>
+				<#=j#> => this.Pointer<#=j+1#>.IsValid() ? 1 : 0,
+<# } #>
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -321,7 +334,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on <#=i#> locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 <# for (int j = 0; j < i; j++) { #>
 	/// <typeparam name="TP<#=j + 1#>">The <#=ordinal[j]#> pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 <# } #>
@@ -347,7 +360,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on <#=i#> locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 <# for (int j = 0; j < i; j++) { #>
 	/// <typeparam name="TP<#=j + 1#>">The <#=ordinal[j]#> pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 <# } #>

@@ -85,7 +85,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <summary>
 		/// Compute the tensor permutation from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="permutationOrder"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
 		/// <param name="permutationOrder">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
@@ -93,7 +93,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
-		public static void Permute<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged
+		public static void Permute<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = source.ValueStorage.LocationDescription, location2 = destination.ValueStorage.LocationDescription;
 			bool success = false;
@@ -110,7 +110,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <summary>
 		/// Compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="binary">The <see cref="BinaryOperation"/> to be applied to <paramref name="left"/> and <paramref name="right"/> tensors</param>
 		/// <param name="left">The left input dense tensor as a <see cref="DenseTensorWrapper{T}"/>, can be invalid</param>
 		/// <param name="right">The right input dense tensor as a <see cref="DenseTensorWrapper{T}"/>, can be invalid</param>
@@ -120,7 +120,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
-		public static void OperationBinary<T>(BinaryOperation binary, DenseTensorWrapper<T> left, Span<int> leftPerm, DenseTensorWrapper<T> right, Span<int> rightPerm, DenseTensorWrapper<T> destination) where T : unmanaged
+		public static void OperationBinary<T>(BinaryOperation binary, DenseTensorWrapper<T> left, Span<int> leftPerm, DenseTensorWrapper<T> right, Span<int> rightPerm, DenseTensorWrapper<T> destination) where T : unmanaged, INumber<T>
 		{
 			bool leftValid = !left.IsInputInvalid(), rightValid = !right.IsInputInvalid();
 			if (!leftValid && !rightValid)
@@ -150,7 +150,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// Compute the tensor reduction from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="reduceDimensions"/>:<br/>
 		/// <c><paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see> = <paramref name="source"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * <paramref name="reduce"/>(<paramref name="source"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="source"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>[<paramref name="reduceDimensions"/>])) + <paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * <paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="BinaryOperation"/></param>
 		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T}"/> to be reduced</param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
@@ -158,7 +158,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
-		public static void Reduce<T>(BinaryOperation reduce, DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged
+		public static void Reduce<T>(BinaryOperation reduce, DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = source.ValueStorage.LocationDescription, location2 = destination.ValueStorage.LocationDescription;
 			bool success = false;
@@ -176,7 +176,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// Compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and store the result to the <paramref name="destination"/> tensor:<br/>
 		/// <c><paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see> = <paramref name="left"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * <paramref name="right"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * contract(<paramref name="left"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="left"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>), <paramref name="right"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="right"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>)) + <paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * <paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="left">The left input dense tensor as a <see cref="DenseTensorWrapper{T}"/> to be contracted</param>
 		/// <param name="right">The right input dense tensor as a <see cref="DenseTensorWrapper{T}"/> to be contracted</param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
@@ -184,7 +184,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="destination"/> or <paramref name="info"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
-		public static void Contract<T>(DenseTensorWrapper<T> left, DenseTensorWrapper<T> right, DenseTensorWrapper<T> destination, TensorContractInfo info) where T : unmanaged
+		public static void Contract<T>(DenseTensorWrapper<T> left, DenseTensorWrapper<T> right, DenseTensorWrapper<T> destination, TensorContractInfo info) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = left.ValueStorage.LocationDescription, location2 = right.ValueStorage.LocationDescription, location3 = destination.ValueStorage.LocationDescription;
 			bool success = false;
@@ -204,7 +204,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="permutationOrder"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/>, its <see cref="DenseTensorWrapper{T}.Operation"/> and <see cref="DenseTensorWrapper{T}.Scalar"/> are ignored.</param>
 		/// <param name="permutationOrder">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
@@ -212,12 +212,12 @@ namespace Althea.TensorAlgebra.Dense
 		/// <remarks>If <paramref name="permutationOrder"/> is an identity permutation, this method shall simply perform (pitched) tensor copy</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order or the sizes mismatches</exception>
-		protected abstract bool Permute_<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged;
+		protected abstract bool Permute_<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="binary">The <see cref="BinaryOperation"/> to be applied to <paramref name="left"/> and <paramref name="right"/> tensors</param>
 		/// <param name="left">The left input dense tensor as a <see cref="DenseTensorWrapper{T}"/>, can be invalid</param>
 		/// <param name="right">The right input dense tensor as a <see cref="DenseTensorWrapper{T}"/>, can be invalid</param>
@@ -227,13 +227,13 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
-		protected abstract bool OperationBinary_<T>(BinaryOperation binary, DenseTensorWrapper<T> left, Span<int> leftPerm, DenseTensorWrapper<T> right, Span<int> rightPerm, DenseTensorWrapper<T> destination) where T : unmanaged;
+		protected abstract bool OperationBinary_<T>(BinaryOperation binary, DenseTensorWrapper<T> left, Span<int> leftPerm, DenseTensorWrapper<T> right, Span<int> rightPerm, DenseTensorWrapper<T> destination) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="reduceDimensions"/>:<br/>
 		/// <c><paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see> = <paramref name="source"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * <paramref name="reduce"/>(<paramref name="source"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="source"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>[<paramref name="reduceDimensions"/>])) + <paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * <paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="BinaryOperation"/></param>
 		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T}"/> to be reduced</param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
@@ -241,13 +241,13 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
-		protected abstract bool Reduce_<T>(BinaryOperation reduce, DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged;
+		protected abstract bool Reduce_<T>(BinaryOperation reduce, DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and store the result to the <paramref name="destination"/> tensor:<br/>
 		/// <c><paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see> = <paramref name="left"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * <paramref name="right"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * contract(<paramref name="left"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="left"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>), <paramref name="right"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="right"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>)) + <paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.Scalar">Scalar</see> * <paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.Operation">Op</see>(<paramref name="destination"/>.<see cref="DenseTensorWrapper{T}.ValueStorage">Storage</see>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="left">The left input dense tensor as a <see cref="DenseTensorWrapper{T}"/> to be contracted</param>
 		/// <param name="right">The right input dense tensor as a <see cref="DenseTensorWrapper{T}"/> to be contracted</param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T}"/></param>
@@ -255,7 +255,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="destination"/> or <paramref name="info"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
-		protected abstract bool Contract_<T>(DenseTensorWrapper<T> left, DenseTensorWrapper<T> right, DenseTensorWrapper<T> destination, TensorContractInfo info) where T : unmanaged;
+		protected abstract bool Contract_<T>(DenseTensorWrapper<T> left, DenseTensorWrapper<T> right, DenseTensorWrapper<T> destination, TensorContractInfo info) where T : unmanaged, INumber<T>;
 		#endregion
 	}
 }

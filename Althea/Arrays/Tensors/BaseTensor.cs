@@ -14,7 +14,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract tensor class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse tensor that inherits <see cref="BaseTensor{T}"/>, but they shall be immutable.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <remarks>
 	/// Since the <see cref="BaseTensor{T}"/> may be reference created quite frequently, storing the size as a C# <see cref="Array"/> is rather expensive.<br/>
 	/// Thus the C++ equivalent "<c>struct { long size[16] }</c>" of <see cref="FixedBuffer_128{T}"/> (which is a essentially a <c>fixed long size[16]</c>) is used instead to reduce the GC pressure.<br/>
@@ -22,7 +22,7 @@ namespace Althea.Arrays
 	/// Therefore, the derived class shall follow the same strategy, such as <see cref="BaseSparseTensor{T, TInd}"/>.
 	/// </remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public abstract class BaseTensor<T> : ValueArray<T>, ITensor where T : unmanaged
+	public abstract class BaseTensor<T> : ValueArray<T>, ITensor where T : unmanaged, INumber<T>
 	{
 		#region basic
 		// previously defined 8 + (8 * 2) bytes

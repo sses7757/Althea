@@ -25,7 +25,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The interface for caching strategy of a two-level caching system
 	/// </summary>
-	/// <typeparam name="TSelf">The actual unmanaged struct that implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
+	/// <typeparam name="TSelf">The actual unmanaged number that implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
 	public interface ICacheStrategy<TSelf> : IEqualityOperators<TSelf, TSelf>, ICheckValid where TSelf : struct, ICacheStrategy<TSelf>
 	{
 		/// <summary>
@@ -273,17 +273,17 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived struct, get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		protected abstract TS Strategy { get; }
+		protected internal abstract TS Strategy { get; }
 
 		/// <summary>
 		/// When implemented by a derived struct, get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		protected abstract PointerSegment<TPh> Cache { get; }
+		protected internal abstract PointerSegment<TPh> Cache { get; }
 
 		/// <summary>
 		/// Get the low speed memory storage <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		protected PointerSegment<TPl> Memory { get; }
+		protected internal PointerSegment<TPl> Memory { get; }
 
 		/// <summary>
 		/// Create a new <see cref="CachedStorageBase{TS, TPh, TPl}"/> with given memory <see cref="PointerSegment{T}"/>
@@ -362,6 +362,8 @@ namespace Althea.Storage
 
 		long IStorage.SizeOfPointer(int i)
 		{
+			if (!this.IsValid())
+				return 0;
 			if (i != 1)
 				throw new ArgumentOutOfRangeException(nameof(i));
 			return (this.Memory.LengthInBytes + this.CacheLineOffset - 1) / this.Strategy.CacheLineSize + 1; // ceiling divide
@@ -590,12 +592,12 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public override TS Strategy { get; }
+		protected internal override TS Strategy { get; }
 
 		/// <summary>
 		/// Get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public override PointerSegment<TPh> Cache { get; }
+		protected internal override PointerSegment<TPh> Cache { get; }
 
 		/// <summary>
 		/// Get the offset of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/> compared to the start of its cache line in bytes.
@@ -636,12 +638,12 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public override TS Strategy => this.RealRef?.Strategy ?? default;
+		protected internal override TS Strategy => this.RealRef?.Strategy ?? default;
 
 		/// <summary>
 		/// Get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
 		/// </summary>
-		public override PointerSegment<TPh> Cache => this.RealRef?.Cache ?? default;
+		protected internal override PointerSegment<TPh> Cache => this.RealRef?.Cache ?? default;
 
 		/// <summary>
 		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceCachedStorage{T, TS, TPh, TPl}"/>

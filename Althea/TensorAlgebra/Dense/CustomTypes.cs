@@ -13,8 +13,8 @@ namespace Althea.TensorAlgebra.Dense
 	/// <summary>
 	/// The computation wrapper for a (possibly pitched) dense tensor
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public readonly ref struct DenseTensorWrapper<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public readonly ref struct DenseTensorWrapper<T> where T : unmanaged, INumber<T>
 	{
 		#region basic
 		private readonly Storage<T> m_values;

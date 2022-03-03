@@ -229,7 +229,7 @@ namespace Althea.Storage
 		private static readonly MethodInfo getSizeOfPointer = typeof(IStorage).GetMethod(nameof(IStorage.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null);
 #pragma warning restore CS8601
 
-		private static Action<TS, T> GetFillMethod<TS, T>() where TS : class, IStorage where T : unmanaged
+		private static Action<TS, T> GetFillMethod<TS, T>() where TS : class, IStorage where T : unmanaged, INumber<T>
 		{
 			var type = typeof(TS);
 			var pointerGetters = TS.PointerGetters;
@@ -302,7 +302,7 @@ namespace Althea.Storage
 			return method.CreateDelegate<Action<TS, T>>();
 		}
 
-		private static Func<TS1, TS2, long, long> GetCopyMethod<TS1, TS2>() where TS1 : class, IStorage where TS2 : class, IStorage
+		private static Action<TS1, TS2> GetCopyMethod<TS1, TS2>() where TS1 : class, IStorage where TS2 : class, IStorage
 		{
 			Type type1 = typeof(TS1), type2 = typeof(TS2);
 			MethodInfo[] pointerGetters1 = TS2.PointerGetters, pointerGetters2 = TS2.PointerGetters;
@@ -347,11 +347,11 @@ namespace Althea.Storage
 				}
 			}
 
-			DynamicMethod method = new($"Copier from {type1.GetGenericString()} to {type2.GetGenericString()}", typeof(long), new[] { type1, type2, typeof(long) });
+			DynamicMethod method = new($"Copier from {type1.GetGenericString()} to {type2.GetGenericString()}", null, new[] { type1, type2 });
 			var IL = method.GetILGenerator();
-			IL.Emit(OpCodes.Ldc_I8, 0L);
-			IL.Emit(OpCodes.Stloc_0); // long allOffset = 0;
+			// TODO: complicated copy IL
 
+			return method.CreateDelegate<Action<TS1, TS2>>();
 		}
 		#endregion
 
@@ -437,7 +437,9 @@ namespace Althea.Storage
 			copier = GetCopyMethod<TS1, TS2>();
 			copyByteFunc[(handle1, handle2)] = copier;
 		FINAL:
-			return ((Func<TS1, TS2, long, long>)copier).Invoke(source, destination, Math.Min(source.LengthInBytes, destination.LengthInBytes));
+			long copyLen = Math.Min(source.LengthInBytes, destination.LengthInBytes);
+			((Action<TS1, TS2, long>)copier).Invoke(source, destination, copyLen);
+			return copyLen;
 		}
 		#endregion
 	}

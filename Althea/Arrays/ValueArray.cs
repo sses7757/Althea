@@ -17,9 +17,9 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract array class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse array that inherits <see cref="ValueArray{T}"/>, but they shall be immutable.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
-	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid, IMainPropertyFormattable where T : unmanaged
+	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid, IMainPropertyFormattable where T : unmanaged, INumber<T>
 	{
 		#region properties
 		private readonly Storage<T> m_orginalStorage;
@@ -992,7 +992,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
 		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged struct as the new data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
 		/// <returns>The new array alike this one</returns>
 		public abstract ValueArray<TOut> NewArrayAlike<TOut>() where TOut : unmanaged;
 

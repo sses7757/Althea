@@ -21,14 +21,14 @@ namespace Althea.Arrays
 		/// <param name="otherInfo">other information obtained from <see cref="ValueArray{T}.GetMetaData"/></param>
 		/// <returns>The reconstructed <see cref="ValueArray{T}"/> of the derived factory's corresponding array type</returns>
 		/// <exception cref="ArgumentException">If the any of the arguments is invalid (such as <paramref name="storages"/> not containing <see cref="ValueArray{T}.StorageName"/>)</exception>
-		ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged;
+		ValueArray<T> CreateArray<T>(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null) where T : unmanaged, INumber<T>;
 	}
 
 	/// <summary>
 	/// The <see cref="ValueArray{T}"/> factory used to create instances
 	/// </summary>
-	/// <typeparam name="T">An unmanaged struct as the data type</typeparam>
-	public static class ValueArrayFactory<T> where T : unmanaged
+	/// <typeparam name="T">An unmanaged number as the data type</typeparam>
+	public static class ValueArrayFactory<T> where T : unmanaged, INumber<T>
 	{
 		#region caching
 		internal delegate ValueArray<T> DelegateCreateArray(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null);
@@ -125,7 +125,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Check storage named <paramref name="name"/> in the <paramref name="storages"/> and cast it into type <typeparamref name="U"/>
 		/// </summary>
-		/// <typeparam name="U">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="U">Any unmanaged number as the data type</typeparam>
 		/// <param name="storages">The dictionary of the storages</param>
 		/// <param name="name">The name to get</param>
 		/// <param name="size">The size to check, default 0 means do not check</param>

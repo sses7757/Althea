@@ -638,7 +638,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Read the saved folder / file back to a <see cref="ValueArray{T}"/> synchronously
 		/// </summary>
-		/// <typeparam name="T">An unmanaged struct as data type</typeparam>
+		/// <typeparam name="T">An unmanaged number as data type</typeparam>
 		/// <param name="folder">The folder or file name previously saved</param>
 		/// <returns>The <see cref="ValueArray{T}"/> read from the file(s) in <paramref name="folder"/></returns>
 		/// <exception cref="IOException">if the check code and the file do not match</exception>
@@ -650,7 +650,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Read the saved folder / file back to a <see cref="ValueArray{T}"/> asynchronously
 		/// </summary>
-		/// <typeparam name="T">An unmanaged struct as data type</typeparam>
+		/// <typeparam name="T">An unmanaged number as data type</typeparam>
 		/// <param name="folder">The folder or file name previously saved</param>
 		/// <returns>The <see cref="ValueArray{T}"/> read from the file(s) in <paramref name="folder"/></returns>
 		/// <exception cref="IOException">if the check code and the file do not match</exception>

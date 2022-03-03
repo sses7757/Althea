@@ -7,7 +7,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The interface for fixed buffer structures
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct that implements <see cref="IEquatable{T}"/></typeparam>
+	/// <typeparam name="T">Any unmanaged number that implements <see cref="IEquatable{T}"/></typeparam>
 	public interface IFixedBuffer<T> : IReadOnlyList<T> where T : unmanaged, IEquatable<T>
 	{
 		/// <summary>
@@ -34,7 +34,7 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
 		/// </summary>
-		/// <typeparam name="TOut">The output data type, any unmanaged struct</typeparam>
+		/// <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
 		/// <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
 		IFixedBuffer<TOut> As<TOut>() where TOut : unmanaged, IEquatable<TOut>;
 
@@ -73,14 +73,14 @@ namespace Althea.Helpers
 
 	internal sealed class FixedBufferDebugView<T>
 	{
-		private readonly T[] m_array;
+		private readonly T[] array;
 
 		[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-		public T[] Items => this.m_array;
+		public T[] Items => this.array;
 
 		public FixedBufferDebugView(IAsSpan<T> s)
 		{
-			this.m_array = s.AsSpan().ToArray();
+			this.array = s.AsSpan().ToArray();
 		}
 	}
 	#endregion

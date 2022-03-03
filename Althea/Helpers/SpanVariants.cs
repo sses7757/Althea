@@ -907,47 +907,64 @@ namespace Althea.Helpers
 		#endregion
 
 		#region sort related
-		// Ignore Spelling: stackalloc
 		/// <summary>
-		/// Get the <see cref="Swapper{T}"/> used to in-place swap two columns of this <see cref="SpanMatrix{T}"/>
+		/// Get the <see cref="ColumnSwapping"/>s for this <see cref="SpanMatrix{T}"/> and stores them to <paramref name="columns"/>.
 		/// </summary>
-		/// <example><code>
-		/// fixed (<typeparamref name="T"/>* p = spanMatrix.<see cref="UnderlyingSpan">UnderlyingSpan</see>)
-		/// {
-		/// 	<see cref="int"/> l = spanMatrix.<see cref="LeadDim">LeadDim</see>, n = spanMatrix.<see cref="Cols">Cols</see>;
-		/// 	<see cref="Span{T}">Span</see>&lt;<see cref="IntPtr"/>&gt; columns = stackalloc <see cref="IntPtr"/>[n];
-		/// 	for (<see cref="int"/> i = 0; i &lt; n; i++)
-		/// 	{
-		/// 		columns[i] = (<see cref="IntPtr"/>)(p + n * l);
-		/// 	}
-		/// 	keys.<see cref="SwapSort.Sort{TKey, TValue}">Sort</see>(columns, swapper: spanMatrix.<see cref="ColumnSwapper">ColumnSwapper</see>);
-		/// }
-		/// </code></example>
-		public unsafe readonly Swapper<IntPtr> ColumnSwapper {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => new ColumnSwapping(this);
+		/// <param name="fixedSpan">The fixed pointer of <see cref="UnderlyingSpan"/></param>
+		/// <param name="columns">The <see cref="Span{T}"/> of <see cref="ColumnSwapping"/>s used to store the result</param>
+		/// <returns><paramref name="columns"/> of correct length.</returns>
+		/// <exception cref="ArgumentException">If <paramref name="columns"/> is too small</exception>
+		public unsafe readonly Span<ColumnSwapping> AsColumnSwappings(IntPtr fixedSpan, Span<ColumnSwapping> columns)
+		{
+			if (columns.Length < this._cols)
+				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(columns));
+			for (int i = 0; i < this._cols; i++)
+			{
+				columns[i] = new(this, fixedSpan, i);
+			}
+			return columns[..this._cols];
 		}
 
-		private sealed class ColumnSwapping : Swapper<IntPtr>
+		/// <summary>
+		/// The struct used for storing and swapping columns of <see cref="SpanMatrix{T}"/>
+		/// </summary>
+		public unsafe readonly struct ColumnSwapping : ISwapper<ColumnSwapping>
 		{
 			private readonly int rows;
 
-			private readonly byte[]? buffer;
+			private readonly void* colStart;
 
-			internal ColumnSwapping(SpanMatrix<T> mat)
+			[ThreadStatic]
+			private static byte[]? _buffer;
+
+			internal ColumnSwapping(SpanMatrix<T> mat, IntPtr start, int column)
 			{
 				this.rows = mat._rows * Unsafe.SizeOf<T>();
-				this.buffer = this.rows.CheckStackLimit<byte>();
+				int ld = mat._leadDim * Unsafe.SizeOf<T>();
+				this.colStart = column * ld + (byte*)start.ToPointer();
+				if (_buffer is null)
+				{
+					if (this.rows > Settings.StackAllocLimit)
+						_buffer = new byte[this.rows];
+				}
+				else if (_buffer.Length < this.rows)
+				{
+					_buffer = Settings.CheckStackLimit<byte>(this.rows);
+				}
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public override unsafe void Swap(ref IntPtr a, ref IntPtr b)
+			static void ISwapper<ColumnSwapping>.Swap(ref ColumnSwapping a, ref ColumnSwapping b)
 			{
-				Span<byte> buf = this.buffer ?? stackalloc byte[this.rows];
-				Span<byte> aa = new((void*)a, this.rows), bb = new((void*)b, this.rows);
+#if DEBUG
+				if (a.rows != b.rows)
+					throw new ArgumentException(Resources.Parameter.NotSameSize);
+#endif
+				Span<byte> buf =  _buffer ?? stackalloc byte[a.rows];
+				Span<byte> aa = new(a.colStart, a.rows), bb = new(b.colStart, b.rows);
 				aa.CopyTo(buf);
 				bb.CopyTo(aa);
-				buf.CopyTo(bb);
+				buf[..a.rows].CopyTo(bb);
 			}
 		}
 		#endregion

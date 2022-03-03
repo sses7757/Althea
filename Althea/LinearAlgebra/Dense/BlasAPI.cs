@@ -141,14 +141,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Find the (smallest) index of the element with the maximum magnitude.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The resulting index</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static long AbsoluteValueArgMax<T>(IStorage x, int strideX) where T : unmanaged
+		public static long AbsoluteValueArgMax<T>(IStorage x, int strideX) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location = x.LocationDescription;
 			long result = default;
@@ -167,14 +167,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Find the (smallest) index of the element with the minimum magnitude.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The resulting index or 0 if <paramref name="strideX"/> is less than 1</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static long AbsoluteValueArgMin<T>(Storage<T> x, int strideX) where T : unmanaged
+		public static long AbsoluteValueArgMin<T>(Storage<T> x, int strideX) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location = x.LocationDescription;
 			long result = default;
@@ -193,14 +193,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Compute the sum of the absolute values of the elements of vector <paramref name="x"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The result value as a <see cref="double"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static double AbsoluteValueSum<T>(Storage<T> x, int strideX) where T : unmanaged
+		public static double AbsoluteValueSum<T>(Storage<T> x, int strideX) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location = x.LocationDescription;
 			double result = default;
@@ -219,13 +219,13 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Compute the Euclidean norm (2-norm) of the vector <paramref name="x"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>The result value as a <see cref="double"/>, or 0 if <paramref name="strideX"/> ≤ 0</returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static double Norm<T>(Storage<T> x, int strideX) where T : unmanaged
+		public static double Norm<T>(Storage<T> x, int strideX) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location = x.LocationDescription;
 			double result = default;
@@ -244,14 +244,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// In-place scale the vector <paramref name="x"/> by <paramref name="scalar"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="scalar">The scalar used for multiplication</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static void Scale<T>(Storage<T> x, int strideX, T scalar) where T : unmanaged
+		public static void Scale<T>(Storage<T> x, int strideX, T scalar) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location = x.LocationDescription;
 			bool success = false;
@@ -268,7 +268,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Multiply the vector <paramref name="x"/> by the scalar <paramref name="α"/> and in-place add it to the vector <paramref name="y"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="α">The scalar used for multiplication</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -277,7 +277,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void VectorGeneralAdd<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
+		public static void VectorGeneralAdd<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription;
 			bool success = false;
@@ -294,7 +294,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Compute the dot (inner) product of vectors <paramref name="x"/> and <paramref name="y"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="conjX">Conjugate <paramref name="x"/> or not</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -304,7 +304,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static T Dot<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged
+		public static T Dot<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription;
 			T result = default;
@@ -326,7 +326,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// Perform the matrix-vector multiplication: <paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>)* <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="m"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> and <paramref name="y"/> are vectors, and <paramref name="α"/> and <paramref name="β"/> are scalars.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> that is non- or (conj.) transpose</param>
 		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
@@ -341,7 +341,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged
+		public static void GeneralMatrixMultiplyVector<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription, locationMat = A.LocationDescription;
 			bool success = false;
@@ -374,7 +374,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void SymmHermMatrixMultiplyVector<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged
+		public static void SymmHermMatrixMultiplyVector<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription, locationMat = A.LocationDescription;
 			bool success = false;
@@ -407,7 +407,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		public static void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged
+		public static void GenralRankOneUpdate<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.LocationDescription, location2 = y.LocationDescription, locationMat = A.LocationDescription;
 			bool success = false;
@@ -438,7 +438,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static void SymmHermRankOneUpdate<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged
+		public static void SymmHermRankOneUpdate<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations locationVec = x.LocationDescription, locationMat = A.LocationDescription;
 			bool success = false;
@@ -471,7 +471,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static void SymmHermRankTwoUpdate<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged
+		public static void SymmHermRankTwoUpdate<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations locationVec1 = x.LocationDescription, locationVec2 = y.LocationDescription, locationMat = A.LocationDescription;
 			bool success = false;
@@ -501,7 +501,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		public static void TriangularMatrixMultiplyVector<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX) where T : unmanaged
+		public static void TriangularMatrixMultiplyVector<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations locationVec = x.LocationDescription, locationMat = A.LocationDescription;
 			bool success = false;
@@ -537,7 +537,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void GeneralMatricesMultiply<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
+		public static void GeneralMatricesMultiply<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
 			bool success = false;
@@ -571,7 +571,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void SymmHermMatrixMultiplyGeneral<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
+		public static void SymmHermMatrixMultiplyGeneral<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
 			bool success = false;
@@ -603,7 +603,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void RankKUpdate<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged
+		public static void RankKUpdate<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = C.LocationDescription;
 			bool success = false;
@@ -637,7 +637,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void RankTwoKUpdate<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
+		public static void RankTwoKUpdate<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
 			bool success = false;
@@ -672,7 +672,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void RankKUpdateVariant<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
+		public static void RankKUpdateVariant<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
 			bool success = false;
@@ -703,7 +703,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		public static void TriangularMatrixSolve<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged
+		public static void TriangularMatrixSolve<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription;
 			bool success = false;
@@ -737,7 +737,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/>, must be <paramref name="ldb"/> when <paramref name="B"/> == <paramref name="C"/>.</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void TriangularMatrixMultiply<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T> C, long ldc) where T : unmanaged
+		public static void TriangularMatrixMultiply<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = A.LocationDescription, location2 = B.LocationDescription, location3 = C.LocationDescription;
 			bool success = false;
@@ -759,43 +759,43 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// When implemented by a derived class, find the (smallest) index of the element with the maximum magnitude.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">Output the resulting index</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool AbsoluteValueArgMax<T>(IStorage x, int strideX, out long index) where T : unmanaged;
+		protected abstract bool AbsoluteValueArgMax<T>(IStorage x, int strideX, out long index) where T : unmanaged, INumber<T>;
 		
 		/// <summary>
 		/// When implemented by a derived class, find the (smallest) index of the element with the minimum magnitude.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">Output the resulting index</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool AbsoluteValueArgMin_<T>(Storage<T> x, int strideX, out long index) where T : unmanaged;
+		protected abstract bool AbsoluteValueArgMin_<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the sum of the absolute values of the elements of vector <paramref name="x"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="sum">Output the result as a <see cref="double"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool AbsoluteValueSum_<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged;
+		protected abstract bool AbsoluteValueSum_<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, multiply the vector <paramref name="x"/> by the scalar <paramref name="α"/> and in-place add it to the vector <paramref name="y"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="α">The scalar used for multiplication</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -804,12 +804,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract bool VectorGeneralAdd_<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged;
+		protected abstract bool VectorGeneralAdd_<T>(T α, Storage<T> x, int strideX, Storage<T> y, int strideY) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the dot (inner) product of vectors <paramref name="x"/> and <paramref name="y"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="conjX">Conjugate <paramref name="x"/> or not</param>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
@@ -819,30 +819,30 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract bool Dot_<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY, out T dot) where T : unmanaged;
+		protected abstract bool Dot_<T>(bool conjX, Storage<T> x, int strideX, Storage<T> y, int strideY, out T dot) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the Euclidean norm (2-norm) of the vector <paramref name="x"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="norm">Output the result value as a <see cref="double"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool Norm_<T>(Storage<T> x, int strideX, out double norm) where T : unmanaged;
+		protected abstract bool Norm_<T>(Storage<T> x, int strideX, out double norm) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, in-place scale the vector <paramref name="x"/> by <paramref name="scalar"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="scalar">The scalar used for multiplication</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool Scale_<T>(Storage<T> x, int strideX, T scalar) where T : unmanaged;
+		protected abstract bool Scale_<T>(Storage<T> x, int strideX, T scalar) where T : unmanaged, INumber<T>;
 		#endregion
 
 		#region BLAS level 2
@@ -850,7 +850,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// When implemented by a derived class, perform the matrix-vector multiplication: <paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>)* <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/>.<br/>
 		/// Where <paramref name="A"/> is a <paramref name="m"/>×<paramref name="n"/> matrix stored in column-major format, <paramref name="x"/> and <paramref name="y"/> are vectors, and <paramref name="α"/> and <paramref name="β"/> are scalars.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> that is non- or (conj.) transpose</param>
 		/// <param name="m">The number of rows of matrix <paramref name="A"/></param>
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
@@ -865,7 +865,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract bool GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged;
+		protected abstract bool GeneralMatrixMultiplyVector_<T>(MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-vector multiplication:<br/>
@@ -886,7 +886,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract bool SymmHermMatrixMultiplyVector_<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged;
+		protected abstract bool SymmHermMatrixMultiplyVector_<T>(bool fillUpper, bool hermA, long n, T α, Storage<T> A, long lda, Storage<T> x, int strideX, T β, Storage<T> y, int strideY) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the rank-1 update:<br/>
@@ -907,7 +907,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is less than 1</exception>
-		protected abstract bool GenralRankOneUpdate_<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged;
+		protected abstract bool GenralRankOneUpdate_<T>(bool conjY, long m, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-1 update:<br/>
@@ -926,7 +926,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool SymmHermRankOneUpdate_<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged;
+		protected abstract bool SymmHermRankOneUpdate_<T>(bool fillUpper, bool conjX, long n, T α, Storage<T> x, int strideX, T β, Storage<T> A, long lda) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-2 update:<br/>
@@ -947,7 +947,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool SymmHermRankTwoUpdate_<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged;
+		protected abstract bool SymmHermRankTwoUpdate_<T>(bool fillUpper, bool conjugate, long n, T α, Storage<T> x, int strideX, Storage<T> y, int strideY, T β, Storage<T> A, long lda) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the triangular matrix multiply:<br/>
@@ -965,7 +965,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is less than 1</exception>
-		protected abstract bool TriangularMatrixMultiplyVector_<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX) where T : unmanaged;
+		protected abstract bool TriangularMatrixMultiplyVector_<T>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, Storage<T> A, long lda, Storage<T> x, int strideX) where T : unmanaged, INumber<T>;
 		#endregion
 
 		#region BLAS level 3
@@ -989,7 +989,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool GeneralMatricesMultiply_<T>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian matrix-matrix multiplication:<br/>
@@ -1011,7 +1011,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool SymmHermMatrixMultiplyGeneral_<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool SymmHermMatrixMultiplyGeneral_<T>(bool fillUpper, bool leftA, bool hermA, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>
@@ -1031,7 +1031,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool RankKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, Storage<T> A, long lda, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-2k update:<br/>
@@ -1053,7 +1053,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool RankTwoKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool RankTwoKUpdate_<T>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the variant symmetric/hermitian rank-k update:<br/>
@@ -1076,7 +1076,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool RankKUpdateVariant_<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool RankKUpdateVariant_<T>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, solves the triangular linear systems with multiple right-hand-sides for <c>x</c> and overwrite it to <paramref name="B"/>:<br/>
@@ -1095,7 +1095,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		protected abstract bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged;
+		protected abstract bool TriangularMatrixSolve_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, multiply the triangular matrix <paramref name="A"/> with the given matrix <paramref name="B"/> and overwrite the result to <paramref name="C"/>:<br/>
@@ -1116,7 +1116,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/>, must be <paramref name="ldb"/> when <paramref name="B"/> == <paramref name="C"/>.</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		protected abstract bool TriangularMatrixMultiply_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool TriangularMatrixMultiply_<T>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, Storage<T> A, long lda, Storage<T> B, long ldb, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 		#endregion
 		#endregion
 	}

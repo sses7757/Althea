@@ -12,9 +12,9 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The abstract matrix class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="BaseMatrix{T}"/>, but they shall be immutable.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public abstract class BaseMatrix<T> : ValueArray<T>, IMatrix where T : unmanaged
+	public abstract class BaseMatrix<T> : ValueArray<T>, IMatrixMetric where T : unmanaged, INumber<T>
 	{
 		#region basic
 		// previously defined 8 + (8 * 2) bytes
@@ -399,7 +399,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The wrapper structure used to access diagonal elements of a <see cref="BaseMatrix{T}"/>
 	/// </summary>
-	public readonly struct MatrixDiagonalAccessor<T> : IEquatable<MatrixDiagonalAccessor<T>> where T : unmanaged
+	public readonly struct MatrixDiagonalAccessor<T> : IEquatable<MatrixDiagonalAccessor<T>> where T : unmanaged, INumber<T>
 	{
 		#region basic
 		private readonly BaseMatrix<T> _owner;

@@ -69,14 +69,14 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Add the sparse vector <paramref name="x"/> scaled by scalar <paramref name="α"/> to a dense vector <paramref name="y"/>: <c><paramref name="y"/> += <paramref name="α"/> * <paramref name="x"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="α">The scalar to multiply <paramref name="x"/></param>
 		/// <param name="x">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The input/output dense vector as a <see cref="Storage{T}"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If the <see cref="ISparseArray{T}.IndexType"/> is not an integral type</exception>
-		public static void VectorSparseAddToDense<T>(T α, ISparseVector<T> x, Storage<T> y) where T : unmanaged
+		public static void VectorSparseAddToDense<T>(T α, ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
 			bool success = false;
@@ -93,14 +93,14 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Calculate the dot (inner) product of a sparse vector <paramref name="x"/> and a dense vector <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="conjX">Whether to conjugate <paramref name="x"/> or not</param>
 		/// <param name="x">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The input dense vector as a <see cref="Storage{T}"/></param>
 		/// <returns>The dot product result as a <typeparamref name="T"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static T VectorSparseDotDense<T>(bool conjX, ISparseVector<T> x, Storage<T> y) where T : unmanaged
+		public static T VectorSparseDotDense<T>(bool conjX, ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
 			T result = default;
@@ -119,14 +119,14 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Calculate the dot (inner) product of two sparse vectors <paramref name="x"/> and <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="conjX">Whether to conjugate <paramref name="x"/> or not</param>
 		/// <param name="x">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The other input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <returns>The dot product result as a <typeparamref name="T"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static T VectorSparseDotSparse<T>(bool conjX, ISparseVector<T> x, ISparseVector<T> y) where T : unmanaged
+		public static T VectorSparseDotSparse<T>(bool conjX, ISparseVector<T> x, ISparseVector<T> y) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.Storage.LocationDescription;
 			T result = default;
@@ -145,14 +145,14 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/> and put the result in a new sparse vector.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
 		/// <param name="format">The desired output sparse vector's <see cref="SparseVectorFormat"/>, can be anatomic</param>
 		/// <returns>The result sparse vector of the sum of <paramref name="x"/> and <paramref name="y"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static SparseArrayWrapper<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, SparseVectorFormat format = FormatExtension.VectorAny) where T : unmanaged
+		public static SparseArrayWrapper<T> VectorSparseAddSparse<T>(ISparseVector<T> x, ISparseVector<T> y, SparseVectorFormat format = FormatExtension.VectorAny) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.Storage.LocationDescription;
 			SparseArrayWrapper<T> result = default;
@@ -171,12 +171,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Point-wise multiply a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The input/output sparse vector x</param>
 		/// <param name="y">The input dense vector y</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static void VectorSparsePointWiseMultiplyDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged
+		public static void VectorSparsePointWiseMultiplyDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
 			bool success = false;
@@ -193,12 +193,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Point-wise divide a sparse vector by a dense vector: <c><paramref name="x"/> /= <paramref name="y"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The input/output sparse vector x</param>
 		/// <param name="y">The input dense vector y</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static void VectorSparsePointWiseDivideDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged
+		public static void VectorSparsePointWiseDivideDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations location1 = x.Storage.LocationDescription, location2 = y.LocationDescription;
 			bool success = false;
@@ -217,7 +217,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Compute the sparse matrix dense vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="M"/>) * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation to <paramref name="M"/></param>
 		/// <param name="M">The input sparse matrix M</param>
 		/// <param name="x">The input dense vector x</param>
@@ -226,7 +226,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
-		public static void MatrixSparseMultiplyVectorDense<T>(MatrixOperation op, T α, ISparseMatrix<T> M, Storage<T> x, T β, Storage<T> y) where T : unmanaged
+		public static void MatrixSparseMultiplyVectorDense<T>(MatrixOperation op, T α, ISparseMatrix<T> M, Storage<T> x, T β, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations vector1 = x.LocationDescription, vector2 = y.LocationDescription, matrix = M.Storage.LocationDescription;
 			bool success = false;
@@ -243,7 +243,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Compute the dense matrix sparse vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="M"/>) * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation to <paramref name="M"/></param>
 		/// <param name="α">The scalar to multiply <paramref name="M"/></param>
 		/// <param name="m">The number of rows of <paramref name="op"/>(<paramref name="M"/>) (the number of columns is implied in <paramref name="x"/>)</param>
@@ -254,7 +254,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
-		public static void MatrixDenseMultiplyVectorSparse<T>(MatrixOperation op, T α, long m, Storage<T> M, long ldm, ISparseVector<T> x, T β, Storage<T> y) where T : unmanaged
+		public static void MatrixDenseMultiplyVectorSparse<T>(MatrixOperation op, T α, long m, Storage<T> M, long ldm, ISparseVector<T> x, T β, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations vector1 = x.Storage.LocationDescription, vector2 = y.LocationDescription, matrix = M.LocationDescription;
 			bool success = false;
@@ -271,7 +271,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Compute sparse vector outer product: <c><paramref name="x"/> * <paramref name="y"/>^op</c>, <c>op = <paramref name="conjY"/> ? H : T</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="conjY">Whether to conjugate <paramref name="y"/> or not</param>
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
@@ -279,7 +279,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>A new sparse matrix as the outer product with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		public static SparseArrayWrapper<T> VectorSparseOuter<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
+		public static SparseArrayWrapper<T> VectorSparseOuter<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations vector1 = x.Storage.LocationDescription, vector2 = y.Storage.LocationDescription;
 			SparseArrayWrapper<T> result = default;
@@ -300,13 +300,13 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix to be sliced</param>
 		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
 		/// <returns>The sliced sub sparse matrix of <paramref name="matrix"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
-		public static SparseArrayWrapper<T> SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice) where T : unmanaged
+		public static SparseArrayWrapper<T> SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = matrix.Storage.LocationDescription;
 			SparseArrayWrapper<T> result = default;
@@ -325,7 +325,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> matrix.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix to be sliced</param>
 		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
 		/// <param name="sub">The sub sparse matrix to be overwritten</param>
@@ -333,7 +333,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
 		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot be overwritten by the sliced <paramref name="matrix"/></exception>
-		public static void SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged
+		public static void SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = matrix.Storage.LocationDescription, matrix2 = sub.Storage.LocationDescription;
 			bool success = false;
@@ -350,7 +350,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> dense matrix.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix to be sliced</param>
 		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
 		/// <param name="sub">The sub dense matrix to be overwritten</param>
@@ -358,7 +358,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default or <paramref name="subLD"/> is out of range</exception>
-		public static void SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, Storage<T> sub, long subLD) where T : unmanaged
+		public static void SparseMatrixSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, Storage<T> sub, long subLD) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = matrix.Storage.LocationDescription, matrix2 = sub.LocationDescription;
 			bool success = false;
@@ -375,7 +375,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Set the given sparse <paramref name="matrix"/>'s <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> matrix.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix whose slice will be overwritten</param>
 		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
 		/// <param name="sub">The sub sparse matrix to overwrite the sliced <paramref name="matrix"/></param>
@@ -383,7 +383,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
 		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot overwrite the sliced <paramref name="matrix"/></exception>
-		public static void SparseMatrixSetSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged
+		public static void SparseMatrixSetSlice<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = matrix.Storage.LocationDescription, matrix2 = sub.Storage.LocationDescription;
 			bool success = false;
@@ -400,7 +400,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Perform the dense matrix and sparse matrix addition: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
@@ -413,7 +413,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		public static void MatrixDenseAddSparse<T>(MatrixOperation opA, MatrixOperation opB, T α, Storage<T> A, long lda, T β, ISparseMatrix<T> B, Storage<T> C, long ldc) where T : unmanaged
+		public static void MatrixDenseAddSparse<T>(MatrixOperation opA, MatrixOperation opB, T α, Storage<T> A, long lda, T β, ISparseMatrix<T> B, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = A.LocationDescription, matrix2 = B.Storage.LocationDescription, matrix3 = C.LocationDescription;
 			bool success = false;
@@ -430,7 +430,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Perform the sparse matrices addition: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
@@ -443,7 +443,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		public static SparseArrayWrapper<T> MatrixSparseAddSparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T>? A, T β, ISparseMatrix<T>? B, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
+		public static SparseArrayWrapper<T> MatrixSparseAddSparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T>? A, T β, ISparseMatrix<T>? B, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, INumber<T>
 		{
 			if ((A is null || !A.IsValid()) && (B is null || !B.IsValid()))
 				throw new ArgumentException(Resources.Parameter.CannotAllNull);
@@ -475,7 +475,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Perform the sparse matrices multiplication: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
@@ -487,7 +487,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>A new sparse matrix as the product (and sum) with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static SparseArrayWrapper<T> MatrixSparseMultiplySparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
+		public static SparseArrayWrapper<T> MatrixSparseMultiplySparse<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = A.Storage.LocationDescription, matrix2 = B.Storage.LocationDescription;
 			CombinationOfLocations? matrix3 = C?.Storage.LocationDescription;
@@ -512,7 +512,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="m">The number of rows of <paramref name="opA"/>(<paramref name="A"/>). (The number of columns is implied from <paramref name="opB"/> and <paramref name="B"/>)</param>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
@@ -525,7 +525,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void MatrixDenseMultiplySparse<T>(MatrixOperation opA, MatrixOperation opB, long m, T α, Storage<T> A, long lda, ISparseMatrix<T> B, T β, Storage<T> C, long ldc) where T : unmanaged
+		public static void MatrixDenseMultiplySparse<T>(MatrixOperation opA, MatrixOperation opB, long m, T α, Storage<T> A, long lda, ISparseMatrix<T> B, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = A.LocationDescription, matrix2 = B.Storage.LocationDescription, matrix3 = C.LocationDescription;
 			bool success = false;
@@ -542,7 +542,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="n">The number of columns of <paramref name="opB"/>(<paramref name="B"/>). (The number of rows is implied from <paramref name="opA"/> and <paramref name="A"/>)</param>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
@@ -555,7 +555,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="ldc">The leading dimension of <paramref name="C"/></param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
-		public static void MatrixSparseMultiplyDense<T>(MatrixOperation opA, MatrixOperation opB, long n, T α, ISparseMatrix<T> A, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged
+		public static void MatrixSparseMultiplyDense<T>(MatrixOperation opA, MatrixOperation opB, long n, T α, ISparseMatrix<T> A, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = A.Storage.LocationDescription, matrix2 = B.LocationDescription, matrix3 = C.LocationDescription;
 			bool success = false;
@@ -572,14 +572,14 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Perform the sparse matrices Kronecker product: <c><paramref name="A"/> ⨂ <paramref name="B"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="A">The first input sparse matrix</param>
 		/// <param name="B">The second input sparse matrix</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
 		/// <returns>A new sparse matrix as the Kronecker product with format fitting <paramref name="format"/></returns>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		public static SparseArrayWrapper<T> MatrixSparseKronecker<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged
+		public static SparseArrayWrapper<T> MatrixSparseKronecker<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, INumber<T>
 		{
 			CombinationOfLocations matrix1 = A.Storage.LocationDescription, matrix2 = B.Storage.LocationDescription;
 			SparseArrayWrapper<T> result = default;
@@ -603,77 +603,77 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// When implemented by a derived class, add the sparse vector <paramref name="x"/> scaled by scalar <paramref name="α"/> to a dense vector <paramref name="y"/>: <c><paramref name="y"/> += <paramref name="α"/> * <paramref name="x"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="α">The scalar to multiply <paramref name="x"/></param>
 		/// <param name="x">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The input/output dense vector as a <see cref="Storage{T}"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If the <see cref="ISparseArray{T}.IndexType"/> is not an integral type</exception>
-		protected abstract bool VectorSparseAddToDense_<T>(T α, ISparseVector<T> x, Storage<T> y) where T : unmanaged;
+		protected abstract bool VectorSparseAddToDense_<T>(T α, ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the dot (inner) product of a sparse vector <paramref name="x"/> and a dense vector <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="conjX">Whether to conjugate <paramref name="x"/> or not</param>
 		/// <param name="x">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The input dense vector as a <see cref="Storage{T}"/></param>
 		/// <param name="dot">Output the dot product result as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparseDotDense_<T>(bool conjX, ISparseVector<T> x, Storage<T> y, out T dot) where T : unmanaged;
+		protected abstract bool VectorSparseDotDense_<T>(bool conjX, ISparseVector<T> x, Storage<T> y, out T dot) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the dot (inner) product of two sparse vectors <paramref name="x"/> and <paramref name="y"/>: result = <c><paramref name="x"/>^op <paramref name="y"/></c>, op = <paramref name="conjX"/> ? H : T.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="conjX">Whether to conjugate <paramref name="x"/> or not</param>
 		/// <param name="x">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="y">The other input sparse vector as a <see cref="ISparseVector{T}"/></param>
 		/// <param name="dot">Output the dot product result as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparseDotSparse_<T>(bool conjX, ISparseVector<T> x, ISparseVector<T> y, out T dot) where T : unmanaged;
+		protected abstract bool VectorSparseDotSparse_<T>(bool conjX, ISparseVector<T> x, ISparseVector<T> y, out T dot) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, add the sparse vector <paramref name="x"/> to another sparse vector <paramref name="y"/> and put the result in a new sparse vector.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
 		/// <param name="format">The desired output sparse vector's <see cref="SparseVectorFormat"/>, can be anatomic</param>
 		/// <param name="target">Output the result sparse vector of the sum of <paramref name="x"/> and <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparseAddSparse_<T>(ISparseVector<T> x, ISparseVector<T> y, out SparseArrayWrapper<T> target, SparseVectorFormat format = FormatExtension.VectorAny) where T : unmanaged;
+		protected abstract bool VectorSparseAddSparse_<T>(ISparseVector<T> x, ISparseVector<T> y, out SparseArrayWrapper<T> target, SparseVectorFormat format = FormatExtension.VectorAny) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, point-wise multiply a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The input/output sparse vector x</param>
 		/// <param name="y">The input dense vector y</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparsePointWiseMultiplyDense_<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged;
+		protected abstract bool VectorSparsePointWiseMultiplyDense_<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, point-wise divide a sparse vector by a dense vector: <c><paramref name="x"/> /= <paramref name="y"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The input/output sparse vector x</param>
 		/// <param name="y">The input dense vector y</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparsePointWiseDivideDense_<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged;
+		protected abstract bool VectorSparsePointWiseDivideDense_<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>;
 		#endregion
 
 		#region vector and matrix
 		/// <summary>
 		/// When implemented by a derived class, compute the sparse matrix dense vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="M"/>) * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation to <paramref name="M"/></param>
 		/// <param name="M">The input sparse matrix M</param>
 		/// <param name="x">The input dense vector x</param>
@@ -682,12 +682,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
-		protected abstract bool MatrixSparseMultiplyVectorDense_<T>(MatrixOperation op, T α, ISparseMatrix<T> M, Storage<T> x, T β, Storage<T> y) where T : unmanaged;
+		protected abstract bool MatrixSparseMultiplyVectorDense_<T>(MatrixOperation op, T α, ISparseMatrix<T> M, Storage<T> x, T β, Storage<T> y) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the dense matrix sparse vector multiplication: <c><paramref name="y"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="M"/>) * <paramref name="x"/> + <paramref name="β"/> * <paramref name="y"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> to indicate the simple operation to <paramref name="M"/></param>
 		/// <param name="α">The scalar to multiply <paramref name="M"/></param>
 		/// <param name="m">The number of rows of <paramref name="op"/>(<paramref name="M"/>) (the number of columns is implied in <paramref name="x"/>)</param>
@@ -698,12 +698,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="β">The scalar to multiply <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="M"/> is null or invalid</exception>
-		protected abstract bool MatrixDenseMultiplyVectorSparse_<T>(MatrixOperation op, T α, long m, Storage<T> M, long ldm, ISparseVector<T> x, T β, Storage<T> y) where T : unmanaged;
+		protected abstract bool MatrixDenseMultiplyVectorSparse_<T>(MatrixOperation op, T α, long m, Storage<T> M, long ldm, ISparseVector<T> x, T β, Storage<T> y) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute sparse vector outer product: <c><paramref name="x"/> * <paramref name="y"/>^op</c>, <c>op = <paramref name="conjY"/> ? H : T</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="conjY">Whether to conjugate <paramref name="y"/> or not</param>
 		/// <param name="x">The input sparse vector x</param>
 		/// <param name="y">The input sparse vector y</param>
@@ -711,26 +711,26 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="target">Output a new sparse matrix as the outer product with format fitting <paramref name="format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparseOuter_<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged;
+		protected abstract bool VectorSparseOuter_<T>(bool conjY, ISparseVector<T> x, ISparseVector<T> y, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, INumber<T>;
 		#endregion
 
 		#region matrix
 		/// <summary>
 		/// When implemented by a derived class, slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix to be sliced</param>
 		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
 		/// <param name="sub">Output the sliced sub sparse matrix of <paramref name="matrix"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
-		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, out SparseArrayWrapper<T> sub) where T : unmanaged;
+		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, out SparseArrayWrapper<T> sub) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> matrix.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix to be sliced</param>
 		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
 		/// <param name="sub">The sub sparse matrix to be overwritten</param>
@@ -738,12 +738,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
 		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot be overwritten by the sliced <paramref name="matrix"/></exception>
-		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged;
+		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> dense matrix.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix to be sliced</param>
 		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
 		/// <param name="sub">The sub dense matrix to be overwritten</param>
@@ -751,12 +751,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default or <paramref name="subLD"/> is out of range</exception>
-		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, Storage<T> sub, long subLD) where T : unmanaged;
+		protected abstract bool SparseMatrixSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, Storage<T> sub, long subLD) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, set the given sparse <paramref name="matrix"/>'s <paramref name="slice"/> parameter and overwrite the <paramref name="sub"/> matrix.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix whose slice will be overwritten</param>
 		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
 		/// <param name="sub">The sub sparse matrix to overwrite the sliced <paramref name="matrix"/></param>
@@ -764,12 +764,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
 		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot overwrite the sliced <paramref name="matrix"/></exception>
-		protected abstract bool SparseMatrixSetSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged;
+		protected abstract bool SparseMatrixSetSlice_<T>(ISparseMatrix<T> matrix, MatrixSliceWrapper slice, ISparseMatrix<T> sub) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the dense matrix and sparse matrix addition: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
@@ -782,12 +782,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		protected abstract bool MatrixDenseAddSparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, Storage<T> A, long lda, T β, ISparseMatrix<T> B, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool MatrixDenseAddSparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, Storage<T> A, long lda, T β, ISparseMatrix<T> B, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the sparse matrices addition: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
@@ -800,12 +800,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <remarks>If <paramref name="A"/> is null or <paramref name="α"/> is 0, the simple matrix operation <paramref name="opB"/> will be applied to <paramref name="B"/> and the returned sparse matrix may overlap with <paramref name="B"/>. The same for <paramref name="A"/>. However, they cannot be both null or 0.</remarks>
 		/// <exception cref="ArgumentNullException">If both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		protected abstract bool MatrixSparseAddSparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T>? A, T β, ISparseMatrix<T>? B, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged;
+		protected abstract bool MatrixSparseAddSparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T>? A, T β, ISparseMatrix<T>? B, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the sparse matrices multiplication: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
@@ -818,12 +818,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		protected abstract bool MatrixSparseMultiplySparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged;
+		protected abstract bool MatrixSparseMultiplySparse_<T>(MatrixOperation opA, MatrixOperation opB, T α, ISparseMatrix<T> A, ISparseMatrix<T> B, T β, ISparseMatrix<T>? C, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="m">The number of rows of <paramref name="opA"/>(<paramref name="A"/>). (The number of columns is implied from <paramref name="opB"/> and <paramref name="B"/>)</param>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
@@ -837,12 +837,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		protected abstract bool MatrixDenseMultiplySparse_<T>(MatrixOperation opA, MatrixOperation opB, long m, T α, Storage<T> A, long lda, ISparseMatrix<T> B, T β, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool MatrixDenseMultiplySparse_<T>(MatrixOperation opA, MatrixOperation opB, long m, T α, Storage<T> A, long lda, ISparseMatrix<T> B, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="n">The number of columns of <paramref name="opB"/>(<paramref name="B"/>). (The number of rows is implied from <paramref name="opA"/> and <paramref name="A"/>)</param>
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
@@ -856,19 +856,19 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
-		protected abstract bool MatrixSparseMultiplyDense_<T>(MatrixOperation opA, MatrixOperation opB, long n, T α, ISparseMatrix<T> A, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged;
+		protected abstract bool MatrixSparseMultiplyDense_<T>(MatrixOperation opA, MatrixOperation opB, long n, T α, ISparseMatrix<T> A, Storage<T> B, long ldb, T β, Storage<T> C, long ldc) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the sparse matrices Kronecker product: <c><paramref name="A"/> ⨂ <paramref name="B"/></c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="A">The first input sparse matrix</param>
 		/// <param name="B">The second input sparse matrix</param>
 		/// <param name="format">The desired output sparse matrix's format, can be anatomic</param>
 		/// <param name="target">Output a new sparse matrix as the Kronecker product with format fitting <paramref name="format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		protected abstract bool MatrixSparseKronecker_<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged;
+		protected abstract bool MatrixSparseKronecker_<T>(ISparseMatrix<T> A, ISparseMatrix<T> B, out SparseArrayWrapper<T> target, SparseMatrixFormat format = FormatExtension.MatrixAny) where T : unmanaged, INumber<T>;
 		#endregion
 		#endregion
 	}

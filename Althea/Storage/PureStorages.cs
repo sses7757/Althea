@@ -35,7 +35,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract pure storage class that inherits <see cref="PureStorageBase{TP}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public abstract class PureStorage<T, TP> : PureStorageBase<TP>, IStorage<T, PureStorage<T, TP>> where T : unmanaged, INumber<T> where TP : notnull, IPointer<TP>
 	{
@@ -65,6 +65,11 @@ namespace Althea.Storage
 #pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(PureStorageBase<TP>).GetProperty(nameof(Pointer))?.GetGetMethod() };
 #pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			return this.IsValid() ? 1 : 0;
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -261,7 +266,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a pure storage on a single location.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public sealed class ActualPureStorage<T, TP> : PureStorage<T, TP>, IActualStorage<T, PureStorage<T, TP>>
 		where T : unmanaged, INumber<T>
@@ -282,7 +287,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a pure storage on a single location.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public sealed class ReferencePureStorage<T, TP> : PureStorage<T, TP>, IReferenceStorage<T, PureStorage<T, TP>>
 		where T : unmanaged, INumber<T>

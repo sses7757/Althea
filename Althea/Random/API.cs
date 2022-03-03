@@ -100,9 +100,9 @@ namespace Althea.Random
 		/// <summary>
 		/// Get the default one-dimensional <see cref="IRandomDistribution"/> -- a <see cref="UniformDistribution{T}"/> on [0, 1) if <typeparamref name="T"/> is a floating-point type, otherwise a <see cref="RandomBitsDistribution{T}"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <returns>The default one-dimensional <see cref="IRandomDistribution"/></returns>
-		public static IRandomDistribution GetDefaultDistribution<T>() where T : unmanaged
+		public static IRandomDistribution GetDefaultDistribution<T>() where T : unmanaged, INumber<T>
 			=> Const<T>.IsIntegralType ? new RandomBitsDistribution<T>() : new UniformDistribution<T>(Const<T>.One);
 		#endregion
 
@@ -111,13 +111,13 @@ namespace Althea.Random
 		/// <summary>
 		/// Fill the given <paramref name="storage"/> with random numbers generated from the given <paramref name="distribution"/>
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="storage">The <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="distribution">The <see cref="IRandomDistribution"/> indicating which distribution to use, must be of rank-1. Default null means <see cref="GetDefaultDistribution{T}"/>.</param>
 		/// <exception cref="InvalidOperationException">If an error occurred during selecting the implementation</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
-		public static void FillWithRandom<T>(Storage<T> storage, IRandomDistribution? distribution = null) where T : unmanaged
+		public static void FillWithRandom<T>(Storage<T> storage, IRandomDistribution? distribution = null) where T : unmanaged, INumber<T>
 		{
 			distribution ??= GetDefaultDistribution<T>();
 			if (distribution[0] != Const<T>.DataType)
@@ -138,8 +138,8 @@ namespace Althea.Random
 		/// <summary>
 		/// Fill the given <paramref name="storage1"/> and <paramref name="storage2"/> with random numbers generated from the given <paramref name="distribution"/>
 		/// </summary>
-		/// <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T1">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="T2">Any unmanaged number as the data type</typeparam>
 		/// <param name="storage1">The first <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="storage2">The second <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="distribution">The <see cref="IRandomDistribution"/> indicating which distribution to use, must be of rank-2</param>
@@ -172,9 +172,9 @@ namespace Althea.Random
 		/// <summary>
 		/// Fill the given <paramref name="storage1"/>, <paramref name="storage2"/> and <paramref name="storage3"/> with random numbers generated from the given <paramref name="distribution"/>
 		/// </summary>
-		/// <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="T3">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T1">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="T2">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="T3">Any unmanaged number as the data type</typeparam>
 		/// <param name="storage1">The first <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="storage2">The second <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="storage3">The third <see cref="Storage{T}"/> to be filled with random numbers</param>
@@ -255,19 +255,19 @@ namespace Althea.Random
 		/// <summary>
 		/// When implemented by a derived class, fill the given <paramref name="storage"/> with random numbers generated from the given <paramref name="distribution"/>
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="storage">The <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="distribution">The <see cref="IRandomDistribution"/> indicating which distribution to use, must be of rank-1</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
-		protected abstract bool FillWithRandom_<T>(Storage<T> storage, IRandomDistribution distribution) where T : unmanaged;
+		protected abstract bool FillWithRandom_<T>(Storage<T> storage, IRandomDistribution distribution) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, fill the given <paramref name="storage1"/> and <paramref name="storage2"/> with random numbers generated from the given <paramref name="distribution"/>
 		/// </summary>
-		/// <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T1">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="T2">Any unmanaged number as the data type</typeparam>
 		/// <param name="storage1">The first <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="storage2">The second <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="distribution">The <see cref="IRandomDistribution"/> indicating which distribution to use, must be of rank-2</param>
@@ -281,9 +281,9 @@ namespace Althea.Random
 		/// <summary>
 		/// When implemented by a derived class, fill the given <paramref name="storage1"/>, <paramref name="storage2"/> and <paramref name="storage3"/> with random numbers generated from the given <paramref name="distribution"/>
 		/// </summary>
-		/// <typeparam name="T1">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="T2">Any unmanaged struct as the data type</typeparam>
-		/// <typeparam name="T3">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T1">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="T2">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="T3">Any unmanaged number as the data type</typeparam>
 		/// <param name="storage1">The first <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="storage2">The second <see cref="Storage{T}"/> to be filled with random numbers</param>
 		/// <param name="storage3">The third <see cref="Storage{T}"/> to be filled with random numbers</param>

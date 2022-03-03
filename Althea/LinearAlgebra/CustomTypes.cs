@@ -333,12 +333,12 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// Simplify the given <paramref name="input"/> <see cref="MatrixOperation"/> with type <typeparamref name="T"/> and <paramref name="hermitian"/>
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="input">The input <see cref="MatrixOperation"/> to be simplified</param>
 		/// <param name="hermitian">Whether the target matrix is neither symmetric nor hermitian (null) or simply symmetric (false) or hermitian (true)</param>
 		/// <returns>The simplified <paramref name="input"/> as a <see cref="MatrixOperation"/>. If <paramref name="hermitian"/> is not null, only <see cref="MatrixOperation.None"/> and <see cref="MatrixOperation.Conjugate"/> are possible outputs.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged
+		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged, INumber<T>
 		{
 			bool isComplex = Const<T>.IsComplex;
 			bool symm = hermitian.HasValue && !hermitian.Value, herm = isComplex && hermitian.HasValue && hermitian.Value;
@@ -428,7 +428,7 @@ namespace Althea.LinearAlgebra
 		/// <param name="matrix">The matrix to take slice from</param>
 		/// <param name="sub">The sub-matrix to be overwritten by the sliced <paramref name="matrix"/> or to overwrite the <paramref name="matrix"/>'s slice</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MatrixSliceWrapper Create<T>(long offsetRow, long countRow, long offsetCol, long countCol, IMatrix matrix, IMatrix? sub = null)
+		public static MatrixSliceWrapper Create<T>(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric matrix, IMatrixMetric? sub = null)
 		{
 			// check matrix
 			if (matrix is null)

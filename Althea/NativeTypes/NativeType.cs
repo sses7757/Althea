@@ -54,7 +54,7 @@ namespace Althea.NativeTypes
 	/// <summary>
 	/// The static class for primitive and custom number types' meta data
 	/// </summary>
-	/// <typeparam name="T">An unmanaged struct which implements <see cref="INumber{TSelf}"/> as the number type</typeparam>
+	/// <typeparam name="T">An unmanaged number which implements <see cref="INumber{TSelf}"/> as the number type</typeparam>
 	public static class NativeType<T> where T : INumber<T>
 	{
 		private static readonly Type? interfaceType = null;

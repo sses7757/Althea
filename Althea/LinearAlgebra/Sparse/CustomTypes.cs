@@ -77,8 +77,8 @@ namespace Althea.LinearAlgebra.Sparse
 	/// <summary>
 	/// The simple wrapper structure for any sparse array which is typically used as outputs of API methods.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public readonly ref struct SparseArrayWrapper<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public readonly ref struct SparseArrayWrapper<T> where T : unmanaged, INumber<T>
 	{
 		private readonly Storage<T> values;
 

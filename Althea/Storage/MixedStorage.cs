@@ -54,7 +54,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public abstract class MixedStorage<T, TP1, TP2> : MixedStorageBase<TP1, TP2>, IStorage<T, MixedStorage<T, TP1, TP2>>
@@ -92,6 +92,18 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer2))?.GetGetMethod(), };
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+				0 => this.Pointer1.IsValid() ? 1 : 0,
+				1 => this.Pointer2.IsValid() ? 1 : 0,
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -290,7 +302,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on 2 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public sealed class ActualMixedStorage<T, TP1, TP2> : MixedStorage<T, TP1, TP2>, IActualStorage<T, MixedStorage<T, TP1, TP2>>
@@ -313,7 +325,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on 2 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public sealed class ReferenceMixedStorage<T, TP1, TP2> : MixedStorage<T, TP1, TP2>, IReferenceStorage<T, MixedStorage<T, TP1, TP2>>
@@ -426,7 +438,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -466,6 +478,19 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer3))?.GetGetMethod(), };
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+				0 => this.Pointer1.IsValid() ? 1 : 0,
+				1 => this.Pointer2.IsValid() ? 1 : 0,
+				2 => this.Pointer3.IsValid() ? 1 : 0,
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -665,7 +690,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on 3 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -690,7 +715,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on 3 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -822,7 +847,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -864,6 +889,20 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer4))?.GetGetMethod(), };
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+				0 => this.Pointer1.IsValid() ? 1 : 0,
+				1 => this.Pointer2.IsValid() ? 1 : 0,
+				2 => this.Pointer3.IsValid() ? 1 : 0,
+				3 => this.Pointer4.IsValid() ? 1 : 0,
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -1064,7 +1103,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on 4 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -1091,7 +1130,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on 4 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -1242,7 +1281,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -1286,6 +1325,21 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer5))?.GetGetMethod(), };
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+				0 => this.Pointer1.IsValid() ? 1 : 0,
+				1 => this.Pointer2.IsValid() ? 1 : 0,
+				2 => this.Pointer3.IsValid() ? 1 : 0,
+				3 => this.Pointer4.IsValid() ? 1 : 0,
+				4 => this.Pointer5.IsValid() ? 1 : 0,
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -1487,7 +1541,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on 5 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -1516,7 +1570,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on 5 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -1686,7 +1740,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -1732,6 +1786,22 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer5))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer6))?.GetGetMethod(), };
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+				0 => this.Pointer1.IsValid() ? 1 : 0,
+				1 => this.Pointer2.IsValid() ? 1 : 0,
+				2 => this.Pointer3.IsValid() ? 1 : 0,
+				3 => this.Pointer4.IsValid() ? 1 : 0,
+				4 => this.Pointer5.IsValid() ? 1 : 0,
+				5 => this.Pointer6.IsValid() ? 1 : 0,
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -1934,7 +2004,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on 6 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -1965,7 +2035,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on 6 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -2154,7 +2224,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -2202,6 +2272,23 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer5))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer6))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer7))?.GetGetMethod(), };
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+				0 => this.Pointer1.IsValid() ? 1 : 0,
+				1 => this.Pointer2.IsValid() ? 1 : 0,
+				2 => this.Pointer3.IsValid() ? 1 : 0,
+				3 => this.Pointer4.IsValid() ? 1 : 0,
+				4 => this.Pointer5.IsValid() ? 1 : 0,
+				5 => this.Pointer6.IsValid() ? 1 : 0,
+				6 => this.Pointer7.IsValid() ? 1 : 0,
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -2405,7 +2492,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on 7 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -2438,7 +2525,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on 7 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -2646,7 +2733,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -2696,6 +2783,24 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer5))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer6))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer7))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer8))?.GetGetMethod(), };
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+				0 => this.Pointer1.IsValid() ? 1 : 0,
+				1 => this.Pointer2.IsValid() ? 1 : 0,
+				2 => this.Pointer3.IsValid() ? 1 : 0,
+				3 => this.Pointer4.IsValid() ? 1 : 0,
+				4 => this.Pointer5.IsValid() ? 1 : 0,
+				5 => this.Pointer6.IsValid() ? 1 : 0,
+				6 => this.Pointer7.IsValid() ? 1 : 0,
+				7 => this.Pointer8.IsValid() ? 1 : 0,
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -2900,7 +3005,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on 8 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -2935,7 +3040,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on 8 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -3162,7 +3267,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -3214,6 +3319,25 @@ namespace Althea.Storage
 		#pragma warning disable CS8619
 		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer5))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer6))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer7))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer8))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer9))?.GetGetMethod(), };
 		#pragma warning restore CS8619
+
+		long IStorage.SizeOfPointer(int i)
+		{
+			if (this.Disposed)
+				return 0;
+			return i switch
+			{
+				0 => this.Pointer1.IsValid() ? 1 : 0,
+				1 => this.Pointer2.IsValid() ? 1 : 0,
+				2 => this.Pointer3.IsValid() ? 1 : 0,
+				3 => this.Pointer4.IsValid() ? 1 : 0,
+				4 => this.Pointer5.IsValid() ? 1 : 0,
+				5 => this.Pointer6.IsValid() ? 1 : 0,
+				6 => this.Pointer7.IsValid() ? 1 : 0,
+				7 => this.Pointer8.IsValid() ? 1 : 0,
+				8 => this.Pointer9.IsValid() ? 1 : 0,
+				_ => throw new ArgumentOutOfRangeException(nameof(i)),
+			};
+		}
 
 		/// <summary>
 		/// Get the total length of the presenting array in bytes
@@ -3419,7 +3543,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on 9 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -3456,7 +3580,7 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on 9 locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.NativeTypes;
 using Althea.Resources;
 using Althea.Helpers;
 
@@ -773,7 +772,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to check</param>
 		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
-		public static bool FastAllZeros<T>(this Span<T> span) where T : unmanaged
+		public static bool FastAllZeros<T>(this Span<T> span) where T : unmanaged, INumber<T>
 		{
 			return FastAllZeros((ReadOnlySpan<T>)span);
 		}
@@ -783,7 +782,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to check</param>
 		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
-		public static unsafe bool FastAllZeros<T>(this ReadOnlySpan<T> span) where T : unmanaged
+		public static unsafe bool FastAllZeros<T>(this ReadOnlySpan<T> span) where T : unmanaged, INumber<T>
 		{
 			int size = Math.Min(span.Length, 8) * sizeof(T);
 			ReadOnlySpan<byte> spanFirst = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref span.Ref()), size);
@@ -1024,7 +1023,7 @@ namespace Althea.Linq
 		/// <returns>The created <typeparamref name="TStruct"/></returns>
 		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TStruct ToStruct<T, TStruct>(this Span<T> span) where T : unmanaged where TStruct : struct
+		public static TStruct ToStruct<T, TStruct>(this Span<T> span) where T : unmanaged, INumber<T> where TStruct : struct
 		{
 			return ToStruct<T, TStruct>((ReadOnlySpan<T>)span);
 		}
@@ -1038,7 +1037,7 @@ namespace Althea.Linq
 		/// <returns>The created <typeparamref name="TStruct"/></returns>
 		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TStruct ToStruct<T, TStruct>(this ReadOnlySpan<T> span) where T : unmanaged where TStruct : struct
+		public static TStruct ToStruct<T, TStruct>(this ReadOnlySpan<T> span) where T : unmanaged, INumber<T> where TStruct : struct
 		{
 			span.ToStruct(out TStruct s);
 			return s;
@@ -1053,7 +1052,7 @@ namespace Althea.Linq
 		/// <param name="struct">The output <typeparamref name="TStruct"/></param>
 		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void ToStruct<T, TStruct>(this ReadOnlySpan<T> span, out TStruct @struct) where T : unmanaged where TStruct : struct
+		public static unsafe void ToStruct<T, TStruct>(this ReadOnlySpan<T> span, out TStruct @struct) where T : unmanaged, INumber<T> where TStruct : struct
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size > span.Length)
@@ -1075,7 +1074,7 @@ namespace Althea.Linq
 		/// <returns>The <paramref name="span"/></returns>
 		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe Span<T> FromStruct<T, TStruct>(this Span<T> span, TStruct @struct) where T : unmanaged where TStruct : struct
+		public static unsafe Span<T> FromStruct<T, TStruct>(this Span<T> span, TStruct @struct) where T : unmanaged, INumber<T> where TStruct : struct
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size > span.Length)
@@ -1753,7 +1752,7 @@ namespace Althea.Linq
 		/// <summary>
 		/// Scale the values in <paramref name="span"/> by <paramref name="scalar"/> in-place
 		/// </summary>
-		/// <typeparam name="T">Any supported unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any supported unmanaged number as the data type</typeparam>
 		/// <param name="span">The span to be scaled in-place</param>
 		/// <param name="scalar">The scalar to multiply to each element in <paramref name="span"/></param>
 		public static void Scale<T>(this Span<T> span, T scalar) where T : unmanaged, IEquatable<T>, IAdditiveIdentity<T, T>, IMultiplyOperators<T, T, T>

@@ -16,10 +16,10 @@ namespace Althea.Solver
 	/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
 	/// </summary>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	public interface IKrylovVector<TVec, T> : ICloneable<TVec>, IDisposable
 		where TVec : class, IKrylovVector<TVec, T>, ICloneable<TVec>, IDisposable, new()
-		where T : unmanaged
+		where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the total presenting length of this vector
@@ -142,11 +142,11 @@ namespace Althea.Solver
 	/// </summary>
 	/// <typeparam name="TMat">The concrete matrix type</typeparam>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IMultipliableMatrix<TMat, TVec, T> : IMatrix, IDisposable
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public interface IMultipliableMatrix<TMat, TVec, T> : IMatrixMetric, IDisposable
 		where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
 		where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
-		where T : unmanaged
+		where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether this matrix can perform in-place matrix operations or not
@@ -215,11 +215,11 @@ namespace Althea.Solver
 	/// </summary>
 	/// <typeparam name="TMat">The concrete matrix type</typeparam>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public interface IConvertibleVector<TVec, TMat, T> : IVector, IDisposable
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public interface IConvertibleVector<TVec, TMat, T> : IVectorMetric, IDisposable
 		where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
 		where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
-		where T : unmanaged
+		where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, convert this vector to a matrix of type <typeparamref name="TMat"/>
@@ -444,9 +444,9 @@ namespace Althea.Solver
 	/// <summary>
 	/// The information used as input and output of Krylov subspace methods
 	/// </summary>
-	/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+	/// <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-	public readonly ref struct KrylovSubspaceSolveInfo<TVec, T> where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged
+	public readonly ref struct KrylovSubspaceSolveInfo<TVec, T> where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged, INumber<T>
 	{
 		#region fields
 		/// <summary>

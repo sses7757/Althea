@@ -42,8 +42,8 @@ namespace Althea.TensorAlgebra.Sparse
 	/// <summary>
 	/// The computation wrapper for a sparse tensor
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
-	public readonly ref struct SparseTensorWrapper<T> where T : unmanaged
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public readonly ref struct SparseTensorWrapper<T> where T : unmanaged, INumber<T>
 	{
 		private readonly Storage<T> m_values;
 

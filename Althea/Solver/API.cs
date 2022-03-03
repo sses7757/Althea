@@ -68,7 +68,7 @@ namespace Althea.Solver
 		/// </summary>
 		/// <typeparam name="TMat">The concrete matrix type as a <see cref="IMultipliableMatrix{TMat, TVec, T}"/></typeparam>
 		/// <typeparam name="TVec">The concrete vector type as a <see cref="IConvertibleVector{TVec, TMat, T}"/></typeparam>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="multiply">Whether to perform Kronecker Multiply or Kronecker Sum</param>
 		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
 		/// <param name="leftMatrix">The input left matrix to perform the Kronecker sum</param>
@@ -82,7 +82,7 @@ namespace Althea.Solver
 		public static void KroneckerMultiplyVector<TMat, TVec, T>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
 			where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
 			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			bool success = false;
 			LinkedListNode<AbstractApi>? node = RecentAPIs.First;
@@ -100,7 +100,7 @@ namespace Althea.Solver
 		/// <summary>
 		/// Perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.
 		/// </summary>
-		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
@@ -109,7 +109,7 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		public static (double eigenvalue, TVec eigenvector) NaiveKrylovSubspaceEigenHermitain<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			double eigenvalue = default;
 			TVec? eigenvector = null;
@@ -132,7 +132,7 @@ namespace Althea.Solver
 		/// <summary>
 		/// Perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
 		/// </summary>
-		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
@@ -142,7 +142,7 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		public static int RestartKrylovSubspaceEigen<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			int result = 0;
 			bool success = false;
@@ -164,7 +164,7 @@ namespace Althea.Solver
 		/// <summary>
 		/// Perform a restart Krylov subspace algorithm (typically the MinRes or PCG or GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
 		/// </summary>
-		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
@@ -174,7 +174,7 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		public static (double relativeError, TVec solve) RestartKrylovSubspaceLinearSolve<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			double error = 0;
 			TVec? solve = null;
@@ -210,7 +210,7 @@ namespace Althea.Solver
 		/// </summary>
 		/// <typeparam name="TMat">The concrete matrix type as a <see cref="IMultipliableMatrix{TMat, TVec, T}"/></typeparam>
 		/// <typeparam name="TVec">The concrete vector type as a <see cref="IConvertibleVector{TVec, TMat, T}"/></typeparam>
-		/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="multiply">Whether to perform Kronecker Multiply or Kronecker Sum</param>
 		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
 		/// <param name="leftMatrix">The input left matrix to perform the Kronecker multiply/sum</param>
@@ -224,12 +224,12 @@ namespace Althea.Solver
 		protected abstract bool KroneckerMultiplyVector_<TMat, TVec, T>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
 			where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
 			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
-			where T : unmanaged;
+			where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.
 		/// </summary>
-		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
 		/// <param name="eigenvalue">The output approximate lowest eigenvalue</param>
@@ -237,12 +237,12 @@ namespace Althea.Solver
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output eigenvector.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged;
+		protected abstract bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
 		/// </summary>
-		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
@@ -252,12 +252,12 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		protected abstract bool RestartKrylovSubspaceEigen_<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged;
+			where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
 		/// </summary>
-		/// <typeparam name="T">Any float-point type unmanaged struct as the data type</typeparam>
+		/// <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
 		/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
 		/// <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> used as input information and output container</param>
@@ -268,7 +268,7 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		protected abstract bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged;
+			where T : unmanaged, INumber<T>;
 		#endregion
 	}
 }
