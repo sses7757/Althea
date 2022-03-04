@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 
 using Althea.Linq;
 
@@ -9,10 +8,10 @@ namespace Althea.Storage
 	/// <summary>
 	/// The managed pointer that implements <see cref="IPointer{TSelf}"/> as a example
 	/// </summary>
-	public readonly struct ManagedPointer : IPointer<ManagedPointer>, IDisposable
+	public readonly struct ManagedPointer : IPointer<ManagedPointer>
 	{
 		#region basic
-		private readonly byte[] data;
+		private readonly IntPtr data;
 
 		/// <summary>
 		/// Get the length of underly memory in bytes
@@ -22,7 +21,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the underlying data as a <see cref="Span{T}"/> of <see cref="byte"/>
 		/// </summary>
-		public Span<byte> Data => new(this.data, 0, (int)this.LengthInBytes);
+		public unsafe Span<byte> Data => new(this.data.ToPointer(), (int)this.LengthInBytes);
 
 		/// <summary>
 		/// Get the underlying data as a <see cref="Span{T}"/> of <typeparamref name="T"/>
@@ -30,19 +29,15 @@ namespace Althea.Storage
 		public Span<T> AsData<T>() where T : unmanaged, INumber<T> => this.Data.As<byte, T>();
 
 		/// <summary>
-		/// Allocate and create a new <see cref="ManagedPointer"/> of given <paramref name="length"/> in bytes
+		/// Create a new <see cref="ManagedPointer"/> with given <paramref name="data"/> as a pointer from a fixed managed buffer and <paramref name="length"/>.
 		/// </summary>
-		/// <param name="length">The length in bytes of underlying data to create</param>
-		public ManagedPointer(long length)
+		/// <param name="data">The data as a pointer from a fixed managed buffer</param>
+		/// <param name="length">The length of <paramref name="data"/> in bytes</param>
+		public ManagedPointer(IntPtr data, long length)
 		{
-			this.data = ArrayPool<byte>.Shared.Rent(checked((int)length));
+			this.data = data;
 			this.LengthInBytes = length;
 		}
-
-		/// <summary>
-		/// Deallocate the underlying data
-		/// </summary>
-		public void Dispose() => ArrayPool<byte>.Shared.Return(this.data);
 
 		/// <summary>
 		/// Check whether this pointer is valid or not
@@ -88,9 +83,9 @@ namespace Althea.Storage
 		#region string
 		static string IMainPropertyFormattable<ManagedPointer>.StringMain => nameof(ManagedPointer);
 
-		static IEnumerable<string> IMainPropertyFormattable<ManagedPointer>.PropertyNames => new[] { nameof(LengthInBytes) };
+		static IEnumerable<string> IMainPropertyFormattable<ManagedPointer>.PropertyNames => new[] { "FixedPointer", nameof(LengthInBytes) };
 
-		IEnumerable<object?> IMainPropertyFormattable<ManagedPointer>.PropertyValues => new object[] { this.LengthInBytes };
+		IEnumerable<object?> IMainPropertyFormattable<ManagedPointer>.PropertyValues => new object[] { this.data, this.LengthInBytes };
 
 		/// <summary>
 		/// Get the string representation of this <see cref="ManagedPointer"/>

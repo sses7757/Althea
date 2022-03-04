@@ -175,25 +175,34 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		/// <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsBitSet<T>(this T input, byte bit) where T : IBinaryInteger<T> => (input & T.Create(1 << bit)) == T.Zero;
 
 		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0
 		/// </summary>
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		/// <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsBitNotSet<T>(this T input, byte bit) where T : IBinaryInteger<T> => (input & T.Create(1 << bit)) != T.Zero;
+
+		/// <summary>
+		/// Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 1</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T SetBit<T>(this T input, byte bit) where T : IBinaryInteger<T> => input | T.Create(1 << bit);
 
 		/// <summary>
-		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+		/// Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 0
 		/// </summary>
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
-		/// <returns>whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+		/// <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 0</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static T ResetBit<T>(this T input, byte bit) where T : IBinaryInteger<T> => input & ~T.Create(1 << bit);
 		#endregion

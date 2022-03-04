@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -116,7 +116,7 @@ namespace Althea.Storage
 		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/>is null or invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
 		[AbstractApiMethod]
 		public abstract bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, int incrementSource, PointerSegment<TP2> destination, int incrementDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
@@ -124,7 +124,7 @@ namespace Althea.Storage
 
 		#region storage and managed operations
 		/// <summary>
-		/// When implemented by a derived class, copy out the <b>first</b> element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>
+		/// When implemented by a derived class, copy out the <b>first</b> element in unmanaged pointer <paramref name="source"/> to a managed value of type <typeparamref name="T"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TP">The pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -133,10 +133,15 @@ namespace Althea.Storage
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool ToManaged<T, TP>(PointerSegment<TP> source, out T value) where T : unmanaged, INumber<T> where TP : IPointer<TP>;
+		public unsafe virtual bool ToManaged<T, TP>(PointerSegment<TP> source, out T value) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		{
+			value = default;
+			ManagedPointer mp = new(new(Unsafe.AsPointer(ref value)), sizeof(T));
+			return this.MemoryCopy<TP, ManagedPointer>(source, mp, out _);
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>
+		/// When implemented by a derived class, overwrite the <b>first</b> element in unmanaged pointer <paramref name="destination"/> by a managed <paramref name="value"/> of type <typeparamref name="T"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TP">The pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -145,10 +150,14 @@ namespace Althea.Storage
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool FromManaged<T, TP>(PointerSegment<TP> destination, T value) where T : unmanaged, INumber<T> where TP : IPointer<TP>;
+		public unsafe virtual bool FromManaged<T, TP>(PointerSegment<TP> destination, T value) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		{
+			ManagedPointer mp = new(new(&value), sizeof(T));
+			return this.MemoryCopy<ManagedPointer, TP>(mp, destination, out _);
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>
+		/// When implemented by a derived class, copy out the first few elements in unmanaged pointer <paramref name="source"/> to a managed array of type <typeparamref name="T"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TP">The pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -158,10 +167,19 @@ namespace Althea.Storage
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool ToManaged<T, TP>(PointerSegment<TP> source, Span<T> destination, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>;
+		public unsafe virtual bool ToManaged<T, TP>(PointerSegment<TP> source, Span<T> destination, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		{
+			if (destination.IsEmpty)
+				throw new ArgumentNullException(nameof(destination));
+			fixed (T* dst = destination)
+			{
+				ManagedPointer mp = new(new(dst), sizeof(T) * destination.Length);
+				return this.MemoryCopy<TP, ManagedPointer>(source, mp, out actualCopied);
+			}
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>
+		/// When implemented by a derived class, overwrite the first few elements in unmanaged pointer <paramref name="destination"/> by the <paramref name="values"/> of a managed array of type <typeparamref name="T"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TP">The pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -171,7 +189,16 @@ namespace Althea.Storage
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool FromManaged<T, TP>(PointerSegment<TP> destination, ReadOnlySpan<T> values, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>;
+		public unsafe virtual bool FromManaged<T, TP>(PointerSegment<TP> destination, ReadOnlySpan<T> values, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		{
+			if (values.IsEmpty)
+				throw new ArgumentNullException(nameof(values));
+			fixed (T* src = values)
+			{
+				ManagedPointer mp = new(new(src), sizeof(T) * values.Length);
+				return this.MemoryCopy<ManagedPointer, TP>(mp, destination, out actualCopied);
+			}
+		}
 
 		// Ignore Spelling: sizeof
 		/// <summary>
@@ -193,10 +220,22 @@ namespace Althea.Storage
 		/// or <c><paramref name="destinationLeadDim"/> * <paramref name="width"/> &gt; <paramref name="destination"/></c>.<see cref="Span{T}.Length">Length</see>
 		/// </exception>
 		[AbstractApiMethod]
-		public abstract bool ToManaged2D<T, TP>(PointerSegment<TP> source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged, INumber<T> where TP : IPointer<TP>;
+		public unsafe virtual bool ToManaged2D<T, TP>(PointerSegment<TP> source, long leadDim, long height, long width, Span<T> destination, long destinationLeadDim = 0) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		{
+			if (destination.IsEmpty)
+				throw new ArgumentNullException(nameof(destination));
+			if (destinationLeadDim == 0)
+				destinationLeadDim = height;
+			leadDim *= sizeof(T); height *= sizeof(T); width *= sizeof(T); destinationLeadDim *= sizeof(T);
+			fixed (T* dst = destination)
+			{
+				ManagedPointer mp = new(new(dst), sizeof(T) * destination.Length);
+				return this.MemoryCopy2D<TP, ManagedPointer>(source, leadDim, mp, destinationLeadDim, height, width);
+			}
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by  a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
+		/// When implemented by a derived class, overwrite some of the elements in unmanaged pointer <paramref name="destination"/> as a 2D matrix by a managed array of type <typeparamref name="T"/> (viewed as a 1D array).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TP">The pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -214,7 +253,73 @@ namespace Althea.Storage
 		/// or <c><paramref name="valuesLeadDim"/> * <paramref name="width"/> &gt; <paramref name="values"/></c>.<see cref="ReadOnlySpan{T}.Length">Length</see>
 		/// </exception>
 		[AbstractApiMethod]
-		public abstract bool FromManaged2D<T, TP>(PointerSegment<TP> destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged, INumber<T> where TP : IPointer<TP>;
+		public unsafe virtual bool FromManaged2D<T, TP>(PointerSegment<TP> destination, long leadDim, long height, long width, ReadOnlySpan<T> values, long valuesLeadDim = 0) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		{
+			if (values.IsEmpty)
+				throw new ArgumentNullException(nameof(values));
+			if (valuesLeadDim == 0)
+				valuesLeadDim = height;
+			leadDim *= sizeof(T); height *= sizeof(T); width *= sizeof(T); valuesLeadDim *= sizeof(T);
+			fixed (T* src = values)
+			{
+				ManagedPointer mp = new(new(src), sizeof(T) * values.Length);
+				return this.MemoryCopy2D<ManagedPointer, TP>(mp, valuesLeadDim, destination, leadDim, height, width);
+			}
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> which is a managed array of type <typeparamref name="T"/> with given strides.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementSource"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
+		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TP">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
+		/// <param name="source">The source pointer to copy from</param>
+		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="destination">The destination managed array to copy to</param>
+		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		[AbstractApiMethod]
+		public unsafe virtual bool ToManagedStrided<T, TP>(PointerSegment<TP> source, int incrementSource, Span<T> destination, int incrementDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		{
+			if (destination.IsEmpty)
+				throw new ArgumentNullException(nameof(destination));
+			fixed (T* dst = destination)
+			{
+				ManagedPointer mp = new(new(dst), sizeof(T) * destination.Length);
+				return this.StridedCopy<T, TP, ManagedPointer>(source, incrementSource, mp, incrementDestination, out actualCopied);
+			}
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, copy some of the values in the <paramref name="values"/> managed array of type <typeparamref name="T"/> to <paramref name="destination"/> storage with given strides.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="values"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementValues"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
+		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TP">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
+		/// <param name="values">The source managed array to copy from</param>
+		/// <param name="incrementValues">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="values"/></param>
+		/// <param name="destination">The destination storage to copy to</param>
+		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="values"/> or <paramref name="destination"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementValues"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		[AbstractApiMethod]
+		public unsafe virtual bool FromManagedStrided<T, TP>(PointerSegment<TP> destination, int incrementDestination, Span<T> values, int incrementValues, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		{
+			if (values.IsEmpty)
+				throw new ArgumentNullException(nameof(values));
+			fixed (T* src = values)
+			{
+				ManagedPointer mp = new(new(src), sizeof(T) * values.Length);
+				return this.StridedCopy<T, ManagedPointer, TP>(mp, incrementValues, destination, incrementDestination, out actualCopied);
+			}
+		}
 		#endregion
 	}
 
@@ -258,9 +363,11 @@ namespace Althea.Storage
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Ldc_I4, i);
 				IL.Emit(OpCodes.Callvirt, getSizeOfPointer);
+				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, i); // long sizePointerI = storage.SizeOfPointer(i);
 				labels[i] = (IL.DefineLabel(), IL.DefineLabel());
 			}
+			IL.DeclareLocal(typeof(long)); // local long i
 			for (int i = 0; i < pointerGetters.Length; i++)
 			{
 				IL.Emit(OpCodes.Ldloc_S, i);
@@ -299,6 +406,8 @@ namespace Althea.Storage
 				IL.MarkLabel(labels[i].end); // POINTER_I_END:
 			}
 
+			method.DefineParameter(1, ParameterAttributes.In, "storage");
+			method.DefineParameter(2, ParameterAttributes.In, "value");
 			return method.CreateDelegate<Action<TS, T>>();
 		}
 
@@ -349,8 +458,335 @@ namespace Althea.Storage
 
 			DynamicMethod method = new($"Copier from {type1.GetGenericString()} to {type2.GetGenericString()}", null, new[] { type1, type2 });
 			var IL = method.GetILGenerator();
-			// TODO: complicated copy IL
+			Label ret = IL.DefineLabel(), thr = IL.DefineLabel();
+			Label[,] branches = new Label[pointerGetters1.Length + 1, pointerGetters2.Length + 1];
+			for (int i = 0; i <= pointerGetters1.Length; i++)
+				for (int j = 0; j <= pointerGetters2.Length; j++)
+					branches[i, j] = i == pointerGetters1.Length || j == pointerGetters2.Length ? ret : IL.DefineLabel();
+			for (int i = 0; i < pointerGetters1.Length; i++)
+			{
+				IL.Emit(OpCodes.Ldarg_0);
+				IL.Emit(OpCodes.Ldc_I4, i);
+				IL.Emit(OpCodes.Callvirt, getSizeOfPointer);
+				IL.DeclareLocal(typeof(long));
+				IL.Emit(OpCodes.Stloc_S, i); // long sizeSrcPointerI = src.SizeOfPointer(i);
+			}
+			for (int j = 0; j < pointerGetters2.Length; j++)
+			{
+				IL.Emit(OpCodes.Ldarg_1);
+				IL.Emit(OpCodes.Ldc_I4, j);
+				IL.Emit(OpCodes.Callvirt, getSizeOfPointer);
+				IL.DeclareLocal(typeof(long));
+				IL.Emit(OpCodes.Stloc_S, j + pointerGetters1.Length); // long sizeDstPointerJ = dst.SizeOfPointer(i);
+			}
+			for (int i = 0; i < pointerGetters1.Length; i++)
+			{
+				IL.DeclareLocal(pointerGetters1[i].ReturnType);
+			}
+			for (int j = 0; j < pointerGetters2.Length; j++)
+			{
+				IL.DeclareLocal(pointerGetters2[j].ReturnType);
+			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int sizeSrcPointer(int i) => i;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int sizeDstPointer(int j) => j + pointerGetters1.Length;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int srcPointer(int i) => i + pointerGetters1.Length + pointerGetters2.Length;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int dstPointer(int j) => j + pointerGetters1.Length * 2 + pointerGetters2.Length;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int copied() => (pointerGetters1.Length + pointerGetters2.Length) * 2;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int offsetSrc() => (pointerGetters1.Length + pointerGetters2.Length) * 2 + 1;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int offsetDst() => (pointerGetters1.Length + pointerGetters2.Length) * 2 + 2;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int loopI() => (pointerGetters1.Length + pointerGetters2.Length) * 2 + 3;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			int loopJ() => (pointerGetters1.Length + pointerGetters2.Length) * 2 + 4;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void LocalIInc(bool save = true)
+			{
+				IL.Emit(OpCodes.Ldloc_S, loopI());
+				IL.Emit(OpCodes.Ldc_I8, 1L);
+				IL.Emit(OpCodes.Add);
+				if (save)
+					IL.Emit(OpCodes.Dup);
+				IL.Emit(OpCodes.Stloc_S, loopI());
+			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void LocalJInc(bool save = true)
+			{
+				IL.Emit(OpCodes.Ldloc_S, loopJ());
+				IL.Emit(OpCodes.Ldc_I8, 1L);
+				IL.Emit(OpCodes.Add);
+				if (save)
+					IL.Emit(OpCodes.Dup);
+				IL.Emit(OpCodes.Stloc_S, loopJ());
+			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void LocalSrcNext(int i)
+			{
+				IL.Emit(OpCodes.Ldarg_0);
+				IL.Emit(OpCodes.Ldloc_S, loopI());
+				IL.Emit(OpCodes.Ldc_I4_0);
+				IL.Emit(OpCodes.Callvirt, pointerGetters1[i]);
+				IL.Emit(OpCodes.Stloc_S, srcPointer(i)); // srcPtrI = src.PointerI(i, false);
+			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void LocalDstNext(int j)
+			{
+				IL.Emit(OpCodes.Ldarg_1);
+				IL.Emit(OpCodes.Ldloc_S, loopJ());
+				IL.Emit(OpCodes.Ldc_I4_1);
+				IL.Emit(OpCodes.Callvirt, pointerGetters2[j]);
+				IL.Emit(OpCodes.Stloc_S, dstPointer(j)); // dstPtrI = dst.PointerI(j, true);
+			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void LocalSrcMove(int i)
+			{
+				IL.Emit(OpCodes.Ldloc_S, srcPointer(i));
+				IL.Emit(OpCodes.Ldloc_S, copied());
+				IL.Emit(OpCodes.Ldc_I8, 0L);
+				IL.Emit(OpCodes.Calli, pointerMove1[i]);
+				IL.Emit(OpCodes.Stloc_S, srcPointer(i)); // srcPtrI = srcPtrI.Move(copied);
+			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void LocalDstMove(int j)
+			{
+				IL.Emit(OpCodes.Ldloc_S, dstPointer(j));
+				IL.Emit(OpCodes.Ldloc_S, copied());
+				IL.Emit(OpCodes.Ldc_I8, 0L);
+				IL.Emit(OpCodes.Calli, pointerMove2[j]);
+				IL.Emit(OpCodes.Stloc_S, srcPointer(j)); // dstPtrJ = dstPtrJ.Move(copied);
+			}
+
+			IL.Emit(OpCodes.Ldc_I8, 0L);
+			IL.DeclareLocal(typeof(long));
+			IL.Emit(OpCodes.Stloc_S, copied()); // long copied = 0;
+			IL.Emit(OpCodes.Ldc_I8, 0L);
+			IL.DeclareLocal(typeof(long));
+			IL.Emit(OpCodes.Stloc_S, offsetSrc()); // long offsetSrc = 0;
+			IL.Emit(OpCodes.Ldc_I8, 0L);
+			IL.DeclareLocal(typeof(long));
+			IL.Emit(OpCodes.Stloc_S, offsetDst()); // long offsetDst = 0;
+			IL.Emit(OpCodes.Ldc_I8, 0L);
+			IL.DeclareLocal(typeof(long));
+			IL.Emit(OpCodes.Stloc_S, loopI()); // long i = 0;
+			IL.Emit(OpCodes.Ldc_I8, 0L);
+			IL.DeclareLocal(typeof(long));
+			IL.Emit(OpCodes.Stloc_S, loopJ()); // long j = 0;
+
+			for (int i = 0; i < pointerGetters1.Length; i++)
+			{
+				for (int j = 0; j < pointerGetters2.Length; j++)
+				{
+					IL.MarkLabel(branches[i, j]);
+					int type = (pointerGetters1[i].GetParameters().Length != 0 ? 0.SetBit(0) : 0) + (pointerGetters2[j].GetParameters().Length != 0 ? 0.SetBit(1) : 0);
+					IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
+					IL.Emit(OpCodes.Brfalse_S, branches[i + 1, j]); // if (sizeSrcPointerI == 0) goto P[I+1, J];
+					if (type.IsBitNotSet(0))
+					{	// if (sizeSrcPointerI != 1) throw;
+						IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
+						IL.Emit(OpCodes.Ldc_I8, 1L);
+						IL.Emit(OpCodes.Bne_Un_S, thr);
+					}
+					IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
+					IL.Emit(OpCodes.Brfalse_S, branches[i, j + 1]); // if (sizeSrcPointerJ == 0) goto P[I, J+1];
+					if (type.IsBitNotSet(1))
+					{   // if (sizeSrcPointerJ != 1) throw;
+						IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
+						IL.Emit(OpCodes.Ldc_I8, 1L);
+						IL.Emit(OpCodes.Bne_Un_S, thr);
+					}
+
+					IL.Emit(OpCodes.Ldarg_0);
+					if (type.IsBitNotSet(0))
+					{
+						IL.Emit(OpCodes.Callvirt, pointerGetters1[i]);
+					}
+					else
+					{
+						IL.Emit(OpCodes.Ldloc_S, loopI());
+						IL.Emit(OpCodes.Ldc_I4_0);
+						IL.Emit(OpCodes.Callvirt, pointerGetters1[i]);
+					}
+					IL.Emit(OpCodes.Ldloc_S, offsetSrc());
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Calli, pointerMove1[i]);
+					IL.Emit(OpCodes.Stloc_S, srcPointer(i)); // srcPtrI = src.PointerI(i, false).Move(offsetSrc);
+					IL.Emit(OpCodes.Ldarg_1);
+					if (type.IsBitNotSet(1))
+					{
+						IL.Emit(OpCodes.Callvirt, pointerGetters2[j]);
+					}
+					else
+					{
+						IL.Emit(OpCodes.Ldloc_S, loopJ());
+						IL.Emit(OpCodes.Ldc_I4_1);
+						IL.Emit(OpCodes.Callvirt, pointerGetters2[j]);
+					}
+					IL.Emit(OpCodes.Ldloc_S, offsetDst());
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Calli, pointerMove2[j]);
+					IL.Emit(OpCodes.Stloc_S, dstPointer(j)); // dstPtrJ = dst.PointerJ(j, true).Move(offsetDst);
+
+					Label srcMove = IL.DefineLabel(), dstMove = IL.DefineLabel();
+					Label loopStart = default, c1next = default, c2next = default, c3next = default, c1next1 = default, c1next2 = default;
+					if (type != 0)
+					{
+						loopStart = IL.DefineLabel(); c1next = IL.DefineLabel(); c2next = IL.DefineLabel(); c3next = IL.DefineLabel();
+						IL.MarkLabel(loopStart);
+					}
+
+					// while (true) {
+					IL.Emit(OpCodes.Ldloc_S, srcPointer(i));
+					IL.Emit(OpCodes.Ldloc_S, dstPointer(j));
+					IL.Emit(OpCodes.Call, pointerCopy[i, j]);
+					IL.Emit(OpCodes.Dup);
+					IL.Emit(OpCodes.Stloc_S, copied()); // copied = ApiSelector.MemoryCopy(srcPtrI, dstPtrJ);
+					IL.Emit(OpCodes.Ldloc_S, srcPointer(i));
+					IL.Emit(OpCodes.Calli, pointerLen1[i]);
+					IL.Emit(OpCodes.Bne_Un_S, srcMove);
+					IL.Emit(OpCodes.Ldloc_S, copied());
+					IL.Emit(OpCodes.Ldloc_S, dstPointer(j));
+					IL.Emit(OpCodes.Calli, pointerLen2[j]);
+					IL.Emit(OpCodes.Bne_Un_S, srcMove);
+					// if (copied == srcPtrI.LengthInBytes && copied == dstPtrJ.LengthInBytes) {
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Stloc_S, offsetSrc());
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Stloc_S, offsetDst()); // offsetSrc = offsetDst = 0;
+					switch (type)
+					{
+						case 0b00:
+							IL.Emit(OpCodes.Br_S, branches[i + 1, j + 1]); // goto P[I+1, J+1];
+							break;
+						case 0b01:
+							LocalIInc();
+							IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
+							IL.Emit(OpCodes.Blt_S, c1next); // if (++i >= sizeSrcPointerI) {
+							IL.Emit(OpCodes.Ldc_I8, 0L);
+							IL.Emit(OpCodes.Stloc_S, loopI()); // i = 0;
+							IL.Emit(OpCodes.Br_S, branches[i + 1, j + 1]);i = 0; // goto P[I+1, J+1]; }
+							IL.MarkLabel(c1next);
+							IL.Emit(OpCodes.Br_S, branches[i, j + 1]); // goto P[I, J+1];
+							break;
+						case 0b10:
+							LocalJInc();
+							IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
+							IL.Emit(OpCodes.Blt_S, c1next); // if (++j >= sizeDstPointerJ) {
+							IL.Emit(OpCodes.Ldc_I8, 0L);
+							IL.Emit(OpCodes.Stloc_S, loopJ()); // j = 0;
+							IL.Emit(OpCodes.Br_S, branches[i + 1, j + 1]); // goto P[I+1, J+1]; }
+							IL.MarkLabel(c1next);
+							IL.Emit(OpCodes.Br_S, branches[i + 1, j]); // goto P[I+1, J];
+							break;
+						case 0b11:
+							c1next1 = IL.DefineLabel(); c1next2 = IL.DefineLabel();
+							LocalIInc(false);
+							LocalJInc(false);
+							IL.Emit(OpCodes.Ldloc_S, loopI());
+							IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
+							IL.Emit(OpCodes.Bge_S, c1next);
+							IL.Emit(OpCodes.Ldloc_S, loopJ());
+							IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
+							IL.Emit(OpCodes.Bge_S, c1next); // if (++i < sizeSrcPointerI & ++j < sizeDstPointerJ) {
+							LocalSrcNext(i);
+							LocalDstNext(j);
+							IL.Emit(OpCodes.Br_S, loopStart); // continue; }
+							IL.MarkLabel(c1next);
+							IL.Emit(OpCodes.Ldloc_S, loopI());
+							IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
+							IL.Emit(OpCodes.Bge_S, c1next1); // else if (i < sizeSrcPointerI) {
+							IL.Emit(OpCodes.Ldc_I8, 0L);
+							IL.Emit(OpCodes.Stloc_S, loopJ()); // j = 0;
+							IL.Emit(OpCodes.Br_S, branches[i, j + 1]); // goto P[I, J+1]; }
+							IL.MarkLabel(c1next1);
+							IL.Emit(OpCodes.Ldloc_S, loopJ());
+							IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
+							IL.Emit(OpCodes.Blt_S, c1next2); // else if (j < sizeDstPointerJ) {
+							IL.Emit(OpCodes.Ldc_I8, 0L);
+							IL.Emit(OpCodes.Stloc_S, loopI()); // i = 0;
+							IL.Emit(OpCodes.Br_S, branches[i + 1, j]); // goto P[I+1, J]; }
+							IL.MarkLabel(c1next2); // else {
+							IL.Emit(OpCodes.Ldc_I8, 0L);
+							IL.Emit(OpCodes.Stloc_S, loopI());
+							IL.Emit(OpCodes.Ldc_I8, 0L);
+							IL.Emit(OpCodes.Stloc_S, loopJ()); // i = j = 0;
+							IL.Emit(OpCodes.Br_S, branches[i + 1, j + 1]); // goto P[I+1, J+1]; }
+							break;
+					}
+					// }
+					// else if (copied < srcPtrI.LengthInBytes) {
+					IL.MarkLabel(srcMove);
+					IL.Emit(OpCodes.Ldloc_S, copied());
+					IL.Emit(OpCodes.Ldloc_S, srcPointer(i));
+					IL.Emit(OpCodes.Calli, pointerLen1[i]);
+					IL.Emit(OpCodes.Blt_S, dstMove);
+					IL.Emit(OpCodes.Ldloc_S, offsetSrc());
+					IL.Emit(OpCodes.Ldloc_S, copied());
+					IL.Emit(OpCodes.Add);
+					IL.Emit(OpCodes.Stloc_S, offsetSrc()); // offsetSrc += copied;
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Stloc_S, offsetDst()); // offsetDst = 0; 
+					if (type.IsBitNotSet(1))
+					{
+						IL.Emit(OpCodes.Br_S, branches[i, j + 1]); // goto P[I, J+1];
+					}
+					else
+					{
+						LocalSrcMove(i);
+						LocalJInc();
+						IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
+						IL.Emit(OpCodes.Blt_S, c2next); // if (++j >= sizeDstPointerJ) {
+						IL.Emit(OpCodes.Ldc_I8, 0L);
+						IL.Emit(OpCodes.Stloc_S, loopJ()); // j = 0;
+						IL.Emit(OpCodes.Br_S, branches[i, j + 1]); // goto P[I, J+1]; }
+						IL.MarkLabel(c2next);
+						LocalDstNext(j);
+						IL.Emit(OpCodes.Br_S, loopStart); // continue;
+					}
+					// }
+					// else if (copied < dstPtrJ.LengthInBytes) {
+					IL.MarkLabel(dstMove);
+					IL.Emit(OpCodes.Ldloc_S, offsetDst());
+					IL.Emit(OpCodes.Ldloc_S, copied());
+					IL.Emit(OpCodes.Add);
+					IL.Emit(OpCodes.Stloc_S, offsetDst()); // offsetDst += copied;
+					IL.Emit(OpCodes.Ldc_I8, 0L);
+					IL.Emit(OpCodes.Stloc_S, offsetSrc()); // offsetSrc = 0;
+					if (type.IsBitNotSet(0))
+					{
+						IL.Emit(OpCodes.Br_S, branches[i + 1, j]); // goto P[I+1, J];
+					}
+					else
+					{
+						LocalDstMove(j);
+						LocalIInc();
+						IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
+						IL.Emit(OpCodes.Blt_S, c3next); // if (++i >= sizeSrcPointerI) {
+						IL.Emit(OpCodes.Ldc_I8, 0L);
+						IL.Emit(OpCodes.Stloc_S, loopI()); // i = 0;
+						IL.Emit(OpCodes.Br_S, branches[i + 1, j]); // goto P[I+1, J]; }
+						IL.MarkLabel(c3next);
+						LocalSrcNext(i);
+						IL.Emit(OpCodes.Br_S, loopStart); // continue;
+					}
+					// }
+					// } end while
+				}
+			}
+
+			IL.MarkLabel(ret);
+			IL.Emit(OpCodes.Ret);
+			IL.MarkLabel(thr);
+			IL.ThrowException(typeof(InvalidOperationException));
+
+			method.DefineParameter(1, ParameterAttributes.In, "source");
+			method.DefineParameter(2, ParameterAttributes.In, "destination");
 			return method.CreateDelegate<Action<TS1, TS2>>();
 		}
 		#endregion

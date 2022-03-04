@@ -159,6 +159,8 @@ namespace {ns.Name}
 					method = method.Update(newAttrs, method.Modifiers, retType, method.ExplicitInterfaceSpecifier, method.Identifier, typeParams, method.ParameterList.WithParameters(newParams), typeParamsConstrain, null, null, method.SemicolonToken);
 					string methodMain = method.ToString()
 											   .Replace(" abstract ", " static ")
+											   .Replace(" virtual ", " static ")
+											   .Replace("unsafe ", "")
 											   .Replace($"[{nameof(DuplicateTParameterAttribute).Replace("Attribute", "")}] ", "");
 					methodMain = Regex.Replace(methodMain, @"<T,([^ ])", @"<T, $1");
 					methodMain = Regex.Replace(methodMain, @"([^ ])where" , @"$1 where");
