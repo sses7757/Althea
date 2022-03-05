@@ -52,7 +52,7 @@ namespace Althea.SourceGenerator
 		public void Initialize(GeneratorInitializationContext context)
 		{
 #if DEBUG
-			////Debugger.Launch();
+			Debugger.Launch();
 #endif
 			// Register a factory that can create our custom syntax receiver
 			context.RegisterForSyntaxNotifications(() => new ApiClassSyntaxReceiver());
@@ -156,24 +156,32 @@ namespace {ns.Name}
 					var newParams = hasReturn ? allParams.Remove(returnParam) : allParams;
 					var typeParams = duplicateT ? orgTypeParams.WithParameters(default).AddParameters(typeT).AddParameters(orgTypeParams.Parameters.ToArray()) : orgTypeParams;
 					var typeParamsConstrain = duplicateT ? new SyntaxList<TypeParameterConstraintClauseSyntax>().Add(typeTConstraint).AddRange(method.ConstraintClauses) : method.ConstraintClauses;
-					method = method.Update(newAttrs, method.Modifiers, retType, method.ExplicitInterfaceSpecifier, method.Identifier, typeParams, method.ParameterList.WithParameters(newParams), typeParamsConstrain, null, null, method.SemicolonToken);
+					method = method.WithAttributeLists(newAttrs)
+								   .WithReturnType(retType)
+								   .WithTypeParameterList(typeParams)
+								   .WithConstraintClauses(typeParamsConstrain)
+								   .WithBody(null).WithExpressionBody(null);
 					string methodMain = method.ToString()
 											   .Replace(" abstract ", " static ")
 											   .Replace(" virtual ", " static ")
-											   .Replace("unsafe ", "")
-											   .Replace($"[{nameof(DuplicateTParameterAttribute).Replace("Attribute", "")}] ", "");
+											   .Replace("unsafe", "")
+											   .Replace(",T", ", T")
+											   .Replace(" ;", ";")
+											   .Replace($"[DuplicateTParameter] ", "");
 					methodMain = Regex.Replace(methodMain, @"<T,([^ ])", @"<T, $1");
 					methodMain = Regex.Replace(methodMain, @"([^ ])where" , @"$1 where");
-					methodMain = Regex.Replace(methodMain, @"\[\]\r\n?", "");
+					methodMain = Regex.Replace(methodMain, @"\[\]\r?\n", "");
+					if (methodMain.EndsWith(";"))
+						methodMain = methodMain.Substring(0, methodMain.Length - 1);
 					string newParamsInvoke = string.Join(", ", newParams.Select(p => duplicateT && p.HasAttribute(nameof(DuplicateTParameterAttribute)) ? $"{p.Identifier} * Unmanaged<T>.Size" : p.Identifier.ToString()));
 					if (duplicateT)
 					{
-						methodMain = Regex.Replace(methodMain, @" *;$", $" => {method.Identifier}{orgTypeParams}({newParamsInvoke})" + (returnParam.HasAttribute(nameof(DuplicateTParameterAttribute)) ? " * Unmanaged<T>.Size;" : ";"));
+						methodMain += $" => {method.Identifier}{orgTypeParams}({newParamsInvoke})" + (hasReturn && returnParam.HasAttribute(nameof(DuplicateTParameterAttribute)) ? " * Unmanaged<T>.Size;" : ";");
 					}
 					else if (hasReturn)
 					{
 						string allParamsInvoke = string.Join(", ", allParams.Select(p => p == returnParam ? $"out {p.Type} {p.Identifier}" : p.Identifier.ToString()));
-						methodMain = Regex.Replace(methodMain, @" *;$", $@"
+						string body = $@"
 		{{
 			foreach (var api in ApiEnumerable)
 			{{
@@ -181,12 +189,13 @@ namespace {ns.Name}
 					return {returnParam.Identifier};
 			}}
 			throw new InvalidOperationException(Backend.NotAvailable);
-		}}");
+		}}";
+						methodMain += body;
 					}
 					else
 					{
 						string allParamsInvoke = string.Join(", ", allParams.Select(p => p.Identifier));
-						methodMain = Regex.Replace(methodMain, @" *;$", $@"
+						string body = $@"
 		{{
 			foreach (var api in ApiEnumerable)
 			{{
@@ -194,7 +203,8 @@ namespace {ns.Name}
 					return;
 			}}
 			throw new InvalidOperationException(Backend.NotAvailable);
-		}}");
+		}}";
+						methodMain += body;
 					}
 					generated += methodMain + Environment.NewLine + Environment.NewLine;
 
@@ -230,7 +240,7 @@ namespace {ns.Name}
 			}
 			if (this.VoidReturnType is null && syntaxNode is MethodDeclarationSyntax mds && mds.ReturnType.ToString() == "void")
 			{
-				this.VoidReturnType = mds.ReturnType;
+				this.VoidReturnType = mds.ReturnType.WithoutAnnotations().WithoutLeadingTrivia().WithoutTrailingTrivia().WithoutTrivia();
 			}
 		}
 	}

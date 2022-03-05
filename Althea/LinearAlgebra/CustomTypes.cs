@@ -340,7 +340,7 @@ namespace Althea.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged, INumber<T>
 		{
-			bool isComplex = Const<T>.IsComplex;
+			bool isComplex = NativeType<T>.IsComplex;
 			bool symm = hermitian.HasValue && !hermitian.Value, herm = isComplex && hermitian.HasValue && hermitian.Value;
 			switch (input)
 			{
@@ -381,41 +381,27 @@ namespace Althea.LinearAlgebra
 	/// </summary>
 	public readonly ref struct MatrixSliceWrapper
 	{
-		private readonly long offsetRow, countRow, offsetCol, countCol;
-
 		/// <summary>
 		/// Get the starting offset of the row to take
 		/// </summary>
-		public long OffsetRow {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.offsetRow;
-		}
+		public long OffsetRow { get; }
 		/// <summary>
 		/// Get the starting offset of the column to take
 		/// </summary>
-		public long OffsetCol {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.offsetCol;
-		}
+		public long OffsetCol { get; }
 		/// <summary>
 		/// Get the number of the rows to take
 		/// </summary>
-		public long CountRow {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.countRow;
-		}
+		public long CountRow { get; }
 		/// <summary>
 		/// Get the number of the rows to take
 		/// </summary>
-		public long CountCol {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.countCol;
-		}
+		public long CountCol { get; }
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private MatrixSliceWrapper(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
-			this.offsetRow = offsetRow; this.countRow = countRow; this.offsetCol = offsetCol; this.countCol = countCol;
+			this.OffsetRow = offsetRow; this.CountRow = countRow; this.OffsetCol = offsetCol; this.CountCol = countCol;
 		}
 
 		/// <summary>
