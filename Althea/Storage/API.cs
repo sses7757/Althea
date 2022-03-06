@@ -67,6 +67,21 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TP1">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
+		/// <typeparam name="TP2">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
+		/// <param name="source">The source pointer to copy from</param>
+		/// <param name="destination">The destination pointer to copy into</param>
+		/// <param name="actualCopied">Output the number of <typeparamref name="T"/>s that is actually copied</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in <typeparamref name="T"/></remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
+		[AbstractApiMethod]
+		public abstract bool MemoryCopy<T, TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
+
+		/// <summary>
+		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.
+		/// </summary>
 		/// <typeparam name="TP1">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
 		/// <typeparam name="TP2">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
 		/// <param name="source">The source pointer to copy from</param>
@@ -75,8 +90,8 @@ namespace Althea.Storage
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		[AbstractApiMethod(true)]
-		public abstract bool MemoryCopy<TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, [DuplicateTParameter] out long actualCopied) where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
+		[AbstractApiMethod]
+		public virtual bool MemoryCopy<TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied) where TP1 : IPointer<TP1> where TP2 : IPointer<TP2> => this.MemoryCopy<byte, TP1, TP2>(source, destination, out actualCopied);
 		#endregion
 
 		#region storage and managed operations

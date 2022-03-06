@@ -14,6 +14,9 @@ using Microsoft.CodeAnalysis.Text;
 namespace Althea.SourceGenerator
 {
 	#region marking attributes
+	/// <summary>
+	/// Tells the source generator that the marked class is a runtime API class
+	/// </summary>
 	[System.AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 	public sealed class AbstractRuntimeApiAttribute : Attribute
 	{
@@ -21,6 +24,9 @@ namespace Althea.SourceGenerator
 		{ }
 	}
 
+	/// <summary>
+	/// Tells the source generator that the marked method is a runtime API method
+	/// </summary>
 	[System.AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 	public sealed class AbstractApiMethodAttribute : Attribute
 	{
@@ -28,6 +34,9 @@ namespace Althea.SourceGenerator
 		{ }
 	}
 
+	/// <summary>
+	/// Tells the source generator that the marked parameter shall multiply <c>sizeof(T)</c> when a new API selector method with additional number generic parameter <c>T</c>
+	/// </summary>
 	[System.AttributeUsage(AttributeTargets.Parameter, Inherited = false, AllowMultiple = false)]
 	public sealed class DuplicateTParameterAttribute : Attribute
 	{
@@ -164,7 +173,7 @@ namespace {ns.Name}
 					string methodMain = method.ToString()
 											   .Replace(" abstract ", " static ")
 											   .Replace(" virtual ", " static ")
-											   .Replace("unsafe", "")
+											   .Replace("unsafe ", "")
 											   .Replace(",T", ", T")
 											   .Replace(" ;", ";")
 											   .Replace($"[DuplicateTParameter] ", "");
@@ -240,7 +249,7 @@ namespace {ns.Name}
 			}
 			if (this.VoidReturnType is null && syntaxNode is MethodDeclarationSyntax mds && mds.ReturnType.ToString() == "void")
 			{
-				this.VoidReturnType = mds.ReturnType.WithoutAnnotations().WithoutLeadingTrivia().WithoutTrailingTrivia().WithoutTrivia();
+				this.VoidReturnType = mds.ReturnType.WithoutAnnotations().WithoutLeadingTrivia();
 			}
 		}
 	}
