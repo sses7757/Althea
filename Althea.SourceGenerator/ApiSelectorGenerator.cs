@@ -167,6 +167,7 @@ namespace {ns.Name}
 					var typeParamsConstrain = duplicateT ? new SyntaxList<TypeParameterConstraintClauseSyntax>().Add(typeTConstraint).AddRange(method.ConstraintClauses) : method.ConstraintClauses;
 					method = method.WithAttributeLists(newAttrs)
 								   .WithReturnType(retType)
+								   .WithParameterList(method.ParameterList.WithParameters(newParams))
 								   .WithTypeParameterList(typeParams)
 								   .WithConstraintClauses(typeParamsConstrain)
 								   .WithBody(null).WithExpressionBody(null);

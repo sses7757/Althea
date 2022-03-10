@@ -447,6 +447,7 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		public bool OverlapWith(CachedStorage<T, TS, TPh, TPl> other) => this.Memory.OverlapWith(other.Memory);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static CachedStorage<T, TS, TPh, TPl> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as CachedStorage<TOut, TS, TPh, TPl> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();

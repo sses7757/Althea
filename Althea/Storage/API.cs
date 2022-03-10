@@ -760,7 +760,7 @@ namespace Althea.Storage
 			((Action<TS, byte>)filler).Invoke(storage, value);
 		}
 
-		private static readonly Dictionary<RuntimeTypeHandle, Delegate> fillTFunc = new();
+		private static readonly Dictionary<RuntimeTypeHandle, Delegate> fillFunc = new();
 
 		/// <summary>
 		/// Fill the given <paramref name="storage"/> with given <paramref name="value"/> <typeparamref name="T"/> by <typeparamref name="T"/>.
@@ -768,24 +768,24 @@ namespace Althea.Storage
 		/// <typeparam name="T">The data type of <typeparamref name="TS"/></typeparam>
 		/// <typeparam name="TS">The storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="storage">The storage to be filled with <paramref name="value"/></param>
-		/// <param name="value">The byte value to fill</param>
+		/// <param name="value">The value to fill</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
 		public static unsafe void FillWith<T, TS>(this TS storage, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
-			if (sizeof(T) == sizeof(byte) || new ReadOnlySpan<byte>(&value, sizeof(T)).AllSame())
+			if (value == T.Zero || new ReadOnlySpan<byte>(&value, sizeof(T)).AllSame())
 			{
-				FillWith(storage, *(byte*)&value);
+				storage.FillWith(*(byte*)&value);
 				return;
 			}
 
 			var handle = typeof(TS).TypeHandle;
-			if (fillTFunc.TryGetValue(handle, out var filler))
+			if (fillFunc.TryGetValue(handle, out var filler))
 				goto FINAL;
 			filler = GetFillMethod<TS, T>();
-			fillTFunc[handle] = filler;
+			fillFunc[handle] = filler;
 		FINAL:
 			((Action<TS, T>)filler).Invoke(storage, value);
 		}
@@ -793,16 +793,17 @@ namespace Althea.Storage
 		private static readonly Dictionary<(RuntimeTypeHandle, RuntimeTypeHandle), Delegate> copyByteFunc = new();
 
 		/// <summary>
-		/// Copy the data from <paramref name="source"/> storage to <paramref name="destination"/> storage with copy length as the maximum of both <see cref="IStorage.LengthInBytes"/>.
+		/// Copy the data from <paramref name="source"/> storage to <paramref name="destination"/> storage with copy length as the maximum of both <see cref="IStorage{T, TSelf}.Length"/>.
 		/// </summary>
-		/// <typeparam name="TS1">The source storage class that implements <see cref="IStorage"/></typeparam>
-		/// <typeparam name="TS2">The destination storage class that implements <see cref="IStorage"/></typeparam>
+		/// <typeparam name="T">The data type of <typeparamref name="TS1"/> and <typeparamref name="TS2"/></typeparam>
+		/// <typeparam name="TS1">The source storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The destination storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="source">The source storage</param>
 		/// <param name="destination">The destination storage</param>
-		/// <returns>Actual length in bytes copied.</returns>
+		/// <returns>Actual length in <typeparamref name="T"/> copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
-		public static long CopyTo<TS1, TS2>(this TS1 source, TS2 destination) where TS1 : class, IStorage where TS2 : class, IStorage
+		public static long CopyTo<T, TS1, TS2>(this TS1 source, TS2 destination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -817,7 +818,7 @@ namespace Althea.Storage
 			copier = GetCopyMethod<TS1, TS2>();
 			copyByteFunc[(handle1, handle2)] = copier;
 		FINAL:
-			long copyLen = Math.Min(source.LengthInBytes, destination.LengthInBytes);
+			long copyLen = Math.Min(source.Length, destination.Length);
 			((Action<TS1, TS2>)copier).Invoke(source, destination);
 			return copyLen;
 		}

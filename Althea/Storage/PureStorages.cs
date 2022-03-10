@@ -133,6 +133,7 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		public bool OverlapWith(PureStorage<T, TP> other) => this.Pointer.OverlapWith(other.Pointer);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as PureStorage<TOut, TP> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();

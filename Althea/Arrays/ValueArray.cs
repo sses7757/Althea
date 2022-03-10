@@ -5,448 +5,66 @@ using System.Runtime.CompilerServices;
 using Althea.Helpers;
 using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.TensorAlgebra.Dense;
+using Althea.Storage;
 
-using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
-using MEM = Althea.Storage.AbstractApi;
-using TAD = Althea.TensorAlgebra.Dense.AbstractApi;
+using LAD = Althea.LinearAlgebra.Dense.ApiSelector;
+using MEM = Althea.Storage.ApiSelector;
 
 
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract array class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse array that inherits <see cref="ValueArray{T}"/>, but they shall be immutable.
+	/// The abstract interface whose only value storage is of type <typeparamref name="TS"/> while there may be other index storage(s).
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TS">The storage type used by the value <see cref="Storage"/></typeparam>
+	/// <typeparam name="TSelf">The concrete type that implements this <see cref="ISingleValueStorageArray{T, TS, TSelf}"/></typeparam>
 	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
-	public abstract class ValueArray<T> : AbstractArray<T>, ICheckValid, IMainPropertyFormattable where T : unmanaged, INumber<T>
+	public interface ISingleValueStorageArray<T, TS, TSelf> : ICheckValid, IDisposable, IMainPropertyFormattable<TSelf>
+		where T : unmanaged, INumber<T>
+		where TS : class, IStorage<T, TS>
+		where TSelf : class, ISingleValueStorageArray<T, TS, TSelf>
 	{
-		#region properties
-		private readonly Storage<T> m_orginalStorage;
+		#region basic
+		/// <summary>
+		/// When implemented by a derived class, get the original storage of this array. This is only used for disposition.
+		/// </summary>
+		protected TS OriginalStorage { get; }
 
 		/// <summary>
-		/// Get the raw storage of this array
+		/// Get the referenced value array storage of this array.
 		/// </summary>
-		public Storage<T> Storage { get; }
+		public TS Storage => OriginalStorage.MakeReference();
 
 		/// <summary>
-		/// When implemented by a derived class, get the total number of the visible values in memory, in <typeparamref name="T"/> rather than bytes. The default implementation simply returns <see cref="Storage"/>.<see cref="Storage{T}.Length">Length</see>.
+		/// Get the total number of the visible values in memory in <typeparamref name="T"/>. The default implementation simply returns <see cref="Storage"/>.<see cref="IStorage{T, TSelf}.Length">Length</see>.
 		/// </summary>
-		public virtual long ActualLength {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.Storage.Length;
-		}
+		public virtual long ActualLength => this.OriginalStorage.Length;
 
-		/// <summary>
-		/// When implemented by a derived class, check whether this array is a valid one or not. The default implementation only checks <see cref="AbstractArray{T}.Length"/> and <see cref="Storage"/>.
-		/// </summary>
-		/// <returns>The validness of this array</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public virtual bool IsValid() => this.Length > 0 && this.Storage is not null && this.Storage.IsValid();
-		#endregion
-
-		#region initialize and destroy
-		/// <summary>
-		/// Create a new <see cref="ValueArray{T}"/> using preallocated <paramref name="storage"/> and given <paramref name="length"/>
-		/// </summary>
-		/// <param name="storage">The preallocated <see cref="Storage{T}"/> (can be a <see cref="ReferenceStorage{T}"/>) as the underlying <see cref="Storage"/> of this array</param>
-		/// <param name="length">The total appearance length of this array as a <see cref="long"/>, 0 means an empty array</param>
-		/// <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="storage"/></param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> is negative</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="actualLength"/> is out of the length range of <paramref name="storage"/></exception>
-		protected ValueArray(Storage<T> storage, long length, long actualLength = 0) : base(length)
+		void IDisposable.Dispose()
 		{
-			if (length == 0)
-			{
-				this.m_orginalStorage = this.Storage = Storage<T>.Empty;
-				return;
-			}
-			// checks
-			if (storage is null || !storage.IsValid())
-				throw new ArgumentNullException(nameof(storage));
-			if (actualLength == 0)
-				actualLength = storage.Length;
-			if (actualLength < 0)
-				throw new ArgumentOutOfRangeException(nameof(actualLength), actualLength, Resources.Parameter.CannotNegative);
-			if (actualLength > storage.Length)
-				throw new ArgumentOutOfRangeException(nameof(actualLength), actualLength, Resources.Parameter.InvalidValue);
-			if (actualLength > this.Length)
-				throw new ArgumentOutOfRangeException(nameof(actualLength), actualLength, Resources.Parameter.WrongSize);
-
-			this.Storage = storage.MakeReference(newLength: actualLength);
-			this.m_orginalStorage = storage;
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, actually the dispose this array. The default implementation only disposes <see cref="Storage"/>
-		/// </summary>
-		/// <param name="disposing">Dispose managed resources or not</param>
-		protected override void Dispose(bool disposing)
-		{
-			if (this.Disposed || this.Length == 0 || this.Storage is null)
+			if (this.OriginalStorage is null)
 			{
 				return;
 			}
-			this.m_orginalStorage.Dispose();
+			this.OriginalStorage.Dispose();
+			GC.SuppressFinalize(this);
 		}
 		#endregion
 
-		#region concrete operation helpers
-		#region matrix case
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ApplyToColumns<TVal>(long rows, long cols, long ld, Action<Storage<T>, TVal> action, TVal value)
-		{
-			var storage = this.Storage;
-			for (long i = 0; i < cols; i++)
-			{
-				var column = storage.MakeReference(i * ld, newLength: rows);
-				action.Invoke(column, value);
-			}
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TRet ApplyToColumns<TRet>(long rows, long cols, long ld, Func<Storage<T>, TRet> function, Func<TRet, TRet, TRet> aggregator, TRet init)
-		{
-			var storage = this.Storage;
-			for (long i = 0; i < cols; i++)
-			{
-				var column = storage.MakeReference(i * ld, newLength: rows);
-				TRet here = function.Invoke(column);
-				init = aggregator.Invoke(init, here);
-			}
-			return init;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ApplyToColumns<TVal>(long rows, long cols, long ld, Action<Storage<T>, int, TVal> stridedAction, TVal value)
-		{
-			var storage = this.Storage;
-			for (long i = 0; i < cols; i++)
-			{
-				var column = storage.MakeReference(i * ld, newLength: rows);
-				stridedAction.Invoke(column, 1, value);
-			}
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TRet ApplyToColumns<TRet>(long rows, long cols, long ld, Func<Storage<T>, int, TRet> stridedFunction, Func<TRet, TRet, TRet> aggregator, TRet init)
-		{
-			var storage = this.Storage;
-			for (long i = 0; i < cols; i++)
-			{
-				var column = storage.MakeReference(i * ld, newLength: rows);
-				TRet here = stridedFunction.Invoke(column, 1);
-				init = aggregator.Invoke(init, here);
-			}
-			return init;
-		}
-		#endregion
-
-		#region general case
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static long IncreasePos(ReadOnlySpan<long> jaggedSize, ReadOnlySpan<long> sizeProd, Span<long> position, int maxPosRankInd)
-		{
-			long offset = 0;
-			position[0]++;
-			for (int i = 0; i < maxPosRankInd; i++)
-			{
-				if (position[i] == jaggedSize[i + 1])
-				{
-					position[i] = 0;
-					position[i + 1]++;
-				}
-				offset += position[i] * sizeProd[i];
-			}
-			offset += position[maxPosRankInd] * sizeProd[maxPosRankInd];
-			return offset;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ApplyToFirstDims<TVal>(Span<long> jaggedSize, Span<long> jaggedOuterSize, Action<Storage<T>, TVal> action, TVal value)
-		{
-			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
-			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
-			var sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
-			Span<long> position = stackalloc long[maxPosRankInd + 1];
-			long offset = 0;
-			while (true)
-			{
-				// action
-				action.Invoke(storage.MakeReference(offset, firstDimSize), value);
-				// increase position and offset
-				offset = IncreasePos(jaggedSize, sizeProd, position, maxPosRankInd);
-				if (offset >= maxLength)
-					break;
-			}
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TRet ApplyToFirstDims<TRet>(Span<long> jaggedSize, Span<long> jaggedOuterSize, Func<Storage<T>, TRet> function, Func<TRet, TRet, TRet> aggregator, TRet init)
-		{
-			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
-			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
-			var sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
-			Span<long> position = stackalloc long[maxPosRankInd + 1];
-			long offset = 0;
-			while (true)
-			{
-				// function
-				TRet now = function.Invoke(storage.MakeReference(offset, firstDimSize));
-				init = aggregator(init, now);
-				// increase position and offset
-				offset = IncreasePos(jaggedSize, sizeProd, position, maxPosRankInd);
-				if (offset >= maxLength)
-					break;
-			}
-			return init;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ApplyToFirstDims<TVal>(Span<long> jaggedSize, Span<long> jaggedOuterSize, Action<Storage<T>, int, TVal> stridedAction, TVal value)
-		{
-			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
-			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
-			var sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
-			Span<long> position = stackalloc long[maxPosRankInd + 1];
-			long offset = 0;
-			while (true)
-			{
-				// action
-				stridedAction.Invoke(storage.MakeReference(offset, firstDimSize), 1, value);
-				// increase position and offset
-				offset = IncreasePos(jaggedSize, sizeProd, position, maxPosRankInd);
-				if (offset >= maxLength)
-					break;
-			}
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TRet ApplyToFirstDims<TRet>(Span<long> jaggedSize, Span<long> jaggedOuterSize, Func<Storage<T>, int, TRet> stridedFunction, Func<TRet, TRet, TRet> aggregator, TRet init)
-		{
-			var storage = this.Storage; int rank = jaggedSize.Length, maxPosRankInd = rank - 2;
-			long maxLength = storage.Length, firstDimSize = jaggedSize[0];
-			var sizeProd = jaggedOuterSize.AccumulateProd(stackalloc long[rank], inclusive: false);
-			Span<long> position = stackalloc long[maxPosRankInd + 1];
-			long offset = 0;
-			while (true)
-			{
-				// function
-				TRet now = stridedFunction.Invoke(storage.MakeReference(offset, firstDimSize), 1);
-				init = aggregator(init, now);
-				// increase position and offset
-				offset = IncreasePos(jaggedSize, sizeProd, position, maxPosRankInd);
-				if (offset >= maxLength)
-					break;
-			}
-			return init;
-		}
-		#endregion
-
-		#region judge
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int GetJagged(IPitchedArray<T> pitched, int orgRank, ref Span<long> jaggedSize, ref Span<long> jaggedOuterSize, ref Span<long> jaggedStrides)
-		{
-			var orgSize = pitched.Size; var orgOuterSize = pitched.OuterSize; var strides = pitched.Strides;
-			jaggedSize[0] = jaggedOuterSize[0] = jaggedStrides[0] = 1;
-			int rank = 0;
-			for (int i = 0; i < orgRank; i++)
-			{
-				if (orgSize[i] == orgOuterSize[i])
-				{
-					jaggedSize[rank] *= orgSize[i];
-					jaggedOuterSize[rank] *= orgSize[i];
-					jaggedStrides[rank] *= orgSize[i];
-				}
-				else
-				{
-					jaggedSize[rank] *= orgSize[i];
-					jaggedOuterSize[rank] *= orgOuterSize[i];
-					jaggedStrides[rank] *= orgOuterSize[i];
-					if (++rank == orgRank)
-						break;
-					jaggedSize[rank] = jaggedOuterSize[rank] = 1;
-					// do not reset strides
-				}
-			}
-			jaggedSize = jaggedSize[..rank]; jaggedOuterSize = jaggedOuterSize[..rank]; jaggedStrides = jaggedStrides[..rank];
-			return rank;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EditPitchedInPlace<TVal>(IPitchedArray<T> pitched, Action<Storage<T>, TVal> action, TVal value, bool copyFirst = true)
-		{
-			// get jagged size
-			int orgRank = this.Rank;
-			Span<long> jaggedSize = stackalloc long[orgRank];
-			Span<long> jaggedOuterSize = stackalloc long[orgRank];
-			Span<long> jaggedStrides = stackalloc long[orgRank];
-			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize, ref jaggedStrides);
-			// switch different cases
-			if (jaggedSize[1..].Prod() <= 1000)
-			{   // The estimate overhead of one API call is around 1 microsecond
-				// Typically, we do not want a total overhead larger than 1 millisecond
-				if (rank == 2)
-					this.ApplyToColumns(jaggedSize[0], jaggedSize[1], jaggedOuterSize[0], action, value);
-				else
-					this.ApplyToFirstDims(jaggedSize, jaggedOuterSize, action, value);
-			}
-			else
-			{   // tensor algebra API fill and copy
-				Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
-				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize),
-									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides);
-				if (copyFirst)
-					TAD.Permute(thisWrapper, tempWrapper, identityPerm);
-				// edit the temp array
-				action.Invoke(temp, value);
-				// copy to this pitched array
-				TAD.Permute(tempWrapper, thisWrapper, identityPerm);
-			}
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EditPitchedInPlace<TVal>(IPitchedArray<T> pitched, Action<Storage<T>, int, TVal> stridedAction, TVal value)
-		{
-			// get jagged size
-			int orgRank = this.Rank;
-			Span<long> jaggedSize = stackalloc long[orgRank];
-			Span<long> jaggedOuterSize = stackalloc long[orgRank];
-			Span<long> jaggedStrides = stackalloc long[orgRank];
-			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize, ref jaggedStrides);
-			// switch different cases
-			if (jaggedSize[0] == 1 && rank == 2)
-			{   // linear algebra API with given vector stride
-				stridedAction.Invoke(this.Storage, checked((int)jaggedOuterSize[0]), value);
-			}
-			else if (jaggedSize[1..].Prod() <= 1000)
-			{   // The estimate overhead of one API call is around 1 microsecond
-				// Typically, we do not want a total overhead larger than 1 millisecond
-				if (rank == 2)
-					this.ApplyToColumns(jaggedSize[0], jaggedSize[1], jaggedOuterSize[0], stridedAction, value);
-				else
-					this.ApplyToFirstDims(jaggedSize, jaggedOuterSize, stridedAction, value);
-			}
-			else
-			{   // tensor algebra API fill and copy
-				Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
-				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize),
-									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides);
-				TAD.Permute(thisWrapper, tempWrapper, identityPerm);
-				// edit the temp array
-				stridedAction.Invoke(temp, 1, value);
-				// copy to this pitched array
-				TAD.Permute(tempWrapper, thisWrapper, identityPerm);
-			}
-		}
-
-		private enum CanUseTensorOp
-		{
-			AddScalar,
-			MultiplyScalar,
-			Conjugate
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void EditPitchedInPlace<TVal>(IPitchedArray<T> pitched, Action<Storage<T>, int, TVal> stridedAction, TVal value, CanUseTensorOp op)
-		{
-			// get jagged size
-			int orgRank = this.Rank;
-			Span<long> jaggedSize = stackalloc long[orgRank];
-			Span<long> jaggedOuterSize = stackalloc long[orgRank];
-			Span<long> jaggedStrides = stackalloc long[orgRank];
-			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize, ref jaggedStrides);
-			// switch different cases
-			if (jaggedSize[0] == 1 && rank == 2)
-			{   // linear algebra API with given vector stride
-				stridedAction.Invoke(this.Storage, checked((int)jaggedOuterSize[0]), value);
-			}
-			else if (jaggedSize[1..].Prod() <= 1000)
-			{   // The estimate overhead of one API call is around 1 microsecond
-				// Typically, we do not want a total overhead larger than 1 millisecond
-				if (rank == 2)
-					this.ApplyToColumns(jaggedSize[0], jaggedSize[1], jaggedOuterSize[0], stridedAction, value);
-				else
-					this.ApplyToFirstDims(jaggedSize, jaggedOuterSize, stridedAction, value);
-			}
-			else
-			{   // tensor algebra API fill and copy
-				Span<int> identityPerm = stackalloc int[rank].FillWithRange(0);
-				if (op == CanUseTensorOp.AddScalar && value is T v1)
-				{
-					using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-					// fill with scalar
-					MEM.FillWithValue(temp, v1);
-					// add to this
-					DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize),
-										  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides);
-					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, tempWrapper, identityPerm, thisWrapper, identityPerm, thisWrapper);
-				}
-				else if (op == CanUseTensorOp.MultiplyScalar && value is T v2)
-				{
-					DenseTensorWrapper<T> thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides, scalar: v2);
-					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, thisWrapper, identityPerm, default, default, thisWrapper);
-				}
-				else if (op == CanUseTensorOp.Conjugate)
-				{
-					DenseTensorWrapper<T> thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides, TensorAlgebra.UnaryOperation.Conjugate);
-					TAD.OperationBinary(TensorAlgebra.BinaryOperation.Addition, thisWrapper, identityPerm, default, default, thisWrapper);
-				}
-				else
-					throw new ArgumentOutOfRangeException(nameof(op), op, Resources.Parameter.InvalidValue);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private TRet AggregatePitched<TRet>(IPitchedArray<T> pitched, Func<Storage<T>, int, TRet> stridedFunction, Func<TRet, TRet, TRet> aggregator, TRet init)
-		{
-			// get jagged size
-			int orgRank = this.Rank;
-			Span<long> jaggedSize = stackalloc long[orgRank];
-			Span<long> jaggedOuterSize = stackalloc long[orgRank];
-			Span<long> jaggedStrides = stackalloc long[orgRank];
-			int rank = GetJagged(pitched, orgRank, ref jaggedSize, ref jaggedOuterSize, ref jaggedStrides);
-			// switch different cases
-			if (jaggedSize[0] == 1 && rank == 2)
-			{   // linear algebra API with given vector stride
-				return aggregator.Invoke(init, stridedFunction.Invoke(this.Storage, checked((int)jaggedOuterSize[0])));
-			}
-			else if (jaggedSize[1..].Prod() <= 1000)
-			{   // The estimate overhead of one API call is around 1 microsecond
-				// Typically, we do not want a total overhead larger than 1 millisecond
-				if (rank == 2)
-					return this.ApplyToColumns(jaggedSize[0], jaggedSize[1], jaggedOuterSize[0], stridedFunction, aggregator, init);
-				else
-					return this.ApplyToFirstDims(jaggedSize, jaggedOuterSize, stridedFunction, aggregator, init);
-			}
-			else
-			{   // tensor algebra API fill and copy
-				using var temp = Storage<T>.Create(this.Storage[0].Location, jaggedSize.Prod());
-				// copy the temp array
-				DenseTensorWrapper<T> tempWrapper = new(temp, jaggedSize),
-									  thisWrapper = new(this.Storage, jaggedSize, jaggedOuterSize, jaggedStrides);
-				TAD.Permute(thisWrapper, tempWrapper, stackalloc int[rank].FillWithRange(0));
-				// aggregate on temp array
-				return aggregator.Invoke(init, stridedFunction.Invoke(temp, 1));
-			}
-		}
-		#endregion
-		#endregion
-
-		#region point-wise concrete operations
+		#region static
 		/// <summary>
-		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="MEM.FillWithValue{T}(Storage{T}, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, statically get an empty array of type <typeparamref name="TSelf"/>.
 		/// </summary>
-		/// <param name="value">The value as <typeparamref name="T"/> to fill</param>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual void FillWith(T value)
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				MEM.FillWithValue(this.Storage, value);
-				if (this is ISparseArray<T> sparse)
-				{
-					sparse.DefaultValue = value;
-				}
-			}
-			else
-			{
-				this.EditPitchedInPlace(pitched, MEM.FillWithValue, value, copyFirst: false);
-			}
-		}
+		public abstract static TSelf Empty { get; }
+		#endregion
+
+		#region point-wise operations
+		/// <summary>
+		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes simply fills <see cref="Storage"/>.
+		/// </summary>
+		/// <param name="value">The value as a <typeparamref name="T"/> to fill</param>
+		public virtual unsafe void FillWith(T value) => this.Storage.FillWith(value);
 
 		/// <summary>
 		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.PointWiseAddScalar{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.

@@ -153,7 +153,7 @@ namespace Althea.Storage
 			var storage = TSelf.CreateAlike<T, TSelf>((TSelf)this);
 			try
 			{
-				((TSelf)this).CopyTo(storage);
+				((TSelf)this).CopyTo<T, TSelf, TSelf>(storage);
 				return storage;
 			}
 			catch (System.Exception)

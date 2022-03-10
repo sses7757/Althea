@@ -168,7 +168,8 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
 		public bool OverlapWith(MixedStorage<T, TP1, TP2> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2);
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as MixedStorage<TOut, TP1, TP2> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
@@ -556,7 +557,8 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
 		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3);
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as MixedStorage<TOut, TP1, TP2, TP3> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
@@ -969,7 +971,8 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
 		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4);
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
@@ -1407,7 +1410,8 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
 		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5);
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
@@ -1870,7 +1874,8 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
 		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6);
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
@@ -2358,7 +2363,8 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
 		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7);
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
@@ -2871,7 +2877,8 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
 		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7) || this.Pointer8.OverlapWith(other.Pointer8);
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
@@ -3409,7 +3416,8 @@ namespace Althea.Storage
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
 		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7) || this.Pointer8.OverlapWith(other.Pointer8) || this.Pointer9.OverlapWith(other.Pointer9);
-
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.RefFrom<TOut, TOther>(TOther storage)
 		{
 			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
