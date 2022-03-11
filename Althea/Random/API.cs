@@ -261,7 +261,7 @@ namespace Althea.Random
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
-		protected abstract bool FillWithRandom_<T>(Storage<T> storage, IRandomDistribution distribution) where T : unmanaged, INumber<T>;
+		protected abstract bool FillWithRandom<T>(Storage<T> storage, IRandomDistribution distribution) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, fill the given <paramref name="storage1"/> and <paramref name="storage2"/> with random numbers generated from the given <paramref name="distribution"/>
@@ -274,7 +274,7 @@ namespace Althea.Random
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="distribution"/> is not of rank-2 or its data types are not <typeparamref name="T1"/> and <typeparamref name="T2"/></exception>
-		protected abstract bool FillWithRandom_<T1, T2>(Storage<T1> storage1, Storage<T2> storage2, IRandomDistribution distribution)
+		protected abstract bool FillWithRandom<T1, T2>(Storage<T1> storage1, Storage<T2> storage2, IRandomDistribution distribution)
 			where T1 : unmanaged
 			where T2 : unmanaged;
 
@@ -291,7 +291,7 @@ namespace Althea.Random
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage1"/> or <paramref name="storage2"/> or <paramref name="storage3"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="distribution"/> is not of rank-3 or its data types are not <typeparamref name="T1"/>, <typeparamref name="T2"/> and <typeparamref name="T3"/></exception>
-		protected abstract bool FillWithRandom_<T1, T2, T3>(Storage<T1> storage1, Storage<T2> storage2, Storage<T3> storage3, IRandomDistribution distribution)
+		protected abstract bool FillWithRandom<T1, T2, T3>(Storage<T1> storage1, Storage<T2> storage2, Storage<T3> storage3, IRandomDistribution distribution)
 			where T1 : unmanaged
 			where T2 : unmanaged
 			where T3 : unmanaged;

@@ -612,7 +612,7 @@ namespace Althea.Helpers
 					throw new FormatException(Support.Format);
 				str = str[numberStrWidth..];
 				mid.CopyTo(str); str = str[mid.Length..];
-				if (!GetNumberString(values[i], str, out numberStrWidth, provider, precision))
+				if (!GetNumberString(values[i], str, out _, provider, precision))
 					throw new FormatException(Support.Format);
 				pos.CopyTo(str); str = str[pos.Length..];
 			}
@@ -626,7 +626,7 @@ namespace Althea.Helpers
 		/// <param name="matrix">The column-major values of the dense matrix to print</param>
 		/// <param name="rows">The number of rows of the given matrix</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
+		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
 		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
@@ -647,7 +647,7 @@ namespace Althea.Helpers
 		/// <param name="matrix">The column-major values of the dense matrix to print</param>
 		/// <param name="rows">The number of rows of the given matrix</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, less than 1 means no more elements</param>
+		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
 		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
@@ -747,7 +747,7 @@ namespace Althea.Helpers
 					throw new FormatException(Support.Format);
 				str = str[numberStrWidth..];
 				mid.CopyTo(str); str = str[mid.Length..];
-				if (!GetNumberString(values[i], str, out numberStrWidth, provider, precision))
+				if (!GetNumberString(values[i], str, out _, provider, precision))
 					throw new FormatException(Support.Format);
 				pos.CopyTo(str); str = str[pos.Length..];
 			}
@@ -776,33 +776,6 @@ namespace Althea.Helpers
 			catch (System.Exception)
 			{
 				(clone as IDisposable)?.Dispose();
-				throw;
-			}
-		}
-
-		/// <summary>
-		/// Safely apply <paramref name="action"/> to a new array alike <paramref name="array"/>. When <paramref name="action"/> throws error, the new array will be safely disposed.
-		/// </summary>
-		/// <typeparam name="TArr">The array that is <see cref="Arrays.ValueArray{T}"/></typeparam>
-		/// <typeparam name="T">The data type used by <typeparamref name="TArr"/></typeparam>
-		/// <param name="array">The array to be acted by <paramref name="action"/></param>
-		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
-		/// <returns>The new array alike <paramref name="array"/> after applying <paramref name="action"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static TArr ApplyToAlike<TArr, T>(this TArr array, Action<TArr> action)
-			where TArr : Arrays.ValueArray<T>
-			where T : unmanaged, INumber<T>
-		{
-			var clone = array.NewArrayAlike();
-			try
-			{
-				var t = (TArr)clone;
-				action.Invoke(t);
-				return t;
-			}
-			catch (System.Exception)
-			{
-				clone?.Dispose();
 				throw;
 			}
 		}

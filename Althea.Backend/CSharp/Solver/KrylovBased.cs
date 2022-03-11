@@ -57,7 +57,7 @@ namespace Althea.Backend.CSharp.Solver
 				if (EigenSolve is null)
 				{
 					LAD? pre = LAD.Current;
-					LAD.EigenSpecialMatrixGeneral(SolveVectorMode.RightOnly, n, vecVal, matVec, n, null, 0, matHc, n);
+					LAD.EigenSpecialMatrixGeneral(SolveVectorMode.Right, n, vecVal, matVec, n, null, 0, matHc, n);
 					LAD? now = LAD.Current;
 					Delegate? d = null;
 					pre.SetDelegate<LAD, EigenDelegate>(now, nameof(LAD.EigenSpecialMatrixGeneral), ref d);
@@ -65,7 +65,7 @@ namespace Althea.Backend.CSharp.Solver
 				}
 				else
 				{
-					EigenSolve.Invoke(SolveVectorMode.RightOnly, n, vecVal, matVec, n, null, 0, matHc, n);
+					EigenSolve.Invoke(SolveVectorMode.Right, n, vecVal, matVec, n, null, 0, matHc, n);
 				}
 				//tex:$\mathbf V = \mathbf U \mathbf X$
 				if (MatrixMultiply is null)

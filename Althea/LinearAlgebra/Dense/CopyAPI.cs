@@ -13,7 +13,7 @@ using Althea.SourceGenerator;
 namespace Althea.LinearAlgebra.Dense
 {
 	/// <summary>
-	/// The abstract class for linear algebra memory copy API routines 
+	/// The abstract class for dense linear algebra API routines 
 	/// </summary>
 	[AbstractRuntimeApi]
 	public abstract partial class AbstractApi : AbstractRuntimeApi<AbstractApi>
@@ -57,7 +57,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, int incrementSource, PointerSegment<TP2> destination, int incrementDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
 		#endregion
@@ -144,7 +144,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is ≤ 0</exception>
 		[AbstractApiMethod]
 		public unsafe virtual bool ToManagedStrided<T, TP>(PointerSegment<TP> source, int incrementSource, Span<T> destination, int incrementDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
 		{
@@ -171,7 +171,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="values"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementValues"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementValues"/> or <paramref name="incrementDestination"/> is ≤ 0</exception>
 		[AbstractApiMethod]
 		public unsafe virtual bool FromManagedStrided<T, TP>(PointerSegment<TP> destination, int incrementDestination, Span<T> values, int incrementValues, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
 		{
@@ -270,7 +270,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is less than 1</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> is ≤ 0</exception>
 		public static long StridedCopyTo<T, TS1, TS2>(this TS1 source, int incrementSource, TS2 destination, int incrementDestination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!source.IsValid())

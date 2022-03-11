@@ -61,13 +61,13 @@ namespace Althea.Arrays
 
 		#region point-wise operations
 		/// <summary>
-		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes simply fills <see cref="Storage"/>.
+		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation simply fills <see cref="Storage"/>.
 		/// </summary>
 		/// <param name="value">The value as a <typeparamref name="T"/> to fill</param>
 		public virtual unsafe void FillWith(T value) => this.Storage.FillWith(value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.PointWiseAddScalar{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default simply adds <see cref="Storage"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
 		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>

@@ -458,7 +458,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
-		protected abstract bool GetSlice_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, out SparseArrayWrapper<T> sub) where T : unmanaged, INumber<T>;
+		protected abstract bool GetSlice<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, out SparseArrayWrapper<T> sub) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, slice the sparse tensor <paramref name="source"/> with given <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension and overwrite the result to a sparse <paramref name="sub"/> tensor.
@@ -471,7 +471,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
-		protected abstract bool GetSlice_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensorWrapper<T> sub) where T : unmanaged, INumber<T>;
+		protected abstract bool GetSlice<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensorWrapper<T> sub) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, slice the sparse tensor <paramref name="source"/> with given <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension and overwrite the result to a dense <paramref name="sub"/> tensor.
@@ -485,7 +485,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
-		protected abstract bool GetSlice_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Storage<T> sub, ReadOnlySpan<long> subOuterSize) where T : unmanaged, INumber<T>;
+		protected abstract bool GetSlice<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Storage<T> sub, ReadOnlySpan<long> subOuterSize) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, set the sparse tensor <paramref name="source"/>'s slice indicated by <paramref name="offsets"/> and <paramref name="lengths"/> of each dimension with the values of <paramref name="sub"/> sparse tensor.
@@ -498,7 +498,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="lengths"/> is out of range</exception>
-		protected abstract bool SetSlice_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensorWrapper<T> sub) where T : unmanaged, INumber<T>;
+		protected abstract bool SetSlice<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensorWrapper<T> sub) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the sparse tensor <paramref name="source"/> to a dense tensor whose storage is <paramref name="destination"/> and outer size if <paramref name="outerSize"/>.
@@ -510,7 +510,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="outerSize"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is smaller than <paramref name="source"/> or its product is larger than <paramref name="destination"/>'s length</exception>
-		protected abstract bool ToDense_<T>(SparseTensorWrapper<T> source, Storage<T> destination, ReadOnlySpan<long> outerSize) where T : unmanaged, INumber<T>;
+		protected abstract bool ToDense<T>(SparseTensorWrapper<T> source, Storage<T> destination, ReadOnlySpan<long> outerSize) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the given dense tensor <paramref name="source"/> to a sparse tensor of the given <paramref name="format"/>.
@@ -522,7 +522,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
-		protected abstract bool FromDense_<T>(Dense.DenseTensorWrapper<T> source, SparseTensorFormat format, out SparseArrayWrapper<T> destination, float threshold = 0) where T : unmanaged, INumber<T>;
+		protected abstract bool FromDense<T>(Dense.DenseTensorWrapper<T> source, SparseTensorFormat format, out SparseArrayWrapper<T> destination, float threshold = 0) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, reshape the sparse tensor <paramref name="source"/> to the given <paramref name="newSize"/> and output a <paramref name="destination"/>.
@@ -535,7 +535,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <remarks>If <paramref name="newSize"/> is the same as <paramref name="source"/>'s size, this method shall simply returns default</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="newSize"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="newSize"/> is not a valid reshape size</exception>
-		protected abstract bool Reshape_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> newSize, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
+		protected abstract bool Reshape<T>(SparseTensorWrapper<T> source, ReadOnlySpan<long> newSize, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and output a <paramref name="destination"/>.
@@ -548,7 +548,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <remarks>If <paramref name="permutationOrder"/> is an identity permutation, this method shall simply returns <paramref name="source"/></remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
-		protected abstract bool Permute_<T>(SparseTensorWrapper<T> source, ReadOnlySpan<int> permutationOrder, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
+		protected abstract bool Permute<T>(SparseTensorWrapper<T> source, ReadOnlySpan<int> permutationOrder, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
@@ -562,7 +562,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <param name="destination">The output tensor as a <see cref="SparseArrayWrapper{T}"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
-		protected abstract bool OperationBinary_<T>(BinaryOperation binary, SparseTensorWrapper<T> left, Span<int> leftPerm, SparseTensorWrapper<T> right, Span<int> rightPerm, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
+		protected abstract bool OperationBinary<T>(BinaryOperation binary, SparseTensorWrapper<T> left, Span<int> leftPerm, SparseTensorWrapper<T> right, Span<int> rightPerm, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>:<br/>
@@ -576,7 +576,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
-		protected abstract bool Reduce_<T>(BinaryOperation reduce, SparseTensorWrapper<T> source, ReadOnlySpan<int> reduceDimensions, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
+		protected abstract bool Reduce<T>(BinaryOperation reduce, SparseTensorWrapper<T> source, ReadOnlySpan<int> reduceDimensions, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
@@ -590,7 +590,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="info"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
-		protected abstract bool Contract_<T>(SparseTensorWrapper<T> left, SparseTensorWrapper<T> right, TensorContractInfo info, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
+		protected abstract bool Contract<T>(SparseTensorWrapper<T> left, SparseTensorWrapper<T> right, TensorContractInfo info, out SparseArrayWrapper<T> destination) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the in-place sparse tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and overwrite the result value array to <paramref name="destination"/>:<br/>
@@ -604,7 +604,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="destination"/> or <paramref name="info"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> mismatches the given tensors; or the contraction cannot be performed in-place</exception>
-		protected abstract bool ContractInPlace_<T>(SparseTensorWrapper<T> left, SparseTensorWrapper<T> right, TensorContractInfo info, SparseTensorWrapper<T> destination) where T : unmanaged, INumber<T>;
+		protected abstract bool ContractInPlace<T>(SparseTensorWrapper<T> left, SparseTensorWrapper<T> right, TensorContractInfo info, SparseTensorWrapper<T> destination) where T : unmanaged, INumber<T>;
 		#endregion
 	}
 }

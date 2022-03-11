@@ -226,8 +226,9 @@ namespace Althea.LinearAlgebra
 	}
 
 	/// <summary>
-	/// The <see cref="SolveVectorMode"/> enum indicates which eigen- (or other type of) vector matrices obtained from standard or general eigenvalue solvers or other solvers shall be stored
+	/// The <see cref="SolveVectorMode"/> enum indicates which eigenvector matrices obtained from standard or general eigenvalue solvers or other solvers shall be stored
 	/// </summary>
+	[Flags]
 	public enum SolveVectorMode
 	{
 		/// <summary>
@@ -237,15 +238,15 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// Compute the eigenvectors (both left and right)
 		/// </summary>
-		Vector = 1,
+		Vector = Left | Right,
 		/// <summary>
-		/// Compute only the left eigenvectors
+		/// Compute the left eigenvectors
 		/// </summary>
-		LeftOnly = 2,
+		Left = 1,
 		/// <summary>
-		/// Compute only the right eigenvectors
+		/// Compute the right eigenvectors
 		/// </summary>
-		RightOnly = 3
+		Right = 2
 	}
 
 	/// <summary>

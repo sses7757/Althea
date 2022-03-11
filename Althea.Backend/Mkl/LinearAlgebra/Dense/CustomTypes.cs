@@ -75,8 +75,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				SolveVectorMode.NoVector => (MklVectorModeChar.NoVector, MklVectorModeChar.NoVector),
 				SolveVectorMode.Vector => (MklVectorModeChar.Vector, MklVectorModeChar.Vector),
-				SolveVectorMode.LeftOnly => (MklVectorModeChar.Vector, MklVectorModeChar.NoVector),
-				SolveVectorMode.RightOnly => (MklVectorModeChar.NoVector, MklVectorModeChar.Vector),
+				SolveVectorMode.Left => (MklVectorModeChar.Vector, MklVectorModeChar.NoVector),
+				SolveVectorMode.Right => (MklVectorModeChar.NoVector, MklVectorModeChar.Vector),
 				_ => default,
 			};
 		}

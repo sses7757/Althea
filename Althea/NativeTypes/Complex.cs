@@ -15,14 +15,21 @@ namespace Althea.NativeTypes
 	/// The base interface for complex numbers
 	/// </summary>
 	/// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
-	/// <typeparam name="T">The type of corresponding real number</typeparam>
-	public interface IComplexNumber<TSelf, T> : INumber<TSelf> where TSelf : IComplexNumber<TSelf, T> where T : unmanaged, INumber<T>
+	public interface IComplexNumber<TSelf> : INumber<TSelf> where TSelf : IComplexNumber<TSelf>
 	{
 		/// <summary>
 		/// Abstract static get imaginary one for <typeparamref name="TSelf"/>
 		/// </summary>
 		abstract static TSelf ImaginaryOne { get; }
+	}
 
+	/// <summary>
+	/// The base interface for complex numbers with real type
+	/// </summary>
+	/// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
+	/// <typeparam name="T">The type of corresponding real number</typeparam>
+	public interface IComplexNumber<TSelf, T> : IComplexNumber<TSelf> where TSelf : IComplexNumber<TSelf, T> where T : unmanaged, INumber<T>
+	{
 		/// <summary>
 		/// Get the real part of this complex number
 		/// </summary>
@@ -49,10 +56,8 @@ namespace Althea.NativeTypes
 	/// The base interface for complex float numbers
 	/// </summary>
 	/// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
-	/// <typeparam name="T">The type of corresponding real number</typeparam>
-	public interface IComplexFloatNumber<TSelf, T> : IComplexNumber<TSelf, T>, IFloatingPoint<TSelf>
-		where TSelf : IComplexFloatNumber<TSelf, T>
-		where T : unmanaged, IFloatingPoint<T>
+	public interface IComplexFloatNumber<TSelf> : IComplexNumber<TSelf>, IFloatingPoint<TSelf>
+		where TSelf : IComplexFloatNumber<TSelf>
 	{
 		/// <summary>
 		/// Abstract static get negative imaginary one for <typeparamref name="TSelf"/>
@@ -60,18 +65,29 @@ namespace Althea.NativeTypes
 		abstract static TSelf ImaginaryNegativeOne { get; }
 
 		/// <summary>
+		/// Get the complex conjugate of this complex number
+		/// </summary>
+		TSelf Conjugate { get; }
+	}
+
+	/// <summary>
+	/// The base interface for complex float numbers with real type
+	/// </summary>
+	/// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
+	/// <typeparam name="T">The type of corresponding real number</typeparam>
+	public interface IComplexFloatNumber<TSelf, T> : IComplexNumber<TSelf, T>, IComplexFloatNumber<TSelf>
+	where TSelf : IComplexFloatNumber<TSelf, T>
+	where T : unmanaged, IFloatingPoint<T>
+	{
+		/// <summary>
 		/// Get the magnitude or absolute value of this complex number
 		/// </summary>
 		T Magnitude { get; }
+
 		/// <summary>
 		/// Get the phase of this complex number
 		/// </summary>
 		T Phase { get; }
-
-		/// <summary>
-		/// Get the complex conjugate of this complex number
-		/// </summary>
-		TSelf Conjugate { get; }
 
 		/// <summary>
 		/// Statically return the complex power of the given <paramref name="complex"/> number and a real power <paramref name="p"/>

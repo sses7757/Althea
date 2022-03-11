@@ -221,7 +221,7 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If the sizes mismatch</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		protected abstract bool KroneckerMultiplyVector_<TMat, TVec, T>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
+		protected abstract bool KroneckerMultiplyVector<TMat, TVec, T>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
 			where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
 			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
 			where T : unmanaged, INumber<T>;
@@ -237,7 +237,7 @@ namespace Althea.Solver
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output eigenvector.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool NaiveKrylovSubspaceEigenHermitain_<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged, INumber<T>;
+		protected abstract bool NaiveKrylovSubspaceEigenHermitain<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
@@ -250,7 +250,7 @@ namespace Althea.Solver
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{TVec, T}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvaluesComplex"/> and <see cref="KrylovSubspaceSolveInfo{TVec, T}.EigenvectorsImag"/> are not used</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool RestartKrylovSubspaceEigen_<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
+		protected abstract bool RestartKrylovSubspaceEigen<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged, INumber<T>;
 
@@ -266,7 +266,7 @@ namespace Althea.Solver
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="KrylovSubspaceSolveInfo{TVec, T}.OtherVector"/> is used as the output solve.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-		protected abstract bool RestartKrylovSubspaceLinearSolve_<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve)
+		protected abstract bool RestartKrylovSubspaceLinearSolve<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve)
 			where TVec : class, IKrylovVector<TVec, T>, new()
 			where T : unmanaged, INumber<T>;
 		#endregion
