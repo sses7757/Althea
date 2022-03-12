@@ -3,12 +3,15 @@
 using Althea.Arrays;
 using Althea.Helpers;
 
+using Althea.SourceGenerator;
+
 
 namespace Althea.LinearAlgebra.Sparse
 {
 	/// <summary>
 	/// The abstract class for runtime sparse linear algebra API routines 
 	/// </summary>
+	[AbstractRuntimeApi]
 	public abstract partial class AbstractApi : AbstractRuntimeApi<AbstractApi>
 	{
 		#region vector
@@ -22,7 +25,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="value">The value to set</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
-		protected abstract bool VectorSetValuesAt<T, TInd>(Storage<T> x, T value, Storage<TInd> positions) where T : unmanaged, INumber<T> where TInd : unmanaged;
+		[AbstractApiMethod]
+		public abstract bool VectorSetValuesAt<T, TInd>(Storage<T> x, T value, Storage<TInd> positions) where T : unmanaged, INumber<T> where TInd : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.Indices] = <paramref name="x"/>.<see cref="ISparseArray{T}.Storage">Values</see>.
@@ -32,7 +36,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="y">The dense vector y as a <see cref="Storage{T}"/> whose elements at <paramref name="x"/>.Indices are overwritten</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorSparseToDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool VectorSparseToDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, gather the dense vector <paramref name="x"/> at the underlying position array of <paramref name="y"/> into the <see cref="ISparseArray{T}.Storage"/> of sparse vector <paramref name="y"/>: <c><paramref name="y"/>.<see cref="ISparseArray{T}.Storage">Storage</see> = <paramref name="x"/>[<paramref name="y"/>.Position]</c>.
@@ -43,7 +48,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>This is equivalent to converting dense vector to sparse vector when the sparsity is known</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		protected abstract bool VectorGatherValuesAt<T>(Storage<T> x, ISparseVector<T> y) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool VectorGatherValuesAt<T>(Storage<T> x, ISparseVector<T> y) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert a dense vector <paramref name="x"/> to a sparse vector by the given truncation <paramref name="threshold"/>.
@@ -56,7 +62,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
-		protected abstract bool VectorDenseToSparse<T>(Storage<T> x, SparseVectorFormat format, out SparseArrayWrapper<T> target, float threshold = 0) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool VectorDenseToSparse<T>(Storage<T> x, SparseVectorFormat format, out SparseArrayWrapper<T> target, float threshold = 0) where T : unmanaged, INumber<T>;
 		#endregion
 
 		#region vector and matrix
@@ -70,7 +77,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="target">Output the created new <see cref="ISparseMatrix{T}"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="vector"/> is null or invalid</exception>
-		protected abstract bool SparseVectorToMatrix<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool SparseVectorToMatrix<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the given sparse <paramref name="format"/> to a sparse vector of given <paramref name="format"/>.
@@ -81,7 +89,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="IMatrixMetric.NRows"/> and <see cref="IMatrixMetric.NCols"/>)</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
-		protected abstract bool SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
 		#endregion
 
 		#region matrix
@@ -93,7 +102,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="ld">The leading dimension of <paramref name="destination"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		protected abstract bool MatrixSparseToDense<T>(ISparseMatrix<T> source, Storage<T> destination, long ld) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool MatrixSparseToDense<T>(ISparseMatrix<T> source, Storage<T> destination, long ld) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the given dense matrix <paramref name="source"/> to a sparse matrix of the given <paramref name="format"/>.
@@ -108,7 +118,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
-		protected abstract bool MatrixDenseToSparse<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, out SparseArrayWrapper<T> target, float threshold = 0) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool MatrixDenseToSparse<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, out SparseArrayWrapper<T> target, float threshold = 0) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, prune the given sparse matrix <paramref name="source"/> to a new one by filtering the values less than or equals to <paramref name="threshold"/>.
@@ -119,7 +130,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
-		protected abstract bool MatrixSparsePrune<T>(ISparseMatrix<T> source, float threshold, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool MatrixSparsePrune<T>(ISparseMatrix<T> source, float threshold, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the format of the given sparse matrix <paramref name="source"/> to a new one which fits <paramref name="format"/>.
@@ -130,7 +142,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="otherInfo">The target sparse matrix's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		protected abstract bool MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out SparseArrayWrapper<T> target, IOtherInfo? otherInfo = null) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out SparseArrayWrapper<T> target, IOtherInfo? otherInfo = null) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, reshape the given sparse matrix <paramref name="source"/> to a new one with <paramref name="newNRows"/>.
@@ -141,7 +154,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newNRows"/> is out of range</exception>
-		protected abstract bool MatrixSparseReshape<T>(ISparseMatrix<T> source, long newNRows, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
+		[AbstractApiMethod]
+		public abstract bool MatrixSparseReshape<T>(ISparseMatrix<T> source, long newNRows, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
 		#endregion
 
 		#region index only
@@ -154,7 +168,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		protected abstract bool IndexMax<TInd>(Storage<TInd> array, out TInd max) where TInd : unmanaged;
+		[AbstractApiMethod]
+		public abstract bool IndexMax<TInd>(Storage<TInd> array, out TInd max) where TInd : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, find the minimum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
@@ -165,7 +180,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		protected abstract bool IndexMin<TInd>(Storage<TInd> array, out TInd min) where TInd : unmanaged;
+		[AbstractApiMethod]
+		public abstract bool IndexMin<TInd>(Storage<TInd> array, out TInd min) where TInd : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
@@ -178,7 +194,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		protected abstract bool IndexFind<TInd>(bool sorted, Storage<TInd> array, TInd value, out long find) where TInd : unmanaged;
+		[AbstractApiMethod]
+		public abstract bool IndexFind<TInd>(bool sorted, Storage<TInd> array, TInd value, out long find) where TInd : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
@@ -192,7 +209,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <remarks>If not found, <paramref name="index"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
-		protected abstract bool IndexBound<TInd>(Storage<TInd> array, TInd value, bool lowerBound, out long index) where TInd : unmanaged;
+		[AbstractApiMethod]
+		public abstract bool IndexBound<TInd>(Storage<TInd> array, TInd value, bool lowerBound, out long index) where TInd : unmanaged;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.
@@ -209,7 +227,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
-		protected abstract bool IndexGetAllBounds<TInd, TIndOut>(Storage<TInd> array, Storage<TIndOut> target, TInd start, TInd end, bool lowerBound)
+		[AbstractApiMethod]
+		public abstract bool IndexGetAllBounds<TInd, TIndOut>(Storage<TInd> array, Storage<TIndOut> target, TInd start, TInd end, bool lowerBound)
 			where TInd : unmanaged
 			where TIndOut : unmanaged;
 
@@ -226,7 +245,8 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
-		protected abstract bool IndexGenerateFromBounds<TInd, TIndOut>(Storage<TInd> bounds, Storage<TIndOut> target, bool lowerBound, TIndOut start = default)
+		[AbstractApiMethod]
+		public abstract bool IndexGenerateFromBounds<TInd, TIndOut>(Storage<TInd> bounds, Storage<TIndOut> target, bool lowerBound, TIndOut start = default)
 			where TInd : unmanaged
 			where TIndOut : unmanaged;
 		#endregion

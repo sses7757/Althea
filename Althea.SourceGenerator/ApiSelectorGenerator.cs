@@ -50,12 +50,12 @@ namespace Althea.SourceGenerator
 	{
 		private static readonly DiagnosticDescriptor MultipleReturnsError =
 #pragma warning disable RS2008
-			new DiagnosticDescriptor(id: "GENAPI001",
-									title: "Target API method has multiple returns",
-									messageFormat: "Couldn't generate API selector method of '{0}' since it has multiple return parameters",
-									category: "API Selector Generator",
+			new DiagnosticDescriptor("GENAPI001",
+									"Target API method has multiple returns",
+									"Couldn't generate API selector method of '{0}' since it has multiple return parameters",
+									"API Selector Generator",
 									DiagnosticSeverity.Error,
-									isEnabledByDefault: true);
+									true);
 #pragma warning restore RS2008
 
 		public void Initialize(GeneratorInitializationContext context)
@@ -239,6 +239,8 @@ namespace {ns.Name}
 	{
 		public List<ClassDeclarationSyntax> ApiClasses { get; } = new List<ClassDeclarationSyntax>();
 
+		public List<string> FileNames { get; } = new List<string>();
+
 		public TypeSyntax VoidReturnType { get; private set; }
 
 		public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
@@ -247,6 +249,14 @@ namespace {ns.Name}
 			if (syntaxNode is ClassDeclarationSyntax cds && cds.HasAttribute(nameof(AbstractRuntimeApiAttribute)))
 			{
 				ApiClasses.Add(cds);
+				////var ns = cds.Parent as NamespaceDeclarationSyntax;
+				////string name = ns.Name + "." + cds.Identifier.ToString().Replace("Abstract", "") + "Selector";
+				////int count = 0; string actualName = name;
+				////while (FileNames.Contains(actualName))
+				////{
+				////	actualName = name + (++count);
+				////}
+				////FileNames.Add(actualName);
 			}
 			if (this.VoidReturnType is null && syntaxNode is MethodDeclarationSyntax mds && mds.ReturnType.ToString() == "void")
 			{

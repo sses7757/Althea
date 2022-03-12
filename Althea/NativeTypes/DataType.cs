@@ -359,8 +359,8 @@ namespace Althea.NativeTypes
 				ComplexInteger<uint> => DataType.ComplexUInt32,
 				ComplexInteger<ulong> => DataType.ComplexUInt64,
 				// otherwise
-				_ => NativeType<T>.Classification == 0 ? throw new NotSupportedException(Resources.Support.DataType) : 
-					MakeDataType(NativeType<T>.IsComplex, NativeType<T>.Classification, Unmanaged<T>.Size),
+				_ => NumberType<T>.Classification == 0 ? throw new NotSupportedException(Resources.Support.DataType) : 
+					MakeDataType(NumberType<T>.IsComplex, NumberType<T>.Classification, Unmanaged<T>.Size),
 			};
 		}
 		#endregion

@@ -79,12 +79,13 @@ namespace Althea
 	{
 		#region basic
 		/// <summary>
-		/// The currently using <typeparamref name="TApi"/>
+		/// Get the currently using <typeparamref name="TApi"/>.
 		/// </summary>
+		/// <remarks>DO NOT directly access the method of it unless you are sure what you are doing.</remarks>
 		public static TApi? Current => CurrentApiIndex >= 0 ? APIs[CurrentApiIndex] : null;
 
 		/// <summary>
-		/// The recently used APIs (of type <typeparamref name="TApi"/>)
+		/// The recently used APIs (of type <typeparamref name="TApi"/>).
 		/// </summary>
 		protected static readonly List<TApi> APIs = new();
 

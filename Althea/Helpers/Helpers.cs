@@ -4,6 +4,7 @@ using System.Runtime.Intrinsics.Arm;
 using System.Text;
 
 using Althea.Linq;
+using Althea.NativeTypes;
 using Althea.Resources;
 
 
@@ -37,16 +38,6 @@ namespace Althea.Helpers
 				_ => $"{a}-th",
 			};
 		}
-
-		/// <summary>
-		/// Create a number of type <typeparamref name="T2"/> from the given number of type <typeparamref name="T1"/>
-		/// </summary>
-		/// <typeparam name="T1">The input number type</typeparam>
-		/// <typeparam name="T2">The output number type</typeparam>
-		/// <param name="x">The input number</param>
-		/// <returns><paramref name="x"/> as <typeparamref name="T2"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T2 As<T1, T2>(this T1 x) where T1 : INumber<T1> where T2 : INumber<T2> => T2.Create(x);
 
 		/// <summary>
 		/// Reverse the bits of <paramref name="a"/>

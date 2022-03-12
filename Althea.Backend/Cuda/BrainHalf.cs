@@ -46,7 +46,7 @@ namespace Althea.Backend.Cuda
 	/// </summary>
 	/// <remarks>Do not use the methods during heavy loads since they are all software implemented.</remarks>
 	/// <seealso ref="https://www.nextplatform.com/2018/05/10/tearing-apart-googles-tpu-3-0-ai-coprocessor/"/>
-	public readonly struct BrainHalf : ICustomNativeType<BrainHalf>, IEquatable<BrainHalf>, IComparable<BrainHalf>, IFormattable
+	public readonly struct BrainHalf : ICustomNumberType<BrainHalf>, IEquatable<BrainHalf>, IComparable<BrainHalf>, IFormattable
 	{
 		#region basic
 		private const byte START_EXP = 7;
@@ -385,11 +385,11 @@ namespace Althea.Backend.Cuda
 			return true;
 		}
 
-		bool ICustomNativeType<BrainHalf>.TryParse_Internal(string str, out BrainHalf result) => TryParse(str, out result);
+		bool ICustomNumberType<BrainHalf>.TryParse_Internal(string str, out BrainHalf result) => TryParse(str, out result);
 
-		DataTypeClassification ICustomNativeType<BrainHalf>.Classification_Internal() => BrainFloatConst.BrainFloat;
+		DataTypeClassification ICustomNumberType<BrainHalf>.Classification_Internal() => BrainFloatConst.BrainFloat;
 
-		double ICustomNativeType<BrainHalf>.MachinePrecision_Internal() => BrainFloatConst.BrainFloat16Precision;
+		double ICustomNumberType<BrainHalf>.MachinePrecision_Internal() => BrainFloatConst.BrainFloat16Precision;
 		#endregion
 
 		#region arithmetic

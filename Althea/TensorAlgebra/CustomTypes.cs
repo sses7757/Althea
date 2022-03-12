@@ -291,9 +291,9 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a <see cref="TensorContractInfo"/> with the given <paramref name="left"/>, <paramref name="right"/> and <paramref name="output"/> tensors
 		/// </summary>
-		/// <param name="left">The input left <see cref="ITensor"/></param>
-		/// <param name="right">The input right <see cref="ITensor"/></param>
-		/// <param name="output">The output <see cref="ITensor"/></param>
+		/// <param name="left">The input left <see cref="ILabeledTensor"/></param>
+		/// <param name="right">The input right <see cref="ILabeledTensor"/></param>
+		/// <param name="output">The output <see cref="ILabeledTensor"/></param>
 		/// <param name="leftConc">A <see cref="Span{T}"/> of length equaling to contraction rank, to be filled</param>
 		/// <param name="rightConc">A <see cref="Span{T}"/> of length equaling to contraction rank, to be filled</param>
 		/// <param name="leftFree">A <see cref="Span{T}"/> of length equaling to <paramref name="left"/>'s rank minus contraction rank, to be filled</param>
@@ -302,7 +302,7 @@ namespace Althea.TensorAlgebra
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="output"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="left"/> and <paramref name="right"/> cannot contract and overwrite <paramref name="output"/></exception>
 		/// <example><code>
-		/// int rank = <see cref="TensorContractInfo"/>.<see cref="GetContractRank(ITensor, ITensor)"/>;
+		/// int rank = <see cref="TensorContractInfo"/>.<see cref="GetContractRank(ILabeledTensor, ILabeledTensor)"/>;
 		/// <see cref="Span{T}"/> leftConc = stackalloc int[rank];
 		/// <see cref="Span{T}"/> rightConc = stackalloc int[rank];
 		/// <see cref="Span{T}"/> leftFree = stackalloc int[left.Rank - rank];
@@ -311,7 +311,7 @@ namespace Althea.TensorAlgebra
 		/// <see cref="Dense.AbstractApi.Contract{T}(Dense.DenseTensorWrapper{T}, Dense.DenseTensorWrapper{T}, Dense.DenseTensorWrapper{T}, TensorContractInfo)"/>;
 		/// </code></example>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public TensorContractInfo(ITensor left, ITensor right, ITensor output, Span<int> leftConc, Span<int> rightConc, Span<int> leftFree, Span<int> rightFree)
+		public TensorContractInfo(ILabeledTensor left, ILabeledTensor right, ILabeledTensor output, Span<int> leftConc, Span<int> rightConc, Span<int> leftFree, Span<int> rightFree)
 		{
 			if (left is null || !left.IsValid())
 				throw new ArgumentNullException(nameof(left));
@@ -331,11 +331,11 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Check the labels of the given <paramref name="left"/> and <paramref name="right"/> tensors and get the contraction part's rank
 		/// </summary>
-		/// <param name="left">The input left <see cref="ITensor"/></param>
-		/// <param name="right">The input right <see cref="ITensor"/></param>
+		/// <param name="left">The input left <see cref="ILabeledTensor"/></param>
+		/// <param name="right">The input right <see cref="ILabeledTensor"/></param>
 		/// <returns>The contraction part's rank</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int GetContractRank(ITensor left, ITensor right)
+		public static int GetContractRank(ILabeledTensor left, ILabeledTensor right)
 		{
 			ReadOnlySpan<char> labelA = left.Labels, labelB = right.Labels;
 			int commonRank = 0, rankA = left.Rank;
@@ -698,11 +698,11 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a <see cref="StorableContractInfo"/> with the given <paramref name="left"/>, <paramref name="right"/> and <paramref name="output"/> tensors
 		/// </summary>
-		/// <param name="left">The input left <see cref="ITensor"/></param>
-		/// <param name="right">The input right <see cref="ITensor"/></param>
-		/// <param name="output">The output <see cref="ITensor"/></param>
+		/// <param name="left">The input left <see cref="ILabeledTensor"/></param>
+		/// <param name="right">The input right <see cref="ILabeledTensor"/></param>
+		/// <param name="output">The output <see cref="ILabeledTensor"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public StorableContractInfo(ITensor left, ITensor right, ITensor output)
+		public StorableContractInfo(ILabeledTensor left, ILabeledTensor right, ILabeledTensor output)
 		{
 			this.m_concLen = TensorContractInfo.GetContractRank(left, right);
 			this.m_leftFreeLen = left.Rank - this.m_concLen; this.m_rightFreeLen = right.Rank - this.m_concLen;
@@ -753,14 +753,14 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Check the <paramref name="tensor"/> reduction indicated by the given <paramref name="order"/>
 		/// </summary>
-		/// <param name="tensor">The <see cref="ITensor"/> to be reduced</param>
+		/// <param name="tensor">The <see cref="ILabeledTensor"/> to be reduced</param>
 		/// <param name="order">The <see cref="TensorOrder"/> to indicate the reduction dimensions</param>
 		/// <param name="reducePerm">The <see cref="Span{T}"/> of length equaling the rank. Filled with the reduce dimensions of actual reduction rank at exit.</param>
 		/// <param name="size">The <see cref="Span{T}"/> of length equaling the rank. Filled with the actual output size of actual output rank at exit.</param>
 		/// <param name="labels">The <see cref="Span{T}"/> of length equaling the rank. Filled with the actual output labels of actual output rank at exit.</param>
 		/// <returns>The <paramref name="reducePerm"/> of actual reduction rank</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Span<int> CheckReduce(this ITensor tensor, TensorOrder order, Span<int> reducePerm, ref Span<long> size, ref Span<char> labels)
+		public static Span<int> CheckReduce(this ILabeledTensor tensor, TensorOrder order, Span<int> reducePerm, ref Span<long> size, ref Span<char> labels)
 		{
 			if (tensor is null)
 				throw new ArgumentNullException(nameof(tensor));

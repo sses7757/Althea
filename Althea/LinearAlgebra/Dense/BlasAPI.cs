@@ -7,7 +7,11 @@ using Althea.SourceGenerator;
 
 namespace Althea.LinearAlgebra.Dense
 {
-	public abstract partial class AbstractApi : AbstractRuntimeApi<AbstractApi>
+	/// <summary>
+	/// The abstract class for dense linear algebra BLAS API routines 
+	/// </summary>
+	[AbstractRuntimeApi]
+	public abstract partial class BlasAbstractApi : AbstractRuntimeApi<BlasAbstractApi>
 	{
 		#region BLAS level 1
 		/// <summary>

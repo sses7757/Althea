@@ -7,8 +7,10 @@ using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
 
-using LAD = Althea.LinearAlgebra.Dense.ApiSelector;
-using MEM = Althea.Storage.ApiSelector;
+using LACopy = Althea.LinearAlgebra.Dense.CopyApiSelector;
+using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
+using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
+using Mem = Althea.Storage.ApiSelector;
 
 
 namespace Althea.Arrays
@@ -57,6 +59,23 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, statically get an empty array of type <typeparamref name="TSelf"/>.
 		/// </summary>
 		public abstract static TSelf Empty { get; }
+
+		private static int stride = 0;
+
+		private static int StridedVectorStride 
+		{
+			get
+			{
+				if (stride == 0)
+				{
+					if (TSelf.Empty is IPitchedArray<T> p && p.HasPitch && p.Size.Length == 1)
+						stride = checked((int)p.Strides[0]);
+					else
+						stride = 1;
+				}
+				return stride;
+			}
+		}
 		#endregion
 
 		#region point-wise operations
@@ -67,283 +86,76 @@ namespace Althea.Arrays
 		public virtual unsafe void FillWith(T value) => this.Storage.FillWith(value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default simply adds <see cref="Storage"/>.
+		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>. The default simply adds <see cref="Storage"/> with <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual void AddScalar(T value)
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				LAD.PointWiseAddScalar(this.Storage, 1, value);
-				if (this is ISparseArray<T> sparse && !value.IsZero())
-				{
-					sparse.DefaultValue = sparse.DefaultValue.NativeAdd(value);
-				}
-			}
-			else
-			{
-				this.EditPitchedInPlace(pitched, LAD.PointWiseAddScalar, value, CanUseTensorOp.AddScalar);
-			}
-		}
+		public virtual void AddScalar(T value) => ExtBlas.PointWiseAddScalar(this.Storage, StridedVectorStride, value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>. The default implementation utilizes <see cref="LAD.Scale{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>. The default simply scales <see cref="Storage"/> with <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual void Scale(T value)
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				LAD.Scale(this.Storage, 1, value);
-				if (this is ISparseArray<T> sparse && !value.IsOne())
-				{
-					sparse.DefaultValue = sparse.DefaultValue.NativeMultiply(value);
-				}
-			}
-			else
-			{
-				this.EditPitchedInPlace(pitched, LAD.Scale, value, CanUseTensorOp.MultiplyScalar);
-			}
-		}
+		public virtual void Scale(T value) => Blas.Scale(this.Storage, StridedVectorStride, value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>. The default implementation utilizes <see cref="LAD.PointWiseConjugate{T}"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>. The default simply conjugates <see cref="Storage"/>.
 		/// </summary>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual void Conjugate()
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				LAD.PointWiseConjugate(this.Storage, 1);
-				if (this is ISparseArray<T> sparse)
-				{
-					sparse.DefaultValue = sparse.DefaultValue.NativeConjugate();
-				}
-			}
-			else
-			{
-				this.EditPitchedInPlace(pitched, static (s, i, _) => LAD.PointWiseConjugate(s, i), 0, CanUseTensorOp.Conjugate);
-			}
-		}
+		public virtual void Conjugate() => ExtBlas.PointWiseConjugate<T, TS>(this.Storage, StridedVectorStride);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, double)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default simply exponentiates <see cref="Storage"/> with <paramref name="power"/>.
 		/// </summary>
 		/// <param name="power">The power as a <see cref="double"/></param>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual void Power(double power)
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				LAD.PointWisePower(this.Storage, 1, power);
-				if (this is ISparseArray<T> sparse && power != 1)
-				{
-					sparse.DefaultValue = sparse.DefaultValue.NativePower(power);
-				}
-			}
-			else
-			{
-				this.EditPitchedInPlace(pitched, LAD.PointWisePower, power);
-			}
-		}
+		public virtual void Power(double power) => ExtBlas.PointWisePower<T, TS>(this.Storage, StridedVectorStride, power);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>. The default simply exponentiates <see cref="Storage"/> with <paramref name="power"/>.
 		/// </summary>
 		/// <param name="power">The power as a <typeparamref name="T"/></param>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual void Power(T power)
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				LAD.PointWisePower(this.Storage, 1, power);
-				if (this is ISparseArray<T> sparse && !power.IsOne())
-				{
-					sparse.DefaultValue = sparse.DefaultValue.NativePower(power);
-				}
-			}
-			else
-			{
-				this.EditPitchedInPlace(pitched, LAD.PointWisePower, power);
-			}
-		}
+		public virtual void Power(T power) => ExtBlas.PointWisePower(this.Storage, StridedVectorStride, power);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>. The default implementation utilizes <see cref="LAD.PointWisePower{T}(Storage{T}, int, T)"/>, which is also valid if the actual derived class is a <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>. The default simply truncates <see cref="Storage"/> with <paramref name="threshold"/>.
 		/// </summary>
 		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual void Truncate(double threshold)
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				LAD.TruncateArray(this.Storage, 1, threshold);
-				if (this is ISparseArray<T> sparse && !sparse.DefaultValue.IsZero())
-				{
-					double abs = Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue);
-					if (abs <= threshold)
-						sparse.DefaultValue = default;
-				}
-			}
-			else
-			{
-				this.EditPitchedInPlace(pitched, LAD.TruncateArray, threshold);
-			}
-		}
+		public virtual void Truncate(double threshold) => ExtBlas.TruncateArray<T, TS>(this.Storage, StridedVectorStride, threshold);
 		#endregion
 
 		#region simple aggregation operations
 		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AggregateSum{T}"/>.
+		/// When implemented by a derived class, aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default simply sums <see cref="Storage"/>.
 		/// </summary>
 		/// <returns>The aggregate sum of this array</returns>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual T Sum()
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				T sum = LAD.AggregateSum(this.Storage, 1);
-				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
-					return sum;
-				// else
-				T len = Const<T>.FromLongDelegate.Invoke(this.Length - this.ActualLength);
-				T defMulLen = Const<T>.MultiplyDelegate.Invoke(len, sparse.DefaultValue);
-				return Const<T>.AddDelegate.Invoke(defMulLen, sum);
-			}
-			else
-			{
-				return this.AggregatePitched(pitched, LAD.AggregateSum, Const<T>.AddDelegate, Const<T>.Zero);
-			}
-		}
+		public virtual T Sum() => ExtBlas.AggregateSum<T, TS>(this.Storage, StridedVectorStride);
 
 		/// <summary>
-		/// When implemented by a derived class, aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueSum{T}"/>.
+		/// When implemented by a derived class, aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default simply sums <see cref="Storage"/>'s absolute values.
 		/// </summary>
 		/// <returns>The aggregate sum of absolute values of this array</returns>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual double AbsSum()
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				double sum = LAD.AbsoluteValueSum(this.Storage, 1);
-				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
-					return sum;
-				else
-					return (this.Length - this.ActualLength) * Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue) + sum;
-			}
-			else
-			{
-				return this.AggregatePitched(pitched, LAD.AbsoluteValueSum, Const<double>.AddDelegate, 0.0);
-			}
-		}
+		public virtual double AbsSum() => Blas.AbsoluteValueSum<T, TS>(this.Storage, StridedVectorStride);
 
 		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.Norm{T}"/>.
+		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default simply calculates <see cref="Storage"/>'s 2-norm.
 		/// </summary>
 		/// <returns>The 2-norm of this array</returns>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual double Norm()
-		{
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				double norm = LAD.Norm(this.Storage, 1);
-				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
-				{
-					return norm;
-				}
-				else
-				{
-					norm *= norm;
-					double abs = Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue);
-					norm += abs * abs * (this.Length - this.ActualLength);
-					return Math.Sqrt(norm);
-				}
-			}
-			else
-			{
-				double normSquare = this.AggregatePitched(pitched, LAD.Norm, static (pre, now) => pre + now * now, 0.0);
-				return Math.Sqrt(normSquare);
-			}
-		}
+		public virtual double Norm() => Blas.Norm<T, TS>(this.Storage, StridedVectorStride);
 
 		/// <summary>
 		/// When implemented by a derived class, in-place scale this array's <see cref="Storage"/> such that its 2-norm (Euclidean norm) is 1, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
 		/// </summary>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-		public virtual void Normalize()
-		{
-			if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse || sparse.DefaultValue.IsZero())
-			{
-				double norm = this.Norm();
-				if (norm == 0)
-					throw new DivideByZeroException();
-				this.Scale(Const<T>.FromDoubleDelegate.Invoke(1 / norm));
-			}
-			else
-			{
-				T def = sparse.DefaultValue;
-				double d = Const<T>.AbsoluteDelegate.Invoke(def);
-				double defaultNormDouble = (this.Length - this.ActualLength) * d * d;
-				double norm = this.Norm() + defaultNormDouble;
-				if (norm == 0)
-					throw new DivideByZeroException();
-				T normInv = Const<T>.FromDoubleDelegate.Invoke(1 / norm);
-				// scale both stored and not stored
-				this.Scale(normInv);
-				sparse.DefaultValue = Const<T>.MultiplyDelegate.Invoke(def, normInv);
-			}
-		}
+		public virtual void Normalize() => this.Scale(T.One / T.Create(this.Norm()));
 
 		/// <summary>
-		/// When implemented by a derived class, get the maximum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueArgMax{T}"/>.
+		/// When implemented by a derived class, get the maximum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation simply calculates <see cref="Storage"/>'s argument absolute-value maximum.
 		/// </summary>
 		/// <returns>The maximum one of all absolute values of the elements in this array</returns>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual double AbsMax()
-		{
-			static double GetAbsMax(Storage<T> storage, int stride)
-				=> Const<T>.AbsoluteDelegate.Invoke(MEM.ToManaged(storage + LAD.AbsoluteValueArgMax(storage, stride)));
-
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				double max = GetAbsMax(this.Storage, 1);
-				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
-					return max;
-				else
-					return Math.Max(Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue), max);
-			}
-			else
-			{
-				return this.AggregatePitched(pitched, GetAbsMax, static (pre, now) => Math.Max(pre, now), 0.0);
-			}
-		}
+		public virtual T AbsMax() => T.Abs((this.Storage + Blas.AbsoluteValueArgMax<T, TS>(this.Storage, StridedVectorStride)).ToManaged<T, TS>());
 
 		/// <summary>
-		/// When implemented by a derived class, get the minimum one of all absolute values of the elements in this array. The default implementation only get the maximum absolute value of <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes <see cref="LAD.AbsoluteValueArgMin{T}"/>.
+		/// When implemented by a derived class, get the minimum one of all absolute values of the elements in this array. The default implementation only get the minimum absolute value of <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation simply calculates <see cref="Storage"/>'s argument absolute-value minimum.
 		/// </summary>
 		/// <returns>The minimum one of all absolute values of the elements in this array</returns>
-		/// <remarks>If this array is an <see cref="IPitchedArray{T}"/> and <see cref="IPitchedArray{T}.HasPitch"/>, this method may loops over the first few contiguous dimensions or create temporary storage, which may lead to performance loss.</remarks>
-		public virtual double AbsMin()
-		{
-			static double GetAbsMin(Storage<T> storage, int stride)
-				=> Const<T>.AbsoluteDelegate.Invoke(MEM.ToManaged(storage + LAD.AbsoluteValueArgMin(storage, stride)));
-
-			if (this is not IPitchedArray<T> pitched || !pitched.HasPitch)
-			{
-				double min = GetAbsMin(this.Storage, 1);
-				if (this.Length == this.ActualLength || this is not ISparseArray<T> sparse)
-					return min;
-				else
-					return Math.Min(Const<T>.AbsoluteDelegate.Invoke(sparse.DefaultValue), min);
-			}
-			else
-			{
-				return this.AggregatePitched(pitched, GetAbsMin, static (pre, now) => Math.Min(pre, now), double.MaxValue);
-			}
-		}
+		public virtual T AbsMin() => T.Abs((this.Storage + Blas.AbsoluteValueArgMin<T, TS>(this.Storage, StridedVectorStride)).ToManaged<T, TS>());
 		#endregion
 
 		#region reshape (mostly abstract)
@@ -363,14 +175,14 @@ namespace Althea.Arrays
 			if (newSize.SequenceEqual(array.Size))
 				return;
 
-			if (newSize.Length == 2 && newSize[0] <= 0 && newSize[1] <= 0)
+			if (newSize.Length == 2 && newSize[0] <= 0 && newSize[StridedVectorStride] <= 0)
 			{	// try to convert to a square matrix
 				if (!array.Length.IsPerfectSquare())
 				{
 					throw new ArgumentException(Resources.Other.PerfectSquare, nameof(array));
 				}
 				var leadDim = Convert.ToInt64(Math.Sqrt(array.Length));
-				newSize[0] = newSize[1] = leadDim;
+				newSize[0] = newSize[StridedVectorStride] = leadDim;
 			}
 			int firstFind = newSize.IndexOf(static r => r <= 0);
 			if (firstFind < 0)
@@ -630,7 +442,7 @@ namespace Althea.Arrays
 			var alike = this.NewArrayAlike<TOut>();
 			try
 			{
-				LAD.PointWiseCast(this.Storage, 1, alike.Storage, 1);
+				LAD.PointWiseCast(this.Storage, StridedVectorStride, alike.Storage, StridedVectorStride);
 				return alike;
 			}
 			catch (Exception)
@@ -656,14 +468,14 @@ namespace Althea.Arrays
 			if (!value.IsZero())
 			{
 				using var clone = array.Storage.Clone();
-				LAD.PointWiseAddScalar(clone, 1, value.NativeNegate());
-				index = LAD.AbsoluteValueArgMax(clone, 1);
+				LAD.PointWiseAddScalar(clone, StridedVectorStride, value.NativeNegate());
+				index = LAD.AbsoluteValueArgMax(clone, StridedVectorStride);
 			}
 			else
 			{
-				index = LAD.AbsoluteValueArgMax(array.Storage, 1);
+				index = LAD.AbsoluteValueArgMax(array.Storage, StridedVectorStride);
 			}
-			double val = Const<T>.AbsoluteDelegate.Invoke(MEM.ToManaged(array.Storage + index))
+			double val = Const<T>.AbsoluteDelegate.Invoke(Mem.ToManaged(array.Storage + index))
 							.ToDouble();
 			return val <= 1E-6;
 		}

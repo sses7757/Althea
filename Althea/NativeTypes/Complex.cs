@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -119,7 +118,7 @@ namespace Althea.NativeTypes
 	/// <remarks>Arithmetic overflows are not checked in the methods of <see cref="Complex{T}"/> since they shall not be used for actual computation tasks,<br/>
 	/// although JIT will probably inline the static functions inside them for better performance if it detected that they are hot paths.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Complex<T> : IComplexFloatNumber<Complex<T>, T>, ICustomNativeType<Complex<T>> where T : unmanaged, IFloatingPoint<T>
+	public struct Complex<T> : IComplexFloatNumber<Complex<T>, T>, ICustomNumberType<Complex<T>> where T : unmanaged, IFloatingPoint<T>
 	{
 		#region basic
 		private readonly T real, imag;
@@ -158,12 +157,12 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="Complex{T}"/>
 		/// </summary>
-		public static DataTypeClassification Classification => NativeType<T>.Classification;
+		public static DataTypeClassification Classification => NumberType<T>.Classification;
 
 		/// <summary>
 		/// Statically get the machine precision of <see cref="Complex{T}"/>
 		/// </summary>
-		public static double MachinePrecision => NativeType<T>.MachinePrecision;
+		public static double MachinePrecision => NumberType<T>.MachinePrecision;
 
 		/// <summary>
 		/// Always return true
@@ -176,9 +175,9 @@ namespace Althea.NativeTypes
 			if (typeof(T).IsGenericType)
 				throw new InvalidOperationException(Support.DataType);
 			// native type check
-			if (NativeType<T>.Classification < DataTypeClassification.FloatPoint_IEEE754 ||
-				NativeType<T>.Classification == DataTypeClassification.SignedInteger ||
-				NativeType<T>.Classification == DataTypeClassification.UnsignedInteger)
+			if (NumberType<T>.Classification < DataTypeClassification.FloatPoint_IEEE754 ||
+				NumberType<T>.Classification == DataTypeClassification.SignedInteger ||
+				NumberType<T>.Classification == DataTypeClassification.UnsignedInteger)
 				throw new InvalidOperationException(Support.DataType);
 		}
 		#endregion
@@ -478,40 +477,6 @@ namespace Althea.NativeTypes
 		/// </summary>
 		public static explicit operator T(Complex<T> v) => v.Magnitude;
 
-		private static unsafe bool DirectConvertComp2Comp<TOther, TT>(TOther v, out Complex<T> result) where TOther : unmanaged, INumber<TOther> where TT : unmanaged, INumber<TT>
-		{
-			result = default;
-			if (!T.TryCreate(*(TT*)&v, out T real))
-				return false;
-			if (!T.TryCreate(*(1 + (TT*)&v), out T imag))
-				return false;
-			result = new(real, imag);
-			return true;
-		}
-		private static class Converter<TOther> where TOther : INumber<TOther>
-		{
-			internal delegate bool DelegateConvertToComplex(TOther value, out Complex<T> result);
-
-			internal static readonly DelegateConvertToComplex? Default;
-
-			static Converter()
-			{
-				if (!typeof(TOther).IsGenericType)
-				{
-					Default = null;
-					return;
-				}
-				try
-				{
-					var method = typeof(Complex<T>).GetMethod(nameof(DirectConvertComp2Comp), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(typeof(TOther), typeof(TOther).GenericTypeArguments[0]);
-					Default = method?.CreateDelegate<DelegateConvertToComplex>();
-				}
-				catch (System.Exception)
-				{
-					Default = null;
-				}
-			}
-		}
 		/// <summary>
 		/// Tries to create a complex from the given <paramref name="value"/>
 		/// </summary>
@@ -530,9 +495,9 @@ namespace Althea.NativeTypes
 				result = c;
 				return true;
 			}
-			if (NativeType<TOther>.IsComplex)
+			if (NumberType<TOther>.IsComplex)
 			{
-				return Converter<TOther>.Default?.Invoke(value, out result) ?? false;
+				return ComplexConverter.Converter<Complex<T>, TOther>.Default?.Invoke(value, out result) ?? false;
 			}
 			// real
 			if (!T.TryCreate(value, out T real))
@@ -566,6 +531,30 @@ namespace Althea.NativeTypes
 		/// <param name="value">The value to create from of type <typeparamref name="TOther"/></param>
 		/// <returns>A <see cref="Complex{T}"/> created from <paramref name="value"/></returns>
 		public static Complex<T> CreateTruncating<TOther>(TOther value) where TOther : INumber<TOther> => Create(value);
+
+		/// <summary>
+		/// Statically try to create a number of type <typeparamref name="TOther"/> from a number of type <see cref="Complex{T}"/>.
+		/// </summary>
+		/// <typeparam name="TOther">The other number type to create to</typeparam>
+		/// <param name="from">The input number to convert from of type <see cref="Complex{T}"/></param>
+		/// <param name="to">The output number to convert to of type <typeparamref name="TOther"/></param>
+		/// <returns>Conversion success or not.</returns>
+		public static unsafe bool TryCreateOther<TOther>(Complex<T> from, out TOther to) where TOther : unmanaged, INumber<TOther>
+		{
+			to = default;
+			// complex
+			if (to is Complex<T>)
+			{
+				to = *(TOther*)(&from);
+				return true;
+			}
+			if (NumberType<TOther>.IsComplex)
+			{
+				return ComplexConverter.Converter<TOther, Complex<T>>.Default?.Invoke(from, out to) ?? false;
+			}
+			// real
+			return TOther.TryCreate(from.Magnitude, out to);
+		}
 		#endregion
 
 		#region equality
@@ -1226,7 +1215,7 @@ namespace Althea.NativeTypes
 	/// </summary>
 	/// <typeparam name="T">The data type of corresponding real number</typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct ComplexInteger<T> : IComplexIntegerNumber<ComplexInteger<T>, T>, ICustomNativeType<ComplexInteger<T>> where T : unmanaged, IBinaryInteger<T>
+	public struct ComplexInteger<T> : IComplexIntegerNumber<ComplexInteger<T>, T>, ICustomNumberType<ComplexInteger<T>> where T : unmanaged, IBinaryInteger<T>
 	{
 		#region basic
 		private readonly T real, imag;
@@ -1265,7 +1254,7 @@ namespace Althea.NativeTypes
 		/// <summary>
 		/// Statically get the <see cref="DataTypeClassification"/> of <see cref="ComplexInteger{T}"/>
 		/// </summary>
-		public static DataTypeClassification Classification => NativeType<T>.Classification;
+		public static DataTypeClassification Classification => NumberType<T>.Classification;
 
 		/// <summary>
 		/// Statically get the machine precision of <see cref="ComplexInteger{T}"/>
@@ -1283,8 +1272,8 @@ namespace Althea.NativeTypes
 			if (typeof(T).IsGenericType)
 				throw new InvalidOperationException(Support.DataType);
 			// native type check
-			if (NativeType<T>.Classification != DataTypeClassification.SignedInteger &&
-				NativeType<T>.Classification != DataTypeClassification.UnsignedInteger)
+			if (NumberType<T>.Classification != DataTypeClassification.SignedInteger &&
+				NumberType<T>.Classification != DataTypeClassification.UnsignedInteger)
 				throw new InvalidOperationException(Support.DataType);
 		}
 		#endregion
@@ -1384,61 +1373,6 @@ namespace Althea.NativeTypes
 		/// <param name="val">A pair of real numbers as real and imaginary parts of type <typeparamref name="T"/></param>
 		public static implicit operator ComplexInteger<T>((T real, T imag) val) => new(val.real, val.imag);
 
-		private static unsafe bool DirectConvertComp2Comp<TOther, TT>(TOther v, out ComplexInteger<T> result) where TOther : unmanaged, INumber<TOther> where TT : unmanaged, INumber<TT>
-		{
-			result = default;
-			if (!T.TryCreate(*(TT*)&v, out T real))
-				return false;
-			if (!T.TryCreate(*(1 + (TT*)&v), out T imag))
-				return false;
-			result = new(real, imag);
-			return true;
-		}
-		private static unsafe ComplexInteger<T> SatConvertComp2Comp<TOther, TT>(TOther v) where TOther : unmanaged, INumber<TOther> where TT : unmanaged, INumber<TT>
-		{
-			T real = T.CreateSaturating(*(TT*)&v), imag = T.CreateSaturating(*(1 + (TT*)&v));
-			return new(real, imag);
-		}
-		private static unsafe ComplexInteger<T> TruncConvertComp2Comp<TOther, TT>(TOther v) where TOther : unmanaged, INumber<TOther> where TT : unmanaged, INumber<TT>
-		{
-			T real = T.CreateTruncating(*(TT*)&v), imag = T.CreateTruncating(*(1 + (TT*)&v));
-			return new(real, imag);
-		}
-		private static class Converter<TOther> where TOther : INumber<TOther>
-		{
-			internal delegate bool DelegateConvertToComplex(TOther value, out ComplexInteger<T> result);
-			internal delegate ComplexInteger<T> DelegateNonDirectConvertToComplex(TOther value);
-
-			internal static readonly DelegateConvertToComplex? Default;
-			internal static readonly DelegateNonDirectConvertToComplex? Saturating;
-			internal static readonly DelegateNonDirectConvertToComplex? Truncating;
-
-			static Converter()
-			{
-				if (!typeof(TOther).IsGenericType)
-				{
-					Default = null;
-					return;
-				}
-				try
-				{
-					var method = typeof(ComplexInteger<T>).GetMethod(nameof(DirectConvertComp2Comp), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(typeof(TOther), typeof(TOther).GenericTypeArguments[0]);
-					Default = method?.CreateDelegate<DelegateConvertToComplex>();
-
-					method = typeof(ComplexInteger<T>).GetMethod(nameof(SatConvertComp2Comp), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(typeof(TOther), typeof(TOther).GenericTypeArguments[0]);
-					Saturating = method?.CreateDelegate<DelegateNonDirectConvertToComplex>();
-
-					method = typeof(ComplexInteger<T>).GetMethod(nameof(TruncConvertComp2Comp), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(typeof(TOther), typeof(TOther).GenericTypeArguments[0]);
-					Truncating = method?.CreateDelegate<DelegateNonDirectConvertToComplex>();
-				}
-				catch (System.Exception)
-				{
-					Default = null;
-					Saturating = null;
-					Truncating = null;
-				}
-			}
-		}
 		/// <summary>
 		/// Tries to create a complex from the given <paramref name="value"/>
 		/// </summary>
@@ -1457,9 +1391,9 @@ namespace Althea.NativeTypes
 				result = c;
 				return true;
 			}
-			if (NativeType<TOther>.IsComplex)
+			if (NumberType<TOther>.IsComplex)
 			{
-				return Converter<TOther>.Default?.Invoke(value, out result) ?? false;
+				return ComplexConverter.Converter<ComplexInteger<T>, TOther>.Default?.Invoke(value, out result) ?? false;
 			}
 			// real
 			if (!T.TryCreate(value, out T real))
@@ -1494,9 +1428,9 @@ namespace Althea.NativeTypes
 			{
 				return c;
 			}
-			if (NativeType<TOther>.IsComplex)
+			if (NumberType<TOther>.IsComplex)
 			{
-				return Converter<TOther>.Saturating?.Invoke(value) ?? throw new NotSupportedException(Support.DataType);
+				return ComplexConverter.Converter<ComplexInteger<T>, TOther>.Saturating?.Invoke(value) ?? throw new NotSupportedException(Support.DataType);
 			}
 			// real
 			return new(T.CreateSaturating(value));
@@ -1516,12 +1450,36 @@ namespace Althea.NativeTypes
 			{
 				return c;
 			}
-			if (NativeType<TOther>.IsComplex)
+			if (NumberType<TOther>.IsComplex)
 			{
-				return Converter<TOther>.Truncating?.Invoke(value) ?? throw new NotSupportedException(Support.DataType);
+				return ComplexConverter.Converter<ComplexInteger<T>, TOther>.Truncating?.Invoke(value) ?? throw new NotSupportedException(Support.DataType);
 			}
 			// real
 			return new(T.CreateTruncating(value));
+		}
+
+		/// <summary>
+		/// Statically try to create a number of type <typeparamref name="TOther"/> from a number of type <see cref="ComplexInteger{T}"/>.
+		/// </summary>
+		/// <typeparam name="TOther">The other number type to create to</typeparam>
+		/// <param name="from">The input number to convert from of type <see cref="ComplexInteger{T}"/></param>
+		/// <param name="to">The output number to convert to of type <typeparamref name="TOther"/></param>
+		/// <returns>Conversion success or not.</returns>
+		public static unsafe bool TryCreateOther<TOther>(ComplexInteger<T> from, out TOther to) where TOther : unmanaged, INumber<TOther>
+		{
+			to = default;
+			// complex
+			if (to is ComplexInteger<T>)
+			{
+				to = *(TOther*)(&from);
+				return true;
+			}
+			if (NumberType<TOther>.IsComplex)
+			{
+				return ComplexConverter.Converter<TOther, ComplexInteger<T>>.Default?.Invoke(from, out to) ?? false;
+			}
+			// real
+			return TOther.TryCreate(Math.Sqrt(from.MagnitudeSquared.As<T, double>()), out to);
 		}
 		#endregion
 

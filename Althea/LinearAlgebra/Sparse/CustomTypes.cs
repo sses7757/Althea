@@ -2,9 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Arrays;
 using Althea.Helpers;
-using Althea.Storage;
 
 
 namespace Althea.LinearAlgebra.Sparse
@@ -216,92 +214,4 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 		#endregion
 	}
-
-	#region wrapper
-	/// <summary>
-	/// The simple wrapper structure for any sparse array which is typically used as outputs of API methods.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public readonly ref struct SparseArrayWrapper<T> where T : unmanaged, INumber<T>
-	{
-		private readonly IStorage values;
-
-		private readonly ReadOnlySpan<IStorage> indices;
-
-		private readonly SparseFormat format;
-
-		private readonly object? otherInfo;
-
-		private readonly T defaultValue;
-
-		/// <summary>
-		/// Get the value array storage of this sparse array wrapper as an <see cref="IStorage"/>
-		/// </summary>
-		public IStorage ValueStorage {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.values;
-		}
-
-		/// <summary>
-		/// Get the storages of index arrays of this sparse array wrapper as a <see cref="ReadOnlySpan{T}"/> of <see cref="IStorage"/>(s)
-		/// </summary>
-		public ReadOnlySpan<IStorage> IndexStorages {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.indices;
-		}
-
-		/// <summary>
-		/// Get the <see cref="SparseFormat"/> of this sparse array
-		/// </summary>
-		public SparseFormat Format {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.format;
-		}
-
-		/// <summary>
-		/// Get the other info (possibly null) of this sparse array
-		/// </summary>
-		public object? OtherInfo {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.otherInfo;
-		}
-
-		/// <summary>
-		/// Get the default value of this sparse array
-		/// </summary>
-		public T DefaultValue {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.defaultValue;
-		}
-
-		/// <summary>
-		/// Create a <see cref="SparseArrayWrapper{T}"/> with given <paramref name="values"/>, <paramref name="indices"/> and <paramref name="format"/>
-		/// </summary>
-		/// <param name="values">The value array storage</param>
-		/// <param name="indices">The storages of index arrays</param>
-		/// <param name="format">The format as a <see cref="SparseFormat"/></param>
-		/// <param name="defaultValue">The default value of this sparse array</param>
-		/// <param name="info">The object storing other information, can be null</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SparseArrayWrapper(IStorage values, ReadOnlySpan<IStorage> indices, SparseFormat format, T defaultValue, object? info = null)
-		{
-			this.values = values; this.indices = indices; this.format = format; this.defaultValue = defaultValue; this.otherInfo = info;
-		}
-
-		/// <summary>
-		/// Dispose this wrapper.
-		/// </summary>
-		/// <remarks>When the <see cref="SparseArrayWrapper{T}"/> was created from <see cref="ISparseArray{T}"/>, it shall only contains referenced storages. Therefore, the disposition in such situation does nothing.<br/>
-		/// However, it will dispose the storages created inside the method implementations of <see cref="AbstractApi"/>.</remarks>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			this.values?.Dispose();
-			for (int i = 0; i < this.indices.Length; i++)
-			{
-				this.indices[i]?.Dispose();
-			}
-		}
-	}
-	#endregion
 }

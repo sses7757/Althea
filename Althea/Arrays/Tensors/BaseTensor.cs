@@ -22,7 +22,7 @@ namespace Althea.Arrays
 	/// Therefore, the derived class shall follow the same strategy, such as <see cref="BaseSparseTensor{T, TInd}"/>.
 	/// </remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public abstract class BaseTensor<T> : ValueArray<T>, ITensor where T : unmanaged, INumber<T>
+	public abstract class BaseTensor<T> : ValueArray<T>, ILabeledTensor where T : unmanaged, INumber<T>
 	{
 		#region basic
 		// previously defined 8 + (8 * 2) bytes

@@ -341,7 +341,7 @@ namespace Althea.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged, INumber<T>
 		{
-			bool isComplex = NativeType<T>.IsComplex;
+			bool isComplex = NumberType<T>.IsComplex;
 			bool symm = hermitian.HasValue && !hermitian.Value, herm = isComplex && hermitian.HasValue && hermitian.Value;
 			switch (input)
 			{
