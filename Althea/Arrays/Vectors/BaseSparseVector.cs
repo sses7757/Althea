@@ -6,7 +6,7 @@ using Althea.Helpers;
 using Althea.LinearAlgebra.Sparse;
 using Althea.NativeTypes;
 
-using MEM = Althea.Storage.AbstractApi;
+using MEM = Althea.Storage.IAbstractApi;
 
 
 namespace Althea.Arrays

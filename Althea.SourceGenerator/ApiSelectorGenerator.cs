@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,9 +14,9 @@ namespace Althea.SourceGenerator
 {
 	#region marking attributes
 	/// <summary>
-	/// Tells the source generator that the marked class is a runtime API class
+	/// Tells the source generator that the marked interface is a runtime API class
 	/// </summary>
-	[System.AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public sealed class AbstractRuntimeApiAttribute : Attribute
 	{
 		public AbstractRuntimeApiAttribute()
@@ -27,7 +26,7 @@ namespace Althea.SourceGenerator
 	/// <summary>
 	/// Tells the source generator that the marked method is a runtime API method
 	/// </summary>
-	[System.AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 	public sealed class AbstractApiMethodAttribute : Attribute
 	{
 		public AbstractApiMethodAttribute(bool duplicateTVariant = false)
@@ -37,7 +36,7 @@ namespace Althea.SourceGenerator
 	/// <summary>
 	/// Tells the source generator that the marked parameter shall multiply <c>sizeof(T)</c> when a new API selector method with additional number generic parameter <c>T</c>
 	/// </summary>
-	[System.AttributeUsage(AttributeTargets.Parameter, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Parameter, Inherited = false, AllowMultiple = false)]
 	public sealed class DuplicateTParameterAttribute : Attribute
 	{
 		public DuplicateTParameterAttribute()
@@ -64,13 +63,13 @@ namespace Althea.SourceGenerator
 			Debugger.Launch();
 #endif
 			// Register a factory that can create our custom syntax receiver
-			context.RegisterForSyntaxNotifications(() => new ApiClassSyntaxReceiver());
+			context.RegisterForSyntaxNotifications(() => new ApiIntefaceSyntaxReceiver());
 		}
 
 		public void Execute(GeneratorExecutionContext context)
 		{
-			ApiClassSyntaxReceiver syntaxReceiver = (ApiClassSyntaxReceiver)context.SyntaxReceiver;
-			var apiClasses = syntaxReceiver.ApiClasses;
+			ApiIntefaceSyntaxReceiver syntaxReceiver = (ApiIntefaceSyntaxReceiver)context.SyntaxReceiver;
+			var apiClasses = syntaxReceiver.ApiInterfaces;
 
 			// get type parameter T
 			TypeParameterSyntax typeT = null;
@@ -101,6 +100,8 @@ namespace Althea.SourceGenerator
 				var ns = apiClass.Parent as NamespaceDeclarationSyntax;
 				var usings = (ns.Parent as CompilationUnitSyntax).Usings;
 				string selectorName = apiClass.Identifier.ToString().Replace("Abstract", "") + "Selector";
+				if (selectorName[0] == 'I')
+					selectorName = selectorName.Substring(1);
 				string usingStatements = string.Join(Environment.NewLine, usings.Where(u => !u.ToString().Contains("Althea.SourceGenerator")));
 				if (!usingStatements.Contains("using Althea.NativeTypes;"))
 					usingStatements += Environment.NewLine + "using Althea.NativeTypes;";
@@ -111,7 +112,7 @@ namespace Althea.SourceGenerator
 
 namespace {ns.Name}
 {{
-	{ns.ToString().Substring(classDocStart, classDocEnd - classDocStart).Replace("abstract class", "selector class")}	/// </summary>
+	{ns.ToString().Substring(classDocStart, classDocEnd - classDocStart).Replace("abstract interface", "selector class")}	/// </summary>
 	public sealed partial class {selectorName} : AbstractApiSelector<{apiClass.Identifier}>
 	{{
 ";
@@ -235,9 +236,9 @@ namespace {ns.Name}
 		}
 	}
 
-	class ApiClassSyntaxReceiver : ISyntaxReceiver
+	class ApiIntefaceSyntaxReceiver : ISyntaxReceiver
 	{
-		public List<ClassDeclarationSyntax> ApiClasses { get; } = new List<ClassDeclarationSyntax>();
+		public List<InterfaceDeclarationSyntax> ApiInterfaces { get; } = new List<InterfaceDeclarationSyntax>();
 
 		public List<string> FileNames { get; } = new List<string>();
 
@@ -246,9 +247,9 @@ namespace {ns.Name}
 		public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
 		{
 			// Business logic to decide what we're interested in goes here
-			if (syntaxNode is ClassDeclarationSyntax cds && cds.HasAttribute(nameof(AbstractRuntimeApiAttribute)))
+			if (syntaxNode is InterfaceDeclarationSyntax cds && cds.HasAttribute(nameof(AbstractRuntimeApiAttribute)))
 			{
-				ApiClasses.Add(cds);
+				ApiInterfaces.Add(cds);
 				////var ns = cds.Parent as NamespaceDeclarationSyntax;
 				////string name = ns.Name + "." + cds.Identifier.ToString().Replace("Abstract", "") + "Selector";
 				////int count = 0; string actualName = name;
@@ -267,7 +268,7 @@ namespace {ns.Name}
 
 	static class Extensions
 	{
-		public static bool HasAttribute(this ClassDeclarationSyntax cds, string attributeName)
+		public static bool HasAttribute(this InterfaceDeclarationSyntax cds, string attributeName)
 		{
 			attributeName = attributeName.Replace("Attribute", "");
 			foreach (var attrList in cds.AttributeLists)

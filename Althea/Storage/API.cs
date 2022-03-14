@@ -14,10 +14,10 @@ using Althea.SourceGenerator;
 namespace Althea.Storage
 {
 	/// <summary>
-	/// The abstract class for runtime memory API routines 
+	/// The abstract interface for runtime memory API routines 
 	/// </summary>
 	[AbstractRuntimeApi]
-	public abstract class AbstractApi : AbstractRuntimeApi<AbstractApi>
+	public interface IAbstractApi : IAbstractRuntimeApi<IAbstractApi>
 	{
 		#region storage operations
 		/// <summary>

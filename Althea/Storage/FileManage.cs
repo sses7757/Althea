@@ -13,7 +13,7 @@ using Althea.Linq;
 using Althea.Arrays;
 using Althea.NativeTypes;
 
-using MEM = Althea.Storage.AbstractApi;
+using MEM = Althea.Storage.IAbstractApi;
 namespace Althea.Storage
 {
 	#region URI related

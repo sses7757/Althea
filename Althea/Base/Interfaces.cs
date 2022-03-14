@@ -96,7 +96,7 @@ namespace Althea
 		bool Available { get; }
 
 		/// <summary>
-		/// The implementation type of <see cref="Althea.Storage.AbstractApi"/>
+		/// The implementation type of <see cref="Althea.Storage.IAbstractApi"/>
 		/// </summary>
 		Type StorageImplementation { get; }
 
@@ -106,7 +106,7 @@ namespace Althea
 		Type DenseLinearAlgebraImplementation { get; }
 
 		/// <summary>
-		/// The implementation type of <see cref="Althea.LinearAlgebra.Sparse.AbstractApi"/>
+		/// The implementation type of <see cref="Althea.LinearAlgebra.Sparse.IAbstractApi"/>
 		/// </summary>
 		Type SparseLinearAlgebraImplementation { get; }
 

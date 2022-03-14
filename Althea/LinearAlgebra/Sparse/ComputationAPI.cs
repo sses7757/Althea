@@ -8,7 +8,11 @@ using Althea.SourceGenerator;
 
 namespace Althea.LinearAlgebra.Sparse
 {
-	public abstract partial class AbstractApi : AbstractRuntimeApi<AbstractApi>
+	/// <summary>
+	/// The abstract interface for runtime sparse linear algebra computation API routines 
+	/// </summary>
+	[AbstractRuntimeApi]
+	public interface IComputationAbstractApi : IAbstractRuntimeApi<IComputationAbstractApi>
 	{
 		#region vector
 		/// <summary>

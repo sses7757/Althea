@@ -7,7 +7,7 @@ using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using MEM = Althea.Storage.AbstractApi;
+using MEM = Althea.Storage.IAbstractApi;
 
 
 namespace Althea.Backend.Storage

@@ -10,10 +10,10 @@ using Althea.SourceGenerator;
 namespace Althea.LinearAlgebra.Dense
 {
 	/// <summary>
-	/// The abstract class for dense linear algebra LAPACK API routines 
+	/// The abstract interface for dense linear algebra LAPACK API routines 
 	/// </summary>
 	[AbstractRuntimeApi]
-	public abstract partial class LapackAbstractApi : AbstractRuntimeApi<LapackAbstractApi>
+	public interface ILapackAbstractApi : IAbstractRuntimeApi<ILapackAbstractApi>
 	{
 		#region eigen-problems
 		/// <summary>

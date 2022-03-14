@@ -11,7 +11,7 @@ using static Althea.Backend.Storage.ConcretePointersExtension;
 namespace Althea.Backend.Mkl.Storage
 {
 	/// <summary>
-	/// The MKL back-end of <see cref="AbstractApi"/> that supports storage locations of CPU and file.
+	/// The MKL back-end of <see cref="IAbstractApi"/> that supports storage locations of CPU and file.
 	/// </summary>
 	public class StorageApi : CSharp.Storage.StorageApi
 	{

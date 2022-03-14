@@ -553,7 +553,7 @@ namespace Althea.NativeTypes
 				return ComplexConverter.Converter<TOther, Complex<T>>.Default?.Invoke(from, out to) ?? false;
 			}
 			// real
-			return TOther.TryCreate(from.Magnitude, out to);
+			return TOther.TryCreate(from.real, out to);
 		}
 		#endregion
 
@@ -1479,7 +1479,7 @@ namespace Althea.NativeTypes
 				return ComplexConverter.Converter<TOther, ComplexInteger<T>>.Default?.Invoke(from, out to) ?? false;
 			}
 			// real
-			return TOther.TryCreate(Math.Sqrt(from.MagnitudeSquared.As<T, double>()), out to);
+			return TOther.TryCreate(from.real, out to);
 		}
 		#endregion
 

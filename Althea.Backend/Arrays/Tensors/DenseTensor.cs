@@ -12,7 +12,7 @@ using Althea.NativeTypes;
 using Althea.TensorAlgebra;
 using Althea.Solver;
 
-using MEM = Althea.Storage.AbstractApi;
+using MEM = Althea.Storage.IAbstractApi;
 using TAD = Althea.TensorAlgebra.Dense.AbstractApi;
 
 

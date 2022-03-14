@@ -12,7 +12,7 @@ using Althea.TensorAlgebra;
 using Althea.Solver;
 using Althea.TensorAlgebra.Sparse;
 
-using MEM = Althea.Storage.AbstractApi;
+using MEM = Althea.Storage.IAbstractApi;
 using TAS = Althea.TensorAlgebra.Sparse.AbstractApi;
 
 

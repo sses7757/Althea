@@ -10,8 +10,8 @@ using Althea.NativeTypes;
 using Althea.Solver;
 
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
-using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
-using MEM = Althea.Storage.AbstractApi;
+using LAS = Althea.LinearAlgebra.Sparse.IAbstractApi;
+using MEM = Althea.Storage.IAbstractApi;
 
 
 namespace Althea.Backend.Arrays

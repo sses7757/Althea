@@ -53,9 +53,9 @@ namespace Althea.Helpers
 		{
 			public bool DisposeNotCurrentImplementation { get; set; }
 
-			public Storage.AbstractApi? Storage { get; set; }
+			public Storage.IAbstractApi? Storage { get; set; }
 			public LinearAlgebra.Dense.AbstractApi? LinearAlgebraDense { get; set; }
-			public LinearAlgebra.Sparse.AbstractApi? LinearAlgebraSparse { get; set; }
+			public LinearAlgebra.Sparse.IAbstractApi? LinearAlgebraSparse { get; set; }
 			public TensorAlgebra.Dense.AbstractApi? TensorAlgebraDense { get; set; }
 			public TensorAlgebra.Sparse.AbstractApi? TensorAlgebraSparse { get; set; }
 			public Random.AbstractApi? Random { get; set; }
@@ -68,14 +68,14 @@ namespace Althea.Helpers
 			{
 				DisposeNotCurrentImplementation = true;
 
-				Althea.Storage.AbstractApi.SetImplementation(impls.StorageImplementation);
-				this.Storage = Althea.Storage.AbstractApi.Current;
+				Althea.Storage.IAbstractApi.SetImplementation(impls.StorageImplementation);
+				this.Storage = Althea.Storage.IAbstractApi.Current;
 
 				LinearAlgebra.Dense.AbstractApi.SetImplementation(impls.DenseLinearAlgebraImplementation);
 				this.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
 
-				LinearAlgebra.Sparse.AbstractApi.SetImplementation(impls.SparseLinearAlgebraImplementation);
-				this.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.Current;
+				LinearAlgebra.Sparse.IAbstractApi.SetImplementation(impls.SparseLinearAlgebraImplementation);
+				this.LinearAlgebraSparse = LinearAlgebra.Sparse.IAbstractApi.Current;
 
 				TensorAlgebra.Dense.AbstractApi.SetImplementation(impls.DenseTensorAlgebraImplementation);
 				this.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
@@ -92,9 +92,9 @@ namespace Althea.Helpers
 
 			[JsonConstructor]
 			internal ImplementationSettings(bool disposeNotCurrentImplementation,
-				Storage.AbstractApi? storage,
+				Storage.IAbstractApi? storage,
 				LinearAlgebra.Dense.AbstractApi? linearAlgebraDense,
-				LinearAlgebra.Sparse.AbstractApi? linearAlgebraSparse,
+				LinearAlgebra.Sparse.IAbstractApi? linearAlgebraSparse,
 				TensorAlgebra.Dense.AbstractApi? tensorAlgebraDense,
 				TensorAlgebra.Sparse.AbstractApi? tensorAlgebraSparse,
 				Random.AbstractApi? random,
@@ -102,14 +102,14 @@ namespace Althea.Helpers
 			{
 				DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
 
-				Althea.Storage.AbstractApi.SetImplementation(storage);
-				this.Storage = Althea.Storage.AbstractApi.Current;
+				Althea.Storage.IAbstractApi.SetImplementation(storage);
+				this.Storage = Althea.Storage.IAbstractApi.Current;
 
 				LinearAlgebra.Dense.AbstractApi.SetImplementation(linearAlgebraDense);
 				this.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
 
-				LinearAlgebra.Sparse.AbstractApi.SetImplementation(linearAlgebraSparse);
-				this.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.Current;
+				LinearAlgebra.Sparse.IAbstractApi.SetImplementation(linearAlgebraSparse);
+				this.LinearAlgebraSparse = LinearAlgebra.Sparse.IAbstractApi.Current;
 
 				TensorAlgebra.Dense.AbstractApi.SetImplementation(tensorAlgebraDense);
 				this.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
@@ -323,8 +323,8 @@ namespace Althea.Helpers
 		{
 			var currentOptions = new JsonSerializerOptions(options);
 
-			settings.ImplementationSettings.Storage = Storage.AbstractApi.Current;
-			var converter = Storage.AbstractApi.Current?.CurrentConverter;
+			settings.ImplementationSettings.Storage = Storage.IAbstractApi.Current;
+			var converter = Storage.IAbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
@@ -333,8 +333,8 @@ namespace Althea.Helpers
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 
-			settings.ImplementationSettings.LinearAlgebraSparse = LinearAlgebra.Sparse.AbstractApi.Current;
-			converter = LinearAlgebra.Sparse.AbstractApi.Current?.CurrentConverter;
+			settings.ImplementationSettings.LinearAlgebraSparse = LinearAlgebra.Sparse.IAbstractApi.Current;
+			converter = LinearAlgebra.Sparse.IAbstractApi.Current?.CurrentConverter;
 			if (converter is not null)
 				currentOptions.Converters.Add(converter);
 

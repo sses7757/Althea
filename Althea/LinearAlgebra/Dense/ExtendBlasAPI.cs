@@ -8,10 +8,10 @@ using Althea.SourceGenerator;
 namespace Althea.LinearAlgebra.Dense
 {
 	/// <summary>
-	/// The abstract class for dense linear algebra extend BLAS API routines 
+	/// The abstract interface for dense linear algebra extend BLAS API routines 
 	/// </summary>
 	[AbstractRuntimeApi]
-	public abstract partial class ExtendBlasAbstractApi : AbstractRuntimeApi<ExtendBlasAbstractApi>
+	public interface IExtendBlasAbstractApi : IAbstractRuntimeApi<IExtendBlasAbstractApi>
 	{
 		#region BLAS like
 		/// <summary>

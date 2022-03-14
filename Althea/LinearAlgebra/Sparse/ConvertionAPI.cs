@@ -9,10 +9,10 @@ using Althea.SourceGenerator;
 namespace Althea.LinearAlgebra.Sparse
 {
 	/// <summary>
-	/// The abstract class for runtime sparse linear algebra API routines 
+	/// The abstract interface for runtime sparse linear algebra conversion API routines 
 	/// </summary>
 	[AbstractRuntimeApi]
-	public abstract partial class AbstractApi : AbstractRuntimeApi<AbstractApi>
+	public interface IConversionAbstractApi : IAbstractRuntimeApi<IConversionAbstractApi>
 	{
 		#region vector
 		/// <summary>

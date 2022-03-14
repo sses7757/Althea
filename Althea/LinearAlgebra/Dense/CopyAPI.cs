@@ -13,10 +13,10 @@ using Althea.SourceGenerator;
 namespace Althea.LinearAlgebra.Dense
 {
 	/// <summary>
-	/// The abstract class for dense linear algebra copy API routines 
+	/// The abstract interface for dense linear algebra copy API routines 
 	/// </summary>
 	[AbstractRuntimeApi]
-	public abstract partial class CopyAbstractApi : AbstractRuntimeApi<CopyAbstractApi>
+	public interface ICopyAbstractApi : IAbstractRuntimeApi<ICopyAbstractApi>
 	{
 		#region storage operations
 		/// <summary>

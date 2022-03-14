@@ -16,9 +16,9 @@ using static Althea.Backend.Storage.ConcretePointersExtension;
 namespace Althea.Backend.Cuda.Storage
 {
 	/// <summary>
-	/// The CUDA back-end of the <see cref="AbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABIs are found.
+	/// The CUDA back-end of the <see cref="IAbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABIs are found.
 	/// </summary>
-	public class StorageApi : AbstractApi
+	public class StorageApi : IAbstractApi
 	{
 		#region basic
 		/// <summary>

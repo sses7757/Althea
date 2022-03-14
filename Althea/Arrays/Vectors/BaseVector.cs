@@ -5,61 +5,29 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
-using Althea.NativeTypes;
+using Althea.Storage;
 
+using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
+using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the actual data storage. There may be more pointer(s) for different indices in a sparse vector that inherits <see cref="BaseVector{T}"/>, but they shall be immutable.
+	/// The abstract vector interface whose only value storage is of type <typeparamref name="TS"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public abstract class BaseVector<T> : ValueArray<T>, IVectorMetric, IReadOnlyList<T> where T : unmanaged, INumber<T>
+	/// <typeparam name="TS">The storage type used by the value <see cref="Storage"/></typeparam>
+	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IBaseVector{T, TS, TSelf}"/></typeparam>
+	public interface IBaseVector<T, TS, TSelf> : ISingleValueStorageArray<T, TS, TSelf>, IReadOnlyList<T>
+		where T : unmanaged, INumber<T>
+		where TS : class, IStorage<T, TS>
+		where TSelf : class, ISingleValueStorageArray<T, TS, TSelf>
 	{
-		#region basic
-		private long m_length;
-
-		/// <summary>
-		/// Get the rank of this vector -- 1
-		/// </summary>
-		public override int Rank {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 1;
-		}
-
-		/// <summary>
-		/// Get the size of this vector ({<see cref="AbstractArray{T}.Length"/>}) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
-		/// </summary>
-		public override ReadOnlySpan<long> Size {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => MemoryMarshal.CreateReadOnlySpan(ref this.m_length, 1);
-		}
-
-		/// <summary>
-		/// Construct a <see cref="BaseVector{T}"/> by preallocated <paramref name="values"/> and the given <paramref name="length"/>
-		/// </summary>
-		/// <param name="values">The preallocated <see cref="Storage{T}"/> of the value array</param>
-		/// <param name="length">The presenting size of the vector</param>
-		/// <param name="actualLength">The actual length of this array, default 0 means the length of <paramref name="values"/></param>
-		protected BaseVector(Storage<T> values, long length, long actualLength = 0) : base(values, length, actualLength)
-		{
-			this.m_length = length;
-		}
-		#endregion
-
-		#region reshape
-		/// <summary>
-		/// Reshape this array to a vector. Returns this vector directly.
-		/// </summary>
-		/// <returns> Returns this vector directly.</returns>
-		public override BaseVector<T> ToVector() => this;
-		#endregion
-
 		#region indexing
 		/// <summary>
 		/// Provide legacy support of C# duck type for <c>this[<see cref="Index"/>]</c> and <c>this[<see cref="Range"/>]</c>
 		/// </summary>
-		public int Count => (int)this.Length;
+		int IReadOnlyCollection<T>.Count => (int)this.Length;
 
 		/// <summary>
 		/// Check whether the given <paramref name="index"/> is out of range of this vector
@@ -100,12 +68,12 @@ namespace Althea.Arrays
 		/// <param name="index">The position of the element to get / set</param>
 		/// <returns>The element at <paramref name="index"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public abstract T this[long index] { get; set; }
+		T this[long index] { get; set; }
 
 		/// <summary>
 		/// Provide legacy support of <see cref="this[long]"/> and C# duck type for <c>this[<see cref="Index"/>]</c>
 		/// </summary>
-		public T this[int index] => this[(long)index];
+		T IReadOnlyList<T>.this[int index] => this[(long)index];
 
 		/// <summary>
 		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/>
@@ -114,7 +82,7 @@ namespace Althea.Arrays
 		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
 		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>. Shall be a referenced vector if possible.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
-		public abstract BaseVector<T> GetSlice(long start, long count);
+		TSelf GetSlice(long start, long count);
 
 		/// <summary>
 		/// When implemented by a derived class, set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>
@@ -125,12 +93,12 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If <paramref name="value"/> cannot be used to set</exception>
-		public abstract void SetSlice(long start, long count, BaseVector<T> value);
+		void SetSlice(long start, long count, TSelf value);
 
 		/// <summary>
 		/// Provide legacy support of C# duck type for <c>this[<see cref="Range"/>]</c>
 		/// </summary>
-		public BaseVector<T> Slice(int start, int length) => this.Slice(start, length);
+		public virtual TSelf Slice(int start, int length) => this.GetSlice(start, length);
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
@@ -140,25 +108,25 @@ namespace Althea.Arrays
 			}
 		}
 
-		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<T>)this).GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 		#endregion
 
 		#region linear algebra abstract methods
 		/// <summary>
-		/// When implemented by a derived class, compute the dot (inner) product of this vector and the <paramref name="other"/> vector.
+		/// When implemented by a derived class, compute the dot (inner) product of this vector and the <paramref name="other"/> vector. The default implementation simply dots two <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/>s.
 		/// </summary>
 		/// <param name="other">The other vector to perform the dot product</param>
 		/// <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
 		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-		public abstract T Dot(BaseVector<T> other, bool conjugateThis = true);
+		public virtual T Dot(TSelf other, bool conjugateThis = true) => Blas.Dot<T, TS, TS>(conjugateThis, this.Storage, 1, other.Storage, 1);
 
 		/// <summary>
-		/// When implemented by a derived class, compute the addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector.
+		/// When implemented by a derived class, compute the out-of-place addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector. The default implementation simply adds two <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/>s
 		/// </summary>
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
 		/// <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
-		public abstract BaseVector<T> AddVector(BaseVector<T> other, T scalar);
+		public virtual TSelf AddVector(TSelf other, T scalar) => ((TSelf)this).ApplyToClone(c => Blas.Add(scalar, other.Storage, 1, c.Storage, 1));
 
 		/// <summary>
 		/// When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) with this vector (scaled by <paramref name="β"/>).

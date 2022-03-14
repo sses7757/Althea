@@ -8,10 +8,10 @@ using Althea.SourceGenerator;
 namespace Althea.LinearAlgebra.Dense
 {
 	/// <summary>
-	/// The abstract class for dense linear algebra BLAS API routines 
+	/// The abstract interface for dense linear algebra BLAS API routines 
 	/// </summary>
 	[AbstractRuntimeApi]
-	public abstract partial class BlasAbstractApi : AbstractRuntimeApi<BlasAbstractApi>
+	public interface IBlasAbstractApi : IAbstractRuntimeApi<IBlasAbstractApi>
 	{
 		#region BLAS level 1
 		/// <summary>
@@ -49,12 +49,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="sum">Output the result as a <see cref="double"/></param>
+		/// <param name="sum">Output the result as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool AbsoluteValueSum<T, TS>(TS x, int strideX, out double sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool AbsoluteValueSum<T, TS>(TS x, int strideX, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the Euclidean norm (2-norm) of the vector <paramref name="x"/>.
@@ -63,11 +63,11 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="x">The vector of type <typeparamref name="T"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="norm">Output the result value as a <see cref="double"/></param>
+		/// <param name="norm">Output the result value as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool Norm<T, TS>(TS x, int strideX, out double norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool Norm<T, TS>(TS x, int strideX, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, in-place scale the vector <paramref name="x"/> by <paramref name="scalar"/>.

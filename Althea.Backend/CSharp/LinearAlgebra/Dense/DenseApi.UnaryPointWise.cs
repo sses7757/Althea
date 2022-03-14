@@ -541,7 +541,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				try
 				{
-					Althea.Storage.AbstractApi.FillWithValue(x, Const<T>.One);
+					Althea.Storage.IAbstractApi.FillWithValue(x, Const<T>.One);
 					return true;
 				}
 				catch (Exception)
@@ -568,7 +568,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				try
 				{
-					Althea.Storage.AbstractApi.FillWithValue(x, Const<T>.One);
+					Althea.Storage.IAbstractApi.FillWithValue(x, Const<T>.One);
 					return true;
 				}
 				catch (Exception)

@@ -17,9 +17,9 @@ using static Althea.Backend.Storage.ConcretePointersExtension;
 namespace Althea.Backend.CSharp.Storage
 {
 	/// <summary>
-	/// The C# back-end of <see cref="AbstractApi"/> that supports storage locations of CPU and file.
+	/// The C# back-end of <see cref="IAbstractApi"/> that supports storage locations of CPU and file.
 	/// </summary>
-	public class StorageApi : AbstractApi
+	public class StorageApi : IAbstractApi
 	{
 		#region basic
 		/// <summary>

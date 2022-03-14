@@ -14,8 +14,8 @@ using Althea.Solver;
 
 using INFO = Althea.Backend.Arrays.BlockedSparseMatrixOtherInfo;
 using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
-using LAS = Althea.LinearAlgebra.Sparse.AbstractApi;
-using MEM = Althea.Storage.AbstractApi;
+using LAS = Althea.LinearAlgebra.Sparse.IAbstractApi;
+using MEM = Althea.Storage.IAbstractApi;
 
 
 namespace Althea.Backend.Arrays
