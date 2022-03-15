@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-using Althea.Arrays;
 using Althea.Helpers;
 using Althea.NativeTypes;
 
@@ -10,76 +9,30 @@ namespace Althea.LinearAlgebra
 {
 	#region interface
 	/// <summary>
-	/// The interface for runtime linear algebra API routines
+	/// The interface for basic vector metrics
 	/// </summary>
-	internal interface ILinearAlgebraApi
+	public interface IVectorMetric
 	{
-		#region support information
 		/// <summary>
-		/// When implemented by a derived class, check if the given <paramref name="location"/> is supported by vector unary operations of this implementation or not.
+		/// When implemented by a derived class, get the presenting length of this vector.
 		/// </summary>
-		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether vector unary operation on <paramref name="location"/> is supported by this <see cref="ILinearAlgebraApi"/>.</returns>
-		bool IsSupportedVectorUnary(CombinationOfLocations location);
+		long Length { get; }
+	}
+
+	/// <summary>
+	/// The interface for basic matrix metrics
+	/// </summary>
+	public interface IMatrixMetric
+	{
+		/// <summary>
+		/// When implemented by a derived class, get the presenting number of rows of this matrix.
+		/// </summary>
+		long NRows { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by vector binary operations of this implementation or not.
+		/// When implemented by a derived class, get the presenting number of columns of this matrix.
 		/// </summary>
-		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether binary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="ILinearAlgebraApi"/>.</returns>
-		bool IsSupportedVectorBinary(CombinationOfLocations location1, CombinationOfLocations location2);
-
-		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by vector and matrix binary operations of this implementation or not.
-		/// </summary>
-		/// <param name="vector">The given <see cref="CombinationOfLocations"/> of the vector</param>
-		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of the matrix</param>
-		/// <returns>Whether binary operations on <paramref name="vector"/> and <paramref name="matrix"/> are supported by this <see cref="ILinearAlgebraApi"/>.</returns>
-		bool IsSupportedVectorUnaryMatrixUnary(CombinationOfLocations vector, CombinationOfLocations matrix);
-
-		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by binary vector and unary matrix operations of this implementation or not.
-		/// </summary>
-		/// <param name="vector1">The given <see cref="CombinationOfLocations"/> of the first vector</param>
-		/// <param name="vector2">The given <see cref="CombinationOfLocations"/> of the second vector</param>
-		/// <param name="matrix">The given <see cref="CombinationOfLocations"/> of matrix</param>
-		/// <returns>Whether binary vector and unary matrix operations on <paramref name="vector1"/> and <paramref name="vector2"/> and <paramref name="matrix"/> are supported by this <see cref="ILinearAlgebraApi"/>.</returns>
-		bool IsSupportedVectorBinaryMatrixUnary(CombinationOfLocations vector1, CombinationOfLocations vector2, CombinationOfLocations matrix);
-
-		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by unary vector and binary matrix operations of this implementation or not.
-		/// </summary>
-		/// <param name="vector">The given <see cref="CombinationOfLocations"/> of the vector</param>
-		/// <param name="matrix1">The given <see cref="CombinationOfLocations"/> of the first matrix</param>
-		/// <param name="matrix2">The given <see cref="CombinationOfLocations"/> of the second matrix</param>
-		/// <returns>Whether unary vector and binary matrix operations on <paramref name="vector"/> and <paramref name="matrix1"/> and <paramref name="matrix2"/> are supported by this <see cref="ILinearAlgebraApi"/>.</returns>
-		bool IsSupportedVectorUnaryMatrixBinary(CombinationOfLocations vector, CombinationOfLocations matrix1, CombinationOfLocations matrix2);
-
-		/// <summary>
-		/// When implemented by a derived class, check if the given <paramref name="location"/> is supported by matrix unary operations of this implementation or not.
-		/// </summary>
-		/// <param name="location">The given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether matrix unary operation on <paramref name="location"/> is supported by this <see cref="ILinearAlgebraApi"/>.</returns>
-		bool IsSupportedMatrixUnary(CombinationOfLocations location);
-
-		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by matrix binary operations of this implementation or not.
-		/// </summary>
-		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether binary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="ILinearAlgebraApi"/>.</returns>
-		bool IsSupportedMatrixBinary(CombinationOfLocations location1, CombinationOfLocations location2);
-
-		/// <summary>
-		/// When implemented by a derived class, check if the given <see cref="CombinationOfLocations"/>s are supported by matrix trinary operations of this implementation or not.
-		/// </summary>
-		/// <param name="location1">The first given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location2">The second given <see cref="CombinationOfLocations"/></param>
-		/// <param name="location3">The third given <see cref="CombinationOfLocations"/></param>
-		/// <returns>Whether trinary operations on <paramref name="location1"/> and <paramref name="location2"/> are supported by this <see cref="ILinearAlgebraApi"/>.</returns>
-		bool IsSupportedMatrixTrinary(CombinationOfLocations location1, CombinationOfLocations location2, CombinationOfLocations location3);
-		#endregion
+		long NCols { get; }
 	}
 	#endregion
 
@@ -415,7 +368,7 @@ namespace Althea.LinearAlgebra
 		/// <param name="matrix">The matrix to take slice from</param>
 		/// <param name="sub">The sub-matrix to be overwritten by the sliced <paramref name="matrix"/> or to overwrite the <paramref name="matrix"/>'s slice</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MatrixSliceWrapper Create<T>(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric matrix, IMatrixMetric? sub = null)
+		public static MatrixSliceWrapper Create(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric matrix, IMatrixMetric? sub = null)
 		{
 			// check matrix
 			if (matrix is null)

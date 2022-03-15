@@ -47,11 +47,11 @@ namespace Althea.NativeTypes
 		/// </summary>
 		ComplexHalf = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="ComplexSingle"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="Complex{T}"/> of <see cref="float"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
 		ComplexSingle = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="ComplexDouble"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="Complex{T}"/> of <see cref="double"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
 		ComplexDouble = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
 
@@ -90,36 +90,36 @@ namespace Althea.NativeTypes
 		RealUInt64 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
 
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="sbyte"/>  = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="sbyte"/>  = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
 		/// </summary>
 		ComplexInt8 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte1,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="short"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="short"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
 		/// </summary>
 		ComplexInt16 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="int"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="int"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
 		ComplexInt32 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="long"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="long"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
 		ComplexInt64 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte8,
 
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="byte"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="byte"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
 		/// </summary>
 		ComplexUInt8 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte1,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="ushort"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="ushort"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
 		/// </summary>
 		ComplexUInt16 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte2,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="uint"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="uint"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
 		/// </summary>
 		ComplexUInt32 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte4,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="ulong"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="ulong"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
 		/// </summary>
 		ComplexUInt64 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
 	}

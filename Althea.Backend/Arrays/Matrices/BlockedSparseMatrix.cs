@@ -326,10 +326,10 @@ namespace Althea.Backend.Arrays
 		/// <param name="countRow">The number of the rows to take</param>
 		/// <param name="offsetCol">The starting offset of the columns to take</param>
 		/// <param name="countCol">The number of the columns to take</param>
-		/// <param name="overwrite">The <see cref="BaseMatrix{T}"/> to be overwritten</param>
+		/// <param name="overwrite">The <see cref="IBaseMatrix{T}"/> to be overwritten</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
-		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, BaseMatrix<T> overwrite)
+		public override void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, IBaseMatrix<T> overwrite)
 		{
 			if (overwrite is null || !overwrite.IsValid())
 				throw new ArgumentNullException(nameof(overwrite));
@@ -354,11 +354,11 @@ namespace Althea.Backend.Arrays
 		/// <param name="countRow">The number of the rows to take</param>
 		/// <param name="offsetCol">The starting offset of the columns to take</param>
 		/// <param name="countCol">The number of the columns to take</param>
-		/// <param name="value">The <see cref="BaseMatrix{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
+		/// <param name="value">The <see cref="IBaseMatrix{T}"/> whose value will overwrite this matrix from (<paramref name="offsetRow"/>, <paramref name="countRow"/>) with size (<paramref name="countRow"/>, <paramref name="countCol"/>)</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
 		/// <exception cref="NotSupportedException">If <paramref name="value"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
-		public override void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, BaseMatrix<T> value)
+		public override void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, IBaseMatrix<T> value)
 		{
 			if (value is null || !value.IsValid())
 				throw new ArgumentNullException(nameof(value));
@@ -471,10 +471,10 @@ namespace Althea.Backend.Arrays
 		/// When implemented by a derived class, convert this sparse matrix to a dense matrix whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
 		/// </summary>
 		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense matrix to overwrite</param>
-		/// <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="BaseMatrix{T}.NRows"/></param>
+		/// <param name="leadDim">The leading dimension of the target dense matrix, default 0 means <see cref="IBaseMatrix{T}.NRows"/></param>
 		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="BaseMatrix{T}.NRows"/></exception>
-		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="BaseMatrix{T}.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is less than <see cref="IBaseMatrix{T}.NRows"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="leadDim"/> * <see cref="IBaseMatrix{T}.NCols"/> &gt; <paramref name="denseStorage"/>.<see cref="Storage{T}.Length">Length</see></exception>
 		public override void ToDense(Storage<T> denseStorage, long leadDim)
 		{
 			if (denseStorage is null || !denseStorage.IsValid())
@@ -616,11 +616,11 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="BaseMatrix{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
+		/// Create a new <see cref="IBaseMatrix{T}"/> which is the point-wise addition result of this matrix the <paramref name="other"/> matrix.
 		/// </summary>
 		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
 		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix before addition</param>
-		/// <param name="other">The input right <see cref="BaseMatrix{T}"/> to be added</param>
+		/// <param name="other">The input right <see cref="IBaseMatrix{T}"/> to be added</param>
 		/// <param name="opThis">The <see cref="MatrixOperation"/> to apply to this matrix before addition</param>
 		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
 		/// <returns>A new <see cref="DenseMatrix{T}"/> as the result of <c><paramref name="scalarThis"/> * <paramref name="opThis"/>(this) + <paramref name="scalarOther"/> * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
@@ -628,7 +628,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalarThis"/> or <paramref name="scalarOther"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
-		public override BaseMatrix<T> AddMatrix(T scalarThis, T scalarOther, BaseMatrix<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
+		public override IBaseMatrix<T> AddMatrix(T scalarThis, T scalarOther, IBaseMatrix<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
 			var (m, n) = ((IMatrix<T>)this).CheckAdd(scalarThis, scalarOther, other, ref opThis, ref opOther);
 			if (other is DenseMatrix<T> dense)
@@ -663,18 +663,18 @@ namespace Althea.Backend.Arrays
 		}
 
 		/// <summary>
-		/// Create a new <see cref="BaseMatrix{T}"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
+		/// Create a new <see cref="IBaseMatrix{T}"/> which is the multiplication result of this matrix and the <paramref name="other"/> matrix.
 		/// </summary>
 		/// <param name="scalar">The scalar to multiply to the result</param>
-		/// <param name="other">The input right <see cref="BaseMatrix{T}"/> to be multiplied</param>
+		/// <param name="other">The input right <see cref="IBaseMatrix{T}"/> to be multiplied</param>
 		/// <param name="opThis">The <see cref="MatrixOperation"/> to apply to this matrix before addition</param>
 		/// <param name="opOther">The <see cref="MatrixOperation"/> to apply to the <paramref name="other"/> matrix before addition</param>
-		/// <returns>A new <see cref="BaseMatrix{T}"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
+		/// <returns>A new <see cref="IBaseMatrix{T}"/> as the result of <c><paramref name="scalar"/> * <paramref name="opThis"/>(this) * <paramref name="opOther"/>(<paramref name="other"/>)</c></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or empty</exception>
 		/// <exception cref="NotSupportedException">If the given <paramref name="opThis"/> or <paramref name="opOther"/> is not supported; or <paramref name="other"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
-		public override BaseMatrix<T> MultiplyMatrix(T scalar, BaseMatrix<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
+		public override IBaseMatrix<T> MultiplyMatrix(T scalar, IBaseMatrix<T> other, MatrixOperation opThis = MatrixOperation.None, MatrixOperation opOther = MatrixOperation.None)
 		{
 			var (m, n, _) = ((IMatrix<T>)this).CheckMultiply(scalar, other, ref opThis, ref opOther);
 			if (other is DenseMatrix<T> dense)

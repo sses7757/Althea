@@ -135,6 +135,9 @@
   <data name="CannotFindMethod" xml:space="preserve">
     <value>Cannot find a mehtod of given requirement(s).</value>
   </data>
+  <data name="CannotNegate" xml:space="preserve">
+    <value>Cannot calculate the negate of an unsigned number.</value>
+  </data>
   <data name="CannotParse" xml:space="preserve">
     <value>Cannot parse '{0}' to a custom type {1}.</value>
   </data>

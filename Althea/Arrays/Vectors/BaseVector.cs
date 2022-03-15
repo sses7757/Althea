@@ -2,32 +2,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
-using Althea.Helpers;
-using Althea.Storage;
+using Althea.LinearAlgebra;
 
-using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
-using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract vector interface whose only value storage is of type <typeparamref name="TS"/>.
+	/// The base vector interface.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value <see cref="Storage"/></typeparam>
-	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IBaseVector{T, TS, TSelf}"/></typeparam>
-	public interface IBaseVector<T, TS, TSelf> : ISingleValueStorageArray<T, TS, TSelf>, IReadOnlyList<T>
-		where T : unmanaged, INumber<T>
-		where TS : class, IStorage<T, TS>
-		where TSelf : class, ISingleValueStorageArray<T, TS, TSelf>
+	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IBaseVector<T, TSelf> : IVectorMetric, IValueArray<T, TSelf>, IReadOnlyList<T>
+		where T : unmanaged, INumber<T> where TSelf : class, IBaseVector<T, TSelf>
 	{
 		#region indexing
 		/// <summary>
 		/// Provide legacy support of C# duck type for <c>this[<see cref="Index"/>]</c> and <c>this[<see cref="Range"/>]</c>
 		/// </summary>
-		int IReadOnlyCollection<T>.Count => (int)this.Length;
+		int IReadOnlyCollection<T>.Count => (int)((IVectorMetric)this).Length;
 
 		/// <summary>
 		/// Check whether the given <paramref name="index"/> is out of range of this vector
@@ -39,7 +32,7 @@ namespace Althea.Arrays
 		{
 			if (index < 0)
 				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.CannotNegative);
-			if (index >= this.Length)
+			if (index >= ((IVectorMetric)this).Length)
 				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
 		}
 
@@ -54,11 +47,11 @@ namespace Althea.Arrays
 		{
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.CannotNegative);
-			if (offset >= this.Length)
+			if (offset >= ((IVectorMetric)this).Length)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
 			if (length < 0)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.CannotNegative);
-			if (offset + length > this.Length)
+			if (offset + length > ((IVectorMetric)this).Length)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
 		}
 
@@ -100,177 +93,26 @@ namespace Althea.Arrays
 		/// </summary>
 		public virtual TSelf Slice(int start, int length) => this.GetSlice(start, length);
 
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			for (long i = 0; i < this.Length; i++)
-			{
-				yield return this[i];
-			}
-		}
-
 		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 		#endregion
 
 		#region linear algebra abstract methods
 		/// <summary>
-		/// When implemented by a derived class, compute the dot (inner) product of this vector and the <paramref name="other"/> vector. The default implementation simply dots two <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/>s.
+		/// When implemented by a derived class, compute the dot (inner) product of this vector and the <paramref name="other"/> vector.
 		/// </summary>
+		/// <typeparam name="TOther">The other concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 		/// <param name="other">The other vector to perform the dot product</param>
 		/// <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
 		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-		public virtual T Dot(TSelf other, bool conjugateThis = true) => Blas.Dot<T, TS, TS>(conjugateThis, this.Storage, 1, other.Storage, 1);
+		T Dot<TOther>(TOther other, bool conjugateThis = true) where TOther : class, IBaseVector<T, TOther>;
 
 		/// <summary>
-		/// When implemented by a derived class, compute the out-of-place addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector. The default implementation simply adds two <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/>s
+		/// When implemented by a derived class, compute the in-place addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector.
 		/// </summary>
+		/// <typeparam name="TOther">The other concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 		/// <param name="other">The other vector to add</param>
 		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		/// <returns>The addition result of this + <paramref name="scalar"/> * <paramref name="other"/></returns>
-		public virtual TSelf AddVector(TSelf other, T scalar) => ((TSelf)this).ApplyToClone(c => Blas.Add(scalar, other.Storage, 1, c.Storage, 1));
-
-		/// <summary>
-		/// When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) with this vector (scaled by <paramref name="β"/>).
-		/// </summary>
-		/// <param name="matrix">The input matrix to be multiplied</param>
-		/// <param name="vector">The input vector to be multiplied</param>
-		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
-		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
-		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
-		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		public abstract BaseVector<T> AddMatrixMultiplyVector(BaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = LinearAlgebra.MatrixOperation.None);
-		#endregion
-
-		#region operators
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the point-wise exponentiation result of the given <paramref name="vector"/> and <paramref name="power"/>.
-		/// </summary>
-		/// <param name="vector">The original vector whose elements are the bases</param>
-		/// <param name="power">The power acting as the exponent of type <see cref="double"/></param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the point-wise exponentiate result of the given <paramref name="vector"/> and <paramref name="power"/></returns>
-		public static BaseVector<T> operator ^(BaseVector<T> vector, double power)
-		{
-			if (vector is null || !vector.IsValid())
-				throw new ArgumentNullException(nameof(vector));
-
-			return vector.ApplyToClone(v => v.Power(power));
-		}
-
-		/// <summary>
-		/// Compute the dot (inner) product result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
-		/// </summary>
-		/// <param name="left">One original vector as the left operand</param>
-		/// <param name="right">One original vector as the right operand</param>
-		/// <returns>A <typeparamref name="T"/> which is the dot (inner) product result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
-		public static T operator *(BaseVector<T> left, BaseVector<T> right)
-		{
-			if (left is null || !left.IsValid())
-				throw new ArgumentNullException(nameof(left));
-			if (right is null || !right.IsValid())
-				throw new ArgumentNullException(nameof(right));
-
-			return left.Dot(right);
-		}
-
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
-		/// </summary>
-		/// <param name="left">One original vector as the left operand</param>
-		/// <param name="right">One original vector as the right operand</param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
-		public static BaseVector<T> operator +(BaseVector<T> left, BaseVector<T> right)
-		{
-			if (left is null || !left.IsValid())
-				throw new ArgumentNullException(nameof(left));
-			if (right is null || !right.IsValid())
-				throw new ArgumentNullException(nameof(right));
-
-			return left.AddVector(right, Const<T>.One);
-		}
-
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
-		/// </summary>
-		/// <param name="left">One original vector as the left operand</param>
-		/// <param name="right">One original vector as the right operand</param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
-		public static BaseVector<T> operator -(BaseVector<T> left, BaseVector<T> right)
-		{
-			if (left is null || !left.IsValid())
-				throw new ArgumentNullException(nameof(left));
-			if (right is null || !right.IsValid())
-				throw new ArgumentNullException(nameof(right));
-
-			return left.AddVector(right, Const<T>.MinusOne);
-		}
-
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="vector">The original vector to multiply</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
-		public static BaseVector<T> operator *(BaseVector<T> vector, T scalar)
-		{
-			if (vector is null || !vector.IsValid())
-				throw new ArgumentNullException(nameof(vector));
-
-			return vector.ApplyToClone(v => v.Scale(scalar));
-		}
-
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the negation result of the given <paramref name="vector"/>
-		/// </summary>
-		/// <param name="vector">The original vector to negate</param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the negation result of the given <paramref name="vector"/></returns>
-		public static BaseVector<T> operator -(BaseVector<T> vector) => vector * Const<T>.MinusOne;
-
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="vector">The original vector to multiply</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
-		public static BaseVector<T> operator *(T scalar, BaseVector<T> vector) => vector * scalar;
-
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the division result of the given <paramref name="vector"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="vector">The original vector to be divided</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
-		public static BaseVector<T> operator /(BaseVector<T> vector, T scalar) => vector * scalar.NativeReciprocal();
-
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/>.
-		/// </summary>
-		/// <param name="vector">The input vector to be multiplied at the right side</param>
-		/// <param name="matrix">The input matrix to be multiplied at the left side</param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the multiplication result of the given left <paramref name="matrix"/> and right <paramref name="vector"/></returns>
-		public static BaseVector<T> operator *(BaseMatrix<T> matrix, BaseVector<T> vector)
-		{
-			if (matrix is null || !matrix.IsValid())
-				throw new ArgumentNullException(nameof(matrix));
-			if (vector is null || !vector.IsValid())
-				throw new ArgumentNullException(nameof(vector));
-
-			return vector.AddMatrixMultiplyVector(matrix, vector, Const<T>.One);
-		}
-
-		/// <summary>
-		/// Create a new <see cref="BaseVector{T}"/> which is the multiplication result of the given left <paramref name="vector"/> and right <paramref name="matrix"/>.
-		/// </summary>
-		/// <param name="vector">The input vector to be multiplied at the left side</param>
-		/// <param name="matrix">The input matrix to be multiplied at the right side</param>
-		/// <returns>A new <see cref="BaseVector{T}"/> which is the multiplication result of the given left <paramref name="vector"/> and right <paramref name="matrix"/></returns>
-		public static BaseVector<T> operator *(BaseVector<T> vector, BaseMatrix<T> matrix)
-		{
-			if (matrix is null || !matrix.IsValid())
-				throw new ArgumentNullException(nameof(matrix));
-			if (vector is null || !vector.IsValid())
-				throw new ArgumentNullException(nameof(vector));
-
-			return vector.AddMatrixMultiplyVector(matrix, vector, Const<T>.One, operation: LinearAlgebra.MatrixOperation.Transpose);
-		}
+		void AddBy<TOther>(TOther other, T scalar) where TOther : class, IBaseVector<T, TOther>;
 		#endregion
 	}
 }

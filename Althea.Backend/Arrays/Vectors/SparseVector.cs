@@ -321,7 +321,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
 		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="SparseVector{T, TIndex}"/> or <paramref name="matrix"/> is neither a <see cref="DenseMatrix{T}"/> nor a <see cref="ISparseMatrix{T}"/></exception>
-		public override BaseVector<T> AddMatrixMultiplyVector(BaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
+		public override BaseVector<T> AddMatrixMultiplyVector(IBaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			if (matrix is null || !matrix.IsValid())
 				throw new ArgumentNullException(nameof(matrix));

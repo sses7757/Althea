@@ -43,7 +43,7 @@ namespace Althea.Arrays
 	/// Simple interface for sparse arrays where the index type is not indicated
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface ISparseArray<T> : IDisposable where T : unmanaged, INumber<T>
+	public interface ISparseArray<T> : ICheckValid, IDisposable where T : unmanaged, INumber<T>
 	{
 		#region property
 		/// <summary>

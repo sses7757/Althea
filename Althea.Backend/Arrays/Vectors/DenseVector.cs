@@ -231,7 +231,7 @@ namespace Althea.Backend.Arrays
 		/// <exception cref="NotSupportedException">If <paramref name="vector"/> is neither a <see cref="DenseVector{T}"/> nor a <see cref="Althea.Arrays.BaseSparseVector{T, TIndex}"/>, or <paramref name="matrix"/> is neither <see cref="DenseMatrix{T}"/> nor <see cref="ISparseMatrix{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> or <paramref name="vector"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If this or <paramref name="vector"/> has incompatible length with <paramref name="matrix"/></exception>
-		public void AddByMatrixMultiplyVector(BaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
+		public void AddByMatrixMultiplyVector(IBaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			if (matrix is null || !matrix.IsValid())
 				throw new ArgumentNullException(nameof(matrix));
@@ -298,7 +298,7 @@ namespace Althea.Backend.Arrays
 		/// <param name="β">The scalar to be multiplied to this vector of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="LinearAlgebra.MatrixOperation"/></param>
 		/// <returns>The addition result of <paramref name="β"/> * this + <paramref name="α"/> * <paramref name="operation"/>(<paramref name="matrix"/>) * <paramref name="vector"/></returns>
-		public override DenseVector<T> AddMatrixMultiplyVector(BaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = MatrixOperation.None) => this.ApplyToClone(v => v.AddByMatrixMultiplyVector(matrix, vector, α, β, operation));
+		public override DenseVector<T> AddMatrixMultiplyVector(IBaseMatrix<T> matrix, BaseVector<T> vector, T α, T β = default, LinearAlgebra.MatrixOperation operation = MatrixOperation.None) => this.ApplyToClone(v => v.AddByMatrixMultiplyVector(matrix, vector, α, β, operation));
 		#endregion
 
 		#region IKrylovVector
