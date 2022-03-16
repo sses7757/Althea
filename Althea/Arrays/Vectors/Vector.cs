@@ -95,24 +95,5 @@ namespace Althea.Arrays
 
 		IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 		#endregion
-
-		#region linear algebra abstract methods
-		/// <summary>
-		/// When implemented by a derived class, compute the dot (inner) product of this vector and the <paramref name="other"/> vector.
-		/// </summary>
-		/// <typeparam name="TOther">The other concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-		/// <param name="other">The other vector to perform the dot product</param>
-		/// <param name="conjugateThis">Whether the dot product is performed on the conjugation of this vector or directly.</param>
-		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-		T Dot<TOther>(TOther other, bool conjugateThis = true) where TOther : class, IBaseVector<T, TOther>;
-
-		/// <summary>
-		/// When implemented by a derived class, compute the in-place addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and this vector.
-		/// </summary>
-		/// <typeparam name="TOther">The other concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-		/// <param name="other">The other vector to add</param>
-		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		void AddBy<TOther>(TOther other, T scalar) where TOther : class, IBaseVector<T, TOther>;
-		#endregion
 	}
 }

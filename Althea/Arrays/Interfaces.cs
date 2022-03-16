@@ -33,7 +33,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get (the both-end inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		/// <remarks>The first element shall be 1, the last element shall be the product of <see cref="OuterSize"/> and the <see cref="ReadOnlySpan{T}.Length">size</see> == rank + 1</remarks>
+		/// <remarks>The first element shall be 1 and the last element shall be the product of <see cref="OuterSize"/>. The returned <see cref="ReadOnlySpan{T}.Length">size</see> == rank + 1</remarks>
 		ReadOnlySpan<long> Strides { get; }
 		#endregion
 	}

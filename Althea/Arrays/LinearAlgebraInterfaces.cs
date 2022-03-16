@@ -7,6 +7,35 @@ using Althea.LinearAlgebra;
 namespace Althea.Arrays
 {
 	/// <summary>
+	/// The interface for vectors' in-place operations.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TVec1">The current concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec2">The other concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IVectorOperations<T, in TVec1, in TVec2>
+		where T : unmanaged, INumber<T>
+		where TVec1 : class, IBaseVector<T, TVec1>
+		where TVec2 : class, IBaseVector<T, TVec2>
+	{
+		/// <summary>
+		/// When implemented by a derived class, statically compute the dot (inner) product of <paramref name="left"/> and <paramref name="right"/>.
+		/// </summary>
+		/// <param name="left">The left vector to perform the dot product</param>
+		/// <param name="right">The right vector to perform the dot product</param>
+		/// <param name="conjugateLeft">Whether the dot product is performed on the conjugation of <paramref name="left"/> or directly.</param>
+		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
+		public abstract static T Dot(TVec1 left, TVec2 right, bool conjugateLeft = true);
+
+		/// <summary>
+		/// When implemented by a derived class, statically compute the in-place addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and <paramref name="this"/> vector.
+		/// </summary>
+		/// <param name="this">The vector be added to</param>
+		/// <param name="other">The other vector to add</param>
+		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
+		public abstract static void AddBy(TVec1 @this, TVec2 other, T scalar);
+	}
+
+	/// <summary>
 	/// The interface for vectors' out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
@@ -150,5 +179,131 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		public abstract void SetDiag(TMat matrix, long k, TVec value);
+	}
+
+	/// <summary>
+	/// The interface for vectors' in-place operations.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IMatrixOperations<T, in TMat1, in TMat2, in TMat3>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+	{
+		/// <summary>
+		/// When implemented by a derived class, statically overwrite <paramref name="C"/> with the addition of <c><paramref name="opA"/>(<paramref name="A"/>) + <paramref name="opB"/>(<paramref name="B"/>)</c>.
+		/// </summary>
+		/// <param name="scalarA">The scalar to multiply to matrix <paramref name="A"/> before addition</param>
+		/// <param name="scalarB">The scalar to multiply to matrix <paramref name="B"/> before addition</param>
+		/// <param name="A">The input left matrix to add</param>
+		/// <param name="B">The input right matrix to add</param>
+		/// <param name="C">The output matrix to be overwritten</param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before addition</param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before addition</param>
+		/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or empty; or both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the addition cannot be performed due to incompatible sizes</exception>
+		public abstract static void AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+
+		/// <summary>
+		/// When implemented by a derived class, statically overwrite <paramref name="C"/> with the addition of <c><paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="C"/></c>.
+		/// </summary>
+		/// <param name="scalar">The scalar to multiply to matrix multiplication result</param>
+		/// <param name="A">The input left matrix to multiply</param>
+		/// <param name="B">The input right matrix to multiply</param>
+		/// <param name="C">The output matrix to be overwritten</param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before multiplication</param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before multiplication</param>
+		/// <exception cref="ArgumentException">If any of the matrices is null or empty; or the multiplication cannot be performed due to incompatible sizes</exception>
+		public abstract static void MultiplyMatries(TMat1 A, TMat2 B, T scalar, TMat3 C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+	}
+
+	/// <summary>
+	/// The interface for matrices' out-of-place operators.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first input matrix type</typeparam>
+	/// <typeparam name="TMat2">The second input matrix type</typeparam>
+	/// <typeparam name="TMat3">The output matrix type</typeparam>
+	public interface IMatrixOperators<T, in TMat1, in TMat2, out TMat3>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixOperators<T, TMat1, TMat2, TMat3>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+	{
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise negation result of the given <paramref name="matrix"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the negation of <paramref name="matrix"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat3 operator -(TMat1 matrix);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the multiplier</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat3 operator *(TMat1 matrix, T scalar);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the multiplier</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat3 operator *(T scalar, TMat1 matrix);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise division result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the divider</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="matrix"/> / <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat3 operator /(TMat1 matrix, T scalar);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the simple operation result of the given <paramref name="matrix"/> under <paramref name="operation"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <param name="operation">The input <see cref="MatrixOperation"/> used as the operation</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="operation"/>(<paramref name="matrix"/>)</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat3 operator ^(TMat1 matrix, MatrixOperation operation);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise addition result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+		/// </summary>
+		/// <param name="left">The input left <typeparamref name="TMat1"/> to be added</param>
+		/// <param name="right">The input right <typeparamref name="TMat2"/> to be added</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> + <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 operator +(TMat1 left, TMat2 right);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise subtraction result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+		/// </summary>
+		/// <param name="left">The input left <typeparamref name="TMat1"/> to be subtracted from</param>
+		/// <param name="right">The input right <typeparamref name="TMat2"/> to subtract</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> - <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the subtraction cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 operator -(TMat1 left, TMat2 right);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+		/// </summary>
+		/// <param name="left">The input <typeparamref name="TMat1"/> to be multiplied at left</param>
+		/// <param name="right">The input <typeparamref name="TMat2"/> to be multiplied at right</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 operator *(TMat1 left, TMat2 right);
 	}
 }

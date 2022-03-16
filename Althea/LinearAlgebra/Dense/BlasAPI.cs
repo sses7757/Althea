@@ -24,7 +24,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="index">Output the resulting index</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool AbsoluteValueArgMax<T, TS>(TS x, int strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 		
@@ -38,7 +38,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="index">Output the resulting index</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool AbsoluteValueArgMin<T, TS>(TS x, int strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -52,7 +52,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="sum">Output the result as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool AbsoluteValueSum<T, TS>(TS x, int strideX, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -65,7 +65,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="norm">Output the result value as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool Norm<T, TS>(TS x, int strideX, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -79,7 +79,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="scalar">The scalar used for multiplication</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool Scale<T, TS>(TS x, int strideX, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -96,7 +96,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool Add<T, TS1, TS2>(T α, TS1 x, int strideX, TS2 y, int strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
@@ -114,7 +114,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="dot">Output the result value as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool Dot<T, TS1, TS2>(bool conjX, TS1 x, int strideX, TS2 y, int strideY, out T dot) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
@@ -141,7 +141,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool GeneralMatrixMultiplyVector<T, TSM, TSV1, TSV2>(MatrixOperation op, long m, long n, T α, TSM A, long lda, TSV1 x, int strideX, T β, TSV2 y, int strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 
@@ -167,7 +167,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool SymmHermMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool hermA, long n, T α, TSM A, long lda, TSV1 x, int strideX, T β, TSV2 y, int strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 
@@ -193,7 +193,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool GenralRankOneUpdate<T, TSM, TSV1, TSV2>(bool conjY, long m, long n, T α, TSV1 x, int strideX, TSV2 y, int strideY, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 
@@ -216,7 +216,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool SymmHermRankOneUpdate<T, TSM, TSV>(bool fillUpper, bool conjX, long n, T α, TSV x, int strideX, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV : class, IStorage<T, TSV>;
 
@@ -242,7 +242,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool SymmHermRankTwoUpdate<T, TSM, TSV1, TSV2>(bool fillUpper, bool conjugate, long n, T α, TSV1 x, int strideX, TSV2 y, int strideY, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 
@@ -264,7 +264,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool TriangularMatrixMultiplyVector<T, TSM, TSV>(bool fillUpper, bool unitDiag, MatrixOperation op, long n, TSM A, long lda, TSV x, int strideX) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV : class, IStorage<T, TSV>;
 		#endregion

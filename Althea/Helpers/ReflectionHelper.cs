@@ -15,17 +15,14 @@ namespace Althea.Helpers
 		/// Get the name string representation of given <paramref name="type"/> together with its generic parameters
 		/// </summary>
 		/// <param name="type">The given <see cref="Type"/> to get name</param>
-		/// <param name="full">Whether to use <see cref="Type.FullName"/> or only <see cref="MemberInfo.Name"/></param>
 		/// <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
-		public static string? GetGenericString(this Type type, bool full = false)
+		public static string GetGenericString(this Type type)
 		{
-			string? name = full ? type.FullName : type.Name;
-			if (name is null)
-				return null;
+			string name = type.Name;
 			if (type.IsGenericType)
 			{
 				var args = type.GenericTypeArguments;
-				name += $"<{string.Join(", ", args.Select(a => a.GetGenericString(full)).ToArray())}>";
+				name += $"<{string.Join(", ", args.Select(a => a.GetGenericString()).ToArray())}>";
 			}
 			return name;
 		}

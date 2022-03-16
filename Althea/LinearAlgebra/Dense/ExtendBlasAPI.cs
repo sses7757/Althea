@@ -78,6 +78,20 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region vector math
 		/// <summary>
+		/// When implemented by a derived class, fill the vector <paramref name="x"/>'s values separated by <paramref name="stride"/> by same <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="x">The pointer to be filled</param>
+		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
+		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
+		[AbstractApiMethod]
+		public abstract bool FillWithValue<T, TS>(TS x, T value, int stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="x"/> and <paramref name="y"/> are equal: <c><paramref name="x"/>[i] == <paramref name="y"/>[j]</c> (point-wise equals).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
@@ -90,7 +104,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="equals">Output <see cref="bool"/> indicating whether all elements in <paramref name="x"/> and <paramref name="y"/> are equal</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PointWiseEquals<T, TS1, TS2>(TS1 x, int strideX, TS2 y, int strideY, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
@@ -106,7 +120,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PointWiseMultiply<T, TS1, TS2>(TS1 x, int strideX, TS2 y, int strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
@@ -122,7 +136,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PointWiseDivide<T, TS1, TS2>(TS1 x, int strideX, TS2 y, int strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
@@ -136,7 +150,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="p">The exponent as a <see cref="double"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PointWisePower<T, TS>(TS x, int stride, double p) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -150,7 +164,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="p">The exponent as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PointWisePower<T, TS>(TS x, int stride, T p) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -163,7 +177,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PointWiseConjugate<T, TS>(TS x, int stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -180,7 +194,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="incDst">The stride between consecutive elements of <paramref name="destination"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incSrc"/> or <paramref name="incDst"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incSrc"/> or <paramref name="incDst"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, int incSrc, TSOut destination, int incDst) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
 
@@ -207,7 +221,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool AggregateSum<T, TS>(TS x, int stride, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -221,7 +235,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="product">Output the product as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool AggregateProduct<T, TS>(TS x, int stride, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
@@ -238,7 +252,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PartialSum<T, TS1, TS2>(TS1 x, int strideX, TS2 y, int strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
@@ -255,7 +269,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="inclusive">Whether to sum <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) if  or exclusively (the first element is 0)</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PartialProduct<T, TS1, TS2>(TS1 x, int strideX, TS2 y, int strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
@@ -269,7 +283,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="scalr">The scalar to add</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> is ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PointWiseAddScalar<T, TS>(TS x, int stride, T scalr) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 		#endregion

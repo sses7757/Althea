@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Reflection;
 
 using Althea.Linq;
+using Althea.Helpers;
+using Althea.NativeTypes;
 
 
 namespace Althea.Storage
@@ -92,5 +95,99 @@ namespace Althea.Storage
 		/// </summary>
 		public override string ToString() => IMainPropertyFormattable<ManagedPointer>.ToString(in this);
 		#endregion
+	}
+
+	internal sealed class ManagedPureStorage<T> : IStorage<T, ManagedPureStorage<T>> where T : unmanaged, INumber<T>
+	{
+		public PointerSegment<ManagedPointer> Pointer { get; }
+
+		internal ManagedPureStorage()
+		{
+			Pointer = default;
+		}
+
+		public ManagedPureStorage(PointerSegment<ManagedPointer> mp)
+		{
+			this.Pointer = mp;
+		}
+
+		public static ManagedPureStorage<T> Empty => new();
+
+		public static DataType DataType => Unmanaged<T>.DataType;
+
+		public static CombinationOfLocations LocationDescription => new StorageLocation(LocationType.CpuRam, 0);
+
+		public static string StringMain => typeof(ManagedPureStorage<T>).GetGenericString();
+
+		public static IEnumerable<string> PropertyNames => new[] { nameof(Pointer) };
+
+		static long IAdditiveIdentity<ManagedPureStorage<T>, long>.AdditiveIdentity => 0;
+
+		public long LengthInBytes => this.Pointer.LengthInBytes;
+
+		public long Length => this.Pointer.LengthInBytes / Unmanaged<T>.Size;
+
+		public IEnumerable<object?> PropertyValues => new object[] { this.Pointer  };
+
+		bool IStorage.Disposed => false;
+
+		void IStorage.Dispose(bool invokedByUser)
+		{
+			// do nothing
+		}
+
+#pragma warning disable CS8619
+		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(ManagedPureStorage<T>).GetProperty(nameof(Pointer))?.GetGetMethod() };
+#pragma warning restore CS8619
+
+		public static ManagedPureStorage<T> Create(ReadOnlySpan<long> lengths) => throw new InvalidOperationException();
+
+		static ManagedPureStorage<T> IStorage<T, ManagedPureStorage<T>>.CreateAlike<TOut, TOther>(TOther storage) => throw new InvalidOperationException();
+
+		static ManagedPureStorage<T> IStorage<T, ManagedPureStorage<T>>.RefFrom<TOut, TOther>(TOther storage)
+		{
+			if (storage is ManagedPureStorage<TOut> mp)
+				return new(mp.Pointer);
+			else
+				throw new InvalidOperationException();
+		}
+
+		public bool Equals(ManagedPureStorage<T>? other)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool IsValid() => this.Pointer.IsValid();
+
+		public ManagedPureStorage<T> MakeReference(long offset = 0, long newLength = 0)
+		{
+			if (offset == 0 && newLength == 0)
+				return this;
+			if (newLength == 0)
+				newLength = this.Length - offset;
+			return new(this.Pointer.MoveBy(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size));
+		}
+
+		public bool OverlapWith(ManagedPureStorage<T> other) => this.Pointer.OverlapWith(other.Pointer);
+
+		public static ManagedPureStorage<T> operator +(ManagedPureStorage<T> left, long offset) => left.MakeReference(offset);
+
+		public static long operator -(ManagedPureStorage<T> left, ManagedPureStorage<T> right)
+		{
+			if (left.OverlapWith(right))
+				return (left.Pointer - right.Pointer) / Unmanaged<T>.Size;
+			else
+				throw new InvalidOperationException();
+		}
+
+		public static ManagedPureStorage<T> operator -(ManagedPureStorage<T> left, long offset) => left.MakeReference(-offset);
+
+		public static bool operator ==(ManagedPureStorage<T> left, ManagedPureStorage<T> right) => left.Equals(right);
+
+		public static bool operator !=(ManagedPureStorage<T> left, ManagedPureStorage<T> right) => !left.Equals(right);
+
+		public override bool Equals(object? obj) => this.Equals(obj as ManagedPureStorage<T>);
+
+		public override int GetHashCode() => this.Pointer.GetHashCode();
 	}
 }

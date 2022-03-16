@@ -64,12 +64,6 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>.
 		/// </summary>
-		/// <param name="power">The power as a <see cref="double"/></param>
-		void Power(double power);
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>.
-		/// </summary>
 		/// <param name="power">The power as a <typeparamref name="T"/></param>
 		void Power(T power);
 
@@ -265,8 +259,6 @@ namespace Althea.Arrays
 
 		void IValueArray<T, TSelf>.Conjugate() => ExtBlas.PointWiseConjugate<T, TS>(this.Storage, 1);
 
-		void IValueArray<T, TSelf>.Power(double power) => ExtBlas.PointWisePower<T, TS>(this.Storage, 1, power);
-		
 		void IValueArray<T, TSelf>.Power(T power) => ExtBlas.PointWisePower(this.Storage, 1, power);
 
 		void IValueArray<T, TSelf>.Truncate(double threshold) => ExtBlas.TruncateArray<T, TS>(this.Storage, 1, threshold);
