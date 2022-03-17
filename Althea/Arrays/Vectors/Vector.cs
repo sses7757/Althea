@@ -41,9 +41,10 @@ namespace Althea.Arrays
 		/// </summary>
 		/// <param name="offset">The starting offset index to be checked</param>
 		/// <param name="length">The length to be checked</param>
+		/// <param name="sub">The sub vector to check which can be null to prevent checking</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and/or <paramref name="length"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void CheckRange(long offset, long length)
+		protected void CheckRange(long offset, long length, IVectorMetric? sub = null)
 		{
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.CannotNegative);
@@ -53,6 +54,11 @@ namespace Althea.Arrays
 				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.CannotNegative);
 			if (offset + length > ((IVectorMetric)this).Length)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
+			if (sub is not null)
+			{
+				if (sub.Length < length)
+					throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
+			}
 		}
 
 		/// <summary>
@@ -76,6 +82,15 @@ namespace Althea.Arrays
 		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>. Shall be a referenced vector if possible.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
 		TSelf GetSlice(long start, long count);
+
+		/// <summary>
+		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> and overwrite to <paramref name="overwrite"/>
+		/// </summary>
+		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
+		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+		/// <param name="overwrite">The <typeparamref name="TSelf"/> to be overwritten</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+		void GetSlice(long start, long count, TSelf overwrite);
 
 		/// <summary>
 		/// When implemented by a derived class, set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>

@@ -82,7 +82,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="x">The pointer to be filled</param>
+		/// <param name="x">The vector to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
@@ -182,6 +182,20 @@ namespace Althea.LinearAlgebra.Dense
 		public abstract bool PointWiseConjugate<T, TS>(TS x, int stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
+		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalr"/></c> (point-wise addition).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="x">The vector to be added in-place</param>
+		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="scalr">The scalar to add</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
+		[AbstractApiMethod]
+		public abstract bool PointWiseAddScalar<T, TS>(TS x, int stride, T scalr) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
 		/// When implemented by a derived class, cast the given vector from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
 		/// </summary>
 		/// <typeparam name="TIn">Any unmanaged number as the input data type</typeparam>
@@ -209,7 +223,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool TruncateArray<T, TS>(TS x, int stride, double threshold) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool PointWiseTruncate<T, TS>(TS x, int stride, double threshold) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, aggregately sum the elements in vector <paramref name="x"/>.
@@ -272,20 +286,278 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool PartialProduct<T, TS1, TS2>(TS1 x, int strideX, TS2 y, int strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		#endregion
+
+		#region matrix math
+		/// <summary>
+		/// When implemented by a derived class, fill the matrix <paramref name="A"/>'s values by same <paramref name="value"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to be filled</param>
+		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixFill<T, TS>(TS A, long ld, T value, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalr"/></c> (point-wise addition).
+		/// When implemented by a derived class, check if all elements in matrices <paramref name="A"/> and <paramref name="B"/> are equal.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="x">The vector to be added in-place</param>
-		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="scalr">The scalar to add</param>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to be checked</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The other matrix to be checked</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+		/// <param name="equals">Output <see cref="bool"/> indicating whether all elements in <paramref name="A"/> and <paramref name="B"/> are equal</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseAddScalar<T, TS>(TS x, int stride, T scalr) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralMatricesEquals<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute <c><paramref name="A"/> = <paramref name="A"/>.*<paramref name="B"/></c> (point-wise multiplication).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to be multiplied in-place</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The other matrix to multiply</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatricesMultiply<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute <c><paramref name="A"/> = <paramref name="A"/>./<paramref name="B"/></c> (point-wise division).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to be divided in-place</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The other matrix to divide</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatricesDivide<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <summary>
+		/// When implemented by a derived class, <c><paramref name="A"/> = <paramref name="A"/>.^<paramref name="p"/></c> (point-wise power).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to be powered in-place</param>
+		/// <param name="p">The exponent as a <typeparamref name="T"/></param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixPower<T, TS>(TS A, long ld, T p, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, <c><paramref name="A"/> = <paramref name="A"/> + <paramref name="scalar"/></c> (point-wise addition).
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to be added in-place</param>
+		/// <param name="scalar">The scalar to add</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixAddScalar<T, TS>(TS A, long ld, T scalar, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, cast the given matrix from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
+		/// </summary>
+		/// <typeparam name="TIn">Any unmanaged number as the input data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number as the output data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="source">The source matrix</param>
+		/// <param name="rows">The number of rows</param>
+		/// <param name="cols">The number of columns</param>
+		/// <param name="lds">The leading dimension of <paramref name="source"/></param>
+		/// <param name="destination">The destination matrix</param>
+		/// <param name="ldd">The leading dimension of <paramref name="destination"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lds"/> or <paramref name="ldd"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixCast<TIn, TOut, TSIn, TSOut>(TSIn source, long lds, TSOut destination, long ldd, long rows, long cols) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+
+		/// <summary>
+		/// When implemented by a derived class, truncate the matrix by comparing each element's absolute value in <paramref name="A"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to be truncated in-place</param>
+		/// <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixTruncate<T, TS>(TS A, long ld, double threshold, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the elements in matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to sum</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixSum<T, TS>(TS A, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the absolute values of the elements in matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to sum</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixAbsSum<T, TS>(TS A, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute the norm of the elements in matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to sum</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="norm">Output the norm as a <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixNorm<T, TS>(TS A, long ld, long rows, long cols, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately product the elements in matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to product</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="product">Output the product as a <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixProduct<T, TS>(TS A, long ld, long rows, long cols, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, get the index of the index of the element with largest absolute value in matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to sum</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixAbsArgMax<T, TS>(TS A, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, get the index of the index of the element with smallest absolute value in matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to sum</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixAbsArgMin<T, TS>(TS A, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately sum the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to sum</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="x">The output vector to store the sums</param>
+		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixSumColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, int stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1>;
+
+		/// <summary>
+		/// When implemented by a derived class, aggregately product the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The matrix to product</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="x">The output vector to store the products</param>
+		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatrixProductColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, int stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1>;
 		#endregion
 
 		#region matrix extended

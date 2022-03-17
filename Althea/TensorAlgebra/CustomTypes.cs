@@ -6,7 +6,6 @@ using Althea.Arrays;
 using Althea.Linq;
 using Althea.Resources;
 using Althea.Helpers;
-using System.Reflection.Emit;
 
 
 namespace Althea.TensorAlgebra
@@ -475,7 +474,7 @@ namespace Althea.TensorAlgebra
 	}
 
 	/// <summary>
-	/// The <see cref="TensorContractInfo"/> that can be stored on stack and heap
+	/// An alternative version of <see cref="TensorContractInfo"/> that can be stored on heap
 	/// </summary>
 	public readonly struct StorableContractInfo : ICheckValid, IEquatable<StorableContractInfo>
 	{

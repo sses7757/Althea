@@ -86,7 +86,7 @@ namespace Althea.Arrays
 		/// <param name="sub">The sub matrix to check which can be null to prevent checking</param>
 		/// <exception cref="ArgumentOutOfRangeException">If the any of the parameters is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void CheckRange(long offsetRow, long countRow, long offsetCol, long countCol, TSelf? sub = null)
+		protected void CheckRange(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric? sub = null)
 		{
 			MatrixSliceWrapper.Create(offsetRow, countRow, offsetCol, countCol, this, sub);
 		}
@@ -142,7 +142,7 @@ namespace Althea.Arrays
 			}
 			set
 			{
-				var (offsetRow, countRow, offsetCol, countCol) = this.CheckRange(x, y, value);
+				var (offsetRow, countRow, offsetCol, countCol) = this.CheckRange(x, y);
 				this.SetSubmatrix(offsetRow, countRow, offsetCol, countCol, value);
 			}
 		}

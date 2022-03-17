@@ -127,7 +127,7 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface for tensor that contains basic members (size and labels).
 	/// </summary>
-	public interface ILabeledTensor
+	public interface ILabeledTensor : ICheckValid
 	{
 		#region properties
 		/// <summary>

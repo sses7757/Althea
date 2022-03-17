@@ -15,7 +15,7 @@ namespace Althea.Arrays
 	/// The dense vector interface whose only storage is of type <typeparamref name="TS"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value <see cref="Storage"/></typeparam>
+	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/></typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IDenseVector{T, TS, TSelf}"/></typeparam>
 	public interface IDenseVector<T, TS, TSelf> : IBaseVector<T, TSelf>, ISingleValueStorageArray<T, TS, TSelf>
 		where T : unmanaged, INumber<T>
@@ -59,6 +59,37 @@ namespace Althea.Arrays
 				offset += buffer.LongLength;
 			}
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, statically create a referenced <typeparamref name="TSelf"/> with given <paramref name="storage"/> and <paramref name="length"/>.
+		/// </summary>
+		/// <param name="storage">The storage of the new vector</param>
+		/// <param name="length">The length in <typeparamref name="T"/> of the new vector</param>
+		/// <param name="stride">The stride between consecutive elements of the new vector</param>
+		/// <returns>The created referenced vector of type <typeparamref name="TSelf"/>.</returns>
+		protected abstract static TSelf CreateRef(TS storage, long length, int stride = 1);
+
+		TSelf IBaseVector<T, TSelf>.GetSlice(long start, long count)
+		{
+			this.CheckRange(start, count);
+			return TSelf.CreateRef(this.Storage + (start * this.Stride), count, this.Stride);
+		}
+
+		void IBaseVector<T, TSelf>.GetSlice(long start, long count, TSelf overwrite)
+		{
+			this.CheckRange(start, count, overwrite);
+			var src = this.Storage + (start * this.Stride);
+			var dst = overwrite.Storage;
+			src.StridedCopyTo<T, TS, TS>(this.Stride, dst, overwrite.Stride);
+		}
+
+		void IBaseVector<T, TSelf>.SetSlice(long start, long count, TSelf value)
+		{
+			this.CheckRange(start, count, value);
+			var src = value.Storage;
+			var dst = this.Storage + (start * this.Stride);
+			src.StridedCopyTo<T, TS, TS>(this.Stride, dst, this.Stride);
+		}
 		#endregion
 
 		#region point-wise operations
@@ -72,7 +103,7 @@ namespace Althea.Arrays
 
 		void IValueArray<T, TSelf>.Power(T power) => ExtBlas.PointWisePower(this.Storage, this.Stride, power);
 
-		void IValueArray<T, TSelf>.Truncate(double threshold) => ExtBlas.TruncateArray<T, TS>(this.Storage, this.Stride, threshold);
+		void IValueArray<T, TSelf>.Truncate(double threshold) => ExtBlas.PointWiseTruncate<T, TS>(this.Storage, this.Stride, threshold);
 		#endregion
 
 		#region simple aggregation operations
@@ -81,8 +112,6 @@ namespace Althea.Arrays
 		T IValueArray<T, TSelf>.AbsSum() => Blas.AbsoluteValueSum<T, TS>(this.Storage, this.Stride);
 
 		T IValueArray<T, TSelf>.Norm() => Blas.Norm<T, TS>(this.Storage, this.Stride);
-
-		void IValueArray<T, TSelf>.Normalize() => this.Scale(T.One / this.Norm());
 
 		T IValueArray<T, TSelf>.ValueWithMaxAbs() => (this.Storage + Blas.AbsoluteValueArgMax<T, TS>(this.Storage, this.Stride)).ToManaged<T, TS>();
 

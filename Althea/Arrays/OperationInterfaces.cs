@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 
+using Althea.Arrays;
 using Althea.LinearAlgebra;
+using Althea.TensorAlgebra;
 
 
 namespace Althea.Arrays
@@ -39,9 +40,9 @@ namespace Althea.Arrays
 	/// The interface for vectors' out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The first input vector type</typeparam>
-	/// <typeparam name="TVec2">The second input vector type</typeparam>
-	/// <typeparam name="TVec3">The output vector type</typeparam>
+	/// <typeparam name="TVec1">The first input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec2">The second input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec3">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	public interface IVectorOperators<T, in TVec1, in TVec2, out TVec3>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>, IVectorOperators<T, TVec1, TVec2, TVec3>
@@ -101,9 +102,9 @@ namespace Althea.Arrays
 	/// The interface for operations that multiply vectors and matrices of different types.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The input vector type</typeparam>
-	/// <typeparam name="TVec2">The output vector type</typeparam>
-	/// <typeparam name="TMat">The input matrix type</typeparam>
+	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	public interface IMatrixVectorMultiplyOperations<T, in TVec1, TVec2, in TMat>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>
@@ -139,8 +140,8 @@ namespace Althea.Arrays
 	/// The interface for operations that get or set diagonal elements of matrices.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type</typeparam>
-	/// <typeparam name="TMat">The matrix type</typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	public interface IMatrixDiagonalVector<T, TVec, TMat>
 		where T : unmanaged, INumber<T>
 		where TVec : class, IBaseVector<T, TVec>
@@ -185,13 +186,14 @@ namespace Althea.Arrays
 	/// The interface for vectors' in-place operations.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	public interface IMatrixOperations<T, in TMat1, in TMat2, in TMat3>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
 	{
 		/// <summary>
 		/// When implemented by a derived class, statically overwrite <paramref name="C"/> with the addition of <c><paramref name="opA"/>(<paramref name="A"/>) + <paramref name="opB"/>(<paramref name="B"/>)</c>.
@@ -223,9 +225,9 @@ namespace Althea.Arrays
 	/// The interface for matrices' out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first input matrix type</typeparam>
-	/// <typeparam name="TMat2">The second input matrix type</typeparam>
-	/// <typeparam name="TMat3">The output matrix type</typeparam>
+	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	public interface IMatrixOperators<T, in TMat1, in TMat2, out TMat3>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixOperators<T, TMat1, TMat2, TMat3>
@@ -305,5 +307,154 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
 		public abstract static TMat3 operator *(TMat1 left, TMat2 right);
+	}
+
+	/// <summary>
+	/// The interface for tensors' in-place operations.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TTen1">The first concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
+	/// <typeparam name="TTen2">The second concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
+	/// <typeparam name="TTen3">The third concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
+	public interface ITensorOperations<T, in TTen1, in TTen2, in TTen3>
+		where T : unmanaged, INumber<T>
+		where TTen1 : class, IBaseTensor<T, TTen1>
+		where TTen2 : class, IBaseTensor<T, TTen2>
+		where TTen3 : class, IBaseTensor<T, TTen3>
+	{
+		/// <summary>
+		/// When implemented by a derived class, compute the tensor contraction-addition: <c><paramref name="C"/> = <paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> .* <paramref name="opC"/>(<paramref name="C"/>)</c>.
+		/// </summary>
+		/// <remarks>The <see cref="ILabeledTensor.Labels"/> of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide contraction dimensions.</remarks>
+		/// <param name="A">The first input contraction tensor</param>
+		/// <param name="B">The second input contraction tensor</param>
+		/// <param name="C">The input/output addition tensor</param>
+		/// <param name="α">The scalar to multiply to <paramref name="A"/> or <paramref name="B"/> during operation</param>
+		/// <param name="β">The scalar to multiply to <paramref name="C"/> during operation</param>
+		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="A"/> during operation</param>
+		/// <param name="opB">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="B"/> during operation</param>
+		/// <param name="opC">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="C"/> during operation</param>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/>, <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="A"/>, <paramref name="B"/> or <paramref name="C"/>'s labels indicate that they cannot contract or add</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
+		public abstract static void Contract(TTen1 A, UnaryOperation opA, TTen2 B, UnaryOperation opB, T α, TTen3 C, UnaryOperation opC, T β);
+
+		/// <summary>
+		/// When implemented by a derived class, compute the tensor point-wise binary operation: <c><paramref name="C"/> = <paramref name="binary"/>(<paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>), <paramref name="β"/> .* <paramref name="opB"/>(<paramref name="B"/>))</c>.
+		/// </summary>
+		/// <remarks>The <see cref="ILabeledTensor.Labels"/> of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide permutations. If <paramref name="A"/> or <paramref name="B"/> is null (<paramref name="α"/> or <paramref name="β"/> is 0), <paramref name="binary"/> is not used.</remarks>
+		/// <param name="A">The first input tensor</param>
+		/// <param name="B">The second input tensor</param>
+		/// <param name="C">The output result tensor</param>
+		/// <param name="α">The scalar to multiply to <paramref name="A"/> during operation</param>
+		/// <param name="β">The scalar to multiply to <paramref name="B"/> during operation</param>
+		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="A"/> during operation</param>
+		/// <param name="opB">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="B"/> during operation</param>
+		/// <param name="binary">The <see cref="BinaryOperation"/> to apply simultaneously to both elements of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <exception cref="ArgumentNullException">If both <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If the operation cannot be performed due to incompatible size(s)</exception>
+		public abstract static void TensorsBinaryOperation(TTen1? A, UnaryOperation opA, T α, TTen2? B, UnaryOperation opB, T β, TTen3 C, BinaryOperation binary);
+	}
+
+	public interface ITensorOperators<T, in TTen1, in TTen2, out TTen3>
+	{
+		/// <summary>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the which is the permutation of the given <paramref name="tensor"/> under <paramref name="order"/>.
+		/// </summary>
+		/// <param name="tensor">One original tensor as the left operand</param>
+		/// <param name="order">The <see cref="TensorOrder"/> indicating the permutation order</param>
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the permutation result of the given <paramref name="tensor"/> under <paramref name="order"/></returns>
+		public static BaseTensor<T> operator ^(BaseTensor<T> tensor, TensorOrder order)
+		{
+			if (tensor is null || !tensor.IsValid())
+				throw new ArgumentNullException(nameof(tensor));
+
+			return tensor.Permute(order, Const<T>.One);
+		}
+
+		/// <summary>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the which is the tensor contraction of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// </summary>
+		/// <param name="left">One original tensor as the left operand</param>
+		/// <param name="right">One original tensor as the right operand</param>
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the contraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors</returns>
+		public static BaseTensor<T> operator *(BaseTensor<T> left, BaseTensor<T> right)
+		{
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
+
+			return left.Contract(right, Const<T>.One);
+		}
+
+		/// <summary>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// </summary>
+		/// <param name="left">One original tensor as the left operand</param>
+		/// <param name="right">One original tensor as the right operand</param>
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
+		public static BaseTensor<T> operator +(BaseTensor<T> left, BaseTensor<T> right)
+		{
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
+
+			return left.AddTensor(Const<T>.One, right, Const<T>.One);
+		}
+
+		/// <summary>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// </summary>
+		/// <param name="left">One original tensor as the left operand</param>
+		/// <param name="right">One original tensor as the right operand</param>
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
+		public static BaseTensor<T> operator -(BaseTensor<T> left, BaseTensor<T> right)
+		{
+			if (left is null || !left.IsValid())
+				throw new ArgumentNullException(nameof(left));
+			if (right is null || !right.IsValid())
+				throw new ArgumentNullException(nameof(right));
+
+			return left.AddTensor(Const<T>.One, right, Const<T>.MinusOne);
+		}
+
+		/// <summary>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the (point-wise) multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="tensor">The original tensor to multiply</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public static BaseTensor<T> operator *(BaseTensor<T> tensor, T scalar)
+		{
+			if (tensor is null || !tensor.IsValid())
+				throw new ArgumentNullException(nameof(tensor));
+
+			return tensor.ApplyToClone(v => v.Scale(scalar));
+		}
+
+		/// <summary>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the negation result of the given <paramref name="tensor"/>
+		/// </summary>
+		/// <param name="tensor">The original tensor to negate</param>
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the negation result of the given <paramref name="tensor"/></returns>
+		public static BaseTensor<T> operator -(BaseTensor<T> tensor) => tensor * Const<T>.MinusOne;
+
+		/// <summary>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="tensor">The original tensor to multiply</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public static BaseTensor<T> operator *(T scalar, BaseTensor<T> tensor) => tensor * scalar;
+
+		/// <summary>
+		/// Create a new <see cref="BaseTensor{T}"/> which is the division result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="tensor">The original tensor to be divided</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
+		/// <returns>A new <see cref="BaseTensor{T}"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public static BaseTensor<T> operator /(BaseTensor<T> tensor, T scalar) => tensor * scalar.NativeReciprocal();
 	}
 }

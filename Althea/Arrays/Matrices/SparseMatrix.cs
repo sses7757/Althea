@@ -152,7 +152,7 @@ namespace Althea.Arrays
 			where TIndOut : unmanaged;
 
 		/// <summary>
-		/// When implemented by a derived class, cast this sparse matrix into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
+		/// When implemented by a derived class, cast this sparse matrix into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> of this array.
 		/// </summary>
 		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
 		/// <typeparam name="TIndOut">Any integral-typed unmanaged number as the new index type</typeparam>

@@ -39,82 +39,82 @@ namespace Althea.Arrays
 
 		#region point-wise operations
 		/// <summary>
-		/// When implemented by a derived class, fill this array's <see cref="Storage"/> with given <paramref name="value"/>.
+		/// When implemented by a derived class, fill this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> with given <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The value as a <typeparamref name="T"/> to fill</param>
 		void FillWith(T value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="Storage"/> with given <paramref name="value"/>.
+		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> with given <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
 		void AddScalar(T value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="Storage"/> with given <paramref name="value"/>.
+		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> with given <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
 		void Scale(T value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="Storage"/>.
+		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/>.
 		/// </summary>
 		void Conjugate();
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="Storage"/> with given <paramref name="power"/>.
+		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> with given <paramref name="power"/>.
 		/// </summary>
 		/// <param name="power">The power as a <typeparamref name="T"/></param>
 		void Power(T power);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="Storage"/> by comparing with given <paramref name="threshold"/>.
+		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> by comparing with given <paramref name="threshold"/>.
 		/// </summary>
-		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
+		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
 		void Truncate(double threshold);
 		#endregion
 
 		#region simple aggregation operations
 		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, aggregately sum the elements in this array.
 		/// </summary>
 		/// <returns>The aggregate sum of this array.</returns>
 		T Sum();
 
 		/// <summary>
-		/// When implemented by a derived class, aggregately sum the absolute values of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, aggregately sum the absolute values of elements in this array.
 		/// </summary>
 		/// <returns>The aggregate sum of absolute values of this array.</returns>
 		T AbsSum();
 
 		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array. The default implementation only sums <see cref="Storage"/>, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>.
+		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array.
 		/// </summary>
 		/// <returns>The 2-norm of this array.</returns>
 		T Norm();
 
 		/// <summary>
-		/// When implemented by a derived class, in-place scale this array's <see cref="Storage"/> such that its 2-norm (Euclidean norm) is 1, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
+		/// When implemented by a derived class, in-place scale this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> such that its 2-norm (Euclidean norm) is 1, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
 		/// </summary>
-		void Normalize();
+		virtual void Normalize() => this.Scale(T.One / this.Norm());
 
 		/// <summary>
-		/// When implemented by a derived class, get the element whose absolute value is maximum in this array. The default implementation simply calculates <see cref="Storage"/>'s argument absolute-value maximum.
+		/// When implemented by a derived class, get the element whose absolute value is maximum in this array.
 		/// </summary>
 		/// <returns>The element whose absolute value is maximum in this array.</returns>
 		T ValueWithMaxAbs();
 
 		/// <summary>
-		/// When implemented by a derived class, get the element whose absolute value is minimum in this array. The default implementation simply calculates <see cref="Storage"/>'s argument absolute-value minimum.
+		/// When implemented by a derived class, get the element whose absolute value is minimum in this array.
 		/// </summary>
 		/// <returns>The element whose absolute value is minimum in this array.</returns>
 		T ValueWithMinAbs();
 
 		/// <summary>
-		/// Compare the <see cref="Storage"/> of this array with a given <paramref name="value"/> to check whether all elements in <see cref="Storage"/> is the same as <paramref name="value"/>.
+		/// Compare the <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> of this array with a given <paramref name="value"/> to check whether all elements in <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> is the same as <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The given value in <typeparamref name="T"/> to compare</param>
-		/// <returns>True if all elements in <see cref="Storage"/> is the same as <paramref name="value"/>; false otherwise.</returns>
+		/// <returns>True if all elements in <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> is the same as <paramref name="value"/>; false otherwise.</returns>
 		public virtual bool ValueAllEquals(T value)
 		{
 			if (!this.IsValid())
@@ -215,7 +215,7 @@ namespace Althea.Arrays
 	/// The abstract interface whose only value storage is of type <typeparamref name="TS"/> while there may be other index storage(s).
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value <see cref="Storage"/></typeparam>
+	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/></typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="ISingleValueStorageArray{T, TS, TSelf}"/></typeparam>
 	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
 	public interface ISingleValueStorageArray<T, TS, TSelf> : IValueArray<T, TSelf>
@@ -235,7 +235,7 @@ namespace Althea.Arrays
 		public virtual TS Storage => OriginalStorage.MakeReference();
 
 		/// <summary>
-		/// Get the total number of the visible values in memory in <typeparamref name="T"/>. The default implementation simply returns <see cref="Storage"/>.<see cref="IStorage{T, TSelf}.Length">Length</see>.
+		/// Get the total number of the visible values in memory in <typeparamref name="T"/>. The default implementation simply returns <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/>.<see cref="IStorage{T, TSelf}.Length">Length</see>.
 		/// </summary>
 		public virtual long ActualLength => this.OriginalStorage.Length;
 
@@ -261,7 +261,7 @@ namespace Althea.Arrays
 
 		void IValueArray<T, TSelf>.Power(T power) => ExtBlas.PointWisePower(this.Storage, 1, power);
 
-		void IValueArray<T, TSelf>.Truncate(double threshold) => ExtBlas.TruncateArray<T, TS>(this.Storage, 1, threshold);
+		void IValueArray<T, TSelf>.Truncate(double threshold) => ExtBlas.PointWiseTruncate<T, TS>(this.Storage, 1, threshold);
 		#endregion
 
 		#region simple aggregation operations
@@ -270,8 +270,6 @@ namespace Althea.Arrays
 		T IValueArray<T, TSelf>.AbsSum() => Blas.AbsoluteValueSum<T, TS>(this.Storage, 1);
 
 		T IValueArray<T, TSelf>.Norm() => Blas.Norm<T, TS>(this.Storage, 1);
-
-		void IValueArray<T, TSelf>.Normalize() => this.Scale(T.One / this.Norm());
 
 		T IValueArray<T, TSelf>.ValueWithMaxAbs() => (this.Storage + Blas.AbsoluteValueArgMax<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
 
@@ -289,7 +287,7 @@ namespace Althea.Arrays
 		TOther NewArrayAlike<TOut, TSOut, TOther>() where TOut : unmanaged, INumber<TOut> where TSOut : class, IStorage<TOut, TSOut> where TOther : class, ISingleValueStorageArray<TOut, TSOut, TOther>;
 
 		/// <summary>
-		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="Storage"/> of this array.
+		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> of this array.
 		/// </summary>
 		/// <typeparam name="TOut">The data type to cast to</typeparam>
 		/// <typeparam name="TSOut">The output storage type</typeparam>
