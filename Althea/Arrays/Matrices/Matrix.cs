@@ -27,16 +27,11 @@ namespace Althea.Arrays
 		TSelf GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol);
 
 		/// <summary>
-		/// When implemented by a derived class, get a sub-matrix by the row and column index ranges and copy it to <paramref name="overwrite"/>.
+		/// When implemented by a derived class, copy this matrix's elements to <paramref name="destination"/>'s ones.
 		/// </summary>
-		/// <param name="offsetRow">The starting offset of the row to take</param>
-		/// <param name="countRow">The number of the rows to take</param>
-		/// <param name="offsetCol">The starting offset of the columns to take</param>
-		/// <param name="countCol">The number of the columns to take</param>
-		/// <param name="overwrite">The <typeparamref name="TSelf"/> to be overwritten</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
-		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
-		void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, TSelf overwrite);
+		/// <param name="destination">The destination matrix to copy to</param>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is not of same size as this one</exception>
+		void CopyTo(TSelf destination);
 
 		/// <summary>
 		/// When implemented by a derived class, set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.

@@ -42,12 +42,11 @@ namespace Althea.Arrays.Matrices
 			return TSelf.CreateRef(this.Storage + (offsetRow + offsetCol * this.LeadDim), countRow, countCol, this.LeadDim);
 		}
 
-		void IBaseMatrix<T, TSelf>.GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, TSelf overwrite)
+		void IBaseMatrix<T, TSelf>.CopyTo(TSelf destination)
 		{
-			this.CheckRange(offsetRow, countRow, offsetCol, countCol, overwrite);
-			var src = this.Storage + (offsetRow + offsetCol * this.LeadDim);
-			var dst = overwrite.Storage;
-			src.Copy2DTo<T, TS, TS>(this.LeadDim, dst, overwrite.LeadDim, countRow, countCol);
+			if (destination.NRows != this.NRows || destination.NCols != this.NCols)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(destination));
+			this.Storage.Copy2DTo<T, TS, TS>(this.LeadDim, destination.Storage, destination.LeadDim, this.NRows, this.NCols);
 		}
 
 		void IBaseMatrix<T, TSelf>.SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, TSelf value)

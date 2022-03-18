@@ -75,12 +75,11 @@ namespace Althea.Arrays
 			return TSelf.CreateRef(this.Storage + (start * this.Stride), count, this.Stride);
 		}
 
-		void IBaseVector<T, TSelf>.GetSlice(long start, long count, TSelf overwrite)
+		void IBaseVector<T, TSelf>.CopyTo(TSelf destination)
 		{
-			this.CheckRange(start, count, overwrite);
-			var src = this.Storage + (start * this.Stride);
-			var dst = overwrite.Storage;
-			src.StridedCopyTo<T, TS, TS>(this.Stride, dst, overwrite.Stride);
+			if (((IVectorMetric)destination).Length != ((IVectorMetric)this).Length)
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(destination));
+			this.Storage.StridedCopyTo<T, TS, TS>(this.Stride, destination.Storage, destination.Stride);
 		}
 
 		void IBaseVector<T, TSelf>.SetSlice(long start, long count, TSelf value)

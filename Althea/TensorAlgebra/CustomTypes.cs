@@ -18,21 +18,37 @@ namespace Althea.TensorAlgebra
 	public enum BinaryOperation
 	{
 		/// <summary>
-		/// Addition of two elements
+		/// Operation that returns the addition of two input parameters
 		/// </summary>
 		Addition,
 		/// <summary>
-		/// Multiplication of two elements
+		/// Operation that returns the multiplication of two input parameters
 		/// </summary>
 		Multiply,
 		/// <summary>
-		/// Maximum of two elements (only for real-typed tensors)
+		/// Operation that returns the power of the first input parameter to the second one
+		/// </summary>
+		Power,
+		/// <summary>
+		/// Operation that returns the maximum of two input parameters
 		/// </summary>
 		Maximum,
 		/// <summary>
-		/// Minimum of two elements (only for real-typed tensors)
+		/// Operation that returns the mininum of two input parameters
 		/// </summary>
-		Mininum
+		Mininum,
+		/// <summary>
+		/// Operation that simply returns the second input parameter
+		/// </summary>
+		GetSecond,
+		/// <summary>
+		/// Operation that returns the conjugate of the first input parameter
+		/// </summary>
+		ConjugateFirst,
+		/// <summary>
+		/// Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
+		/// </summary>
+		ClipFirstBySecond
 	}
 
 	/// <summary>
@@ -46,13 +62,17 @@ namespace Althea.TensorAlgebra
 		/// </summary>
 		Identity,
 		/// <summary>
-		/// Complex conjugate (real-typed elements are not changed)
+		/// Complex conjugate operator (real-typed elements are not changed)
 		/// </summary>
 		Conjugate,
 		/// <summary>
-		/// Negation
+		/// Negation operator
 		/// </summary>
-		Negate
+		Negate,
+		/// <summary>
+		/// Absolute operator
+		/// </summary>
+		AbsoluteValue
 	}
 	#endregion
 
@@ -307,7 +327,7 @@ namespace Althea.TensorAlgebra
 		/// <see cref="Span{T}"/> leftFree = stackalloc int[left.Rank - rank];
 		/// <see cref="Span{T}"/> rightFree = stackalloc int[right.Rank - rank];
 		/// <see cref="TensorContractInfo"/> info = new(left, right, output, leftConc, rightConc, leftFree, rightFree);
-		/// <see cref="Dense.AbstractApi.Contract{T}(Dense.DenseTensorWrapper{T}, Dense.DenseTensorWrapper{T}, Dense.DenseTensorWrapper{T}, TensorContractInfo)"/>;
+		/// <see cref="Dense.ApiSelector.Contract"/>;
 		/// </code></example>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TensorContractInfo(ILabeledTensor left, ILabeledTensor right, ILabeledTensor output, Span<int> leftConc, Span<int> rightConc, Span<int> leftFree, Span<int> rightFree)

@@ -19,10 +19,10 @@ namespace Althea.Arrays
 	{
 		#region basic
 		/// <summary>
-		/// When implemented by a derived class, get the (both end inclusive) accumulated product of the <see cref="ILabeledTensor.Size"/> of this tensor
+		/// When implemented by a derived class, get the (both end inclusive) accumulated product of the <see cref="ILabeledTensor.Size"/> of this tensor.
 		/// </summary>
 		/// <remarks>The first element is 1, the last element is <see cref="IValueArray{T, TSelf}.Length"/> and its size == <see cref="ILabeledTensor.Rank"/> + 1</remarks>
-		ReadOnlySpan<long> SizeProd { get; }
+		protected ReadOnlySpan<long> SizeProd { get; }
 		#endregion
 
 		#region element indexing
@@ -116,6 +116,7 @@ namespace Althea.Arrays
 		/// <returns>The equivalent total offset of the position indicated by <paramref name="offsets"/>.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected long CheckRange(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths) => this.CheckRange(offsets, lengths, this.SizeProd);
 
 		/// <summary>
@@ -124,10 +125,12 @@ namespace Althea.Arrays
 		/// <param name="offsets">The starting offset indices as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
 		/// <param name="lengths">The lengths as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
 		/// <param name="outerSizeProd">The (inclusive) accumulated product of the outer size (i.e. the strides of all dimensions)</param>
+		/// <param name="sub">The sub tensor to check which can be null to ignore checking</param>
 		/// <returns>The equivalent total offset of the position indicated by <paramref name="offsets"/>.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
-		protected long CheckRange(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, ReadOnlySpan<long> outerSizeProd)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected long CheckRange(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, ReadOnlySpan<long> outerSizeProd, ILabeledTensor? sub = null)
 		{
 			int rank = this.Rank;
 			var size = ((ILabeledTensor)this).Size;
@@ -143,6 +146,17 @@ namespace Althea.Arrays
 				if (lengths[i] <= 0 || offsets[i] + lengths[i] >= size[i])
 					throw new ArgumentOutOfRangeException(nameof(lengths), lengths[i], Resources.Parameter.InvalidValue);
 				offset += outerSizeProd[i] * offsets[i];
+			}
+			if (sub is not null)
+			{
+				if (sub.Rank != rank)
+					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(sub));
+				var sizeSub = sub.Size;
+				for (int i = 0; i < rank; i++)
+				{
+					if (sizeSub[i] < lengths[i])
+						throw new ArgumentOutOfRangeException(nameof(lengths), lengths[i], Resources.Parameter.InvalidValue);
+				}
 			}
 			return offset;
 		}
@@ -183,7 +197,7 @@ namespace Althea.Arrays
 				Span<long> off = stackalloc long[this.Rank];
 				Span<long> len = stackalloc long[this.Rank];
 				this.GetRange(off, len, ranges);
-				if (!len.SequenceEqual(((ILabeledTensor)value).Size, static (a, b) => a <= b))
+				if (!len.SequenceEqual(((ILabeledTensor)value).Size))
 					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(value));
 				this.SetSlice(off, len, value);
 			}
@@ -200,15 +214,11 @@ namespace Althea.Arrays
 		TSelf GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
 
 		/// <summary>
-		/// When implemented by a derived class, get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and copy it to <paramref name="overwrite"/>.
+		/// When implemented by a derived class, copy this tensor's elements to <paramref name="destination"/>'s ones.
 		/// </summary>
-		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
-		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
-		/// <param name="overwrite">The tensor to be overwritten by the sub-tensor</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or empty</exception>
-		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank; or <paramref name="overwrite"/> cannot be overwritten</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
-		void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TSelf overwrite);
+		/// <param name="destination">The destination tensor to copy to</param>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is not of same size as this one</exception>
+		void CopyTo(TSelf destination);
 
 		/// <summary>
 		/// When implemented by a derived class, set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>.
@@ -269,17 +279,21 @@ namespace Althea.Arrays
 		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
 		/// <param name="allOffsets">The output overall offsets of all dimensions, must be of size == rank</param>
 		/// <param name="allLengths">The output overall lengths of all dimensions, must be of size == rank</param>
+		/// <param name="outerSizeProd">The (inclusive) accumulated product of the outer size (i.e. the strides of all dimensions)</param>
+		/// <param name="sub">The sub tensor to check which can be null to ignore checking</param>
 		/// <returns>The equivalent total offset of the position indicated by (at exit) <paramref name="allOffsets"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected long CheckFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Span<long> allOffsets, Span<long> allLengths)
+		protected long CheckFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Span<long> allOffsets, Span<long> allLengths, ReadOnlySpan<long> outerSizeProd, ILabeledTensor? sub = null)
 		{
 			int rank = this.Rank;
 			if (n <= 0 || n >= rank - 1)
 				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.InvalidValue);
 			if (restIndices.Length + n != rank)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(restIndices));
+			if (sub is not null && !sub.Size.SequenceEqual(((ILabeledTensor)this).Size[..n]))
+				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(sub));
 
 			restIndices.CopyTo(allOffsets[n..]);
 			allLengths[n..].Fill(1);
@@ -304,7 +318,7 @@ namespace Althea.Arrays
 				}
 			}
 			// check ranges and return
-			return CheckRange(allOffsets, allLengths);
+			return CheckRange(allOffsets, allLengths, outerSizeProd);
 		}
 
 		/// <summary>
@@ -331,31 +345,6 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>); or <paramref name="value"/> cannot be used as the set parameter</exception>
 		void SetFirstDims(int n, ReadOnlySpan<long> restIndices, TSelf value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
-		#endregion
-
-		#region tensor algebra abstract methods
-		/// <summary>
-		/// When implemented by a derived class, compute the tensor reduction (self partial summation) of this tensor under the given <paramref name="order"/>.
-		/// </summary>
-		/// <param name="order">The given <see cref="TensorOrder"/> to indicate which part(s) of dimension(s) to sum, its order will be ignored</param>
-		/// <param name="scalar">The scalar to multiply to the result</param>
-		/// <param name="op">The <see cref="UnaryOperation"/> to apply to each element during the operation</param>
-		/// <param name="reduce">The <see cref="BinaryOperation"/> used to reduce elements</param>
-		/// <returns>The reduction result as a new <typeparamref name="TSelf"/>.</returns>
-		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract TSelf Reduce(TensorOrder order, T scalar, UnaryOperation op = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition);
-
-		/// <summary>
-		/// When implemented by a derived class, compute the tensor permutation of this tensor under the given <paramref name="order"/>.
-		/// </summary>
-		/// <param name="order">The given <see cref="TensorOrder"/> to indicate the permutation order</param>
-		/// <param name="scalar">The scalar to multiply to the result</param>
-		/// <param name="op">The <see cref="UnaryOperation"/> to apply to each element during the operation</param>
-		/// <returns>The permutation result as a new <typeparamref name="TSelf"/>.</returns>
-		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract TSelf Permute(TensorOrder order, T scalar, UnaryOperation op = UnaryOperation.Identity);
 		#endregion
 	}
 }

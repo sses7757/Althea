@@ -84,13 +84,11 @@ namespace Althea.Arrays
 		TSelf GetSlice(long start, long count);
 
 		/// <summary>
-		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> and overwrite to <paramref name="overwrite"/>
+		/// When implemented by a derived class, copy this vector's elements to <paramref name="destination"/>'s ones.
 		/// </summary>
-		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
-		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
-		/// <param name="overwrite">The <typeparamref name="TSelf"/> to be overwritten</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
-		void GetSlice(long start, long count, TSelf overwrite);
+		/// <param name="destination">The destination vector to copy to</param>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is not of same size as this one</exception>
+		void CopyTo(TSelf destination);
 
 		/// <summary>
 		/// When implemented by a derived class, set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>

@@ -1,21 +1,147 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Althea.Linq;
 using Althea.Arrays;
 using Althea.Helpers;
+using Althea.NativeTypes;
 using Althea.Resources;
 
 
 namespace Althea.TensorAlgebra
 {
 	/// <summary>
-	/// The permutation order struct of tensors.
+	/// The struct act as elements used to create <see cref="TensorOrder"/>s.
 	/// </summary>
-	public readonly struct TensorOrder : ICloneable<TensorOrder>, IEquatable<TensorOrder>
+	public readonly struct OrderElement : IEqualityOperators<OrderElement, OrderElement>
 	{
-		#region private enum
-		private enum OrderType : short
+		#region basic
+		internal readonly TensorOrder.Union main, auxi;
+
+		private OrderElement(TensorOrder.Union u1, TensorOrder.Union u2 = default)
+		{
+			this.main = u1;
+			this.auxi = u2;
+		}
+
+		/// <summary>
+		/// Implicitly convert a <see cref="byte"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(byte val) => new(new(val, TensorOrder.OrderType.Index));
+
+		/// <summary>
+		/// Implicitly convert a <see cref="short"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(short val) => new(new(val, TensorOrder.OrderType.Index));
+
+		/// <summary>
+		/// Implicitly convert a <see cref="int"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(int val) => new(new(checked((short)val), TensorOrder.OrderType.Index));
+
+		/// <summary>
+		/// Implicitly convert a <see cref="long"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(long val) => new(new(checked((short)val), TensorOrder.OrderType.Index));
+
+#pragma warning disable CS3001
+		/// <summary>
+		/// Implicitly convert a <see cref="sbyte"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(sbyte val) => new(new(val, TensorOrder.OrderType.Index));
+
+
+		/// <summary>
+		/// Implicitly convert a <see cref="ushort"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(ushort val) => new(new(checked((short)val), TensorOrder.OrderType.Index));
+
+		/// <summary>
+		/// Implicitly convert a <see cref="int"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(uint val) => new(new(checked((short)val), TensorOrder.OrderType.Index));
+
+		/// <summary>
+		/// Implicitly convert a <see cref="long"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(ulong val) => new(new(checked((short)val), TensorOrder.OrderType.Index));
+#pragma warning restore CS3001
+
+		/// <summary>
+		/// Implicitly convert a <see cref="char"/> as a character index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as a character index</param>
+		public static implicit operator OrderElement(char val) => new(new(val, TensorOrder.OrderType.Char));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static TensorOrder.Union FromIndex(Index val, TensorOrder.OrderType type = TensorOrder.OrderType.Index) => new(checked((short)(val.IsFromEnd ? ~val.Value : val.Value)), type, true);
+
+		/// <summary>
+		/// Implicitly convert a <see cref="Index"/> as an index to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as an index</param>
+		public static implicit operator OrderElement(Index val) => new(FromIndex(val));
+
+		/// <summary>
+		/// Implicitly convert a <see cref="Range"/> as a range of indices to a <see cref="OrderElement"/>.
+		/// </summary>
+		/// <param name="val">The input value as a range of indices</param>
+		public static implicit operator OrderElement(Range val)
+		{
+			if (val.Equals(Range.All))
+				return new(new(0, TensorOrder.OrderType.RangeAll));
+			else
+				return new(FromIndex(val.Start, TensorOrder.OrderType.RangeStart), FromIndex(val.End, TensorOrder.OrderType.RangeEnd));
+		}
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Checks whether this <see cref="OrderElement"/> is the same as the <paramref name="other"/> one.
+		/// </summary>
+		/// <param name="other">The other <see cref="OrderElement"/> to compare</param>
+		/// <returns>True if <c>this == <paramref name="other"/></c>; false otherwise.</returns>
+		public bool Equals(OrderElement other) => this.main == other.main && this.auxi == other.auxi;
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(OrderElement left, OrderElement right) => left.Equals(right);
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(OrderElement left, OrderElement right) => !left.Equals(right);
+
+		/// <summary>
+		/// Checks whether this <see cref="OrderElement"/> is the same as the <paramref name="obj"/>.
+		/// </summary>
+		public override bool Equals(object? obj) => obj is OrderElement o && this.Equals(o);
+
+		/// <summary>
+		/// Get the hash code of this <see cref="OrderElement"/>.
+		/// </summary>
+		public override int GetHashCode() => HashCode.Combine(this.main, this.auxi);
+		#endregion
+	}
+
+	/// <summary>
+	/// The permutation order of tensors as a ref struct.
+	/// </summary>
+	/// <example><c><see cref="TensorOrder"/> order = ('c', 0, ^1, 1..^4, ..);</c></example>
+	public readonly ref partial struct TensorOrder
+	{
+		#region basic
+		internal enum OrderType : short
 		{
 			Empty = 0,
 			Index,
@@ -24,18 +150,73 @@ namespace Althea.TensorAlgebra
 			RangeStart,
 			RangeEnd
 		}
-		#endregion
 
-		#region static
+		[StructLayout(LayoutKind.Explicit, Size = sizeof(int))]
+		internal readonly struct Union : IEqualityOperators<Union, Union>
+		{
+			#region basic
+			[FieldOffset(0)]
+			internal readonly char c;
+			[FieldOffset(0)]
+			internal readonly short index;
+			[FieldOffset(2)]
+			internal readonly OrderType type;
+
+			internal Union(short index, OrderType type, bool actualIndex = false)
+			{
+				this.c = default;
+				if (index > MAX_RANK || (!actualIndex && index < 0))
+					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+				this.index = index;
+				this.type = type;
+			}
+
+			internal Union(char c, OrderType type)
+			{
+				this.index = default;
+				this.c = c;
+				this.type = type;
+			}
+			#endregion
+
+			#region equality
+			/// <summary>
+			/// Checks whether this <see cref="Union"/> is the same as the <paramref name="other"/> one.
+			/// </summary>
+			/// <param name="other">The other <see cref="Union"/> to compare</param>
+			/// <returns>True if <c>this == <paramref name="other"/></c>; false otherwise.</returns>
+			public bool Equals(Union other) => this.index == other.index && this.type == other.type;
+
+			/// <summary>
+			/// Equality operator
+			/// </summary>
+			public static bool operator ==(Union left, Union right) => left.Equals(right);
+
+			/// <summary>
+			/// Inequality operator
+			/// </summary>
+			public static bool operator !=(Union left, Union right) => !left.Equals(right);
+
+			/// <summary>
+			/// Checks whether this <see cref="Union"/> is the same as the <paramref name="obj"/>.
+			/// </summary>
+			/// <param name="obj">The other <see cref="object"/> to compare</param>
+			/// <returns>True if <c>this == <paramref name="obj"/></c>; false otherwise.</returns>
+			public override bool Equals(object? obj) => obj is Union u && this.Equals(u);
+
+			/// <summary>
+			/// Get the hash code of this <see cref="Union"/>.
+			/// </summary>
+			public override int GetHashCode() => HashCode.Combine(this.index, this.type);
+			#endregion
+		}
+
 		/// <summary>
 		/// The identity permutation (in fact this is the default value)
 		/// </summary>
 		public static TensorOrder Identity => default;
 
 		private const short MAX_RANK = 64 / (2 + 2);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static short ToShort(Index index) => checked((short)(index.IsFromEnd ? ~index.Value : index.Value));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int FromShort(short s, int rank)
@@ -45,155 +226,10 @@ namespace Althea.TensorAlgebra
 				throw new ArgumentOutOfRangeException(nameof(s), s, Parameter.InvalidValue);
 			return offset;
 		}
-		#endregion
 
-		#region initialize and clone
-		private readonly FixedBuffer_64<(short, OrderType)> order;
+		private readonly FixedBuffer_64<Union> order;
 
-		private TensorOrder(FixedBuffer_64<(short, OrderType)> order) => this.order = order;
-
-		/// <summary>
-		/// Create an order from a general tuple whose element must be <see cref="short"/>, <see cref="int"/>, <see cref="long"/>, <see cref="Index"/> or <see cref="Range"/> (base-zero order index and range, cannot be negative) or <see cref="char"/> (character label which can only be checked when calling <see cref="GetIntArrayOrder"/> or <see cref="GetCharArrayOrder"/>).
-		/// </summary>
-		/// <param name="tuple">The general tuple of any length to indicate the permutation order; specially, if an element is <see cref="Range.All"/>, it is regarded as the rest of the indices in ascending order.</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="tuple"/> is null or of zero length</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the <paramref name="tuple"/> elements is not of the allowed types</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="tuple"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="tuple"/></exception>
-		public TensorOrder(ITuple tuple)
-		{
-			if (tuple is null || tuple.Length == 0)
-				throw new ArgumentNullException(nameof(tuple));
-			if (tuple.Length > MAX_RANK)
-				throw new ArgumentException(Parameter.WrongSize, nameof(tuple));
-
-			this.order = new FixedBuffer_64<(short, OrderType)>();
-			int current = 0;
-			for (int i = 0; i < tuple.Length; i++)
-			{
-				var val = tuple[i];
-				if (val is null)
-					throw new ArgumentNullException(nameof(tuple));
-				(short, OrderType) newOne;
-				if (val is byte || val is sbyte || val is short || val is ushort || val is int || val is uint || val is long || val is ulong)
-				{
-					if ((dynamic)val < 0 || (dynamic)val >= MAX_RANK)
-						throw new ArgumentOutOfRangeException(nameof(tuple), tuple, Parameter.CannotNegative);
-					newOne = (checked((short)(dynamic)val), OrderType.Index);
-				}
-				else if (val is char c)
-				{
-					newOne = ((short)c, OrderType.Char);
-				}
-				else if (val is Index id)
-				{
-					newOne = (ToShort(id), OrderType.Index);
-				}
-				else if (tuple[i] is Range r)
-				{
-					if (r.Equals(Range.All) && this.order.Contains(OrderType.RangeAll, static o => o.Item2))
-						throw new ArgumentException(Parameter.DuplicateIndices, nameof(tuple));
-					if (r.Start.Equals(r.End))
-						throw new ArgumentException(Parameter.DuplicateIndices, nameof(tuple));
-					newOne = (ToShort(r.Start), OrderType.RangeStart);
-					// check
-					if (this.order.Contains(newOne))
-						throw new ArgumentException(Parameter.DuplicateIndices, nameof(tuple));
-					else
-						this.order[current++] = newOne;
-					newOne = (ToShort(r.End), OrderType.RangeEnd);
-				}
-				else
-				{
-					throw new NotSupportedException(Support.DataType);
-				}
-				// check
-				if (this.order.Contains(newOne))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(tuple));
-				else
-					this.order[current++] = newOne;
-			}
-		}
-
-		/// <summary>
-		/// Create an order from a given (zero-based) permutation order as an array of <see cref="Index"/>.
-		/// </summary>
-		/// <param name="indices">The zero-based permutation order as an array of <see cref="Index"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="indices"/> is null or of zero length</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="indices"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="indices"/></exception>
-		public TensorOrder(params Index[] indices)
-		{
-			Span<int> inds = stackalloc int[indices.Length];
-			for (int i = 0; i < inds.Length; i++)
-			{
-				inds[i] = indices[i].Value;
-				if (indices[i].IsFromEnd)
-					inds[i] = ~inds[i];
-			}
-			this = new(inds);
-		}
-
-		/// <summary>
-		/// Create an order from a given permutation order as an array of <see cref="char"/>.
-		/// </summary>
-		/// <param name="chars">The permutation order as an array of <see cref="char"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="chars"/> is null or of zero length</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="chars"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="chars"/></exception>
-		public TensorOrder(params char[] chars) : this((ReadOnlySpan<char>)chars) { }
-
-		/// <summary>
-		/// Create an order from a given (zero-based) permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>.
-		/// </summary>
-		/// <param name="indices">The zero-based permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="indices"/> is null or of zero length</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="indices"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="indices"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any element in <paramref name="indices"/> is larger than 16</exception>
-		public TensorOrder(ReadOnlySpan<int> indices)
-		{
-			if (indices.Length > MAX_RANK)
-				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
-			if (!indices.ElementsUnique())
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(indices));
-
-			this.order = new FixedBuffer_64<(short, OrderType)>();
-			for (int i = 0; i < indices.Length; i++)
-			{
-				var id = indices[i];
-				if (id >= MAX_RANK)
-					throw new ArgumentOutOfRangeException(nameof(indices), id, Parameter.InvalidValue);
-				var newOne = ((short)id, OrderType.Index);
-				this.order[i] = newOne;
-			}
-		}
-
-		/// <summary>
-		/// Create an order from a given permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>.
-		/// </summary>
-		/// <param name="chars">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/></param>
-		/// <exception cref="ArgumentNullException">If <paramref name="chars"/> is null or of zero length</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="chars"/> is larger than 16 -- the maximum allowed value; or if there are duplicated indices or more than one <see cref="Range.All"/> in <paramref name="chars"/></exception>
-		public TensorOrder(ReadOnlySpan<char> chars)
-		{
-			if (chars.Length > MAX_RANK)
-				throw new ArgumentException(Parameter.WrongSize, nameof(chars));
-			if (!chars.ElementsUnique())
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(chars));
-
-			this.order = new FixedBuffer_64<(short, OrderType)>();
-			for (int i = 0; i < chars.Length; i++)
-			{
-				var newOne = ((short)chars[i], OrderType.Char);
-				this.order[i] = newOne;
-			}
-		}
-
-		/// <summary>
-		/// Clone this structure
-		/// </summary>
-		/// <returns>The cloned new <see cref="TensorOrder"/></returns>
-		public TensorOrder Clone()
-		{
-			return new TensorOrder(this.order);
-		}
+		private TensorOrder(FixedBuffer_64<Union> order) => this.order = order;
 		#endregion
 
 		#region get result
@@ -233,26 +269,26 @@ namespace Althea.TensorAlgebra
 			for (int i = 0; i < length; i++)
 			{
 				var item = orderSpan[i];
-				switch (item.Item2)
+				switch (item.type)
 				{
 					case OrderType.Index:
-						var offset = FromShort(item.Item1, rank);
+						var offset = FromShort(item.index, rank);
 						outputPermutation[actualRank++] = offset;
 						break;
 					case OrderType.Char:
-						int find = label.IndexOf((char)item.Item1);
+						int find = label.IndexOf(item.c);
 						if (find < 0)
-							throw new ArgumentOutOfRangeException(nameof(tensor), item.Item1, Parameter.UnexpectedValue);
+							throw new ArgumentOutOfRangeException(nameof(tensor), item.index, Parameter.UnexpectedValue);
 						outputPermutation[actualRank++] = find;
 						break;
 					case OrderType.RangeAll:
 						outputPermutation[actualRank++] = int.MaxValue; // a place holder
 						break;
 					case OrderType.RangeStart:
-						rangeStart = FromShort(item.Item1, rank);
+						rangeStart = FromShort(item.index, rank);
 						break;
 					case OrderType.RangeEnd:
-						int rangeEnd = FromShort(item.Item1, rank);
+						int rangeEnd = FromShort(item.index, rank);
 						if (rangeEnd <= rangeStart)
 							throw new ArgumentOutOfRangeException(nameof(tensor), rank, Parameter.InvalidValue);
 						int count = rangeEnd - rangeStart;
@@ -265,7 +301,7 @@ namespace Althea.TensorAlgebra
 			}
 
 			// check duplicate
-			if (outputPermutation.Slice(0, actualRank).DistinctCount() < actualRank)
+			if (outputPermutation[..actualRank].DistinctCount() < actualRank)
 				throw new ArgumentException(Parameter.DuplicateIndices, nameof(tensor));
 			// replace the all range
 			if (outputPermutation.Contains(int.MaxValue))
@@ -341,260 +377,89 @@ namespace Althea.TensorAlgebra
 		}
 		#endregion
 
-		#region converters
-		#region repetitive int tuple converters
-		/// <summary>
-		/// Implicitly convert from span. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
-		/// </summary>
-		/// <param name="span">The general span to indicate the permutation order</param>
-		public static implicit operator TensorOrder(Span<int> span) => new(span);
-
-		/// <summary>
-		/// Implicitly convert from span. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
-		/// </summary>
-		/// <param name="span">The general span to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ReadOnlySpan<int> span) => new(span);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int> tuple) => new(stackalloc int[2].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int> tuple) => new(stackalloc int[3].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int> tuple) => new(stackalloc int[4].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int> tuple) => new(stackalloc int[5].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int> tuple) => new(stackalloc int[6].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{int})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int> tuple) => new(stackalloc int[7].FromStruct(tuple));
-		#endregion
-
-		#region repetitive char tuple converters
-		/// <summary>
-		/// Implicitly convert from span. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
-		/// </summary>
-		/// <param name="span">The general span to indicate the permutation order</param>
-		public static implicit operator TensorOrder(Span<char> span) => new(span);
-
-		/// <summary>
-		/// Implicitly convert from span. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
-		/// </summary>
-		/// <param name="span">The general span to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ReadOnlySpan<char> span) => new(span);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char> tuple) => new(stackalloc char[2].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char> tuple) => new(stackalloc char[3].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char> tuple) => new(stackalloc char[4].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char> tuple) => new(stackalloc char[5].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char> tuple) => new(stackalloc char[6].FromStruct(tuple));
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ReadOnlySpan{char})"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char> tuple) => new(stackalloc char[7].FromStruct(tuple));
-		#endregion
-
-		#region repetitive int and range tuple converters
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<int, int, int, int, int, int, int, Range> tuple) => new(tuple);
-		#endregion
-
-		#region repetitive char and range tuple converters
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, Range> tuple) => new(tuple);
-
-		/// <summary>
-		/// Implicitly convert from tuple. See <see cref="TensorOrder(ITuple)"/> for more detail.
-		/// </summary>
-		/// <param name="tuple">The general tuple to indicate the permutation order</param>
-		public static implicit operator TensorOrder(ValueTuple<char, char, char, char, char, char, char, Range> tuple) => new(tuple);
-		#endregion
-
-		#region other converters
-		/// <summary>
-		/// Implicitly convert from <see cref="Index"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
-		/// </summary>
-		/// <param name="order">The <see cref="Index"/> array to indicate the permutation order</param>
-		public static implicit operator TensorOrder(Index[] order) => new(order);
-
-		/// <summary>
-		/// Implicitly convert from <see cref="int"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
-		/// </summary>
-		/// <param name="order">The <see cref="int"/> array to indicate the permutation order</param>
-		public static implicit operator TensorOrder(int[] order) => new(order);
-
-		/// <summary>
-		/// Implicitly convert from <see cref="char"/> array. See <see cref="TensorOrder(Index[])"/> for more detail.
-		/// </summary>
-		/// <param name="order">The <see cref="char"/> array to indicate the permutation order</param>
-		public static implicit operator TensorOrder(char[] order) => new(order);
-		#endregion
-		#endregion
-
 		#region equalities
 		/// <summary>
-		/// Equality with another <see cref="object"/>
+		/// Always returns false since ref struct cannot be boxed.
 		/// </summary>
-		/// <param name="obj">another <see cref="object"/></param>
-		/// <returns>equal or not</returns>
-		public override bool Equals(object? obj)
-		{
-			if (obj is TensorOrder o)
-				return this.Equals(o);
-			else
-				return false;
-		}
+		public override bool Equals(object? obj) => false;
 
 		/// <summary>
-		/// Equality with another <see cref="TensorOrder"/>
+		/// Checks whether this <see cref="TensorOrder"/> is the same as the <paramref name="other"/> one
 		/// </summary>
-		/// <param name="other">another <see cref="TensorOrder"/></param>
-		/// <returns>equal or not</returns>
-		public bool Equals(TensorOrder other)
-		{
-			return this.order.Equals(other.order);
-		}
+		/// <param name="other">The other <see cref="TensorOrder"/> to compare</param>
+		/// <returns>True if <c>this == <paramref name="other"/></c>; false otherwise.</returns>
+		public bool Equals(TensorOrder other) => this.order.Equals(other.order);
 
 		/// <summary>
-		/// Get the hash code
+		/// Always throws <see cref="InvalidOperationException"/> since ref struct cannot be stored on heap.
 		/// </summary>
-		/// <returns>The hash code</returns>
-		public override int GetHashCode() => this.order.GetHashCode();
+		public override int GetHashCode() => throw new InvalidOperationException();
 
 		/// <summary>
 		/// Equality operator
 		/// </summary>
-		public static bool operator ==(TensorOrder left, TensorOrder right)
-		{
-			return left.Equals(right);
-		}
+		public static bool operator ==(TensorOrder left, TensorOrder right) => left.Equals(right);
 
 		/// <summary>
 		/// Inequality operator
 		/// </summary>
-		public static bool operator !=(TensorOrder left, TensorOrder right)
+		public static bool operator !=(TensorOrder left, TensorOrder right) => !left.Equals(right);
+		#endregion
+
+		#region conversion
+		/// <summary>
+		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
+		/// </summary>
+		/// <param name="elements">The input <see cref="OrderElement"/>s</param>
+		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="elements"/> is empty or null</exception>
+		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the <paramref name="elements"/> &lt; 0 or ≥ max_rank</exception>
+		/// <exception cref="NotSupportedException">If the total size &gt; max_rank</exception>
+		public static TensorOrder Create(params OrderElement[] elements)
 		{
-			return !(left == right);
+			if (elements is null || elements.Length == 0)
+				throw new ArgumentNullException(nameof(elements));
+			FixedBuffer_64<Union> order = default;
+			byte n = 0;
+			foreach (var e in elements)
+			{
+				if (n >= MAX_RANK)
+					throw new NotSupportedException();
+				if (order.AsSpan(n).Contains(e.auxi))
+					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				order[n++] = e.main;
+				if (e.auxi != default)
+				{
+					if (n >= MAX_RANK)
+						throw new NotSupportedException();
+					if (order.AsSpan(n).Contains(e.auxi))
+						throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					order[n++] = e.auxi;
+				}
+			}
+			return new(order);
+		}
+
+		/// <summary>
+		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/> as the order.
+		/// </summary>
+		/// <param name="a">The input <see cref="OrderElement"/></param>
+		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
+		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/> imply duplicate indices</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="a"/> &lt; 0 or ≥ max_rank</exception>
+		public static implicit operator TensorOrder(OrderElement a)
+		{
+			FixedBuffer_64<Union> order = default;
+			byte n = 0;
+			order[n++] = a.main;
+			if (a.auxi != default)
+			{
+				if (order.AsSpan(n).Contains(a.auxi))
+					throw new ArgumentException(Parameter.DuplicateIndices, nameof(a));
+				order[n++] = a.auxi;
+			}
+			return new(order);
 		}
 		#endregion
 	}

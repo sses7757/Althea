@@ -101,6 +101,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>MixedStorage.tt</DependentUpon>
     </Compile>
+    <Compile Update="TensorAlgebra\TensorOrderCreate.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TensorOrderCreate.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -153,6 +158,10 @@
     <None Update="Storage\MixedStorage.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>MixedStorage.cs</LastGenOutput>
+    </None>
+    <None Update="TensorAlgebra\TensorOrderCreate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TensorOrderCreate.cs</LastGenOutput>
     </None>
   </ItemGroup>
 
