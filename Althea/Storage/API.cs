@@ -161,15 +161,15 @@ namespace Althea.Storage
 			{
 				var pg = pointerGetters[i];
 				if (pg is null || pg.ReturnType.GenericTypeArguments.Length != 1)
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				if (pg.GetParameters().Length != 0 &&
 					!(pg.GetParameters().Length == 2 && pg.GetParameters()
 														  .Select(static p => p.ParameterType)
 														  .SequenceEqual(new[] { typeof(long), typeof(bool) })))
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				var fillMethod = typeof(ApiSelector).GetMethod(nameof(ApiSelector.FillWithValue), typeof(T) == typeof(byte) ? 1 : 2, BindingFlags.Public | BindingFlags.Static, null, new[] { pg.ReturnType, typeof(T) }, null)?.MakeGenericMethod(pg.ReturnType.GenericTypeArguments[0]);
 				if (fillMethod is null)
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				pointerFill[i] = fillMethod;
 			}
 
@@ -242,18 +242,18 @@ namespace Althea.Storage
 				bool first = true;
 			SET_METHOD:
 				if (pg is null || pg.ReturnType.GenericTypeArguments.Length != 1)
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				if (pg.GetParameters().Length != 0 &&
 					!(pg.GetParameters().Length == 2 && pg.GetParameters()
 														  .Select(static p => p.ParameterType)
 														  .SequenceEqual(new[] { typeof(long), typeof(bool) })))
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				var ptrLen = pg.ReturnType.GetProperty(nameof(PointerSegment<ManagedPointer>.LengthInBytes), BindingFlags.Public | BindingFlags.Instance)?.GetAccessors(false)?.FirstOrDefault();
 				if (ptrLen is null || ptrLen.ReturnType != typeof(long))
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				var ptrMove = pg.ReturnType.GetMethod(nameof(PointerSegment<ManagedPointer>.MoveBy), 0, BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(long), typeof(long) }, null);
 				if (ptrMove is null)
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				if (first)
 				{
 					pointerLen1[i] = ptrLen; pointerMove1[i] = ptrMove;
@@ -269,7 +269,7 @@ namespace Althea.Storage
 				{
 					var copyMethod = typeof(ApiSelector).GetMethod(nameof(ApiSelector.MemoryCopy), 2, BindingFlags.Public | BindingFlags.Static, null, new[] { pointerGetters1[i].ReturnType, pointerGetters2[j].ReturnType }, null)?.MakeGenericMethod(pointerGetters1[i].ReturnType.GenericTypeArguments[0], pointerGetters2[j].ReturnType.GenericTypeArguments[0]);
 					if (copyMethod is null)
-						throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+						throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 					pointerCopy[i, j] = copyMethod;
 				}
 			}
@@ -623,15 +623,15 @@ namespace Althea.Storage
 			{
 				var pg = pointerGetters[i];
 				if (pg is null || pg.ReturnType.GenericTypeArguments.Length != 1)
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				if (pg.GetParameters().Length != 0 &&
 					!(pg.GetParameters().Length == 2 && pg.GetParameters()
 														  .Select(static p => p.ParameterType)
 														  .SequenceEqual(new[] { typeof(long), typeof(bool) })))
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				var managedMethod = typeof(ApiSelector).GetMethod(to ? nameof(ApiSelector.ToManaged) : nameof(ApiSelector.FromManaged), 2, BindingFlags.Public | BindingFlags.Static, null, new[] { pg.ReturnType, spanType }, null)?.MakeGenericMethod(typeof(T), pg.ReturnType.GenericTypeArguments[0]);
 				if (managedMethod is null)
-					throw new InvalidOperationException(StorageException.InvalidPointerGetter);
+					throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 				pointerManaged[i] = managedMethod;
 			}
 
@@ -810,7 +810,7 @@ namespace Althea.Storage
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (source.OverlapWith(destination))
-				throw new InvalidOperationException(StorageException.CannotCopyOverlap);
+				throw new InvalidOperationException(StorageError.CannotCopyOverlap);
 
 			RuntimeTypeHandle handle1 = typeof(TS1).TypeHandle, handle2 = typeof(TS2).TypeHandle;
 			if (copyByteFunc.TryGetValue((handle1, handle2), out var copier))

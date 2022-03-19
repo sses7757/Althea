@@ -121,7 +121,7 @@ namespace Althea.Random
 		{
 			distribution ??= GetDefaultDistribution<T>();
 			if (distribution[0] != Const<T>.DataType)
-				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(distribution));
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(distribution));
 
 			CombinationOfLocations location1 = storage.LocationDescription;
 			bool success = false;
@@ -153,9 +153,9 @@ namespace Althea.Random
 			if (distribution is null )
 				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.Count != 2)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(distribution));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(distribution));
 			if (distribution[0] != Const<T1>.DataType || distribution[1] != Const<T2>.DataType)
-				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(distribution));
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(distribution));
 
 			CombinationOfLocations location1 = storage1.LocationDescription, locatio2 = storage2.LocationDescription;
 			bool success = false;
@@ -190,9 +190,9 @@ namespace Althea.Random
 			if (distribution is null)
 				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.Count != 3)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(distribution));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(distribution));
 			if (distribution[0] != Const<T1>.DataType || distribution[1] != Const<T2>.DataType || distribution[2] != Const<T3>.DataType)
-				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(distribution));
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(distribution));
 
 			CombinationOfLocations location1 = storage1.LocationDescription, locatio2 = storage2.LocationDescription, locatio3 = storage3.LocationDescription;
 			bool success = false;
@@ -221,9 +221,9 @@ namespace Althea.Random
 			if (storages is null || storages.Length == 0)
 				throw new ArgumentNullException(nameof(storages));
 			if (distribution.Count != storages.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
 			if (!distribution.SequenceEqual(storages, static (d, s) => d == s.DataType))
-				throw new ArgumentException(Resources.Parameter.UnexpectedType);
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType);
 
 			Span<CombinationOfLocations> locations = stackalloc CombinationOfLocations[storages.Length];
 			storages.CopyTo(locations, static s => s.LocationDescription);

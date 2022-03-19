@@ -120,20 +120,11 @@
   <data name="AbnormalOccured" xml:space="preserve">
     <value>The float 'NaN' or '±Infinity' occured during the calculations.</value>
   </data>
-  <data name="CacheSizeRatioSmall" xml:space="preserve">
-    <value>Some of the ratios between the sizes of caches are too small to have proper performance.</value>
-  </data>
   <data name="CannotAdd" xml:space="preserve">
     <value>There is not suitable addition operator for the given type.</value>
   </data>
-  <data name="CannotDeserialize" xml:space="preserve">
-    <value>Cannot deserialize the received message.</value>
-  </data>
   <data name="CannotDivide" xml:space="preserve">
     <value>The given interger(s) cannot perform lossless integer division.</value>
-  </data>
-  <data name="CannotFindMethod" xml:space="preserve">
-    <value>Cannot find a mehtod of given requirement(s).</value>
   </data>
   <data name="CannotNegate" xml:space="preserve">
     <value>Cannot calculate the negate of an unsigned number.</value>
@@ -144,25 +135,10 @@
   <data name="CannotParseComplex" xml:space="preserve">
     <value>Cannot parse '{0}' to a complex number with real type {1}.</value>
   </data>
-  <data name="DifferentSparsity" xml:space="preserve">
-    <value>The given sparse array has different sparsity from this one, hence, this in-place operation cannot be executed.</value>
-  </data>
-  <data name="ErrorOccur" xml:space="preserve">
-    <value>An error happened:</value>
-  </data>
-  <data name="InvalidGeneric" xml:space="preserve">
-    <value>The given generic type is invalid.</value>
-  </data>
-  <data name="ListCannotAdd" xml:space="preserve">
-    <value>Cannot append more items to this list since there is no extra space for it.</value>
-  </data>
-  <data name="MatrixSquare" xml:space="preserve">
-    <value>The diagonal accessor of this matrix cannot be obtained since the it is not a square matrix.</value>
+  <data name="DataTypeNotAllow" xml:space="preserve">
+    <value>The give data type is not allowed.</value>
   </data>
   <data name="PerfectSquare" xml:space="preserve">
-    <value>The size of the target matrix cannot be obtained since the length of array is not a perfect square.</value>
-  </data>
-  <data name="UseDefault" xml:space="preserve">
-    <value>Use default settings instead...</value>
+    <value>The given length is not a perfect square.</value>
   </data>
 </root>

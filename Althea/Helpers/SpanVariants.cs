@@ -93,7 +93,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index >= this._size)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				return ref this._span[index];
 			}
 		}
@@ -108,9 +108,9 @@ namespace Althea.Helpers
 		public readonly Span<T> Slice(int start, int count)
 		{
 			if (start >= this._size)
-				throw new ArgumentOutOfRangeException(nameof(start), start, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(start), start, Resources.ParameterError.InvalidValue);
 			if (start + count >= this._size)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
 			return this._span.Slice(start, count);
 		}
 
@@ -524,9 +524,9 @@ namespace Althea.Helpers
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
 			if (rows <= 0)
-				throw new ArgumentOutOfRangeException(nameof(rows), rows, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(rows), rows, Resources.ParameterError.MustPositive);
 			if (leadingDim < 0)
-				throw new ArgumentOutOfRangeException(nameof(leadingDim), leadingDim, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(leadingDim), leadingDim, Resources.ParameterError.CannotNegative);
 			if (leadingDim == 0)
 				leadingDim = rows;
 			if (span.Length % leadingDim != 0)
@@ -551,9 +551,9 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (row < 0 || row >= this._rows)
-					throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
 				if (col < 0 || col >= this._cols)
-					throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
 				return ref this._span[row + col * this._leadDim];
 			}
 		}
@@ -581,7 +581,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (columnIndex < 0 || columnIndex >= this._cols)
-					throw new ArgumentOutOfRangeException(nameof(columnIndex), columnIndex, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(columnIndex), columnIndex, Resources.ParameterError.InvalidValue);
 				return this._span[(columnIndex * this._leadDim)..(columnIndex * this._leadDim + this._rows)];
 			}
 		}
@@ -597,9 +597,9 @@ namespace Althea.Helpers
 		public readonly SpanMatrix<T> Slice(int column, int count)
 		{
 			if (column < 0 || column >= this._cols)
-				throw new ArgumentOutOfRangeException(nameof(column), column, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(column), column, Resources.ParameterError.InvalidValue);
 			if (count < 0 || column + count >= this._cols)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
 			return new(this._span[(column * this._leadDim)..((column + count) * this._leadDim)], this._rows, this._leadDim);
 		}
 
@@ -622,9 +622,9 @@ namespace Althea.Helpers
 		public readonly SpanMatrix<T> SliceRow(int row, int count)
 		{
 			if (row < 0 || row >= this._rows)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
 			if (count < 0 || row + count >= this._rows)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
 			return new(this._span[row..^(this._leadDim - row - count)], count, this._leadDim);
 		}
 
@@ -735,9 +735,9 @@ namespace Althea.Helpers
 			if (this.IsEmpty)
 				return;
 			if (row < 0 || row >= this._rows)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
 			if (destination.Length < this._cols)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
 
 			for (int i = 0; i < this._cols; i++)
 			{
@@ -758,9 +758,9 @@ namespace Althea.Helpers
 			if (this.IsEmpty)
 				return;
 			if (row < 0 || row >= this._rows)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
 			if (destination.Length < this._cols)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
 
 			for (int i = 0; i < this._cols; i++)
 			{
@@ -785,7 +785,7 @@ namespace Althea.Helpers
 			}
 			// otherwise
 			if (destination.Length < this._rows * this._cols)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
 			for (int i = 0; i < this._cols; i++)
 			{
 				var dst = destination[(i * this._rows)..];
@@ -804,7 +804,7 @@ namespace Althea.Helpers
 			if (this.IsEmpty)
 				return;
 			if (destination._rows != this._rows || destination._cols != this._cols)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(destination));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
 			if (this._leadDim == this._rows && destination._leadDim == destination._rows)
 			{
 				this._span[..(this._rows * this._cols)].CopyTo(destination._span);
@@ -836,7 +836,7 @@ namespace Althea.Helpers
 			}
 			// otherwise
 			if (destination.Length < this._rows * this._cols)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(destination));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
 			for (int i = 0; i < this._cols; i++)
 			{
 				var dst = destination[(i * this._rows)..];
@@ -889,7 +889,7 @@ namespace Althea.Helpers
 			if (array is null)
 				throw new ArgumentNullException(nameof(array));
 			if (array.Length != this._cols)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(array));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(array));
 
 			uint size = (uint)(this._rows * Unsafe.SizeOf<T>());
 			for (int i = 0; i < this._cols; i++)
@@ -898,7 +898,7 @@ namespace Althea.Helpers
 				if (column is null || column.Length == 0)
 					throw new ArgumentNullException(nameof(array));
 				if (column.Length != this._rows)
-					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(array));
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(array));
 				Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
 								 ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
 								 size);
@@ -917,7 +917,7 @@ namespace Althea.Helpers
 		public unsafe readonly Span<ColumnSwapping> AsColumnSwappings(IntPtr fixedSpan, Span<ColumnSwapping> columns)
 		{
 			if (columns.Length < this._cols)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(columns));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(columns));
 			for (int i = 0; i < this._cols; i++)
 			{
 				columns[i] = new(this, fixedSpan, i);
@@ -958,7 +958,7 @@ namespace Althea.Helpers
 			{
 #if DEBUG
 				if (a.rows != b.rows)
-					throw new ArgumentException(Resources.Parameter.NotSameSize);
+					throw new ArgumentException(Resources.ParameterError.NotSameSize);
 #endif
 				Span<byte> buf =  _buffer ?? stackalloc byte[a.rows];
 				Span<byte> aa = new(a.colStart, a.rows), bb = new(b.colStart, b.rows);

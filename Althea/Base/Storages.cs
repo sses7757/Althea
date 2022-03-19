@@ -116,7 +116,7 @@ namespace Althea
 			if (levelAsCache.IsEmpty)
 				return 0;
 			if (levelAsCache.Length > sizeof(CombinationType) * 8)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(levelAsCache));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(levelAsCache));
 			CombinationType c = 0;
 			for (int i = 0; i < levelAsCache.Length; i++)
 			{

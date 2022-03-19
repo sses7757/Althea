@@ -147,20 +147,6 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="x">The vector to be powered in-place</param>
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="p">The exponent as a <see cref="double"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
-		[AbstractApiMethod]
-		public abstract bool PointWisePower<T, TS>(TS x, int stride, double p) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/>.^<paramref name="p"/></c> (point-wise power).
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="x">The vector to be powered in-place</param>
-		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="p">The exponent as a <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>

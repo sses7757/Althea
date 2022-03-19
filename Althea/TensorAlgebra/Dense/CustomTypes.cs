@@ -262,7 +262,7 @@ namespace Althea.TensorAlgebra.Dense
 			if (storage is null || !storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
 			if (tensor is ISparseArray<T>)
-				throw new ArgumentException(Resources.Parameter.UnexpectedType, nameof(tensor));
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(tensor));
 
 			ReadOnlySpan<long> outerSize, strides;
 			if (tensor is IPitchedArray<T> p)

@@ -148,7 +148,7 @@ namespace Althea.NativeTypes
 			if (TryConvert(x, out T2 y))
 				return y;
 			else
-				throw new NotSupportedException(Resources.Support.DataType);
+				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 		}
 	}
 
@@ -185,7 +185,7 @@ namespace Althea.NativeTypes
 		static NumberType()
 		{
 			if (!typeof(T).IsValueType)
-				throw new InvalidOperationException(Resources.Support.DataType);
+				throw new InvalidOperationException(Resources.ArithmeticError.DataTypeNotAllow);
 			try
 			{
 				if (!typeof(T).IsPrimitive && typeof(T) != typeof(Half))
@@ -193,7 +193,7 @@ namespace Althea.NativeTypes
 			}
 			catch (Exception)
 			{
-				throw new InvalidOperationException(Resources.Support.DataType);
+				throw new InvalidOperationException(Resources.ArithmeticError.DataTypeNotAllow);
 			}
 			if (interfaceType is null)
 			{
@@ -223,6 +223,12 @@ namespace Althea.NativeTypes
 #pragma warning restore CS8605
 			}
 		}
+
+		/// <summary>
+		/// Check whether the given <paramref name="value"/> contains only real value or not.
+		/// </summary>
+		/// <param name="value">The given value of type <typeparamref name="T"/> to check</param>
+		public static bool IsRealValue(T value) => !IsComplex || T.Abs(value * T.Sign(value)) == value;1 
 
 		/// <summary>
 		/// Get whether type <typeparamref name="T"/> is a primitive type or not.

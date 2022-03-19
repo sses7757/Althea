@@ -61,40 +61,45 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
     </Compile>
-    <Compile Update="Resources\Exception.Designer.cs">
+    <Compile Update="Resources\ArithmeticError.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Exception.resx</DependentUpon>
+      <DependentUpon>ArithmeticError.resx</DependentUpon>
     </Compile>
-    <Compile Update="Resources\Other.Designer.cs">
+    <Compile Update="Resources\OtherError.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Other.resx</DependentUpon>
+      <DependentUpon>OtherError.resx</DependentUpon>
     </Compile>
-    <Compile Update="Resources\Backend.Designer.cs">
+    <Compile Update="Resources\FileError.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Backend.resx</DependentUpon>
+      <DependentUpon>FileError.resx</DependentUpon>
     </Compile>
-    <Compile Update="Resources\Parameter.Designer.cs">
+    <Compile Update="Resources\BackendError.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Parameter.resx</DependentUpon>
+      <DependentUpon>BackendError.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Resources\ParameterError.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ParameterError.resx</DependentUpon>
     </Compile>
     <Compile Update="Resources\Print.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Print.resx</DependentUpon>
     </Compile>
-    <Compile Update="Resources\StorageException.Designer.cs">
+    <Compile Update="Resources\SparseError.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>StorageException.resx</DependentUpon>
+      <DependentUpon>SparseError.resx</DependentUpon>
     </Compile>
-    <Compile Update="Resources\Support.Designer.cs">
+    <Compile Update="Resources\StorageError.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>Support.resx</DependentUpon>
+      <DependentUpon>StorageError.resx</DependentUpon>
     </Compile>
     <Compile Update="Storage\MixedStorage.cs">
       <DesignTime>True</DesignTime>
@@ -109,33 +114,37 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\Exception.resx">
+    <EmbeddedResource Update="Resources\ArithmeticError.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Exception.Designer.cs</LastGenOutput>
+      <LastGenOutput>ArithmeticError.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Other.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Other.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Backend.resx">
+    <EmbeddedResource Update="Resources\OtherError.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Backend.Designer.cs</LastGenOutput>
+      <LastGenOutput>OtherError.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Parameter.resx">
+    <EmbeddedResource Update="Resources\FileError.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>FileError.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\BackendError.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>BackendError.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\ParameterError.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Parameter.Designer.cs</LastGenOutput>
+      <LastGenOutput>ParameterError.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\Print.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
+      <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Print.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resources\StorageException.resx">
+    <EmbeddedResource Update="Resources\SparseError.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>StorageException.Designer.cs</LastGenOutput>
+      <LastGenOutput>SparseError.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Support.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Support.Designer.cs</LastGenOutput>
+    <EmbeddedResource Update="Resources\StorageError.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>StorageError.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 

@@ -22,14 +22,14 @@ namespace Althea.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Print {
+    internal class SparseError {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Print() {
+        internal SparseError() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Althea.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Print", typeof(Print).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.SparseError", typeof(SparseError).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,29 +61,29 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 ... {0} more stored rows 的本地化字符串。
+        ///   查找类似 The element(s) in sparse array with default value cannot be set to another value. 的本地化字符串。
         /// </summary>
-        internal static string MoreRows {
+        internal static string CannotSetSparse {
             get {
-                return ResourceManager.GetString("MoreRows", resourceCulture);
+                return ResourceManager.GetString("CannotSetSparse", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 ... {0} more stored elements 的本地化字符串。
+        ///   查找类似 The given sparse array has different sparsity from this one, hence, this in-place operation cannot be executed. 的本地化字符串。
         /// </summary>
-        internal static string MoreStored {
+        internal static string DifferentSparsity {
             get {
-                return ResourceManager.GetString("MoreStored", resourceCulture);
+                return ResourceManager.GetString("DifferentSparsity", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 ... {0} more 的本地化字符串。
+        ///   查找类似 Other sparse array format(s) is(are) not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string RowMore {
+        internal static string FormatNotSupport {
             get {
-                return ResourceManager.GetString("RowMore", resourceCulture);
+                return ResourceManager.GetString("FormatNotSupport", resourceCulture);
             }
         }
     }

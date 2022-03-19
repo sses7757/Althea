@@ -316,10 +316,10 @@ namespace Althea.NativeTypes
 			}
 			catch (Exception)
 			{
-				throw new NotSupportedException(Resources.Support.DataType);
+				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			}
 			if (v is not DataType d)
-				throw new NotSupportedException(Resources.Support.DataType);
+				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			return d;
 		}
 
@@ -359,7 +359,7 @@ namespace Althea.NativeTypes
 				ComplexInteger<uint> => DataType.ComplexUInt32,
 				ComplexInteger<ulong> => DataType.ComplexUInt64,
 				// otherwise
-				_ => NumberType<T>.Classification == 0 ? throw new NotSupportedException(Resources.Support.DataType) : 
+				_ => NumberType<T>.Classification == 0 ? throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow) : 
 					MakeDataType(NumberType<T>.IsComplex, NumberType<T>.Classification, Unmanaged<T>.Size),
 			};
 		}

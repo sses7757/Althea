@@ -197,7 +197,7 @@ namespace Althea.TensorAlgebra.Sparse
 			int f = (int)format;
 			int c = f.PopCount();
 			if (result.Length < c)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(result));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(result));
 			result = result[..c]; c = 0;
 			if (f.IsPowerOfTwo())
 			{

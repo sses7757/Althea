@@ -19,17 +19,17 @@ namespace Althea.Resources {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Backend {
+    internal class FileError {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Backend() {
+        internal FileError() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Althea.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Backend", typeof(Backend).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.FileError", typeof(FileError).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,20 +61,11 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 The initialization procedure of selected backend implementation cannot be performed. 的本地化字符串。
+        ///   查找类似 The given file&apos;s checksum mismatchaes with the known one, it may be corrupted. 的本地化字符串。
         /// </summary>
-        internal static string CannotInitialize {
+        internal static string FileCorrupted {
             get {
-                return ResourceManager.GetString("CannotInitialize", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 There is no suitable backend implementation currently available. 的本地化字符串。
-        /// </summary>
-        internal static string NotAvailable {
-            get {
-                return ResourceManager.GetString("NotAvailable", resourceCulture);
+                return ResourceManager.GetString("FileCorrupted", resourceCulture);
             }
         }
     }

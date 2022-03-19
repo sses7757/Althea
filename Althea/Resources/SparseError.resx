@@ -117,70 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CompiledNotFound" xml:space="preserve">
-    <value>The compiled method cannot be found.</value>
+  <data name="CannotSetSparse" xml:space="preserve">
+    <value>The element(s) in sparse array with default value cannot be set to another value.</value>
   </data>
-  <data name="CompileError" xml:space="preserve">
-    <value>The following compile errors were encountered: </value>
+  <data name="DifferentSparsity" xml:space="preserve">
+    <value>The given sparse array has different sparsity from this one, hence, this in-place operation cannot be executed.</value>
   </data>
-  <data name="FileCorrupted" xml:space="preserve">
-    <value>The given file's checksum mismatchaes with the known one, it may be corrupted.</value>
-  </data>
-  <data name="MatrixSolveBunchKaufman" xml:space="preserve">
-    <value>Bunch-Kaufman factorization failed since matrix A (D) is singular, D({0}, {0}) = 0.</value>
-  </data>
-  <data name="MatrixSolveCholesky" xml:space="preserve">
-    <value>Cholesky factorization failed since leading minor of order {0} is not positive definite.</value>
-  </data>
-  <data name="MatrixSolveEigen" xml:space="preserve">
-    <value>Eigenvalue decomposition failed since {0}-th off-diagonal elements of an intermediate tridiagonal form did not converge to zero.</value>
-  </data>
-  <data name="MatrixSolveGeneralEigen" xml:space="preserve">
-    <value>General eigenvalue decomposition failed since internal solve method such as 'Cholesky' and 'SVD' returns error status.</value>
-  </data>
-  <data name="MatrixSolveJacobi" xml:space="preserve">
-    <value>Jacobi method does not converge under given tolerance and maximum sweeps.</value>
-  </data>
-  <data name="MatrixSolveLU" xml:space="preserve">
-    <value>LU factorization failed since matrix A (U) is singular: U({0}, {0}) = 0.</value>
-  </data>
-  <data name="MatrixSolveNonSymmEigen" xml:space="preserve">
-    <value>Eigenvalue decomposition for non-symmetric matrix failed since the internal QR failed to compute all the eigenvalues.</value>
-  </data>
-  <data name="MatrixSolveNonSymmGeneralEigen" xml:space="preserve">
-    <value>General eigenvalue decomposition for non-symmetric matrices failed since the internal QZ iteration failed to compute all the eigenvalues.</value>
-  </data>
-  <data name="MatrixSolveQR" xml:space="preserve">
-    <value>QR factorization failed for unknown reasons.</value>
-  </data>
-  <data name="MatrixSolveSchur" xml:space="preserve">
-    <value>Schur decomposition failed to compute all the eigenvalues, or the eigenvalues could not be reordered because some eigenvalues were too close to separate, or after reordering, round-off changed values of some complex eigenvalues so that leading eigenvalues in the Schur form no longer satisfy the input.</value>
-  </data>
-  <data name="MatrixSolveSVD" xml:space="preserve">
-    <value>SVD failed to converge, {0}-th super-diagonal elements of an upper bidiagonal matrix not converged.</value>
-  </data>
-  <data name="MismatchCannotConvert" xml:space="preserve">
-    <value>There is no conversion from '{0}' to '{1}'.</value>
-  </data>
-  <data name="MismatchNotComplex" xml:space="preserve">
-    <value>The type '{0}' is not a complex type.</value>
-  </data>
-  <data name="MismatchNotComplexCorrespondence" xml:space="preserve">
-    <value>The type '{1}' is not a complex correspondence type of '{0}'.</value>
-  </data>
-  <data name="MismatchNotFloat" xml:space="preserve">
-    <value>The type '{0}' is not a floating-point type.</value>
-  </data>
-  <data name="MismatchNotInteger" xml:space="preserve">
-    <value>The type '{0}' is not an integral type.</value>
-  </data>
-  <data name="MismatchNotReal" xml:space="preserve">
-    <value>The type '{0}' is not a real type.</value>
-  </data>
-  <data name="MismatchNotRealCorrespondence" xml:space="preserve">
-    <value>The type '{1}' is not a real correspondence type of '{0}'.</value>
-  </data>
-  <data name="MismatchOtherReason" xml:space="preserve">
-    <value>There is other reason so that '{0}' mismatches to '{1}'.</value>
+  <data name="FormatNotSupport" xml:space="preserve">
+    <value>Other sparse array format(s) is(are) not supported yet.</value>
   </data>
 </root>

@@ -55,13 +55,13 @@ namespace Althea.Arrays
 		protected void CheckIndex(long row, long col)
 		{
 			if (row < 0)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.CannotNegative);
 			if (row >= this.NRows)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
 			if (col < 0)
-				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.ParameterError.CannotNegative);
 			if (col >= this.NCols)
-				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.ParameterError.InvalidValue);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

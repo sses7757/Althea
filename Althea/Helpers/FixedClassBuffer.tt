@@ -74,7 +74,7 @@ namespace Althea.Helpers
 				return MemoryMarshal.CreateSpan(ref Unsafe.As<FixedClassBuffer_<#= sizes[i] #><T>, T>(ref this), _count);
 			// else
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref Unsafe.As<FixedClassBuffer_<#= sizes[i] #><T>, T>(ref this), size);
 		}
 
@@ -92,7 +92,7 @@ namespace Althea.Helpers
 				return MemoryMarshal.CreateSpan(ref Unsafe.As<FixedClassBuffer_<#= sizes[i] #><T>, TClass>(ref this), _count);
 			// else
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref Unsafe.As<FixedClassBuffer_<#= sizes[i] #><T>, TClass>(ref this), size);
 		}
 		#endregion

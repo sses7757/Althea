@@ -82,12 +82,12 @@ namespace Althea.Arrays
 			int rank = this.Rank;
 			var size = ((ILabeledTensor)this).Size;
 			if (indices.Length != rank)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(indices));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(indices));
 			long offset = 0;
 			for (int i = 0; i < rank; i++)
 			{
 				if (indices[i] < 0 || indices[i] >= size[i])
-					throw new ArgumentOutOfRangeException(nameof(indices), indices[i], Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(indices), indices[i], Resources.ParameterError.InvalidValue);
 				offset += outerSizeProd[i] * indices[i];
 			}
 			return offset;
@@ -99,7 +99,7 @@ namespace Althea.Arrays
 			int rank = this.Rank;
 			var size = ((ILabeledTensor)this).Size;
 			if (indices is null || indices.Length != rank)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(indices));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(indices));
 			for (int i = 0; i < rank; i++)
 			{
 				ind[i] = indices[i].GetPosition(size[i]);
@@ -135,27 +135,27 @@ namespace Althea.Arrays
 			int rank = this.Rank;
 			var size = ((ILabeledTensor)this).Size;
 			if (offsets.Length != rank)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(offsets));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(offsets));
 			if (lengths.Length != rank)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(lengths));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(lengths));
 			long offset = 0;
 			for (int i = 0; i < rank; i++)
 			{
 				if (offsets[i] < 0 || offsets[i] >= size[i])
-					throw new ArgumentOutOfRangeException(nameof(offsets), offsets[i], Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(offsets), offsets[i], Resources.ParameterError.InvalidValue);
 				if (lengths[i] <= 0 || offsets[i] + lengths[i] >= size[i])
-					throw new ArgumentOutOfRangeException(nameof(lengths), lengths[i], Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(lengths), lengths[i], Resources.ParameterError.InvalidValue);
 				offset += outerSizeProd[i] * offsets[i];
 			}
 			if (sub is not null)
 			{
 				if (sub.Rank != rank)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(sub));
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sub));
 				var sizeSub = sub.Size;
 				for (int i = 0; i < rank; i++)
 				{
 					if (sizeSub[i] < lengths[i])
-						throw new ArgumentOutOfRangeException(nameof(lengths), lengths[i], Resources.Parameter.InvalidValue);
+						throw new ArgumentOutOfRangeException(nameof(lengths), lengths[i], Resources.ParameterError.InvalidValue);
 				}
 			}
 			return offset;
@@ -167,7 +167,7 @@ namespace Althea.Arrays
 			int rank = this.Rank;
 			var size = ((ILabeledTensor)this).Size;
 			if (ranges is null || ranges.Length != rank)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(ranges));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(ranges));
 			for (int i = 0; i < rank; i++)
 			{
 				(off[i], len[i]) = ranges[i].GetOffsetAndCount(size[i]);
@@ -198,7 +198,7 @@ namespace Althea.Arrays
 				Span<long> len = stackalloc long[this.Rank];
 				this.GetRange(off, len, ranges);
 				if (!len.SequenceEqual(((ILabeledTensor)value).Size))
-					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(value));
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(value));
 				this.SetSlice(off, len, value);
 			}
 		}
@@ -260,9 +260,9 @@ namespace Althea.Arrays
 		{
 			int rank = this.Rank, len = restIndices.Length;
 			if (n >= rank - 1)
-				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.ParameterError.InvalidValue);
 			if (len + n != rank)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(restIndices));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(restIndices));
 			var size = ((ILabeledTensor)this).Size;
 			for (int i = 0; i < len; i++)
 			{
@@ -289,24 +289,24 @@ namespace Althea.Arrays
 		{
 			int rank = this.Rank;
 			if (n <= 0 || n >= rank - 1)
-				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.ParameterError.InvalidValue);
 			if (restIndices.Length + n != rank)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(restIndices));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(restIndices));
 			if (sub is not null && !sub.Size.SequenceEqual(((ILabeledTensor)this).Size[..n]))
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(sub));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(sub));
 
 			restIndices.CopyTo(allOffsets[n..]);
 			allLengths[n..].Fill(1);
 			if (!offsets.IsEmpty)
 			{
 				if (offsets.Length != n)
-					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(offsets));
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(offsets));
 				offsets.CopyTo(allOffsets[..n]);
 			}
 			if (!lengths.IsEmpty)
 			{
 				if (lengths.Length != n)
-					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(lengths));
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(lengths));
 				lengths.CopyTo(allLengths[..n]);
 			}
 			else

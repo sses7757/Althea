@@ -374,28 +374,28 @@ namespace Althea.LinearAlgebra
 			if (matrix is null)
 				throw new ArgumentNullException(nameof(matrix));
 			if (offsetRow < 0)
-				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.ParameterError.CannotNegative);
 			if (offsetRow >= matrix.NRows)
-				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.ParameterError.InvalidValue);
 			if (countRow <= 0)
-				throw new ArgumentOutOfRangeException(nameof(countRow), countRow, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(countRow), countRow, Resources.ParameterError.CannotNegative);
 			if (countRow + offsetRow > matrix.NRows)
-				throw new ArgumentOutOfRangeException(nameof(countRow), countRow, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(countRow), countRow, Resources.ParameterError.InvalidValue);
 			if (offsetCol < 0)
-				throw new ArgumentOutOfRangeException(nameof(offsetCol), offsetCol, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(offsetCol), offsetCol, Resources.ParameterError.CannotNegative);
 			if (offsetCol >= matrix.NCols)
-				throw new ArgumentOutOfRangeException(nameof(offsetCol), offsetCol, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offsetCol), offsetCol, Resources.ParameterError.InvalidValue);
 			if (countCol <= 0)
-				throw new ArgumentOutOfRangeException(nameof(countCol), countCol, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(countCol), countCol, Resources.ParameterError.CannotNegative);
 			if (countCol + offsetCol > matrix.NCols)
-				throw new ArgumentOutOfRangeException(nameof(countCol), countCol, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(countCol), countCol, Resources.ParameterError.InvalidValue);
 			// check sub
 			if (sub is not null)
 			{
 				if (countRow < sub.NRows)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(sub));
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sub));
 				if (countCol < sub.NCols)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(sub));
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sub));
 			}
 			// return
 			return new(offsetRow, countRow, offsetCol, countCol);

@@ -238,7 +238,7 @@ namespace Althea.LinearAlgebra.Dense
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (source.OverlapWith(destination))
-				throw new InvalidOperationException(StorageException.CannotCopyOverlap);
+				throw new InvalidOperationException(StorageError.CannotCopyOverlap);
 			if (sourceLD == destinationLD && sourceLD == height)
 			{
 				source.CopyTo<T, TS1, TS2>(destination.MakeReference(0, height * width));
@@ -324,7 +324,7 @@ namespace Althea.LinearAlgebra.Dense
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
 			if (source.OverlapWith(destination))
-				throw new InvalidOperationException(StorageException.CannotCopyOverlap);
+				throw new InvalidOperationException(StorageError.CannotCopyOverlap);
 			if (incrementSource < 1)
 				throw new ArgumentOutOfRangeException(nameof(incrementSource));
 			if (incrementDestination < 1)

@@ -22,14 +22,14 @@ namespace Althea.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Exception {
+    internal class OtherError {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Exception() {
+        internal OtherError() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Althea.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Exception", typeof(Exception).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.OtherError", typeof(OtherError).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -57,33 +57,6 @@ namespace Althea.Resources {
             }
             set {
                 resourceCulture = value;
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The compiled method cannot be found. 的本地化字符串。
-        /// </summary>
-        internal static string CompiledNotFound {
-            get {
-                return ResourceManager.GetString("CompiledNotFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The following compile errors were encountered:  的本地化字符串。
-        /// </summary>
-        internal static string CompileError {
-            get {
-                return ResourceManager.GetString("CompileError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The given file&apos;s checksum mismatchaes with the known one, it may be corrupted. 的本地化字符串。
-        /// </summary>
-        internal static string FileCorrupted {
-            get {
-                return ResourceManager.GetString("FileCorrupted", resourceCulture);
             }
         }
         

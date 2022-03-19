@@ -31,9 +31,9 @@ namespace Althea.Arrays
 		protected void CheckIndex(long index)
 		{
 			if (index < 0)
-				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.CannotNegative);
 			if (index >= ((IVectorMetric)this).Length)
-				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 		}
 
 		/// <summary>
@@ -47,17 +47,17 @@ namespace Althea.Arrays
 		protected void CheckRange(long offset, long length, IVectorMetric? sub = null)
 		{
 			if (offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.CannotNegative);
 			if (offset >= ((IVectorMetric)this).Length)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (length < 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.ParameterError.CannotNegative);
 			if (offset + length > ((IVectorMetric)this).Length)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.ParameterError.InvalidValue);
 			if (sub is not null)
 			{
 				if (sub.Length < length)
-					throw new ArgumentOutOfRangeException(nameof(length), length, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(length), length, Resources.ParameterError.InvalidValue);
 			}
 		}
 

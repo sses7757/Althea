@@ -19,27 +19,27 @@ namespace Althea.Resources {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Support {
+    internal class ArithmeticError {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Support() {
+        internal ArithmeticError() {
         }
         
         /// <summary>
         ///   返回此类使用的缓存的 ResourceManager 实例。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
+        internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Support", typeof(Support).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.ArithmeticError", typeof(ArithmeticError).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -51,7 +51,7 @@ namespace Althea.Resources {
         ///   使用此强类型资源类的所有资源查找执行重写。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
+        internal static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -61,74 +61,74 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似  is/are not supported yet. 的本地化字符串。
+        ///   查找类似 The float &apos;NaN&apos; or &apos;±Infinity&apos; occured during the calculations. 的本地化字符串。
         /// </summary>
-        public static string BaseNotSupport {
+        internal static string AbnormalOccured {
             get {
-                return ResourceManager.GetString("BaseNotSupport", resourceCulture);
+                return ResourceManager.GetString("AbnormalOccured", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 Other data type(s) are not supported yet. 的本地化字符串。
+        ///   查找类似 There is not suitable addition operator for the given type. 的本地化字符串。
         /// </summary>
-        public static string DataType {
+        internal static string CannotAdd {
             get {
-                return ResourceManager.GetString("DataType", resourceCulture);
+                return ResourceManager.GetString("CannotAdd", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 Other format(s) are not supported yet. 的本地化字符串。
+        ///   查找类似 The given interger(s) cannot perform lossless integer division. 的本地化字符串。
         /// </summary>
-        public static string Format {
+        internal static string CannotDivide {
             get {
-                return ResourceManager.GetString("Format", resourceCulture);
+                return ResourceManager.GetString("CannotDivide", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 Ohter location(s) is/are not supported yet. 的本地化字符串。
+        ///   查找类似 Cannot calculate the negate of an unsigned number. 的本地化字符串。
         /// </summary>
-        public static string Location {
+        internal static string CannotNegate {
             get {
-                return ResourceManager.GetString("Location", resourceCulture);
+                return ResourceManager.GetString("CannotNegate", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 This operation does not support the current operating system. 的本地化字符串。
+        ///   查找类似 Cannot parse &apos;{0}&apos; to a custom type {1}. 的本地化字符串。
         /// </summary>
-        public static string OperationSystem {
+        internal static string CannotParse {
             get {
-                return ResourceManager.GetString("OperationSystem", resourceCulture);
+                return ResourceManager.GetString("CannotParse", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 Not dense neither sparse array(s) is/are not supported yet. 的本地化字符串。
+        ///   查找类似 Cannot parse &apos;{0}&apos; to a complex number with real type {1}. 的本地化字符串。
         /// </summary>
-        public static string OtherArray {
+        internal static string CannotParseComplex {
             get {
-                return ResourceManager.GetString("OtherArray", resourceCulture);
+                return ResourceManager.GetString("CannotParseComplex", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 Other routine(s) is/are not supported yet. 的本地化字符串。
+        ///   查找类似 The give data type is not allowed. 的本地化字符串。
         /// </summary>
-        public static string Routine {
+        internal static string DataTypeNotAllow {
             get {
-                return ResourceManager.GetString("Routine", resourceCulture);
+                return ResourceManager.GetString("DataTypeNotAllow", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 Tensors are not supported yet. 的本地化字符串。
+        ///   查找类似 The given length is not a perfect square. 的本地化字符串。
         /// </summary>
-        public static string Tensor {
+        internal static string PerfectSquare {
             get {
-                return ResourceManager.GetString("Tensor", resourceCulture);
+                return ResourceManager.GetString("PerfectSquare", resourceCulture);
             }
         }
     }

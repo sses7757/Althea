@@ -22,14 +22,14 @@ namespace Althea.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Print {
+    internal class BackendError {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Print() {
+        internal BackendError() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace Althea.Resources {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.Print", typeof(Print).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.BackendError", typeof(BackendError).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,29 +61,20 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 ... {0} more stored rows 的本地化字符串。
+        ///   查找类似 The initialization procedure of selected backend implementation cannot be performed. 的本地化字符串。
         /// </summary>
-        internal static string MoreRows {
+        internal static string CannotInitialize {
             get {
-                return ResourceManager.GetString("MoreRows", resourceCulture);
+                return ResourceManager.GetString("CannotInitialize", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   查找类似 ... {0} more stored elements 的本地化字符串。
+        ///   查找类似 There is no suitable backend implementation currently available. 的本地化字符串。
         /// </summary>
-        internal static string MoreStored {
+        internal static string NotAvailable {
             get {
-                return ResourceManager.GetString("MoreStored", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 ... {0} more 的本地化字符串。
-        /// </summary>
-        internal static string RowMore {
-            get {
-                return ResourceManager.GetString("RowMore", resourceCulture);
+                return ResourceManager.GetString("NotAvailable", resourceCulture);
             }
         }
     }

@@ -88,7 +88,7 @@ namespace Althea.Arrays
 		protected BaseSparseTensor(ReadOnlySpan<long> size, Storage<T> valueArray, SparseTensorFormat format, ReadOnlySpan<char> labels = default, T defaultValue = default, long stores = 0) : base(valueArray, size, labels, stores)
 		{
 			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.ParameterError.InvalidValue);
 			this.m_format = format;
 			this.m_defaultValue = defaultValue;
 		}

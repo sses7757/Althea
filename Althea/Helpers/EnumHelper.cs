@@ -25,7 +25,7 @@ namespace Althea.Helpers
 			if (parameterInfos.IsEmpty)
 				throw new ArgumentNullException(nameof(parameterInfos));
 			if (parameterInfos.Length > 8)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(parameterInfos));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(parameterInfos));
 			Span<Type> types = (stackalloc IntPtr[parameterInfos.Length]).AsClassType<Type>();
 			for (int i = 0; i < parameterInfos.Length; i++)
 				types[i] = parameterInfos[i].ParameterType;
@@ -43,7 +43,7 @@ namespace Althea.Helpers
 			if (parameterTypes.IsEmpty)
 				throw new ArgumentNullException(nameof(parameterTypes));
 			if (parameterTypes.Length > 8)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(parameterTypes));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(parameterTypes));
 			this.parameterTypes = new(parameterTypes);
 		}
 
@@ -103,9 +103,10 @@ namespace Althea.Helpers
 		/// <returns><paramref name="e"/>'s name / string representation</returns>
 		public static string GetName<T>(this T e) where T : struct, Enum
 		{
-			if (!NameCacher<T>.names.TryGetValue(e, out string? name))
-				name = null;
-			return name ?? e.ToString();
+			if (NameCacher<T>.names.TryGetValue(e, out string? name))
+				return name;
+			else
+				return e.ToString();
 		}
 
 		/// <summary>
@@ -119,9 +120,9 @@ namespace Althea.Helpers
 		public static void SetName<T>(this T e, string name) where T : struct, Enum
 		{
 			if (Enum.IsDefined(e))
-				throw new InvalidOperationException(Resources.Parameter.InvalidValue);
+				throw new InvalidOperationException(Resources.ParameterError.InvalidValue);
 			if (string.IsNullOrEmpty(name) || name.Contains(' '))
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(name));
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(name));
 			NameCacher<T>.names[e] = name;
 		}
 
@@ -154,7 +155,7 @@ namespace Althea.Helpers
 			if (Enum.TryParse(name, out T e))
 				return e;
 			if (!NameCacher<T>.names.ContainsValue(name))
-				throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(name));
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(name));
 			e = NameCacher<T>.names.FirstOrDefault(kv => kv.Value == name).Key;
 			return e;
 		}

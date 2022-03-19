@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
@@ -39,11 +38,15 @@ namespace Althea.LinearAlgebra.Sparse
 			/// <summary>
 			/// No blocking -- indices are for individual elements
 			/// </summary>
-			NonBlock = 1 << 0,
+			None = 0,
 			/// <summary>
-			/// Standard blocking -- indices are for contiguous blocks
+			/// Standard blocking -- indices are for contiguous blocks of same size
 			/// </summary>
-			SimpleBlock = 1 << 1,
+			Simple = 1 << 0,
+			/// <summary>
+			/// Complicated blocking -- indices are for contiguous blocks of possibly different sizes
+			/// </summary>
+			Complicated = 1 << 1,
 		}
 
 		/// <summary>
@@ -51,6 +54,10 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		public enum Major : short
 		{
+			/// <summary>
+			/// No major -- the <see cref="Major"/> is not applicable
+			/// </summary>
+			None = 0,
 			/// <summary>
 			/// The column major
 			/// </summary>
@@ -74,33 +81,23 @@ namespace Althea.LinearAlgebra.Sparse
 		private readonly Major major;
 
 		/// <summary>
-		/// Statically get a <see cref="SparseFormat"/> representing any format
+		/// Statically get a <see cref="SparseFormat"/> representing any format.
 		/// </summary>
 		public static SparseFormat Any => new((Type)255, (Blocking)255, (Major)255);
 
 		/// <summary>
-		/// Statically get a <see cref="SparseFormat"/> representing none of the format
+		/// Statically get a <see cref="SparseFormat"/> representing none of the format.
 		/// </summary>
 		public static SparseFormat None => default;
 
 		/// <summary>
 		/// The full constructor of a <see cref="SparseFormat"/>.
 		/// </summary>
-		public SparseFormat(Type type, Blocking blocking, Major major)
+		public SparseFormat(Type type, Blocking blocking = Blocking.None, Major major = Major.None)
 		{
 			this.type = type;
 			this.blocking = blocking;
 			this.major = major;
-		}
-
-		/// <summary>
-		/// The constructor of a <see cref="SparseFormat"/> with any <see cref="Major"/>, typically used for sparse vector formats.
-		/// </summary>
-		public SparseFormat(Type type, Blocking blocking)
-		{
-			this.type = type;
-			this.blocking = blocking;
-			this.major = (Major)255;
 		}
 
 		/// <summary>
@@ -142,14 +139,24 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region methods
 		/// <summary>
-		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.NonBlock"/>.
+		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.None"/>.
 		/// </summary>
-		public readonly SparseFormat WithoutBlocking => new(this.type, Blocking.NonBlock, this.major);
+		public readonly SparseFormat WithoutBlocking => new(this.type, Blocking.None, this.major);
 
 		/// <summary>
-		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.SimpleBlock"/>.
+		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.Simple"/>.
 		/// </summary>
-		public readonly SparseFormat WithBlocking => new(this.type, Blocking.SimpleBlock, this.major);
+		public readonly SparseFormat WithSimpleBlocking => new(this.type, Blocking.Simple, this.major);
+
+		/// <summary>
+		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.Complicated"/>.
+		/// </summary>
+		public readonly SparseFormat WithComplicatedBlocking => new(this.type, Blocking.Complicated, this.major);
+
+		/// <summary>
+		/// Get a <see cref="SparseFormat"/> whose <see cref="Major"/> is <see cref="Major.None"/>.
+		/// </summary>
+		public readonly SparseFormat WithoutMajor => new(this.type, this.blocking, Major.None);
 
 		/// <summary>
 		/// Get a <see cref="SparseFormat"/> whose <see cref="Major"/> is <see cref="Major.Column"/>.
@@ -167,25 +174,48 @@ namespace Althea.LinearAlgebra.Sparse
 		public readonly bool IsAtomic => ((byte)this.type).IsPowerOfTwo() && ((byte)this.blocking).IsPowerOfTwo() && ((byte)this.major).IsPowerOfTwo();
 
 		/// <summary>
+		/// Get whether this <see cref="SparseFormat"/> is of <see cref="Type.Compressed"/> or not.
+		/// </summary>
+		public readonly bool IsCompressed => this.type == Type.Compressed;
+
+		/// <summary>
+		/// Get whether this <see cref="SparseFormat"/> isn't of <see cref="Major.None"/> or not.
+		/// </summary>
+		public readonly bool HasMajor => this.major != Major.None;
+
+		/// <summary>
 		/// Get whether this <see cref="SparseFormat"/> is of <see cref="Major.Row"/> or not.
 		/// </summary>
 		public readonly bool IsRowMajor => this.major == Major.Row;
 
 		/// <summary>
-		/// Get whether this <see cref="SparseFormat"/> is of <see cref="Type.Compressed"/> or not.
+		/// Get whether this <see cref="SparseFormat"/> isn't of <see cref="Blocking.None"/> or not.
 		/// </summary>
-		public readonly bool IsCompress => this.type == Type.Compressed;
+		public readonly bool HasBlocking => this.blocking != Blocking.None;
 
 		/// <summary>
-		/// Get whether this <see cref="SparseFormat"/> is of <see cref="Blocking.SimpleBlock"/> or not.
+		/// Get whether this <see cref="SparseFormat"/> is of <see cref="Blocking.Simple"/> or not.
 		/// </summary>
-		public readonly bool IsBlocking => this.blocking == Blocking.SimpleBlock;
+		public readonly bool IsSimpleBlocking => this.blocking == Blocking.Simple;
+
+		/// <summary>
+		/// Get the number of atomic combinations corresponding this <see cref="SparseFormat"/>.
+		/// </summary>
+		public int NCombinations
+		{
+			get
+			{
+				byte t = (byte)this.type, b = (byte)this.blocking, m = (byte)this.major;
+				byte pt = t.PopCount(), pb = b.PopCount(), pm = m.PopCount();
+				return pt * pb * pm;
+			}
+		}
 
 		/// <summary>
 		/// Decompose this <see cref="SparseFormat"/> into atomic <paramref name="result"/>s.
 		/// </summary>
 		/// <param name="result">The <see cref="Span{T}"/> to put the results</param>
-		/// <returns>The sliced <paramref name="result"/> whose length is the number of atomic formats</returns>
+		/// <returns>The <paramref name="result"/> filled with atomic formats</returns>
 		/// <exception cref="ArgumentException">If the length of <paramref name="result"/> is less than the number of atomic formats</exception>
 		public Span<SparseFormat> Decompose(Span<SparseFormat> result)
 		{
@@ -195,7 +225,7 @@ namespace Althea.LinearAlgebra.Sparse
 			byte pt = t.PopCount(), pb = b.PopCount(), pm = m.PopCount();
 			int count = pt * pb * pm;
 			if (result.Length < count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(result));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(result));
 			result = result[..count];
 			count = 0;
 			for (byte it = 0; it < pt; it++)
@@ -210,7 +240,28 @@ namespace Althea.LinearAlgebra.Sparse
 					}
 				}
 			}
-			return result;
+			return result[..count];
+		}
+		#endregion
+
+		#region string
+		/// <summary>
+		/// Get the full string representation of this <see cref="SparseFormat"/>.
+		/// </summary>
+		public override string ToString()
+		{
+			if (this == Any)
+				return nameof(Any);
+			if (this == None)
+				return nameof(None);
+			if (this.IsAtomic)
+				return $"{this.type.GetName()}_{this.blocking.GetName()}{nameof(Blocking)}_{this.major.GetName()}{nameof(Major)}";
+			byte t = (byte)this.type, b = (byte)this.blocking, m = (byte)this.major;
+			string st, sb, sm;
+			st = t == 255 ? "Any" : $"{{{this.type.GetName()}}}";
+			sb = b == 255 ? "Any" : $"{{{this.blocking.GetName()}}}";
+			sm = m == 255 ? "Any" : $"{{{this.major.GetName()}}}";
+			return $"[{nameof(Type)}={st}; {nameof(Blocking)}={sb}; {nameof(Major)}={sm}]";
 		}
 		#endregion
 	}

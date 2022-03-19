@@ -172,7 +172,7 @@ namespace Althea.Random
 		/// <returns>The <see cref="DataType"/> of <typeparamref name="T"/></returns>
 		public override DataType this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => index == 0 ? Const<T>.DataType : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+			get => index == 0 ? Const<T>.DataType : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 		}
 
 		/// <summary>
@@ -318,7 +318,7 @@ namespace Althea.Random
 			{
 				var dist = distributions[i];
 				if (dist.Count != 1)
-					throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distributions));
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(distributions));
 				this.m_seed = unchecked(this.m_seed + dist.RandomSeed ?? 0);
 				if (dist is SimpleJointRandomDistribution joint)
 					this.m_distributions[i] = joint.m_distributions[0];
@@ -332,7 +332,7 @@ namespace Althea.Random
 		DataType IReadOnlyList<DataType>.this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => index < 0 || index >= this.m_count ?
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) :
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue) :
 					this.m_distributions[index][0];
 		}
 
@@ -361,7 +361,7 @@ namespace Althea.Random
 		public IRandomDistribution this[int index] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => index < 0 || index >= this.m_count ?
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue) :
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue) :
 					this.m_distributions[index];
 		}
 

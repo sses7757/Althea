@@ -157,7 +157,7 @@ namespace Althea.Arrays
 			if (firstFind < 0)
 			{	// no uncertain index
 				if (newSize.Prod() != array.Length)
-					throw new ArgumentOutOfRangeException(nameof(newSize), newSize.Prod(), Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(newSize), newSize.Prod(), Resources.ParameterError.InvalidValue);
 				return;
 			}
 			int lastFind = newSize.LastIndexOf(static r => r <= 0);
@@ -167,13 +167,13 @@ namespace Althea.Arrays
 				var prod = newSize.Prod();
 				var remain = array.Length % prod;
 				if (remain != 0)
-					throw new ArgumentOutOfRangeException(nameof(newSize), remain, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(newSize), remain, Resources.ParameterError.InvalidValue);
 				else
 					newSize[firstFind] = array.Length / prod;
 			}
 			else
 			{	// more than one uncertain indices
-				throw new ArgumentException(Resources.Parameter.UnexpectedValue, nameof(newSize));
+				throw new ArgumentException(Resources.ParameterError.UnexpectedValue, nameof(newSize));
 			}
 		}
 		#endregion

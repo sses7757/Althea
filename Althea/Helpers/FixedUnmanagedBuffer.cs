@@ -74,9 +74,9 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -97,9 +97,9 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -159,7 +159,7 @@ namespace Althea.Helpers
 		public Span<T> AsSpan(int size = 0)
 		{
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
@@ -203,7 +203,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
@@ -212,7 +212,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;
@@ -383,9 +383,9 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -406,9 +406,9 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -468,7 +468,7 @@ namespace Althea.Helpers
 		public Span<T> AsSpan(int size = 0)
 		{
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
@@ -512,7 +512,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
@@ -521,7 +521,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;
@@ -692,9 +692,9 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -715,9 +715,9 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -777,7 +777,7 @@ namespace Althea.Helpers
 		public Span<T> AsSpan(int size = 0)
 		{
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
@@ -821,7 +821,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
@@ -830,7 +830,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;
@@ -1001,9 +1001,9 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -1024,9 +1024,9 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -1086,7 +1086,7 @@ namespace Althea.Helpers
 		public Span<T> AsSpan(int size = 0)
 		{
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
@@ -1130,7 +1130,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
@@ -1139,7 +1139,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;
@@ -1310,9 +1310,9 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -1333,9 +1333,9 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -1395,7 +1395,7 @@ namespace Althea.Helpers
 		public Span<T> AsSpan(int size = 0)
 		{
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
@@ -1439,7 +1439,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
@@ -1448,7 +1448,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;
@@ -1619,9 +1619,9 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -1642,9 +1642,9 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -1704,7 +1704,7 @@ namespace Althea.Helpers
 		public Span<T> AsSpan(int size = 0)
 		{
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
@@ -1748,7 +1748,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
@@ -1757,7 +1757,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;
@@ -1928,9 +1928,9 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -1951,9 +1951,9 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -2013,7 +2013,7 @@ namespace Althea.Helpers
 		public Span<T> AsSpan(int size = 0)
 		{
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
@@ -2057,7 +2057,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
@@ -2066,7 +2066,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;
@@ -2237,9 +2237,9 @@ namespace Althea.Helpers
 		public void CopyFromSpan(ReadOnlySpan<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -2260,9 +2260,9 @@ namespace Althea.Helpers
 		public void CopyToSpan(Span<T> span, int offset = 0)
 		{
 			if (offset < 0 || offset >= _count)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (span.Length + offset > _count)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(span));
 
 			int size = Math.Min(span.Length, _count - offset);
 			fixed (void* t = &this.field)
@@ -2322,7 +2322,7 @@ namespace Althea.Helpers
 		public Span<T> AsSpan(int size = 0)
 		{
 			if (size < 0 || size > _count)
-				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(size), size, Resources.ParameterError.InvalidValue);
 			return MemoryMarshal.CreateSpan(ref this.field, size == 0 ? _count : size);
 		}
 		#endregion
@@ -2366,7 +2366,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					return ((T*)t)[index];
@@ -2375,7 +2375,7 @@ namespace Althea.Helpers
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			set {
 				if (index < 0 || index >= _count)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 				fixed (void* t = &this.field)
 				{
 					((T*)t)[index] = value;

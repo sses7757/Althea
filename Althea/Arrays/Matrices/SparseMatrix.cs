@@ -86,7 +86,7 @@ namespace Althea.Arrays
 			base(valueArray, rows, cols, stores)
 		{
 			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.ParameterError.InvalidValue);
 			this.m_format = format;
 			this.m_defaultValue = defaultValue;
 		}

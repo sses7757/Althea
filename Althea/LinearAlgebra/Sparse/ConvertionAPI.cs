@@ -2,6 +2,7 @@
 
 using Althea.Arrays;
 using Althea.Helpers;
+using Althea.Storage;
 
 using Althea.SourceGenerator;
 
@@ -162,93 +163,97 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// When implemented by a derived class, find the maximum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <param name="max">Output the maximum value</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexMax<TInd>(Storage<TInd> array, out TInd max) where TInd : unmanaged;
+		public abstract bool IndexMax<T, TS>(TS array, out T max) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the minimum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <param name="min">Output the minimum value</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexMin<TInd>(Storage<TInd> array, out TInd min) where TInd : unmanaged;
+		public abstract bool IndexMin<T, TS>(TS array, out T min) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <param name="value">The target value to find</param>
 		/// <param name="find">Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexFind<TInd>(bool sorted, Storage<TInd> array, TInd value, out long find) where TInd : unmanaged;
+		public abstract bool IndexFind<T, TS>(bool sorted, TS array, T value, out long find) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
 		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
 		/// <param name="value">The target value to find</param>
 		/// <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
 		/// <param name="index">Output the zero-based index of the target bound in <paramref name="array"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>If not found, <paramref name="index"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
+		/// <remarks>If not found, <paramref name="index"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="IStorage{T, TSelf}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> is not an integral type</exception>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexBound<TInd>(Storage<TInd> array, TInd value, bool lowerBound, out long index) where TInd : unmanaged;
+		public abstract bool IndexBound<T, TS>(TS array, T value, bool lowerBound, out long index) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.
 		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS">The input concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TSOut">The output concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
 		/// <param name="target">The storage of the result indices, must has length larger than <paramref name="end"/> - <paramref name="start"/></param>
 		/// <param name="start">The inclusive start value to find</param>
 		/// <param name="end">The inclusive end value to find</param>
 		/// <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>If not found, the corresponding index in <paramref name="target"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="Storage{T}.Length">Length</see> otherwise.</remarks>
+		/// <remarks>If not found, the corresponding index in <paramref name="target"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="IStorage{T, TSelf}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> or <typeparamref name="TOut"/> is not an integral type</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexGetAllBounds<TInd, TIndOut>(Storage<TInd> array, Storage<TIndOut> target, TInd start, TInd end, bool lowerBound)
-			where TInd : unmanaged
-			where TIndOut : unmanaged;
+		public abstract bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInteger<T> where TOut : unmanaged, IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<T, TSOut>;
 
 		/// <summary>
-		/// When implemented by a derived class, reverse the operation of <see cref="IndexGetAllBounds_"/> to get the sorted <paramref name="target"/> array from the given <paramref name="bounds"/>.
+		/// When implemented by a derived class, reverse the operation of <see cref="IndexGetAllBounds"/> to get the sorted <paramref name="target"/> array from the given <paramref name="bounds"/>.
 		/// </summary>
-		/// <typeparam name="TInd">Any integral-typed unmanaged number as the bound index type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged number as the output index type</typeparam>
-		/// <param name="bounds">The storage of the bound index array, usually generated from <see cref="IndexGetAllBounds_"/></param>
+		/// <typeparam name="T">Any integral-typed unmanaged number as the bound index type</typeparam>
+		/// <typeparam name="TS">The input concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TSOut">The output concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="bounds">The storage of the bound index array, usually generated from <see cref="IndexGetAllBounds"/></param>
 		/// <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
 		/// <param name="start">The start value to fill in <paramref name="target"/></param>
 		/// <param name="lowerBound">Whether to fill the <paramref name="target"/> with <paramref name="bounds"/> regarded as lower bounds or upper bounds</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TInd"/> or <typeparamref name="TIndOut"/> is not an integral type</exception>
+		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> or <typeparamref name="TOut"/> is not an integral type</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexGenerateFromBounds<TInd, TIndOut>(Storage<TInd> bounds, Storage<TIndOut> target, bool lowerBound, TIndOut start = default)
-			where TInd : unmanaged
-			where TIndOut : unmanaged;
+		public abstract bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start = default) where T : unmanaged, IBinaryInteger<T> where TOut : unmanaged, IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<T, TSOut>;
 		#endregion
 	}
 }

@@ -47,16 +47,23 @@ namespace Althea.Arrays
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
 			long length = ((IVectorMetric)this).Length;
-			T[] buffer = new T[Math.Min(length, 8192)];
-			long offset = 0;
-			while (offset < length)
+			T[] buffer = System.Buffers.ArrayPool<T>.Shared.Rent((int)Math.Min(length, 8192));
+			try
 			{
-				(this.Storage + offset * this.Stride).ToManagedStride<T, TS>(this.Stride, buffer);
-				for (int i = 0; i < buffer.Length; i++)
+				long offset = 0;
+				while (offset < length)
 				{
-					yield return buffer[i];
+					(this.Storage + offset * this.Stride).ToManagedStride<T, TS>(this.Stride, buffer);
+					for (int i = 0; i < buffer.Length; i++)
+					{
+						yield return buffer[i];
+					}
+					offset += buffer.LongLength;
 				}
-				offset += buffer.LongLength;
+			}
+			finally
+			{
+				System.Buffers.ArrayPool<T>.Shared.Return(buffer);
 			}
 		}
 
@@ -78,7 +85,7 @@ namespace Althea.Arrays
 		void IBaseVector<T, TSelf>.CopyTo(TSelf destination)
 		{
 			if (((IVectorMetric)destination).Length != ((IVectorMetric)this).Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(destination));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
 			this.Storage.StridedCopyTo<T, TS, TS>(this.Stride, destination.Storage, destination.Stride);
 		}
 

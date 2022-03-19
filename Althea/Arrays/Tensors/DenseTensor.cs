@@ -29,10 +29,10 @@ namespace Althea.Arrays.Tensors
 		ReadOnlySpan<long> OuterSize { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, get the (both end inclusive) accumulated product of the <see cref="OuterSize"/> of this tensor.
+		/// When implemented by a derived class, get (the both-end inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		/// <remarks>The first element is 1, the last element is the product of <see cref="OuterSize"/> and its size == <see cref="ILabeledTensor.Rank"/> + 1</remarks>
-		protected ReadOnlySpan<long> OuterSizeProd { get; }
+		/// <remarks>The first element shall be 1 and the last element shall be the product of <see cref="OuterSize"/>. The returned <see cref="ReadOnlySpan{T}.Length">size</see> == rank + 1</remarks>
+		protected ReadOnlySpan<long> Strides { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, statically create a referenced <typeparamref name="TSelf"/> with given <paramref name="storage"/>, <paramref name="size"/> and <paramref name="outerSize"/>.
@@ -49,11 +49,11 @@ namespace Althea.Arrays.Tensors
 		{
 			get
 			{
-				return (this.Storage + this.CheckIndex(indices, this.OuterSizeProd)).ToManaged<T, TS>();
+				return (this.Storage + this.CheckIndex(indices, this.Strides)).ToManaged<T, TS>();
 			}
 			set
 			{
-				(this.Storage + this.CheckIndex(indices, this.OuterSizeProd)).FromManaged(value);
+				(this.Storage + this.CheckIndex(indices, this.Strides)).FromManaged(value);
 			}
 		}
 		#endregion
@@ -61,21 +61,21 @@ namespace Althea.Arrays.Tensors
 		#region range indexing
 		TSelf IBaseTensor<T, TSelf>.GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
 		{
-			var storage = this.Storage + this.CheckRange(offsets, lengths, this.OuterSizeProd);
+			var storage = this.Storage + this.CheckRange(offsets, lengths, this.Strides);
 			return TSelf.CreateRef(storage, lengths, this.OuterSize);
 		}
 
 		void IBaseTensor<T, TSelf>.CopyTo(TSelf destination)
 		{
 			if (!((ILabeledTensor)this).Size.SequenceEqual(((ILabeledTensor)destination).Size))
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(destination));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
 			Ten.Permute<T, TS, TS>(new(this, this.Storage), new(destination, destination.Storage), stackalloc int[this.Rank].FillWithRange(0));
 		}
 
 		void IBaseTensor<T, TSelf>.SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TSelf value)
 		{
-			var storage = this.Storage + this.CheckRange(offsets, lengths, this.OuterSizeProd, value);
-			Ten.Permute<T, TS, TS>(new(value, value.Storage), new(storage, lengths, this.OuterSize, this.OuterSizeProd), stackalloc int[this.Rank].FillWithRange(0));
+			var storage = this.Storage + this.CheckRange(offsets, lengths, this.Strides, value);
+			Ten.Permute<T, TS, TS>(new(value, value.Storage), new(storage, lengths, this.OuterSize, this.Strides), stackalloc int[this.Rank].FillWithRange(0));
 		}
 		#endregion
 
@@ -83,15 +83,15 @@ namespace Althea.Arrays.Tensors
 		TSelf IBaseTensor<T, TSelf>.GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
 		{
 			Span<long> allOffsets = stackalloc long[this.Rank], allLengths = stackalloc long[this.Rank];
-			var storage = this.Storage + this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths, this.OuterSizeProd);
+			var storage = this.Storage + this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths, this.Strides);
 			return TSelf.CreateRef(storage, lengths, this.OuterSize[..n]);
 		}
 
 		void IBaseTensor<T, TSelf>.SetFirstDims(int n, ReadOnlySpan<long> restIndices, TSelf value, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
 		{
 			Span<long> allOffsets = stackalloc long[this.Rank], allLengths = stackalloc long[this.Rank];
-			var storage = this.Storage + this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths, this.OuterSizeProd, value);
-			Ten.Permute<T, TS, TS>(new(value, value.Storage), new(storage, lengths, this.OuterSize[..n], this.OuterSizeProd[..(n + 1)]), stackalloc int[n].FillWithRange(0));
+			var storage = this.Storage + this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths, this.Strides, value);
+			Ten.Permute<T, TS, TS>(new(value, value.Storage), new(storage, lengths, this.OuterSize[..n], this.Strides[..(n + 1)]), stackalloc int[n].FillWithRange(0));
 		}
 		#endregion
 

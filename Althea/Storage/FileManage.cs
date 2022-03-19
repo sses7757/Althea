@@ -95,7 +95,7 @@ namespace Althea.Storage
 			}
 			catch (Exception e)
 			{
-				throw new JsonException(Resources.Parameter.UnexpectedType, e);
+				throw new JsonException(Resources.ParameterError.UnexpectedType, e);
 			}
 		}
 
@@ -120,7 +120,7 @@ namespace Althea.Storage
 					if (reader.TokenType == JsonTokenType.EndObject)
 					{
 						if (type == default || locations is null || locations.Length == 0)
-							throw new JsonException(Resources.Parameter.WrongSize);
+							throw new JsonException(Resources.ParameterError.WrongSize);
 						return new CombinationOfLocations(type, locations);
 					}
 					if (reader.TokenType != JsonTokenType.PropertyName)
@@ -149,7 +149,7 @@ namespace Althea.Storage
 				if (e is JsonException)
 					throw;
 				else
-					throw new JsonException(Resources.Parameter.UnexpectedValue, e);
+					throw new JsonException(Resources.ParameterError.UnexpectedValue, e);
 			}
 		}
 
@@ -204,7 +204,7 @@ namespace Althea.Storage
 					if (reader.TokenType == JsonTokenType.EndObject)
 					{
 						if (lengthInBytes == 0 || location == default)
-							throw new JsonException(Resources.Parameter.WrongSize);
+							throw new JsonException(Resources.ParameterError.WrongSize);
 						return new PointerSegment(new TempPointer { LengthInBytes = lengthInBytes, Location = location });
 					}
 					if (reader.TokenType != JsonTokenType.PropertyName)
@@ -231,7 +231,7 @@ namespace Althea.Storage
 				if (e is JsonException)
 					throw;
 				else
-					throw new JsonException(Resources.Parameter.UnexpectedValue, e);
+					throw new JsonException(Resources.ParameterError.UnexpectedValue, e);
 			}
 		}
 
@@ -281,7 +281,7 @@ namespace Althea.Storage
 					{
 						case DataType:
 							reader.Read();
-							dataType = TypeConverter.Read(ref reader, typeToConvert, options) ?? throw new JsonException(Resources.Parameter.UnexpectedType);
+							dataType = TypeConverter.Read(ref reader, typeToConvert, options) ?? throw new JsonException(Resources.ParameterError.UnexpectedType);
 							break;
 						case Locations:
 							reader.Read();
@@ -307,7 +307,7 @@ namespace Althea.Storage
 				}
 				// allocate and create empty storage
 				if (dataType is null || locations == default || pointers.Count == 0)
-					throw new JsonException(Resources.Parameter.WrongSize);
+					throw new JsonException(Resources.ParameterError.WrongSize);
 				var type = dataType.ToDataType();
 				int size = type.Bytes();
 				if (pointers.Any(p => p.LengthInBytes % size != 0))
@@ -328,7 +328,7 @@ namespace Althea.Storage
 				if (e is JsonException)
 					throw;
 				else
-					throw new JsonException(Resources.Parameter.UnexpectedValue, e);
+					throw new JsonException(Resources.ParameterError.UnexpectedValue, e);
 			}
 		}
 
@@ -372,7 +372,7 @@ namespace Althea.Storage
 			}
 			catch (Exception e)
 			{
-				throw new JsonException(Resources.Parameter.InvalidValue, e);
+				throw new JsonException(Resources.ParameterError.InvalidValue, e);
 			}
 		}
 
@@ -398,7 +398,7 @@ namespace Althea.Storage
 				if (storages is null || storages.Count == 0)
 					throw new ArgumentNullException(nameof(storages));
 				if (checkSums is not null && checkSums.Count != storages.Count)
-					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(checkSums));
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(checkSums));
 			}
 			catch (Exception)
 			{
@@ -715,7 +715,7 @@ namespace Althea.Storage
 			using var fileStream = File.OpenRead(file);
 			using var storageStream = new StorageStream(storage);
 			if (fileStream.Length != storageStream.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(file));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(file));
 			await fileStream.CopyToAsync(storageStream);
 		}
 

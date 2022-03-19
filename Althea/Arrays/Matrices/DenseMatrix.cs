@@ -45,7 +45,7 @@ namespace Althea.Arrays.Matrices
 		void IBaseMatrix<T, TSelf>.CopyTo(TSelf destination)
 		{
 			if (destination.NRows != this.NRows || destination.NCols != this.NCols)
-				throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(destination));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
 			this.Storage.Copy2DTo<T, TS, TS>(this.LeadDim, destination.Storage, destination.LeadDim, this.NRows, this.NCols);
 		}
 

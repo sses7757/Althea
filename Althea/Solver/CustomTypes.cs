@@ -96,7 +96,7 @@ namespace Althea.Solver
 			if (input.IsEmpty)
 				throw new ArgumentNullException(nameof(input));
 			if (unjoinedVectors.Length != input.Length)
-				throw new ArgumentException(Resources.Parameter.NotSameSize);
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
 
 			// sort first to reduce errors
 			int length = input.Length;
@@ -123,7 +123,7 @@ namespace Althea.Solver
 					if (dnvec is null)
 						throw new ArgumentNullException(nameof(unjoinedVectors));
 					if (dnvec.Length != vecLen)
-						throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(unjoinedVectors));
+						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(unjoinedVectors));
 					if (!val.IsZero())
 						vec.AddBy(dnvec, val);
 				}
@@ -551,7 +551,7 @@ namespace Althea.Solver
 		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool check = true)
 		{
 			if (maxIter <= 0)
-				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.ParameterError.MustPositive);
 			if (matrixFunction is null)
 				throw new ArgumentNullException(nameof(matrixFunction));
 			if (initial is null)
@@ -593,23 +593,23 @@ namespace Althea.Solver
 									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
 		{
 			if (iterPerRestart < 0)
-				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.ParameterError.CannotNegative);
 			if (tolerance < 0)
-				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.CannotNegative);
 			if (maxRestarts <= 0)
-				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.ParameterError.MustPositive);
 			if (nEig <= 0)
-				throw new ArgumentOutOfRangeException(nameof(nEig), nEig, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(nEig), nEig, Resources.ParameterError.MustPositive);
 			if (matrixFunction is null)
 				throw new ArgumentNullException(nameof(matrixFunction));
 			if (initial is null)
 				throw new ArgumentNullException(nameof(initial));
 			if (outputEigenvalues.Length < nEig)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputEigenvalues));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputEigenvalues));
 			if (outputRealEigenvectors.Length < nEig)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputRealEigenvectors));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputRealEigenvectors));
 			if (outputCompEigenvectors.Length < nEig)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputCompEigenvectors));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputCompEigenvectors));
 
 			this.MatrixFunction = matrixFunction;
 			this.PreconditionMatrixFunction = null;
@@ -645,21 +645,21 @@ namespace Althea.Solver
 									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
 		{
 			if (iterPerRestart < 0)
-				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.ParameterError.CannotNegative);
 			if (tolerance < 0)
-				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.CannotNegative);
 			if (maxRestarts <= 0)
-				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.ParameterError.MustPositive);
 			if (nEig <= 0)
-				throw new ArgumentOutOfRangeException(nameof(nEig), nEig, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(nEig), nEig, Resources.ParameterError.MustPositive);
 			if (matrixFunction is null)
 				throw new ArgumentNullException(nameof(matrixFunction));
 			if (initial is null)
 				throw new ArgumentNullException(nameof(initial));
 			if (outputEigenvalues.Length < nEig)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputEigenvalues));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputEigenvalues));
 			if (outputEigenvectors.Length < nEig)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(outputEigenvectors));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputEigenvectors));
 
 			this.MatrixFunction = matrixFunction;
 			this.PreconditionMatrixFunction = null;
@@ -695,11 +695,11 @@ namespace Althea.Solver
 									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
 		{
 			if (iterPerRestart < 0)
-				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(iterPerRestart), iterPerRestart, Resources.ParameterError.CannotNegative);
 			if (tolerance < 0)
-				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.CannotNegative);
 			if (maxRestarts <= 0)
-				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.ParameterError.MustPositive);
 			if (matrixFunction is null)
 				throw new ArgumentNullException(nameof(matrixFunction));
 			if (initial is null)

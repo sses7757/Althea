@@ -1,273 +1,200 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.NativeTypes;
+using Althea.Storage;
 
-using MEM = Althea.Storage.IAbstractApi;
+using Mem = Althea.Storage.ApiSelector;
+using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
+using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
+using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
+using SpComp = Althea.LinearAlgebra.Sparse.ComputationApiSelector;
 
 
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The abstract sparse vector class with the only mutable <see cref="ValueArray{T}.Storage"/> that refers to the value array storage.
+	/// The coordinated non-blocked (or blocked) sparse vector interface whose value storage is of type <typeparamref name="TS"/> and index storage is of type <typeparamref name="TSInd"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TInd">Any integer-typed unmanaged number as the index type</typeparam>
-	public abstract class BaseSparseVector<T, TInd> : BaseVector<T>, ISparseVector<T>, ISparseArray<T, TInd>
-		where T : unmanaged, INumber<T>
-		where TInd : unmanaged
+	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/></typeparam>
+	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
+	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+	/// <typeparam name="TSelf">The concrete type that implements this <see cref="ISparseVector{T, TInd, TS, TSInd, TSelf}"/></typeparam>
+	public interface ISparseVector<T, TInd, TS, TSInd, TSelf> : IBaseVector<T, TSelf>, ISingleValueStorageArray<T, TS, TSelf>, ISparseArray<T>
+		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		where TSelf : class, ISparseVector<T, TInd, TS, TSInd, TSelf>
 	{
 		#region basic
-		static BaseSparseVector()
-		{
-			if (!Const<TInd>.IsIntegralType)
-				throw new TypeMismatchException(typeof(TInd), TypeMismatchException.MismatchReason.NotInteger);
-		}
-
-		private readonly SparseVectorFormat m_format;
-
-		private T m_defaultValue;
+		/// <summary>
+		/// When implemented by a derived class, get the index array's original storage of this sparse vector.
+		/// </summary>
+		protected TSInd OrginalIndexStorage { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, get the number of stored values of this sparse vector. The default implementation returns the <see cref="ValueArray{T}.ActualLength"/>.
+		/// When implemented by a derived class, get the block size array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
 		/// </summary>
-		public virtual long NStored {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.ActualLength;
-		}
+		protected TSInd? OriginalBlockSizes { get; }
 
 		/// <summary>
-		/// Get the sparse format of this sparse vector as a <see cref="SparseVectorFormat"/>
+		/// When implemented by a derived class, get the index array's storage of this sparse vector.
 		/// </summary>
-		public SparseVectorFormat Format {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_format;
-		}
+		TSInd IndexStorage => this.OrginalIndexStorage.MakeReference();
 
 		/// <summary>
-		/// Get or set the default value (the values which are not specified) of this sparse vector
+		/// When implemented by a derived class, get the block size array's storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
 		/// </summary>
-		public T DefaultValue {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.m_defaultValue;
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			set => this.m_defaultValue = value;
-		}
+		TSInd? BlockSizes => this.OriginalBlockSizes?.MakeReference();
 
 		/// <summary>
-		/// When implemented by a derived class, get all the index arrays as a <see cref="ReadOnlySpan{T}"/> of <see cref="Storage{T}"/> of <typeparamref name="TInd"/>
+		/// When implemented by a derived class, statically get a <see cref="bool"/> indicating whether the <see cref="IndexStorage"/> shall be maintained as a sorted array or not.
 		/// </summary>
-		public abstract ReadOnlySpan<Storage<TInd>> IndexArrays { get; }
+		/// <remarks>If <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.None"/>, the <see cref="MaintainSortedIndex"/> cannot be false.</remarks>
+		protected abstract static bool MaintainSortedIndex { get; }
 
-		/// <summary>
-		/// When implemented by a derived class, get the original index array(s)' storage(s) of this sparse array.
-		/// </summary>
-		protected abstract ReadOnlySpan<IStorage> OriginalIndexStorages { get; }
+		IStorage ISparseArray<T>.ValueStorage => this.OriginalStorage;
 
-		ReadOnlySpan<IStorage> ISparseArray<T>.OriginalIndexStorages {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.OriginalIndexStorages;
-		}
-
-		/// <summary>
-		/// Create a <see cref="BaseSparseVector{T, TInd}"/> with given <paramref name="length"/> and <paramref name="valueArray"/>
-		/// </summary>
-		/// <param name="length">The presenting length of this sparse vector</param>
-		/// <param name="valueArray">The value array as a <see cref="Storage{T}"/> of <typeparamref name="T"/></param>
-		/// <param name="format">The <see cref="SparseVectorFormat"/> of this sparse vector, must be atomic</param>
-		/// <param name="defaultValue">The default value (the value not specified) of this sparse vector</param>
-		/// <param name="stores">The number of stored values, default 0 means the length of <paramref name="valueArray"/></param>
-		/// <exception cref="TypeMismatchException">If the <typeparamref name="TInd"/> is not an real integral type</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="valueArray"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="format"/> is not atomic; or <paramref name="stores"/> is out of the length range of <paramref name="valueArray"/> or larger than the presenting length of this vector</exception>
-		protected BaseSparseVector(long length, Storage<T> valueArray, SparseVectorFormat format, T defaultValue = default, long stores = 0) : base(valueArray, length, stores)
-		{
-			if (!format.IsAtomic())
-				throw new ArgumentOutOfRangeException(nameof(format), format, Resources.Parameter.InvalidValue);
-			this.m_format = format;
-			this.m_defaultValue = defaultValue;
-		}
+		ReadOnlySpan<IStorage> ISparseArray<T>.IndexStorages => this.OriginalBlockSizes is null ? new[] { this.OrginalIndexStorage } : new[] { this.OrginalIndexStorage, this.OriginalBlockSizes };
 		#endregion
 
-		#region storage related
-		/// <summary>
-		/// When implemented by a derived class, check whether this sparse vector is a valid one or not. The default implementation only utilizes the default implementation of <see cref="ICheckValid.IsValid"/> in <see cref="ISparseArray{T}"/>.
-		/// </summary>
-		/// <returns>The validness of this array</returns>
-		public override bool IsValid() => ((ISparseArray<T>)this).IsValid();
-
-		/// <summary>
-		/// When implemented by a derived class, check if this sparse vector share some storage(s) with the <paramref name="other"/> one. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.OverlapWith(ISparseArray{T, TIndex})"/>
-		/// </summary>
-		/// <param name="other">The other <see cref="ValueArray{T}"/> to check</param>
-		/// <returns>True if they do share some storage, false otherwise</returns>
-		public override bool OverlapWith(ValueArray<T> other) => other is ISparseArray<T, TInd> sparse && ((ISparseArray<T, TInd>)this).OverlapWith(sparse);
-
-		/// <summary>
-		/// When implemented by a derived class, actually the dispose this array. The default implementation utilizes <see cref="ISparseArray{T}.Dispose()"/>.
-		/// </summary>
-		/// <param name="disposing">Dispose managed resources or not</param>
-		protected override void Dispose(bool disposing)
+		#region index
+		T IBaseVector<T, TSelf>.this[long index]
 		{
-			base.Dispose(disposing);
-			if (!this.Disposed && !this.IndexArrays.IsEmpty)
+			get
 			{
-				((ISparseArray<T>)this).Dispose();
+				this.CheckIndex(index);
+				long find = SpConv.IndexFind(TSelf.MaintainSortedIndex, this.IndexStorage, TInd.Create(index));
+				if (find < 0)
+					return TSelf.DefaultValue;
+				long offset = (this.IndexStorage + find).ToManaged<TInd, TSInd>().As<TInd, long>();
+				return (this.Storage + offset).ToManaged<T, TS>();
+			}
+			set
+			{
+				this.CheckIndex(index);
+				long find = SpConv.IndexFind(TSelf.MaintainSortedIndex, this.IndexStorage, TInd.Create(index);
+				if (find < 0)
+				{
+					if (value != TSelf.DefaultValue)
+						throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
+					return;
+				}
+				long offset = (this.IndexStorage + find).ToManaged<TInd, TSInd>().As<TInd, long>();
+				(this.Storage + offset).FromManaged(value);
 			}
 		}
+
+		TSelf IBaseVector<T, TSelf>.GetSlice(long start, long count)
+		{
+
+		}
+
+		void IBaseVector<T, TSelf>.CopyTo(TSelf destination);
+
+		void IBaseVector<T, TSelf>.SetSlice(long start, long count, TSelf value);
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			
+		}
 		#endregion
 
-		#region clone related
-		/// <summary>
-		/// When implemented by a derived class, deep clone the sparse vector, the mutable status will not be copied.
-		/// </summary>
-		/// <returns>The cloned sparse vector</returns>
-		public override abstract BaseSparseVector<T, TInd> Clone();
-
-		/// <summary>
-		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled.
-		/// </summary>
-		/// <returns>The new sparse vector alike this one</returns>
-		public override BaseSparseVector<T, TInd> NewArrayAlike() => this.NewArrayAlike<T, TInd>();
-
-		/// <summary>
-		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The new sparse vector alike this one</returns>
-		public override BaseSparseVector<TOut, TInd> NewArrayAlike<TOut>() => this.NewArrayAlike<TOut, TInd>();
-
-		/// <summary>
-		/// When implemented by a derived class, create a new sparse vector with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/> while index type changed to <typeparamref name="TIndOut"/>.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged number as the new index type</typeparam>
-		/// <returns>The new sparse vector of type (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) alike this one</returns>
-		/// <exception cref="TypeMismatchException">If the <typeparamref name="TIndOut"/> is not an integral type</exception>
-		public abstract BaseSparseVector<TOut, TIndOut> NewArrayAlike<TOut, TIndOut>()
-			where TOut : unmanaged
-			where TIndOut : unmanaged;
-
-		/// <summary>
-		/// When implemented by a derived class, cast this sparse vector into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> of this array.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <typeparam name="TIndOut">Any integral-typed unmanaged number as the new index type</typeparam>
-		/// <returns>The new <see cref="BaseSparseVector{T, TInd}"/> of (<typeparamref name="TOut"/>, <typeparamref name="TIndOut"/>) casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/> and <typeparamref name="TIndOut"/> == <typeparamref name="TInd"/></returns>
-		public virtual BaseSparseVector<TOut, TIndOut> DataTypeCast<TOut, TIndOut>()
-			where TOut : unmanaged, IFormattable, IEquatable<TOut>
-			where TIndOut : unmanaged, IEquatable<TIndOut>
+		#region point-wise operations
+		void IValueArray<T, TSelf>.FillWith(T value)
 		{
-			var matrix = this.NewArrayAlike<TOut, TIndOut>();
-			try
+			if (value != TSelf.DefaultValue)
+				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
+			this.Storage.FillWith(value);
+		}
+
+		void IValueArray<T, TSelf>.AddScalar(T value)
+		{
+			if (value != T.Zero)
+				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
+		}
+
+		void IValueArray<T, TSelf>.Scale(T value)
+		{
+			if (TSelf.DefaultValue == T.Zero)
+				Blas.Scale(this.Storage, 1, value);
+			else if (value != T.One)
+				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
+		}
+
+		void IValueArray<T, TSelf>.Conjugate()
+		{
+			if (NumberType<T>.IsComplex)
 			{
-				((ISparseArray<T, TInd>)this).TypeCast(matrix);
-				return matrix;
-			}
-			catch (Exception)
-			{
-				matrix?.Dispose();
-				throw;
+				if (NumberType<T>.IsRealValue(TSelf.DefaultValue))
+					ExtBlas.PointWiseConjugate<T, TS>(this.Storage, 1);
+				else
+					throw new InvalidOperationException(Resources.SparseError.CannotSetSparse);
 			}
 		}
-		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.NewArrayAlike<TOut, TIndexOut>() => this.NewArrayAlike<TOut, TIndexOut>();
 
-		ISparseArray<TOut, TIndexOut> ISparseArray<T, TInd>.DataTypeCast<TOut, TIndexOut>() => this.DataTypeCast<TOut, TIndexOut>();
-		#endregion
-
-		#region conversion
-		/// <summary>
-		/// When implemented by a derived class, convert this sparse vector to a dense vector whose <see cref="Storage{T}"/> is <paramref name="denseStorage"/>
-		/// </summary>
-		/// <param name="denseStorage">The <see cref="Storage{T}"/> of the dense vector to overwrite</param>
-		/// <exception cref="ArgumentNullException">If <paramref name="denseStorage"/> is null or has length less than <see cref="AbstractArray{T}.Length"/> of this</exception>
-		public abstract void ToDense(Storage<T> denseStorage);
-
-		/// <summary>
-		/// When implemented by a derived class, convert this sparse vector to another sparse vector with <see cref="Format"/> fitting <paramref name="format"/>
-		/// </summary>
-		/// <param name="format">The target format, can be anatomic</param>
-		/// <returns>The converted <see cref="BaseSparseVector{T, TInd}"/> whose <see cref="Format"/> fits the given <paramref name="format"/>, or this one if no conversion is necessary</returns>
-		public abstract BaseSparseVector<T, TInd> ToFormat(SparseVectorFormat format);
-		#endregion
-
-		#region equality
-		/// <summary>
-		/// When implemented by a derived class, get the hash code this sparse vector. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.GetHashCode"/>.
-		/// </summary>
-		/// <returns>The hash code of this sparse vector</returns>
-		public override int GetHashCode() => ((ISparseArray<T, TInd>)this).GetHashCode();
-
-		/// <summary>
-		/// When implemented by a derived class, check whether this sparse vector is equal to another one. The default implementation only utilizes the default implementation of <see cref="ISparseArray{T, TIndex}.Equals(object?)"/>.
-		/// </summary>
-		/// <param name="obj">The other object to compare with</param>
-		/// <returns>True if this == <paramref name="obj"/></returns>
-		public override bool Equals(object? obj) => ((ISparseArray<T, TInd>)this).Equals(obj);
-		#endregion
-
-		#region print
-		/// <summary>
-		/// The helper method used in <see cref="Print(PrintSettings?)"/> to get the first several indices of this sparse vector
-		/// </summary>
-		/// <param name="indices">The <see cref="Span{T}"/> of <see cref="long"/> used to store the indices</param>
-		protected abstract void GetIndices(Span<long> indices);
-
-		private string ActualPrint(PrintSettings settings)
+		void IValueArray<T, TSelf>.Power(T power)
 		{
-			// get managed arrays
-			int length = (int)Math.Min(settings.ArrayLength, this.NStored);
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			MEM.ToManaged(this.Storage, values);
-			Span<long> indices = length.CheckStackLimit<long>() ?? stackalloc long[length];
-			this.GetIndices(indices);
-			// to vector string
-			string detail = values.ToSparseVectorString(indices, precision: settings.Precision);
-			if (this.Length > values.Length)
-				detail += Environment.NewLine + string.Format(Resources.Print.MoreStored, this.NStored - values.Length);
-			return detail;
+			if (TSelf.DefaultValue == T.Zero || TSelf.DefaultValue == T.One)
+				ExtBlas.PointWisePower(this.Storage, 1, power);
+			else
+				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(power));
 		}
 
-		/// <summary>
-		/// When implemented by a derived class, print out this sparse vector.
-		/// </summary>
-		/// <param name="overrideSetting">Override global settings in <see cref="Settings"/></param>
-		/// <returns>The detailed string representation of this sparse vector</returns>
-		public override string Print(PrintSettings? overrideSetting = null)
+		void IValueArray<T, TSelf>.Truncate(double threshold)
 		{
-			string description = this.ToString();
-			if (this.Disposed)
-				return description;
-
-			var settings = overrideSetting ?? Settings.PrintSetting;
-
-			return description + ":" + Environment.NewLine + this.ActualPrint(settings);
+			if (TSelf.DefaultValue != T.Zero && T.Abs(TSelf.DefaultValue) < T.Create(threshold))
+				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(threshold));
+			else
+				ExtBlas.PointWiseTruncate<T, TS>(this.Storage, 1, threshold);
 		}
 		#endregion
 
-		#region serialization
-		/// <summary>
-		/// The presenting name of the <see cref="DefaultValue"/>.
-		/// </summary>
-		public const string DefaultValueName = nameof(DefaultValue);
-
-		/// <summary>
-		/// The presenting name of the <see cref="Format"/>.
-		/// </summary>
-		public const string FormatName = nameof(Format);
-
-		/// <summary>
-		/// When implemented by a derived class, get other requisite informations for re-constructing the sparse vector of that derived class type. The default implementation returns <see cref="DefaultValue"/> and <see cref="Format"/>.
-		/// </summary>
-		/// <returns>Other requisite informations used to re-construct this sparse vector.</returns>
-		public override IReadOnlyDictionary<string, object> GetMetaData() => new Dictionary<string, object>(2)
+		#region simple aggregation operations
+		T IValueArray<T, TSelf>.Sum()
 		{
-			[DefaultValueName] = this.m_defaultValue,
-			[FormatName] = this.m_format,
-		};
+			T defaultSum = TSelf.DefaultValue * T.Create(((IVectorMetric)this).Length - this.Storage.Length);
+			return defaultSum + ExtBlas.AggregateSum<T, TS>(this.Storage, 1);
+		}
+
+		T IValueArray<T, TSelf>.AbsSum()
+		{
+			T defaultSum = T.Abs(TSelf.DefaultValue) * T.Create(((IVectorMetric)this).Length - this.Storage.Length);
+			return defaultSum + Blas.AbsoluteValueSum<T, TS>(this.Storage, 1);
+		}
+
+		T IValueArray<T, TSelf>.Norm()
+		{
+			if (TSelf.DefaultValue == T.Zero)
+				return Blas.Norm<T, TS>(this.Storage, 1);
+			T abs = T.Abs(TSelf.DefaultValue);
+			T defaultSum = abs * abs * T.Create(((IVectorMetric)this).Length - this.Storage.Length);
+			T norm = Blas.Norm<T, TS>(this.Storage, 1);
+			double n = (norm * norm + defaultSum).As<T, double>();
+			return Math.Sqrt(n).As<double, T>();
+		}
+
+		T IValueArray<T, TSelf>.ValueWithMaxAbs()
+		{
+			T max = (this.Storage + Blas.AbsoluteValueArgMax<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
+			if (T.Abs(TSelf.DefaultValue) > T.Abs(max))
+				return TSelf.DefaultValue;
+			else
+				return max;
+		}
+
+		T IValueArray<T, TSelf>.ValueWithMinAbs()
+		{
+			T min = (this.Storage + Blas.AbsoluteValueArgMin<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
+			if (T.Abs(TSelf.DefaultValue) < T.Abs(min))
+				return TSelf.DefaultValue;
+			else
+				return min;
+		}
 		#endregion
 	}
 }

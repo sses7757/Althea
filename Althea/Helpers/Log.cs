@@ -202,7 +202,7 @@ namespace Althea.Helpers
 						Debug.WriteLine(msg, category);
 						break;
 					default:
-						throw new ArgumentOutOfRangeException(nameof(level), level, Resources.Parameter.InvalidValue);
+						throw new ArgumentOutOfRangeException(nameof(level), level, Resources.ParameterError.InvalidValue);
 				}
 			};
 			await Task.Run(run).ConfigureAwait(true);
@@ -337,7 +337,7 @@ namespace Althea.Helpers
 			get => Settings.settings.LogSettings.PrintLevels;
 			set {
 				if (!value.IsValid())
-					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.ParameterError.InvalidValue);
 				Settings.settings.LogSettings = Settings.settings.LogSettings with { PrintLevels = value };
 			}
 		}
@@ -349,7 +349,7 @@ namespace Althea.Helpers
 			get => Settings.settings.LogSettings.BufferLevels;
 			set {
 				if (!value.IsValid())
-					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.ParameterError.InvalidValue);
 				Settings.settings.LogSettings = Settings.settings.LogSettings with { BufferLevels = value };
 			}
 		}
@@ -387,7 +387,7 @@ namespace Althea.Helpers
 		public static async void Write(string msg, [CallerMemberName] string? category = null, LogLevel level = LogLevel.Information)
 		{
 			if (!level.IsValid() || !((int)level).IsPowerOfTwo())
-				throw new ArgumentOutOfRangeException(nameof(level), level, Resources.Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(level), level, Resources.ParameterError.InvalidValue);
 			await logger.Write(msg, category, level);
 		}
 	}

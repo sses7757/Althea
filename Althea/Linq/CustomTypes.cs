@@ -194,7 +194,7 @@ namespace Althea.Linq
 
 		private readonly T data;
 
-		public T this[int index] => this.hasValue && index == 0 ? this.data : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+		public T this[int index] => this.hasValue && index == 0 ? this.data : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 
 		public int Count => this.hasValue ? 1 : 0;
 
@@ -357,7 +357,7 @@ namespace Althea.Linq
 		#region basic
 		private readonly T data1, data2;
 
-		public T this[int index] => index == 0 ? data1 : index == 1 ? data2 : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+		public T this[int index] => index == 0 ? data1 : index == 1 ? data2 : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 
 		public int Count => 2;
 
@@ -370,7 +370,7 @@ namespace Althea.Linq
 		public ImmutableTwoElementSet(T data1, T data2)
 		{
 			if (EqualityComparer<T>.Default.Equals(data1, data2))
-				throw new InvalidOperationException(Resources.Parameter.DuplicateValue);
+				throw new InvalidOperationException(Resources.ParameterError.DuplicateValue);
 			this.data1 = data1; this.data2 = data2;
 		}
 		#endregion
@@ -532,7 +532,7 @@ namespace Althea.Linq
 		#region basic
 		private readonly T data1, data2, data3;
 
-		public T this[int index] => index == 0 ? data1 : index == 1 ? data2 : index == 2 ? data3 : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.Parameter.InvalidValue);
+		public T this[int index] => index == 0 ? data1 : index == 1 ? data2 : index == 2 ? data3 : throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 
 		public int Count => 3;
 
@@ -547,7 +547,7 @@ namespace Althea.Linq
 		{
 			var c = EqualityComparer<T>.Default;
 			if (c.Equals(data1, data2) || c.Equals(data2, data3))
-				throw new InvalidOperationException(Resources.Parameter.DuplicateValue);
+				throw new InvalidOperationException(Resources.ParameterError.DuplicateValue);
 			this.data1 = data1; this.data2 = data2; this.data3 = data3;
 		}
 		#endregion
