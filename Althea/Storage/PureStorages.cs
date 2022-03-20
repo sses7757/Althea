@@ -136,7 +136,7 @@ namespace Althea.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.RefFrom<TOut, TOther>(TOther storage)
 		{
-			return (storage as PureStorage<TOut, TP> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
+			return (storage as PureStorage<TOut, TP> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
 		}
 
 		/// <summary>
@@ -160,22 +160,22 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="PureStorage{T, TP}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 1</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static PureStorage<T, TP> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 1)
-				throw new InvalidOperationException(Support.Location);
+				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
 			if (lengths[0] <= 0)
-				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
 			return new ActualPureStorage<T, TP>(lengths[0]);
 		}
 
 		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
-			return CreateAlike(storage as PureStorage<TOut, TP> ?? throw new InvalidOperationException(Parameter.UnexpectedType));
+			return CreateAlike(storage as PureStorage<TOut, TP> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
@@ -224,7 +224,7 @@ namespace Althea.Storage
 		{
 			long diffBytes = IStorage<T, PureStorage<T, TP>>.StorageDiffBytes(left, right);
 			if (diffBytes % Unmanaged<T>.Size != 0)
-				throw new InvalidOperationException(Other.CannotDivide);
+				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / Unmanaged<T>.Size;
 		}
 
@@ -279,7 +279,7 @@ namespace Althea.Storage
 		/// <param name="length">The length to create in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
-		public ActualPureStorage(long length) : base(length > 0 ? MEM.Allocate<T, TP>(length) : throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive))
+		public ActualPureStorage(long length) : base(length > 0 ? MEM.Allocate<T, TP>(length) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
 		{
 			// do nothing
 		}

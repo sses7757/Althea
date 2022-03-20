@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 
 using Althea.NativeTypes;
 using Althea.Resources;
@@ -265,10 +266,15 @@ namespace Althea.Storage
 		{
 			long newSize = sizeInBytes ? size : (size * Unmanaged<T>.Size);
 			if (size * Unmanaged<T>.Size % Unmanaged<TOut>.Size != 0)
-				throw new InvalidCastException(Other.CannotDivide);
+				throw new InvalidCastException(ArithmeticError.CannotDivide);
 			newSize /= Unmanaged<TOut>.Size;
 			return newSize;
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, statically get the JSON converter of <typeparamref name="TSelf"/>.
+		/// </summary>
+		protected internal abstract static JsonConverter<TSelf> JsonConverter { get; }
 	}
 
 	/// <summary>
@@ -333,11 +339,11 @@ namespace Althea.Storage
 			}
 			// check
 			if (storage is not TS)
-				throw new ArgumentException(Parameter.UnexpectedType, nameof(storage));
+				throw new ArgumentException(ParameterError.UnexpectedType, nameof(storage));
 			if (offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, ParameterError.CannotNegative);
 			if (storage.LengthInBytes < offset + newLength)
-				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, ParameterError.InvalidValue);
 			// return
 			return (storage, offset, newLength);
 		}

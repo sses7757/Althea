@@ -146,7 +146,7 @@ namespace Althea.Helpers
 		public void Add(T value)
 		{
 			if (this._size == this._span.Length)
-				throw new InvalidOperationException(Resources.Other.ListCannotAdd);
+				throw new InvalidOperationException(Resources.StorageError.StorageFull);
 			this._span[this._size++] = value;
 		}
 
@@ -161,7 +161,7 @@ namespace Althea.Helpers
 			if (values.IsEmpty)
 				return;
 			if (this._size + values.Length > this._span.Length)
-				throw new InvalidOperationException(Resources.Other.ListCannotAdd);
+				throw new InvalidOperationException(Resources.StorageError.StorageFull);
 			values.CopyTo(this._span[this._size..]);
 			this._size += values.Length;
 		}
@@ -530,7 +530,7 @@ namespace Althea.Helpers
 			if (leadingDim == 0)
 				leadingDim = rows;
 			if (span.Length % leadingDim != 0)
-				throw new ArgumentException(Resources.Other.CannotDivide, nameof(leadingDim));
+				throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(leadingDim));
 
 			this._span = span;
 			this._rows = rows;

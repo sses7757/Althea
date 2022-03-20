@@ -131,7 +131,7 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region matrix
 		/// <summary>
-		/// When implemented by a derived class, slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> parameter.
+		/// When implemented by a derived class, slice the given sparse <paramref name="matrix"/> with the given <paramref name="slice"/> ParameterError.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="matrix">The input sparse matrix to be sliced</param>

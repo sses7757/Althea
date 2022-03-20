@@ -30,14 +30,14 @@ namespace Althea.Helpers
 		internal static Type? GetTypeWithPostfix(this Type type, string postfix, int skipGeneric = 0)
 		{
 			Type[] generics = type.GenericTypeArguments;
-			string fullName = type.AssemblyQualifiedName ?? throw new ArgumentException(Parameter.UnexpectedValue, nameof(type));
+			string fullName = type.AssemblyQualifiedName ?? throw new ArgumentException(ParameterError.UnexpectedValue, nameof(type));
 			int genericStart = fullName.IndexOf('`');
 			string postfixedName;
 			if (genericStart >= 0)
 			{
 				int genericEnd = fullName.IndexOf("]]");
 				if (genericEnd < 0)
-					throw new ArgumentException(Parameter.UnexpectedValue, nameof(type));
+					throw new ArgumentException(ParameterError.UnexpectedValue, nameof(type));
 				genericEnd += 2;
 				if (generics.Length > skipGeneric)
 				{

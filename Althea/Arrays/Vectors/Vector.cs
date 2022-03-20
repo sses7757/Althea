@@ -75,13 +75,22 @@ namespace Althea.Arrays
 		T IReadOnlyList<T>.this[int index] => this[(long)index];
 
 		/// <summary>
-		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/>
+		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/>.
 		/// </summary>
 		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
 		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
-		/// <returns>The sub-vector indicated by <paramref name="start"/> and <paramref name="count"/>. Shall be a referenced vector if possible.</returns>
+		/// <returns>The sliced vector which shall be a referenced one if possible.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
 		TSelf GetSlice(long start, long count);
+
+		/// <summary>
+		/// When implemented by a derived class, get a sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> and write it to <paramref name="overwrite"/>.
+		/// </summary>
+		/// <param name="start">The starting offset of the target sub-vector compared to this vector, in <typeparamref name="T"/></param>
+		/// <param name="count">The length of the target sub-vector, in <typeparamref name="T"/></param>
+		/// <param name="overwrite">The sub-vector to be overwritten</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
+		void GetSlice(long start, long count, TSelf overwrite);
 
 		/// <summary>
 		/// When implemented by a derived class, copy this vector's elements to <paramref name="destination"/>'s ones.

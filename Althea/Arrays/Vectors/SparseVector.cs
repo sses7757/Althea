@@ -18,7 +18,7 @@ using SpComp = Althea.LinearAlgebra.Sparse.ComputationApiSelector;
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The coordinated non-blocked (or blocked) sparse vector interface whose value storage is of type <typeparamref name="TS"/> and index storage is of type <typeparamref name="TSInd"/>.
+	/// The coordinated non-blocked (or blocked) sparse vector interface whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/></typeparam>
@@ -39,57 +39,86 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the block size array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
 		/// </summary>
-		protected TSInd? OriginalBlockSizes { get; }
+		protected TSInd? BlockSizes { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the block size array's accumulation array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
+		/// </summary>
+		protected TSInd? BlockSizeAccu { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the block size if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Simple"/>.
+		/// </summary>
+		protected long BlockSize { get; }
+
+		/// <summary>
+		/// The supported <see cref="SparseFormat"/>s of this interface.
+		/// </summary>
+		protected static readonly SparseFormat SupportFormats = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element | SparseFormat.Blocking.Simple | SparseFormat.Blocking.Complicated, SparseFormat.Major.None);
 
 		/// <summary>
 		/// When implemented by a derived class, get the index array's storage of this sparse vector.
 		/// </summary>
 		TSInd IndexStorage => this.OrginalIndexStorage.MakeReference();
 
-		/// <summary>
-		/// When implemented by a derived class, get the block size array's storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
-		/// </summary>
-		TSInd? BlockSizes => this.OriginalBlockSizes?.MakeReference();
-
-		/// <summary>
-		/// When implemented by a derived class, statically get a <see cref="bool"/> indicating whether the <see cref="IndexStorage"/> shall be maintained as a sorted array or not.
-		/// </summary>
-		/// <remarks>If <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.None"/>, the <see cref="MaintainSortedIndex"/> cannot be false.</remarks>
-		protected abstract static bool MaintainSortedIndex { get; }
-
 		IStorage ISparseArray<T>.ValueStorage => this.OriginalStorage;
 
-		ReadOnlySpan<IStorage> ISparseArray<T>.IndexStorages => this.OriginalBlockSizes is null ? new[] { this.OrginalIndexStorage } : new[] { this.OrginalIndexStorage, this.OriginalBlockSizes };
+		ReadOnlySpan<IStorage> ISparseArray<T>.IndexStorages => this.BlockSizes is null ? new[] { this.OrginalIndexStorage } : new[] { this.OrginalIndexStorage, this.BlockSizes };
+
+		static ISparseVector()
+		{
+			if ((TSelf.Format & SupportFormats) != TSelf.Format)
+				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+		}
 		#endregion
 
 		#region index
+		private long GetOffset(long index)
+		{
+			this.CheckIndex(index);
+			long offset;
+			if (TSelf.Format.BlockType == SparseFormat.Blocking.Element)
+			{
+				long find = SpConv.IndexFind(true, this.IndexStorage, TInd.Create(index));
+				if (find < 0)
+					return -1;
+				offset = (this.IndexStorage + find).ToManaged<TInd, TSInd>().As<TInd, long>();
+			}
+			else
+			{
+				long blockIndex = SpConv.IndexBound(this.IndexStorage, TInd.Create(index + 1), true) - 1;
+				long blockSize = this.BlockSizes is null ? this.BlockSize : (this.BlockSizes + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
+				long blockOffset = (this.IndexStorage + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
+				offset = index - blockOffset;
+				if (offset >= blockSize)
+					return -1;
+				offset += this.BlockSizeAccu is null ? blockSize * blockIndex : (this.BlockSizeAccu + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
+			}
+			return offset;
+		}
+
 		T IBaseVector<T, TSelf>.this[long index]
 		{
 			get
 			{
-				this.CheckIndex(index);
-				long find = SpConv.IndexFind(TSelf.MaintainSortedIndex, this.IndexStorage, TInd.Create(index));
-				if (find < 0)
-					return TSelf.DefaultValue;
-				long offset = (this.IndexStorage + find).ToManaged<TInd, TSInd>().As<TInd, long>();
-				return (this.Storage + offset).ToManaged<T, TS>();
+				long offset = this.GetOffset(index);
+				return offset < 0 ? TSelf.DefaultValue : (this.Storage + offset).ToManaged<T, TS>();
 			}
 			set
 			{
-				this.CheckIndex(index);
-				long find = SpConv.IndexFind(TSelf.MaintainSortedIndex, this.IndexStorage, TInd.Create(index);
-				if (find < 0)
-				{
-					if (value != TSelf.DefaultValue)
-						throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
-					return;
-				}
-				long offset = (this.IndexStorage + find).ToManaged<TInd, TSInd>().As<TInd, long>();
+				long offset = this.GetOffset(index);
+				if (offset < 0)
+					throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(index));
 				(this.Storage + offset).FromManaged(value);
 			}
 		}
 
 		TSelf IBaseVector<T, TSelf>.GetSlice(long start, long count)
+		{
+
+		}
+
+		void IBaseVector<T, TSelf>.GetSlice(long start, long count, TSelf overwrite)
 		{
 
 		}

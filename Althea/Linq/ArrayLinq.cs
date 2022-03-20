@@ -743,7 +743,7 @@ namespace Althea.Linq
 			if (list2 is null || list2.Count == 0)
 				throw new ArgumentNullException(nameof(list2));
 			if (list1.Count != list2.Count)
-				throw new ArgumentException(Parameter.NotSameSize);
+				throw new ArgumentException(ParameterError.NotSameSize);
 
 			var res = new (T1, T2)[list1.Count];
 			for (int i = 0; i < list1.Count; i++)
@@ -770,7 +770,7 @@ namespace Althea.Linq
 			if (list2 is null || list2.Count == 0)
 				throw new ArgumentNullException(nameof(list2));
 			if (list1.Count != list2.Count)
-				throw new ArgumentException(Parameter.NotSameSize);
+				throw new ArgumentException(ParameterError.NotSameSize);
 			if (func is null)
 				throw new ArgumentNullException(nameof(func));
 			var res = new TOut[list1.Count];
@@ -802,7 +802,7 @@ namespace Althea.Linq
 			if (list3 is null || list3.Count == 0)
 				throw new ArgumentNullException(nameof(list3));
 			if (list1.Count != list2.Count || list1.Count != list3.Count)
-				throw new ArgumentException(Parameter.NotSameSize);
+				throw new ArgumentException(ParameterError.NotSameSize);
 			if (func is null)
 				throw new ArgumentNullException(nameof(func));
 
@@ -1026,9 +1026,9 @@ namespace Althea.Linq
 		public static int[] RandomUniqueArray(int count, int minValue, int maxValue)
 		{
 			if (count <= 0)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, ParameterError.InvalidValue);
 			if (maxValue < minValue + count)
-				throw new ArgumentOutOfRangeException(nameof(maxValue), maxValue, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(maxValue), maxValue, ParameterError.InvalidValue);
 
 			HashSet<int> set = new(count);
 			while (set.Count != count)
@@ -1045,9 +1045,9 @@ namespace Althea.Linq
 		public static int[] RandomPositiveArrayOfSum(int count, int sum)
 		{
 			if (count <= 0)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, ParameterError.InvalidValue);
 			if (sum <= 0)
-				throw new ArgumentOutOfRangeException(nameof(sum), sum, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(sum), sum, ParameterError.InvalidValue);
 
 			int[] partition = RandomUniqueArray(count - 1, 1, sum);
 			Array.Sort(partition);
@@ -1070,9 +1070,9 @@ namespace Althea.Linq
 		public static int[] RandomNonNegativeArrayOfSum(int count, int sum)
 		{
 			if (count <= 0)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(count), count, ParameterError.InvalidValue);
 			if (sum < count)
-				throw new ArgumentOutOfRangeException(nameof(sum), sum, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(sum), sum, ParameterError.InvalidValue);
 
 			int[] arr = new int[count];
 			for (int i = 0; i < sum; i++)

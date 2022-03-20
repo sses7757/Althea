@@ -27,7 +27,7 @@ namespace Althea.Helpers
 		public static string ToOrdinal(this int a)
 		{
 			if (a < 0)
-				throw new ArgumentOutOfRangeException(nameof(a), a, Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(a), a, ParameterError.CannotNegative);
 			a++;
 			int c = a % 10;
 			return c switch
@@ -236,7 +236,7 @@ namespace Althea.Helpers
 		public static string RepeatString(this string s, int n)
 		{
 			if (n < 0)
-				throw new ArgumentOutOfRangeException(nameof(n), n, Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(n), n, ParameterError.CannotNegative);
 			if (string.IsNullOrEmpty(s))
 				throw new ArgumentNullException(nameof(s));
 			if (n == 0)
@@ -346,7 +346,7 @@ namespace Althea.Helpers
 		public static string MultilineConcat(this string left, string right, string? prefix = null, string? midfix = null, string? postfix = null)
 		{
 			if (string.IsNullOrEmpty(left) && string.IsNullOrEmpty(right))
-				throw new ArgumentException(Parameter.CannotAllNull);
+				throw new ArgumentException(ParameterError.CannotAllNull);
 			if (string.IsNullOrEmpty(left))
 				return MultilinePrePostfix(right, prefix, postfix);
 			if (string.IsNullOrEmpty(right))
@@ -400,7 +400,7 @@ namespace Althea.Helpers
 			{
 				ss[i] = strings[i].Split(Environment.NewLine);
 				if (ss[i].Length != lines)
-					throw new ArgumentException(Parameter.NotSameSize, nameof(strings));
+					throw new ArgumentException(ParameterError.NotSameSize, nameof(strings));
 				allLength = checked(allLength + ss[i].Length);
 			}
 			nStrings--;
@@ -544,7 +544,7 @@ namespace Althea.Helpers
 			{
 				pre.CopyTo(str); str = str[pre.Length..];
 				if (!GetNumberString(input[i], str, out int numberStrWidth, provider, precision))
-					throw new FormatException(Support.Format);
+					throw new FormatException();
 				str = str[numberStrWidth..];
 				pos.CopyTo(str); str = str[pos.Length..];
 			}
@@ -588,7 +588,7 @@ namespace Althea.Helpers
 		public static string ToSparseVectorString<TVal, TInd>(this ReadOnlySpan<TVal> values, ReadOnlySpan<TInd> indices, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where TVal : ISpanFormattable, IAdditiveIdentity<TVal, TVal>, IEquatable<TVal> where TInd : ISpanFormattable
 		{
 			if (values.Length != indices.Length)
-				throw new ArgumentException(Parameter.NotSameSize);
+				throw new ArgumentException(ParameterError.NotSameSize);
 			if (values.IsEmpty)
 				return string.Empty;
 
@@ -600,11 +600,11 @@ namespace Althea.Helpers
 			{
 				pre.CopyTo(str); str = str[pre.Length..];
 				if (!GetIntegerString(indices[i], str, out int numberStrWidth, provider))
-					throw new FormatException(Support.Format);
+					throw new FormatException();
 				str = str[numberStrWidth..];
 				mid.CopyTo(str); str = str[mid.Length..];
 				if (!GetNumberString(values[i], str, out _, provider, precision))
-					throw new FormatException(Support.Format);
+					throw new FormatException();
 				pos.CopyTo(str); str = str[pos.Length..];
 			}
 			return new(new ReadOnlySpan<char>(chars, 0, maxLength - str.Length));
@@ -652,9 +652,9 @@ namespace Althea.Helpers
 			if (matrix.IsEmpty)
 				return string.Empty;
 			if (rows <= 0)
-				throw new ArgumentOutOfRangeException(nameof(rows), rows, Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(rows), rows, ParameterError.MustPositive);
 			if (matrix.Length % rows != 0)
-				throw new ArgumentException(Other.CannotDivide);
+				throw new ArgumentException(ArithmeticError.CannotDivide);
 
 			int cols = matrix.Length / rows;
 			string moreStr = more > 0 ? string.Format("  " + Print.RowMore, more) : "  ";
@@ -668,7 +668,7 @@ namespace Althea.Helpers
 				for (int j = 0; j < cols; j++)
 				{
 					if (!GetNumberString(matrix[i + j * rows], str, out int numberStrWidth, provider, precision))
-						throw new FormatException(Support.Format);
+						throw new FormatException();
 					str = str[numberStrWidth..];
 				}
 				pos.CopyTo(str); str = str[pos.Length..];
@@ -716,9 +716,9 @@ namespace Althea.Helpers
 		public static string ToSparseMatrixString<TVal, TInd>(this ReadOnlySpan<TVal> values, ReadOnlySpan<TInd> indx, ReadOnlySpan<TInd> indy, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where TVal : ISpanFormattable, IAdditiveIdentity<TVal, TVal>, IEquatable<TVal> where TInd : ISpanFormattable
 		{
 			if (values.Length != indx.Length)
-				throw new ArgumentException(Parameter.NotSameSize);
+				throw new ArgumentException(ParameterError.NotSameSize);
 			if (values.Length != indy.Length)
-				throw new ArgumentException(Parameter.NotSameSize);
+				throw new ArgumentException(ParameterError.NotSameSize);
 			if (values.IsEmpty)
 				return string.Empty;
 
@@ -731,15 +731,15 @@ namespace Althea.Helpers
 				pre.CopyTo(str); str = str[pre.Length..];
 				str[0] = '('; str = str[1..];
 				if (!GetIntegerString(indx[i], str, out int numberStrWidth, provider))
-					throw new FormatException(Support.Format);
+					throw new FormatException();
 				str = str[numberStrWidth..];
 				com.CopyTo(str); str = str[com.Length..];
 				if (!GetIntegerString(indy[i], str, out numberStrWidth, provider))
-					throw new FormatException(Support.Format);
+					throw new FormatException();
 				str = str[numberStrWidth..];
 				mid.CopyTo(str); str = str[mid.Length..];
 				if (!GetNumberString(values[i], str, out _, provider, precision))
-					throw new FormatException(Support.Format);
+					throw new FormatException();
 				pos.CopyTo(str); str = str[pos.Length..];
 			}
 			return new(new ReadOnlySpan<char>(chars, 0, maxLength - str.Length));
@@ -785,7 +785,7 @@ namespace Althea.Helpers
 		public static long GetPosition(this Index index, long length, bool check = true)
 		{
 			if (check && length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(length), length, ParameterError.MustPositive);
 			long val;
 			if (index.IsFromEnd)
 			{
@@ -796,7 +796,7 @@ namespace Althea.Helpers
 				val = index.Value;
 			}
 			if (check && (val < 0 || val >= length))
-				throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(index), index, ParameterError.InvalidValue);
 			return val;
 		}
 
@@ -813,10 +813,10 @@ namespace Althea.Helpers
 		public static (long Offset, long Length) GetOffsetAndCount(this Range range, long length, bool check = true)
 		{
 			if (check && length <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(length), length, ParameterError.MustPositive);
 			long start = range.Start.GetPosition(length, check: false), end = range.End.GetPosition(length, check: false);
 			if (check && (end <= start || start >= length || end < 0 || end > length))
-				throw new ArgumentOutOfRangeException(nameof(range), range, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(range), range, ParameterError.InvalidValue);
 			return (start, end - start);
 		}
 		#endregion

@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -181,7 +183,7 @@ namespace Althea
 			this.Type = type; this.Detail = detail;
 		}
 
-		[System.Text.Json.Serialization.JsonConstructor]
+		[JsonConstructor]
 		internal StorageLocation(string type, short detail)
 		{
 			this.Type = EnumHelper.Parse<LocationType>(type); this.Detail = detail;
@@ -274,7 +276,7 @@ namespace Althea
 		{
 			this.data = default;
 			if (data.Length >= MaxSize || data.IsEmpty)
-				throw new ArgumentOutOfRangeException(nameof(data), data.Length, Parameter.WrongSize);
+				throw new ArgumentOutOfRangeException(nameof(data), data.Length, ParameterError.WrongSize);
 			// initialize
 			this.type = type;
 			this.count = (ushort)data.Length;
@@ -361,7 +363,7 @@ namespace Althea
 		/// <param name="index">The index</param>
 		/// <returns>The element at <paramref name="index"/> as a <see cref="StorageLocation"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
-		public StorageLocation this[int index] => index >= 0 && index < this.count ? this.data[index] : throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+		public StorageLocation this[int index] => index >= 0 && index < this.count ? this.data[index] : throw new ArgumentOutOfRangeException(nameof(index), index, ParameterError.InvalidValue);
 
 		/// <summary>
 		/// Forms a slice out of the current <see cref="CombinationOfLocations"/> starting at a specified <paramref name="start"/> for a specified <paramref name="length"/>.
@@ -373,9 +375,9 @@ namespace Althea
 		public CombinationOfLocations Slice(int start, int length)
 		{
 			if (start < 0 || start >= this.count)
-				throw new ArgumentOutOfRangeException(nameof(start), start, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(start), start, ParameterError.InvalidValue);
 			if (length <= 0 || length + start > this.count)
-				throw new ArgumentOutOfRangeException(nameof(length), length, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(length), length, ParameterError.InvalidValue);
 
 			var locations = this.CopyLocationsToSpan(stackalloc StorageLocation[this.count]);
 			return new CombinationOfLocations(this.type, locations.Slice(start, length));
@@ -416,7 +418,7 @@ namespace Althea
 		public Span<StorageLocation> CopyLocationsToSpan(Span<StorageLocation> span)
 		{
 			if (span.Length < this.count)
-				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
 			this.data.CopyToSpan(span);
 			return span[..this.count];
 		}
@@ -435,6 +437,71 @@ namespace Althea
 		/// <returns>the string representation of this <see cref="CombinationOfLocations"/></returns>
 		public override string ToString() => IMainPropertyFormattable<CombinationOfLocations>.ToString(in this);
 		#endregion
+
+		#region JSON serialize
+		internal sealed class Converter : JsonConverter<CombinationOfLocations>
+		{
+			public override CombinationOfLocations Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject)
+					throw new JsonException();
+				try
+				{
+					CombinationType type = default;
+					StorageLocation[]? locations = null;
+					while (reader.Read())
+					{
+						if (reader.TokenType == JsonTokenType.EndObject)
+						{
+							if (type == default || locations is null || locations.Length == 0)
+								throw new JsonException(Resources.ParameterError.WrongSize);
+							return new CombinationOfLocations(type, locations);
+						}
+						if (reader.TokenType != JsonTokenType.PropertyName)
+							throw new JsonException();
+						switch (reader.GetString())
+						{
+							case Type:
+								reader.Read();
+								string? a = reader.GetString();
+								type = a is null ? default : Enum.Parse<CombinationType>(a);
+								break;
+							case Locations:
+								reader.Read();
+								locations = JsonSerializer.Deserialize<StorageLocation[]>(ref reader, options);
+								break;
+							default:
+								throw new JsonException();
+						}
+					}
+					// read to end while not ended
+					throw new JsonException();
+				}
+				catch (Exception e)
+				{
+					if (e is JsonException)
+						throw;
+					else
+						throw new JsonException(Resources.ParameterError.UnexpectedValue, e);
+				}
+			}
+
+			private const string Type = nameof(CombinationOfLocations.Type), Locations = "Locations";
+
+			public override void Write(Utf8JsonWriter writer, CombinationOfLocations value, JsonSerializerOptions options)
+			{
+				writer.WriteStartObject();
+				{
+					writer.WriteString(Type, value.Type.ToString());
+					var locs = new StorageLocation[value.Count];
+					value.CopyLocationsToSpan(locs);
+					writer.WritePropertyName(Locations);
+					writer.WriteRawValue(JsonSerializer.Serialize(locs, options));
+				}
+				writer.WriteEndObject();
+			}
+		}
+		#endregion
 	}
 	#endregion
 
@@ -446,20 +513,26 @@ namespace Althea
 	/// The interface for an immutable pointer which can be read, overwritten and positioned at any possible storage location, including any type of memory and any scheme of URI.
 	/// </summary>
 	/// <typeparam name="TSelf">The actual implementation type</typeparam>
-	public interface IPointer<TSelf> : ICheckValid, IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf> where TSelf : IPointer<TSelf>
+	public interface IPointer<TSelf> : ICheckValid, IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>
+		where TSelf : IPointer<TSelf>
 	{
 		/// <summary>
-		/// When implemented by derived classes, statically get the <see cref="StorageLocation"/> of this pointer's underlying type
+		/// When implemented by derived classes, statically get the <see cref="StorageLocation"/> of this pointer's underlying type.
 		/// </summary>
 		abstract static StorageLocation Location { get; }
 
 		/// <summary>
-		/// When implemented by derived classes, statically get the default value of <typeparamref name="TSelf"/>
+		/// When implemented by derived classes, statically get the default value of <typeparamref name="TSelf"/>.
 		/// </summary>
 		abstract static TSelf Default { get; }
 
 		/// <summary>
-		/// When implemented by derived classes, get the original (native) length of this pointer's underlying storage in bytes
+		/// When implemented by derived classes, statically get the JSON converter of <typeparamref name="TSelf"/>.
+		/// </summary>
+		protected internal abstract static JsonConverter<TSelf> JsonConverter { get; }
+
+		/// <summary>
+		/// When implemented by derived classes, get the original (native) length of this pointer's underlying storage in bytes.
 		/// </summary>
 		long LengthInBytes { get; }
 
@@ -536,14 +609,14 @@ namespace Althea
 		{
 			offset += pointer.OffsetInBytes;
 			if (offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.CannotNegative);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, ParameterError.CannotNegative);
 			long off = offset;
 			if (off > pointer.Pointer.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(offset), offset, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(offset), offset, ParameterError.InvalidValue);
 			if (newLength <= 0)
 				newLength = pointer.Pointer.LengthInBytes - off;
 			if (off + newLength > pointer.Pointer.LengthInBytes)
-				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, ParameterError.InvalidValue);
 
 			this.Pointer = pointer.Pointer; this.OffsetInBytes = off; this.LengthInBytes = newLength;
 		}

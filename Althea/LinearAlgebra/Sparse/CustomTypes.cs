@@ -10,7 +10,7 @@ namespace Althea.LinearAlgebra.Sparse
 	/// The structure for the format of any sparse array
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
-	public readonly struct SparseFormat : IEqualityOperators<SparseFormat, SparseFormat>
+	public readonly struct SparseFormat : IEqualityOperators<SparseFormat, SparseFormat>, IBitwiseOperators<SparseFormat, SparseFormat, SparseFormat>
 	{
 		#region enumerates
 		/// <summary>
@@ -36,17 +36,21 @@ namespace Althea.LinearAlgebra.Sparse
 		public enum Blocking : byte
 		{
 			/// <summary>
-			/// No blocking -- indices are for individual elements
+			/// No blocking -- indices are for custom things
 			/// </summary>
 			None = 0,
 			/// <summary>
+			/// Element blocking -- indices are for individual elements
+			/// </summary>
+			Element = 1 << 0,
+			/// <summary>
 			/// Standard blocking -- indices are for contiguous blocks of same size
 			/// </summary>
-			Simple = 1 << 0,
+			Simple = 1 << 1,
 			/// <summary>
 			/// Complicated blocking -- indices are for contiguous blocks of possibly different sizes
 			/// </summary>
-			Complicated = 1 << 1,
+			Complicated = 1 << 2,
 		}
 
 		/// <summary>
@@ -81,6 +85,21 @@ namespace Althea.LinearAlgebra.Sparse
 		private readonly Major major;
 
 		/// <summary>
+		/// Get the <see cref="Type"/> of this <see cref="SparseFormat"/>.
+		/// </summary>
+		public Type Class => this.type;
+
+		/// <summary>
+		/// Get the <see cref="Blocking"/> of this <see cref="SparseFormat"/>.
+		/// </summary>
+		public Blocking BlockType => this.blocking;
+
+		/// <summary>
+		/// Get the <see cref="Major"/> of this <see cref="SparseFormat"/>.
+		/// </summary>
+		public Major MajorType => this.major;
+
+		/// <summary>
 		/// Statically get a <see cref="SparseFormat"/> representing any format.
 		/// </summary>
 		public static SparseFormat Any => new((Type)255, (Blocking)255, (Major)255);
@@ -89,6 +108,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// Statically get a <see cref="SparseFormat"/> representing none of the format.
 		/// </summary>
 		public static SparseFormat None => default;
+
+		private SparseFormat(int data)
+		{
+			this = default;
+			this.data = data;
+		}
 
 		/// <summary>
 		/// The full constructor of a <see cref="SparseFormat"/>.
@@ -135,6 +160,26 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		/// <param name="s">The <see cref="SparseFormat"/> to convert</param>
 		public static explicit operator int(SparseFormat s) => s.data;
+
+		/// <summary>
+		/// Get the common <see cref="SparseFormat"/> of the <paramref name="left"/> and <paramref name="right"/> <see cref="SparseFormat"/>s.
+		/// </summary>
+		public static SparseFormat operator &(SparseFormat left, SparseFormat right) => new(left.data & right.data);
+
+		/// <summary>
+		/// Get the union <see cref="SparseFormat"/> of the <paramref name="left"/> and <paramref name="right"/> <see cref="SparseFormat"/>s.
+		/// </summary>
+		public static SparseFormat operator |(SparseFormat left, SparseFormat right) => new(left.data | right.data);
+
+		/// <summary>
+		/// Get the XOR <see cref="SparseFormat"/> of the <paramref name="left"/> and <paramref name="right"/> <see cref="SparseFormat"/>s.
+		/// </summary>
+		public static SparseFormat operator ^(SparseFormat left, SparseFormat right) => new(left.data ^ right.data);
+
+		/// <summary>
+		/// Get the complementary <see cref="SparseFormat"/> of the <paramref name="value"/> <see cref="SparseFormat"/>.
+		/// </summary>
+		public static SparseFormat operator ~(SparseFormat value) => new(~value.type, ~value.blocking, ~value.major);
 		#endregion
 
 		#region methods
@@ -142,6 +187,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.None"/>.
 		/// </summary>
 		public readonly SparseFormat WithoutBlocking => new(this.type, Blocking.None, this.major);
+
+		/// <summary>
+		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.Element"/>.
+		/// </summary>
+		public readonly SparseFormat WithElementBlocking => new(this.type, Blocking.Element, this.major);
 
 		/// <summary>
 		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.Simple"/>.
@@ -192,11 +242,6 @@ namespace Althea.LinearAlgebra.Sparse
 		/// Get whether this <see cref="SparseFormat"/> isn't of <see cref="Blocking.None"/> or not.
 		/// </summary>
 		public readonly bool HasBlocking => this.blocking != Blocking.None;
-
-		/// <summary>
-		/// Get whether this <see cref="SparseFormat"/> is of <see cref="Blocking.Simple"/> or not.
-		/// </summary>
-		public readonly bool IsSimpleBlocking => this.blocking == Blocking.Simple;
 
 		/// <summary>
 		/// Get the number of atomic combinations corresponding this <see cref="SparseFormat"/>.

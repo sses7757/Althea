@@ -1,19 +1,18 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
-using System.Collections;
-using System.IO.Compression;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Text.Json.Serialization;
-using System.Diagnostics.CodeAnalysis;
 
+using Althea.Helpers;
 using Althea.Linq;
-using Althea.Arrays;
 using Althea.NativeTypes;
+using Althea.Resources;
 
-using MEM = Althea.Storage.IAbstractApi;
+
 namespace Althea.Storage
 {
 	#region URI related
@@ -64,7 +63,7 @@ namespace Althea.Storage
 		public static UriScheme GetScheme(this Uri uri)
 		{
 			if (!uri.IsAbsoluteUri)
-				throw new ArgumentOutOfRangeException(nameof(uri), uri, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(uri), uri, ParameterError.InvalidValue);
 			if (uri.Scheme == Uri.UriSchemeFile)
 				return UriScheme.File;
 			if (uri.Scheme == @"tcp" || uri.Scheme == Uri.UriSchemeNetTcp)
@@ -102,260 +101,6 @@ namespace Althea.Storage
 		public override void Write(Utf8JsonWriter writer, Type value, JsonSerializerOptions options)
 		{
 			writer.WriteStringValue(value.AssemblyQualifiedName);
-		}
-	}
-
-	internal sealed class LocationDescriptionConverter : JsonConverter<CombinationOfLocations>
-	{
-		public override CombinationOfLocations Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-		{
-			if (reader.TokenType != JsonTokenType.StartObject)
-				throw new JsonException();
-			try
-			{
-				CombinationType type = default;
-				StorageLocation[]? locations = null;
-				while (reader.Read())
-				{
-					if (reader.TokenType == JsonTokenType.EndObject)
-					{
-						if (type == default || locations is null || locations.Length == 0)
-							throw new JsonException(Resources.ParameterError.WrongSize);
-						return new CombinationOfLocations(type, locations);
-					}
-					if (reader.TokenType != JsonTokenType.PropertyName)
-						throw new JsonException();
-					switch (reader.GetString())
-					{
-						case Type:
-							reader.Read();
-							string? a = reader.GetString();
-							type = a is null ? default : Enum.Parse<CombinationType>(a);
-							break;
-						case Locations:
-							reader.Read();
-							var loc = JsonSerializer.Deserialize<int[]>(ref reader, options);
-							locations = loc?.Select(static l => new StorageLocation(l))?.ToArray();
-							break;
-						default:
-							throw new JsonException();
-					}
-				}
-				// read to end while not ended
-				throw new JsonException();
-			}
-			catch (Exception e)
-			{
-				if (e is JsonException)
-					throw;
-				else
-					throw new JsonException(Resources.ParameterError.UnexpectedValue, e);
-			}
-		}
-
-		private const string Type = nameof(CombinationOfLocations.Type), Locations = "Locations";
-
-		public override void Write(Utf8JsonWriter writer, CombinationOfLocations value, JsonSerializerOptions options)
-		{
-			writer.WriteStartObject();
-			{
-				writer.WriteString(Type, value.Type.ToString());
-				////writer.WriteNumber(nameof(value.Count), value.Count);
-				writer.WriteStartArray(Locations);
-				foreach (var l in value)
-				{
-					writer.WriteNumberValue(l.AsInt());
-				}
-				writer.WriteEndArray();
-			}
-			writer.WriteEndObject();
-		}
-	}
-
-	internal sealed class PointerSegmentConverter : JsonConverter<PointerSegment>
-	{
-		private sealed class TempPointer : IPointer
-		{
-			public StorageLocation Location { get; set; }
-
-			public long LengthInBytes { get; set; }
-
-			public string StringMain => throw new NotImplementedException();
-
-			public IEnumerable<KeyValuePair<string, object?>> StringProperties => throw new NotImplementedException();
-
-			public bool Equals(IPointer? other) => throw new NotImplementedException();
-
-			public bool IsValid() => true;
-
-			public override string ToString() => throw new NotImplementedException();
-		}
-
-		public override PointerSegment Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-		{
-			if (reader.TokenType != JsonTokenType.StartObject)
-				throw new JsonException();
-			try
-			{
-				StorageLocation location = default;
-				long lengthInBytes = 0;
-				while (reader.Read())
-				{
-					if (reader.TokenType == JsonTokenType.EndObject)
-					{
-						if (lengthInBytes == 0 || location == default)
-							throw new JsonException(Resources.ParameterError.WrongSize);
-						return new PointerSegment(new TempPointer { LengthInBytes = lengthInBytes, Location = location });
-					}
-					if (reader.TokenType != JsonTokenType.PropertyName)
-						throw new JsonException();
-					switch (reader.GetString())
-					{
-						case Location:
-							reader.Read();
-							location = new(JsonSerializer.Deserialize<int>(ref reader, options));
-							break;
-						case Length:
-							reader.Read();
-							lengthInBytes = JsonSerializer.Deserialize<long>(ref reader, options);
-							break;
-						default:
-							throw new JsonException();
-					}
-				}
-				// read to end while not ended
-				throw new JsonException();
-			}
-			catch (Exception e)
-			{
-				if (e is JsonException)
-					throw;
-				else
-					throw new JsonException(Resources.ParameterError.UnexpectedValue, e);
-			}
-		}
-
-		private const string Location = nameof(PointerSegment.Location), Length = nameof(PointerSegment.LengthInBytes);
-
-		public override void Write(Utf8JsonWriter writer, PointerSegment value, JsonSerializerOptions options)
-		{
-			writer.WriteStartObject();
-			{
-				writer.WriteNumber(Location, value.Location.AsInt());
-				writer.WriteNumber(Length, value.LengthInBytes);
-			}
-			writer.WriteEndObject();
-		}
-	}
-
-	internal sealed class IStorageConverter : JsonConverter<IStorage>
-	{
-		private static readonly JsonConverter<CombinationOfLocations> LocationConverter = new LocationDescriptionConverter();
-
-		private static readonly JsonConverter<PointerSegment> PointerConverter = new PointerSegmentConverter();
-
-		private static readonly JsonConverter<Type> TypeConverter = new TypeConverter();
-
-		public override IStorage? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-		{
-			if (reader.TokenType != JsonTokenType.StartObject)
-				throw new JsonException();
-
-			IStorage? result = null;
-			try
-			{
-				Type? dataType = null;
-				CombinationOfLocations locations = default;
-				List<PointerSegment> pointers = new();
-				bool success = false;
-				while (reader.Read())
-				{
-					if (reader.TokenType == JsonTokenType.EndObject)
-					{
-						success = true;
-						break;
-					}
-					if (reader.TokenType != JsonTokenType.PropertyName)
-						throw new JsonException();
-					switch (reader.GetString())
-					{
-						case DataType:
-							reader.Read();
-							dataType = TypeConverter.Read(ref reader, typeToConvert, options) ?? throw new JsonException(Resources.ParameterError.UnexpectedType);
-							break;
-						case Locations:
-							reader.Read();
-							locations = LocationConverter.Read(ref reader, typeToConvert, options);
-							break;
-						case Pointers:
-							reader.Read();
-							if (reader.TokenType != JsonTokenType.StartArray)
-								throw new JsonException();
-							while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
-							{
-								pointers.Add(PointerConverter.Read(ref reader, typeToConvert, options));
-							}
-							break;
-						default:
-							throw new JsonException();
-					}
-				}
-				if (!success)
-				{
-					// read to end while not ended
-					throw new JsonException();
-				}
-				// allocate and create empty storage
-				if (dataType is null || locations == default || pointers.Count == 0)
-					throw new JsonException(Resources.ParameterError.WrongSize);
-				var type = dataType.ToDataType();
-				int size = type.Bytes();
-				if (pointers.Any(p => p.LengthInBytes % size != 0))
-					throw new JsonException(Resources.Other.CannotDivide);
-				var createFunc = typeof(StorageFactory<>).MakeGenericType(dataType)
-														 .GetMethod(nameof(StorageFactory<int>.Create))?
-														 .CreateDelegate<CreateDelegate>();
-				if (createFunc is null)
-					throw new JsonException(Resources.Other.CannotFindMethod);
-				var spanLoc = locations.CopyLocationsToSpan(stackalloc StorageLocation[locations.Count]);
-				Span<long> spanLen = stackalloc long[pointers.Count];
-				pointers.CopyTo(spanLen, p => p.LengthInBytes / size);
-				return createFunc.Invoke(locations.Type, spanLoc, spanLen);
-			}
-			catch (Exception e)
-			{
-				result?.Dispose();
-				if (e is JsonException)
-					throw;
-				else
-					throw new JsonException(Resources.ParameterError.UnexpectedValue, e);
-			}
-		}
-
-		private const string DataType = "DataType", Locations = nameof(IStorage.LocationDescription), Pointers = "Pointers";
-
-		public override void Write(Utf8JsonWriter writer, IStorage value, JsonSerializerOptions options)
-		{
-			Type storageType = value.GetType();
-			if (!storageType.IsGenericType || storageType.GenericTypeArguments.Length != 1)
-				throw new NotSupportedException(Resources.Other.InvalidGeneric);
-			Type type = storageType.GenericTypeArguments[0];
-			writer.WriteStartObject();
-			{
-				// data type
-				writer.WriteString(DataType, type.AssemblyQualifiedName);
-				// LocationDescription
-				writer.WritePropertyName(Locations);
-				LocationConverter.Write(writer, value.LocationDescription, options);
-				// PointerSegments
-				writer.WriteStartArray(Pointers);
-				foreach (var p in value)
-				{
-					PointerConverter.Write(writer, p, options);
-				}
-				writer.WriteEndArray();
-			}
-			writer.WriteEndObject();
 		}
 	}
 

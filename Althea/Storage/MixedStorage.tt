@@ -204,7 +204,7 @@ namespace Althea.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static MixedStorage<T, <#=pointerTypes#>> IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.RefFrom<TOut, TOther>(TOther storage)
 		{
-			return (storage as MixedStorage<TOut, <#=pointerTypes#>> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
+			return (storage as MixedStorage<TOut, <#=pointerTypes#>> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
 		}
 
 		/// <summary>
@@ -228,22 +228,22 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, <#=pointerTypes#>}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size <#=i#></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, <#=pointerTypes#>> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != <#=i#>)
-				throw new InvalidOperationException(Support.Location);
+				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
 			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
 			return new ActualMixedStorage<T, <#=pointerTypes#>>(<# for (int j = 0; j < i - 1; j++) { #>lengths[<#=j#>], <# } #> lengths[<#=i - 1#>]);
 		}
 
 		static MixedStorage<T, <#=pointerTypes#>> IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, <#=pointerTypes#>> ?? throw new InvalidOperationException(Parameter.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<TOut, <#=pointerTypes#>> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
@@ -292,7 +292,7 @@ namespace Althea.Storage
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.StorageDiffBytes(left, right);
 			if (diffBytes % Unmanaged<T>.Size != 0)
-				throw new InvalidOperationException(Other.CannotDivide);
+				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / Unmanaged<T>.Size;
 		}
 
@@ -352,7 +352,7 @@ namespace Althea.Storage
 <# } #>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(<# for (int j = 1; j < i; j++) { #>long length<#=j#>, <# } #>long length<#=i#>) : base(<# for (int j = 1; j < i; j++) { #>length<#=j#> > 0 ? MEM.Allocate<T, TP<#=j#>>(length<#=j#>) : throw new ArgumentOutOfRangeException(nameof(length<#=j#>), Parameter.MustPositive), <# } #>length<#=i#> > 0 ? MEM.Allocate<T, TP<#=i#>>(length<#=i#>) : throw new ArgumentOutOfRangeException(nameof(length<#=i#>), Parameter.MustPositive))
+		public ActualMixedStorage(<# for (int j = 1; j < i; j++) { #>long length<#=j#>, <# } #>long length<#=i#>) : base(<# for (int j = 1; j < i; j++) { #>length<#=j#> > 0 ? MEM.Allocate<T, TP<#=j#>>(length<#=j#>) : throw new ArgumentOutOfRangeException(nameof(length<#=j#>), ParameterError.MustPositive), <# } #>length<#=i#> > 0 ? MEM.Allocate<T, TP<#=i#>>(length<#=i#>) : throw new ArgumentOutOfRangeException(nameof(length<#=i#>), ParameterError.MustPositive))
 		{
 			// do nothing
 		}

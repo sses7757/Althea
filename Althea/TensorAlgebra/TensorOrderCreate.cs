@@ -5,7 +5,6 @@ using System;
 
 using Althea.Linq;
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.Resources;
 
 
@@ -16,7 +15,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -31,18 +30,18 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 			return new(order);
@@ -51,7 +50,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -66,29 +65,29 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 			return new(order);
@@ -97,7 +96,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -112,40 +111,40 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 			return new(order);
@@ -154,7 +153,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -169,51 +168,51 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 			return new(order);
@@ -222,7 +221,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -237,62 +236,62 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 			return new(order);
@@ -301,7 +300,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -316,73 +315,73 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 			return new(order);
@@ -391,7 +390,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -406,84 +405,84 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 			return new(order);
@@ -492,7 +491,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -507,97 +506,97 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 
 			// add a8
 			if (order.AsSpan(n).Contains(elements.a8.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a8.main;
 			if (elements.a8.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a8.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a8.auxi;
 			}
 			return new(order);
@@ -606,7 +605,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -621,97 +620,97 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 
 			// add a8
 			if (order.AsSpan(n).Contains(elements.a8.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a8.main;
 			if (elements.a8.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a8.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a8.auxi;
 			}
 
@@ -719,14 +718,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a9.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a9.main;
 			if (elements.a9.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a9.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a9.auxi;
 			}
 			return new(order);
@@ -735,7 +734,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -750,97 +749,97 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 
 			// add a8
 			if (order.AsSpan(n).Contains(elements.a8.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a8.main;
 			if (elements.a8.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a8.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a8.auxi;
 			}
 
@@ -848,14 +847,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a9.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a9.main;
 			if (elements.a9.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a9.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a9.auxi;
 			}
 
@@ -863,14 +862,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a10.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a10.main;
 			if (elements.a10.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a10.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a10.auxi;
 			}
 			return new(order);
@@ -879,7 +878,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -894,97 +893,97 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 
 			// add a8
 			if (order.AsSpan(n).Contains(elements.a8.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a8.main;
 			if (elements.a8.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a8.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a8.auxi;
 			}
 
@@ -992,14 +991,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a9.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a9.main;
 			if (elements.a9.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a9.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a9.auxi;
 			}
 
@@ -1007,14 +1006,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a10.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a10.main;
 			if (elements.a10.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a10.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a10.auxi;
 			}
 
@@ -1022,14 +1021,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a11.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a11.main;
 			if (elements.a11.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a11.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a11.auxi;
 			}
 			return new(order);
@@ -1038,7 +1037,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -1053,97 +1052,97 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 
 			// add a8
 			if (order.AsSpan(n).Contains(elements.a8.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a8.main;
 			if (elements.a8.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a8.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a8.auxi;
 			}
 
@@ -1151,14 +1150,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a9.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a9.main;
 			if (elements.a9.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a9.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a9.auxi;
 			}
 
@@ -1166,14 +1165,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a10.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a10.main;
 			if (elements.a10.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a10.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a10.auxi;
 			}
 
@@ -1181,14 +1180,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a11.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a11.main;
 			if (elements.a11.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a11.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a11.auxi;
 			}
 
@@ -1196,14 +1195,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a12.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a12.main;
 			if (elements.a12.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a12.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a12.auxi;
 			}
 			return new(order);
@@ -1212,7 +1211,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -1227,97 +1226,97 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 
 			// add a8
 			if (order.AsSpan(n).Contains(elements.a8.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a8.main;
 			if (elements.a8.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a8.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a8.auxi;
 			}
 
@@ -1325,14 +1324,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a9.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a9.main;
 			if (elements.a9.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a9.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a9.auxi;
 			}
 
@@ -1340,14 +1339,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a10.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a10.main;
 			if (elements.a10.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a10.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a10.auxi;
 			}
 
@@ -1355,14 +1354,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a11.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a11.main;
 			if (elements.a11.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a11.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a11.auxi;
 			}
 
@@ -1370,14 +1369,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a12.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a12.main;
 			if (elements.a12.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a12.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a12.auxi;
 			}
 
@@ -1385,14 +1384,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a13.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a13.main;
 			if (elements.a13.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a13.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a13.auxi;
 			}
 			return new(order);
@@ -1401,7 +1400,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -1416,97 +1415,97 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 
 			// add a8
 			if (order.AsSpan(n).Contains(elements.a8.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a8.main;
 			if (elements.a8.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a8.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a8.auxi;
 			}
 
@@ -1514,14 +1513,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a9.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a9.main;
 			if (elements.a9.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a9.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a9.auxi;
 			}
 
@@ -1529,14 +1528,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a10.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a10.main;
 			if (elements.a10.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a10.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a10.auxi;
 			}
 
@@ -1544,14 +1543,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a11.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a11.main;
 			if (elements.a11.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a11.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a11.auxi;
 			}
 
@@ -1559,14 +1558,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a12.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a12.main;
 			if (elements.a12.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a12.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a12.auxi;
 			}
 
@@ -1574,14 +1573,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a13.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a13.main;
 			if (elements.a13.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a13.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a13.auxi;
 			}
 
@@ -1589,14 +1588,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a14.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a14.main;
 			if (elements.a14.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a14.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a14.auxi;
 			}
 			return new(order);
@@ -1605,7 +1604,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
@@ -1620,97 +1619,97 @@ namespace Althea.TensorAlgebra
 			if (elements.a0.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a0.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a0.auxi;
 			}
 
 			// add a1
 			if (order.AsSpan(n).Contains(elements.a1.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a1.main;
 			if (elements.a1.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a1.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a1.auxi;
 			}
 
 			// add a2
 			if (order.AsSpan(n).Contains(elements.a2.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a2.main;
 			if (elements.a2.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a2.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a2.auxi;
 			}
 
 			// add a3
 			if (order.AsSpan(n).Contains(elements.a3.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a3.main;
 			if (elements.a3.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a3.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a3.auxi;
 			}
 
 			// add a4
 			if (order.AsSpan(n).Contains(elements.a4.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a4.main;
 			if (elements.a4.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a4.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a4.auxi;
 			}
 
 			// add a5
 			if (order.AsSpan(n).Contains(elements.a5.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a5.main;
 			if (elements.a5.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a5.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a5.auxi;
 			}
 
 			// add a6
 			if (order.AsSpan(n).Contains(elements.a6.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a6.main;
 			if (elements.a6.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a6.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a6.auxi;
 			}
 
 			// add a7
 			if (order.AsSpan(n).Contains(elements.a7.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a7.main;
 			if (elements.a7.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(elements.a7.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a7.auxi;
 			}
 
 			// add a8
 			if (order.AsSpan(n).Contains(elements.a8.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a8.main;
 			if (elements.a8.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a8.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a8.auxi;
 			}
 
@@ -1718,14 +1717,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a9.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a9.main;
 			if (elements.a9.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a9.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a9.auxi;
 			}
 
@@ -1733,14 +1732,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a10.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a10.main;
 			if (elements.a10.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a10.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a10.auxi;
 			}
 
@@ -1748,14 +1747,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a11.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a11.main;
 			if (elements.a11.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a11.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a11.auxi;
 			}
 
@@ -1763,14 +1762,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a12.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a12.main;
 			if (elements.a12.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a12.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a12.auxi;
 			}
 
@@ -1778,14 +1777,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a13.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a13.main;
 			if (elements.a13.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a13.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a13.auxi;
 			}
 
@@ -1793,14 +1792,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a14.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a14.main;
 			if (elements.a14.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a14.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a14.auxi;
 			}
 
@@ -1808,14 +1807,14 @@ namespace Althea.TensorAlgebra
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 			if (order.AsSpan(n).Contains(elements.a15.main))
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 			order[n++] = elements.a15.main;
 			if (elements.a15.auxi != default)
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
 				if (order.AsSpan(n).Contains(elements.a15.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = elements.a15.auxi;
 			}
 			return new(order);

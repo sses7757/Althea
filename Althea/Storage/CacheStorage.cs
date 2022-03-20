@@ -450,7 +450,7 @@ namespace Althea.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static CachedStorage<T, TS, TPh, TPl> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.RefFrom<TOut, TOther>(TOther storage)
 		{
-			return (storage as CachedStorage<TOut, TS, TPh, TPl> ?? throw new InvalidOperationException(Parameter.UnexpectedType)).As<T>();
+			return (storage as CachedStorage<TOut, TS, TPh, TPl> ?? throw new ArgumentException(ParameterError.UnexpectedType, nameof(storage))).As<T>();
 		}
 
 		/// <summary>
@@ -481,15 +481,15 @@ namespace Althea.Storage
 		public static CachedStorage<T, TS, TPh, TPl> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 2)
-				throw new InvalidOperationException(Support.Location);
+				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
 			if (lengths[1] <= 0)
-				throw new ArgumentOutOfRangeException(nameof(lengths), Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
 			return new ActualCachedStorage<T, TS, TPh, TPl>(lengths[1]);
 		}
 
 		static CachedStorage<T, TS, TPh, TPl> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.CreateAlike<TOut, TOther>(TOther storage)
 		{
-			return CreateAlike(storage as CachedStorage<TOut, TS, TPh, TPl> ?? throw new InvalidOperationException(Parameter.UnexpectedType));
+			return CreateAlike(storage as CachedStorage<TOut, TS, TPh, TPl> ?? throw new ArgumentException(ParameterError.UnexpectedType, nameof(storage)));
 		}
 
 		/// <summary>
@@ -537,7 +537,7 @@ namespace Althea.Storage
 		{
 			long diffBytes = IStorage<T, CachedStorage<T, TS, TPh, TPl>>.StorageDiffBytes(left, right);
 			if (diffBytes % Unmanaged<T>.Size != 0)
-				throw new InvalidOperationException(Other.CannotDivide);
+				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / Unmanaged<T>.Size;
 		}
 
@@ -616,7 +616,7 @@ namespace Althea.Storage
 		/// <param name="length">The length to create in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
-		public ActualCachedStorage(long length) : base(length > 0 ? MEM.Allocate<T, TPl>(length) : throw new ArgumentOutOfRangeException(nameof(length), Parameter.MustPositive))
+		public ActualCachedStorage(long length) : base(length > 0 ? MEM.Allocate<T, TPl>(length) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
 		{
 			this.Strategy = TS.Create(length * Unmanaged<T>.Size, out long cacheSizeBytes);
 			this.Cache = MEM.Allocate<TPh>(cacheSizeBytes);

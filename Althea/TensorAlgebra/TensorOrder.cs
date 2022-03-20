@@ -166,7 +166,7 @@ namespace Althea.TensorAlgebra
 			{
 				this.c = default;
 				if (index > MAX_RANK || (!actualIndex && index < 0))
-					throw new ArgumentOutOfRangeException(nameof(index), index, Parameter.InvalidValue);
+					throw new ArgumentOutOfRangeException(nameof(index), index, ParameterError.InvalidValue);
 				this.index = index;
 				this.type = type;
 			}
@@ -223,7 +223,7 @@ namespace Althea.TensorAlgebra
 		{
 			int offset = s < 0 ? rank + s + 1 : s;
 			if (offset >= rank || offset < 0)
-				throw new ArgumentOutOfRangeException(nameof(s), s, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(s), s, ParameterError.InvalidValue);
 			return offset;
 		}
 
@@ -251,9 +251,9 @@ namespace Althea.TensorAlgebra
 			int rank = tensor.Rank;
 			int length = this.order.NonDefaults;
 			if (rank < length)
-				throw new ArgumentOutOfRangeException(nameof(tensor), rank, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(tensor), rank, ParameterError.InvalidValue);
 			if (outputPermutation.Length != rank)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(outputPermutation));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(outputPermutation));
 			var label = tensor.Labels;
 			if (label.Length != rank)
 				throw new ArgumentNullException(nameof(tensor));
@@ -278,7 +278,7 @@ namespace Althea.TensorAlgebra
 					case OrderType.Char:
 						int find = label.IndexOf(item.c);
 						if (find < 0)
-							throw new ArgumentOutOfRangeException(nameof(tensor), item.index, Parameter.UnexpectedValue);
+							throw new ArgumentOutOfRangeException(nameof(tensor), item.index, ParameterError.UnexpectedValue);
 						outputPermutation[actualRank++] = find;
 						break;
 					case OrderType.RangeAll:
@@ -290,7 +290,7 @@ namespace Althea.TensorAlgebra
 					case OrderType.RangeEnd:
 						int rangeEnd = FromShort(item.index, rank);
 						if (rangeEnd <= rangeStart)
-							throw new ArgumentOutOfRangeException(nameof(tensor), rank, Parameter.InvalidValue);
+							throw new ArgumentOutOfRangeException(nameof(tensor), rank, ParameterError.InvalidValue);
 						int count = rangeEnd - rangeStart;
 						outputPermutation.Slice(actualRank, count).FillWithRange(rangeStart);
 						actualRank += count;
@@ -302,7 +302,7 @@ namespace Althea.TensorAlgebra
 
 			// check duplicate
 			if (outputPermutation[..actualRank].DistinctCount() < actualRank)
-				throw new ArgumentException(Parameter.DuplicateIndices, nameof(tensor));
+				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(tensor));
 			// replace the all range
 			if (outputPermutation.Contains(int.MaxValue))
 			{
@@ -331,7 +331,7 @@ namespace Althea.TensorAlgebra
 			}
 			// check partial
 			if (!allowPartial && actualRank < rank)
-				throw new ArgumentException(Parameter.WrongSize, nameof(tensor));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(tensor));
 			// return
 			return outputPermutation[..actualRank];
 		}
@@ -410,7 +410,7 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>
-		/// <param name="elements">The input <see cref="OrderElement"/>s</param>
+		/// <param name="elements">The input <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
 		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="elements"/> is empty or null</exception>
 		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
@@ -426,15 +426,15 @@ namespace Althea.TensorAlgebra
 			{
 				if (n >= MAX_RANK)
 					throw new NotSupportedException();
-				if (order.AsSpan(n).Contains(e.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+				if (order.AsSpan(n).Contains(e.main))
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 				order[n++] = e.main;
 				if (e.auxi != default)
 				{
 					if (n >= MAX_RANK)
 						throw new NotSupportedException();
 					if (order.AsSpan(n).Contains(e.auxi))
-						throw new ArgumentException(Parameter.DuplicateIndices, nameof(elements));
+						throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
 					order[n++] = e.auxi;
 				}
 			}
@@ -456,7 +456,7 @@ namespace Althea.TensorAlgebra
 			if (a.auxi != default)
 			{
 				if (order.AsSpan(n).Contains(a.auxi))
-					throw new ArgumentException(Parameter.DuplicateIndices, nameof(a));
+					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(a));
 				order[n++] = a.auxi;
 			}
 			return new(order);

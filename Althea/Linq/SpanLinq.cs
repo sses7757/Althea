@@ -27,7 +27,7 @@ namespace Althea.Linq
 		public static Span<TOut> CopyTo<TIn, TOut>(this IReadOnlyList<TIn> array, Span<TOut> span, Converter<TIn, TOut> selector)
 		{
 			if (span.Length != array.Count)
-				throw new ArgumentException(Parameter.NotSameSize);
+				throw new ArgumentException(ParameterError.NotSameSize);
 
 			int len = span.Length;
 			for (int i = 0; i < len; i++)
@@ -61,7 +61,7 @@ namespace Althea.Linq
 		public static void CopyTo<TIn, TOut>(this ReadOnlySpan<TIn> span, Span<TOut> array, Converter<TIn, TOut> selector)
 		{
 			if (span.Length != array.Length)
-				throw new ArgumentException(Parameter.NotSameSize);
+				throw new ArgumentException(ParameterError.NotSameSize);
 
 			int len = span.Length;
 			for (int i = 0; i < len; i++)
@@ -263,7 +263,7 @@ namespace Althea.Linq
 			if (indices.IsEmpty)
 				throw new ArgumentNullException(nameof(indices));
 			if (indices.Length > array.Length || indices.Length > target.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(indices));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(indices));
 
 			int len = indices.Length;
 			for (int i = 0; i < len; i++)
@@ -330,7 +330,7 @@ namespace Althea.Linq
 			if (perm.IsEmpty)
 				throw new ArgumentNullException(nameof(perm));
 			if (perm.Length != inv.Length)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(inv));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(inv));
 
 			int len = perm.Length;
 			for (int i = 0; i < len; i++)
@@ -424,7 +424,7 @@ namespace Althea.Linq
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
 			if (result.Length < span.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(result));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(result));
 
 			int len = span.Length;
 			if (result.Length > len)
@@ -469,7 +469,7 @@ namespace Althea.Linq
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
 			if (result.Length < span.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(result));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(result));
 			if (init == T.AdditiveIdentity)
 				init = T.MultiplicativeIdentity;
 
@@ -1056,7 +1056,7 @@ namespace Althea.Linq
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size > span.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
 			@struct = default;
 			fixed (void* t = &span.Ref())
 			{
@@ -1078,7 +1078,7 @@ namespace Althea.Linq
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size > span.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
 			fixed (void* t = &span[0])
 			{
 				Unsafe.CopyBlock(t, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -1116,7 +1116,7 @@ namespace Althea.Linq
 		public static Span<T> SetValue<T>(this Span<T> span, T value1, T value2)
 		{
 			if (span.Length < 2)
-				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
 			span[0] = value1; span[1] = value2;
 			return span;
 		}
@@ -1135,7 +1135,7 @@ namespace Althea.Linq
 		public static Span<T> SetValue<T>(this Span<T> span, T value1, T value2, T value3)
 		{
 			if (span.Length < 3)
-				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
 			span[0] = value1; span[1] = value2; span[2] = value3;
 			return span;
 		}
@@ -1181,7 +1181,7 @@ namespace Althea.Linq
 			}
 			long size = (long)span.Length * sizeof(TFrom);
 			if (size % sizeof(TTo) != 0)
-				throw new ArgumentException(Other.CannotDivide);
+				throw new ArgumentException(ArithmeticError.CannotDivide);
 			return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), (int)(size / sizeof(TTo)));
 		}
 
@@ -1202,7 +1202,7 @@ namespace Althea.Linq
 			}
 			long size = (long)span.Length * sizeof(TFrom);
 			if (size % sizeof(TTo) != 0)
-				throw new ArgumentException(Other.CannotDivide);
+				throw new ArgumentException(ArithmeticError.CannotDivide);
 			return MemoryMarshal.CreateSpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), (int)(size / sizeof(TTo)));
 		}
 

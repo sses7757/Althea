@@ -34,7 +34,7 @@ namespace Althea.TensorAlgebra
 		/// </summary>
 		Maximum,
 		/// <summary>
-		/// Operation that returns the mininum of two input parameters
+		/// Operation that returns the minimum of two input parameters
 		/// </summary>
 		Mininum,
 		/// <summary>
@@ -128,7 +128,7 @@ namespace Althea.TensorAlgebra
 			if (freeN == 0)
 				return ReadOnlySpan<int>.Empty;
 			if (output.Length < freeN)
-				throw new ArgumentException(Parameter.WrongSize, nameof(output));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(output));
 			int n = 0;
 			for (int i = 0; i < rank; i++)
 			{
@@ -178,11 +178,11 @@ namespace Althea.TensorAlgebra
 			int fa = this.m_leftFreeInOut.Length, fb = this.m_rightFreeInOut.Length;
 			int c = this.m_leftConc.Length;
 			if (labelC.Length < fa + fb)
-				throw new ArgumentException(Parameter.WrongSize, nameof(labelC));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(labelC));
 			if (labelA.Length < fa + c)
-				throw new ArgumentException(Parameter.WrongSize, nameof(labelA));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(labelA));
 			if (labelB.Length < c + fb)
-				throw new ArgumentException(Parameter.WrongSize, nameof(labelB));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(labelB));
 			labelA = labelA[..(fa + c)];
 			labelB = labelB[..(fb + c)];
 			labelC = labelC[..(fa + fb)];
@@ -327,7 +327,7 @@ namespace Althea.TensorAlgebra
 		/// <see cref="Span{T}"/> leftFree = stackalloc int[left.Rank - rank];
 		/// <see cref="Span{T}"/> rightFree = stackalloc int[right.Rank - rank];
 		/// <see cref="TensorContractInfo"/> info = new(left, right, output, leftConc, rightConc, leftFree, rightFree);
-		/// <see cref="Dense.ApiSelector.Contract"/>;
+		/// <see cref="Dense.BaseApiSelector.Contract"/>;
 		/// </code></example>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public TensorContractInfo(ILabeledTensor left, ILabeledTensor right, ILabeledTensor output, Span<int> leftConc, Span<int> rightConc, Span<int> leftFree, Span<int> rightFree)
@@ -380,7 +380,7 @@ namespace Althea.TensorAlgebra
 				if (ind >= 0)
 				{
 					if (sizeB[ind] != sizeA[i])
-						throw new ArgumentException(Parameter.WrongSize, nameof(sizeA));
+						throw new ArgumentException(ParameterError.WrongSize, nameof(sizeA));
 					commonMode[now] = labelA[i]; commonSize[now] = sizeA[i];
 					concA[now] = i; concB[now++] = ind;
 				}
@@ -405,12 +405,12 @@ namespace Althea.TensorAlgebra
 			}
 			// check free mode and size with C
 			if (now != rankC)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(sizeC));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(sizeC));
 			for (int i = 0; i < rankC; i++)
 			{
 				int ind = labelC.IndexOf(freeMode[i]);
 				if (ind < 0 || sizeC[ind] != freeSize[i])
-					throw new ArgumentException(Parameter.WrongSize, nameof(sizeC));
+					throw new ArgumentException(ParameterError.WrongSize, nameof(sizeC));
 			}
 			// get left and right free indices
 			int nowA = 0, nowB = 0;
@@ -448,26 +448,26 @@ namespace Althea.TensorAlgebra
 			int freeARank = rankA - commonRank, freeBRank = rankB - commonRank;
 			// check sizes
 			if (labelA.Length != rankA)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(labelA));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(labelA));
 			if (labelB.Length != rankB)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(labelB));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(labelB));
 			if (concB.Length != commonRank)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(concB));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(concB));
 			if (freeCA.Length != freeARank)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(freeCA));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(freeCA));
 			if (freeCB.Length != freeARank)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(freeCB));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(freeCB));
 			if (outSize.Length != rankC)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(outSize));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(outSize));
 			if (outLabels.Length != rankC)
-				throw new ArgumentException(Parameter.NotSameSize, nameof(outLabels));
+				throw new ArgumentException(ParameterError.NotSameSize, nameof(outLabels));
 			if (!outputLabels.ElementsUnique())
-				throw new ArgumentException(Parameter.DuplicateValue, nameof(outputLabels));
+				throw new ArgumentException(ParameterError.DuplicateValue, nameof(outputLabels));
 			// check output label
 			Span<char> simpleLabelC = stackalloc char[rankA + rankB];
 			simpleLabelC = labelA.SetUnion(labelB, simpleLabelC);
 			if (!outputLabels.IsEmpty && !simpleLabelC.SetEquals(outputLabels))
-				throw new ArgumentException(Parameter.InvalidValue, nameof(outputLabels));
+				throw new ArgumentException(ParameterError.InvalidValue, nameof(outputLabels));
 			// check contraction size
 			Span<char> commonLabel = stackalloc char[Math.Min(rankA, rankB)];
 			commonLabel = labelA.SetIntersect(labelB, commonLabel);
@@ -475,7 +475,7 @@ namespace Althea.TensorAlgebra
 			Span<long> concSizeA = stackalloc long[commonRank], concSizeB = stackalloc long[commonRank];
 			sizeA.ReOrderTo(concSizeA, concA); sizeB.ReOrderTo(concSizeB, concB);
 			if (!concSizeA.SequenceEqual(concSizeB))
-				throw new ArgumentException(Parameter.WrongSize, nameof(sizeB));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(sizeB));
 			// get output permutation
 			ReadOnlySpan<char> outLabel = outputLabels.IsEmpty ? simpleLabelC : outputLabels;
 			outLabel.CopyTo(outLabels);
@@ -601,11 +601,11 @@ namespace Althea.TensorAlgebra
 			int fa = this.m_leftFreeLen, fb = this.m_rightFreeLen;
 			int c = this.m_concLen;
 			if (labelC.Length < fa + fb)
-				throw new ArgumentException(Parameter.WrongSize, nameof(labelC));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(labelC));
 			if (labelA.Length < fa + c)
-				throw new ArgumentException(Parameter.WrongSize, nameof(labelA));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(labelA));
 			if (labelB.Length < c + fb)
-				throw new ArgumentException(Parameter.WrongSize, nameof(labelB));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(labelB));
 			labelA = labelA[..(fa + c)];
 			labelB = labelB[..(fb + c)];
 			labelC = labelC[..(fa + fb)];
@@ -785,11 +785,11 @@ namespace Althea.TensorAlgebra
 				throw new ArgumentNullException(nameof(tensor));
 			int rank = tensor.Rank;
 			if (size.Length != rank)
-				throw new ArgumentException(Parameter.WrongSize, nameof(size));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(size));
 			if (labels.Length != rank)
-				throw new ArgumentException(Parameter.WrongSize, nameof(labels));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(labels));
 			if (reducePerm.Length != rank)
-				throw new ArgumentException(Parameter.WrongSize, nameof(reducePerm));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(reducePerm));
 			// get reduce permutation
 			reducePerm = order.GetIntSpanOrder(tensor, reducePerm, allowPartial: true);
 			// get output permutation
@@ -826,7 +826,7 @@ namespace Althea.TensorAlgebra
 			if (span.IsEmpty)
 				return span;
 			if (span.Length > EnglishLetters.Length + GreekLetters.Length)
-				throw new ArgumentException(Parameter.WrongSize, nameof(span));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
 
 			new ReadOnlySpan<char>(EnglishLetters, 0, Math.Min(EnglishLetters.Length, span.Length)).CopyTo(span);
 			if (span.Length <= EnglishLetters.Length)
@@ -848,7 +848,7 @@ namespace Althea.TensorAlgebra
 			if (span.IsEmpty)
 				return span;
 			if (!EnglishLetters.Contains(from) || !GreekLetters.Contains(from))
-				throw new ArgumentOutOfRangeException(nameof(from), from, Parameter.InvalidValue);
+				throw new ArgumentOutOfRangeException(nameof(from), from, ParameterError.InvalidValue);
 
 			int n = span.Length;
 			int c = -1;
@@ -861,7 +861,7 @@ namespace Althea.TensorAlgebra
 				{
 					c++;
 					if (c >= GreekLetters.Length)
-						throw new ArgumentException(Parameter.WrongSize, nameof(span));
+						throw new ArgumentException(ParameterError.WrongSize, nameof(span));
 					from = GreekLetters[c];
 				}
 				else

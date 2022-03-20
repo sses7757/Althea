@@ -77,5 +77,14 @@ namespace Althea.Resources {
                 return ResourceManager.GetString("InvalidPointerGetter", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   查找类似 The current storage is full, no more elements can be added. 的本地化字符串。
+        /// </summary>
+        internal static string StorageFull {
+            get {
+                return ResourceManager.GetString("StorageFull", resourceCulture);
+            }
+        }
     }
 }
