@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CannotCutSimpleBlocking" xml:space="preserve">
+    <value>The elements in simple blocking sparse array cannot be seperated.</value>
+  </data>
   <data name="CannotSetSparse" xml:space="preserve">
     <value>The element(s) in sparse array with default value cannot be set to another value.</value>
   </data>

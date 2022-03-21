@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
 using Althea.Linq;
-using Althea.NativeTypes;
-using Althea.Storage;
 
 
 namespace Althea.Arrays
@@ -40,92 +37,21 @@ namespace Althea.Arrays
 
 
 	/// <summary>
-	/// Simple interface for sparse arrays where the index type is not indicated
+	/// The interface for sparse array static information
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface ISparseArray<T> : ICheckValid, IDisposable where T : unmanaged, INumber<T>
+	public interface ISparseArrayStatic<T>
 	{
-		#region property
-		/// <summary>
-		/// When implemented by a derived class, get the number of non-default values (the values that are actually stored) of this sparse array.
-		/// </summary>
-		long NStored { get; }
-
+		#region static
 		/// <summary>
 		/// When implemented by a derived class, statically get the sparse format of this sparse array as a <see cref="LinearAlgebra.Sparse.SparseFormat"/>.
 		/// </summary>
 		abstract static LinearAlgebra.Sparse.SparseFormat Format { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the data type of the <paramref name="n"/>-th index array of this sparse array as a <see cref="DataType"/>.
-		/// </summary>
-		/// <param name="n">The index of the index array</param>
-		/// <returns>The <see cref="DataType"/> of  the <paramref name="n"/>-th index array.</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> is out of range</exception>
-		abstract static DataType IndexType(int n);
-
-		/// <summary>
 		/// When implemented by a derived class, statically get the default value of this sparse array
 		/// </summary>
 		abstract static T DefaultValue { get; }
-		#endregion
-
-		#region dispose
-		/// <summary>
-		/// When implemented by a derived class, get the original value array's storage of this sparse array. This property is only used for disposition.
-		/// </summary>
-		protected IStorage ValueStorage { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get the original index array(s)' storage(s) of this sparse array. This property is only used for disposition.
-		/// </summary>
-		protected ReadOnlySpan<IStorage> IndexStorages { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, actually dispose this sparse array's index storages. The default implementation disposes <see cref="ISparseArray{T}.IndexStorages"/>.
-		/// </summary>
-		void IDisposable.Dispose()
-		{
-			this.ValueStorage?.Dispose();
-			var list = this.IndexStorages;
-			for (int i = 0; i < list.Length; i++)
-			{
-				list[i]?.Dispose();
-			}
-			GC.SuppressFinalize(this);
-		}
-
-		/// <summary>
-		/// When implemented by a derived class, dispose this sparse array's index storages after excluding the internal ones shared between this array and the target <paramref name="array"/>. The default implementation only compares the two <see cref="ISparseArray{T}.IndexStorages"/>.
-		/// </summary>
-		/// <param name="array">The target <see cref="ISparseArray{T}"/> to exclude before disposing</param>
-		void DisposeExclude(ISparseArray<T> array)
-		{
-			var list = this.IndexStorages;
-			var other = array.IndexStorages;
-			for (int i = 0; i < list.Length; i++)
-			{
-				bool canDispose = true;
-				for (int j = 0; j < other.Length; j++)
-				{
-					if (list[i].OverlapWith(other[j]))
-					{
-						canDispose = false;
-						break;
-					}
-				}
-				if (canDispose)
-					list[i].Dispose();
-			}
-		}
-
-		bool ICheckValid.IsValid()
-		{
-			if (this.NStored <= 0)
-				return false;
-			var list = this.IndexStorages;
-			return list.All(static l => l is not null && l.IsValid());
-		}
 		#endregion
 	}
 

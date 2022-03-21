@@ -17,20 +17,54 @@ namespace Althea.LinearAlgebra.Sparse
 	{
 		#region vector
 		/// <summary>
-		/// When implemented by a derived class, set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the give <paramref name="value"/>.
+		/// When implemented by a derived class, set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the given <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
-		/// <param name="x">The input vector whose values will be set</param>
-		/// <param name="positions">The given positions as a <see cref="Storage{T}"/> of <see cref="int"/></param>
+		/// <typeparam name="TS">The concrete storage type of data type <typeparamref name="T"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TSInd">The concrete storage type of data type <typeparamref name="TInd"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="x">The input vector as a <typeparamref name="TS"/> whose values will be set</param>
+		/// <param name="positions">The given positions as a <typeparamref name="TSInd"/></param>
 		/// <param name="value">The value to set</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorSetValuesAt<T, TInd>(Storage<T> x, T value, Storage<TInd> positions) where T : unmanaged, INumber<T> where TInd : unmanaged;
+		public abstract bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>;
 
 		/// <summary>
-		/// When implemented by a derived class, scatter (and overwrite) the sparse vector <paramref name="x"/> to the dense vector <paramref name="y"/>: <paramref name="y"/>[<paramref name="x"/>.Indices] = <paramref name="x"/>.<see cref="ISparseArray{T}.Storage">Values</see>.
+		/// When implemented by a derived class, set the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the given <paramref name="values"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS1">The first concrete storage type of data type <typeparamref name="T"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The first concrete storage type of data type <typeparamref name="T"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TSInd">The concrete storage type of data type <typeparamref name="TInd"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="x">The input vector as a <typeparamref name="TS1"/> whose values will be set</param>
+		/// <param name="positions">The given positions as a <typeparamref name="TSInd"/></param>
+		/// <param name="values">The values to set as a <typeparamref name="TS2"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
+		[AbstractApiMethod]
+		public abstract bool VectorSetValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+
+		/// <summary>
+		/// When implemented by a derived class, gather the <paramref name="x"/>'s values at certain <paramref name="positions"/> to the given <paramref name="values"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS1">The first concrete storage type of data type <typeparamref name="T"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The first concrete storage type of data type <typeparamref name="T"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TSInd">The concrete storage type of data type <typeparamref name="TInd"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="x">The input vector as a <typeparamref name="TS1"/> whose values will be gathered</param>
+		/// <param name="positions">The given positions as a <typeparamref name="TSInd"/></param>
+		/// <param name="values">The output vector as a <typeparamref name="TS2"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
+		[AbstractApiMethod]
+		public abstract bool VectorGatherValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+
+		/// <summary>
+		/// When implemented by a derived class, convert sparse vector <paramref name="x"/> to dense vector <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="x">The sparse vector x as a <see cref="ISparseVector{T}"/></param>
@@ -38,19 +72,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorSparseToDense<T>(ISparseVector<T> x, Storage<T> y) where T : unmanaged, INumber<T>;
-
-		/// <summary>
-		/// When implemented by a derived class, gather the dense vector <paramref name="x"/> at the underlying position array of <paramref name="y"/> into the <see cref="ISparseArray{T}.Storage"/> of sparse vector <paramref name="y"/>: <c><paramref name="y"/>.<see cref="ISparseArray{T}.Storage">Storage</see> = <paramref name="x"/>[<paramref name="y"/>.Position]</c>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/> to gather from</param>
-		/// <param name="y">The input (sparse index) and output (value array) sparse vector</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>This is equivalent to converting dense vector to sparse vector when the sparsity is known</remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		[AbstractApiMethod]
-		public abstract bool VectorGatherValuesAt<T>(Storage<T> x, ISparseVector<T> y) where T : unmanaged, INumber<T>;
+		public abstract bool VectorSparseToDense<T>(ISparseArray<T> x, Storage<T> y) where T : unmanaged, INumber<T>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert a dense vector <paramref name="x"/> to a sparse vector by the given truncation <paramref name="threshold"/>.
@@ -161,30 +183,17 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region index only
 		/// <summary>
-		/// When implemented by a derived class, find the maximum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
+		/// When implemented by a derived class, find the minimum and maximum values of the given integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
 		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
 		/// <param name="array">The storage of the integer-typed array</param>
-		/// <param name="max">Output the maximum value</param>
+		/// <param name="minmax">Output the minimum and maximum values</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexMax<T, TS>(TS array, out T max) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, find the minimum value of the given <b>sorted</b> integer-typed <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
-		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="array">The storage of the integer-typed array</param>
-		/// <param name="min">Output the minimum value</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
-		[AbstractApiMethod]
-		public abstract bool IndexMin<T, TS>(TS array, out T min) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
+		public abstract bool IndexMinMax<T, TS>(TS array, bool sorted, out (T Min, T Max) minmax) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
@@ -194,12 +203,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
 		/// <param name="array">The storage of the integer-typed array</param>
 		/// <param name="value">The target value to find</param>
-		/// <param name="find">Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/></param>
+		/// <param name="find">Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/> if it is found; otherwise, output a negative number</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexFind<T, TS>(bool sorted, TS array, T value, out long find) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
+		public abstract bool IndexFind<T, TS>(TS array, bool sorted, T value, out long find) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
@@ -213,9 +221,25 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>If not found, <paramref name="index"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="IStorage{T, TSelf}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not an integral type</exception>
 		[AbstractApiMethod]
 		public abstract bool IndexBound<T, TS>(TS array, T value, bool lowerBound, out long index) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute the scan (accumulation) of <paramref name="array"/> and store the result to <paramref name="target"/>.
+		/// </summary>
+		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS">The input concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TSOut">The output concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="array">The storage of the input integer-typed array</param>
+		/// <param name="target">The storage of the result array</param>
+		/// <param name="inclusive">Whether to perform inclusive scan (true), exclusive scan (false) or contains both ends (null)</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <remarks>If <paramref name="inclusive"/> is null, the length of <paramref name="target"/> shall be larger than <paramref name="array"/>.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
+		[AbstractApiMethod]
+		public abstract bool IndexScan<T, TOut, TS, TSOut>(TS array, TSOut target, bool? inclusive) where T : unmanaged, IBinaryInteger<T> where TOut : unmanaged, IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<T, TSOut>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.
@@ -227,13 +251,12 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
 		/// <param name="target">The storage of the result indices, must has length larger than <paramref name="end"/> - <paramref name="start"/></param>
 		/// <param name="start">The inclusive start value to find</param>
-		/// <param name="end">The inclusive end value to find</param>
+		/// <param name="end">The exclusive end value to find</param>
 		/// <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>If not found, the corresponding index in <paramref name="target"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="IStorage{T, TSelf}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> or <typeparamref name="TOut"/> is not an integral type</exception>
 		[AbstractApiMethod]
 		public abstract bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInteger<T> where TOut : unmanaged, IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<T, TSOut>;
 
@@ -251,7 +274,6 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> or <typeparamref name="TOut"/> is not an integral type</exception>
 		[AbstractApiMethod]
 		public abstract bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start = default) where T : unmanaged, IBinaryInteger<T> where TOut : unmanaged, IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<T, TSOut>;
 		#endregion

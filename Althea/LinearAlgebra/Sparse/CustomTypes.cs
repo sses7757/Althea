@@ -14,7 +14,7 @@ namespace Althea.LinearAlgebra.Sparse
 	{
 		#region enumerates
 		/// <summary>
-		/// The type of a <see cref="SparseFormat"/>
+		/// The type of a <see cref="SparseFormat"/>, other types like ELLPACK is not built in but can be supported manually.
 		/// </summary>
 		[Flags]
 		public enum Type : byte
@@ -30,7 +30,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// The blocking of a <see cref="SparseFormat"/>
+		/// The blocking of a <see cref="SparseFormat"/>, other blocking types can be supported manually.
 		/// </summary>
 		[Flags]
 		public enum Blocking : byte
@@ -54,7 +54,7 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// The major of a <see cref="SparseFormat"/>
+		/// The major of a <see cref="SparseFormat"/>, other majoring types can be supported manually.
 		/// </summary>
 		public enum Major : short
 		{

@@ -149,7 +149,7 @@ namespace {ns.Name}
 					if (hasReturn)
 					{
 						string retDoc = Regex.Match(document, $@"<param name=""{returnParam.Identifier}"">(.+?)</param>").Groups[1].Value;
-						document = Regex.Replace(document, @"<returns>.+?</returns>", $@"<returns>{retDoc}</returns>");
+						document = Regex.Replace(document, @"<returns>.+?</returns>", $@"<returns>{retDoc}.</returns>");
 						document = Regex.Replace(document, $@"\r?\n\t+/// ?<param name=""{returnParam.Identifier}"">.+?</param>", "");
 					}
 					else
@@ -199,7 +199,7 @@ namespace {ns.Name}
 				if (api.{method.Identifier}{orgTypeParams}({allParamsInvoke}))
 					return {returnParam.Identifier};
 			}}
-			throw new InvalidOperationException(Backend.NotAvailable);
+			throw new InvalidOperationException(BackendError.NotAvailable);
 		}}";
 						methodMain += body;
 					}
@@ -213,7 +213,7 @@ namespace {ns.Name}
 				if (api.{method.Identifier}{orgTypeParams}({allParamsInvoke}))
 					return;
 			}}
-			throw new InvalidOperationException(Backend.NotAvailable);
+			throw new InvalidOperationException(BackendError.NotAvailable);
 		}}";
 						methodMain += body;
 					}

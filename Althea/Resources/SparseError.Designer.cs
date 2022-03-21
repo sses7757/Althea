@@ -61,6 +61,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The elements in simple blocking sparse array cannot be seperated. 的本地化字符串。
+        /// </summary>
+        internal static string CannotCutSimpleBlocking {
+            get {
+                return ResourceManager.GetString("CannotCutSimpleBlocking", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The element(s) in sparse array with default value cannot be set to another value. 的本地化字符串。
         /// </summary>
         internal static string CannotSetSparse {

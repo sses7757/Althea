@@ -750,23 +750,95 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
 		/// </summary>
-		/// <typeparam name="T">The array that is <see cref="ICloneable"/> and <see cref="IDisposable"/></typeparam>
+		/// <typeparam name="T">The array that is <see cref="ICloneable{T}"/> and <see cref="IDisposable"/></typeparam>
 		/// <param name="array">The array to be acted by <paramref name="action"/></param>
 		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
 		/// <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToClone<T>(this T array, Action<T> action) where T : IDisposable, ICloneable
+		public static T ApplyToClone<T>(this T array, Action<T> action) where T : IDisposable, ICloneable<T>
 		{
 			var clone = array.Clone();
 			try
 			{
-				var t = (T)clone;
+				var t = clone;
 				action.Invoke(t);
 				return t;
 			}
-			catch (System.Exception)
+			catch (Exception)
 			{
-				(clone as IDisposable)?.Dispose();
+				clone?.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Safely apply <paramref name="action"/> to a new alike one created from <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
+		/// </summary>
+		/// <typeparam name="T">The array that is <see cref="ICreateAlike{T}"/> and <see cref="IDisposable"/></typeparam>
+		/// <param name="array">The array to be acted by <paramref name="action"/></param>
+		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
+		/// <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T ApplyToAlike<T>(this T array, Action<T> action) where T : IDisposable, ICreateAlike<T>
+		{
+			var alike = array.CreateAlike();
+			try
+			{
+				var t = alike;
+				action.Invoke(t);
+				return t;
+			}
+			catch (Exception)
+			{
+				alike?.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
+		/// </summary>
+		/// <typeparam name="T">The array that is <see cref="ICloneable{T}"/> and <see cref="IDisposable"/></typeparam>
+		/// <param name="array">The array to be acted by <paramref name="action"/></param>
+		/// <param name="action">The <see cref="Action{T, T}"/> whose first input is <paramref name="array"/> and second input is its clone</param>
+		/// <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T ApplyToClone<T>(this T array, Action<T, T> action) where T : IDisposable, ICloneable<T>
+		{
+			var clone = array.Clone();
+			try
+			{
+				var t = clone;
+				action.Invoke(array, t);
+				return t;
+			}
+			catch (Exception)
+			{
+				clone?.Dispose();
+				throw;
+			}
+		}
+
+		/// <summary>
+		/// Safely apply <paramref name="action"/> to a new alike one created from <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
+		/// </summary>
+		/// <typeparam name="T">The array that is <see cref="ICreateAlike{T}"/> and <see cref="IDisposable"/></typeparam>
+		/// <param name="array">The array to be acted by <paramref name="action"/></param>
+		/// <param name="action">The <see cref="Action{T, T}"/> whose first input is <paramref name="array"/> and second input is its alike one</param>
+		/// <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static T ApplyToAlike<T>(this T array, Action<T, T> action) where T : IDisposable, ICreateAlike<T>
+		{
+			var alike = array.CreateAlike();
+			try
+			{
+				var t = alike;
+				action.Invoke(array, t);
+				return t;
+			}
+			catch (Exception)
+			{
+				alike?.Dispose();
 				throw;
 			}
 		}

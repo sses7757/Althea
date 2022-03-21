@@ -16,17 +16,29 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/></typeparam>
-	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IDenseVector{T, TS, TSelf}"/></typeparam>
-	public interface IDenseVector<T, TS, TSelf> : IBaseVector<T, TSelf>, ISingleValueStorageArray<T, TS, TSelf>
+	public class DenseVector<T, TS> : IBaseVector<T, DenseVector<T, TS>>, ISingleValueStorageArray<T, TS, DenseVector<T, TS>>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
-		where TSelf : class, IDenseVector<T, TS, TSelf>
 	{
 		#region basic
 		/// <summary>
 		/// When implemented by a derived class, get the stride between consecutive elements of this vector in <typeparamref name="T"/>.
 		/// </summary>
 		int Stride { get; }
+
+		long IVectorMetric.Length => this.OriginalStorage.Length / this.Stride;
+
+		long IValueArray<T, TSelf>.Length => this.OriginalStorage.Length / this.Stride;
+
+		bool ICheckValid.IsValid() => this.Storage?.IsValid() ?? false;
+
+		void IDisposable.Dispose()
+		{
+			this.OriginalStorage?.Dispose();
+			GC.SuppressFinalize(this);
+		}
+
+		bool IEquatable<TSelf>.Equals(TSelf? other) => other is not null && this.OriginalStorage == other.OriginalStorage && this.Stride == other.Stride;
 		#endregion
 
 		#region indexing

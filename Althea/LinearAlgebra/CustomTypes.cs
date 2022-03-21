@@ -52,23 +52,23 @@ namespace Althea.LinearAlgebra
 				return $"The {(-info).ToOrdinal()} input parameter of method '{kind}' is invalid.";
 			string? message = kind switch
 			{
-				SolveMethodKind.Cholesky => Resources.Exception.MatrixSolveCholesky,
-				SolveMethodKind.LU => Resources.Exception.MatrixSolveLU,
-				SolveMethodKind.BunchKaufman => Resources.Exception.MatrixSolveBunchKaufman,
-				SolveMethodKind.SVD => Resources.Exception.MatrixSolveSVD,
-				SolveMethodKind.Eigenvalue => Resources.Exception.MatrixSolveEigen,
+				SolveMethodKind.Cholesky => Resources.OtherError.MatrixSolveCholesky,
+				SolveMethodKind.LU => Resources.OtherError.MatrixSolveLU,
+				SolveMethodKind.BunchKaufman => Resources.OtherError.MatrixSolveBunchKaufman,
+				SolveMethodKind.SVD => Resources.OtherError.MatrixSolveSVD,
+				SolveMethodKind.Eigenvalue => Resources.OtherError.MatrixSolveEigen,
 				_ => null,
 			};
 			if (message is not null)
 				return string.Format(message, info);
 			return kind switch
 			{
-				SolveMethodKind.QR => Resources.Exception.MatrixSolveQR,
-				SolveMethodKind.Schur => Resources.Exception.MatrixSolveSchur,
-				SolveMethodKind.GeneralEigen => Resources.Exception.MatrixSolveGeneralEigen,
-				SolveMethodKind.Jacobi => Resources.Exception.MatrixSolveJacobi,
-				SolveMethodKind.NonSymmetricEigenvalue => Resources.Exception.MatrixSolveNonSymmEigen,
-				SolveMethodKind.NonSymmetricGenearlEigenvalue => Resources.Exception.MatrixSolveNonSymmGeneralEigen,
+				SolveMethodKind.QR => Resources.OtherError.MatrixSolveQR,
+				SolveMethodKind.Schur => Resources.OtherError.MatrixSolveSchur,
+				SolveMethodKind.GeneralEigen => Resources.OtherError.MatrixSolveGeneralEigen,
+				SolveMethodKind.Jacobi => Resources.OtherError.MatrixSolveJacobi,
+				SolveMethodKind.NonSymmetricEigenvalue => Resources.OtherError.MatrixSolveNonSymmEigen,
+				SolveMethodKind.NonSymmetricGenearlEigenvalue => Resources.OtherError.MatrixSolveNonSymmGeneralEigen,
 				_ => $"Unknown method with error info = {info}",
 			};
 		}

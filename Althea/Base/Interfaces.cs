@@ -71,18 +71,31 @@ namespace Althea
 	}
 
 	/// <summary>
-	/// The interface for a cloneable object
+	/// The interface for cloneable objects
 	/// </summary>
-	/// <typeparam name="T"></typeparam>
+	/// <typeparam name="T">The actual type that implements <see cref="ICloneable{T}"/></typeparam>
 	public interface ICloneable<T> : ICloneable where T : ICloneable<T>
 	{
 		/// <summary>
 		/// Creates a new object that is a copy of the current instance.
 		/// </summary>
-		/// <returns>A new object that is a copy of the current instance</returns>
+		/// <returns>A new object that is a copy of the current instance.</returns>
 		new T Clone();
 
 		object ICloneable.Clone() => this.Clone();
+	}
+
+	/// <summary>
+	/// The interface for objects that can create alike ones from
+	/// </summary>
+	/// <typeparam name="T">The actual type that implements <see cref="ICreateAlike{T}"/></typeparam>
+	public interface ICreateAlike<T> : ICloneable<T> where T : ICreateAlike<T>
+	{
+		/// <summary>
+		/// Creates a new object alike the current instance (with same meta data, etc.) while not copying the data.
+		/// </summary>
+		/// <returns>A new object alike the current instance.</returns>
+		T CreateAlike();
 	}
 
 	/// <summary>
@@ -91,7 +104,7 @@ namespace Althea
 	public interface ISetBackend
 	{
 		/// <summary>
-		/// Check whether all the back-end implementations are available
+		/// Check whether all the back-end implementations are available.
 		/// </summary>
 		bool Available { get; }
 

@@ -15,9 +15,14 @@ namespace Althea.Storage
 	public interface IStorage : ICheckValid, IDisposable
 	{
 		/// <summary>
-		/// Whether this storage is disposed or not
+		/// When implemented by a derived class, get the referenced storage of this storage as a nullable <see cref="IStorage"/>.
 		/// </summary>
-		protected bool Disposed { get; }
+		IStorage? Reference { get; }
+
+		/// <summary>
+		/// Whether this storage is disposed or not.
+		/// </summary>
+		bool Disposed { get; }
 
 		void IDisposable.Dispose()
 		{
@@ -27,23 +32,23 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, get the total length of the presenting array in bytes
-		/// </summary>
-		long LengthInBytes { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, actually unmanaged resources held by this <see cref="IStorage"/>
+		/// When implemented by a derived class, actually unmanaged resources held by this <see cref="IStorage"/>.
 		/// </summary>
 		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
 		protected abstract void Dispose(bool invokedByUser);
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// When implemented by a derived class, get the total length of the presenting array in bytes.
+		/// </summary>
+		long LengthInBytes { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>.
 		/// </summary>
 		abstract static DataType DataType { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the description of the storage locations of this <see cref="IStorage"/> as a <see cref="CombinationOfLocations"/>
+		/// When implemented by a derived class, statically get the description of the storage locations of this <see cref="IStorage"/> as a <see cref="CombinationOfLocations"/>.
 		/// </summary>
 		abstract static CombinationOfLocations LocationDescription { get; }
 
@@ -81,7 +86,7 @@ namespace Althea.Storage
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
-	public interface IStorage<T, TSelf> : IStorage,
+	public interface IStorage<T, TSelf> : IStorage, ICreateAlike<TSelf>,
 		IEqualityOperators<TSelf, TSelf>, ICloneable<TSelf>, IMainPropertyFormattable<TSelf>,
 		IAdditiveIdentity<TSelf, long>, IAdditionOperators<TSelf, long, TSelf>, ISubtractionOperators<TSelf, long, TSelf>
 		where T : unmanaged, INumber<T>
@@ -139,16 +144,6 @@ namespace Althea.Storage
 			return originThis.Equals(originOther);
 		}
 
-		/// <summary>
-		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> overlaps with the <paramref name="other"/> <typeparamref name="TSelf"/>.
-		/// </summary>
-		/// <param name="other">The other <typeparamref name="TSelf"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		bool OverlapWith(TSelf other);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool IStorage.OverlapWith(IStorage other) => other is TSelf s && this.OverlapWith(s);
-
 		TSelf ICloneable<TSelf>.Clone()
 		{
 			var storage = TSelf.CreateAlike<T, TSelf>((TSelf)this);
@@ -157,7 +152,7 @@ namespace Althea.Storage
 				((TSelf)this).CopyTo<T, TSelf, TSelf>(storage);
 				return storage;
 			}
-			catch (System.Exception)
+			catch (Exception)
 			{
 				storage?.Dispose();
 				throw;
@@ -188,6 +183,8 @@ namespace Althea.Storage
 		/// <returns>A new <typeparamref name="TSelf"/> that likes <paramref name="storage"/></returns>
 		/// <exception cref="InvalidCastException">If an actual storage <typeparamref name="TOther"/> cannot be created alike <typeparamref name="TSelf"/></exception>
 		abstract static TSelf CreateAlike<TOut, TOther>(TOther storage) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<TOut, TOther>;
+
+		TSelf ICreateAlike<TSelf>.CreateAlike() => TSelf.CreateAlike<T, TSelf>((TSelf)this);
 
 		/// <summary>
 		/// Statically get the distance in bytes between two <typeparamref name="TSelf"/>s
@@ -284,6 +281,7 @@ namespace Althea.Storage
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
 	public interface IActualStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, INumber<T> where TStorage : class, IStorage<T, TStorage>
 	{
+		IStorage? IStorage.Reference => null;
 	}
 
 	/// <summary>
@@ -296,12 +294,7 @@ namespace Althea.Storage
 		void IStorage.Dispose(bool invokedByUser) { }
 
 		/// <summary>
-		/// When implemented by a derived class, get the referenced storage as a nullable <see cref="IStorage"/>
-		/// </summary>
-		IStorage? Reference { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get the total offset compared to the start of <see cref="Reference"/> in bytes
+		/// When implemented by a derived class, get the total offset compared to the start of <see cref="IStorage.Reference"/> in bytes
 		/// </summary>
 		long TotalOffsetInBytes { get; }
 

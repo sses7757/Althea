@@ -1,229 +1,674 @@
 ﻿using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
+using Althea.Linq;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.NativeTypes;
 using Althea.Storage;
 
-using Mem = Althea.Storage.ApiSelector;
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
-using SpComp = Althea.LinearAlgebra.Sparse.ComputationApiSelector;
-
+using System.Runtime.InteropServices;
 
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The coordinated non-blocked (or blocked) sparse vector interface whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+	/// The coordinated non-blocked (or blocked) sparse vector class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/></typeparam>
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	/// <typeparam name="TSelf">The concrete type that implements this <see cref="ISparseVector{T, TInd, TS, TSInd, TSelf}"/></typeparam>
-	public interface ISparseVector<T, TInd, TS, TSInd, TSelf> : IBaseVector<T, TSelf>, ISingleValueStorageArray<T, TS, TSelf>, ISparseArray<T>
+	/// <typeparam name="TStatic">The concrete type that implements <see cref="ISparseArrayStatic{T}"/></typeparam>
+	[StructLayout(LayoutKind.Explicit)]
+	public class SparseVector<T, TInd, TS, TSInd, TStatic> :
+		IBaseVector<T, SparseVector<T, TInd, TS, TSInd, TStatic>>,
+		ISingleValueStorageArray<T, TS, SparseVector<T, TInd, TS, TSInd, TStatic>>
 		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
-		where TSelf : class, ISparseVector<T, TInd, TS, TSInd, TSelf>
+		where TStatic : struct, ISparseArrayStatic<T>
 	{
 		#region basic
-		/// <summary>
-		/// When implemented by a derived class, get the index array's original storage of this sparse vector.
-		/// </summary>
-		protected TSInd OrginalIndexStorage { get; }
+		[FieldOffset(0)]
+		private long length;
+		[FieldOffset(sizeof(long) * 1)]
+		private readonly TS values;
+		[FieldOffset(sizeof(long) * 2)]
+		private readonly TSInd indices;
+		[FieldOffset(sizeof(long) * 3)]
+		private readonly long blockSize;
+		[FieldOffset(sizeof(long) * 4)]
+		private readonly TSInd? blockSizes;
+		[FieldOffset(sizeof(long) * 5)]
+		private readonly TSInd? blockSizesScan;
+
+		ReadOnlySpan<long> IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Size => MemoryMarshal.CreateReadOnlySpan(ref this.length, 1);
+
+		TS ISingleValueStorageArray<T, TS, SparseVector<T, TInd, TS, TSInd, TStatic>>.OriginalStorage => this.values;
+
+		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.indices?.IsValid() ?? false);
+
+		/// <inheritdoc/>
+		public TS Storage => this.OriginalStorage.MakeReference();
 
 		/// <summary>
-		/// When implemented by a derived class, get the block size array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
+		/// Get the index array's storage of this sparse vector.
 		/// </summary>
-		protected TSInd? BlockSizes { get; }
+		public TSInd IndexStorage => this.OrginalIndexStorage.MakeReference();
 
 		/// <summary>
-		/// When implemented by a derived class, get the block size array's accumulation array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
+		/// Get the presenting length of this sparse vector.
 		/// </summary>
-		protected TSInd? BlockSizeAccu { get; }
+		public long NStored => this.OriginalStorage.Length;
+
+		/// <inheritdoc/>
+		public long Length => this.length;
 
 		/// <summary>
-		/// When implemented by a derived class, get the block size if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Simple"/>.
+		/// Get the value array's original storage of this sparse vector.
 		/// </summary>
-		protected long BlockSize { get; }
+		protected TS OriginalStorage => this.values;
 
 		/// <summary>
-		/// The supported <see cref="SparseFormat"/>s of this interface.
+		/// Get the index array's original storage of this sparse vector.
+		/// </summary>
+		protected TSInd OrginalIndexStorage => this.indices;
+
+		/// <summary>
+		/// Get the block size array's original storage of this sparse vector which shall be null if <see cref="ISparseArrayStatic{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
+		/// </summary>
+		protected TSInd? BlockSizes => this.blockSizes;
+
+		/// <summary>
+		/// Get the block size array's accumulation array's original storage of this sparse vector which shall be null if <see cref="ISparseArrayStatic{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
+		/// </summary>
+		/// <remarks>This array's first element shall be 0 and the last element in <see cref="BlockSizes"/> shall not be accumulated (a exclusive scan).</remarks>
+		protected TSInd? BlockSizesScan => this.blockSizesScan;
+
+		/// <summary>
+		/// Get the block size if <see cref="ISparseArrayStatic{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Simple"/>.
+		/// </summary>
+		protected long BlockSize => this.blockSize;
+
+		/// <summary>
+		/// Create a new <see cref="SparseVector{T, TInd, TS, TSInd, TStatic}"/> with given parameters.
+		/// </summary>
+		/// <param name="length">The presenting length</param>
+		/// <param name="values">The original value array</param>
+		/// <param name="indices">The original index array</param>
+		/// <param name="blockSize">The constant block size, must be 0 if the <see cref="ISparseArrayStatic{T}.Format"/> does not indicate it</param>
+		/// <param name="blockSizes">The original block size array, must be null if the <see cref="ISparseArrayStatic{T}.Format"/> does not indicate it</param>
+		/// <param name="blockSizesScan">The original block size scan array, must be null if <paramref name="blockSizes"/> is null, can be null if it does not to let this constructor to compute a new one</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <exception cref="ArgumentException"></exception>
+		/// <exception cref="ArgumentNullException"></exception>
+		protected SparseVector(long length, TS values!!, TSInd indices!!, long blockSize = 0, TSInd? blockSizes = null, TSInd? blockSizesScan = null)
+		{
+			if (length < 0)
+				throw new ArgumentOutOfRangeException(nameof(length), Resources.ParameterError.CannotNegative);
+			this.length = length;
+			if (length < values.Length || values.Length < indices.Length)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
+			switch (TStatic.Format.BlockType)
+			{
+				case SparseFormat.Blocking.Element:
+					if (values.Length != indices.Length)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
+					if (blockSizes is not null || blockSizesScan is not null || blockSize != 0)
+						throw new ArgumentException(Resources.SparseError.FormatNotSupport);
+					break;
+				case SparseFormat.Blocking.Simple:
+					if (blockSizes is not null || blockSizesScan is not null)
+						throw new ArgumentException(Resources.SparseError.FormatNotSupport);
+					if (blockSize <= 0)
+						throw new ArgumentOutOfRangeException(nameof(blockSize), Resources.ParameterError.MustPositive);
+					if (values.Length != indices.Length * blockSize)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
+					break;
+				case SparseFormat.Blocking.Complicated:
+					if (blockSize != 0)
+						throw new ArgumentException(Resources.SparseError.FormatNotSupport);
+					if (blockSizes is null)
+						throw new ArgumentNullException(nameof(blockSizes));
+					if (blockSizes.Length != indices.Length)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(blockSizes));
+					if (blockSizesScan is not null)
+					{
+						if (blockSizesScan.Length != indices.Length)
+							throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(blockSizesScan));
+						break;
+					}
+					blockSizesScan = blockSizes.ApplyToAlike(static (org, @new) => SpConv.IndexScan<TInd, TInd, TSInd, TSInd>(org, @new, false));
+					break;
+				default:
+					break;
+			}
+			this.values = values.AddToManager();
+			this.indices = indices.AddToManager();
+			this.blockSize = blockSize;
+			this.blockSizes = blockSizes?.AddToManager();
+			this.blockSizesScan = blockSizesScan?.AddToManager();
+		}
+
+		/// <inheritdoc/>
+		public virtual void Dispose()
+		{
+			this.values.SafeDispose();
+			this.indices.SafeDispose();
+			this.blockSizes.SafeDispose();
+			this.blockSizesScan.SafeDispose();
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Deconstructor to be invoked by GC.
+		/// </summary>
+		~SparseVector()
+		{
+			this.Dispose();
+		}
+		#endregion
+
+		#region static
+		private SparseVector()
+		{
+			this.values = TS.Empty; this.indices = TSInd.Empty; this.blockSize = 0;
+		}
+
+		static SparseVector<T, TInd, TS, TSInd, TStatic> IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Empty => new();
+
+		/// <summary>
+		/// Get the supported <see cref="SparseFormat"/>s of this abstract sparse vector.
 		/// </summary>
 		protected static readonly SparseFormat SupportFormats = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element | SparseFormat.Blocking.Simple | SparseFormat.Blocking.Complicated, SparseFormat.Major.None);
 
-		/// <summary>
-		/// When implemented by a derived class, get the index array's storage of this sparse vector.
-		/// </summary>
-		TSInd IndexStorage => this.OrginalIndexStorage.MakeReference();
-
-		IStorage ISparseArray<T>.ValueStorage => this.OriginalStorage;
-
-		ReadOnlySpan<IStorage> ISparseArray<T>.IndexStorages => this.BlockSizes is null ? new[] { this.OrginalIndexStorage } : new[] { this.OrginalIndexStorage, this.BlockSizes };
-
-		static ISparseVector()
+		static SparseVector()
 		{
-			if ((TSelf.Format & SupportFormats) != TSelf.Format)
+			if ((TStatic.Format & SupportFormats) != TStatic.Format)
 				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 		#endregion
 
 		#region index
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private long GetOffset(long index)
 		{
-			this.CheckIndex(index);
+			((IBaseVector<T, SparseVector<T, TInd, TS, TSInd, TStatic>>)this).CheckIndex(index);
 			long offset;
-			if (TSelf.Format.BlockType == SparseFormat.Blocking.Element)
+			if (TStatic.Format.BlockType == SparseFormat.Blocking.Element)
 			{
-				long find = SpConv.IndexFind(true, this.IndexStorage, TInd.Create(index));
-				if (find < 0)
-					return -1;
-				offset = (this.IndexStorage + find).ToManaged<TInd, TSInd>().As<TInd, long>();
+				offset = SpConv.IndexFind(this.indices, true, TInd.Create(index));
 			}
 			else
 			{
-				long blockIndex = SpConv.IndexBound(this.IndexStorage, TInd.Create(index + 1), true) - 1;
-				long blockSize = this.BlockSizes is null ? this.BlockSize : (this.BlockSizes + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
-				long blockOffset = (this.IndexStorage + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
+				long blockIndex = SpConv.IndexBound(this.indices, TInd.Create(index + 1), true) - 1;
+				long blockSize = this.blockSizes is null ? this.blockSize : (this.blockSizes + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
+				long blockOffset = (this.indices + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
 				offset = index - blockOffset;
 				if (offset >= blockSize)
-					return -1;
-				offset += this.BlockSizeAccu is null ? blockSize * blockIndex : (this.BlockSizeAccu + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
+					offset = -1;
+				else
+					offset += this.blockSizesScan is null ? blockSize * blockIndex : (this.blockSizesScan + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
 			}
 			return offset;
 		}
 
-		T IBaseVector<T, TSelf>.this[long index]
+		/// <inheritdoc/>
+		public T this[long index]
 		{
 			get
 			{
 				long offset = this.GetOffset(index);
-				return offset < 0 ? TSelf.DefaultValue : (this.Storage + offset).ToManaged<T, TS>();
+				return offset < 0 ? TStatic.DefaultValue : (this.values + offset).ToManaged<T, TS>();
 			}
 			set
 			{
 				long offset = this.GetOffset(index);
 				if (offset < 0)
 					throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(index));
-				(this.Storage + offset).FromManaged(value);
+				(this.values + offset).FromManaged(value);
 			}
 		}
 
-		TSelf IBaseVector<T, TSelf>.GetSlice(long start, long count)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private (long indexStart, long indexCount, long valueStart, long valueCount, long blockStartOffset, long blockEndSize) GetSliceInfo(long start, long count, SparseVector<T, TInd, TS, TSInd, TStatic>? sub = null)
 		{
+			((IBaseVector<T, SparseVector<T, TInd, TS, TSInd, TStatic>>)this).CheckRange(start, count, sub);
+			long indexStart, indexCount;
+			long valueStart, valueCount;
+			long blockStartOffset = 0, blockEndSize = 0;
+			if (TStatic.Format.BlockType == SparseFormat.Blocking.Element)
+			{
+				indexStart = SpConv.IndexBound(this.indices, TInd.Create(start), true);
+				indexCount = SpConv.IndexBound(this.indices, TInd.Create(start + count), true);
+				indexCount -= indexStart;
+				valueStart = indexStart; valueCount = indexCount;
+			}
+			else
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				(long index, long value, long block) GetOffsets(long allOffset)
+				{
+					long indexOffset = SpConv.IndexBound(this.indices, TInd.Create(allOffset + 1), true) - 1;
+					if (indexOffset >= this.indices.Length)
+						return (indexOffset, this.values.Length, 0);
+					long blockSize = this.blockSizes is null ? this.blockSize : (this.blockSizes + indexOffset).ToManaged<TInd, TSInd>().As<TInd, long>();
+					long blockOffset = (this.indices + indexOffset).ToManaged<TInd, TSInd>().As<TInd, long>();
+					blockOffset = allOffset - blockOffset;
+					long valueOffset;
+					if (blockOffset > 0 && blockOffset < blockSize)
+					{
+						if (TStatic.Format.BlockType == SparseFormat.Blocking.Simple)
+							throw new ArgumentException(Resources.SparseError.CannotCutSimpleBlocking, nameof(allOffset));
+						valueOffset = blockOffset + (this.blockSizesScan is null ? blockSize * indexOffset : (this.blockSizesScan + indexOffset).ToManaged<TInd, TSInd>().As<TInd, long>());
+					}
+					else
+					{
+						valueOffset = blockOffset + (this.blockSizesScan is null ? blockSize * indexOffset : (this.blockSizesScan + indexOffset).ToManaged<TInd, TSInd>().As<TInd, long>());
+						blockOffset = 0;
+					}
+					return (indexOffset, valueOffset, blockOffset);
+				}
 
+				(indexStart, valueStart, blockStartOffset) = GetOffsets(start);
+				(indexCount, valueCount, blockEndSize) = GetOffsets(start + count);
+				indexCount -= indexStart; valueCount -= valueStart;
+			}
+			if (sub is not null)
+			{
+				if (sub.IndexStorage.Length != indexCount || sub.Storage.Length != valueCount)
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sub));
+			}
+			return (indexStart, indexCount, valueStart, valueCount, blockStartOffset, blockEndSize);
 		}
 
-		void IBaseVector<T, TSelf>.GetSlice(long start, long count, TSelf overwrite)
+		/// <inheritdoc/>
+		public SparseVector<T, TInd, TS, TSInd, TStatic> GetSlice(long start, long count)
 		{
+			var (indexStart, indexCount, valueStart, valueCount, blockStartOffset, blockEndSize) = this.GetSliceInfo(start, count);
+			if (indexStart == 0 && indexCount == this.indices.Length && valueStart == 0 && valueCount == this.values.Length)
+				return new(count, this.values.Clone(), this.indices.Clone(), this.blockSize, this.blockSizes?.Clone(), this.blockSizesScan?.Clone());
 
+			var newVals = this.values.MakeReference(valueStart, valueCount);
+			var newInds = this.indices.MakeReference(indexStart, indexCount);
+			if (start == 0)
+				newInds = newInds.Clone();
+			else
+				newInds = newInds.ApplyToClone(ind => ExtBlas.PointWiseAddScalar(ind, 1, TInd.Create(-start)));
+			TSInd? bs = null, bsa = null;
+			if (this.blockSizes is not null && this.blockSizesScan is not null)
+			{
+				bs = this.blockSizes.MakeReference(indexStart, indexCount);
+				if (blockStartOffset == 0 && blockEndSize == 0)
+				{
+					bs = bs.Clone();
+				}
+				else
+				{
+					bs = bs.ApplyToClone(@new =>
+					{
+						@new.FromManaged(@new.ToManaged<TInd, TSInd>() - TInd.Create(blockStartOffset));
+						if (blockEndSize == 0)
+							return;
+						var newEnd = @new + (@new.Length - 1);
+						newEnd.FromManaged(TInd.Create(blockEndSize));
+					});
+				}
+				bsa = this.blockSizesScan.MakeReference(indexStart, indexCount);
+				bsa = bsa.ApplyToClone(@new =>
+				{
+					ExtBlas.PointWiseAddScalar(@new, 1, -@new.ToManaged<TInd, TSInd>());
+					if (blockStartOffset != 0)
+						ExtBlas.PointWiseAddScalar(@new + 1, 1, TInd.Create(-blockStartOffset));
+				});
+			}
+			return new(count, newVals, newInds, this.blockSize, bs, bsa);
 		}
 
-		void IBaseVector<T, TSelf>.CopyTo(TSelf destination);
+		/// <inheritdoc/>
+		public void GetSlice(long start, long count, SparseVector<T, TInd, TS, TSInd, TStatic> overwrite)
+		{
+			var (indexStart, indexCount, valueStart, valueCount, blockStartOffset, blockEndSize) = this.GetSliceInfo(start, count, overwrite);
+			if (indexStart == 0 && indexCount == this.indices.Length && valueStart == 0 && valueCount == this.values.Length)
+			{
+				this.CopyTo(overwrite);
+				return;
+			}
 
-		void IBaseVector<T, TSelf>.SetSlice(long start, long count, TSelf value);
+			var refVals = this.values.MakeReference(valueStart, valueCount);
+			refVals.CopyTo<T, TS, TS>(overwrite.Storage);
+			var refInds = this.indices.MakeReference(indexStart, indexCount);
+			refInds.CopyTo<TInd, TSInd, TSInd>(overwrite.IndexStorage);
+			if (start != 0)
+				ExtBlas.PointWiseAddScalar(overwrite.IndexStorage, 1, TInd.Create(-start));
+
+			if (this.blockSizes is not null && this.blockSizesScan is not null && overwrite.BlockSizes is not null && overwrite.BlockSizesScan is not null)
+			{
+				TSInd bs = this.blockSizes.MakeReference(indexStart, indexCount);
+				bs.CopyTo<TInd, TSInd, TSInd>(overwrite.BlockSizes);
+				if (blockStartOffset != 0)
+				{
+					overwrite.BlockSizes.FromManaged(overwrite.BlockSizes.ToManaged<TInd, TSInd>() - TInd.Create(blockStartOffset));
+				}
+				if (blockEndSize != 0)
+				{
+					var newEnd = overwrite.BlockSizes + (indexCount - 1);
+					newEnd.FromManaged(TInd.Create(blockEndSize));
+				}
+				TSInd bsa = this.blockSizesScan.MakeReference(indexStart, indexCount);
+				bsa.CopyTo<TInd, TSInd, TSInd>(overwrite.BlockSizesScan);
+				ExtBlas.PointWiseAddScalar(overwrite.BlockSizesScan, 1, -overwrite.BlockSizesScan.ToManaged<TInd, TSInd>());
+				if (blockStartOffset != 0)
+					ExtBlas.PointWiseAddScalar(overwrite.BlockSizesScan + 1, 1, TInd.Create(-blockStartOffset));
+			}
+		}
+
+		/// <inheritdoc/>
+		public void CopyTo(SparseVector<T, TInd, TS, TSInd, TStatic> destination)
+		{
+			if (destination.IndexStorage.Length != this.indices.Length || destination.Storage.Length != this.values.Length)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
+			this.values.CopyTo<T, TS, TS>(destination.Storage);
+			this.indices.CopyTo<TInd, TSInd, TSInd>(destination.IndexStorage);
+			if (this.blockSizes is not null && this.blockSizesScan is not null && destination.BlockSizes is not null && destination.BlockSizesScan is not null)
+			{
+				this.blockSizes.CopyTo<TInd, TSInd, TSInd>(destination.BlockSizes);
+				this.blockSizesScan.CopyTo<TInd, TSInd, TSInd>(destination.BlockSizesScan);
+			}
+		}
+
+		/// <inheritdoc/>
+		public void SetSlice(long start, long count, SparseVector<T, TInd, TS, TSInd, TStatic> value)
+		{
+			var (indexStart, indexCount, valueStart, valueCount, blockStartOffset, blockEndSize) = this.GetSliceInfo(start, count, value);
+			if (indexStart == 0 && indexCount == this.indices.Length && valueStart == 0 && valueCount == this.values.Length)
+			{
+				value.CopyTo((SparseVector<T, TInd, TS, TSInd, TStatic>)this);
+				return;
+			}
+
+			var refVals = this.values.MakeReference(valueStart, valueCount);
+			value.Storage.CopyTo<T, TS, TS>(refVals);
+			var refInds = this.indices.MakeReference(indexStart, indexCount);
+			value.IndexStorage.CopyTo<TInd, TSInd, TSInd>(refInds);
+			if (start != 0)
+				ExtBlas.PointWiseAddScalar(refInds, 1, TInd.Create(start));
+
+			if (this.blockSizes is not null && this.blockSizesScan is not null && value.BlockSizes is not null && value.BlockSizesScan is not null)
+			{
+				TSInd bs = this.blockSizes.MakeReference(indexStart, indexCount);
+				value.BlockSizes.CopyTo<TInd, TSInd, TSInd>(bs);
+				if (blockStartOffset != 0)
+				{
+					bs.FromManaged(bs.ToManaged<TInd, TSInd>() + TInd.Create(blockStartOffset));
+				}
+				if (blockEndSize != 0)
+				{
+					var newEnd = bs + (indexCount - 1);
+					newEnd.FromManaged(TInd.Create(blockEndSize));
+				}
+				TSInd bsa = this.blockSizesScan.MakeReference(indexStart, indexCount);
+				TInd scanStart = bsa.ToManaged<TInd, TSInd>();
+				value.BlockSizesScan.CopyTo<TInd, TSInd, TSInd>(bsa);
+				ExtBlas.PointWiseAddScalar(bsa, 1, scanStart);
+				if (blockStartOffset != 0)
+					ExtBlas.PointWiseAddScalar(bsa + 1, 1, TInd.Create(blockStartOffset));
+			}
+		}
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			
+			using var dense = this.ToDense();
+			foreach (var item in dense)
+			{
+				yield return item;
+			}
 		}
 		#endregion
 
 		#region point-wise operations
-		void IValueArray<T, TSelf>.FillWith(T value)
+		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.FillWith(T value)
 		{
-			if (value != TSelf.DefaultValue)
+			if (value != TStatic.DefaultValue)
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
-			this.Storage.FillWith(value);
+			this.values.FillWith(value);
 		}
 
-		void IValueArray<T, TSelf>.AddScalar(T value)
+		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.AddScalar(T value)
 		{
 			if (value != T.Zero)
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
 		}
 
-		void IValueArray<T, TSelf>.Scale(T value)
+		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Scale(T value)
 		{
-			if (TSelf.DefaultValue == T.Zero)
-				Blas.Scale(this.Storage, 1, value);
+			if (TStatic.DefaultValue == T.Zero)
+				Blas.Scale(this.values, 1, value);
 			else if (value != T.One)
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
 		}
 
-		void IValueArray<T, TSelf>.Conjugate()
+		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Conjugate()
 		{
 			if (NumberType<T>.IsComplex)
 			{
-				if (NumberType<T>.IsRealValue(TSelf.DefaultValue))
-					ExtBlas.PointWiseConjugate<T, TS>(this.Storage, 1);
+				if (NumberType<T>.IsRealValue(TStatic.DefaultValue))
+					ExtBlas.PointWiseConjugate<T, TS>(this.values, 1);
 				else
 					throw new InvalidOperationException(Resources.SparseError.CannotSetSparse);
 			}
 		}
 
-		void IValueArray<T, TSelf>.Power(T power)
+		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Power(T power)
 		{
-			if (TSelf.DefaultValue == T.Zero || TSelf.DefaultValue == T.One)
-				ExtBlas.PointWisePower(this.Storage, 1, power);
+			if (TStatic.DefaultValue == T.Zero || TStatic.DefaultValue == T.One)
+				ExtBlas.PointWisePower(this.values, 1, power);
 			else
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(power));
 		}
 
-		void IValueArray<T, TSelf>.Truncate(double threshold)
+		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Truncate(double threshold)
 		{
-			if (TSelf.DefaultValue != T.Zero && T.Abs(TSelf.DefaultValue) < T.Create(threshold))
+			if (TStatic.DefaultValue != T.Zero && T.Abs(TStatic.DefaultValue) < T.Create(threshold))
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(threshold));
 			else
-				ExtBlas.PointWiseTruncate<T, TS>(this.Storage, 1, threshold);
+				ExtBlas.PointWiseTruncate<T, TS>(this.values, 1, threshold);
 		}
 		#endregion
 
 		#region simple aggregation operations
-		T IValueArray<T, TSelf>.Sum()
+		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Sum()
 		{
-			T defaultSum = TSelf.DefaultValue * T.Create(((IVectorMetric)this).Length - this.Storage.Length);
-			return defaultSum + ExtBlas.AggregateSum<T, TS>(this.Storage, 1);
+			T defaultSum = TStatic.DefaultValue * T.Create(((IVectorMetric)this).Length - this.values.Length);
+			return defaultSum + ExtBlas.AggregateSum<T, TS>(this.values, 1);
 		}
 
-		T IValueArray<T, TSelf>.AbsSum()
+		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.AbsSum()
 		{
-			T defaultSum = T.Abs(TSelf.DefaultValue) * T.Create(((IVectorMetric)this).Length - this.Storage.Length);
-			return defaultSum + Blas.AbsoluteValueSum<T, TS>(this.Storage, 1);
+			T defaultSum = T.Abs(TStatic.DefaultValue) * T.Create(((IVectorMetric)this).Length - this.values.Length);
+			return defaultSum + Blas.AbsoluteValueSum<T, TS>(this.values, 1);
 		}
 
-		T IValueArray<T, TSelf>.Norm()
+		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Norm()
 		{
-			if (TSelf.DefaultValue == T.Zero)
-				return Blas.Norm<T, TS>(this.Storage, 1);
-			T abs = T.Abs(TSelf.DefaultValue);
-			T defaultSum = abs * abs * T.Create(((IVectorMetric)this).Length - this.Storage.Length);
-			T norm = Blas.Norm<T, TS>(this.Storage, 1);
+			if (TStatic.DefaultValue == T.Zero)
+				return Blas.Norm<T, TS>(this.values, 1);
+			T abs = T.Abs(TStatic.DefaultValue);
+			T defaultSum = abs * abs * T.Create(((IVectorMetric)this).Length - this.values.Length);
+			T norm = Blas.Norm<T, TS>(this.values, 1);
 			double n = (norm * norm + defaultSum).As<T, double>();
 			return Math.Sqrt(n).As<double, T>();
 		}
 
-		T IValueArray<T, TSelf>.ValueWithMaxAbs()
+		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.ValueWithMaxAbs()
 		{
-			T max = (this.Storage + Blas.AbsoluteValueArgMax<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
-			if (T.Abs(TSelf.DefaultValue) > T.Abs(max))
-				return TSelf.DefaultValue;
+			T max = (this.values + Blas.AbsoluteValueArgMax<T, TS>(this.values, 1)).ToManaged<T, TS>();
+			if (T.Abs(TStatic.DefaultValue) > T.Abs(max))
+				return TStatic.DefaultValue;
 			else
 				return max;
 		}
 
-		T IValueArray<T, TSelf>.ValueWithMinAbs()
+		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.ValueWithMinAbs()
 		{
-			T min = (this.Storage + Blas.AbsoluteValueArgMin<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
-			if (T.Abs(TSelf.DefaultValue) < T.Abs(min))
-				return TSelf.DefaultValue;
+			T min = (this.values + Blas.AbsoluteValueArgMin<T, TS>(this.values, 1)).ToManaged<T, TS>();
+			if (T.Abs(TStatic.DefaultValue) < T.Abs(min))
+				return TStatic.DefaultValue;
 			else
 				return min;
 		}
+		#endregion
+
+		#region conversion and clone
+		/// <summary>
+		/// Create a new dense vector of type <see cref="DenseVector{T, TS}"/> from this sparse vector.
+		/// </summary>
+		/// <returns>The created dense vector of type <see cref="DenseVector{T, TS}"/>.</returns>
+		public DenseVector<T, TS> ToDense()
+		{
+
+		}
+
+		/// <inheritdoc/>
+		public SparseVector<T, TInd, TS, TSInd, TStatic> CreateAlike()
+		{
+			return new(this.length, this.values.CreateAlike(), this.indices.CreateAlike(), this.blockSize, this.blockSizes?.CreateAlike(), this.blockSizesScan?.CreateAlike());
+		}
+
+		/// <inheritdoc/>
+		public SparseVector<T, TInd, TS, TSInd, TStatic> Clone()
+		{
+			var clone = this.CreateAlike();
+			try
+			{
+				this.CopyTo(clone);
+				return clone;
+			}
+			catch (Exception)
+			{
+				clone?.Dispose();
+				throw;
+			}
+		}
+		#endregion
+
+		#region serialization
+		/// <inheritdoc/>
+		public IReadOnlyDictionary<string, IStorage> GetStorages() => this.blockSizes is null || this.blockSizesScan is null ?
+			new Dictionary<string, IStorage>
+			{
+				[nameof(Storage)] = this.values,
+				[nameof(IndexStorage)] = this.indices,
+			} :
+			new Dictionary<string, IStorage>
+			{
+				[nameof(Storage)] = this.values,
+				[nameof(IndexStorage)] = this.indices,
+				[nameof(BlockSizes)] = this.blockSizes,
+				[nameof(BlockSizesScan)] = this.blockSizesScan,
+			};
+
+		/// <inheritdoc/>
+		public IReadOnlyDictionary<string, object>? GetMetaData() => this.blockSize == 0 ? null : new Dictionary<string, object> { [nameof(BlockSize)] = this.blockSize };
+
+		/// <inheritdoc/>
+		public SparseVector<T, TInd, TS, TSInd, TStatic> CreateArray(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null)
+		{
+			if (size.Length != 1)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(size));
+			long length = size[0];
+			long blockSize = 0; TSInd? blockSizes = null, blockSizesScan = null;
+			switch (TStatic.Format.BlockType)
+			{
+				case SparseFormat.Blocking.Element:
+					if (storages.Count != 2)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(storages));
+					if (otherInfo is not null)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(otherInfo));
+					break;
+				case SparseFormat.Blocking.Simple:
+					if (storages.Count != 2)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(storages));
+					if (otherInfo is null || otherInfo.Count != 1)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(otherInfo));
+					if (!otherInfo.TryGetValue(nameof(BlockSize), out var objBS))
+						throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+					if (objBS is not long blocksize)
+						throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+					blockSize = blocksize;
+					break;
+				case SparseFormat.Blocking.Complicated:
+					if (storages.Count != 4)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(storages));
+					if (otherInfo is not null)
+						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(otherInfo));
+					if (!storages.TryGetValue(nameof(BlockSizes), out var objBSs))
+						throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+					if (objBSs is not TSInd blocksizes)
+						throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+					if (!storages.TryGetValue(nameof(BlockSizesScan), out var objBSAs))
+						throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+					if (objBSAs is not TSInd blocksizesscan)
+						throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+					blockSizes = blocksizes;
+					blockSizesScan = blocksizesscan;
+					break;
+				default:
+					break;
+			}
+			if (!storages.TryGetValue(nameof(Storage), out var objVals))
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+			if (objVals is not TS values)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+			if (!storages.TryGetValue(nameof(IndexStorage), out var objInds))
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+			if (objVals is not TSInd indices)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(otherInfo));
+			return new(length, values, indices, blockSize, blockSizes, blockSizesScan);
+		}
+
+		#endregion
+
+		#region equality
+		/// <inheritdoc/>
+		public bool Equals(SparseVector<T, TInd, TS, TSInd, TStatic>? other)
+		{
+			if (other is null)
+				return false;
+			return this.values == other.values && this.indices == other.indices && this.blockSize == other.blockSize &&
+				(ReferenceEquals(this.blockSizes, other.blockSizes) || (this.blockSizes is not null && other.blockSizes is not null && this.blockSizes == other.blockSizes)) &&
+				(ReferenceEquals(this.blockSizesScan, other.blockSizesScan) || (this.blockSizesScan is not null && other.blockSizesScan is not null && this.blockSizesScan == other.blockSizesScan));
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(SparseVector<T, TInd, TS, TSInd, TStatic> left, SparseVector<T, TInd, TS, TSInd, TStatic> right) => left.Equals(right);
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(SparseVector<T, TInd, TS, TSInd, TStatic> left, SparseVector<T, TInd, TS, TSInd, TStatic> right) => !left.Equals(right);
+
+		/// <inheritdoc/>
+		public override bool Equals(object? obj) => this.Equals(obj as SparseVector<T, TInd, TS, TSInd, TStatic>);
+
+		/// <inheritdoc/>
+		public override int GetHashCode() => HashCode.Combine(this.values, this.indices, this.blockSize, this.blockSizes, this.blockSizesScan);
+		#endregion
+
+		#region string
+		static string IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd, TStatic>>.StringMain => nameof(SparseVector<T, TInd, TS, TSInd, TStatic>);
+
+		static IEnumerable<string> IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd, TStatic>>.PropertyNames => new[] { "DataType", "IndexType", "Format", "DefaultValue", "Values", "Indices", "BlockSizes" };
+
+		IEnumerable<object?> IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd, TStatic>>.PropertyValues => new object[] { Unmanaged<T>.DataType, Unmanaged<TInd>.DataType, TStatic.Format, TStatic.DefaultValue, this.values, this.indices, this.blockSizes ?? (object)(this.blockSize == 0 ? 1 : this.blockSize) };
+
+		/// <inheritdoc/>
+		public override string ToString() => IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd, TStatic>>.ToString(this);
 		#endregion
 	}
 }

@@ -10,13 +10,90 @@ using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 
 namespace Althea.Arrays
 {
+	#region manager
+	/// <summary>
+	/// The static thread-safe manager for managing cross referenced <see cref="IStorage"/>s of arrays.
+	/// </summary>
+	public static class ArrayStorageManager
+	{
+		private static readonly object managerLock = new();
+
+		private static readonly Dictionary<IStorage, HashSet<IStorage>> References = new();
+
+		/// <summary>
+		/// Add the given <paramref name="storage"/> to the manager whose <see cref="IStorage.Reference"/> is used to determine whether it is a referenced storage or not.
+		/// </summary>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage"/></typeparam>
+		/// <param name="storage">The storage to be managed</param>
+		/// <returns>Returns the <paramref name="storage"/> itself.</returns>
+		public static TS AddToManager<TS>(this TS storage!!) where TS : class, IStorage
+		{
+			if (!storage.IsValid())
+				return storage;
+			lock (managerLock)
+			{
+				if (References.ContainsKey(storage))
+					throw new ArgumentException(Resources.ParameterError.DuplicateValue, nameof(storage));
+				if (storage.Reference is null)
+				{
+					References.Add(storage, new() { storage });
+				}
+				else
+				{
+					if (References.TryGetValue(storage.Reference, out var set))
+						set.Add(storage);
+					else
+						References.Add(storage.Reference, new() { storage.Reference, storage });
+				}
+			}
+			return storage;
+		}
+
+		/// <summary>
+		/// Safely dispose the given <paramref name="storage"/> by checking references before invoking <see cref="IDisposable.Dispose"/>.
+		/// </summary>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage"/></typeparam>
+		/// <param name="storage">The storage to be disposed</param>
+		public static void SafeDispose<TS>(this TS? storage) where TS : class, IStorage
+		{
+			if (storage is null || storage.Disposed)
+				return;
+			lock (managerLock)
+			{
+				if (storage.Reference is null)
+				{
+					if (References.TryGetValue(storage, out var set))
+					{
+						set.Remove(storage);
+						if (set.Count == 0)
+							storage.Dispose();
+					}
+					else
+					{	// unmanaged storage
+						storage.Dispose();
+					}
+				}
+				else
+				{
+					if (References.TryGetValue(storage.Reference, out var set))
+					{
+						set.Remove(storage);
+						if (set.Count == 0)
+							storage.Reference.Dispose();
+					}
+				}
+			}
+		}
+	}
+	#endregion
+
 	/// <summary>
 	/// The abstract interface for value arrays.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IValueArray{T, TSelf}"/></typeparam>
 	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
-	public interface IValueArray<T, TSelf> : ICheckValid, IDisposable, ICloneable<TSelf>, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf>
+	public interface IValueArray<T, TSelf> : ICheckValid, IDisposable, ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IValueArray<T, TSelf>
 	{
@@ -94,7 +171,7 @@ namespace Althea.Arrays
 		T Norm();
 
 		/// <summary>
-		/// When implemented by a derived class, in-place scale this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> such that its 2-norm (Euclidean norm) is 1, which is also valid if the actual derived class is <see cref="ISparseArray{T}"/>. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
+		/// When implemented by a derived class, in-place scale this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> such that its 2-norm (Euclidean norm) is 1. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
 		/// </summary>
 		virtual void Normalize() => this.Scale(T.One / this.Norm());
 
@@ -148,7 +225,7 @@ namespace Althea.Arrays
 			{	// try to convert to a square matrix
 				if (!array.Length.IsPerfectSquare())
 				{
-					throw new ArgumentException(Resources.Other.PerfectSquare, nameof(array));
+					throw new ArgumentException(Resources.ArithmeticError.PerfectSquare, nameof(array));
 				}
 				var leadDim = Convert.ToInt64(Math.Sqrt(array.Length));
 				newSize[0] = newSize[1] = leadDim;
@@ -176,14 +253,6 @@ namespace Althea.Arrays
 				throw new ArgumentException(Resources.ParameterError.UnexpectedValue, nameof(newSize));
 			}
 		}
-		#endregion
-
-		#region clone relate
-		/// <summary>
-		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled.
-		/// </summary>
-		/// <returns>The new array alike this one</returns>
-		TSelf NewArrayAlike();
 		#endregion
 
 		#region creation
@@ -276,41 +345,24 @@ namespace Althea.Arrays
 		T IValueArray<T, TSelf>.ValueWithMinAbs() => (this.Storage + Blas.AbsoluteValueArgMin<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
 		#endregion
 
-		#region clone related
-		/// <summary>
-		/// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <typeparam name="TSOut">The output storage type</typeparam>
-		/// <typeparam name="TOther">The output array type</typeparam>
-		/// <returns>The new array alike this one but with data type <typeparamref name="TOut"/>.</returns>
-		TOther NewArrayAlike<TOut, TSOut, TOther>() where TOut : unmanaged, INumber<TOut> where TSOut : class, IStorage<TOut, TSOut> where TOther : class, ISingleValueStorageArray<TOut, TSOut, TOther>;
+		////#region clone related
+		/////// <summary>
+		/////// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
+		/////// </summary>
+		/////// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+		/////// <typeparam name="TSOut">The output storage type</typeparam>
+		/////// <typeparam name="TOther">The output array type</typeparam>
+		/////// <returns>The new array alike this one but with data type <typeparamref name="TOut"/>.</returns>
+		////TOther NewArrayAlike<TOut, TSOut, TOther>() where TOut : unmanaged, INumber<TOut> where TSOut : class, IStorage<TOut, TSOut> where TOther : class, ISingleValueStorageArray<TOut, TSOut, TOther>;
 
-		/// <summary>
-		/// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>. The default implementation only casts the <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> of this array.
-		/// </summary>
-		/// <typeparam name="TOut">The data type to cast to</typeparam>
-		/// <typeparam name="TSOut">The output storage type</typeparam>
-		/// <typeparam name="TOther">The output array type</typeparam>
-		/// <returns>The new <typeparamref name="TOther"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
-		public virtual TOther DataTypeCast<TOut, TSOut, TOther>() where TOut : unmanaged, INumber<TOut> where TSOut : class, IStorage<TOut, TSOut> where TOther : class, ISingleValueStorageArray<TOut, TSOut, TOther>
-		{
-			if (typeof(T) == typeof(TOut))
-			{
-				return (TOther)this;
-			}
-			var alike = this.NewArrayAlike<TOut, TSOut, TOther>();
-			try
-			{
-				ExtBlas.PointWiseCast<T, TOut, TS, TSOut>(this.Storage, 1, alike.Storage, 1);
-				return alike;
-			}
-			catch (Exception)
-			{
-				alike.Dispose();
-				throw;
-			}
-		}
-		#endregion
+		/////// <summary>
+		/////// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>.
+		/////// </summary>
+		/////// <typeparam name="TOut">The data type to cast to</typeparam>
+		/////// <typeparam name="TSOut">The output storage type</typeparam>
+		/////// <typeparam name="TOther">The output array type</typeparam>
+		/////// <returns>The new <typeparamref name="TOther"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
+		////TOther DataTypeCast<TOut, TSOut, TOther>() where TOut : unmanaged, INumber<TOut> where TSOut : class, IStorage<TOut, TSOut> where TOther : class, ISingleValueStorageArray<TOut, TSOut, TOther>;
+		////#endregion
 	}
 }
