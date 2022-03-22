@@ -4,12 +4,14 @@
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using MEM = Althea.Storage.ApiSelector;
+using Mem = Althea.Storage.ApiSelector;
 
 
 namespace Althea.Storage
@@ -125,8 +127,8 @@ namespace Althea.Storage
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2>)
 			{
-				MEM.Free(this.Pointer1.Pointer);
-				MEM.Free(this.Pointer2.Pointer);
+				Mem.Free(this.Pointer1.Pointer);
+				Mem.Free(this.Pointer2.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -297,6 +299,65 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, TP1, TP2>>? IStorage<T, MixedStorage<T, TP1, TP2>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2>>
+		{
+			private record struct Repr(string Data1, string Data2);
+
+			public override MixedStorage<T, TP1, TP2> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+
+				// read pointer 1
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data1 = reader.GetBytesFromBase64();
+				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 2
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data2 = reader.GetBytesFromBase64();
+				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				if (!reader.Read())
+					throw new JsonException();
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, TP1, TP2>(pointer1, pointer2);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, }.Max()];
+				int size;
+				writer.WriteStartObject();
+				
+				// write pointer 1
+				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+				// write pointer 2
+				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -310,6 +371,11 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
 	{
+		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2) : base(pointer1, pointer2)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2}"/> from the given lengths of all locations
 		/// </summary>
@@ -317,7 +383,7 @@ namespace Althea.Storage
 		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -513,9 +579,9 @@ namespace Althea.Storage
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2, TP3>)
 			{
-				MEM.Free(this.Pointer1.Pointer);
-				MEM.Free(this.Pointer2.Pointer);
-				MEM.Free(this.Pointer3.Pointer);
+				Mem.Free(this.Pointer1.Pointer);
+				Mem.Free(this.Pointer2.Pointer);
+				Mem.Free(this.Pointer3.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -686,6 +752,80 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3>>
+		{
+			private record struct Repr(string Data1, string Data2, string Data3);
+
+			public override MixedStorage<T, TP1, TP2, TP3> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+
+				// read pointer 1
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data1 = reader.GetBytesFromBase64();
+				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 2
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data2 = reader.GetBytesFromBase64();
+				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 3
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data3 = reader.GetBytesFromBase64();
+				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				if (!reader.Read())
+					throw new JsonException();
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, TP1, TP2, TP3>(pointer1, pointer2, pointer3);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, }.Max()];
+				int size;
+				writer.WriteStartObject();
+				
+				// write pointer 1
+				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+				// write pointer 2
+				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+				// write pointer 3
+				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -700,6 +840,11 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
 	{
+		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3) : base(pointer1, pointer2, pointer3)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3}"/> from the given lengths of all locations
 		/// </summary>
@@ -708,7 +853,7 @@ namespace Althea.Storage
 		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -926,10 +1071,10 @@ namespace Althea.Storage
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4>)
 			{
-				MEM.Free(this.Pointer1.Pointer);
-				MEM.Free(this.Pointer2.Pointer);
-				MEM.Free(this.Pointer3.Pointer);
-				MEM.Free(this.Pointer4.Pointer);
+				Mem.Free(this.Pointer1.Pointer);
+				Mem.Free(this.Pointer2.Pointer);
+				Mem.Free(this.Pointer3.Pointer);
+				Mem.Free(this.Pointer4.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -1100,6 +1245,95 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>>
+		{
+			private record struct Repr(string Data1, string Data2, string Data3, string Data4);
+
+			public override MixedStorage<T, TP1, TP2, TP3, TP4> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+
+				// read pointer 1
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data1 = reader.GetBytesFromBase64();
+				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 2
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data2 = reader.GetBytesFromBase64();
+				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 3
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data3 = reader.GetBytesFromBase64();
+				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 4
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data4 = reader.GetBytesFromBase64();
+				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				if (!reader.Read())
+					throw new JsonException();
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(pointer1, pointer2, pointer3, pointer4);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, }.Max()];
+				int size;
+				writer.WriteStartObject();
+				
+				// write pointer 1
+				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+				// write pointer 2
+				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+				// write pointer 3
+				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+				// write pointer 4
+				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -1115,6 +1349,11 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
 	{
+		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4) : base(pointer1, pointer2, pointer3, pointer4)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4}"/> from the given lengths of all locations
 		/// </summary>
@@ -1124,7 +1363,7 @@ namespace Althea.Storage
 		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -1364,11 +1603,11 @@ namespace Althea.Storage
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>)
 			{
-				MEM.Free(this.Pointer1.Pointer);
-				MEM.Free(this.Pointer2.Pointer);
-				MEM.Free(this.Pointer3.Pointer);
-				MEM.Free(this.Pointer4.Pointer);
-				MEM.Free(this.Pointer5.Pointer);
+				Mem.Free(this.Pointer1.Pointer);
+				Mem.Free(this.Pointer2.Pointer);
+				Mem.Free(this.Pointer3.Pointer);
+				Mem.Free(this.Pointer4.Pointer);
+				Mem.Free(this.Pointer5.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -1539,6 +1778,110 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
+		{
+			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5);
+
+			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+
+				// read pointer 1
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data1 = reader.GetBytesFromBase64();
+				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 2
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data2 = reader.GetBytesFromBase64();
+				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 3
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data3 = reader.GetBytesFromBase64();
+				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 4
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data4 = reader.GetBytesFromBase64();
+				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 5
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data5 = reader.GetBytesFromBase64();
+				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				if (!reader.Read())
+					throw new JsonException();
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(pointer1, pointer2, pointer3, pointer4, pointer5);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, }.Max()];
+				int size;
+				writer.WriteStartObject();
+				
+				// write pointer 1
+				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+				// write pointer 2
+				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+				// write pointer 3
+				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+				// write pointer 4
+				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+				// write pointer 5
+				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -1555,6 +1898,11 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
 	{
+		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5) : base(pointer1, pointer2, pointer3, pointer4, pointer5)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> from the given lengths of all locations
 		/// </summary>
@@ -1565,7 +1913,7 @@ namespace Althea.Storage
 		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -1827,12 +2175,12 @@ namespace Althea.Storage
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>)
 			{
-				MEM.Free(this.Pointer1.Pointer);
-				MEM.Free(this.Pointer2.Pointer);
-				MEM.Free(this.Pointer3.Pointer);
-				MEM.Free(this.Pointer4.Pointer);
-				MEM.Free(this.Pointer5.Pointer);
-				MEM.Free(this.Pointer6.Pointer);
+				Mem.Free(this.Pointer1.Pointer);
+				Mem.Free(this.Pointer2.Pointer);
+				Mem.Free(this.Pointer3.Pointer);
+				Mem.Free(this.Pointer4.Pointer);
+				Mem.Free(this.Pointer5.Pointer);
+				Mem.Free(this.Pointer6.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -2003,6 +2351,125 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
+		{
+			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6);
+
+			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+
+				// read pointer 1
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data1 = reader.GetBytesFromBase64();
+				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 2
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data2 = reader.GetBytesFromBase64();
+				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 3
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data3 = reader.GetBytesFromBase64();
+				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 4
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data4 = reader.GetBytesFromBase64();
+				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 5
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data5 = reader.GetBytesFromBase64();
+				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 6
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data6 = reader.GetBytesFromBase64();
+				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
+				Mem.FromManaged<byte, TP6>(pointer6, data6);
+				if (!reader.Read())
+					throw new JsonException();
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, }.Max()];
+				int size;
+				writer.WriteStartObject();
+				
+				// write pointer 1
+				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+				// write pointer 2
+				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+				// write pointer 3
+				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+				// write pointer 4
+				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+				// write pointer 5
+				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+				// write pointer 6
+				size = (int)Mem.ToManaged<byte, TP6>(value.Pointer6, temp);
+				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -2020,6 +2487,11 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
 	{
+		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> from the given lengths of all locations
 		/// </summary>
@@ -2031,7 +2503,7 @@ namespace Althea.Storage
 		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? MEM.Allocate<T, TP6>(length6) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -2315,13 +2787,13 @@ namespace Althea.Storage
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>)
 			{
-				MEM.Free(this.Pointer1.Pointer);
-				MEM.Free(this.Pointer2.Pointer);
-				MEM.Free(this.Pointer3.Pointer);
-				MEM.Free(this.Pointer4.Pointer);
-				MEM.Free(this.Pointer5.Pointer);
-				MEM.Free(this.Pointer6.Pointer);
-				MEM.Free(this.Pointer7.Pointer);
+				Mem.Free(this.Pointer1.Pointer);
+				Mem.Free(this.Pointer2.Pointer);
+				Mem.Free(this.Pointer3.Pointer);
+				Mem.Free(this.Pointer4.Pointer);
+				Mem.Free(this.Pointer5.Pointer);
+				Mem.Free(this.Pointer6.Pointer);
+				Mem.Free(this.Pointer7.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -2492,6 +2964,140 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
+		{
+			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7);
+
+			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+
+				// read pointer 1
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data1 = reader.GetBytesFromBase64();
+				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 2
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data2 = reader.GetBytesFromBase64();
+				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 3
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data3 = reader.GetBytesFromBase64();
+				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 4
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data4 = reader.GetBytesFromBase64();
+				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 5
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data5 = reader.GetBytesFromBase64();
+				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 6
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data6 = reader.GetBytesFromBase64();
+				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
+				Mem.FromManaged<byte, TP6>(pointer6, data6);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 7
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data7 = reader.GetBytesFromBase64();
+				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
+				Mem.FromManaged<byte, TP7>(pointer7, data7);
+				if (!reader.Read())
+					throw new JsonException();
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, }.Max()];
+				int size;
+				writer.WriteStartObject();
+				
+				// write pointer 1
+				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+				// write pointer 2
+				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+				// write pointer 3
+				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+				// write pointer 4
+				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+				// write pointer 5
+				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+				// write pointer 6
+				size = (int)Mem.ToManaged<byte, TP6>(value.Pointer6, temp);
+				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
+				
+				// write pointer 7
+				size = (int)Mem.ToManaged<byte, TP7>(value.Pointer7, temp);
+				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -2510,6 +3116,11 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
 	{
+		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> from the given lengths of all locations
 		/// </summary>
@@ -2522,7 +3133,7 @@ namespace Althea.Storage
 		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? MEM.Allocate<T, TP6>(length6) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? MEM.Allocate<T, TP7>(length7) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -2828,14 +3439,14 @@ namespace Althea.Storage
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>)
 			{
-				MEM.Free(this.Pointer1.Pointer);
-				MEM.Free(this.Pointer2.Pointer);
-				MEM.Free(this.Pointer3.Pointer);
-				MEM.Free(this.Pointer4.Pointer);
-				MEM.Free(this.Pointer5.Pointer);
-				MEM.Free(this.Pointer6.Pointer);
-				MEM.Free(this.Pointer7.Pointer);
-				MEM.Free(this.Pointer8.Pointer);
+				Mem.Free(this.Pointer1.Pointer);
+				Mem.Free(this.Pointer2.Pointer);
+				Mem.Free(this.Pointer3.Pointer);
+				Mem.Free(this.Pointer4.Pointer);
+				Mem.Free(this.Pointer5.Pointer);
+				Mem.Free(this.Pointer6.Pointer);
+				Mem.Free(this.Pointer7.Pointer);
+				Mem.Free(this.Pointer8.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -3006,6 +3617,155 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
+		{
+			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7, string Data8);
+
+			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+
+				// read pointer 1
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data1 = reader.GetBytesFromBase64();
+				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 2
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data2 = reader.GetBytesFromBase64();
+				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 3
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data3 = reader.GetBytesFromBase64();
+				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 4
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data4 = reader.GetBytesFromBase64();
+				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 5
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data5 = reader.GetBytesFromBase64();
+				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 6
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data6 = reader.GetBytesFromBase64();
+				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
+				Mem.FromManaged<byte, TP6>(pointer6, data6);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 7
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data7 = reader.GetBytesFromBase64();
+				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
+				Mem.FromManaged<byte, TP7>(pointer7, data7);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 8
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data8) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data8 = reader.GetBytesFromBase64();
+				TP8 pointer8 = Mem.Allocate<TP8>(data8.LongLength);
+				Mem.FromManaged<byte, TP8>(pointer8, data8);
+				if (!reader.Read())
+					throw new JsonException();
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, }.Max()];
+				int size;
+				writer.WriteStartObject();
+				
+				// write pointer 1
+				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+				// write pointer 2
+				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+				// write pointer 3
+				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+				// write pointer 4
+				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+				// write pointer 5
+				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+				// write pointer 6
+				size = (int)Mem.ToManaged<byte, TP6>(value.Pointer6, temp);
+				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
+				
+				// write pointer 7
+				size = (int)Mem.ToManaged<byte, TP7>(value.Pointer7, temp);
+				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
+				
+				// write pointer 8
+				size = (int)Mem.ToManaged<byte, TP8>(value.Pointer8, temp);
+				writer.WriteBase64String(nameof(Repr.Data8), new(temp, 0, size));
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -3025,6 +3785,11 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
 	{
+		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7, TP8 pointer8) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> from the given lengths of all locations
 		/// </summary>
@@ -3038,7 +3803,7 @@ namespace Althea.Storage
 		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? MEM.Allocate<T, TP6>(length6) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? MEM.Allocate<T, TP7>(length7) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive), length8 > 0 ? MEM.Allocate<T, TP8>(length8) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive), length8 > 0 ? Mem.Allocate<TP8>(length8 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -3366,15 +4131,15 @@ namespace Althea.Storage
 		{
 			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>)
 			{
-				MEM.Free(this.Pointer1.Pointer);
-				MEM.Free(this.Pointer2.Pointer);
-				MEM.Free(this.Pointer3.Pointer);
-				MEM.Free(this.Pointer4.Pointer);
-				MEM.Free(this.Pointer5.Pointer);
-				MEM.Free(this.Pointer6.Pointer);
-				MEM.Free(this.Pointer7.Pointer);
-				MEM.Free(this.Pointer8.Pointer);
-				MEM.Free(this.Pointer9.Pointer);
+				Mem.Free(this.Pointer1.Pointer);
+				Mem.Free(this.Pointer2.Pointer);
+				Mem.Free(this.Pointer3.Pointer);
+				Mem.Free(this.Pointer4.Pointer);
+				Mem.Free(this.Pointer5.Pointer);
+				Mem.Free(this.Pointer6.Pointer);
+				Mem.Free(this.Pointer7.Pointer);
+				Mem.Free(this.Pointer8.Pointer);
+				Mem.Free(this.Pointer9.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -3545,6 +4310,170 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
+		{
+			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7, string Data8, string Data9);
+
+			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+
+				// read pointer 1
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data1 = reader.GetBytesFromBase64();
+				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 2
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data2 = reader.GetBytesFromBase64();
+				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 3
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data3 = reader.GetBytesFromBase64();
+				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 4
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data4 = reader.GetBytesFromBase64();
+				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 5
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data5 = reader.GetBytesFromBase64();
+				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 6
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data6 = reader.GetBytesFromBase64();
+				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
+				Mem.FromManaged<byte, TP6>(pointer6, data6);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 7
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data7 = reader.GetBytesFromBase64();
+				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
+				Mem.FromManaged<byte, TP7>(pointer7, data7);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 8
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data8) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data8 = reader.GetBytesFromBase64();
+				TP8 pointer8 = Mem.Allocate<TP8>(data8.LongLength);
+				Mem.FromManaged<byte, TP8>(pointer8, data8);
+				if (!reader.Read())
+					throw new JsonException();
+
+				// read pointer 9
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data9) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data9 = reader.GetBytesFromBase64();
+				TP9 pointer9 = Mem.Allocate<TP9>(data9.LongLength);
+				Mem.FromManaged<byte, TP9>(pointer9, data9);
+				if (!reader.Read())
+					throw new JsonException();
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, value.Pointer9.LengthInBytes, }.Max()];
+				int size;
+				writer.WriteStartObject();
+				
+				// write pointer 1
+				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+				// write pointer 2
+				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+				// write pointer 3
+				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+				// write pointer 4
+				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+				// write pointer 5
+				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+				// write pointer 6
+				size = (int)Mem.ToManaged<byte, TP6>(value.Pointer6, temp);
+				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
+				
+				// write pointer 7
+				size = (int)Mem.ToManaged<byte, TP7>(value.Pointer7, temp);
+				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
+				
+				// write pointer 8
+				size = (int)Mem.ToManaged<byte, TP8>(value.Pointer8, temp);
+				writer.WriteBase64String(nameof(Repr.Data8), new(temp, 0, size));
+				
+				// write pointer 9
+				size = (int)Mem.ToManaged<byte, TP9>(value.Pointer9, temp);
+				writer.WriteBase64String(nameof(Repr.Data9), new(temp, 0, size));
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -3565,6 +4494,11 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
 	{
+		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7, TP8 pointer8, TP9 pointer9) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> from the given lengths of all locations
 		/// </summary>
@@ -3579,7 +4513,7 @@ namespace Althea.Storage
 		/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 > 0 ? MEM.Allocate<T, TP1>(length1) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? MEM.Allocate<T, TP2>(length2) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? MEM.Allocate<T, TP3>(length3) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? MEM.Allocate<T, TP4>(length4) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? MEM.Allocate<T, TP5>(length5) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? MEM.Allocate<T, TP6>(length6) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? MEM.Allocate<T, TP7>(length7) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive), length8 > 0 ? MEM.Allocate<T, TP8>(length8) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive), length9 > 0 ? MEM.Allocate<T, TP9>(length9) : throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive), length8 > 0 ? Mem.Allocate<TP8>(length8 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive), length9 > 0 ? Mem.Allocate<TP9>(length9 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.MustPositive))
 		{
 			// do nothing
 		}

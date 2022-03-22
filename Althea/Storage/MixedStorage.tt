@@ -11,12 +11,14 @@
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using MEM = Althea.Storage.ApiSelector;
+using Mem = Althea.Storage.ApiSelector;
 
 
 namespace Althea.Storage
@@ -157,7 +159,7 @@ namespace Althea.Storage
 			if (this is ActualMixedStorage<T, <#=pointerTypes#>>)
 			{
 <# for (int j = 1; j <= i; j++) { #>
-				MEM.Free(this.Pointer<#=j#>.Pointer);
+				Mem.Free(this.Pointer<#=j#>.Pointer);
 <# } #>
 			}
 			this.Disposed = true;
@@ -329,6 +331,54 @@ namespace Althea.Storage
 		/// </summary>
 		/// <returns>the string representation of this <see cref="MixedStorage{T, <#=pointerTypes#>}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, <#=pointerTypes#>>>.ToString(this);
+		
+		static JsonConverter<MixedStorage<T, <#=pointerTypes#>>>? IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<MixedStorage<T, <#=pointerTypes#>>>
+		{
+			private record struct Repr(<# for (int j = 1; j <= i - 1; j++) { #>string Data<#=j#>, <# } #>string Data<#=i#>);
+
+			public override MixedStorage<T, <#=pointerTypes#>> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+<# for (int j = 1; j <= i; j++) { #>
+
+				// read pointer <#=j#>
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data<#=j#>) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+				byte[] data<#=j#> = reader.GetBytesFromBase64();
+				TP<#=j#> pointer<#=j#> = Mem.Allocate<TP<#=j#>>(data<#=j#>.LongLength);
+				Mem.FromManaged<byte, TP<#=j#>>(pointer<#=j#>, data<#=j#>);
+				if (!reader.Read())
+					throw new JsonException();
+<# } #>
+				
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+				return new ActualMixedStorage<T, <#=pointerTypes#>>(<#=pointerInputs#>);
+			}
+
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, <#=pointerTypes#>> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[new[] { <# for (int j = 1; j <= i; j++) { #>value.Pointer<#=j#>.LengthInBytes, <# } #>}.Max()];
+				int size;
+				writer.WriteStartObject();
+<# for (int j = 1; j <= i; j++) { #>
+				
+				// write pointer <#=j#>
+				size = (int)Mem.ToManaged<byte, TP<#=j#>>(value.Pointer<#=j#>, temp);
+				writer.WriteBase64String(nameof(Repr.Data<#=j#>), new(temp, 0, size));
+<# } #>
+				
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -344,6 +394,11 @@ namespace Althea.Storage
 		<# for (int j = 1; j <= i; j++) { #>where TP<#=j#> : notnull, IPointer<TP<#=j#>> <# } #>
 
 	{
+		internal ActualMixedStorage(<#=pointerRawParas#>) : base(<#=pointerInputs#>)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualMixedStorage{T, <#=pointerTypes#>}"/> from the given lengths of all locations
 		/// </summary>
@@ -352,7 +407,7 @@ namespace Althea.Storage
 <# } #>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(<# for (int j = 1; j < i; j++) { #>long length<#=j#>, <# } #>long length<#=i#>) : base(<# for (int j = 1; j < i; j++) { #>length<#=j#> > 0 ? MEM.Allocate<T, TP<#=j#>>(length<#=j#>) : throw new ArgumentOutOfRangeException(nameof(length<#=j#>), ParameterError.MustPositive), <# } #>length<#=i#> > 0 ? MEM.Allocate<T, TP<#=i#>>(length<#=i#>) : throw new ArgumentOutOfRangeException(nameof(length<#=i#>), ParameterError.MustPositive))
+		public ActualMixedStorage(<# for (int j = 1; j < i; j++) { #>long length<#=j#>, <# } #>long length<#=i#>) : base(<# for (int j = 1; j < i; j++) { #>length<#=j#> > 0 ? Mem.Allocate<TP<#=j#>>(length<#=j#> * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length<#=j#>), ParameterError.MustPositive), <# } #>length<#=i#> > 0 ? Mem.Allocate<TP<#=i#>>(length<#=i#> * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length<#=i#>), ParameterError.MustPositive))
 		{
 			// do nothing
 		}

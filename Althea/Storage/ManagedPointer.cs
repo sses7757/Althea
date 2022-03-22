@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 using Althea.Linq;
 using Althea.Helpers;
@@ -90,15 +91,20 @@ namespace Althea.Storage
 
 		IEnumerable<object?> IMainPropertyFormattable<ManagedPointer>.PropertyValues => new object[] { this.data, this.LengthInBytes };
 
-		/// <summary>
-		/// Get the string representation of this <see cref="ManagedPointer"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<ManagedPointer>.ToString(in this);
 		#endregion
 	}
 
 	internal sealed class ManagedPureStorage<T> : IStorage<T, ManagedPureStorage<T>> where T : unmanaged, INumber<T>
 	{
+		#region basic
+		IStorage? IStorage.Reference => null;
+
+		long IStorage.TotalOffsetInBytes => 0;
+
+		static JsonConverter<ManagedPureStorage<T>>? IStorage<T, ManagedPureStorage<T>>.JsonConverter => null;
+
 		public PointerSegment<ManagedPointer> Pointer { get; }
 
 		internal ManagedPureStorage()
@@ -106,7 +112,7 @@ namespace Althea.Storage
 			Pointer = default;
 		}
 
-		public ManagedPureStorage(PointerSegment<ManagedPointer> mp)
+		public ManagedPureStorage(ManagedPointer mp)
 		{
 			this.Pointer = mp;
 		}
@@ -144,41 +150,17 @@ namespace Althea.Storage
 
 		static ManagedPureStorage<T> IStorage<T, ManagedPureStorage<T>>.CreateAlike<TOut, TOther>(TOther storage) => throw new InvalidOperationException();
 
-		static ManagedPureStorage<T> IStorage<T, ManagedPureStorage<T>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			if (storage is ManagedPureStorage<TOut> mp)
-				return new(mp.Pointer);
-			else
-				throw new InvalidOperationException();
-		}
+		static ManagedPureStorage<T> IStorage<T, ManagedPureStorage<T>>.RefFrom<TOut, TOther>(TOther storage) => throw new InvalidOperationException();
 
-		public bool Equals(ManagedPureStorage<T>? other)
-		{
-			throw new NotImplementedException();
-		}
+		public bool Equals(ManagedPureStorage<T>? other) => other is not null && other.Pointer == this.Pointer;
 
 		public bool IsValid() => this.Pointer.IsValid();
 
-		public ManagedPureStorage<T> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0)
-				return this;
-			if (newLength == 0)
-				newLength = this.Length - offset;
-			return new(this.Pointer.MoveBy(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size));
-		}
-
-		public bool OverlapWith(ManagedPureStorage<T> other) => this.Pointer.OverlapWith(other.Pointer);
+		public ManagedPureStorage<T> MakeReference(long offset = 0, long newLength = 0) => throw new InvalidOperationException();
 
 		public static ManagedPureStorage<T> operator +(ManagedPureStorage<T> left, long offset) => left.MakeReference(offset);
 
-		public static long operator -(ManagedPureStorage<T> left, ManagedPureStorage<T> right)
-		{
-			if (left.OverlapWith(right))
-				return (left.Pointer - right.Pointer) / Unmanaged<T>.Size;
-			else
-				throw new InvalidOperationException();
-		}
+		public static long operator -(ManagedPureStorage<T> left, ManagedPureStorage<T> right) => throw new InvalidOperationException();
 
 		public static ManagedPureStorage<T> operator -(ManagedPureStorage<T> left, long offset) => left.MakeReference(-offset);
 
@@ -189,5 +171,6 @@ namespace Althea.Storage
 		public override bool Equals(object? obj) => this.Equals(obj as ManagedPureStorage<T>);
 
 		public override int GetHashCode() => this.Pointer.GetHashCode();
+		#endregion
 	}
 }

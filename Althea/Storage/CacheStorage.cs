@@ -1,13 +1,15 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
+using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using MEM = Althea.Storage.ApiSelector;
+using Mem = Althea.Storage.ApiSelector;
 
 
 namespace Althea.Storage
@@ -54,6 +56,13 @@ namespace Althea.Storage
 		/// <returns>The offsets to the cache pointer in bytes which contains the requested byte.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		long GetCacheOf(long storageOffset, CopyDelegate copy, bool intentWrite);
+
+		/// <summary>
+		/// When implemented by a derived struct, flush all cached data into actual memory with <paramref name="copy"/> delegate.
+		/// </summary>
+		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data if necessary</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void Flush(CopyDelegate copy);
 	}
 
 	/// <summary>
@@ -141,9 +150,7 @@ namespace Althea.Storage
 
 		private readonly CacheLineInfo[] lineInfo;
 
-		/// <summary>
-		/// Get the size of one cache line in bytes.
-		/// </summary>
+		/// <inheritdoc/>
 		public int CacheLineSize
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,14 +187,7 @@ namespace Althea.Storage
 			return new(MAX_CACHE_LINE_BITS, (byte)((actualStorageInBytes + 1) >> MAX_CACHE_LINE_BITS).CeilLog2());
 		}
 
-
-		/// <summary>
-		/// Calculate the cache offset of given actual storage offset, copy data if necessary, and update internal information of this <see cref="DirectMappingStrategy"/>.
-		/// </summary>
-		/// <param name="storageOffset">The offset of actual storage in bytes which is the location of the byte of interest</param>
-		/// <param name="copy">The <see cref="CopyDelegate"/> used to copy data if necessary</param>
-		/// <param name="intentWrite">Whether the intent of using this piece of cache is to write (true) or read (false)</param>
-		/// <returns>The offsets to the cache pointer in bytes which contains the requested byte.</returns>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public long GetCacheOf(long storageOffset, CopyDelegate copy, bool intentWrite)
 		{
@@ -217,19 +217,29 @@ namespace Althea.Storage
 			return cacheOffset + withinLineOffset;
 		}
 
-		/// <summary>
-		/// Check whether this <see cref="DirectMappingStrategy"/> is a valid one or not
-		/// </summary>
-		/// <returns>The validness of this <see cref="DirectMappingStrategy"/></returns>
+		/// <inheritdoc/>
+		public void Flush(CopyDelegate copy)
+		{
+			int tagBitOffset = this.lineSizeLog2 + this.nLinesLog2;
+			int lines = 1 << this.nLinesLog2, lineSize = 1 << this.lineSizeLog2;
+			for (int i = 0; i < lines; i++)
+			{
+				var info = this.lineInfo[i];
+				if (!info.Valid || !info.Dirty)
+					continue;
+				long storageOffset = info.Tag << tagBitOffset;
+				copy(i << this.lineSizeLog2, storageOffset, lineSize, false);
+				info.Dirty = false;
+				this.lineInfo[i] = info;
+			}
+		}
+
+		/// <inheritdoc/>
 		public bool IsValid() => this.lineSizeLog2 > 0;
 		#endregion
 
 		#region equality
-		/// <summary>
-		/// Check whether this <see cref="DirectMappingStrategy"/> is the same as the <paramref name="other"/> one
-		/// </summary>
-		/// <param name="other">The other <see cref="DirectMappingStrategy"/> to compare</param>
-		/// <returns>this == <paramref name="other"/> or not</returns>
+		/// <inheritdoc/>
 		public bool Equals(DirectMappingStrategy other) => this.lineSizeLog2 == other.lineSizeLog2 && this.lineInfo.SequenceEqual(other.lineInfo);
 
 		/// <summary>
@@ -242,17 +252,10 @@ namespace Althea.Storage
 		/// </summary>
 		public static bool operator !=(DirectMappingStrategy left, DirectMappingStrategy right) => !left.Equals(right);
 
-		/// <summary>
-		/// Check whether this <see cref="DirectMappingStrategy"/> is the same as the other object
-		/// </summary>
-		/// <param name="obj">The other <see cref="object"/> to compare</param>
-		/// <returns>this == <paramref name="obj"/> or not</returns>
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => obj is DirectMappingStrategy strategy && this.Equals(strategy);
 
-		/// <summary>
-		/// Get the hash code of this <see cref="DirectMappingStrategy"/>
-		/// </summary>
-		/// <returns>The hash code</returns>
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.lineSizeLog2, this.lineInfo.HashCodeOfArray());
 		#endregion
 	}
@@ -304,9 +307,9 @@ namespace Althea.Storage
 		protected void CopyWrapper(long sourceOffset, long destinationOffset, long copyLength, bool copyToCache)
 		{
 			if (copyToCache)
-				MEM.MemoryCopy(this.Memory + sourceOffset, this.Cache.MoveBy(destinationOffset, copyLength));
+				Mem.MemoryCopy(this.Memory + sourceOffset, this.Cache.MoveBy(destinationOffset, copyLength));
 			else
-				MEM.MemoryCopy(this.Cache + sourceOffset, this.Memory.MoveBy(destinationOffset, copyLength));
+				Mem.MemoryCopy(this.Cache + sourceOffset, this.Memory.MoveBy(destinationOffset, copyLength));
 		}
 	}
 
@@ -404,8 +407,8 @@ namespace Althea.Storage
 		{
 			if (this is ActualCachedStorage<T, TS, TPh, TPl>)
 			{
-				MEM.Free(this.Cache.Pointer);
-				MEM.Free(this.Memory.Pointer);
+				Mem.Free(this.Cache.Pointer);
+				Mem.Free(this.Memory.Pointer);
 			}
 			this.Disposed = true;
 		}
@@ -569,11 +572,49 @@ namespace Althea.Storage
 
 		IEnumerable<object?> IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.PropertyValues => new object?[] { DataType, this.Length, this.Cache.ToString(), this.Memory.ToString() };
 
-		/// <summary>
-		/// Return the string representation of this <see cref="CachedStorage{T, TS, TPh, TPl}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="CachedStorage{T, TS, TPh, TPl}"/></returns>
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.ToString(this);
+
+		static JsonConverter<CachedStorage<T, TS, TPh, TPl>>? IStorage<T, CachedStorage<T, TS, TPh, TPl>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<CachedStorage<T, TS, TPh, TPl>>
+		{
+			private record struct Repr(string Data);
+
+			public override CachedStorage<T, TS, TPh, TPl> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+
+				byte[] data = reader.GetBytesFromBase64();
+				TPl pointer = Mem.Allocate<TPl>(data.LongLength);
+				Mem.FromManaged<byte, TPl>(pointer, data);
+
+				if (!reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+
+				return new ActualCachedStorage<T, TS, TPh, TPl>(pointer);
+			}
+
+			public override void Write(Utf8JsonWriter writer, CachedStorage<T, TS, TPh, TPl> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[value.LengthInBytes];
+				value.Strategy.Flush(value.CopyWrapper);
+				Mem.ToManaged<byte, TPl>(value.Memory, temp);
+				writer.WriteStartObject();
+				writer.WriteBase64String(nameof(Repr.Data), temp);
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -610,16 +651,21 @@ namespace Althea.Storage
 		/// </summary>
 		protected override long CacheLineOffset => 0;
 
+		internal ActualCachedStorage(TPl memory) : base(memory)
+		{
+			this.Strategy = TS.Create(memory.LengthInBytes, out long cacheSizeBytes);
+			this.Cache = Mem.Allocate<TPh>(cacheSizeBytes);
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualCachedStorage{T, TS, TPh, TPl}"/> of given <paramref name="length"/>
 		/// </summary>
 		/// <param name="length">The length to create in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
-		public ActualCachedStorage(long length) : base(length > 0 ? MEM.Allocate<T, TPl>(length) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
+		public ActualCachedStorage(long length) : this(length > 0 ? Mem.Allocate<TPl>(length * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
 		{
-			this.Strategy = TS.Create(length * Unmanaged<T>.Size, out long cacheSizeBytes);
-			this.Cache = MEM.Allocate<TPh>(cacheSizeBytes);
+			// do nothing
 		}
 	}
 

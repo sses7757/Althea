@@ -80,13 +80,13 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get the block size array's original storage of this sparse vector which shall be null if <see cref="ISparseArrayStatic{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
 		/// </summary>
-		protected TSInd? BlockSizes => this.blockSizes;
+		protected TSInd BlockSizes => this.blockSizes ?? TSInd.Empty;
 
 		/// <summary>
 		/// Get the block size array's accumulation array's original storage of this sparse vector which shall be null if <see cref="ISparseArrayStatic{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
 		/// </summary>
 		/// <remarks>This array's first element shall be 0 and the last element in <see cref="BlockSizes"/> shall not be accumulated (a exclusive scan).</remarks>
-		protected TSInd? BlockSizesScan => this.blockSizesScan;
+		protected TSInd BlockSizesScan => this.blockSizesScan ?? TSInd.Empty;
 
 		/// <summary>
 		/// Get the block size if <see cref="ISparseArrayStatic{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Simple"/>.
@@ -345,38 +345,38 @@ namespace Althea.Arrays
 			if (start != 0)
 				ExtBlas.PointWiseAddScalar(overwrite.IndexStorage, 1, TInd.Create(-start));
 
-			if (this.blockSizes is not null && this.blockSizesScan is not null && overwrite.BlockSizes is not null && overwrite.BlockSizesScan is not null)
+			if (this.blockSizes is not null && this.blockSizesScan is not null && overwrite.blockSizes is not null && overwrite.blockSizesScan is not null)
 			{
 				TSInd bs = this.blockSizes.MakeReference(indexStart, indexCount);
-				bs.CopyTo<TInd, TSInd, TSInd>(overwrite.BlockSizes);
+				bs.CopyTo<TInd, TSInd, TSInd>(overwrite.blockSizes);
 				if (blockStartOffset != 0)
 				{
-					overwrite.BlockSizes.FromManaged(overwrite.BlockSizes.ToManaged<TInd, TSInd>() - TInd.Create(blockStartOffset));
+					overwrite.blockSizes.FromManaged(overwrite.blockSizes.ToManaged<TInd, TSInd>() - TInd.Create(blockStartOffset));
 				}
 				if (blockEndSize != 0)
 				{
-					var newEnd = overwrite.BlockSizes + (indexCount - 1);
+					var newEnd = overwrite.blockSizes + (indexCount - 1);
 					newEnd.FromManaged(TInd.Create(blockEndSize));
 				}
 				TSInd bsa = this.blockSizesScan.MakeReference(indexStart, indexCount);
-				bsa.CopyTo<TInd, TSInd, TSInd>(overwrite.BlockSizesScan);
-				ExtBlas.PointWiseAddScalar(overwrite.BlockSizesScan, 1, -overwrite.BlockSizesScan.ToManaged<TInd, TSInd>());
+				bsa.CopyTo<TInd, TSInd, TSInd>(overwrite.blockSizesScan);
+				ExtBlas.PointWiseAddScalar(overwrite.blockSizesScan, 1, -overwrite.blockSizesScan.ToManaged<TInd, TSInd>());
 				if (blockStartOffset != 0)
-					ExtBlas.PointWiseAddScalar(overwrite.BlockSizesScan + 1, 1, TInd.Create(-blockStartOffset));
+					ExtBlas.PointWiseAddScalar(overwrite.blockSizesScan + 1, 1, TInd.Create(-blockStartOffset));
 			}
 		}
 
 		/// <inheritdoc/>
 		public void CopyTo(SparseVector<T, TInd, TS, TSInd, TStatic> destination)
 		{
-			if (destination.IndexStorage.Length != this.indices.Length || destination.Storage.Length != this.values.Length)
+			if (destination.indices.Length != this.indices.Length || destination.values.Length != this.values.Length)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
-			this.values.CopyTo<T, TS, TS>(destination.Storage);
-			this.indices.CopyTo<TInd, TSInd, TSInd>(destination.IndexStorage);
-			if (this.blockSizes is not null && this.blockSizesScan is not null && destination.BlockSizes is not null && destination.BlockSizesScan is not null)
+			this.values.CopyTo<T, TS, TS>(destination.values);
+			this.indices.CopyTo<TInd, TSInd, TSInd>(destination.indices);
+			if (this.blockSizes is not null && this.blockSizesScan is not null && destination.blockSizes is not null && destination.blockSizesScan is not null)
 			{
-				this.blockSizes.CopyTo<TInd, TSInd, TSInd>(destination.BlockSizes);
-				this.blockSizesScan.CopyTo<TInd, TSInd, TSInd>(destination.BlockSizesScan);
+				this.blockSizes.CopyTo<TInd, TSInd, TSInd>(destination.blockSizes);
+				this.blockSizesScan.CopyTo<TInd, TSInd, TSInd>(destination.blockSizesScan);
 			}
 		}
 
@@ -397,10 +397,10 @@ namespace Althea.Arrays
 			if (start != 0)
 				ExtBlas.PointWiseAddScalar(refInds, 1, TInd.Create(start));
 
-			if (this.blockSizes is not null && this.blockSizesScan is not null && value.BlockSizes is not null && value.BlockSizesScan is not null)
+			if (this.blockSizes is not null && this.blockSizesScan is not null && value.blockSizes is not null && value.blockSizesScan is not null)
 			{
 				TSInd bs = this.blockSizes.MakeReference(indexStart, indexCount);
-				value.BlockSizes.CopyTo<TInd, TSInd, TSInd>(bs);
+				value.blockSizes.CopyTo<TInd, TSInd, TSInd>(bs);
 				if (blockStartOffset != 0)
 				{
 					bs.FromManaged(bs.ToManaged<TInd, TSInd>() + TInd.Create(blockStartOffset));
@@ -412,7 +412,7 @@ namespace Althea.Arrays
 				}
 				TSInd bsa = this.blockSizesScan.MakeReference(indexStart, indexCount);
 				TInd scanStart = bsa.ToManaged<TInd, TSInd>();
-				value.BlockSizesScan.CopyTo<TInd, TSInd, TSInd>(bsa);
+				value.blockSizesScan.CopyTo<TInd, TSInd, TSInd>(bsa);
 				ExtBlas.PointWiseAddScalar(bsa, 1, scanStart);
 				if (blockStartOffset != 0)
 					ExtBlas.PointWiseAddScalar(bsa + 1, 1, TInd.Create(blockStartOffset));
@@ -430,20 +430,23 @@ namespace Althea.Arrays
 		#endregion
 
 		#region point-wise operations
-		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.FillWith(T value)
+		/// <inheritdoc/>
+		public virtual void FillWith(T value)
 		{
 			if (value != TStatic.DefaultValue)
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
 			this.values.FillWith(value);
 		}
 
-		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.AddScalar(T value)
+		/// <inheritdoc/>
+		public virtual void AddScalar(T value)
 		{
 			if (value != T.Zero)
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
 		}
 
-		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Scale(T value)
+		/// <inheritdoc/>
+		public virtual void Scale(T value)
 		{
 			if (TStatic.DefaultValue == T.Zero)
 				Blas.Scale(this.values, 1, value);
@@ -451,7 +454,8 @@ namespace Althea.Arrays
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
 		}
 
-		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Conjugate()
+		/// <inheritdoc/>
+		public virtual void Conjugate()
 		{
 			if (NumberType<T>.IsComplex)
 			{
@@ -462,7 +466,8 @@ namespace Althea.Arrays
 			}
 		}
 
-		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Power(T power)
+		/// <inheritdoc/>
+		public virtual void Power(T power)
 		{
 			if (TStatic.DefaultValue == T.Zero || TStatic.DefaultValue == T.One)
 				ExtBlas.PointWisePower(this.values, 1, power);
@@ -470,7 +475,8 @@ namespace Althea.Arrays
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(power));
 		}
 
-		void IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Truncate(double threshold)
+		/// <inheritdoc/>
+		public virtual void Truncate(double threshold)
 		{
 			if (TStatic.DefaultValue != T.Zero && T.Abs(TStatic.DefaultValue) < T.Create(threshold))
 				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(threshold));
@@ -480,19 +486,22 @@ namespace Althea.Arrays
 		#endregion
 
 		#region simple aggregation operations
-		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Sum()
+		/// <inheritdoc/>
+		public virtual T Sum()
 		{
 			T defaultSum = TStatic.DefaultValue * T.Create(((IVectorMetric)this).Length - this.values.Length);
 			return defaultSum + ExtBlas.AggregateSum<T, TS>(this.values, 1);
 		}
 
-		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.AbsSum()
+		/// <inheritdoc/>
+		public virtual T AbsSum()
 		{
 			T defaultSum = T.Abs(TStatic.DefaultValue) * T.Create(((IVectorMetric)this).Length - this.values.Length);
 			return defaultSum + Blas.AbsoluteValueSum<T, TS>(this.values, 1);
 		}
 
-		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.Norm()
+		/// <inheritdoc/>
+		public virtual T Norm()
 		{
 			if (TStatic.DefaultValue == T.Zero)
 				return Blas.Norm<T, TS>(this.values, 1);
@@ -503,7 +512,8 @@ namespace Althea.Arrays
 			return Math.Sqrt(n).As<double, T>();
 		}
 
-		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.ValueWithMaxAbs()
+		/// <inheritdoc/>
+		public virtual T ValueWithMaxAbs()
 		{
 			T max = (this.values + Blas.AbsoluteValueArgMax<T, TS>(this.values, 1)).ToManaged<T, TS>();
 			if (T.Abs(TStatic.DefaultValue) > T.Abs(max))
@@ -512,7 +522,8 @@ namespace Althea.Arrays
 				return max;
 		}
 
-		T IValueArray<T, SparseVector<T, TInd, TS, TSInd, TStatic>>.ValueWithMinAbs()
+		/// <inheritdoc/>
+		public virtual T ValueWithMinAbs()
 		{
 			T min = (this.values + Blas.AbsoluteValueArgMin<T, TS>(this.values, 1)).ToManaged<T, TS>();
 			if (T.Abs(TStatic.DefaultValue) < T.Abs(min))
@@ -527,19 +538,19 @@ namespace Althea.Arrays
 		/// Create a new dense vector of type <see cref="DenseVector{T, TS}"/> from this sparse vector.
 		/// </summary>
 		/// <returns>The created dense vector of type <see cref="DenseVector{T, TS}"/>.</returns>
-		public DenseVector<T, TS> ToDense()
+		public virtual DenseVector<T, TS> ToDense()
 		{
-
+			
 		}
 
 		/// <inheritdoc/>
-		public SparseVector<T, TInd, TS, TSInd, TStatic> CreateAlike()
+		public virtual SparseVector<T, TInd, TS, TSInd, TStatic> CreateAlike()
 		{
 			return new(this.length, this.values.CreateAlike(), this.indices.CreateAlike(), this.blockSize, this.blockSizes?.CreateAlike(), this.blockSizesScan?.CreateAlike());
 		}
 
 		/// <inheritdoc/>
-		public SparseVector<T, TInd, TS, TSInd, TStatic> Clone()
+		public virtual SparseVector<T, TInd, TS, TSInd, TStatic> Clone()
 		{
 			var clone = this.CreateAlike();
 			try
@@ -557,7 +568,7 @@ namespace Althea.Arrays
 
 		#region serialization
 		/// <inheritdoc/>
-		public IReadOnlyDictionary<string, IStorage> GetStorages() => this.blockSizes is null || this.blockSizesScan is null ?
+		public virtual IReadOnlyDictionary<string, IStorage> GetStorages() => this.blockSizes is null || this.blockSizesScan is null ?
 			new Dictionary<string, IStorage>
 			{
 				[nameof(Storage)] = this.values,
@@ -572,10 +583,10 @@ namespace Althea.Arrays
 			};
 
 		/// <inheritdoc/>
-		public IReadOnlyDictionary<string, object>? GetMetaData() => this.blockSize == 0 ? null : new Dictionary<string, object> { [nameof(BlockSize)] = this.blockSize };
+		public virtual IReadOnlyDictionary<string, object>? GetMetaData() => this.blockSize == 0 ? null : new Dictionary<string, object> { [nameof(BlockSize)] = this.blockSize };
 
 		/// <inheritdoc/>
-		public SparseVector<T, TInd, TS, TSInd, TStatic> CreateArray(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null)
+		public virtual SparseVector<T, TInd, TS, TSInd, TStatic> CreateArray(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null)
 		{
 			if (size.Length != 1)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(size));
@@ -634,7 +645,7 @@ namespace Althea.Arrays
 
 		#region equality
 		/// <inheritdoc/>
-		public bool Equals(SparseVector<T, TInd, TS, TSInd, TStatic>? other)
+		public virtual bool Equals(SparseVector<T, TInd, TS, TSInd, TStatic>? other)
 		{
 			if (other is null)
 				return false;
@@ -669,6 +680,41 @@ namespace Althea.Arrays
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd, TStatic>>.ToString(this);
+
+		/// <inheritdoc/>
+		public unsafe string Print(PrintSettings? settings = null)
+		{
+			settings ??= Settings.PrintSetting;
+			int length = Math.Min((int)this.values.Length, settings.Value.ArrayLength);
+			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			Span<int> indices = length.CheckStackLimit<int>() ?? stackalloc int[length];
+			this.Storage.ToManaged(values);
+			fixed (int* inds = indices)
+			{
+				var mp = new ManagedPureStorage<int>(new ManagedPointer(new(inds), length * sizeof(int)));
+				switch (TStatic.Format.BlockType)
+				{
+					case SparseFormat.Blocking.Element:
+						ExtBlas.PointWiseCast<TInd, int, TSInd, ManagedPureStorage<int>>(this.indices, 1, mp, 1);
+						break;
+					case SparseFormat.Blocking.Simple:
+						ExtBlas.PointWiseCast<TInd, int, TSInd, ManagedPureStorage<int>>(this.indices, 1, mp, (int)this.blockSize);
+						for (long i = 0; i < length; i++)
+						{
+							var diff = i % this.blockSize;
+							inds[i] = (int)(inds[i - diff] + diff);
+						}
+						break;
+					case SparseFormat.Blocking.Complicated:
+						int blocks = 1 + (int)SpConv.IndexBound(this.BlockSizesScan, TInd.Create(length), true);
+						for (int i = 0; i < length; i++)
+						{
+							inds[i] = inds[i - i % this.blockSize];
+						}
+						break;
+				}
+			}
+		}
 		#endregion
 	}
 }

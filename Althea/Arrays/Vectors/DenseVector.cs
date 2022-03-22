@@ -56,28 +56,7 @@ namespace Althea.Arrays
 			}
 		}
 
-		IEnumerator<T> IEnumerable<T>.GetEnumerator()
-		{
-			long length = ((IVectorMetric)this).Length;
-			T[] buffer = System.Buffers.ArrayPool<T>.Shared.Rent((int)Math.Min(length, 8192));
-			try
-			{
-				long offset = 0;
-				while (offset < length)
-				{
-					(this.Storage + offset * this.Stride).ToManagedStride<T, TS>(this.Stride, buffer);
-					for (int i = 0; i < buffer.Length; i++)
-					{
-						yield return buffer[i];
-					}
-					offset += buffer.LongLength;
-				}
-			}
-			finally
-			{
-				System.Buffers.ArrayPool<T>.Shared.Return(buffer);
-			}
-		}
+		IEnumerator<T> IEnumerable<T>.GetEnumerator() => this.values.GetEnumerator();
 
 		/// <summary>
 		/// When implemented by a derived class, statically create a referenced <typeparamref name="TSelf"/> with given <paramref name="storage"/> and <paramref name="length"/>.

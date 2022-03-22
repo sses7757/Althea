@@ -527,11 +527,6 @@ namespace Althea
 		abstract static TSelf Default { get; }
 
 		/// <summary>
-		/// When implemented by derived classes, statically get the JSON converter of <typeparamref name="TSelf"/>.
-		/// </summary>
-		protected internal abstract static JsonConverter<TSelf> JsonConverter { get; }
-
-		/// <summary>
 		/// When implemented by derived classes, get the original (native) length of this pointer's underlying storage in bytes.
 		/// </summary>
 		long LengthInBytes { get; }

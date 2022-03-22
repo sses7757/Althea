@@ -18,7 +18,7 @@ namespace Althea.Arrays
 	{
 		private static readonly object managerLock = new();
 
-		private static readonly Dictionary<IStorage, HashSet<IStorage>> References = new();
+		private static readonly Dictionary<IStorage, List<IStorage>> References = new();
 
 		/// <summary>
 		/// Add the given <paramref name="storage"/> to the manager whose <see cref="IStorage.Reference"/> is used to determine whether it is a referenced storage or not.
@@ -49,6 +49,16 @@ namespace Althea.Arrays
 			return storage;
 		}
 
+		private static bool SwapRemove<T>(this List<T> list, T value)
+		{
+			int find = list.IndexOf(value);
+			if (find < 0)
+				return false;
+			list[find] = list[^1];
+			list.RemoveAt(list.Count - 1);
+			return true;
+		}
+
 		/// <summary>
 		/// Safely dispose the given <paramref name="storage"/> by checking references before invoking <see cref="IDisposable.Dispose"/>.
 		/// </summary>
@@ -64,7 +74,7 @@ namespace Althea.Arrays
 				{
 					if (References.TryGetValue(storage, out var set))
 					{
-						set.Remove(storage);
+						set.SwapRemove(storage);
 						if (set.Count == 0)
 							storage.Dispose();
 					}
@@ -77,7 +87,7 @@ namespace Althea.Arrays
 				{
 					if (References.TryGetValue(storage.Reference, out var set))
 					{
-						set.Remove(storage);
+						set.SwapRemove(storage);
 						if (set.Count == 0)
 							storage.Reference.Dispose();
 					}
@@ -93,7 +103,9 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IValueArray{T, TSelf}"/></typeparam>
 	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
-	public interface IValueArray<T, TSelf> : ICheckValid, IDisposable, ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf>
+	public interface IValueArray<T, TSelf> :
+		ICheckValid, IDisposable, IPrintable<T>,
+		ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IValueArray<T, TSelf>
 	{

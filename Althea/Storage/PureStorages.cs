@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using MEM = Althea.Storage.ApiSelector;
+using Mem = Althea.Storage.ApiSelector;
 
 
 namespace Althea.Storage
@@ -86,22 +89,19 @@ namespace Althea.Storage
 		/// </summary>
 		public bool Disposed { get; private set; } = false;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		void IStorage.Dispose(bool invokedByUser)
 		{
 			if (this is ActualPureStorage<T, TP>)
 			{
-				MEM.Free(this.Pointer.Pointer);
+				Mem.Free(this.Pointer.Pointer);
 			}
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
 		/// <summary>
 		/// The deconstructor invoked by GC
 		/// </summary>
-		~PureStorage() => this.Dispose();
+		~PureStorage() => ((IStorage)this).Dispose(false);
 
 		/// <summary>
 		/// Check whether this <see cref="PureStorage{T, TP}"/> is a valid one or not
@@ -125,13 +125,6 @@ namespace Althea.Storage
 			else
 				return new ReferencePureStorage<T, TP>(this, offset, newLength);
 		}
-
-		/// <summary>
-		/// Check whether this <see cref="PureStorage{T, TP}"/> overlaps with the <paramref name="other"/> <see cref="PureStorage{T, TP}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="PureStorage{T, TP}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		public bool OverlapWith(PureStorage<T, TP> other) => this.Pointer.OverlapWith(other.Pointer);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.RefFrom<TOut, TOther>(TOther storage)
@@ -252,15 +245,53 @@ namespace Althea.Storage
 		#region string
 		static string IMainPropertyFormattable<PureStorage<T, TP>>.StringMain => nameof(PureStorage<T, TP>);
 
-		static IEnumerable<string> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, PureStorage<T, TP>>.Length), nameof(Pointer) };
+		static IEnumerable<string> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyNames => new[] { nameof(DataType), nameof(Length), nameof(Pointer) };
 
 		IEnumerable<object?> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyValues => new object[] { DataType, this.Length, this.Pointer };
 
-		/// <summary>
-		/// Return the string representation of this <see cref="PureStorage{T, TP}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="PureStorage{T, TP}"/></returns>
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<PureStorage<T, TP>>.ToString(this);
+
+		static JsonConverter<PureStorage<T, TP>>? IStorage<T, PureStorage<T, TP>>.JsonConverter => new JsonConverter();
+
+		private sealed class JsonConverter : JsonConverter<PureStorage<T, TP>>
+		{
+			private record struct Repr(string Data);
+
+			public override PureStorage<T, TP>? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				////var tempOptions = new JsonSerializerOptions(options) { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data) || !reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.String)
+					throw new JsonException();
+
+				byte[] data = reader.GetBytesFromBase64();
+				TP pointer = Mem.Allocate<TP>(data.LongLength);
+				Mem.FromManaged<byte, TP>(pointer, data);
+				
+				if (!reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				reader.Read();
+
+				return new ActualPureStorage<T, TP>(pointer);
+			}
+
+			public override void Write(Utf8JsonWriter writer, PureStorage<T, TP> value!!, JsonSerializerOptions options)
+			{
+				if (!value.IsValid())
+					throw new JsonException(ParameterError.InvalidValue);
+				byte[] temp = new byte[value.LengthInBytes];
+				Mem.ToManaged<byte, TP>(value.Pointer, temp);
+				writer.WriteStartObject();
+				writer.WriteBase64String(nameof(Repr.Data), temp);
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 
@@ -273,13 +304,18 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TP : notnull, IPointer<TP>
 	{
+		internal ActualPureStorage(TP pointer) : base(pointer)
+		{
+			// do nothing
+		}
+
 		/// <summary>
 		/// Create a new <see cref="ActualPureStorage{T, TP}"/> of given <paramref name="length"/>
 		/// </summary>
 		/// <param name="length">The length to create in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
-		public ActualPureStorage(long length) : base(length > 0 ? MEM.Allocate<T, TP>(length) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
+		public ActualPureStorage(long length) : base(length > 0 ? Mem.Allocate<TP>(length * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
 		{
 			// do nothing
 		}

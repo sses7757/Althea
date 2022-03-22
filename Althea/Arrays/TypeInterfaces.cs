@@ -1,5 +1,6 @@
 ﻿using System;
 
+using Althea.Helpers;
 using Althea.Linq;
 
 
@@ -40,7 +41,7 @@ namespace Althea.Arrays
 	/// The interface for sparse array static information
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface ISparseArrayStatic<T>
+	public interface ISparseArrayStatic<T> where T : unmanaged, INumber<T>
 	{
 		#region static
 		/// <summary>
@@ -58,7 +59,8 @@ namespace Althea.Arrays
 	/// <summary>
 	/// The interface for tensor that contains basic members (size and labels).
 	/// </summary>
-	public interface ILabeledTensor : ICheckValid
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public interface ILabeledTensor<T> where T : unmanaged, INumber<T>
 	{
 		#region properties
 		/// <summary>
@@ -67,7 +69,7 @@ namespace Althea.Arrays
 		int Rank { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, get the size of this array (the extent at all dimensions) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
+		/// When implemented by a derived class, get the size of this array (the extent at all dimensions) in <typeparamref name="T"/> as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
 		/// </summary>
 		ReadOnlySpan<long> Size { get; }
 
@@ -103,5 +105,19 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If the length of <paramref name="labels"/> is not the same as the <see cref="Rank"/></exception>
 		void SetLabels(params char[] labels);
 		#endregion
+	}
+
+	/// <summary>
+	/// The interface for printable arrays.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public interface IPrintable<T> where T : unmanaged, INumber<T>
+	{
+		/// <summary>
+		/// When implemented by a derived class, print this array to <see cref="string"/> under given print <paramref name="settings"/>.
+		/// </summary>
+		/// <param name="settings">The <see cref="PrintSettings"/> to use, default null means <see cref="Settings.PrintSetting"/></param>
+		/// <returns>The printed array as a <see cref="string"/>.</returns>
+		string Print(PrintSettings? settings = null);
 	}
 }

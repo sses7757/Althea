@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
+using Althea.Helpers;
 using Althea.NativeTypes;
 using Althea.Resources;
 
@@ -17,7 +18,12 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, get the referenced storage of this storage as a nullable <see cref="IStorage"/>.
 		/// </summary>
-		IStorage? Reference { get; }
+		IStorage? Reference => null;
+
+		/// <summary>
+		/// When implemented by a derived class, get the total offset compared to the start of <see cref="Reference"/> in bytes
+		/// </summary>
+		long TotalOffsetInBytes => 0;
 
 		/// <summary>
 		/// Whether this storage is disposed or not.
@@ -35,7 +41,7 @@ namespace Althea.Storage
 		/// When implemented by a derived class, actually unmanaged resources held by this <see cref="IStorage"/>.
 		/// </summary>
 		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
-		protected abstract void Dispose(bool invokedByUser);
+		public void Dispose(bool invokedByUser);
 
 		/// <summary>
 		/// When implemented by a derived class, get the total length of the presenting array in bytes.
@@ -72,13 +78,6 @@ namespace Althea.Storage
 		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/>.</returns>
 		bool IsByteOffsetValid(long offset, long newLength = 0);
-
-		/// <summary>
-		/// When implemented by a derived class, check whether this storage overlaps with the <paramref name="other"/> storage.
-		/// </summary>
-		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		bool OverlapWith(IStorage other);
 	}
 
 	/// <summary>
@@ -86,12 +85,39 @@ namespace Althea.Storage
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
-	public interface IStorage<T, TSelf> : IStorage, ICreateAlike<TSelf>,
-		IEqualityOperators<TSelf, TSelf>, ICloneable<TSelf>, IMainPropertyFormattable<TSelf>,
+	public interface IStorage<T, TSelf> : IStorage, IReadOnlyList<T>,
+		 ICreateAlike<TSelf>, IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>,
 		IAdditiveIdentity<TSelf, long>, IAdditionOperators<TSelf, long, TSelf>, ISubtractionOperators<TSelf, long, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IStorage<T, TSelf>
 	{
+		T IReadOnlyList<T>.this[int index] => ((TSelf)this.MakeReference(index, 1)).ToManaged<T, TSelf>();
+
+		int IReadOnlyCollection<T>.Count => checked((int)this.Length);
+
+		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => this.GetEnumerator();
+
+		IEnumerator<T> IEnumerable<T>.GetEnumerator()
+		{
+			long length = this.Length;
+			Span<T> buffer = stackalloc T[(int)Math.Min(length, Settings.StackAllocLimit / Unmanaged<T>.Size)];
+			long offset = 0;
+			while (offset < length)
+			{
+				((TSelf)this + offset).ToManaged(buffer);
+				for (int i = 0; i < buffer.Length; i++)
+				{
+					yield return buffer[i];
+				}
+				offset += buffer.Length;
+			}
+		}
+
+		/// <summary>
+		/// Provide C# duck type method for range slicing of this storage.
+		/// </summary>
+		TSelf Slice(int start, int count) => this.MakeReference(start, count);
+
 		bool IStorage.IsByteOffsetValid(long offset, long newLength)
 		{
 			if (newLength < 0 || !this.IsValid())
@@ -269,9 +295,9 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the JSON converter of <typeparamref name="TSelf"/>.
+		/// When implemented by a derived class, statically get the JSON converter of <typeparamref name="TSelf"/>. Null means use default one.
 		/// </summary>
-		protected internal abstract static JsonConverter<TSelf> JsonConverter { get; }
+		protected internal abstract static JsonConverter<TSelf>? JsonConverter { get; }
 	}
 
 	/// <summary>
@@ -281,7 +307,6 @@ namespace Althea.Storage
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
 	public interface IActualStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, INumber<T> where TStorage : class, IStorage<T, TStorage>
 	{
-		IStorage? IStorage.Reference => null;
 	}
 
 	/// <summary>
@@ -291,12 +316,11 @@ namespace Althea.Storage
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{T, TStorage}"/></typeparam>
 	public interface IReferenceStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, INumber<T> where TStorage : class, IStorage<T, TStorage>
 	{
-		void IStorage.Dispose(bool invokedByUser) { }
+		abstract IStorage? IStorage.Reference { get; }
 
-		/// <summary>
-		/// When implemented by a derived class, get the total offset compared to the start of <see cref="IStorage.Reference"/> in bytes
-		/// </summary>
-		long TotalOffsetInBytes { get; }
+		abstract long IStorage.TotalOffsetInBytes { get; }
+
+		void IStorage.Dispose(bool invokedByUser) { }
 
 		/// <summary>
 		/// Create a referenced <typeparamref name="TStorage"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
@@ -344,7 +368,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the total offset compared to the start of the underlying reference in <typeparamref name="T"/>.
 		/// </summary>
-		/// <remarks>The default implementation does not check whether <see cref="TotalOffsetInBytes"/> can be divided by <see cref="Unmanaged{T}.Size"/> or not.</remarks>
+		/// <remarks>The default implementation does not check whether <see cref="IStorage.TotalOffsetInBytes"/> can be divided by <see cref="Unmanaged{T}.Size"/> or not.</remarks>
 		public long TotalOffset => TotalOffsetInBytes / Unmanaged<T>.Size;
 	}
 }
