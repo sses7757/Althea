@@ -148,6 +148,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<TP1, TP2> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
@@ -601,6 +607,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<TP1, TP2, TP3> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
@@ -1094,6 +1106,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<TP1, TP2, TP3, TP4> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
@@ -1627,6 +1645,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
@@ -2200,6 +2224,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
@@ -2813,6 +2843,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
@@ -3466,6 +3502,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7) && this.Pointer8.OverlapWith(s.Pointer8);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>
@@ -4159,6 +4201,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7) && this.Pointer8.OverlapWith(s.Pointer8) && this.Pointer9.OverlapWith(s.Pointer9);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>

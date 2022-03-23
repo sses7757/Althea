@@ -44,22 +44,22 @@ namespace Althea.LinearAlgebra.Dense
 
 		/// <summary>
 		/// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
-		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementSource"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="strideSource"/>, j = i * <paramref name="strideDestination"/></c>.<br/>
 		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TP1">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
 		/// <typeparam name="TP2">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
 		/// <param name="source">The source pointer to copy from</param>
-		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="strideSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
 		/// <param name="destination">The destination pointer to copy to</param>
-		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <param name="strideDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, int incrementSource, PointerSegment<TP2> destination, int incrementDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
+		public abstract bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, long strideSource, PointerSegment<TP2> destination, long strideDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
 		#endregion
 
 		////#region storage and managed operations
@@ -132,55 +132,55 @@ namespace Althea.LinearAlgebra.Dense
 
 		/////// <summary>
 		/////// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> which is a managed array of type <typeparamref name="T"/> with given strides.<br/>
-		/////// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementSource"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
+		/////// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="strideSource"/>, j = i * <paramref name="strideDestination"/></c>.<br/>
 		/////// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
 		/////// </summary>
 		/////// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/////// <typeparam name="TP">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
 		/////// <param name="source">The source pointer to copy from</param>
-		/////// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/////// <param name="strideSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
 		/////// <param name="destination">The destination managed array to copy to</param>
-		/////// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/////// <param name="strideDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/////// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
 		/////// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/////// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/////// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> ≤ 0</exception>
+		/////// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
 		////[AbstractApiMethod]
-		////public unsafe virtual bool ToManagedStrided<T, TP>(PointerSegment<TP> source, int incrementSource, Span<T> destination, int incrementDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		////public unsafe virtual bool ToManagedStrided<T, TP>(PointerSegment<TP> source, long strideSource, Span<T> destination, long strideDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
 		////{
 		////	if (destination.IsEmpty)
 		////		throw new ArgumentNullException(nameof(destination));
 		////	fixed (T* dst = destination)
 		////	{
 		////		ManagedPointer mp = new(new(dst), sizeof(T) * destination.Length);
-		////		return this.StridedCopy<T, TP, ManagedPointer>(source, incrementSource, mp, incrementDestination, out actualCopied);
+		////		return this.StridedCopy<T, TP, ManagedPointer>(source, strideSource, mp, strideDestination, out actualCopied);
 		////	}
 		////}
 
 		/////// <summary>
 		/////// When implemented by a derived class, copy some of the values in the <paramref name="values"/> managed array of type <typeparamref name="T"/> to <paramref name="destination"/> storage with given strides.<br/>
-		/////// <c><paramref name="destination"/>[j] = <paramref name="values"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementValues"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
+		/////// <c><paramref name="destination"/>[j] = <paramref name="values"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="strideValues"/>, j = i * <paramref name="strideDestination"/></c>.<br/>
 		/////// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
 		/////// </summary>
 		/////// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/////// <typeparam name="TP">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
 		/////// <param name="values">The source managed array to copy from</param>
-		/////// <param name="incrementValues">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="values"/></param>
+		/////// <param name="strideValues">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="values"/></param>
 		/////// <param name="destination">The destination storage to copy to</param>
-		/////// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/////// <param name="strideDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/////// <param name="actualCopied">Output the number of elements (in <typeparamref name="T"/>) actually copied</param>
 		/////// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/////// <exception cref="ArgumentNullException">If <paramref name="values"/> or <paramref name="destination"/> is invalid</exception>
-		/////// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementValues"/> or <paramref name="incrementDestination"/> ≤ 0</exception>
+		/////// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideValues"/> or <paramref name="strideDestination"/> ≤ 0</exception>
 		////[AbstractApiMethod]
-		////public unsafe virtual bool FromManagedStrided<T, TP>(PointerSegment<TP> destination, int incrementDestination, Span<T> values, int incrementValues, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		////public unsafe virtual bool FromManagedStrided<T, TP>(PointerSegment<TP> destination, long strideDestination, Span<T> values, long strideValues, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
 		////{
 		////	if (values.IsEmpty)
 		////		throw new ArgumentNullException(nameof(values));
 		////	fixed (T* src = values)
 		////	{
 		////		ManagedPointer mp = new(new(src), sizeof(T) * values.Length);
-		////		return this.StridedCopy<T, ManagedPointer, TP>(mp, incrementValues, destination, incrementDestination, out actualCopied);
+		////		return this.StridedCopy<T, ManagedPointer, TP>(mp, strideValues, destination, strideDestination, out actualCopied);
 		////	}
 		////}
 		////#endregion
@@ -201,7 +201,7 @@ namespace Althea.LinearAlgebra.Dense
 			return default;
 			// TODO
 		}
-		private static Action<TS1, TS2, int, int> GetCopyStridedMethod<TS1, TS2>() where TS1 : class, IStorage where TS2 : class, IStorage
+		private static Action<TS1, TS2, long, long> GetCopyStridedMethod<TS1, TS2>() where TS1 : class, IStorage where TS2 : class, IStorage
 		{
 			return default;
 			// TODO
@@ -304,20 +304,20 @@ namespace Althea.LinearAlgebra.Dense
 
 		/// <summary>
 		/// Copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
-		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementSource"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="strideSource"/>, j = i * <paramref name="strideDestination"/></c>.<br/>
 		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS1">The source storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The destination storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="source">The source storage to copy from</param>
-		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="strideSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
 		/// <param name="destination">The destination storage to copy to</param>
-		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <param name="strideDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> ≤ 0</exception>
-		public static long StridedCopyTo<T, TS1, TS2>(this TS1 source, int incrementSource, TS2 destination, int incrementDestination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
+		public static long StridedCopyTo<T, TS1, TS2>(this TS1 source, long strideSource, TS2 destination, long strideDestination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -325,11 +325,11 @@ namespace Althea.LinearAlgebra.Dense
 				throw new ArgumentNullException(nameof(destination));
 			if (source.OverlapWith(destination))
 				throw new InvalidOperationException(StorageError.CannotCopyOverlap);
-			if (incrementSource < 1)
-				throw new ArgumentOutOfRangeException(nameof(incrementSource));
-			if (incrementDestination < 1)
-				throw new ArgumentOutOfRangeException(nameof(incrementDestination));
-			if (incrementSource == 1 && incrementDestination == 1)
+			if (strideSource < 1)
+				throw new ArgumentOutOfRangeException(nameof(strideSource));
+			if (strideDestination < 1)
+				throw new ArgumentOutOfRangeException(nameof(strideDestination));
+			if (strideSource == 1 && strideDestination == 1)
 			{
 				return source.CopyTo<T, TS1, TS2>(destination);
 			}
@@ -340,55 +340,55 @@ namespace Althea.LinearAlgebra.Dense
 			copier = GetCopyStridedMethod<TS1, TS2>();
 			copyStridedFunc[(handle1, handle2)] = copier;
 		FINAL:
-			((Action<TS1, TS2, int, int>)copier).Invoke(source, destination, incrementSource, incrementDestination);
-			return Math.Max((source.Length - 1) / incrementSource + 1, (destination.Length - 1) / incrementDestination + 1);
+			((Action<TS1, TS2, long, long>)copier).Invoke(source, destination, strideSource, strideDestination);
+			return Math.Max((source.Length - 1) / strideSource + 1, (destination.Length - 1) / strideDestination + 1);
 		}
 
 		/// <summary>
 		/// Copy the <paramref name="source"/> storage to <paramref name="destination"/> span with given strides.<br/>
-		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementSource"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="strideSource"/>, j = i * <paramref name="strideDestination"/></c>.<br/>
 		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="source">The source storage to copy from</param>
-		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="strideSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
 		/// <param name="destination">The destination span to copy to</param>
-		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <param name="strideDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> ≤ 0</exception>
-		public static unsafe long ToManagedStride<T, TS>(this TS source, int incrementSource, Span<T> destination, int incrementDestination = 1) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
+		public static unsafe long ToManagedStride<T, TS>(this TS source, long strideSource, Span<T> destination, long strideDestination = 1) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			fixed (T* dst = destination)
 			{
 				ManagedPointer mp = new(new(dst), destination.Length * sizeof(T));
 				ManagedPureStorage<T> ms = new(mp);
-				return StridedCopyTo<T, TS, ManagedPureStorage<T>>(source, incrementSource, ms, incrementDestination);
+				return StridedCopyTo<T, TS, ManagedPureStorage<T>>(source, strideSource, ms, strideDestination);
 			}
 		}
 
 		/// <summary>
 		/// Copy the <paramref name="source"/> span to <paramref name="destination"/> storage with given strides.<br/>
-		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="incrementSource"/>, j = i * <paramref name="incrementDestination"/></c>.<br/>
+		/// <c><paramref name="destination"/>[j] = <paramref name="source"/>[k] for i = 0, ..., n - 1; k = i * <paramref name="strideSource"/>, j = i * <paramref name="strideDestination"/></c>.<br/>
 		/// The number of elements copied is calculated to the maximum possible value that does not exceeds the boundaries.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The storage class that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="source">The source span to copy from</param>
-		/// <param name="incrementSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
+		/// <param name="strideSource">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="source"/></param>
 		/// <param name="destination">The destination storage to copy to</param>
-		/// <param name="incrementDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
+		/// <param name="strideDestination">The stride between consecutive elements (in <typeparamref name="T"/>) of <paramref name="destination"/></param>
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incrementSource"/> or <paramref name="incrementDestination"/> ≤ 0</exception>
-		public static unsafe long FromManagedStride<T, TS>(this Span<T> source, int incrementSource, TS destination, int incrementDestination) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
+		public static unsafe long FromManagedStride<T, TS>(this Span<T> source, long strideSource, TS destination, long strideDestination) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			fixed (T* src = source)
 			{
 				ManagedPointer mp = new(new(src), source.Length * sizeof(T));
 				ManagedPureStorage<T> ms = new(mp);
-				return StridedCopyTo<T, ManagedPureStorage<T>, TS>(ms, incrementSource, destination, incrementDestination);
+				return StridedCopyTo<T, ManagedPureStorage<T>, TS>(ms, strideSource, destination, strideDestination);
 			}
 		}
 		#endregion

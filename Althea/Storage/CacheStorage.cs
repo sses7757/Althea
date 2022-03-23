@@ -428,6 +428,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is CachedStorageBase<TS, TPh, TPl> s && this.Memory.OverlapWith(s.Memory);
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="CachedStorage{T, TS, TPh, TPl}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>

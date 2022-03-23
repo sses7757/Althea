@@ -180,6 +180,12 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		/// <inheritdoc/>
+		public bool OverlapWith(IStorage other)
+		{
+			return other is MixedStorageBase<<#=pointerTypes#>> s<# for (int j = 1; j <= i; j++) { #> && this.Pointer<#=j#>.OverlapWith(s.Pointer<#=j#>)<# } #>;
+		}
+
 		/// <summary>
 		/// Make a referenced <see cref="MixedStorage{T, <#=pointerTypes#>}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
 		/// </summary>

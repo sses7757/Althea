@@ -67,26 +67,34 @@ namespace Althea.LinearAlgebra.Sparse
 		/// When implemented by a derived class, convert sparse vector <paramref name="x"/> to dense vector <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <param name="x">The sparse vector x as a <see cref="ISparseVector{T}"/></param>
-		/// <param name="y">The dense vector y as a <see cref="Storage{T}"/> whose elements at <paramref name="x"/>.Indices are overwritten</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
-		[AbstractApiMethod]
-		public abstract bool VectorSparseToDense<T>(ISparseArray<T> x, Storage<T> y) where T : unmanaged, INumber<T>;
-
-		/// <summary>
-		/// When implemented by a derived class, convert a dense vector <paramref name="x"/> to a sparse vector by the given truncation <paramref name="threshold"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <param name="x">The input dense vector as a <see cref="Storage{T}"/></param>
-		/// <param name="threshold">Any element in <paramref name="x"/> whose absolute value is less than or equals to <paramref name="threshold"/> will be regarded as zero</param>
-		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/></param>
+		/// <typeparam name="TS1">The storage type used by the value array(s) of sparse vector</typeparam>
+		/// <typeparam name="TS2">The storage type used by the dense vector</typeparam>
+		/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
+		/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
+		/// <param name="x">The sparse vector as a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/></param>
+		/// <param name="y">Output the dense vector as a <typeparamref name="TS2"/>: if <paramref name="y"/> is invalid, a new one will be allocated and returned; otherwise, it will simply be overwritten</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorDenseToSparse<T>(Storage<T> x, SparseVectorFormat format, out SparseArrayWrapper<T> target, float threshold = 0) where T : unmanaged, INumber<T>;
+		public abstract bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(in SparseArrayWrapper<T, TInd, TS1, TSInd> x, ref TS2 y) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+
+		/// <summary>
+		/// When implemented by a derived class, convert dense vector <paramref name="x"/> to sparse vector <paramref name="x"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS2">The storage type used by the value array(s) of sparse vector</typeparam>
+		/// <typeparam name="TS1">The storage type used by the dense vector</typeparam>
+		/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
+		/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
+		/// <param name="x">The dense vector as a <typeparamref name="TS1"/></param>
+		/// <param name="y">Output the sparse vector as a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> whose <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.DefaultValue"/> and <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Format"/> is used: if <paramref name="y"/>'s storages are invalid, new ones will be allocated and returned; otherwise, they will simply be overwritten</param>
+		/// <param name="strideX">The stride between consecutive elements between <paramref name="y"/></param>
+		/// <param name="threshold">The threshold used to truncate <paramref name="x"/> to sparse array: the values with <c>abs(default) - <paramref name="threshold"/> ≤ abs(v) ≤ abs(default) + <paramref name="threshold"/></c> are truncated to default value</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="y"/> or <paramref name="y"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is out of range or <paramref name="threshold"/> &lt; 0</exception>
+		[AbstractApiMethod]
+		public abstract bool VectorDenseToSparse<T, TInd, TS2, TS1, TSInd>(ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, TS1 x, long strideX = 1, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>;
 		#endregion
 
 		#region vector and matrix
@@ -223,23 +231,6 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		[AbstractApiMethod]
 		public abstract bool IndexBound<T, TS>(TS array, T value, bool lowerBound, out long index) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, compute the scan (accumulation) of <paramref name="array"/> and store the result to <paramref name="target"/>.
-		/// </summary>
-		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
-		/// <typeparam name="TS">The input concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
-		/// <typeparam name="TSOut">The output concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="array">The storage of the input integer-typed array</param>
-		/// <param name="target">The storage of the result array</param>
-		/// <param name="inclusive">Whether to perform inclusive scan (true), exclusive scan (false) or contains both ends (null)</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>If <paramref name="inclusive"/> is null, the length of <paramref name="target"/> shall be larger than <paramref name="array"/>.</remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
-		[AbstractApiMethod]
-		public abstract bool IndexScan<T, TOut, TS, TSOut>(TS array, TSOut target, bool? inclusive) where T : unmanaged, IBinaryInteger<T> where TOut : unmanaged, IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<T, TSOut>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.

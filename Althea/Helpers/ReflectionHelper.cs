@@ -1,5 +1,5 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 using Althea.Resources;
 
@@ -11,6 +11,26 @@ namespace Althea.Helpers
 	/// </summary>
 	public static class ReflectionHelper
 	{
+		/// <summary>
+		/// Creates a new read-only span over a portion of a regular managed object.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="value">The reference to the first element</param>
+		/// <param name="length">The number of elements in <paramref name="value"/></param>
+		/// <returns>A <see cref="ReadOnlySpan{T}"/> on <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ReadOnlySpan<T> CreateReadOnlySpan<T>(in T value, int length) => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in value), length);
+
+		/// <summary>
+		/// Creates a new read-only span over a portion of a regular managed object.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="value">The reference to the first element</param>
+		/// <param name="length">The number of elements in <paramref name="value"/></param>
+		/// <returns>A <see cref="Span{T}"/> on <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<T> CreateSpan<T>(ref T value, int length) => MemoryMarshal.CreateSpan(ref value, length);
+
 		/// <summary>
 		/// Get the name string representation of given <paramref name="type"/> together with its generic parameters
 		/// </summary>

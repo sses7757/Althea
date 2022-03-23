@@ -1,7 +1,7 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 using Althea.Helpers;
+using Althea.Storage;
 
 
 namespace Althea.LinearAlgebra.Sparse
@@ -307,6 +307,69 @@ namespace Althea.LinearAlgebra.Sparse
 			sb = b == 255 ? "Any" : $"{{{this.blocking.GetName()}}}";
 			sm = m == 255 ? "Any" : $"{{{this.major.GetName()}}}";
 			return $"[{nameof(Type)}={st}; {nameof(Blocking)}={sb}; {nameof(Major)}={sm}]";
+		}
+		#endregion
+	}
+
+	/// <summary>
+	/// The wrapper ref struct for any sparse array.
+	/// </summary>
+	/// <typeparam name="TVal">Any unmanaged number as the value data type</typeparam>
+	/// <typeparam name="TSVal">The storage type used by the value array(s)</typeparam>
+	/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
+	/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
+	public readonly ref struct SparseArrayWrapper<TVal, TInd, TSVal, TSInd>
+		where TVal : unmanaged, INumber<TVal> where TInd : unmanaged, IBinaryInteger<TInd>
+		where TSVal : class, IStorage<TVal, TSVal> where TSInd : class, IStorage<TInd, TSInd>
+	{
+		#region basic
+		/// <summary>
+		/// The default value of this sparse array
+		/// </summary>
+		public TVal DefaultValue { get; }
+
+		/// <summary>
+		/// The <see cref="SparseFormat"/> of this sparse array
+		/// </summary>
+		public SparseFormat Format { get; }
+		
+		/// <summary>
+		/// The size of this sparse array
+		/// </summary>
+		public ReadOnlySpan<long> Size { get; }
+
+		/// <summary>
+		/// The value array(s) of this sparse array
+		/// </summary>
+		public ReadOnlySpan<TSVal> ValueStorages { get; }
+
+		/// <summary>
+		/// The index array(s) of this sparse array
+		/// </summary>
+		public ReadOnlySpan<TSInd> IndexStorages { get; }
+
+		/// <summary>
+		/// The constant block size of this sparse array, can be empty if it is not a <see cref="SparseFormat.Blocking.Simple"/>
+		/// </summary>
+		public ReadOnlySpan<TInd> BlockSize { get; }
+
+		/// <summary>
+		/// Other information related to this sparse array as a <see cref="object"/>
+		/// </summary>
+		public object? OtherInfo { get; }
+
+		/// <summary>
+		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with given detailed parameters.
+		/// </summary>
+		public SparseArrayWrapper(TVal defaultValue, SparseFormat format, ReadOnlySpan<long> size, ReadOnlySpan<TSVal> values, ReadOnlySpan<TSInd> indexes, ReadOnlySpan<TInd> blockSize = default, object? otherInfo = null)
+		{
+			this.DefaultValue = defaultValue;
+			this.Format = format;
+			this.Size = size;
+			this.ValueStorages = values;
+			this.IndexStorages = indexes;
+			this.BlockSize = blockSize;
+			this.OtherInfo = otherInfo;
 		}
 		#endregion
 	}

@@ -99,6 +99,21 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="destination"/> is not of same size as this one</exception>
 		void CopyTo(TSelf destination);
 
+		TSelf ICloneable<TSelf>.Clone()
+		{
+			var clone = this.CreateAlike();
+			try
+			{
+				this.CopyTo(clone);
+				return clone;
+			}
+			catch (Exception)
+			{
+				clone?.Dispose();
+				throw;
+			}
+		}
+
 		/// <summary>
 		/// When implemented by a derived class, set the sub-vector indicated by the given <paramref name="start"/> offset and <paramref name="count"/> to <paramref name="value"/>
 		/// </summary>

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.Arm;
 using System.Text;
 
@@ -895,27 +894,61 @@ namespace Althea.Helpers
 
 		#region disposable array extends
 		/// <summary>
-		/// Clear a general array
+		/// Dispose and clear a general span
 		/// </summary>
-		/// <typeparam name="TArr">The array type</typeparam>
+		/// <typeparam name="T">The disposable type</typeparam>
+		/// <param name="span">The span to clear</param>
+		public static void ClearList<T>(this Span<T> span) where T : IDisposable
+		{
+			for (int i = 0; i < span.Length; i++)
+			{
+				span[i]?.Dispose();
+			}
+			span.Clear();
+		}
+
+		/// <summary>
+		/// Dispose and clear a general span
+		/// </summary>
+		/// <typeparam name="T">The disposable type</typeparam>
+		/// <param name="span">The span to clear</param>
+		public static void ClearList<T>(this ReadOnlySpan<T> span) where T : IDisposable
+		{
+			for (int i = 0; i < span.Length; i++)
+			{
+				span[i]?.Dispose();
+			}
+		}
+
+		/// <summary>
+		/// Dispose and clear a general array
+		/// </summary>
+		/// <typeparam name="T">The disposable type</typeparam>
 		/// <param name="array">The array to clear</param>
-		public static void ClearList<TArr>(this TArr[] array) where TArr : IDisposable
+		public static void ClearList<T>(this T[] array) where T : IDisposable
 		{
 			if (array is null)
 				return;
-			array.ForEach(l => l?.Dispose());
+			for (int i = 0; i < array.Length; i++)
+			{
+				array[i]?.Dispose();
+			}
 			Array.Clear(array, 0, array.Length);
 		}
 
 		/// <summary>
-		/// Clear a general list
+		/// Dispose and clear a general list
 		/// </summary>
-		/// <typeparam name="TArr">The array type</typeparam>
+		/// <typeparam name="T">The disposable type</typeparam>
 		/// <param name="list">The list to clear</param>
-		public static void ClearList<TArr>(this List<TArr> list) where TArr : IDisposable
+		public static void ClearList<T>(this List<T> list) where T : IDisposable
 		{
 			if (list is null)
 				return;
+			for (int i = 0; i < list.Count; i++)
+			{
+				list[i]?.Dispose();
+			}
 			list.ForEach(l => l?.Dispose());
 			list.Clear();
 		}
@@ -923,9 +956,9 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Dispose a general read-only list
 		/// </summary>
-		/// <typeparam name="TArr">The array type</typeparam>
+		/// <typeparam name="T">The disposable type</typeparam>
 		/// <param name="list">The read-only list to dispose</param>
-		public static void ClearList<TArr>(this IReadOnlyList<TArr> list) where TArr : IDisposable
+		public static void ClearList<T>(this IReadOnlyList<T> list) where T : IDisposable
 		{
 			if (list is null)
 				return;
@@ -939,9 +972,9 @@ namespace Althea.Helpers
 		/// Dispose a general dictionary
 		/// </summary>
 		/// <typeparam name="T">The dictionary key type</typeparam>
-		/// <typeparam name="TArr">The array type</typeparam>
+		/// <typeparam name="TD">The disposable type</typeparam>
 		/// <param name="dict">The dictionary to dispose</param>
-		public static void ClearDict<T, TArr>(this IReadOnlyDictionary<T, TArr> dict) where TArr : IDisposable
+		public static void ClearDict<T, TD>(this IReadOnlyDictionary<T, TD> dict) where TD : IDisposable
 		{
 			if (dict is null)
 				return;

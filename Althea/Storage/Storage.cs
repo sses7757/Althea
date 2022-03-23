@@ -78,6 +78,13 @@ namespace Althea.Storage
 		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/>.</returns>
 		bool IsByteOffsetValid(long offset, long newLength = 0);
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this storage overlaps with the <paramref name="other"/> storage.
+		/// </summary>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
+		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+		bool OverlapWith(IStorage other);
 	}
 
 	/// <summary>
@@ -295,9 +302,9 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the JSON converter of <typeparamref name="TSelf"/>. Null means use default one.
+		/// When implemented by a derived class, statically get the JSON converter of <typeparamref name="TSelf"/>. Cannot be null.
 		/// </summary>
-		protected internal abstract static JsonConverter<TSelf>? JsonConverter { get; }
+		protected internal abstract static JsonConverter<TSelf> JsonConverter { get; }
 	}
 
 	/// <summary>

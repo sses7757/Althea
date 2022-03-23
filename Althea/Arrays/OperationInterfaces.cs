@@ -28,24 +28,68 @@ namespace Althea.Arrays
 		public abstract static T Dot(TVec1 left, TVec2 right, bool conjugateLeft = true);
 
 		/// <summary>
-		/// When implemented by a derived class, statically compute the in-place addition of the <paramref name="other"/> vector (scaling by <paramref name="scalar"/>) and <paramref name="this"/> vector.
+		/// When implemented by a derived class, statically compute the in-place addition of the <paramref name="left"/> vector (scaling by <paramref name="scalar"/>) and <paramref name="right"/> vector.
 		/// </summary>
-		/// <param name="this">The vector be added to</param>
-		/// <param name="other">The other vector to add</param>
-		/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-		public abstract static void AddBy(TVec1 @this, TVec2 other, T scalar);
+		/// <param name="left">The vector be added to</param>
+		/// <param name="right">The other vector to add</param>
+		/// <param name="scalar">The scalar to be multiplied to <paramref name="right"/> of type <typeparamref name="T"/></param>
+		public abstract static void AddBy(TVec1 left, TVec2 right, T scalar);
 	}
 
 	/// <summary>
-	/// The interface for vectors' out-of-place operators.
+	/// The interface for vectors' unary vector out-of-place operators.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IVectorUnaryOperators<T, in TVec1, out TVec2>
+		where T : unmanaged, INumber<T>
+		where TVec1 : class, IBaseVector<T, TVec1>, IVectorUnaryOperators<T, TVec1, TVec2>
+		where TVec2 : class, IBaseVector<T, TVec2>
+	{
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TVec2"/> which is the negation result of the given <paramref name="vector"/>
+		/// </summary>
+		/// <param name="vector">The original vector to negate</param>
+		/// <returns>A new <typeparamref name="TVec2"/> which is the negation result of the given <paramref name="vector"/></returns>
+		/// <exception cref="InvalidOperationException">If <typeparamref name="T"/> is an unsigned type</exception>
+		public abstract static TVec2 operator -(TVec1 vector);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TVec2"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="vector">The original vector to multiply</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
+		/// <returns>A new <typeparamref name="TVec2"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+		public abstract static TVec2 operator *(TVec1 vector, T scalar);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TVec2"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="vector">The original vector to multiply</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
+		/// <returns>A new <typeparamref name="TVec2"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+		public abstract static TVec2 operator *(T scalar, TVec1 vector);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TVec2"/> which is the division result of the given <paramref name="vector"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="vector">The original vector to be divided</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
+		/// <returns>A new <typeparamref name="TVec2"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
+		public abstract static TVec2 operator /(TVec1 vector, T scalar);
+	}
+
+	/// <summary>
+	/// The interface for vectors' binary out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec1">The first input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec2">The second input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec3">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	public interface IVectorOperators<T, in TVec1, in TVec2, out TVec3>
+	public interface IVectorBinaryOperators<T, in TVec1, in TVec2, out TVec3>
 		where T : unmanaged, INumber<T>
-		where TVec1 : class, IBaseVector<T, TVec1>, IVectorOperators<T, TVec1, TVec2, TVec3>
+		where TVec1 : class, IBaseVector<T, TVec1>, IVectorBinaryOperators<T, TVec1, TVec2, TVec3>
 		where TVec2 : class, IBaseVector<T, TVec2>
 		where TVec3 : class, IBaseVector<T, TVec3>
 	{
@@ -64,38 +108,6 @@ namespace Althea.Arrays
 		/// <param name="right">One original vector as the right operand</param>
 		/// <returns>A new <typeparamref name="TVec3"/> which is the subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
 		public abstract static TVec3 operator -(TVec1 left, TVec2 right);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TVec3"/> which is the negation result of the given <paramref name="vector"/>
-		/// </summary>
-		/// <param name="vector">The original vector to negate</param>
-		/// <returns>A new <typeparamref name="TVec3"/> which is the negation result of the given <paramref name="vector"/></returns>
-		/// <exception cref="InvalidOperationException">If <typeparamref name="T"/> is an unsigned type</exception>
-		public abstract static TVec3 operator -(TVec1 vector);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TVec3"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="vector">The original vector to multiply</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-		/// <returns>A new <typeparamref name="TVec3"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
-		public abstract static TVec3 operator *(TVec1 vector, T scalar);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TVec3"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="vector">The original vector to multiply</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-		/// <returns>A new <typeparamref name="TVec3"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
-		public abstract static TVec3 operator *(T scalar, TVec1 vector);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TVec3"/> which is the division result of the given <paramref name="vector"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="vector">The original vector to be divided</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
-		/// <returns>A new <typeparamref name="TVec3"/> which is the multiplication result of the given <paramref name="vector"/> and <paramref name="scalar"/></returns>
-		public abstract static TVec3 operator /(TVec1 vector, T scalar);
 	}
 
 	/// <summary>
@@ -362,7 +374,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction-addition: <c><paramref name="C"/> = <paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> .* <paramref name="opC"/>(<paramref name="C"/>)</c>.
 		/// </summary>
-		/// <remarks>The <see cref="ILabeledTensor.Labels"/> of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide contraction dimensions.</remarks>
+		/// <remarks>The labels of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide contraction dimensions.</remarks>
 		/// <param name="A">The first input contraction tensor</param>
 		/// <param name="B">The second input contraction tensor</param>
 		/// <param name="C">The input/output addition tensor</param>
@@ -379,7 +391,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor point-wise binary operation: <c><paramref name="C"/> = <paramref name="binary"/>(<paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>), <paramref name="β"/> .* <paramref name="opB"/>(<paramref name="B"/>))</c>.
 		/// </summary>
-		/// <remarks>The <see cref="ILabeledTensor.Labels"/> of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide permutations. If <paramref name="A"/> or <paramref name="B"/> is null (<paramref name="α"/> or <paramref name="β"/> is 0), <paramref name="binary"/> is not used.</remarks>
+		/// <remarks>The labels of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide permutations. If <paramref name="A"/> or <paramref name="B"/> is null (<paramref name="α"/> or <paramref name="β"/> is 0), <paramref name="binary"/> is not used.</remarks>
 		/// <param name="A">The first input tensor</param>
 		/// <param name="B">The second input tensor</param>
 		/// <param name="C">The output result tensor</param>

@@ -790,28 +790,6 @@ namespace Althea.Storage
 			((Action<TS, T>)filler).Invoke(storage, value);
 		}
 
-		private static readonly Dictionary<(RuntimeTypeHandle, RuntimeTypeHandle), Delegate> overlapFunc = new();
-
-		/// <summary>
-		/// Check whether the given <paramref name="left"/> and <paramref name="right"/> storages overlaps with each other.
-		/// </summary>
-		/// <param name="left">The first storage of type <typeparamref name="TS1"/> to check overlap</param>
-		/// <param name="right">The other storage of type <typeparamref name="TS2"/> to check overlap</param>
-		/// <returns>True if <paramref name="left"/> overlaps with <paramref name="right"/>, false otherwise</returns>
-		public static bool OverlapWith<TS1, TS2>(this TS1? left, TS2? right) where TS1 : class, IStorage where TS2 : class, IStorage
-		{
-			if (left is null || !left.IsValid() || right is null || !right.IsValid())
-				return false;
-
-			RuntimeTypeHandle handle1 = typeof(TS1).TypeHandle, handle2 = typeof(TS2).TypeHandle;
-			if (overlapFunc.TryGetValue((handle1, handle2), out var overlapChecker))
-				goto FINAL;
-			overlapChecker = GetOverlapCheckMethod<TS1, TS2>();
-			overlapFunc[(handle1, handle2)] = overlapChecker;
-		FINAL:
-			return ((Func<TS1, TS2, bool>)overlapChecker).Invoke(left, right);
-		}
-
 		private static readonly Dictionary<(RuntimeTypeHandle, RuntimeTypeHandle), Delegate> copyByteFunc = new();
 
 		/// <summary>

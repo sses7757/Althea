@@ -103,8 +103,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IValueArray{T, TSelf}"/></typeparam>
 	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
-	public interface IValueArray<T, TSelf> :
-		ICheckValid, IDisposable, IPrintable<T>,
+	public interface IValueArray<T, TSelf> : ICheckValid, IDisposable, IPrintable<T>,
 		ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IValueArray<T, TSelf>
@@ -113,7 +112,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this array (the extent at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		protected ReadOnlySpan<long> Size { get; }
+		ReadOnlySpan<long> Size { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the presenting length (in <typeparamref name="T"/>) of this array.
@@ -269,26 +268,18 @@ namespace Althea.Arrays
 
 		#region creation
 		/// <summary>
-		/// When implemented by a derived class, get all the storages of this array.
+		/// When implemented by a derived class, serialize this array to a JSON object.
 		/// </summary>
-		/// <returns>All the storages of the array as an <see cref="IReadOnlyDictionary{TKey, TValue}"/> of <see cref="string"/> and <see cref="IStorage"/>.</returns>
-		IReadOnlyDictionary<string, IStorage> GetStorages();
-
+		/// <returns>The serialization of this array as a JSON object <see cref="string"/>.</returns>
+		string JsonSerialize();
+		
 		/// <summary>
-		/// When implemented by a derived class, get other requisite informations for reconstructing the array of that derived class type.
+		/// When implemented by a derived factory class, reconstruct a <typeparamref name="TSelf"/> from the given <paramref name="json"/> object <see cref="string"/>.
 		/// </summary>
-		/// <returns>Other requisite informations used to reconstruct this array.</returns>
-		IReadOnlyDictionary<string, object>? GetMetaData();
-
-		/// <summary>
-		/// When implemented by a derived factory class, reconstruct a <typeparamref name="TSelf"/> of the derived factory's corresponding array type using <paramref name="size"/>, <paramref name="storages"/> as well as <paramref name="otherInfo"/>.
-		/// </summary>
-		/// <param name="size">The size of the <typeparamref name="TSelf"/> about to create</param>
-		/// <param name="storages">All the original storage(s) of the array(s) of the<typeparamref name="TSelf"/> about to create from <see cref="GetStorages"/></param>
-		/// <param name="otherInfo">Other information obtained from <see cref="GetMetaData"/></param>
-		/// <returns>The reconstructed <typeparamref name="TSelf"/> of the derived factory's corresponding array type.</returns>
-		/// <exception cref="ArgumentException">If the any of the arguments is invalid</exception>
-		TSelf CreateArray(ReadOnlySpan<long> size, IReadOnlyDictionary<string, IStorage> storages, IReadOnlyDictionary<string, object>? otherInfo = null);
+		/// <param name="json">The JSON object string used to deserialize</param>
+		/// <returns>The reconstructed <typeparamref name="TSelf"/> from <paramref name="json"/>.</returns>
+		/// <exception cref="ArgumentException">If <paramref name="json"/> is not a valid JSON serialization from <see cref="JsonSerialize"/></exception>
+		TSelf JsonDeserialize(string json);
 		#endregion
 	}
 
