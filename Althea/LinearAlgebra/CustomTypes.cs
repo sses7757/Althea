@@ -156,6 +156,10 @@ namespace Althea.LinearAlgebra
 	/// </summary>
 	public enum GeneralEigenType
 	{
+		/// <summary>
+		/// No general eigen
+		/// </summary>
+		None = 0,
 		//tex: $A x = \lambda B x$
 
 		/// <summary>

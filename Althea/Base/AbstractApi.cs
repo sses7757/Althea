@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -53,7 +50,7 @@ namespace Althea
 			}
 			catch (Exception e)
 			{
-				throw new InvalidOperationException(Resources.Backend.CannotInitialize, e);
+				throw new InvalidOperationException(Resources.BackendError.CannotInitialize, e);
 			}
 		}
 		#endregion
@@ -64,47 +61,73 @@ namespace Althea
 	{
 		private static readonly Dictionary<object, List<RuntimeTypeHandle>> InstanceApis = new();
 
+		private static readonly Dictionary<RuntimeTypeHandle, object> __lockers = new();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static object GetLocker<TApi>() where TApi : IAbstractRuntimeApi<TApi>
+		{
+			var handle = typeof(TApi).TypeHandle;
+			if (!__lockers.TryGetValue(handle, out var locker))
+			{
+				locker = new object();
+				__lockers[handle] = locker;
+			}
+			return locker;
+		}
+
 		internal static int Count<TApi>() where TApi : IAbstractRuntimeApi<TApi>
 		{
-			return AbstractApiSelector<TApi>.APIs.Count;
+			lock (GetLocker<TApi>())
+				return AbstractApiSelector<TApi>.APIs.Count;
 		}
 
 		internal static TApi Get<TApi>(int index) where TApi : IAbstractRuntimeApi<TApi>
 		{
-			return AbstractApiSelector<TApi>.APIs[index];
+			lock (GetLocker<TApi>())
+				return AbstractApiSelector<TApi>.APIs[index];
 		}
 
 		internal static int IndexOf<TApi>(TApi instance) where TApi : IAbstractRuntimeApi<TApi>
 		{
-			return AbstractApiSelector<TApi>.APIs.IndexOf(instance);
+			lock (GetLocker<TApi>())
+				return AbstractApiSelector<TApi>.APIs.IndexOf(instance);
 		}
 
 		internal static void Add<TApi>(TApi instance) where TApi : IAbstractRuntimeApi<TApi>
 		{
 			var handle = typeof(TApi).TypeHandle;
-			AbstractApiSelector<TApi>.APIs.Add(instance);
-			if (InstanceApis.TryGetValue(instance, out var list))
-				list.Add(handle);
-			else
-				InstanceApis[instance] = new() { handle };
+			lock (GetLocker<TApi>())
+			{
+				AbstractApiSelector<TApi>.APIs.Add(instance);
+				if (InstanceApis.TryGetValue(instance, out var list))
+					list.Add(handle);
+				else
+					InstanceApis[instance] = new() { handle };
+			}
 		}
 
 		internal static void Dispose<TApi>(int index) where TApi : IAbstractRuntimeApi<TApi>
 		{
-			var instance = AbstractApiSelector<TApi>.APIs[index];
-			if (InstanceApis[instance].Count == 1)
-				instance.Dispose();
+			lock (GetLocker<TApi>())
+			{
+				var instance = AbstractApiSelector<TApi>.APIs[index];
+				if (InstanceApis[instance].Count == 1)
+					instance.Dispose();
+			}
 		}
 
 		internal static void Initiate<TApi>(int index, Type actualType) where TApi : IAbstractRuntimeApi<TApi>
 		{
-			var instance = IAbstractRuntimeApi<TApi>.Create(actualType);
-			var old = AbstractApiSelector<TApi>.APIs[index];
-			AbstractApiSelector<TApi>.APIs[index] = instance;
-			old.Dispose();
-			var list = InstanceApis[old];
-			InstanceApis.Remove(old);
-			InstanceApis[instance] = list;
+			lock (GetLocker<TApi>())
+			{
+				var instance = IAbstractRuntimeApi<TApi>.Create(actualType);
+				var old = AbstractApiSelector<TApi>.APIs[index];
+				AbstractApiSelector<TApi>.APIs[index] = instance;
+				old.Dispose();
+				var list = InstanceApis[old];
+				InstanceApis.Remove(old);
+				InstanceApis[instance] = list;
+			}
 		}
 	}
 	#endregion
@@ -151,11 +174,9 @@ namespace Althea
 		/// The enumerator used to enumerates through all API instances of <typeparamref name="TApi"/> kind
 		/// </summary>
 		/// <remarks>The access for APIs is locked when enumerating this <see cref="ApiEnumerator"/></remarks>
-		protected struct ApiEnumerator : IEnumerator<TApi>, IDisposable
+		protected ref struct ApiEnumerator
 		{
 			private int current = 0;
-
-			private readonly bool __locked = false;
 
 			private static int EndIndex => (CurrentApiIndex + 1) % ApiManager.Count<TApi>();
 
@@ -164,15 +185,12 @@ namespace Althea
 			/// </summary>
 			public TApi Current => ApiManager.Get<TApi>(current);
 
-			object IEnumerator.Current => this.Current;
-
 			/// <summary>
 			/// The default constructor of <see cref="ApiEnumerator"/>
 			/// </summary>
 			public ApiEnumerator()
 			{
 				this.Reset();
-				Monitor.Enter(apiChangeLock, ref this.__locked);
 			}
 
 			/// <summary>
@@ -183,15 +201,6 @@ namespace Althea
 				this.current = CurrentApiIndex - 1;
 				if (this.current < 0)
 					this.current = ApiManager.Count<TApi>() - 1;
-			}
-
-			/// <summary>
-			/// Dispose the enumerator instance
-			/// </summary>
-			public void Dispose()
-			{
-				if (this.__locked)
-					Monitor.Exit(apiChangeLock);
 			}
 
 			/// <summary>

@@ -1,9 +1,11 @@
-﻿using System;
+﻿using System.Runtime.InteropServices;
+using System.Text.Json;
 
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.Storage;
 
+using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 
 

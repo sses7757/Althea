@@ -1,12 +1,36 @@
-﻿using System;
-
-using Althea.Arrays;
-using Althea.LinearAlgebra;
+﻿using Althea.LinearAlgebra;
 using Althea.TensorAlgebra;
 
 
 namespace Althea.Arrays
 {
+	#region vector
+	/// <summary>
+	/// The interface for vectors' out-of-place conversions.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TVec1">The first concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec2">The second concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IVectorConversion<T, TVec1, TVec2>
+		where T : unmanaged, INumber<T>
+		where TVec1 : class, IBaseVector<T, TVec1>
+		where TVec2 : class, IBaseVector<T, TVec2>
+	{
+		/// <summary>
+		/// When implemented by a derived class, statically convert the <paramref name="input"/> <typeparamref name="TVec1"/> to a new <typeparamref name="TVec2"/>.
+		/// </summary>
+		/// <param name="input">The input vector of type <typeparamref name="TVec1"/> to convert</param>
+		/// <returns>A created new vector of <typeparamref name="TVec2"/>.</returns>
+		public abstract static TVec2 Convert(TVec1 input);
+
+		/// <summary>
+		/// When implemented by a derived class, statically convert the <paramref name="input"/> <typeparamref name="TVec2"/> to a new <typeparamref name="TVec1"/>.
+		/// </summary>
+		/// <param name="input">The input vector of type <typeparamref name="TVec2"/> to convert</param>
+		/// <returns>A created new vector of <typeparamref name="TVec1"/>.</returns>
+		public abstract static TVec1 Convert(TVec2 input);
+	}
+
 	/// <summary>
 	/// The interface for vectors' in-place operations.
 	/// </summary>
@@ -109,7 +133,9 @@ namespace Althea.Arrays
 		/// <returns>A new <typeparamref name="TVec3"/> which is the subtraction result of the given <paramref name="left"/> and <paramref name="right"/> vectors</returns>
 		public abstract static TVec3 operator -(TVec1 left, TVec2 right);
 	}
+	#endregion
 
+	#region vector and matrix
 	/// <summary>
 	/// The interface for operations that multiply vectors and matrices of different types.
 	/// </summary>
@@ -117,7 +143,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixVectorMultiplyOperations<T, in TVec1, TVec2, in TMat>
+	public interface IMatrixVectorMultiplyOperations<T, in TVec1, in TVec2, in TMat>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>
 		where TVec2 : class, IBaseVector<T, TVec2>
@@ -132,8 +158,7 @@ namespace Althea.Arrays
 		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="vectorOut"/> of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
-		/// <returns>The <paramref name="vectorOut"/> after operation.</returns>
-		public abstract static TVec2 MatrixMultiplyVector(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None);
+		public abstract static void MatrixMultiplyVector(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None);
 
 		/// <summary>
 		/// When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="vector"/> and <paramref name="matrix"/> (scaled by <paramref name="α"/>) with <paramref name="vectorOut"/> (scaled by <paramref name="β"/>).
@@ -144,17 +169,44 @@ namespace Althea.Arrays
 		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="vectorOut"/> of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
-		/// <returns>The <paramref name="vectorOut"/> after operation.</returns>
-		public abstract static TVec2 VectorMultiplyMatrix(TVec1 vector, TMat matrix, TVec2 vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None);
+		public abstract static void VectorMultiplyMatrix(TVec1 vector, TMat matrix, TVec2 vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None);
 	}
 
 	/// <summary>
-	/// The interface for operations that get or set diagonal elements of matrices.
+	/// The interface for operators that multiply vectors and matrices of different types out-of-place.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixVectorMultiplyOperators<T, in TVec1, out TVec2, in TMat>
+		where T : unmanaged, INumber<T>
+		where TVec1 : class, IBaseVector<T, TVec1>
+		where TVec2 : class, IBaseVector<T, TVec2>
+		where TMat : class, IBaseMatrix<T, TMat>, IMatrixVectorMultiplyOperators<T, TVec1, TVec2, TMat>
+	{
+		/// <summary>
+		/// When implemented by a derived class, compute the multiplication of the given <paramref name="matrix"/> and <paramref name="vector"/>.
+		/// </summary>
+		/// <param name="matrix">The input matrix to be multiplied</param>
+		/// <param name="vector">The input vector to be multiplied</param>
+		public abstract static TVec2 operator*(TMat matrix, TVec1 vector);
+
+		/// <summary>
+		/// When implemented by a derived class, compute the multiplication of the given <paramref name="vector"/> and <paramref name="matrix"/>.
+		/// </summary>
+		/// <param name="vector">The input vector to be multiplied</param>
+		/// <param name="matrix">The input matrix to be multiplied</param>
+		public abstract static TVec2 operator *(TVec1 vector, TMat matrix);
+	}
+
+	/// <summary>
+	/// The interface for operations that get diagonal elements of matrices to new vectors.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixDiagonalVector<T, TVec, TMat>
+	public interface IMatrixGetDiagonalVector<T, out TVec, in TMat>
 		where T : unmanaged, INumber<T>
 		where TVec : class, IBaseVector<T, TVec>
 		where TMat : class, IBaseMatrix<T, TMat>
@@ -168,19 +220,30 @@ namespace Althea.Arrays
 		/// <exception cref="InvalidOperationException">If this matrix is not a square matrix</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
 		public abstract static TVec GetDiag(TMat matrix, long k);
+	}
 
+	/// <summary>
+	/// The interface for operations that get or set diagonal elements of matrices.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixGetSetDiagonalVector<T, TVec, in TMat>
+		where T : unmanaged, INumber<T>
+		where TVec : class, IBaseVector<T, TVec>
+		where TMat : class, IBaseMatrix<T, TMat>
+	{
 		/// <summary>
 		/// When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements of <paramref name="matrix"/> as a <typeparamref name="TVec"/> and write the result to <paramref name="overwrite"/>.
 		/// </summary>>
 		/// <param name="matrix">The matrix to obtain diagonal from</param>
 		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
 		/// <param name="overwrite">The output <typeparamref name="TVec"/> which will contain the <paramref name="k"/>-th diagonal elements at exit</param>
-		/// <returns>The <paramref name="overwrite"/> containing the <paramref name="k"/>-th diagonal elements.</returns>
 		/// <exception cref="InvalidOperationException">If this matrix is not a square matrix</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
-		public abstract static TVec GetDiag(TMat matrix, long k, TVec overwrite);
+		public abstract static void GetDiag(TMat matrix, long k, TVec overwrite);
 
 		/// <summary>
 		/// When implemented by a derived class, set the <paramref name="k"/>-th diagonal elements  of <paramref name="matrix"/> to <paramref name="value"/>.
@@ -193,7 +256,9 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		public abstract void SetDiag(TMat matrix, long k, TVec value);
 	}
+	#endregion
 
+	#region matrix
 	/// <summary>
 	/// The interface for vectors' in-place operations.
 	/// </summary>
@@ -234,62 +299,74 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface for matrices' out-of-place operators.
+	/// The interface for matrices' unary matrix out-of-place operators.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixUnaryOperators<T, in TMat1, out TMat2>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixUnaryOperators<T, TMat1, TMat2>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+	{
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat2"/> which is the point-wise negation result of the given <paramref name="matrix"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <returns>A new <typeparamref name="TMat2"/> as the negation of <paramref name="matrix"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat2 operator -(TMat1 matrix);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat2"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the multiplier</param>
+		/// <returns>A new <typeparamref name="TMat2"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat2 operator *(TMat1 matrix, T scalar);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat2"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the multiplier</param>
+		/// <returns>A new <typeparamref name="TMat2"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat2 operator *(T scalar, TMat1 matrix);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat2"/> which is the point-wise division result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <param name="scalar">The input scalar used as the divider</param>
+		/// <returns>A new <typeparamref name="TMat2"/> as the result of <paramref name="matrix"/> / <paramref name="scalar"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat2 operator /(TMat1 matrix, T scalar);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat2"/> which is the simple operation result of the given <paramref name="matrix"/> under <paramref name="operation"/>.
+		/// </summary>
+		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
+		/// <param name="operation">The input <see cref="MatrixOperation"/> used as the operation</param>
+		/// <returns>A new <typeparamref name="TMat2"/> as the result of <paramref name="operation"/>(<paramref name="matrix"/>)</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
+		public abstract static TMat2 operator ^(TMat1 matrix, MatrixOperation operation);
+	}
+
+	/// <summary>
+	/// The interface for matrices' binary matrix out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixOperators<T, in TMat1, in TMat2, out TMat3>
+	public interface IMatrixBinaryOperators<T, in TMat1, in TMat2, out TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixOperators<T, TMat1, TMat2, TMat3>
+		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixBinaryOperators<T, TMat1, TMat2, TMat3>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
 		where TMat3 : class, IBaseMatrix<T, TMat3>
 	{
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise negation result of the given <paramref name="matrix"/>.
-		/// </summary>
-		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
-		/// <returns>A new <typeparamref name="TMat3"/> as the negation of <paramref name="matrix"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-		public abstract static TMat3 operator -(TMat1 matrix);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
-		/// </summary>
-		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
-		/// <param name="scalar">The input scalar used as the multiplier</param>
-		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-		public abstract static TMat3 operator *(TMat1 matrix, T scalar);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise multiplication result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
-		/// </summary>
-		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
-		/// <param name="scalar">The input scalar used as the multiplier</param>
-		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="matrix"/> * <paramref name="scalar"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-		public abstract static TMat3 operator *(T scalar, TMat1 matrix);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise division result of the given <paramref name="matrix"/> and <paramref name="scalar"/>.
-		/// </summary>
-		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
-		/// <param name="scalar">The input scalar used as the divider</param>
-		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="matrix"/> / <paramref name="scalar"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-		public abstract static TMat3 operator /(TMat1 matrix, T scalar);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the simple operation result of the given <paramref name="matrix"/> under <paramref name="operation"/>.
-		/// </summary>
-		/// <param name="matrix">The input <typeparamref name="TMat1"/> whose elements will be used</param>
-		/// <param name="operation">The input <see cref="MatrixOperation"/> used as the operation</param>
-		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="operation"/>(<paramref name="matrix"/>)</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or empty</exception>
-		public abstract static TMat3 operator ^(TMat1 matrix, MatrixOperation operation);
-
 		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise addition result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
 		/// </summary>
@@ -321,6 +398,61 @@ namespace Althea.Arrays
 		public abstract static TMat3 operator *(TMat1 left, TMat2 right);
 	}
 
+	/// <summary>
+	/// The interface for matrices' in-place solvers.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged floating pointer number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec">The concrete vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IMatrixSolvers<T, in TMat1, in TMat2, in TVec>
+		where T : unmanaged, IFloatingPoint<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TVec : class, IBaseVector<T, TVec>
+	{
+		/// <summary>
+		/// When implemented by a derived class, statically compute the standard (when <paramref name="type"/> is none) or general (when <paramref name="type"/> is not none) eigen-solve of the input <paramref name="matrix"/> (and <paramref name="another"/> matrix) and write the result eigenvalues to <paramref name="outVals"/> and eigenvectors to <paramref name="outLeft"/> and <paramref name="outRight"/>.
+		/// </summary>
+		/// <param name="matrix">The main input matrix to be eigen-solved</param>
+		/// <param name="another">The secondary input matrix to be eigen-solved which can be null if <paramref name="type"/> is <see cref="GeneralEigenType.None"/></param>
+		/// <param name="outLeft">The output left eigenvectors as a <typeparamref name="TMat2"/>, can be null if <paramref name="mode"/> does not contains left</param>
+		/// <param name="outRight">The output right eigenvectors as a <typeparamref name="TMat2"/>, can be null if <paramref name="mode"/> does not contains right</param>
+		/// <param name="outVals">The output eigenvalues as a <typeparamref name="TVec"/></param>
+		/// <param name="type">The <see cref="GeneralEigenType"/> indicating which form of general eigen problem will be computed or none</param>
+		/// <param name="mode">The <see cref="SolveVectorMode"/> indicating which eigenvectors to compute</param>
+		/// <exception cref="ArgumentException">If the <paramref name="another"/>, <paramref name="outLeft"/> or <paramref name="outRight"/> is null when it shall not be according to <paramref name="type"/> and <paramref name="mode"/></exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void EigenSolve(TMat1 matrix, TVec outVals, TMat2? outLeft, TMat2? outRight, SolveVectorMode mode, TMat1? another = null, GeneralEigenType type = GeneralEigenType.None);
+
+		/// <summary>
+		/// When implemented by a derived class, compute the singular value decomposition (SVD) of the <paramref name="matrix"/> and corresponding the left and/or right singular vectors: <paramref name="matrix"/> = <paramref name="outU"/> * diag(<paramref name="outVals"/>) <paramref name="outVct"/>.
+		/// </summary>
+		/// <param name="matrix">The input matrix to be singular value solved</param>
+		/// <param name="outVals">The output singular values as a <typeparamref name="TVec"/></param>
+		/// <param name="outU">The output left unitary matrix as a <typeparamref name="TMat2"/>, can be null if <paramref name="storeU"/> is none</param>
+		/// <param name="outVct">The output right unitary matrix as a <typeparamref name="TMat2"/>, can be null if <paramref name="storeV"/> is none</param>
+		/// <param name="storeU">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="outU"/></param>
+		/// <param name="storeV">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="outVct"/></param>
+		/// <exception cref="ArgumentException">If <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/>; or <paramref name="outU"/> or <paramref name="outVct"/> is null when <paramref name="storeU"/> or <paramref name="storeV"/> indicates otherwise</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void SingularValueSolve(TMat1 matrix, TVec outVals, TMat2? outU, TMat2? outVct, SVDStore storeU, SVDStore storeV);
+
+		/// <summary>
+		/// When implemented by a derived class, compute the Schur decomposition of the <paramref name="matrix"/> and write the corresponding Schur vectors to <paramref name="outU"/>.
+		/// </summary>
+		/// <param name="matrix">The input matrix to be Schur decomposed</param>
+		/// <param name="outVals">The output singular values as a <typeparamref name="TVec"/></param>
+		/// <param name="outU">The output left unitary matrix as a <typeparamref name="TMat2"/>, can be null if <paramref name="storeU"/> is none</param>
+		/// <param name="outVct">The output right unitary matrix as a <typeparamref name="TMat2"/>, can be null if <paramref name="storeV"/> is none</param>
+		/// <param name="storeU">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="outU"/></param>
+		/// <exception cref="ArgumentException">If <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/>; or <paramref name="outU"/> or <paramref name="outVct"/> is null when <paramref name="storeU"/> or <paramref name="storeV"/> indicates otherwise</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void SchurSolve(TMat1 matrix, TVec outVals, TMat2? outU, TVec? orderVals, SolveVectorMode mode);
+	}
+	#endregion
+
+	#region tensor
 	/// <summary>
 	/// The interface for tensors' in-place operations for two tensors.
 	/// </summary>
@@ -406,26 +538,69 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface for tensors' in-place operations.
+	/// The interface for tensors' unary tensor out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TTen1">The first concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
-	/// <typeparam name="TTen2">The second concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
-	/// <typeparam name="TTen3">The third concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
-	public interface ITensorOperators<T, in TTen1, in TTen2, out TTen3>
+	/// <typeparam name="TTen1">The input concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
+	/// <typeparam name="TTen2">The output concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
+	public interface ITensorUnaryOperators<T, in TTen1, out TTen2>
 		where T : unmanaged, INumber<T>
-		where TTen1 : class, IBaseTensor<T, TTen1>, ITensorOperators<T, TTen1, TTen2, TTen3>
+		where TTen1 : class, IBaseTensor<T, TTen1>, ITensorUnaryOperators<T, TTen1, TTen2>
 		where TTen2 : class, IBaseTensor<T, TTen2>
-		where TTen3 : class, IBaseTensor<T, TTen3>
 	{
 		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the which is the permutation of the given <paramref name="tensor"/> under <paramref name="order"/>.
+		/// When implemented by a derived class, create a new <typeparamref name="TTen2"/> which is the which is the permutation of the given <paramref name="tensor"/> under <paramref name="order"/>.
 		/// </summary>
 		/// <param name="tensor">One original tensor as the left operand</param>
 		/// <param name="order">The <see cref="TensorOrder"/> indicating the permutation order</param>
-		/// <returns>A new <typeparamref name="TTen3"/> which is the permutation result of the given <paramref name="tensor"/> under <paramref name="order"/></returns>
-		public abstract static TTen3 operator ^(TTen1 tensor, TensorOrder order);
+		/// <returns>A new <typeparamref name="TTen2"/> which is the permutation result of the given <paramref name="tensor"/> under <paramref name="order"/></returns>
+		public abstract static TTen2 operator ^(TTen1 tensor, TensorOrder order);
 
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TTen2"/> which is the (point-wise) multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="tensor">The original tensor to multiply</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
+		/// <returns>A new <typeparamref name="TTen2"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public abstract static TTen2 operator *(TTen1 tensor, T scalar);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TTen2"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="tensor">The original tensor to multiply</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
+		/// <returns>A new <typeparamref name="TTen2"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public abstract static TTen2 operator *(T scalar, TTen1 tensor);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TTen2"/> which is the negation result of the given <paramref name="tensor"/>
+		/// </summary>
+		/// <param name="tensor">The original tensor to negate</param>
+		/// <returns>A new <typeparamref name="TTen2"/> which is the negation result of the given <paramref name="tensor"/></returns>
+		public abstract static TTen2 operator -(TTen1 tensor);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TTen2"/> which is the division result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
+		/// </summary>
+		/// <param name="tensor">The original tensor to be divided</param>
+		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
+		/// <returns>A new <typeparamref name="TTen2"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
+		public abstract static TTen2 operator /(TTen1 tensor, T scalar);
+	}
+
+	/// <summary>
+	/// The interface for tensors' unary tensor out-of-place operators.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TTen1">The first input concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
+	/// <typeparam name="TTen2">The second input concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
+	/// <typeparam name="TTen3">The output concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
+	public interface ITensorBinaryOperators<T, in TTen1, in TTen2, out TTen3>
+		where T : unmanaged, INumber<T>
+		where TTen1 : class, IBaseTensor<T, TTen1>, ITensorBinaryOperators<T, TTen1, TTen2, TTen3>
+		where TTen2 : class, IBaseTensor<T, TTen2>
+		where TTen3 : class, IBaseTensor<T, TTen3>
+	{
 		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the which is the tensor contraction of the given <paramref name="left"/> and <paramref name="right"/> tensors.
 		/// </summary>
@@ -449,36 +624,6 @@ namespace Althea.Arrays
 		/// <param name="right">One original tensor as the right operand</param>
 		/// <returns>A new <typeparamref name="TTen3"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
 		public abstract static TTen3 operator -(TTen1 left, TTen2 right);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the (point-wise) multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="tensor">The original tensor to multiply</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-		/// <returns>A new <typeparamref name="TTen3"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
-		public abstract static TTen3 operator *(TTen1 tensor, T scalar);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="tensor">The original tensor to multiply</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to multiply</param>
-		/// <returns>A new <typeparamref name="TTen3"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
-		public abstract static TTen3 operator *(T scalar, TTen1 tensor);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the negation result of the given <paramref name="tensor"/>
-		/// </summary>
-		/// <param name="tensor">The original tensor to negate</param>
-		/// <returns>A new <typeparamref name="TTen3"/> which is the negation result of the given <paramref name="tensor"/></returns>
-		public abstract static TTen3 operator -(TTen1 tensor);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the division result of the given <paramref name="tensor"/> and <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="tensor">The original tensor to be divided</param>
-		/// <param name="scalar">The scalar of type <typeparamref name="T"/> to divide</param>
-		/// <returns>A new <typeparamref name="TTen3"/> which is the multiplication result of the given <paramref name="tensor"/> and <paramref name="scalar"/></returns>
-		public abstract static TTen3 operator /(TTen1 tensor, T scalar);
 	}
+	#endregion
 }

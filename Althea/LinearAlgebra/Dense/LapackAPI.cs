@@ -1,10 +1,7 @@
-﻿using System;
-
-using Althea.Helpers;
+﻿using Althea.Helpers;
 using Althea.NativeTypes;
-using Althea.Storage;
-
 using Althea.SourceGenerator;
+using Althea.Storage;
 
 
 namespace Althea.LinearAlgebra.Dense
@@ -40,8 +37,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the input data type</typeparam>
 		/// <typeparam name="TReal">Any unmanaged number as the real corresponding type of <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TSReal">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TReal"/></typeparam>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="SolveVectorMode.NoVector"/> will be regarded as <see cref="SolveVectorMode.Vector"/></param>
 		/// <param name="type">The <see cref="GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
@@ -56,7 +52,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenGeneralMatrixHermitian<T, TReal, TS1, TS2, TSReal>(GeneralEigenType type, SolveVectorMode mode, long n, TSReal valOut, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TReal : unmanaged, IFloatingPoint<TReal> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSReal : class, IStorage<TReal, TSReal>;
+		public abstract bool EigenGeneralMatrixHermitian<T, TReal, TS, TSReal>(GeneralEigenType type, SolveVectorMode mode, long n, TSReal valOut, TS A, long lda, TS B, long ldb) where T : unmanaged, IFloatingPoint<T> where TReal : unmanaged, IFloatingPoint<TReal> where TS : class, IStorage<T, TS> where TSReal : class, IStorage<TReal, TSReal>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
@@ -180,7 +176,7 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region other decompositions
 		/// <summary>
-		/// When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> <paramref name="S"/> <paramref name="Vct"/>.
+		/// When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the input data type</typeparam>
 		/// <typeparam name="TReal">Any unmanaged number as the real corresponding type of <typeparamref name="T"/></typeparam>

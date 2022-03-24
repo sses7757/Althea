@@ -205,15 +205,15 @@ namespace Althea.Storage
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 2</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, TP1, TP2> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 2)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
+			if (lengths.Any(static l => l < 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
 			return new ActualMixedStorage<T, TP1, TP2>(lengths[0],  lengths[1]);
 		}
 
@@ -306,7 +306,7 @@ namespace Althea.Storage
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.ToString(this);
 		
-		static JsonConverter<MixedStorage<T, TP1, TP2>>? IStorage<T, MixedStorage<T, TP1, TP2>>.JsonConverter => new JsonConverter();
+		static JsonConverter<MixedStorage<T, TP1, TP2>> IStorage<T, MixedStorage<T, TP1, TP2>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2>>
 		{
@@ -389,9 +389,10 @@ namespace Althea.Storage
 		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative))
 		{
-			// do nothing
+			if (this.Length == 0)
+				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
 	}
 
@@ -664,15 +665,15 @@ namespace Althea.Storage
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 3</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, TP1, TP2, TP3> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 3)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
+			if (lengths.Any(static l => l < 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
 			return new ActualMixedStorage<T, TP1, TP2, TP3>(lengths[0], lengths[1],  lengths[2]);
 		}
 
@@ -765,7 +766,7 @@ namespace Althea.Storage
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.ToString(this);
 		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.JsonConverter => new JsonConverter();
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3>> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3>>
 		{
@@ -865,9 +866,10 @@ namespace Althea.Storage
 		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative))
 		{
-			// do nothing
+			if (this.Length == 0)
+				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
 	}
 
@@ -1163,15 +1165,15 @@ namespace Althea.Storage
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 4</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 4)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
+			if (lengths.Any(static l => l < 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(lengths[0], lengths[1], lengths[2],  lengths[3]);
 		}
 
@@ -1264,7 +1266,7 @@ namespace Althea.Storage
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.ToString(this);
 		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.JsonConverter => new JsonConverter();
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>>
 		{
@@ -1381,9 +1383,10 @@ namespace Althea.Storage
 		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative))
 		{
-			// do nothing
+			if (this.Length == 0)
+				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
 	}
 
@@ -1702,15 +1705,15 @@ namespace Althea.Storage
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 5</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 5)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
+			if (lengths.Any(static l => l < 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(lengths[0], lengths[1], lengths[2], lengths[3],  lengths[4]);
 		}
 
@@ -1803,7 +1806,7 @@ namespace Althea.Storage
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.ToString(this);
 		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.JsonConverter => new JsonConverter();
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
 		{
@@ -1937,9 +1940,10 @@ namespace Althea.Storage
 		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative))
 		{
-			// do nothing
+			if (this.Length == 0)
+				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
 	}
 
@@ -2281,15 +2285,15 @@ namespace Althea.Storage
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 6</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 6)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
+			if (lengths.Any(static l => l < 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4],  lengths[5]);
 		}
 
@@ -2382,7 +2386,7 @@ namespace Althea.Storage
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.ToString(this);
 		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.JsonConverter => new JsonConverter();
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
 		{
@@ -2533,9 +2537,10 @@ namespace Althea.Storage
 		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative))
 		{
-			// do nothing
+			if (this.Length == 0)
+				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
 	}
 
@@ -2900,15 +2905,15 @@ namespace Althea.Storage
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 7</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 7)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
+			if (lengths.Any(static l => l < 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5],  lengths[6]);
 		}
 
@@ -3001,7 +3006,7 @@ namespace Althea.Storage
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.ToString(this);
 		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.JsonConverter => new JsonConverter();
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
 		{
@@ -3169,9 +3174,10 @@ namespace Althea.Storage
 		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative))
 		{
-			// do nothing
+			if (this.Length == 0)
+				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
 	}
 
@@ -3559,15 +3565,15 @@ namespace Althea.Storage
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 8</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 8)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
+			if (lengths.Any(static l => l < 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6],  lengths[7]);
 		}
 
@@ -3660,7 +3666,7 @@ namespace Althea.Storage
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.ToString(this);
 		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.JsonConverter => new JsonConverter();
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
 		{
@@ -3845,9 +3851,10 @@ namespace Althea.Storage
 		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive), length8 > 0 ? Mem.Allocate<TP8>(length8 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative))
 		{
-			// do nothing
+			if (this.Length == 0)
+				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
 	}
 
@@ -4258,15 +4265,15 @@ namespace Althea.Storage
 		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
 		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
 		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 9</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 9)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l <= 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
+			if (lengths.Any(static l => l < 0))
+				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
 			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6], lengths[7],  lengths[8]);
 		}
 
@@ -4359,7 +4366,7 @@ namespace Althea.Storage
 		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.ToString(this);
 		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>? IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.JsonConverter => new JsonConverter();
+		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
 		{
@@ -4561,9 +4568,10 @@ namespace Althea.Storage
 		/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 > 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive), length2 > 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive), length3 > 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive), length4 > 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive), length5 > 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive), length6 > 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive), length7 > 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive), length8 > 0 ? Mem.Allocate<TP8>(length8 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive), length9 > 0 ? Mem.Allocate<TP9>(length9 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.MustPositive))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative), length9 >= 0 ? Mem.Allocate<TP9>(length9 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.CannotNegative))
 		{
-			// do nothing
+			if (this.Length == 0)
+				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
 	}
 

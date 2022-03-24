@@ -120,6 +120,9 @@
   <data name="CannotAllNull" xml:space="preserve">
     <value>The given parameters cannot be null at the same time.</value>
   </data>
+  <data name="CannotAllZero" xml:space="preserve">
+    <value>The given parameters cannot be zeros at the same time.</value>
+  </data>
   <data name="CannotNegative" xml:space="preserve">
     <value>The given parameter cannot be less than zero.</value>
   </data>

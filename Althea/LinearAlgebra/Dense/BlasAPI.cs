@@ -1,8 +1,5 @@
-﻿using System;
-
+﻿using Althea.SourceGenerator;
 using Althea.Storage;
-
-using Althea.SourceGenerator;
 
 
 namespace Althea.LinearAlgebra.Dense
@@ -385,7 +382,6 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="fillUpper">The <see cref="bool"/> indicates whether matrix <paramref name="C"/>'s upper or lower part will be overwritten</param>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="conjB">Conjugate transpose <paramref name="B"/> or just transpose <paramref name="B"/></param>
 		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>), <paramref name="op"/>(<paramref name="B"/>) and <paramref name="C"/></param>
@@ -396,12 +392,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
 		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-		/// <param name="C">The symmetric/hermitian matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
+		/// <param name="C">The general matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="n"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool RankKUpdateVariant<T, TS1, TS2, TS3>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool RankKUpdateVariant<T, TS1, TS2, TS3>(MatrixOperation op, bool conjB, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, solves the triangular linear systems with multiple right-hand-sides for <c>x</c> and overwrite it to <paramref name="B"/>:<br/>

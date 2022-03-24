@@ -70,6 +70,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given parameters cannot be zeros at the same time. 的本地化字符串。
+        /// </summary>
+        public static string CannotAllZero {
+            get {
+                return ResourceManager.GetString("CannotAllZero", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The given parameter cannot be less than zero. 的本地化字符串。
         /// </summary>
         public static string CannotNegative {
