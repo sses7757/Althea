@@ -1,6 +1,4 @@
-﻿using System;
-
-using Althea.Helpers;
+﻿using Althea.Helpers;
 using Althea.Linq;
 using Althea.Storage;
 
@@ -123,6 +121,28 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, statically get an empty array of type <typeparamref name="TSelf"/>.
 		/// </summary>
 		public abstract static TSelf Empty { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, copy this array's elements to <paramref name="destination"/>'s ones.
+		/// </summary>
+		/// <param name="destination">The destination array to copy to</param>
+		/// <exception cref="ArgumentException">If <paramref name="destination"/> is not of same size as this one</exception>
+		void CopyTo(TSelf destination);
+
+		TSelf ICloneable<TSelf>.Clone()
+		{
+			TSelf clone = this.CreateAlike();
+			try
+			{
+				this.CopyTo(clone);
+				return clone;
+			}
+			catch (Exception)
+			{
+				clone?.Dispose();
+				throw;
+			}
+		}
 		#endregion
 
 		#region point-wise operations
@@ -266,7 +286,7 @@ namespace Althea.Arrays
 		}
 		#endregion
 
-		#region creation
+		#region serialization
 		/// <summary>
 		/// When implemented by a derived class, serialize this array to a JSON object.
 		/// </summary>
@@ -347,25 +367,5 @@ namespace Althea.Arrays
 
 		T IValueArray<T, TSelf>.ValueWithMinAbs() => (this.Storage + Blas.AbsoluteValueArgMin<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
 		#endregion
-
-		////#region clone related
-		/////// <summary>
-		/////// When implemented by a derived class, create a new array with same properties as this one while the underlying storages are not filled and the data type is changed to <typeparamref name="TOut"/>.
-		/////// </summary>
-		/////// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/////// <typeparam name="TSOut">The output storage type</typeparam>
-		/////// <typeparam name="TOther">The output array type</typeparam>
-		/////// <returns>The new array alike this one but with data type <typeparamref name="TOut"/>.</returns>
-		////TOther NewArrayAlike<TOut, TSOut, TOther>() where TOut : unmanaged, INumber<TOut> where TSOut : class, IStorage<TOut, TSOut> where TOther : class, ISingleValueStorageArray<TOut, TSOut, TOther>;
-
-		/////// <summary>
-		/////// When implemented by a derived class, cast this array into another data type <typeparamref name="TOut"/>.
-		/////// </summary>
-		/////// <typeparam name="TOut">The data type to cast to</typeparam>
-		/////// <typeparam name="TSOut">The output storage type</typeparam>
-		/////// <typeparam name="TOther">The output array type</typeparam>
-		/////// <returns>The new <typeparamref name="TOther"/> casted from this array or this array if <typeparamref name="TOut"/> == <typeparamref name="T"/></returns>
-		////TOther DataTypeCast<TOut, TSOut, TOther>() where TOut : unmanaged, INumber<TOut> where TSOut : class, IStorage<TOut, TSOut> where TOther : class, ISingleValueStorageArray<TOut, TSOut, TOther>;
-		////#endregion
 	}
 }

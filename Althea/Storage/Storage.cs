@@ -214,8 +214,20 @@ namespace Althea.Storage
 		/// <typeparam name="TOther">Any storage type that implements <see cref="IStorage{TOut, TOther}"/></typeparam>
 		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
 		/// <returns>A new <typeparamref name="TSelf"/> that likes <paramref name="storage"/></returns>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidCastException">If an actual storage <typeparamref name="TOther"/> cannot be created alike <typeparamref name="TSelf"/></exception>
 		abstract static TSelf CreateAlike<TOut, TOther>(TOther storage) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<TOut, TOther>;
+
+		/// <summary>
+		/// When implemented by a derived class, statically create a new <typeparamref name="TSelf"/> of given lengths.
+		/// </summary>
+		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
+		/// <returns>The created new <typeparamref name="TSelf"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		abstract static TSelf Create(ReadOnlySpan<long> lengths);
 
 		TSelf ICreateAlike<TSelf>.CreateAlike() => TSelf.CreateAlike<T, TSelf>((TSelf)this);
 
@@ -271,17 +283,6 @@ namespace Althea.Storage
 		/// <returns>The distance between two <typeparamref name="TSelf"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
 		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
 		abstract static long operator -(TSelf left, TSelf right);
-
-		/// <summary>
-		/// When implemented by a derived class, statically <b>allocate</b> and create a new <typeparamref name="TSelf"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <typeparamref name="TSelf"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		abstract static TSelf Create(ReadOnlySpan<long> lengths);
 
 		/// <summary>
 		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>

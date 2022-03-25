@@ -258,7 +258,7 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<PureStorage<T, TP>>.ToString(this);
 
-		static JsonConverter<PureStorage<T, TP>>? IStorage<T, PureStorage<T, TP>>.JsonConverter => new JsonConverter();
+		static JsonConverter<PureStorage<T, TP>> IStorage<T, PureStorage<T, TP>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<PureStorage<T, TP>>
 		{

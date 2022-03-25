@@ -12,7 +12,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IBaseMatrix<T, TSelf> : IMatrixMetric where T : unmanaged, INumber<T> where TSelf : class, IBaseMatrix<T, TSelf>
+	public interface IBaseMatrix<T, TSelf> : IMatrixMetric, IValueArray<T, TSelf> where T : unmanaged, INumber<T> where TSelf : class, IBaseMatrix<T, TSelf>
 	{
 		#region basic
 		/// <summary>
@@ -27,11 +27,15 @@ namespace Althea.Arrays
 		TSelf GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol);
 
 		/// <summary>
-		/// When implemented by a derived class, copy this matrix's elements to <paramref name="destination"/>'s ones.
+		/// When implemented by a derived class, get a sub-matrix by the row and column index ranges and write it to <paramref name="overwrite"/>.
 		/// </summary>
-		/// <param name="destination">The destination matrix to copy to</param>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is not of same size as this one</exception>
-		void CopyTo(TSelf destination);
+		/// <param name="offsetRow">The starting offset of the row to take</param>
+		/// <param name="countRow">The number of the rows to take</param>
+		/// <param name="offsetCol">The starting offset of the columns to take</param>
+		/// <param name="countCol">The number of the columns to take</param>
+		/// <param name="overwrite">The sub-matrix to be overwritten</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsetRow"/> or <paramref name="countRow"/> or <paramref name="offsetCol"/> or <paramref name="countCol"/> is out of range</exception>
+		void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, TSelf overwrite);
 
 		/// <summary>
 		/// When implemented by a derived class, set a sub-matrix by the row and column index ranges with the given <paramref name="value"/>.
@@ -52,7 +56,7 @@ namespace Althea.Arrays
 		/// <param name="col">The column index as a <see cref="long"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void CheckIndex(long row, long col)
+		public void CheckIndex(long row, long col)
 		{
 			if (row < 0)
 				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.CannotNegative);
@@ -81,7 +85,7 @@ namespace Althea.Arrays
 		/// <param name="sub">The sub matrix to check which can be null to prevent checking</param>
 		/// <exception cref="ArgumentOutOfRangeException">If the any of the parameters is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void CheckRange(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric? sub = null)
+		public void CheckRange(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric? sub = null)
 		{
 			MatrixSliceWrapper.Create(offsetRow, countRow, offsetCol, countCol, this, sub);
 		}

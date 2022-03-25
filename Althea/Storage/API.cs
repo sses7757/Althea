@@ -736,6 +736,21 @@ namespace Althea.Storage
 		#endregion
 
 		#region extension methods
+		/// <summary>
+		/// Create a new storage of type <typeparamref name="TS"/> alike the <paramref name="original"/> one but with a <paramref name="newSize"/>.
+		/// </summary>
+		/// <typeparam name="TS">The storage class that implements <see cref="IStorage"/></typeparam>
+		/// <param name="original">The original storage to create alike one with different size</param>
+		/// <param name="newSize">The new size in real type of <typeparamref name="TS"/>. If <paramref name="newSize"/> is larger than the length of <paramref name="original"/>, the last pointer's length will be extended</param>
+		/// <returns>The created new storage of type <typeparamref name="TS"/> of length <paramref name="newSize"/>.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newSize"/> ¡Ü 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		public static TS ResizeAlike<TS>(this TS original, long newSize) where TS : class, IStorage
+		{
+
+		}
+
 		private static readonly Dictionary<RuntimeTypeHandle, Delegate> fillByteFunc = new();
 
 		/// <summary>

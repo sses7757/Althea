@@ -585,7 +585,7 @@ namespace Althea.Arrays
 			}
 			TS dense = TS.Empty;
 			SpConv.VectorSparseToDense(in wrapper, ref dense);
-			return new(dense);
+			return new(dense, dense.Length);
 		}
 
 		/// <summary>
@@ -725,7 +725,7 @@ namespace Althea.Arrays
 					}
 					break;
 			}
-			return values.ToSparseVectorString(indices, settings.Value.Precision, postfix: length == this.values.Length ? "" : string.Format(Resources.Print.MoreStored, this.values.Length - length));
+			return values.ToSparseVectorString(indices, settings.Value.Precision) + (length == this.values.Length ? "" : string.Format(Resources.Print.MoreStored, this.values.Length - length));
 		}
 		#endregion
 	}

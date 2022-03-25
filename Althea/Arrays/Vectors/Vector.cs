@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Runtime.CompilerServices;
 
 using Althea.LinearAlgebra;
@@ -91,13 +89,6 @@ namespace Althea.Arrays
 		/// <param name="overwrite">The sub-vector to be overwritten</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> and/or <paramref name="count"/> is out of range</exception>
 		void GetSlice(long start, long count, TSelf overwrite);
-
-		/// <summary>
-		/// When implemented by a derived class, copy this vector's elements to <paramref name="destination"/>'s ones.
-		/// </summary>
-		/// <param name="destination">The destination vector to copy to</param>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is not of same size as this one</exception>
-		void CopyTo(TSelf destination);
 
 		TSelf ICloneable<TSelf>.Clone()
 		{

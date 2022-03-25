@@ -114,7 +114,6 @@ namespace Althea.LinearAlgebra.Dense
 		/// Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its LU decomposition, and <paramref name="B"/> shall be replaced by the solution X.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TInd">Any integral type unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to the <paramref name="A"/></param>
@@ -128,7 +127,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool LinearSolveGeneral<T, TInd, TS1, TS2>(MatrixOperation op, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool LinearSolveGeneral<T, TS1, TS2>(MatrixOperation op, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 
 		#region QR solve

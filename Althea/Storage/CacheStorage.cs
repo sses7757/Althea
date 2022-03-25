@@ -489,11 +489,11 @@ namespace Althea.Storage
 		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
 		public static CachedStorage<T, TS, TPh, TPl> Create(ReadOnlySpan<long> lengths)
 		{
-			if (lengths.Length != 2)
+			if (lengths.Length != 1)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths[1] <= 0)
+			if (lengths[0] <= 0)
 				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
-			return new ActualCachedStorage<T, TS, TPh, TPl>(lengths[1]);
+			return new ActualCachedStorage<T, TS, TPh, TPl>(lengths[0]);
 		}
 
 		static CachedStorage<T, TS, TPh, TPl> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.CreateAlike<TOut, TOther>(TOther storage)
@@ -581,7 +581,7 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.ToString(this);
 
-		static JsonConverter<CachedStorage<T, TS, TPh, TPl>>? IStorage<T, CachedStorage<T, TS, TPh, TPl>>.JsonConverter => new JsonConverter();
+		static JsonConverter<CachedStorage<T, TS, TPh, TPl>> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<CachedStorage<T, TS, TPh, TPl>>
 		{
