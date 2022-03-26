@@ -1,9 +1,8 @@
-﻿using Althea.Helpers;
+﻿using System.Runtime.CompilerServices;
+
+using Althea.Helpers;
 using Althea.Linq;
 using Althea.Storage;
-
-using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
-using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 
 
 namespace Althea.Arrays
@@ -47,12 +46,14 @@ namespace Althea.Arrays
 			return storage;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool SwapRemove<T>(this List<T> list, T value)
 		{
-			int find = list.IndexOf(value);
+			int find = list.LastIndexOf(value);
 			if (find < 0)
 				return false;
-			list[find] = list[^1];
+			if (find != list.Count - 1)
+				list[find] = list[^1];
 			list.RemoveAt(list.Count - 1);
 			return true;
 		}
@@ -115,7 +116,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the presenting length (in <typeparamref name="T"/>) of this array.
 		/// </summary>
-		long Length { get; }
+		protected long Length { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, statically get an empty array of type <typeparamref name="TSelf"/>.
@@ -147,38 +148,38 @@ namespace Althea.Arrays
 
 		#region point-wise operations
 		/// <summary>
-		/// When implemented by a derived class, fill this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> with given <paramref name="value"/>.
+		/// When implemented by a derived class, fill this array with given <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The value as a <typeparamref name="T"/> to fill</param>
 		void FillWith(T value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place add this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> with given <paramref name="value"/>.
+		/// When implemented by a derived class, point-wisely in-place add this array with given <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to add</param>
 		void AddScalar(T value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place multiply this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> with given <paramref name="value"/>.
+		/// When implemented by a derived class, point-wisely in-place multiply this array with given <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
 		void Scale(T value);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place conjugate this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/>.
+		/// When implemented by a derived class, point-wisely in-place conjugate this array.
 		/// </summary>
 		void Conjugate();
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> with given <paramref name="power"/>.
+		/// When implemented by a derived class, point-wisely in-place exponent this array with given <paramref name="power"/>.
 		/// </summary>
 		/// <param name="power">The power as a <typeparamref name="T"/></param>
 		void Power(T power);
 
 		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place truncate this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> by comparing with given <paramref name="threshold"/>.
+		/// When implemented by a derived class, point-wisely in-place truncate this array by comparing with given <paramref name="threshold"/>.
 		/// </summary>
-		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
+		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in this array whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
 		void Truncate(double threshold);
 		#endregion
 
@@ -202,7 +203,7 @@ namespace Althea.Arrays
 		T Norm();
 
 		/// <summary>
-		/// When implemented by a derived class, in-place scale this array's <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> such that its 2-norm (Euclidean norm) is 1. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
+		/// When implemented by a derived class, in-place scale this array such that its 2-norm (Euclidean norm) is 1. The default implementation utilizes the <see cref="Norm()"/> and <see cref="Scale(T)"/>.
 		/// </summary>
 		virtual void Normalize() => this.Scale(T.One / this.Norm());
 
@@ -219,10 +220,10 @@ namespace Althea.Arrays
 		T ValueWithMinAbs();
 
 		/// <summary>
-		/// Compare the <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> of this array with a given <paramref name="value"/> to check whether all elements in <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> is the same as <paramref name="value"/>.
+		/// Compare this array with a given <paramref name="value"/> to check whether all elements are the same as <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The given value in <typeparamref name="T"/> to compare</param>
-		/// <returns>True if all elements in <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/> is the same as <paramref name="value"/>; false otherwise.</returns>
+		/// <returns>True if all elements in this array is the same as <paramref name="value"/>; false otherwise.</returns>
 		public virtual bool ValueAllEquals(T value)
 		{
 			if (!this.IsValid())
@@ -300,72 +301,6 @@ namespace Althea.Arrays
 		/// <returns>The reconstructed <typeparamref name="TSelf"/> from <paramref name="json"/>.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="json"/> is not a valid JSON serialization from <see cref="JsonSerialize"/></exception>
 		TSelf JsonDeserialize(string json);
-		#endregion
-	}
-
-	/// <summary>
-	/// The abstract interface whose only value storage is of type <typeparamref name="TS"/> while there may be other index storage(s).
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/></typeparam>
-	/// <typeparam name="TSelf">The concrete type that implements this <see cref="ISingleValueStorageArray{T, TS, TSelf}"/></typeparam>
-	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
-	public interface ISingleValueStorageArray<T, TS, TSelf> : IValueArray<T, TSelf>
-		where T : unmanaged, INumber<T>
-		where TS : class, IStorage<T, TS>
-		where TSelf : class, ISingleValueStorageArray<T, TS, TSelf>
-	{
-		#region basic
-		/// <summary>
-		/// When implemented by a derived class, get the original storage of this array. This is only used for disposition.
-		/// </summary>
-		protected TS OriginalStorage { get; }
-
-		/// <summary>
-		/// Get the referenced value array storage of this array.
-		/// </summary>
-		public virtual TS Storage => OriginalStorage.MakeReference();
-
-		/// <summary>
-		/// Get the total number of the visible values in memory in <typeparamref name="T"/>. The default implementation simply returns <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/>.<see cref="IStorage{T, TSelf}.Length">Length</see>.
-		/// </summary>
-		public virtual long ActualLength => this.OriginalStorage.Length;
-
-		void IDisposable.Dispose()
-		{
-			if (this.OriginalStorage is null)
-			{
-				return;
-			}
-			this.OriginalStorage.Dispose();
-			GC.SuppressFinalize(this);
-		}
-		#endregion
-
-		#region point-wise operations
-		void IValueArray<T, TSelf>.FillWith(T value) => this.Storage.FillWith(value);
-
-		void IValueArray<T, TSelf>.AddScalar(T value) => ExtBlas.PointWiseAddScalar(this.Storage, 1, value);
-
-		void IValueArray<T, TSelf>.Scale(T value) => Blas.Scale(this.Storage, 1, value);
-
-		void IValueArray<T, TSelf>.Conjugate() => ExtBlas.PointWiseConjugate<T, TS>(this.Storage, 1);
-
-		void IValueArray<T, TSelf>.Power(T power) => ExtBlas.PointWisePower(this.Storage, 1, power);
-
-		void IValueArray<T, TSelf>.Truncate(double threshold) => ExtBlas.PointWiseTruncate<T, TS>(this.Storage, 1, threshold);
-		#endregion
-
-		#region simple aggregation operations
-		T IValueArray<T, TSelf>.Sum() => ExtBlas.AggregateSum<T, TS>(this.Storage, 1);
-
-		T IValueArray<T, TSelf>.AbsSum() => Blas.AbsoluteValueSum<T, TS>(this.Storage, 1);
-
-		T IValueArray<T, TSelf>.Norm() => Blas.Norm<T, TS>(this.Storage, 1);
-
-		T IValueArray<T, TSelf>.ValueWithMaxAbs() => (this.Storage + Blas.AbsoluteValueArgMax<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
-
-		T IValueArray<T, TSelf>.ValueWithMinAbs() => (this.Storage + Blas.AbsoluteValueArgMin<T, TS>(this.Storage, 1)).ToManaged<T, TS>();
 		#endregion
 	}
 }

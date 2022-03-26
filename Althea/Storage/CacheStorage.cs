@@ -428,6 +428,14 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		ReadOnlySpan<long> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.GetPointerSizes(Span<long> sizes)
+		{
+			if (sizes.Length < 1)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+			sizes[0] = this.Memory.LengthInBytes;
+			return sizes;
+		}
+
 		/// <inheritdoc/>
 		public bool OverlapWith(IStorage other)
 		{
@@ -472,7 +480,7 @@ namespace Althea.Storage
 		{
 			if (typeof(TOut) == typeof(T))
 				return this.MakeReference() as CachedStorage<TOut, TS, TPh, TPl> ?? CachedStorage<TOut, TS, TPh, TPl>.Empty;
-			IStorage<T, CachedStorage<T, TS, TPh, TPl>>.CheckCast<TOut>(this.Length);
+			((IStorage<T, CachedStorage<T, TS, TPh, TPl>>)this).CheckCast<TOut>();
 			return new ReferenceCachedStorage<TOut, TS, TPh, TPl>(this);
 		}
 		#endregion

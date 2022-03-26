@@ -16,11 +16,13 @@ namespace Althea.Arrays
 	/// The base dense vector class whose only storage is of type <typeparamref name="TS"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}"/></typeparam>
+	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
 	public class DenseVector<T, TS> : IPitchedArray<T>,
-		IBaseVector<T, DenseVector<T, TS>>, ISingleValueStorageArray<T, TS, DenseVector<T, TS>>,
-		IVectorOperations<T, DenseVector<T, TS>, DenseVector<T, TS>>, IVectorUnaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>>, IVectorBinaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseVector<T, TS>>
+		IBaseVector<T, DenseVector<T, TS>>,
+		IVectorOperations<T, DenseVector<T, TS>, DenseVector<T, TS>>,
+		IVectorUnaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>>,
+		IVectorBinaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseVector<T, TS>>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
 	{
@@ -38,8 +40,6 @@ namespace Althea.Arrays
 		ReadOnlySpan<long> IPitchedArray<T>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);
 		ReadOnlySpan<long> IPitchedArray<T>.Strides => ReflectionHelper.CreateReadOnlySpan(in this.stride, 1);
 		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => ReflectionHelper.CreateReadOnlySpan(in this.outerSize, 1);
-
-		TS ISingleValueStorageArray<T, TS, DenseVector<T, TS>>.OriginalStorage => this.values;
 
 		private DenseVector()
 		{
@@ -244,16 +244,22 @@ namespace Althea.Arrays
 		public DenseVector<T, TS> CreateAlike() => new(this.values.CreateAlike(), this.length, this.stride);
 
 		/// <summary>
-		/// Copy the values from this dense vector to the <paramref name="other"/> one without stride.
+		/// Copy the values from this dense vector to a new <typeparamref name="TS"/> without stride.
 		/// </summary>
-		/// <typeparam name="TS2">The concrete storage type of <paramref name="other"/></typeparam>
-		/// <param name="other">The destination dense storage to copy to</param>
-		/// <exception cref="ArgumentException">If <paramref name="other"/>'s length is less than this</exception>
-		public void ToCompact<TS2>(TS2 other!!) where TS2 : class, IStorage<T, TS2>
+		/// <returns>The created compact vector's storage as a <typeparamref name="TS"/></returns>
+		public TS ToCompact()
 		{
-			if (other.Length < this.length)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(other));
-			this.values.StridedCopyTo<T, TS, TS2>(this.stride, other, 1);
+			var compact = this.values.ResizeAlike(this.length);
+			try
+			{
+				this.values.StridedCopyTo<T, TS, TS>(this.stride, compact, 1);
+				return compact;
+			}
+			catch (Exception)
+			{
+				compact.Dispose();
+				throw;
+			}
 		}
 		#endregion
 

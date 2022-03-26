@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Althea.Helpers;
+using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 
 
@@ -36,23 +37,61 @@ namespace Althea.Arrays
 		#endregion
 	}
 
-
 	/// <summary>
-	/// The interface for sparse array static information
+	/// The base interface for sparse arrays.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface ISparseArrayStatic<T> where T : unmanaged, INumber<T>
+	public interface ISparseArray<T> where T : unmanaged, INumber<T>
 	{
-		#region static
+		#region properties
 		/// <summary>
-		/// When implemented by a derived class, statically get the sparse format of this sparse array as a <see cref="LinearAlgebra.Sparse.SparseFormat"/>.
+		/// When implemented by a derived class, get the sparse format of this sparse array as a <see cref="LinearAlgebra.Sparse.SparseFormat"/>.
 		/// </summary>
-		abstract static LinearAlgebra.Sparse.SparseFormat Format { get; }
+		LinearAlgebra.Sparse.SparseFormat Format { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the default value of this sparse array
+		/// When implemented by a derived class, get the default value of this sparse array
 		/// </summary>
-		abstract static T DefaultValue { get; }
+		T DefaultValue { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get number of elements actually stored this sparse vector.
+		/// </summary>
+		long NStored { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the size of this array (the extent at all dimensions) in <typeparamref name="T"/> as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
+		/// </summary>
+		ReadOnlySpan<long> Size { get; }
+		#endregion
+	}
+
+	/// <summary>
+	/// The complicated interface for sparse arrays.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the value data type</typeparam>
+	/// <typeparam name="TS">The storage type used by the value array(s)</typeparam>
+	/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
+	/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
+	public interface ISparseArray<T, TInd, TS, TSInd> : ISparseArray<T>
+		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where TS : class, Storage.IStorage<T, TS> where TSInd : class, Storage.IStorage<TInd, TSInd>
+	{
+		#region properties
+		/// <summary>
+		/// When implemented by a derived class, get the value array(s) of this sparse array
+		/// </summary>
+		ReadOnlySpan<TS> ValueStorages { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the index array(s) of this sparse array
+		/// </summary>
+		ReadOnlySpan<TSInd> IndexStorages { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the constant block size of this sparse array, can be empty if it is not a <see cref="SparseFormat.Blocking.Simple"/>
+		/// </summary>
+		ReadOnlySpan<TInd> BlockSize { get; }
 		#endregion
 	}
 

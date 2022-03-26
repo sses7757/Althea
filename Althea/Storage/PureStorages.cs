@@ -111,6 +111,14 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		ReadOnlySpan<long> IStorage<T, PureStorage<T, TP>>.GetPointerSizes(Span<long> sizes)
+		{
+			if (sizes.Length < 1)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+			sizes[0] = this.Pointer.LengthInBytes;
+			return sizes;
+		}
+
 		/// <inheritdoc/>
 		public bool OverlapWith(IStorage other)
 		{
@@ -148,7 +156,7 @@ namespace Althea.Storage
 		{
 			if (typeof(TOut) == typeof(T))
 				return this.MakeReference() as PureStorage<TOut, TP> ?? PureStorage<TOut, TP>.Empty;
-			IStorage<T, PureStorage<T, TP>>.CheckCast<TOut>(this.Length);
+			((IStorage<T, PureStorage<T, TP>>)this).CheckCast<TOut>();
 			return new ReferencePureStorage<TOut, TP>(this);
 		}
 		#endregion

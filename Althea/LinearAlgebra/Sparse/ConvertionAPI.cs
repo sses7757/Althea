@@ -71,12 +71,13 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="TS2">The storage type used by the dense vector</typeparam>
 		/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
 		/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
-		/// <param name="x">The sparse vector as a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/></param>
-		/// <param name="y">Output the dense vector as a <typeparamref name="TS2"/>: if <paramref name="y"/> is invalid, a new one will be allocated and returned; otherwise, it will simply be overwritten</param>
+		/// <param name="x">The sparse vector as a <see cref="ISparseArray{T, TInd, TS, TSInd}"/></param>
+		/// <param name="y">The dense vector as a <typeparamref name="TS2"/> to be overwritten</param>
+		/// <param name="strideY">The stride between consecutive elements in <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(in SparseArrayWrapper<T, TInd, TS1, TSInd> x, ref TS2 y) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert dense vector <paramref name="x"/> to sparse vector <paramref name="x"/>.
@@ -94,7 +95,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="y"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is out of range or <paramref name="threshold"/> &lt; 0</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorDenseToSparse<T, TInd, TS2, TS1, TSInd>(ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, TS1 x, long strideX = 1, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, TS1 x, long strideX, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>;
 		#endregion
 
 		#region vector and matrix

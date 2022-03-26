@@ -17,7 +17,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given hermitian matrix <paramref name="A"/> for the special eigen-problem.
 		/// </summary>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="SolveVectorMode.NoVector"/> will be regarded as <see cref="SolveVectorMode.Vector"/></param>
-		/// <typeparam name="T">Any unmanaged number as the input data type</typeparam>
+		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
 		/// <typeparam name="TReal">Any unmanaged number as the real corresponding type of <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TSReal">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TReal"/></typeparam>
@@ -35,8 +35,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given symmetric-definite / hermitian-definite matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the input data type</typeparam>
-		/// <typeparam name="TReal">Any unmanaged number as the real corresponding type of <typeparamref name="T"/></typeparam>
+		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
+		/// <typeparam name="TReal">Any unmanaged floating point number as the real corresponding type of <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TSReal">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TReal"/></typeparam>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="SolveVectorMode.NoVector"/> will be regarded as <see cref="SolveVectorMode.Vector"/></param>
@@ -57,8 +57,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the input data type</typeparam>
-		/// <typeparam name="TComp">Any unmanaged number as the complex corresponding type of <typeparamref name="T"/></typeparam>
+		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
+		/// <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TSComp1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
 		/// <typeparam name="TSComp2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
@@ -82,8 +82,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the input data type</typeparam>
-		/// <typeparam name="TComp">Any unmanaged number as the complex corresponding type of <typeparamref name="T"/></typeparam>
+		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
+		/// <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TSComp1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
 		/// <typeparam name="TSComp2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
@@ -127,7 +127,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool LinearSolveGeneral<T, TS1, TS2>(MatrixOperation op, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool LinearSolveGeneral<T, TS1, TS2>(MatrixOperation op, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 
 		#region QR solve
@@ -142,14 +142,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="n">The number of columns of matrix <paramref name="A"/></param>
 		/// <param name="A">The input/output matrix to be factorized of leading dimension <paramref name="lda"/> and size <paramref name="m"/>×<paramref name="n"/> whose upper triangular part will be overwritten by the triangular matrix at exit (rest part may be filled with other values).</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/></param>
+		/// <param name="Q">The preallocated output unitary matrix of leading dimension <paramref name="ldq"/>, null means do not calculate Q matrix</param>
 		/// <param name="ldq">The leading dimension of <paramref name="Q"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="Q"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2 Q, long ldq) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
@@ -170,15 +170,15 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 
 		#region other decompositions
 		/// <summary>
 		/// When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the input data type</typeparam>
-		/// <typeparam name="TReal">Any unmanaged number as the real corresponding type of <typeparamref name="T"/></typeparam>
+		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
+		/// <typeparam name="TReal">Any unmanaged floating point number as the real corresponding type of <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
@@ -205,8 +205,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Compute the standard Schur decomposition of given matrix <paramref name="A"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the input/output data type</typeparam>
-		/// <typeparam name="TComp">Any unmanaged number as the complex corresponding type of <typeparamref name="T"/></typeparam>
+		/// <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+		/// <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TSComp1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
@@ -230,8 +230,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// Compute the general Schur decomposition of given matrices <paramref name="A"/> and <paramref name="B"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the input/output data type</typeparam>
-		/// <typeparam name="TComp">Any unmanaged number as the complex corresponding type of <typeparamref name="T"/></typeparam>
+		/// <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+		/// <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>

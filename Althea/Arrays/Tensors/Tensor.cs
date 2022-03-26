@@ -1,9 +1,7 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.TensorAlgebra;
 
 
 namespace Althea.Arrays
@@ -13,15 +11,15 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
-	public interface IBaseTensor<T, TSelf> : IValueArray<T, TSelf>, ILabeledTensor
+	public interface IBaseTensor<T, TSelf> : ILabeledTensor<T>, IValueArray<T, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IBaseTensor<T, TSelf>
 	{
 		#region basic
 		/// <summary>
-		/// When implemented by a derived class, get the (both end inclusive) accumulated product of the <see cref="ILabeledTensor.Size"/> of this tensor.
+		/// When implemented by a derived class, get the (both end inclusive) accumulated product of the <see cref="ILabeledTensor{T}.Size"/> of this tensor.
 		/// </summary>
-		/// <remarks>The first element is 1, the last element is <see cref="IValueArray{T, TSelf}.Length"/> and its size == <see cref="ILabeledTensor.Rank"/> + 1</remarks>
+		/// <remarks>The first element is 1, the last element is <see cref="IValueArray{T, TSelf}.Length"/> and its size == <see cref="ILabeledTensor{T}.Rank"/> + 1</remarks>
 		protected ReadOnlySpan<long> SizeProd { get; }
 		#endregion
 
@@ -80,7 +78,7 @@ namespace Althea.Arrays
 		protected long CheckIndex(ReadOnlySpan<long> indices, ReadOnlySpan<long> outerSizeProd)
 		{
 			int rank = this.Rank;
-			var size = ((ILabeledTensor)this).Size;
+			var size = ((ILabeledTensor<T>)this).Size;
 			if (indices.Length != rank)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(indices));
 			long offset = 0;
@@ -97,7 +95,7 @@ namespace Althea.Arrays
 		private void GetIndex(Span<long> ind, Index[] indices)
 		{
 			int rank = this.Rank;
-			var size = ((ILabeledTensor)this).Size;
+			var size = ((ILabeledTensor<T>)this).Size;
 			if (indices is null || indices.Length != rank)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(indices));
 			for (int i = 0; i < rank; i++)
@@ -130,10 +128,10 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected long CheckRange(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, ReadOnlySpan<long> outerSizeProd, ILabeledTensor? sub = null)
+		protected long CheckRange(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, ReadOnlySpan<long> outerSizeProd, ILabeledTensor<T>? sub = null)
 		{
 			int rank = this.Rank;
-			var size = ((ILabeledTensor)this).Size;
+			var size = ((ILabeledTensor<T>)this).Size;
 			if (offsets.Length != rank)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(offsets));
 			if (lengths.Length != rank)
@@ -165,7 +163,7 @@ namespace Althea.Arrays
 		private void GetRange(Span<long> off, Span<long> len, Range[] ranges)
 		{
 			int rank = this.Rank;
-			var size = ((ILabeledTensor)this).Size;
+			var size = ((ILabeledTensor<T>)this).Size;
 			if (ranges is null || ranges.Length != rank)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(ranges));
 			for (int i = 0; i < rank; i++)
@@ -197,7 +195,7 @@ namespace Althea.Arrays
 				Span<long> off = stackalloc long[this.Rank];
 				Span<long> len = stackalloc long[this.Rank];
 				this.GetRange(off, len, ranges);
-				if (!len.SequenceEqual(((ILabeledTensor)value).Size))
+				if (!len.SequenceEqual(((ILabeledTensor<T>)value).Size))
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(value));
 				this.SetSlice(off, len, value);
 			}
@@ -214,13 +212,6 @@ namespace Althea.Arrays
 		TSelf GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
 
 		/// <summary>
-		/// When implemented by a derived class, copy this tensor's elements to <paramref name="destination"/>'s ones.
-		/// </summary>
-		/// <param name="destination">The destination tensor to copy to</param>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is not of same size as this one</exception>
-		void CopyTo(TSelf destination);
-
-		/// <summary>
 		/// When implemented by a derived class, set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>.
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
@@ -234,10 +225,10 @@ namespace Althea.Arrays
 
 		#region first few dimensions indexing
 		/// <summary>
-		/// Get or set the (full) sub-tensor of rank <paramref name="n"/> located by the given <paramref name="restIndices"/> of length <c>(<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>)</c>.
+		/// Get or set the (full) sub-tensor of rank <paramref name="n"/> located by the given <paramref name="restIndices"/> of length <c>(<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</c>.
 		/// </summary>
 		/// <param name="n">The first <paramref name="n"/> dimensions to get/set</param>
-		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
 		/// <returns>The (full) sub-tensor of the first <paramref name="n"/> dimensions</returns>
 		public TSelf this[byte n, params Index[] restIndices]
 		{
@@ -263,7 +254,7 @@ namespace Althea.Arrays
 				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.ParameterError.InvalidValue);
 			if (len + n != rank)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(restIndices));
-			var size = ((ILabeledTensor)this).Size;
+			var size = ((ILabeledTensor<T>)this).Size;
 			for (int i = 0; i < len; i++)
 			{
 				rest[i] = restIndices[i].GetPosition(size[n + i]);
@@ -274,7 +265,7 @@ namespace Althea.Arrays
 		/// Check whether the given first-few-dimension(s) taking indicated by <paramref name="n"/>, <paramref name="restIndices"/>, <paramref name="offsets"/> and <paramref name="lengths"/> are valid and put the overall offsets and lengths to <paramref name="allOffsets"/> and <paramref name="allLengths"/>.
 		/// </summary>
 		/// <param name="n">The first <paramref name="n"/> dimensions to take</param>
-		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
 		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
 		/// <param name="allOffsets">The output overall offsets of all dimensions, must be of size == rank</param>
@@ -282,17 +273,17 @@ namespace Althea.Arrays
 		/// <param name="outerSizeProd">The (inclusive) accumulated product of the outer size (i.e. the strides of all dimensions)</param>
 		/// <param name="sub">The sub tensor to check which can be null to ignore checking</param>
 		/// <returns>The equivalent total offset of the position indicated by (at exit) <paramref name="allOffsets"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected long CheckFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Span<long> allOffsets, Span<long> allLengths, ReadOnlySpan<long> outerSizeProd, ILabeledTensor? sub = null)
+		protected long CheckFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Span<long> allOffsets, Span<long> allLengths, ReadOnlySpan<long> outerSizeProd, ILabeledTensor<T>? sub = null)
 		{
 			int rank = this.Rank;
 			if (n <= 0 || n >= rank - 1)
 				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.ParameterError.InvalidValue);
 			if (restIndices.Length + n != rank)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(restIndices));
-			if (sub is not null && !sub.Size.SequenceEqual(((ILabeledTensor)this).Size[..n]))
+			if (sub is not null && !sub.Size.SequenceEqual(((ILabeledTensor<T>)this).Size[..n]))
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(sub));
 
 			restIndices.CopyTo(allOffsets[n..]);
@@ -311,7 +302,7 @@ namespace Althea.Arrays
 			}
 			else
 			{
-				var size = ((ILabeledTensor)this).Size;
+				var size = ((ILabeledTensor<T>)this).Size;
 				for (int i = 0; i < n; i++)
 				{
 					allLengths[i] = size[i] - allOffsets[i];
@@ -322,28 +313,28 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, get the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>)</c>.
+		/// When implemented by a derived class, get the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</c>.
 		/// </summary>
 		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
-		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
 		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
 		/// <returns>The sub-tensor at the first <paramref name="n"/> dimensions</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>)</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
 		TSelf GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
 
 		/// <summary>
-		/// When implemented by a derived class, set the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>)</c> to the given <paramref name="value"/>.
+		/// When implemented by a derived class, set the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</c> to the given <paramref name="value"/>.
 		/// </summary>
 		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
-		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
 		/// <param name="value">The dense tensor to set</param>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
 		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor.Rank">rank</see> - <paramref name="n"/>); or <paramref name="value"/> cannot be used as the set parameter</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>); or <paramref name="value"/> cannot be used as the set parameter</exception>
 		void SetFirstDims(int n, ReadOnlySpan<long> restIndices, TSelf value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
 		#endregion
 	}

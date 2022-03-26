@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
@@ -232,6 +233,36 @@ namespace Althea.Storage
 		TSelf ICreateAlike<TSelf>.CreateAlike() => TSelf.CreateAlike<T, TSelf>((TSelf)this);
 
 		/// <summary>
+		/// When implemented by a derived class, get the sizes of the actual (non-cached) pointers' in defined order.
+		/// </summary>
+		/// <param name="sizes">The <see cref="Span{T}"/> used to store the sizes</param>
+		/// <returns><paramref name="sizes"/> with correct size.</returns>
+		internal protected ReadOnlySpan<long> GetPointerSizes(Span<long> sizes);
+
+		/// <summary>
+		/// Create a new storage of type <typeparamref name="TSelf"/> alike this one but with a <paramref name="newSize"/>.
+		/// </summary>
+		/// <param name="newSize">The new size in <typeparamref name="T"/>. If <paramref name="newSize"/> is larger than the <see cref="Length"/>, the last pointer's length will be extended</param>
+		/// <returns>The created new storage of type <typeparamref name="TSelf"/> of length <paramref name="newSize"/>.</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newSize"/> ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		virtual TSelf ResizeAlike(long newSize)
+		{
+			long diff = newSize - this.Length;
+			if (diff <= 0)
+				return this.MakeReference(0, newSize).CreateAlike();
+			Span<long> lengths = stackalloc long[TSelf.PointerGetters.Length];
+			this.GetPointerSizes(lengths);
+			for (int i = 0; i < lengths.Length; i++)
+			{
+				lengths[i] /= Unmanaged<T>.Size;
+			}
+			lengths[^1] += diff;
+			return TSelf.Create(lengths);
+		}
+
+		/// <summary>
 		/// Statically get the distance in bytes between two <typeparamref name="TSelf"/>s
 		/// </summary>
 		/// <param name="left">The left operand of type <typeparamref name="TSelf"/></param>
@@ -285,21 +316,24 @@ namespace Althea.Storage
 		abstract static long operator -(TSelf left, TSelf right);
 
 		/// <summary>
-		/// Check whether the given <paramref name="size"/> in <typeparamref name="T"/> can be casted without loss to <typeparamref name="TOut"/>
+		/// Check whether this storage can be casted without loss to <typeparamref name="TOut"/>
 		/// </summary>
 		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <param name="size">The size to check</param>
-		/// <param name="sizeInBytes">Whether <paramref name="size"/> is in bytes or in <typeparamref name="T"/></param>
-		/// <returns>The <paramref name="size"/> (multiplies the size of <typeparamref name="T"/> then) divides the size of <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">if <paramref name="size"/>( multiplies the size of <typeparamref name="T"/>) cannot be divided by the size of <typeparamref name="TOut"/></exception>
+		/// <returns>The <see cref="Length"/> divided by the size of <typeparamref name="TOut"/></returns>
+		/// <exception cref="InvalidCastException">If the sizes of the pointers of this storage cannot be divided by the size of <typeparamref name="TOut"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long CheckCast<TOut>(long size, bool sizeInBytes = false) where TOut : unmanaged, INumber<TOut>
+		public long CheckCast<TOut>() where TOut : unmanaged, INumber<TOut>
 		{
-			long newSize = sizeInBytes ? size : (size * Unmanaged<T>.Size);
-			if (size * Unmanaged<T>.Size % Unmanaged<TOut>.Size != 0)
-				throw new InvalidCastException(ArithmeticError.CannotDivide);
-			newSize /= Unmanaged<TOut>.Size;
-			return newSize;
+			long length = 0;
+			Span<long> sizes = stackalloc long[TSelf.PointerGetters.Length];
+			this.GetPointerSizes(sizes);
+			for (int i = 0; i < sizes.Length; i++)
+			{
+				if (sizes[i] * Unmanaged<T>.Size % Unmanaged<TOut>.Size != 0)
+					throw new InvalidCastException(ArithmeticError.CannotDivide);
+				length += sizes[i];
+			}
+			return length / Unmanaged<TOut>.Size;
 		}
 
 		/// <summary>

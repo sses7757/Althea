@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Drawing;
+using System;
+using System.Runtime.InteropServices;
 
 using Althea.Helpers;
 using Althea.Storage;
@@ -109,11 +111,13 @@ namespace Althea.LinearAlgebra.Sparse
 		/// </summary>
 		public static SparseFormat None => default;
 
-		private SparseFormat(int data)
+		internal SparseFormat(int data)
 		{
 			this = default;
 			this.data = data;
 		}
+
+		internal int Data => this.data;
 
 		/// <summary>
 		/// The full constructor of a <see cref="SparseFormat"/>.
@@ -318,7 +322,7 @@ namespace Althea.LinearAlgebra.Sparse
 	/// <typeparam name="TSVal">The storage type used by the value array(s)</typeparam>
 	/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
 	/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
-	public readonly ref struct SparseArrayWrapper<TVal, TInd, TSVal, TSInd>
+	public ref struct SparseArrayWrapper<TVal, TInd, TSVal, TSInd>
 		where TVal : unmanaged, INumber<TVal> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TSVal : class, IStorage<TVal, TSVal> where TSInd : class, IStorage<TInd, TSInd>
 	{
@@ -326,37 +330,51 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// The default value of this sparse array
 		/// </summary>
-		public TVal DefaultValue { get; }
+		public TVal DefaultValue { get; set; }
 
 		/// <summary>
 		/// The <see cref="SparseFormat"/> of this sparse array
 		/// </summary>
-		public SparseFormat Format { get; }
+		public SparseFormat Format { get; set; }
 		
 		/// <summary>
 		/// The size of this sparse array
 		/// </summary>
-		public ReadOnlySpan<long> Size { get; }
+		public ReadOnlySpan<long> Size { get; set; }
 
 		/// <summary>
 		/// The value array(s) of this sparse array
 		/// </summary>
-		public ReadOnlySpan<TSVal> ValueStorages { get; }
+		public ReadOnlySpan<TSVal> ValueStorages { get; set; }
 
 		/// <summary>
 		/// The index array(s) of this sparse array
 		/// </summary>
-		public ReadOnlySpan<TSInd> IndexStorages { get; }
+		public ReadOnlySpan<TSInd> IndexStorages { get; set; }
 
 		/// <summary>
 		/// The constant block size of this sparse array, can be empty if it is not a <see cref="SparseFormat.Blocking.Simple"/>
 		/// </summary>
-		public ReadOnlySpan<TInd> BlockSize { get; }
+		public ReadOnlySpan<TInd> BlockSize { get; set; }
 
 		/// <summary>
 		/// Other information related to this sparse array as a <see cref="object"/>
 		/// </summary>
-		public object? OtherInfo { get; }
+		public object? OtherInfo { get; set; }
+
+		/// <summary>
+		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with only meta information.
+		/// </summary>
+		public SparseArrayWrapper(TVal defaultValue, SparseFormat format)
+		{
+			this.DefaultValue = defaultValue;
+			this.Format = format;
+			this.Size = default;
+			this.ValueStorages = default;
+			this.IndexStorages = default;
+			this.BlockSize = default;
+			this.OtherInfo = default;
+		}
 
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with given detailed parameters.

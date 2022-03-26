@@ -1,4 +1,6 @@
-﻿using Althea.LinearAlgebra;
+﻿using System.Runtime.CompilerServices;
+
+using Althea.LinearAlgebra;
 using Althea.TensorAlgebra;
 
 
@@ -150,6 +152,19 @@ namespace Althea.Arrays
 		where TMat : class, IBaseMatrix<T, TMat>
 	{
 		/// <summary>
+		/// Check the input parameters of <see cref="MatrixMultiplyVector(TMat, TVec1, TVec2, T, T, MatrixOperation)"/> and <see cref="VectorMultiplyMatrix(TVec1, TMat, TVec2, T, T, MatrixOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckMatMulVec(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, MatrixOperation operation)
+		{
+			long n = operation.CanInPlace() ? matrix.NCols : matrix.NRows;
+			if (n != vector.Length || vector.Length != vectorOut.Length)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vector));
+			if (α == T.Zero)
+				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>) with <paramref name="vectorOut"/> (scaled by <paramref name="β"/>).
 		/// </summary>
 		/// <param name="matrix">The input matrix to be multiplied</param>
@@ -201,6 +216,34 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
+	/// The interface for operators that multiply vectors and matrices of different types out-of-place.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IVectorMatrixMultiplyOperators<T, in TVec1, out TVec2, in TMat>
+		where T : unmanaged, INumber<T>
+		where TVec1 : class, IBaseVector<T, TVec1>, IVectorMatrixMultiplyOperators<T, TVec1, TVec2, TMat>
+		where TVec2 : class, IBaseVector<T, TVec2>
+		where TMat : class, IBaseMatrix<T, TMat>
+	{
+		/// <summary>
+		/// When implemented by a derived class, compute the multiplication of the given <paramref name="matrix"/> and <paramref name="vector"/>.
+		/// </summary>
+		/// <param name="matrix">The input matrix to be multiplied</param>
+		/// <param name="vector">The input vector to be multiplied</param>
+		public abstract static TVec2 operator *(TMat matrix, TVec1 vector);
+
+		/// <summary>
+		/// When implemented by a derived class, compute the multiplication of the given <paramref name="vector"/> and <paramref name="matrix"/>.
+		/// </summary>
+		/// <param name="vector">The input vector to be multiplied</param>
+		/// <param name="matrix">The input matrix to be multiplied</param>
+		public abstract static TVec2 operator *(TVec1 vector, TMat matrix);
+	}
+
+	/// <summary>
 	/// The interface for operations that get diagonal elements of matrices to new vectors.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
@@ -223,12 +266,12 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface for operations that get or set diagonal elements of matrices.
+	/// The interface for operations that get diagonal elements of matrices.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixGetSetDiagonalVector<T, TVec, in TMat>
+	public interface IMatrixGetDiagonalVectorVariant<T, in TVec, in TMat>
 		where T : unmanaged, INumber<T>
 		where TVec : class, IBaseVector<T, TVec>
 		where TMat : class, IBaseMatrix<T, TMat>
@@ -244,7 +287,19 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="overwrite"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="overwrite"/> cannot be overwritten</exception>
 		public abstract static void GetDiag(TMat matrix, long k, TVec overwrite);
+	}
 
+	/// <summary>
+	/// The interface for operations that set diagonal elements of matrices.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixSetDiagonalVector<T, in TVec, in TMat>
+		where T : unmanaged, INumber<T>
+		where TVec : class, IBaseVector<T, TVec>
+		where TMat : class, IBaseMatrix<T, TMat>
+	{
 		/// <summary>
 		/// When implemented by a derived class, set the <paramref name="k"/>-th diagonal elements  of <paramref name="matrix"/> to <paramref name="value"/>.
 		/// </summary>
@@ -273,6 +328,40 @@ namespace Althea.Arrays
 		where TMat3 : class, IBaseMatrix<T, TMat3>
 	{
 		/// <summary>
+		/// Check the input parameters of <see cref="AddMatrices(TMat1?, T, TMat2?, T, TMat3, MatrixOperation, MatrixOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static (long m, long n) CheckMatAdd(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C, MatrixOperation opA, MatrixOperation opB)
+		{
+			bool nullA = A is null || scalarA == T.Zero;
+			bool nullB = B is null || scalarB == T.Zero;
+			if (nullA && nullB)
+				throw new ArgumentException(Resources.ParameterError.CannotAllNull);
+			var (m, n) = (C.NRows, C.NCols);
+			if (!nullA)
+			{
+#pragma warning disable CS8602
+				var (m1, n1) = (A.NRows, A.NCols);
+#pragma warning restore CS8602
+				if (!opA.CanInPlace())
+					(m1, n1) = (n1, m1);
+				if (m1 != m || n1 != n)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
+			}
+			if (!nullB)
+			{
+#pragma warning disable CS8602
+				var (m1, n1) = (B.NRows, B.NCols);
+#pragma warning restore CS8602
+				if (!opB.CanInPlace())
+					(m1, n1) = (n1, m1);
+				if (m1 != m || n1 != n)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(B));
+			}
+			return (m, n);
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, statically overwrite <paramref name="C"/> with the addition of <c><paramref name="opA"/>(<paramref name="A"/>) + <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
 		/// <param name="scalarA">The scalar to multiply to matrix <paramref name="A"/> before addition</param>
@@ -284,6 +373,28 @@ namespace Althea.Arrays
 		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before addition</param>
 		/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or empty; or both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the addition cannot be performed due to incompatible sizes</exception>
 		public abstract static void AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+
+		/// <summary>
+		/// Check the input parameters of <see cref="MultiplyMatries(T, TMat1, TMat2, T, TMat3, MatrixOperation, MatrixOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static (long m, long n, long k) CheckMatMul(T α, TMat1 A, TMat2 B, TMat3 C, MatrixOperation opA, MatrixOperation opB)
+		{
+			if (α == T.Zero)
+				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
+			var (m, n) = (C.NRows, C.NCols);
+			var (r, k) = (A.NRows, A.NCols);
+			if (!opA.CanInPlace())
+				(r, k) = (k, r);
+			var (s, t) = (B.NRows, B.NCols);
+			if (!opB.CanInPlace())
+				(s, t) = (t, s);
+			if (r != m || k != s)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
+			if (t != n)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(B));
+			return (m, n, k);
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, statically overwrite <paramref name="C"/> with the addition of <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
@@ -407,56 +518,36 @@ namespace Althea.Arrays
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat4">The fourth matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec">The concrete vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	public interface IMatrixSolvers<T, in TMat1, in TMat2, in TMat3, in TMat4, in TVec>
+	public interface IMatrixSolvers<T, in TMat1, in TMat2, in TMat3, in TMat4>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
 		where TMat3 : class, IBaseMatrix<T, TMat3>
 		where TMat4 : class, IBaseMatrix<T, TMat4>
-		where TVec : class, IBaseVector<T, TVec>
 	{
 		/// <summary>
-		/// When implemented by a derived class, statically compute the standard (when <paramref name="type"/> is none) or general (when <paramref name="type"/> is not none) eigen-solve of the input <paramref name="matrix"/> (and <paramref name="another"/> matrix) and write the result eigenvalues to <paramref name="outVals"/> and eigenvectors to <paramref name="outLeft"/> and <paramref name="outRight"/>.
+		/// Check the input parameters of <see cref="LinearSolve(TMat1, TMat2, TMat3, MatrixOperation)"/>.
 		/// </summary>
-		/// <param name="matrix">The main input matrix to be eigen-solved</param>
-		/// <param name="another">The secondary input matrix to be eigen-solved which can be null if <paramref name="type"/> is <see cref="GeneralEigenType.None"/></param>
-		/// <param name="outLeft">The output left eigenvectors, can be null if <paramref name="mode"/> does not contains left</param>
-		/// <param name="outRight">The output right eigenvectors, can be null if <paramref name="mode"/> does not contains right</param>
-		/// <param name="outVals">The output eigenvalues</param>
-		/// <param name="type">The <see cref="GeneralEigenType"/> indicating which form of general eigen problem will be computed or none</param>
-		/// <param name="mode">The <see cref="SolveVectorMode"/> indicating which eigenvectors to compute</param>
-		/// <exception cref="ArgumentException">If the <paramref name="another"/>, <paramref name="outLeft"/> or <paramref name="outRight"/> is null when it shall not be according to <paramref name="type"/> and <paramref name="mode"/></exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void EigenSolve(TMat1 matrix, TVec outVals, TMat3? outLeft, TMat4? outRight, SolveVectorMode mode, TMat2? another = null, GeneralEigenType type = GeneralEigenType.None);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckLinear(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves)
+		{
+			if (coefficients.NRows != coefficients.NCols || coefficients.NRows != rightHandSides.NRows)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
+			if (rightHandSides.NRows != outSolves.NRows || rightHandSides.NCols != outSolves.NCols)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(rightHandSides));
+		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute the singular value decomposition (SVD) of the <paramref name="matrix"/> and corresponding the left and/or right singular vectors: <paramref name="matrix"/> = <paramref name="outU"/> * diag(<paramref name="outVals"/>) <paramref name="outVct"/>.
+		/// Check the input parameters of <see cref="LeastSquareSolve(TMat1, TMat2, TMat3)"/>.
 		/// </summary>
-		/// <param name="matrix">The input matrix to be singular value solved</param>
-		/// <param name="outVals">The output singular values</param>
-		/// <param name="outU">The output left unitary matrix, can be null if <paramref name="storeU"/> is none</param>
-		/// <param name="outVct">The output right unitary matrix, can be null if <paramref name="storeV"/> is none</param>
-		/// <param name="storeU">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="outU"/></param>
-		/// <param name="storeV">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="outVct"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/>; or <paramref name="outU"/> or <paramref name="outVct"/> is null when <paramref name="storeU"/> or <paramref name="storeV"/> indicates otherwise</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void SingularValueSolve(TMat1 matrix, TVec outVals, TMat3? outU, TMat4? outVct, SVDStore storeU, SVDStore storeV);
-
-		/// <summary>
-		/// When implemented by a derived class, compute the Schur decomposition of the <paramref name="matrix"/> (and <paramref name="another"/> matrix if not null) and write the corresponding eigenvalues to <paramref name="outVals"/> and Schur vectors to <paramref name="outLeft"/>.
-		/// </summary>
-		/// <param name="matrix">The main input matrix to be Schur decomposed</param>
-		/// <param name="another">The secondary input matrix to be Schur decomposed, null means standard Schur form where <paramref name="outRight"/> shall be null</param>
-		/// <param name="outMatrix">The output matrix to store the Schur form, which can be <paramref name="matrix"/></param>
-		/// <param name="outVals">The output eigenvalues</param>
-		/// <param name="outLeft">The output left Schur vectors, can be null if <paramref name="mode"/> does not contains left</param>
-		/// <param name="outRight">The output left Schur vectors, can be null if <paramref name="mode"/> does not contains left</param>
-		/// <param name="orderVals">If this vector is not null, the eigenvalues in it will be ordered to the top of the Schur form</param>
-		/// <param name="mode">The <see cref="SolveVectorMode"/> indicating whether to compute Schur vectors or not</param>
-		/// <exception cref="ArgumentException">If <paramref name="outLeft"/> or <paramref name="outRight"/> is null when <paramref name="mode"/> indicates otherwise</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void SchurSolve(TMat1 matrix, TMat2 outMatrix, TVec outVals, TMat3? outLeft, TMat4? outRight, TVec? orderVals, SolveVectorMode mode, TMat1? another = null);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckLeast(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves)
+		{
+			if (coefficients.NRows <= coefficients.NCols || coefficients.NRows != rightHandSides.NRows)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
+			if (rightHandSides.NRows != outSolves.NRows || rightHandSides.NCols != outSolves.NCols)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(rightHandSides));
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, compute solves of the linear systems: <c><paramref name="opCoef"/>(<paramref name="coefficients"/>) * <paramref name="outSolves"/> == <paramref name="rightHandSides"/></c>.
@@ -469,25 +560,53 @@ namespace Althea.Arrays
 		public abstract static void LinearSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves, MatrixOperation opCoef = MatrixOperation.None);
 
 		/// <summary>
-		/// When implemented by a derived class, least square solve the linear systems: <c><paramref name="opCoef"/>(<paramref name="coefficients"/>) * <paramref name="outSolves"/> == <paramref name="rightHandSides"/></c>.
+		/// When implemented by a derived class, least square solve the linear systems: <c><paramref name="coefficients"/> * <paramref name="outSolves"/> == <paramref name="rightHandSides"/></c>.
 		/// </summary>
 		/// <param name="coefficients">The input coefficient matrix to be solved</param>
 		/// <param name="rightHandSides">The input right-hand-side matrix to be solved</param>
 		/// <param name="outSolves">The output solve matrix</param>
-		/// <param name="opCoef">The operation to apply to <paramref name="coefficients"/> during calculation</param>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void LeastSquareSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves, MatrixOperation opCoef = MatrixOperation.None);
+		public abstract static void LeastSquareSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves);
+
+		/// <summary>
+		/// Check the input parameters of <see cref="QRDecomposition(TMat1, TMat3, TMat4?, bool)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckQR(TMat1 matrix, TMat3 outTriangular, TMat4? outUnary, bool full)
+		{
+			if (matrix.NRows == matrix.NCols)
+			{
+				if (outTriangular.NRows != matrix.NRows || outTriangular.NCols != matrix.NCols)
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outTriangular));
+				if (outUnary is not null && (outUnary.NRows != matrix.NRows || outUnary.NCols != matrix.NCols))
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outUnary));
+			}
+			else if (matrix.NRows > matrix.NCols)
+			{
+				if (outTriangular.NRows != matrix.NCols || outTriangular.NCols != matrix.NCols)
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outTriangular));
+				if (outUnary is not null && (outUnary.NRows != matrix.NRows || outUnary.NCols != (full ? matrix.NRows : matrix.NCols)))
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outUnary));
+			}
+			else //if (matrix.NRows < matrix.NCols)
+			{
+				if (outTriangular.NRows != matrix.NRows || outTriangular.NCols != matrix.NCols)
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outTriangular));
+				if (outUnary is not null && (outUnary.NRows != matrix.NRows || outUnary.NCols != matrix.NRows))
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outUnary));
+			}
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, QR solve the input <paramref name="matrix"/> and write the result triangular .
 		/// </summary>
 		/// <param name="matrix">The input matrix to be QR decomposed</param>
 		/// <param name="outTriangular">The output triangular matrix, which can be <paramref name="matrix"/></param>
-		/// <param name="outUnary">The output unary matrix, which can be <paramref name="matrix"/> if the dimension allows</param>
+		/// <param name="outUnary">The output unary matrix, which can be <paramref name="matrix"/> if the dimension allows, null means do not calculate it</param>
 		/// <param name="full">Whether to compute the full QR or partial QR</param>
 		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void QRDecomposition(TMat1 matrix, TMat3 outTriangular, TMat4 outUnary, bool full = false);
+		public abstract static void QRDecomposition(TMat1 matrix, TMat3 outTriangular, TMat4? outUnary, bool full = false);
 	}
 	#endregion
 

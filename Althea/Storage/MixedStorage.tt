@@ -180,6 +180,16 @@ namespace Althea.Storage
 		#endregion
 
 		#region reference
+		ReadOnlySpan<long> IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.GetPointerSizes(Span<long> sizes)
+		{
+			if (sizes.Length < <#=i#>)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+<# for (int j = 0; j < i; j++) { #>
+			sizes[<#=j#>] = this.Pointer<#=j+1#>.LengthInBytes;
+<# } #>
+			return sizes;
+		}
+
 		/// <inheritdoc/>
 		public bool OverlapWith(IStorage other)
 		{
@@ -225,7 +235,7 @@ namespace Althea.Storage
 		{
 			if (typeof(TOut) == typeof(T))
 				return this.MakeReference() as MixedStorage<TOut, <#=pointerTypes#>> ?? MixedStorage<TOut, <#=pointerTypes#>>.Empty;
-			IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.CheckCast<TOut>(this.Length);
+			((IStorage<T, MixedStorage<T, <#=pointerTypes#>>>)this).CheckCast<TOut>();
 			return new ReferenceMixedStorage<TOut, <#=pointerTypes#>>(this);
 		}
 		#endregion
