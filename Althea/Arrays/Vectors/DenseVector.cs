@@ -17,7 +17,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
-	[StructLayout(LayoutKind.Explicit)]
+	[StructLayout(LayoutKind.Sequential)]
 	public class DenseVector<T, TS> : IPitchedArray<T>,
 		IBaseVector<T, DenseVector<T, TS>>,
 		IVectorOperations<T, DenseVector<T, TS>, DenseVector<T, TS>>,
@@ -27,13 +27,9 @@ namespace Althea.Arrays
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic
-		[FieldOffset(0)]
 		private readonly long length;
-		[FieldOffset(sizeof(long))]
 		private readonly long stride;
-		[FieldOffset(sizeof(long) * 2)]
 		private readonly long outerSize;
-		[FieldOffset(sizeof(long) * 3)]
 		private readonly TS values;
 
 		ReadOnlySpan<long> IValueArray<T, DenseVector<T, TS>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);

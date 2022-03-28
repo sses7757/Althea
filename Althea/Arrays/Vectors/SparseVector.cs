@@ -24,7 +24,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	[StructLayout(LayoutKind.Explicit)]
+	[StructLayout(LayoutKind.Sequential)]
 	public class SparseVector<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
 		IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>,
 		IVectorOperations<T, DenseVector<T, TS>, SparseVector<T, TInd, TS, TSInd>>,
@@ -38,21 +38,15 @@ namespace Althea.Arrays
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
-		[FieldOffset(0)]
 		private readonly long length;
-		[FieldOffset(sizeof(long) * 1)]
-		private readonly TS values;
-		[FieldOffset(sizeof(long) * 2)]
-		private readonly long blockSize;
-		[FieldOffset(sizeof(long) * 3)] // sizeof(IntPtr) == sizeof(long)
+
 		private readonly TSInd indices;
-		[FieldOffset(sizeof(long) * 4)]
-		private readonly TSInd? blockSizes;
-		[FieldOffset(sizeof(long) * 5)]
-		private readonly TSInd? blockSizesScan;
-		[FieldOffset(sizeof(long) * 6)]
+		private readonly TSInd? blockSizes, blockSizesScan;
+
+		private readonly TS values;
+
+		private readonly TInd blockSize;
 		private readonly SparseFormat format;
-		[FieldOffset(sizeof(long) * 7)] // align at sizeof(long)
 		private readonly T defaultValue;
 
 		ReadOnlySpan<long> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);
@@ -60,7 +54,7 @@ namespace Althea.Arrays
 		ReadOnlySpan<long> ISparseArray<T>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);
 		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => ReflectionHelper.CreateReadOnlySpan(in this.values, 1);
 		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => ReflectionHelper.CreateReadOnlySpan(in this.indices, this.format.BlockType == SparseFormat.Blocking.Complicated ? 3 : 1);
-		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => this.format.BlockType == SparseFormat.Blocking.Simple ? new[] { TInd.Create(this.blockSize) } : default;
+		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => this.format.BlockType == SparseFormat.Blocking.Simple ? ReflectionHelper.CreateReadOnlySpan(in this.blockSize, 1) : default;
 
 		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.indices?.IsValid() ?? false);
 
@@ -78,7 +72,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get the index array's storage of this sparse vector.
 		/// </summary>
-		public TSInd IndexStorage => this.OrginalIndexStorage.MakeReference();
+		public TSInd IndexStorage => this.indices.MakeReference();
 
 		/// <inheritdoc/>
 		public long NStored => this.values.Length;
@@ -99,13 +93,12 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get the block size array's accumulation array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
 		/// </summary>
-		/// <remarks>This array's first element shall be 0 and the last element in <see cref="BlockSizes"/> shall not be accumulated (a exclusive scan).</remarks>
 		protected TSInd BlockSizesScan => this.blockSizesScan ?? TSInd.Empty;
 
 		/// <summary>
 		/// Get the block size if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Simple"/>.
 		/// </summary>
-		protected long BlockSize => this.blockSize;
+		protected TInd BlockSize => this.blockSize;
 
 		/// <summary>
 		/// Create a new <see cref="SparseVector{T, TInd, TS, TSInd}"/> with given parameters.
@@ -120,8 +113,9 @@ namespace Althea.Arrays
 		/// <param name="blockSizesScan">The original block size scan array, must be null if <paramref name="blockSizes"/> is null, can be null if it does not to let this constructor to compute a new one</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="format"/> is not supported or <paramref name="values"/> is too short</exception>
-		/// <exception cref="ArgumentNullException"></exception>
-		protected SparseVector(SparseFormat format, long length, TS values!!, TSInd indices!!, long blockSize = 0, TSInd? blockSizes = null, TSInd? blockSizesScan = null, T defaultValue = default)
+		/// <exception cref="ArgumentNullException">If <paramref name="blockSizes"/> is null when it shall not be according to <paramref name="format"/></exception>
+		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
+		public SparseVector(SparseFormat format, long length, TS values!!, TSInd indices!!, TInd blockSize = default, TSInd? blockSizes = null, TSInd? blockSizesScan = null, T defaultValue = default)
 		{
 			if (!format.IsAtomic || format.Class != SparseFormat.Type.Coordinated || format.MajorType != SparseFormat.Major.None)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(format));
@@ -139,19 +133,21 @@ namespace Althea.Arrays
 				case SparseFormat.Blocking.Element:
 					if (values.Length != indices.Length)
 						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
-					if (blockSizes is not null || blockSizesScan is not null || blockSize != 0)
+					if (blockSizes is not null || blockSizesScan is not null || blockSize != TInd.Zero)
 						throw new ArgumentException(Resources.SparseError.FormatNotSupport);
 					break;
-				case SparseFormat.Blocking.Simple:
+				case SparseFormat.Blocking.Simple: // TODO : Simple, Complicated wrong here
 					if (blockSizes is not null || blockSizesScan is not null)
 						throw new ArgumentException(Resources.SparseError.FormatNotSupport);
-					if (blockSize <= 0)
+					if (blockSize <= TInd.Zero)
 						throw new ArgumentOutOfRangeException(nameof(blockSize), Resources.ParameterError.MustPositive);
-					if (values.Length != indices.Length * blockSize)
+					if (length % blockSize.As<TInd, long>() != 0)
+						throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(blockSize));
+					if (values.Length != indices.Length * blockSize.As<TInd, long>())
 						throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
 					break;
 				case SparseFormat.Blocking.Complicated:
-					if (blockSize != 0)
+					if (blockSize != TInd.Zero)
 						throw new ArgumentException(Resources.SparseError.FormatNotSupport);
 					if (blockSizes is null)
 						throw new ArgumentNullException(nameof(blockSizes));
@@ -195,7 +191,7 @@ namespace Althea.Arrays
 
 		private SparseVector()
 		{
-			this.values = TS.Empty; this.indices = TSInd.Empty; this.blockSize = 0;
+			this.values = TS.Empty; this.indices = TSInd.Empty;
 		}
 
 		static SparseVector<T, TInd, TS, TSInd> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Empty => new();
@@ -243,7 +239,7 @@ namespace Althea.Arrays
 			else
 			{
 				long blockIndex = SpConv.IndexBound(this.indices, TInd.Create(index + 1), true) - 1;
-				long blockSize = this.blockSizes is null ? this.blockSize : (this.blockSizes + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
+				long blockSize = this.blockSizes is null ? this.blockSize.As<TInd, long>() : (this.blockSizes + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
 				long blockOffset = (this.indices + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
 				offset = index - blockOffset;
 				if (offset >= blockSize)
@@ -293,7 +289,7 @@ namespace Althea.Arrays
 					long indexOffset = SpConv.IndexBound(this.indices, TInd.Create(allOffset + 1), true) - 1;
 					if (indexOffset >= this.indices.Length)
 						return (indexOffset, this.values.Length, 0);
-					long blockSize = this.blockSizes is null ? this.blockSize : (this.blockSizes + indexOffset).ToManaged<TInd, TSInd>().As<TInd, long>();
+					long blockSize = this.blockSizes is null ? this.blockSize.As<TInd, long>() : (this.blockSizes + indexOffset).ToManaged<TInd, TSInd>().As<TInd, long>();
 					long blockOffset = (this.indices + indexOffset).ToManaged<TInd, TSInd>().As<TInd, long>();
 					blockOffset = allOffset - blockOffset;
 					long valueOffset;
@@ -572,7 +568,7 @@ namespace Althea.Arrays
 		#endregion
 
 		#region operations
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static T Dot(DenseVector<T, TS> left, SparseVector<T, TInd, TS, TSInd> right, bool conjugateLeft = true)
 		{
 			if (left.Length != right.Length)
@@ -594,7 +590,7 @@ namespace Althea.Arrays
 			return SpComp.VectorSparseDotSparse(conjugateLeft, right, left);
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void AddBy(DenseVector<T, TS> left, SparseVector<T, TInd, TS, TSInd> right, T scalar)
 		{
 			if (left.Length != right.Length)
@@ -602,7 +598,7 @@ namespace Althea.Arrays
 			SpComp.VectorSparseAddToDense(scalar, right, left.Storage, left.Stride);
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void SetDiag(DenseMatrix<T, TS> matrix, long k, SparseVector<T, TInd, TS, TSInd> value)
 		{
 			var diag = DenseMatrix<T, TS>.GetDiag(matrix, k);
@@ -610,14 +606,14 @@ namespace Althea.Arrays
 			AddBy(diag, value, T.One);
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void MatrixMultiplyVector(DenseMatrix<T, TS> matrix, SparseVector<T, TInd, TS, TSInd> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>.CheckMatMulVec(matrix, vector, vectorOut, α, operation);
 			SpComp.MatrixDenseMultiplyVectorSparse(operation, α, operation.CanInPlace() ? matrix.NRows : matrix.NCols, matrix.Storage, matrix.LeadDim, vector, β, vectorOut.Storage, vectorOut.Stride);
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void VectorMultiplyMatrix(SparseVector<T, TInd, TS, TSInd> vector, DenseMatrix<T, TS> matrix, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None) => MatrixMultiplyVector(matrix, vector, vectorOut, α, β, operation.Transpose());
 
 		/// <summary>
@@ -636,42 +632,42 @@ namespace Althea.Arrays
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
 			var wrapper = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
 			SpComp.VectorSparseAddSparse(scalarLeft, left, right, ref wrapper);
-			return new(wrapper.Format, wrapper.Size[0], wrapper.ValueStorages[0], wrapper.IndexStorages[0], wrapper.BlockSize.IsEmpty ? 0 : wrapper.BlockSize[0].As<TInd, long>(), wrapper.IndexStorages.Length < 2 ? null : wrapper.IndexStorages[1], wrapper.IndexStorages.Length < 3 ? null : wrapper.IndexStorages[2]);
+			return new(wrapper.Format, wrapper.Size[0], wrapper.ValueStorages[0], wrapper.IndexStorages[0], wrapper.BlockSize.IsEmpty ? TInd.Zero : wrapper.BlockSize[0], wrapper.IndexStorages.Length < 2 ? null : wrapper.IndexStorages[1], wrapper.IndexStorages.Length < 3 ? null : wrapper.IndexStorages[2]);
 		}
 		#endregion
 
 		#region operators
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static SparseVector<T, TInd, TS, TSInd> operator -(SparseVector<T, TInd, TS, TSInd> vector!!) => vector.ApplyToClone(static v => v.Scale(-T.One));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static SparseVector<T, TInd, TS, TSInd> operator *(SparseVector<T, TInd, TS, TSInd> vector!!, T scalar) => vector.ApplyToClone(v => v.Scale(scalar));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static SparseVector<T, TInd, TS, TSInd> operator *(T scalar, SparseVector<T, TInd, TS, TSInd> vector!!) => vector * scalar;
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static SparseVector<T, TInd, TS, TSInd> operator /(SparseVector<T, TInd, TS, TSInd> vector!!, T scalar) => vector * (T.One / scalar);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator +(SparseVector<T, TInd, TS, TSInd> left!!, DenseVector<T, TS> right!!) => right.ApplyToClone(v => AddBy(v, left, T.One));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator -(DenseVector<T, TS> left!!,  SparseVector<T, TInd, TS, TSInd> right!!) => left.ApplyToClone(v => AddBy(v, right, -T.One));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator -(SparseVector<T, TInd, TS, TSInd> left!!, DenseVector<T, TS> right!!) => right.ApplyToClone(v =>
 		{
 			AddBy(v, left, -T.One); v.Scale(-T.One);
 		});
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static SparseVector<T, TInd, TS, TSInd> operator +(SparseVector<T, TInd, TS, TSInd> left!!, SparseVector<T, TInd, TS, TSInd> right!!) => VectorsAdd(T.One, left, right);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static SparseVector<T, TInd, TS, TSInd> operator -(SparseVector<T, TInd, TS, TSInd> left!!, SparseVector<T, TInd, TS, TSInd> right!!) => VectorsAdd(-T.One, right, left);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator *(DenseMatrix<T, TS> matrix!!, SparseVector<T, TInd, TS, TSInd> vector!!)
 		{
 			if (matrix.NCols != vector.length)
@@ -689,7 +685,7 @@ namespace Althea.Arrays
 			}
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator *(SparseVector<T, TInd, TS, TSInd> vector!!, DenseMatrix<T, TS> matrix!!)
 		{
 			if (matrix.NRows != vector.length)
@@ -738,11 +734,11 @@ namespace Althea.Arrays
 					throw new InvalidOperationException();
 				if (format.BlockType == SparseFormat.Blocking.Complicated)
 				{
-					return new(format, sparse.Size[0], sparse.ValueStorages[0], sparse.IndexStorages[0], sparse.BlockSize[0].As<TInd, long>(), sparse.IndexStorages[1], sparse.IndexStorages[2], defaultValue);
+					return new(format, sparse.Size[0], sparse.ValueStorages[0], sparse.IndexStorages[0], sparse.BlockSize[0], sparse.IndexStorages[1], sparse.IndexStorages[2], defaultValue);
 				}
 				else
 				{
-					return new(format, sparse.Size[0], sparse.ValueStorages[0], sparse.IndexStorages[0], sparse.BlockSize[0].As<TInd, long>(), defaultValue: defaultValue);
+					return new(format, sparse.Size[0], sparse.ValueStorages[0], sparse.IndexStorages[0], sparse.BlockSize[0], defaultValue: defaultValue);
 				}
 			}
 			catch (Exception)
@@ -763,12 +759,12 @@ namespace Althea.Arrays
 
 		#region serialization
 		private record struct ElementRepr(int Format, T Default, long Length, TS Values, TSInd Indices);
-		private record struct SimpleBlockRepr(int Format, T Default, long Length, TS Values, TSInd Indices, long BlockSize);
+		private record struct SimpleBlockRepr(int Format, T Default, long Length, TS Values, TSInd Indices, TInd BlockSize);
 		private record struct ComplexBlockRepr(int Format, T Default, long Length, TS Values, TSInd Indices, TSInd BlockSizes);
 
 		private SparseVector(ElementRepr repr) : this(new(repr.Format), repr.Length, repr.Values, repr.Indices, defaultValue: repr.Default) { }
 		private SparseVector(SimpleBlockRepr repr) : this(new(repr.Format), repr.Length, repr.Values, repr.Indices, repr.BlockSize, defaultValue: repr.Default) { }
-		private SparseVector(ComplexBlockRepr repr) : this(new(repr.Format), repr.Length, repr.Values, repr.Indices, 0, repr.BlockSizes, defaultValue: repr.Default) { }
+		private SparseVector(ComplexBlockRepr repr) : this(new(repr.Format), repr.Length, repr.Values, repr.Indices, TInd.Zero, repr.BlockSizes, defaultValue: repr.Default) { }
 
 		private static readonly JsonSerializerOptions JsonOptions = new()
 		{
@@ -806,7 +802,7 @@ namespace Althea.Arrays
 
 		static IEnumerable<string> IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd>>.PropertyNames => new[] { "DataType", "IndexType", "Format", "DefaultValue", "Values", "Indices", "BlockSizes" };
 
-		IEnumerable<object?> IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd>>.PropertyValues => new object[] { Unmanaged<T>.DataType, Unmanaged<TInd>.DataType, this.format, this.defaultValue, this.values, this.indices, this.blockSizes ?? (object)(this.blockSize == 0 ? 1 : this.blockSize) };
+		IEnumerable<object?> IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd>>.PropertyValues => new object[] { Unmanaged<T>.DataType, Unmanaged<TInd>.DataType, this.format, this.defaultValue, this.values, this.indices, this.blockSizes ?? (object)(this.blockSize == TInd.Zero ? 1 : this.blockSize) };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<SparseVector<T, TInd, TS, TSInd>>.ToString(this);
@@ -829,15 +825,16 @@ namespace Althea.Arrays
 					}
 					break;
 				case SparseFormat.Blocking.Simple:
+					int bs = this.blockSize.As<TInd, int>();
 					fixed (long* inds = indices)
 					{
 						var mp = new ManagedPureStorage<long>(new ManagedPointer(new(inds), length * sizeof(long)));
-						ExtBlas.PointWiseCast<TInd, long, TSInd, ManagedPureStorage<long>>(this.indices, 1, mp, (int)this.blockSize);
+						ExtBlas.PointWiseCast<TInd, long, TSInd, ManagedPureStorage<long>>(this.indices, 1, mp, bs);
 					}
 					for (int i = 0; i < length; i++)
 					{
-						int diff = (int)(i % this.blockSize);
-						indices[i] = (long)(indices[i - diff] + diff);
+						int diff = i % bs;
+						indices[i] = indices[i - diff] + diff;
 					}
 					break;
 				case SparseFormat.Blocking.Complicated:

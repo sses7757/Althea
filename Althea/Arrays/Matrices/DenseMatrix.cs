@@ -19,7 +19,7 @@ namespace Althea.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
-	[StructLayout(LayoutKind.Explicit)]
+	[StructLayout(LayoutKind.Sequential)]
 	public class DenseMatrix<T, TS> : IPitchedArray<T>,
 		IBaseMatrix<T, DenseMatrix<T, TS>>,
 		IMatrixGetDiagonalVector<T, DenseVector<T, TS>, DenseMatrix<T, TS>>,
@@ -35,22 +35,10 @@ namespace Althea.Arrays
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic
-		[FieldOffset(0)]
-		private readonly long __stride1 = 1;
-		[FieldOffset(sizeof(long) * 1)]
-		private readonly long leadDim;
-		[FieldOffset(sizeof(long) * 2)]
-		private readonly long outerLength;
-		[FieldOffset(sizeof(long) * 3)]
-		private readonly long rows;
-		[FieldOffset(sizeof(long) * 4)]
-		private readonly long cols;
-		[FieldOffset(sizeof(long) * 5)]
+		private readonly long __stride1 = 1, leadDim, outerLength;
+		private readonly long rows, cols;
+		private readonly long __ld, __cols;
 		private readonly TS values;
-		[FieldOffset(sizeof(long) * 6)]
-		private readonly long __ld;
-		[FieldOffset(sizeof(long) * 7)]
-		private readonly long __cols;
 
 		/// <summary>
 		/// Get the leading dimension of this dense matrix.
@@ -198,44 +186,44 @@ namespace Althea.Arrays
 		#endregion
 
 		#region point-wise operations
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public void FillWith(T value) => ExtBlas.GeneralMatrixFill(this.values, this.leadDim, value, this.rows, this.cols);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public void AddScalar(T value) => ExtBlas.GeneralMatrixAddScalar(this.values, this.leadDim, value, this.rows, this.cols);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public void Scale(T value) => ExtBlas.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, this.rows, this.cols, value, this.values, this.leadDim, T.Zero, (TS?)null, 1, this.values, this.leadDim);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public void Conjugate() => ExtBlas.GeneralMatricesAdd(MatrixOperation.Conjugate, MatrixOperation.None, this.rows, this.cols, T.One, this.values, this.leadDim, T.Zero, (TS?)null, 1, this.values, this.leadDim);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public void Power(T power) => ExtBlas.GeneralMatrixPower(this.values, this.leadDim, power, this.rows, this.cols);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public void Truncate(double threshold) => ExtBlas.GeneralMatrixTruncate<T, TS>(this.values, this.leadDim, threshold, this.rows, this.cols);
 		#endregion
 
 		#region simple aggregation operations
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public T Sum() => ExtBlas.GeneralMatrixSum<T, TS>(this.values, this.leadDim, this.rows, this.cols);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public T AbsSum() => ExtBlas.GeneralMatrixAbsSum<T, TS>(this.values, this.leadDim, this.rows, this.cols);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public T Norm() => ExtBlas.GeneralMatrixNorm<T, TS>(this.values, this.leadDim, this.rows, this.cols);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public T ValueWithMaxAbs() => (this.values + ExtBlas.GeneralMatrixAbsArgMax<T, TS>(this.values, this.leadDim, this.rows, this.cols)).ToManaged<T, TS>();
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public T ValueWithMinAbs() => (this.values + ExtBlas.GeneralMatrixAbsArgMin<T, TS>(this.values, this.leadDim, this.rows, this.cols)).ToManaged<T, TS>();
 		#endregion
 
 		#region operations
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseVector<T, TS> GetDiag(DenseMatrix<T, TS> matrix!!, long k)
 		{
 			if (matrix.rows >= matrix.cols)
@@ -254,37 +242,37 @@ namespace Althea.Arrays
 			}
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void GetDiag(DenseMatrix<T, TS> matrix!!, long k, DenseVector<T, TS> overwrite!!) => GetDiag(matrix, k).CopyTo(overwrite);
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void SetDiag(DenseMatrix<T, TS> matrix!!, long k, DenseVector<T, TS> value!!) => value.CopyTo(GetDiag(matrix, k));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void MatrixMultiplyVector(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!, DenseVector<T, TS> vectorOut!!, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
 			IMatrixVectorMultiplyOperations<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseMatrix<T, TS>>.CheckMatMulVec(matrix, vector, vectorOut, α, operation);
 			Blas.GeneralMatrixMultiplyVector(operation, matrix.rows, matrix.cols, α, matrix.values, matrix.leadDim, vector.Storage, vector.Stride, β, vectorOut.Storage, vectorOut.Stride);
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void VectorMultiplyMatrix(DenseVector<T, TS> vector!!, DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> vectorOut!!, T α, T β = default, MatrixOperation operation = MatrixOperation.None) => MatrixMultiplyVector(matrix, vector, vectorOut, α, β, operation.Transpose());
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void AddMatrices(DenseMatrix<T, TS>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, DenseMatrix<T, TS> C!!, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (m, n) = IMatrixOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatAdd(A, scalarA, B, scalarB, C, opA, opB);
 			  ExtBlas.GeneralMatricesAdd(opA, opB, m, n, scalarA, A?.values, A?.leadDim ?? 1, scalarB, B?.values, B?.leadDim ?? 1, C.values, C.leadDim);
 		}
 		
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void MultiplyMatries(T α, DenseMatrix<T, TS> A!!, DenseMatrix<T, TS> B!!, T β, DenseMatrix<T, TS> C!!, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (m, n, k) = IMatrixOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
 			Blas.GeneralMatricesMultiply(opA, opB, m, n, k, α, A.values, A.leadDim, B.values, B.leadDim, β, C.values, C.leadDim);
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void LinearSolve(DenseMatrix<T, TS> coefficients!!, DenseMatrix<T, TS> rightHandSides!!, DenseMatrix<T, TS> outSolves!!, MatrixOperation opCoef = MatrixOperation.None)
 		{
 			IMatrixSolvers<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckLinear(coefficients, rightHandSides, outSolves);
@@ -293,7 +281,7 @@ namespace Althea.Arrays
 			Lapack.LinearSolveGeneral<T, TS, TS>(opCoef, coefficients.rows, outSolves.cols, coef, coefficients.rows, outSolves.values, outSolves.leadDim);
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void LeastSquareSolve(DenseMatrix<T, TS> coefficients!!, DenseMatrix<T, TS> rightHandSides!!, DenseMatrix<T, TS> outSolves!!)
 		{
 			IMatrixSolvers<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckLeast(coefficients, rightHandSides, outSolves);
@@ -302,7 +290,7 @@ namespace Althea.Arrays
 			Lapack.LeastSquareSolve<T, TS, TS>(coefficients.rows, coefficients.cols, outSolves.cols, coef, coefficients.rows, outSolves.values, outSolves.leadDim);
 		}
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static void QRDecomposition(DenseMatrix<T, TS> matrix!!, DenseMatrix<T, TS> outTriangular!!, DenseMatrix<T, TS>? outUnary, bool full = false)
 		{
 			IMatrixSolvers<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckQR(matrix, outTriangular, outUnary, full);
@@ -327,34 +315,34 @@ namespace Althea.Arrays
 		#endregion
 
 		#region operators
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator *(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!) => vector.ApplyToAlike(v => MatrixMultiplyVector(matrix, vector, v, T.One));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector!!, DenseMatrix<T, TS> matrix!!) => vector.ApplyToAlike(v => VectorMultiplyMatrix(vector, matrix, v, T.One));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> matrix!!) => matrix.ApplyToClone(static m => m.Scale(-T.One));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> matrix!!, T scalar) => matrix.ApplyToClone(m => m.Scale(scalar));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator *(T scalar, DenseMatrix<T, TS> matrix!!) => matrix.ApplyToClone(m => m.Scale(scalar));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator /(DenseMatrix<T, TS> matrix!!, T scalar) => matrix.ApplyToClone(m => m.Scale(T.One / scalar));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator ^(DenseMatrix<T, TS> matrix!!, MatrixOperation operation) => matrix.ApplyToAlike(m => AddMatrices(matrix, T.One, null, default, m));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator +(DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!) => left.ApplyToAlike(m => AddMatrices(left, T.One, right, T.One, m));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!) => left.ApplyToAlike(m => AddMatrices(left, T.One, right, -T.One, m));
 
-		/// <inhericdoc/>
+		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!)
 		{
 			if (left.cols != right.rows)

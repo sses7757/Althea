@@ -491,6 +491,16 @@ namespace Althea.Arrays
 		public abstract static TMat3 operator +(TMat1 left, TMat2 right);
 
 		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise addition result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+		/// </summary>
+		/// <param name="left">The input left <typeparamref name="TMat2"/> to be added</param>
+		/// <param name="right">The input right <typeparamref name="TMat1"/> to be added</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> + <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the addition cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 operator +(TMat2 left, TMat1 right);
+
+		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise subtraction result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
 		/// </summary>
 		/// <param name="left">The input left <typeparamref name="TMat1"/> to be subtracted from</param>
@@ -501,6 +511,16 @@ namespace Althea.Arrays
 		public abstract static TMat3 operator -(TMat1 left, TMat2 right);
 
 		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise subtraction result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+		/// </summary>
+		/// <param name="left">The input left <typeparamref name="TMat2"/> to be subtracted from</param>
+		/// <param name="right">The input right <typeparamref name="TMat1"/> to subtract</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> - <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the subtraction cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 operator -(TMat2 left, TMat1 right);
+
+		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
 		/// </summary>
 		/// <param name="left">The input <typeparamref name="TMat1"/> to be multiplied at left</param>
@@ -509,6 +529,16 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
 		public abstract static TMat3 operator *(TMat1 left, TMat2 right);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+		/// </summary>
+		/// <param name="left">The input <typeparamref name="TMat2"/> to be multiplied at left</param>
+		/// <param name="right">The input <typeparamref name="TMat1"/> to be multiplied at right</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 operator *(TMat2 left, TMat1 right);
 	}
 
 	/// <summary>

@@ -46,11 +46,11 @@ namespace Althea.LinearAlgebra.Sparse
 			/// </summary>
 			Element = 1 << 0,
 			/// <summary>
-			/// Standard blocking -- indices are for contiguous blocks of same size
+			/// Standard blocking -- indices are for contiguous blocks of same size that divides the overall array into <c>size / blockSize</c> blocks
 			/// </summary>
 			Simple = 1 << 1,
 			/// <summary>
-			/// Complicated blocking -- indices are for contiguous blocks of possibly different sizes
+			/// Complicated blocking -- indices are for contiguous blocks of possibly different sizes that divides the overall array into <c>blockSize.Length</c> blocks
 			/// </summary>
 			Complicated = 1 << 2,
 		}
