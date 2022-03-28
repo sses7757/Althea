@@ -1,124 +1,689 @@
-﻿using System;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.Json;
 
+using Althea.Helpers;
 using Althea.Linq;
-using Althea.LinearAlgebra;
+using Althea.NativeTypes;
 using Althea.Storage;
 using Althea.TensorAlgebra;
 
-using Ten = Althea.TensorAlgebra.Dense.BaseApiSelector;
 using ExtTen = Althea.TensorAlgebra.Dense.ExtendApiSelector;
+using Ten = Althea.TensorAlgebra.Dense.BaseApiSelector;
 
 
 namespace Althea.Arrays.Tensors
 {
 	/// <summary>
-	/// The dense tensor interface whose only storage is of type <typeparamref name="TS"/>.
+	/// The base dense tensor class whose only storage is of type <typeparamref name="TS"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value <see cref="ISingleValueStorageArray{T, TS, TSelf}.Storage"/></typeparam>
-	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IDenseTensor{T, TS, TSelf}"/></typeparam>
-	public interface IDenseTensor<T, TS, TSelf> : IBaseTensor<T, TSelf>, ISingleValueStorageArray<T, TS, TSelf>
+	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
+	[StructLayout(LayoutKind.Explicit)]
+	public class DenseTensor<T, TS> : IPitchedArray<T>, IBaseTensor<T, DenseTensor<T, TS>>,
+		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
+		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>,
+		ITensorUnaryOperators<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
+		ITensorBinaryOperators<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
-		where TSelf : class, IDenseTensor<T, TS, TSelf>
 	{
 		#region basic
-		/// <summary>
-		/// When implemented by a derived class, get the pitch (in <typeparamref name="T"/>) of this tensor (the outer size at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>. It must has length equals to <see cref="ILabeledTensor.Size"/> and consists numbers larger than or equals to <see cref="ILabeledTensor.Size"/> respectively.
-		/// </summary>
-		ReadOnlySpan<long> OuterSize { get; }
+		[FieldOffset(0)]
+		private readonly FixedBuffer_128<long> size;
+		[FieldOffset(128 - sizeof(long))]
+		private readonly int rank;
+		[FieldOffset(128)]
+		private readonly FixedBuffer_128<long> sizeProd;
+		[FieldOffset(128 * 2 - sizeof(long))]
+		private readonly long length;
+		[FieldOffset(128 * 2)]
+		private readonly FixedBuffer_128<long> outerSize;
+		[FieldOffset(128 * 3)]
+		private readonly FixedBuffer_128<long> strides;
+		[FieldOffset(128 * 4 - sizeof(long))]
+		private readonly long outerLength;
+		[FieldOffset(128 * 4)]
+		private FixedBuffer_32<char> labels;
+		[FieldOffset(128 * 4 + 32)]
+		private readonly TS values;
+
+		private const byte MAX_RANK = 15;
+
+		/// <inheritdoc/>
+		public int Rank => this.rank;
+
+		/// <inheritdoc/>
+		public long Length => this.length;
 
 		/// <summary>
-		/// When implemented by a derived class, get (the both-end inclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
+		/// Get the value storage of this tensor.
 		/// </summary>
-		/// <remarks>The first element shall be 1 and the last element shall be the product of <see cref="OuterSize"/>. The returned <see cref="ReadOnlySpan{T}.Length">size</see> == rank + 1</remarks>
-		protected ReadOnlySpan<long> Strides { get; }
+		public TS Storage => this.values.MakeReference();
+
+		/// <inheritdoc/>
+		public ReadOnlySpan<long> Size => this.size.AsSpan(this.rank);
+
+		/// <inheritdoc/>
+		public ReadOnlySpan<long> SizeProd => this.sizeProd.AsSpan(this.rank + 1);
+
+		/// <inheritdoc/>
+		public ReadOnlySpan<long> OuterSize => this.outerSize.AsSpan(this.rank);
+
+		/// <inheritdoc/>
+		public ReadOnlySpan<long> Strides => this.outerSize.AsSpan(this.rank + 1);
+
+		/// <inheritdoc/>
+		public ReadOnlySpan<char> Labels
+		{
+			get => this.labels.AsSpan(this.rank);
+			set
+			{
+				if (value.Length != this.rank)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(value));
+				this.labels.CopyFromSpan(value);
+			}
+		}
+
+		/// <inheritdoc/>
+		public char GetLabel(int index)
+		{
+			if (index < 0 || index >= this.rank)
+				throw new ArgumentOutOfRangeException(nameof(index));
+			return this.labels[index];
+		}
+
+		/// <inheritdoc/>
+		public void SetLabel(int index, char label)
+		{
+			if (index < 0 || index >= this.rank)
+				throw new ArgumentOutOfRangeException(nameof(index));
+			this.labels[index] = label;
+		}
+
+		/// <inheritdoc/>
+		public void SetLabels(params char[] labels!!)
+		{
+			if (labels.Length != this.rank)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
+			this.labels.CopyFromSpan(labels);
+		}
+
+		long IValueArray<T, DenseTensor<T, TS>>.Length => this.length;
+
+		private DenseTensor() => this.values = TS.Empty;
+
+		static DenseTensor<T, TS> IValueArray<T, DenseTensor<T, TS>>.Empty => new();
+
+		bool ICheckValid.IsValid() => this.values.IsValid();
 
 		/// <summary>
-		/// When implemented by a derived class, statically create a referenced <typeparamref name="TSelf"/> with given <paramref name="storage"/>, <paramref name="size"/> and <paramref name="outerSize"/>.
+		/// Create a new <see cref="DenseVector{T, TS}"/> with given <paramref name="storage"/> and <paramref name="size"/>.
 		/// </summary>
-		/// <param name="storage">The storage of the new tensor</param>
-		/// <param name="size">The sizes of each dimension in <typeparamref name="T"/> of the new tensor</param>
-		/// <param name="outerSize">The outer sizes of each dimension in <typeparamref name="T"/> of the new tensor, default means the same as <paramref name="size"/></param>
-		/// <returns>The created referenced tensor of type <typeparamref name="TSelf"/>.</returns>
-		protected abstract static TSelf CreateRef(TS storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize = default);
+		/// <param name="storage">The value storage of the new tensor as a <typeparamref name="TS"/></param>
+		/// <param name="size">The presenting size of the new tensor</param>
+		/// <param name="outerSize">The actual outer size of the new tensor, default means the same as <paramref name="size"/></param>
+		/// <param name="labels">The labels of all dimensions of the new tensor, default means <c>{'a', 'b', ...}</c></param>
+		/// <exception cref="ArgumentException">If the sizes mismatch with each other</exception>
+		/// <exception cref="NotSupportedException">If the rank is too high</exception>
+		public DenseTensor(TS storage!!, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize = default, ReadOnlySpan<char> labels = default)
+		{
+			if (!storage.IsValid())
+				throw new ArgumentNullException(nameof(storage));
+			this.rank = size.Length;
+			if (this.rank > MAX_RANK)
+				throw new NotSupportedException();
+			this.length = size.Prod();
+			this.size.CopyFromSpan(size);
+			size.AccumulateProd(this.sizeProd.AsSpan(this.rank + 1));
+			if (!outerSize.IsEmpty)
+			{
+				if (outerSize.Length != this.rank)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outerSize));
+				if (!outerSize.SequenceLargerEqualThan(size))
+					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(outerSize));
+				this.outerSize.CopyFromSpan(outerSize);
+				outerSize.AccumulateProd(this.strides.AsSpan(this.rank + 1));
+			}
+			else
+			{
+				this.outerSize.CopyFromSpan(size);
+				this.strides.CopyFromSpan(this.SizeProd);
+			}
+			this.outerLength = this.Strides[^1];
+			if (!labels.IsEmpty)
+			{
+				if (labels.Length != this.rank)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
+				if (labels.DistinctCount() != this.rank)
+					throw new ArgumentException(Resources.ParameterError.DuplicateValue, nameof(labels));
+				this.labels.CopyFromSpan(labels);
+			}
+			else
+			{
+				this.labels.AsSpan(this.rank).FillWithLabel();
+			}
+			long valueLen = this.Strides[^2] * this.Size[^1];
+			if (storage.Length < valueLen)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(storage));
+			if (storage.Length > valueLen)
+				storage = storage.MakeReference(0, valueLen);
+			this.values = storage.AddToManager();
+		}
+
+		/// <inheritdoc/>
+		public void Dispose()
+		{
+			this.values.SafeDispose();
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// The deconstructor invoked by GC
+		/// </summary>
+		~DenseTensor()
+		{
+			this.Dispose();
+		}
+		#endregion
+
+		#region equality
+		/// <inheritdoc/>
+		public bool Equals(DenseTensor<T, TS>? other) => ReferenceEquals(this, other) || (other is not null && this.size == other.size && this.outerSize == other.outerSize && this.values == other.values);
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		public static bool operator ==(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => left.Equals(right);
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		public static bool operator !=(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => !left.Equals(right);
+
+		/// <inheritdoc/>
+		public override bool Equals(object? obj) => this.Equals(obj as DenseTensor<T, TS>);
+
+		/// <inheritdoc/>
+		public override int GetHashCode() => HashCode.Combine(this.values, this.size, this.outerSize);
 		#endregion
 
 		#region element indexing
-		T IBaseTensor<T, TSelf>.this[ReadOnlySpan<long> indices]
+		/// <inheritdoc/>
+		public T this[ReadOnlySpan<long> indices]
 		{
 			get
 			{
-				return (this.Storage + this.CheckIndex(indices, this.Strides)).ToManaged<T, TS>();
+				return (this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckIndex(this, indices, this.Strides)).ToManaged<T, TS>();
 			}
 			set
 			{
-				(this.Storage + this.CheckIndex(indices, this.Strides)).FromManaged(value);
+				(this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckIndex(this, indices, this.Strides)).FromManaged(value);
 			}
 		}
 		#endregion
 
 		#region range indexing
-		TSelf IBaseTensor<T, TSelf>.GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
+		/// <inheritdoc/>
+		public DenseTensor<T, TS> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
 		{
-			var storage = this.Storage + this.CheckRange(offsets, lengths, this.Strides);
-			return TSelf.CreateRef(storage, lengths, this.OuterSize);
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, this.Strides);
+			return new(storage, lengths, this.OuterSize);
 		}
 
-		void IBaseTensor<T, TSelf>.CopyTo(TSelf destination)
+		/// <inheritdoc/>
+		public void CopyTo(DenseTensor<T, TS> destination)
 		{
-			if (!((ILabeledTensor)this).Size.SequenceEqual(((ILabeledTensor)destination).Size))
+			if (!this.Size.SequenceEqual(destination.Size))
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
-			Ten.Permute<T, TS, TS>(new(this, this.Storage), new(destination, destination.Storage), stackalloc int[this.Rank].FillWithRange(0));
+			Ten.Permute<T, TS, TS>(new(this, this.values), new(destination, destination.values), stackalloc int[this.rank].FillWithRange(0));
 		}
 
-		void IBaseTensor<T, TSelf>.SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TSelf value)
+		/// <inheritdoc/>
+		public void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, DenseTensor<T, TS> value)
 		{
-			var storage = this.Storage + this.CheckRange(offsets, lengths, this.Strides, value);
-			Ten.Permute<T, TS, TS>(new(value, value.Storage), new(storage, lengths, this.OuterSize, this.Strides), stackalloc int[this.Rank].FillWithRange(0));
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, this.Strides, value);
+			Ten.Permute<T, TS, TS>(new(value, value.values), new(storage, lengths, this.OuterSize, this.Strides), stackalloc int[this.rank].FillWithRange(0));
 		}
 		#endregion
 
 		#region first few dimensions indexing
-		TSelf IBaseTensor<T, TSelf>.GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
+		/// <inheritdoc/>
+		public DenseTensor<T, TS> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
 		{
-			Span<long> allOffsets = stackalloc long[this.Rank], allLengths = stackalloc long[this.Rank];
-			var storage = this.Storage + this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths, this.Strides);
-			return TSelf.CreateRef(storage, lengths, this.OuterSize[..n]);
+			Span<long> allOffsets = stackalloc long[this.rank], allLengths = stackalloc long[this.rank];
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths, this.Strides);
+			return new(storage, lengths, this.OuterSize[..n]);
 		}
 
-		void IBaseTensor<T, TSelf>.SetFirstDims(int n, ReadOnlySpan<long> restIndices, TSelf value, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
+		/// <inheritdoc/>
+		public void SetFirstDims(int n, ReadOnlySpan<long> restIndices, DenseTensor<T, TS> value, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
 		{
-			Span<long> allOffsets = stackalloc long[this.Rank], allLengths = stackalloc long[this.Rank];
-			var storage = this.Storage + this.CheckFirstDims(n, restIndices, offsets, lengths, allOffsets, allLengths, this.Strides, value);
-			Ten.Permute<T, TS, TS>(new(value, value.Storage), new(storage, lengths, this.OuterSize[..n], this.Strides[..(n + 1)]), stackalloc int[n].FillWithRange(0));
+			Span<long> allOffsets = stackalloc long[this.rank], allLengths = stackalloc long[this.rank];
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths, this.Strides, value);
+			Ten.Permute<T, TS, TS>(new(value, value.values), new(storage, lengths, this.OuterSize[..n], this.Strides[..(n + 1)]), stackalloc int[n].FillWithRange(0));
 		}
 		#endregion
 
 		#region point-wise operations
-		void IValueArray<T, TSelf>.FillWith(T value) => ExtTen.PointWiseBinary<T, TS>(new(this, this.Storage), value, BinaryOperation.GetSecond);
+		/// <inheritdoc/>
+		public void FillWith(T value) => ExtTen.PointWiseBinary<T, TS>(new(this, this.values), value, BinaryOperation.GetSecond);
 
-		void IValueArray<T, TSelf>.AddScalar(T value) => ExtTen.PointWiseBinary<T, TS>(new(this, this.Storage), value, BinaryOperation.Addition);
+		/// <inheritdoc/>
+		public void AddScalar(T value) => ExtTen.PointWiseBinary<T, TS>(new(this, this.values), value, BinaryOperation.Addition);
 
-		void IValueArray<T, TSelf>.Scale(T value) => Ten.Permute<T, TS, TS>(new(this, this.Storage, scalar: value), new(this, this.Storage), stackalloc int[this.Rank].FillWithRange(0));
+		/// <inheritdoc/>
+		public void Scale(T value) => Ten.Permute<T, TS, TS>(new(this, this.values, scalar: value), new(this, this.values), stackalloc int[this.rank].FillWithRange(0));
 
-		void IValueArray<T, TSelf>.Conjugate() => Ten.Permute<T, TS, TS>(new(this, this.Storage, UnaryOperation.Conjugate), new(this, this.Storage), stackalloc int[this.Rank].FillWithRange(0));
+		/// <inheritdoc/>
+		public void Conjugate() => Ten.Permute<T, TS, TS>(new(this, this.values, UnaryOperation.Conjugate), new(this, this.values), stackalloc int[this.rank].FillWithRange(0));
 
-		void IValueArray<T, TSelf>.Power(T power) => ExtTen.PointWiseBinary<T, TS>(new(this, this.Storage), power, BinaryOperation.Power);
+		/// <inheritdoc/>
+		public void Power(T power) => ExtTen.PointWiseBinary<T, TS>(new(this, this.values), power, BinaryOperation.Power);
 
-		void IValueArray<T, TSelf>.Truncate(double threshold) => ExtTen.PointWiseBinary<T, TS>(new(this, this.Storage), T.Create(threshold), BinaryOperation.ClipFirstBySecond);
+		/// <inheritdoc/>
+		public void Truncate(double threshold) => ExtTen.PointWiseBinary<T, TS>(new(this, this.values), T.Create(threshold), BinaryOperation.ClipFirstBySecond);
 		#endregion
 
 		#region simple aggregation operations
-		T IValueArray<T, TSelf>.Sum() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.Storage), UnaryOperation.Identity, BinaryOperation.Addition);
+		/// <inheritdoc/>
+		public T Sum() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.Identity, BinaryOperation.Addition);
 
-		T IValueArray<T, TSelf>.AbsSum() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.Storage), UnaryOperation.AbsoluteValue, BinaryOperation.Addition);
+		/// <inheritdoc/>
+		public T AbsSum() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.AbsoluteValue, BinaryOperation.Addition);
 
-		T IValueArray<T, TSelf>.Norm() => ExtTen.Norm<T, TS>(new(this, this.Storage));
+		/// <inheritdoc/>
+		public T Norm() => ExtTen.Norm<T, TS>(new(this, this.values));
 
-		T IValueArray<T, TSelf>.ValueWithMaxAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.Storage), UnaryOperation.AbsoluteValue, BinaryOperation.Maximum);
+		/// <inheritdoc/>
+		public T ValueWithMaxAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.AbsoluteValue, BinaryOperation.Maximum);
 
-		T IValueArray<T, TSelf>.ValueWithMinAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.Storage), UnaryOperation.AbsoluteValue, BinaryOperation.Mininum);
+		/// <inheritdoc/>
+		public T ValueWithMinAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.AbsoluteValue, BinaryOperation.Mininum);
+		#endregion
+
+		#region operations
+		/// <inheritdoc/>
+		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		{
+			Span<int> reduceInd = stackalloc int[A.rank];
+			reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, scalar, B, reduceInd);
+			Ten.Reduce<T, TS, TS>(reduce, new(A, A.values, opA), new(B, B.values), reduceInd);
+		}
+
+		/// <inheritdoc/>
+		public static void Permute(DenseTensor<T, TS> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation op = UnaryOperation.Identity)
+		{
+			Span<int> perm = stackalloc int[A.rank];
+			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
+			Ten.Permute<T, TS, TS>(new(A, A.values, op, scalar), new(B, B.values), perm);
+		}
+
+		/// <inheritdoc/>
+		public static void Contract(DenseTensor<T, TS> A!!, UnaryOperation opA, DenseTensor<T, TS> B!!, UnaryOperation opB, T α, DenseTensor<T, TS> C!!, UnaryOperation opC, T β)
+		{
+			////TensorContractInfo info = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckContract(A, B, α, C);
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+			int rank = TensorContractInfo.GetContractRank(A, B);
+			Span<int> leftConc = stackalloc int[rank];
+			Span<int> rightConc = stackalloc int[rank];
+			Span<int> leftFree = stackalloc int[A.Rank - rank];
+			Span<int> rightFree = stackalloc int[B.Rank - rank];
+			var info = TensorContractInfo.Create(A, B, C, leftConc, rightConc, leftFree, rightFree);
+			Ten.Contract<T, TS, TS, TS>(new(A, A.values, opA, α), new(B, B.values, opB), new(C, C.values, opC), info);
+		}
+
+		/// <inheritdoc/>
+		public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C!!, BinaryOperation binary)
+		{
+			Span<int> permA = stackalloc int[A?.rank ?? 0], permB = stackalloc int[B?.rank ?? 0];
+			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
+			Ten.OperationBinary<T, TS, TS, TS>(binary, A is null ? default : new(A, A.values, opA, α), permA, B is null ? default : new(B, B.values, opB, β), permB, new(C, C.values));
+		}
+		#endregion
+
+		#region operators
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> operator ^(DenseTensor<T, TS> tensor!!, TensorOrder order)
+		{
+			var perm = order.GetIntSpanOrder(tensor, stackalloc int[tensor.rank]);
+			Span<long> newSize = stackalloc long[tensor.rank];
+			tensor.Size.ReOrderTo(newSize, perm);
+			var storage = tensor.values.ResizeAlike(tensor.length);
+			try
+			{
+				Ten.Permute<T, TS, TS>(new(tensor, tensor.values), new(storage, newSize), perm);
+				return new(storage, newSize);
+			}
+			catch (Exception)
+			{
+				storage.Dispose();
+				throw;
+			}
+		}
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> tensor!!, T scalar) => tensor.ApplyToAlike(t => Permute(tensor, TensorOrder.Identity, scalar, t));
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> operator *(T scalar, DenseTensor<T, TS> tensor!!) => tensor * scalar;
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> tensor!!) => tensor.ApplyToAlike(t => Permute(tensor, TensorOrder.Identity, T.One, t, UnaryOperation.Negate));
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> operator /(DenseTensor<T, TS> tensor!!, T scalar) => tensor * (T.One / scalar);
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> left!!, DenseTensor<T, TS> right!!)
+		{
+			int conc = TensorContractInfo.GetContractRank(left, right);
+			int outRank = left.rank + right.rank - 2 * conc;
+			Span<int> leftConc = stackalloc int[conc], rightConc = stackalloc int[conc];
+			Span<int> leftFree = stackalloc int[left.rank - conc], rightFree = stackalloc int[right.rank - conc];
+			Span<char> labelOut = stackalloc char[outRank];
+			Span<long> sizeOut = stackalloc long[outRank];
+			var info = TensorContractInfo.Create(left, right, null, leftConc, rightConc, leftFree, rightFree, sizeOut, labelOut);
+			var storage = left.values.ResizeAlike(sizeOut.Prod());
+			try
+			{
+				Ten.Contract<T, TS, TS, TS>(new(left, left.values), new(right, right.values), new(storage, sizeOut), info);
+				return new(storage, sizeOut, default, labelOut);
+			}
+			catch (Exception)
+			{
+				storage.Dispose();
+				throw;
+			}
+		}
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> operator +(DenseTensor<T, TS> left!!, DenseTensor<T, TS> right!!) => left.ApplyToAlike(t => TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, t, BinaryOperation.Addition));
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left!!, DenseTensor<T, TS> right!!) => left.ApplyToAlike(t => TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, t, BinaryOperation.Addition));
+		#endregion
+
+		#region conversion and clone
+		/// <inheritdoc/>
+		public DenseTensor<T, TS> CreateAlike() => new(this.values.ResizeAlike(this.length), this.Size);
+
+		/// <summary>
+		/// Copy the values from this dense tensor to a new <typeparamref name="TS"/> without stride.
+		/// </summary>
+		/// <returns>The created compact tensor's storage as a <typeparamref name="TS"/></returns>
+		public TS ToCompact()
+		{
+			var compact = this.values.ResizeAlike(this.length);
+			try
+			{
+				Ten.Permute<T, TS, TS>(new(this, this.values), new(compact, this.Size), stackalloc int[this.rank].FillWithRange(0));
+				return compact;
+			}
+			catch (Exception)
+			{
+				compact.Dispose();
+				throw;
+			}
+		}
+		#endregion
+
+		#region serialization
+		private record struct Repr(TS Values, long[] Size, long[] OuterSize);
+		private static readonly JsonSerializerOptions JsonOptions = new()
+		{
+			Converters = { TS.JsonConverter },
+			WriteIndented = true,
+		};
+
+		/// <inheritdoc/>
+		public string JsonSerialize()
+		{
+			return JsonSerializer.Serialize<Repr>(new(this.values, this.Size.ToArray(), this.outerSize.ToArray()), JsonOptions);
+		}
+
+		/// <inheritdoc/>
+		public DenseTensor<T, TS> JsonDeserialize(string json!!)
+		{
+			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
+			return new(repr.Values, repr.Size, repr.OuterSize);
+		}
+		#endregion
+
+		#region string
+		static string IMainPropertyFormattable<DenseTensor<T, TS>>.StringMain => nameof(DenseTensor<T, TS>);
+
+		static IEnumerable<string> IMainPropertyFormattable<DenseTensor<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "OuterSize" };
+
+		IEnumerable<object?> IMainPropertyFormattable<DenseTensor<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.values, "{" + this.Size.SpanJoin('x') + "}", "{" + this.OuterSize.SpanJoin('x') + "}" };
+
+		/// <inheritdoc/>
+		public override string ToString() => IMainPropertyFormattable<DenseTensor<T, TS>>.ToString(this);
+
+		private void GetSizePos(long offset, Span<long> pos)
+		{
+			int atRank = this.rank - pos.Length;
+			for (int i = this.rank - 1, j = pos.Length - 1; i >= atRank; i--, j--)
+			{
+				pos[j] = offset / this.sizeProd[i];
+				offset %= this.sizeProd[i];
+			}
+		}
+		private void GetOuterSizePos(long offset, Span<long> pos)
+		{
+			int atRank = this.rank - pos.Length;
+			for (int i = this.rank - 1, j = pos.Length - 1; i >= atRank; i--, j--)
+			{
+				pos[j] = offset / this.strides[i];
+				offset %= this.strides[i];
+			}
+		}
+
+		/// <inheritdoc/>
+		public string Print(PrintSettings? settings = null)
+		{
+			var ps = settings ?? Settings.PrintSetting;
+			if (this.rank == 1)
+			{
+				using var vec = new DenseVector<T, TS>(this.Storage, this.length);
+				return vec.Print(settings);
+			}
+			if (this.rank == 2)
+			{
+				using var mat = new DenseMatrix<T, TS>(this.Storage, this.size[0], this.size[1], this.outerSize[0]);
+				return mat.Print(settings);
+			}
+			if (ps.MatrixFormTensor)
+			{
+				// get truncated size
+				int matrixMaxRows = ps.MatrixRow, matrixMaxCols = ps.MatrixColumn;
+				Span<long> truncateSize = stackalloc long[this.rank];
+				this.size.CopyToSpan(truncateSize);
+				int d = truncateSize.IndexOf(static s => s > 1);
+				long rows = truncateSize[d];
+				truncateSize[d] = Math.Min(matrixMaxRows, truncateSize[d]);
+				long ld = truncateSize[d];
+				d = truncateSize[(d + 1)..].IndexOf(static s => s > 1) + d + 1;
+				long cols = truncateSize[d];
+				truncateSize[d] = Math.Min(matrixMaxCols, truncateSize[d]);
+				long matrixLength = rows * cols;
+				// reduce matrix size
+				matrixMaxRows = (int)Math.Ceiling(Math.Sqrt(matrixMaxRows));
+				matrixMaxCols = (int)Math.Ceiling(Math.Sqrt(matrixMaxCols));
+				ps = ps with { MatrixRow = matrixMaxRows, MatrixColumn = matrixMaxCols };
+				d = truncateSize.IndexOf(static s => s > 1);
+				truncateSize[d] = Math.Min(matrixMaxRows, truncateSize[d]);
+				ld = truncateSize[d];
+				d = truncateSize[(d + 1)..].IndexOf(static s => s > 1) + d + 1;
+				truncateSize[d] = Math.Min(matrixMaxCols, truncateSize[d]);
+				matrixLength = rows * cols;
+				// print
+				return TensorPrinter.Print(this.Size, this.OuterSize, this.Strides, this.values, truncateSize, rows, cols, ld, ps);
+			}
+			else
+			{
+				long nMatrices = this.Size[2..].Prod();
+				int length = Math.Min((int)nMatrices, ps.ArrayLength);
+				StringBuilder sb = new();
+				Span<long> restInds = stackalloc long[this.rank - 2];
+				for (int i = 0; i < length; i++)
+				{
+					GetSizePos(i, restInds);
+					using var part = this.GetFirstDims(2, restInds, default, default);
+					sb.AppendLine($"Tensor[.., .., {restInds.SpanJoin(", ")}] = ");
+					sb.AppendLine(part.Print());
+				}
+				return sb.ToString() + (length == nMatrices ? "" : string.Format(Resources.Print.MoreStored, nMatrices - length));
+			}
+		}
+
+		private readonly ref struct TensorPrinter
+		{
+			private readonly TS storage;
+
+			private readonly ReadOnlySpan<long> size;
+
+			private readonly ReadOnlySpan<long> outerSize;
+
+			private readonly ReadOnlySpan<long> outerSizeProd;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			private TensorPrinter(ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> outerSizeProd, TS storage)
+			{
+				this.storage = storage;
+				this.size = size;
+				this.outerSize = outerSize;
+				this.outerSizeProd = outerSizeProd;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			private TensorPrinter(TensorPrinter parent, long rowIndex, long colIndex)
+			{
+				this.size = parent.size[..^2];
+				this.outerSize = parent.outerSize[..^2];
+				this.outerSizeProd = parent.outerSizeProd[..^2];
+				this.storage = parent.storage + (parent.outerSizeProd[^2] * (rowIndex + parent.outerSize[^2] * colIndex));
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			private static void AppendRow(StringBuilder sb, string currentRow, string prefix, string postfix, bool lastRow, long moreRows)
+			{
+				if (lastRow)
+				{
+					if (moreRows <= 0)
+					{
+						sb.Append(currentRow);
+						return;
+					}
+					sb.AppendLine(currentRow).Append(prefix).AppendFormat(Resources.Print.MoreRows, moreRows);
+				}
+				else
+				{
+					sb.AppendLine(currentRow);
+					int find = currentRow.LastIndexOf(Environment.NewLine, sb.Length - 2);
+					int lineWidth = sb.Length - find - Environment.NewLine.Length * 2 - postfix.Length;
+					sb.Append(prefix.PadRight(lineWidth)).AppendLine(postfix);
+				}
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			internal static string Print(ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> outerSizeProd, TS storage, ReadOnlySpan<long> matrixSize, long rows, long cols, long ld, PrintSettings settings, string? prefix = null, string? postfix = null)
+			{
+				int rank = size.Length;
+				bool topLayerIsVec = rank % 2 == 1;
+				long matrixLength = matrixSize.Prod();
+				prefix += "|"; postfix = "|" + postfix;
+				TensorPrintCommonInfo info = new(outerSize, matrixSize, rows, cols, ld, matrixLength, settings);
+				if (topLayerIsVec)
+				{
+					StringBuilder sb = new();
+					string subPrefix = prefix + "|", subPostfix = "|" + postfix;
+					long crows = size[0], lastOuterSizeProd = outerSizeProd[^1];
+					int nrows = (int)Math.Min(crows, settings.MatrixRow);
+					ReadOnlySpan<long> vecSize = size[..^1], vecOuterSize = outerSize[..^1], vecOuterSizeProd = outerSizeProd[..^1];
+					for (int i = 0; i < nrows; i++)
+					{
+						TensorPrinter current = new(vecSize, vecOuterSize, vecOuterSizeProd, storage + lastOuterSizeProd * i);
+						string currentRow = Print(current, info, subPrefix, subPostfix);
+						AppendRow(sb, currentRow, prefix, postfix, lastRow: i == nrows - 1, moreRows: 0);
+					}
+					return sb.ToString();
+				}
+				else
+				{
+					var tensor = new TensorPrinter(size, outerSize, outerSizeProd, storage);
+					return Print(tensor, info, prefix, postfix);
+				}
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+			private static unsafe string Print(TensorPrinter tensor, TensorPrintCommonInfo info, string prefix, string postfix)
+			{
+				if (tensor.size.Length == 2)
+				{
+					var temp = ((int)info.MatrixNowLength).CheckStackLimit<T>() ?? stackalloc T[(int)info.MatrixNowLength];
+					fixed (T* tt = temp)
+					{
+						var mp = new ManagedPureStorage<T>(new(new(tt), temp.Length * sizeof(T)));
+						Ten.Permute<T, TS, ManagedPureStorage<T>>(new(tensor.storage, info.MatrixSize, info.OuterSize, stackalloc long[] { 1, info.MatrixNowLD }), new(mp, info.MatrixSize), stackalloc int[info.MatrixSize.Length].FillWithRange(0));
+					}
+					return temp.ToMatrixString((int)info.MatrixOrgRows, info.MatrixSize[1] - info.MatrixOrgCols, info.Settings.Precision, prefix, postfix);
+				}
+				// else
+				StringBuilder sb = new();
+				long rows = tensor.size[0], cols = tensor.size[1];
+				int nrows = (int)Math.Min(rows, info.Settings.MatrixRow), ncols = (int)Math.Min(cols, info.Settings.MatrixColumn);
+				string moreElem = cols > ncols ? string.Format(Resources.Print.RowMore + postfix, cols - ncols) : postfix;
+				string[] subMatsCurrentRow = new string[ncols];
+				for (int i = 0; i < nrows; i++)
+				{
+					for (int j = 0; j < ncols; j++)
+					{
+						TensorPrinter current = new(tensor, i, j);
+						subMatsCurrentRow[j] = Print(current, info, "|", "|");
+					}
+					string currentRow = subMatsCurrentRow.MultilineConcat(prefix, "|  |", moreElem);
+					AppendRow(sb, currentRow, prefix, postfix, lastRow: i == nrows - 1, moreRows: rows - nrows);
+				}
+				return sb.ToString();
+			}
+		}
+
+		private sealed class TensorPrintCommonInfo
+		{
+			private readonly FixedBuffer_128<long> outerSize = default, matrixSize = default;
+
+			private readonly long rows, cols, ld, length;
+
+			private readonly int rank;
+
+			private readonly PrintSettings settings;
+
+
+			internal ReadOnlySpan<long> OuterSize => this.outerSize.AsSpan(this.rank);
+
+			internal ReadOnlySpan<long> MatrixSize => this.matrixSize.AsSpan(this.rank);
+
+			internal long MatrixOrgRows => this.rows;
+			
+			internal long MatrixOrgCols => this.cols;
+			
+			internal long MatrixNowLD => this.ld;
+
+			internal long MatrixNowLength => this.length;
+
+			internal PrintSettings Settings => this.settings;
+
+			internal TensorPrintCommonInfo(ReadOnlySpan<long> outerSize, ReadOnlySpan<long> matrixSize, long rows, long cols, long ld, long matrixLength, PrintSettings settings)
+			{
+				this.outerSize.CopyFromSpan(outerSize); this.matrixSize.CopyFromSpan(matrixSize);
+				this.rank = outerSize.Length;
+				this.rows = rows; this.cols = cols; this.ld = ld; this.length = matrixLength;
+				this.settings = settings;
+			}
+		}
 		#endregion
 	}
 }

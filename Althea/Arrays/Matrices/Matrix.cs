@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -14,7 +13,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	public interface IBaseMatrix<T, TSelf> : IMatrixMetric, IValueArray<T, TSelf> where T : unmanaged, INumber<T> where TSelf : class, IBaseMatrix<T, TSelf>
 	{
-		#region basic
+		#region indexing
 		/// <summary>
 		/// When implemented by a derived class, get a sub-matrix by the row and column index ranges.
 		/// </summary>
@@ -50,21 +49,22 @@ namespace Althea.Arrays
 		void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, TSelf value);
 
 		/// <summary>
-		/// Check the row and column indices
+		/// Check the <paramref name="row"/> and <paramref name="col"/> indices of <paramref name="matrix"/>.
 		/// </summary>
-		/// <param name="row">The row index as a <see cref="long"/></param>
-		/// <param name="col">The column index as a <see cref="long"/></param>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+		/// <param name="matrix">The matrix to be checked</param>
+		/// <param name="row">The row index as a <see cref="long"/> to be checked</param>
+		/// <param name="col">The column index as a <see cref="long"/> to be checked</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void CheckIndex(long row, long col)
+		protected static void CheckIndex(TSelf matrix, long row, long col)
 		{
 			if (row < 0)
 				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.CannotNegative);
-			if (row >= this.NRows)
+			if (row >= matrix.NRows)
 				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
 			if (col < 0)
 				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.ParameterError.CannotNegative);
-			if (col >= this.NCols)
+			if (col >= matrix.NCols)
 				throw new ArgumentOutOfRangeException(nameof(col), col, Resources.ParameterError.InvalidValue);
 		}
 
@@ -76,8 +76,9 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// Check the row and column ranges
+		/// Check the row and column ranges <paramref name="matrix"/>.
 		/// </summary>
+		/// <param name="matrix">The matrix to be checked</param>
 		/// <param name="offsetRow">The starting row index as a <see cref="long"/></param>
 		/// <param name="offsetCol">The starting column index as a <see cref="long"/></param>
 		/// <param name="countRow">The row count as a <see cref="long"/></param>
@@ -85,9 +86,9 @@ namespace Althea.Arrays
 		/// <param name="sub">The sub matrix to check which can be null to prevent checking</param>
 		/// <exception cref="ArgumentOutOfRangeException">If the any of the parameters is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void CheckRange(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric? sub = null)
+		protected static void CheckRange(TSelf matrix, long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric? sub = null)
 		{
-			MatrixSliceWrapper.Create(offsetRow, countRow, offsetCol, countCol, this, sub);
+			MatrixSliceWrapper.Create(offsetRow, countRow, offsetCol, countCol, matrix, sub);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

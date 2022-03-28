@@ -41,12 +41,16 @@ namespace Althea.Arrays
 		private readonly long leadDim;
 		[FieldOffset(sizeof(long) * 2)]
 		private readonly long outerLength;
-		[FieldOffset(sizeof(long) * 4)]
+		[FieldOffset(sizeof(long) * 3)]
 		private readonly long rows;
 		[FieldOffset(sizeof(long) * 4)]
 		private readonly long cols;
 		[FieldOffset(sizeof(long) * 5)]
 		private readonly TS values;
+		[FieldOffset(sizeof(long) * 6)]
+		private readonly long __ld;
+		[FieldOffset(sizeof(long) * 7)]
+		private readonly long __cols;
 
 		/// <summary>
 		/// Get the leading dimension of this dense matrix.
@@ -61,8 +65,8 @@ namespace Althea.Arrays
 
 		ReadOnlySpan<long> IValueArray<T, DenseMatrix<T, TS>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.rows, 2);
 		ReadOnlySpan<long> IPitchedArray<T>.Size => ReflectionHelper.CreateReadOnlySpan(in this.rows, 2);
-		ReadOnlySpan<long> IPitchedArray<T>.Strides => ReflectionHelper.CreateReadOnlySpan(in this.__stride1, 2);
-		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => ReflectionHelper.CreateReadOnlySpan(in this.leadDim, 2);
+		ReadOnlySpan<long> IPitchedArray<T>.Strides => ReflectionHelper.CreateReadOnlySpan(in this.__stride1, 3);
+		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => ReflectionHelper.CreateReadOnlySpan(in this.__ld, 2);
 
 		private DenseMatrix()
 		{
@@ -72,7 +76,9 @@ namespace Althea.Arrays
 
 		long IValueArray<T, DenseMatrix<T, TS>>.Length => this.rows * this.cols;
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Get the value storage of this matrix as a <typeparamref name="TS"/>.
+		/// </summary>
 		public TS Storage => this.values.MakeReference();
 
 		bool ICheckValid.IsValid() => this.values?.IsValid() ?? false;
@@ -103,6 +109,7 @@ namespace Althea.Arrays
 			if (length != this.outerLength)
 				storage = storage.MakeReference(0, this.outerLength - (leadDim - rows));
 			this.values = storage.AddToManager();
+			this.__ld = leadDim; this.__cols = cols;
 		}
 
 		/// <inheritdoc/>
@@ -146,14 +153,14 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public DenseMatrix<T, TS> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
 		{
-			((IBaseMatrix<T, DenseMatrix<T, TS>>)this).CheckRange(offsetRow, countRow, offsetCol, countCol);
+			IBaseMatrix<T, DenseMatrix<T, TS>>.CheckRange(this, offsetRow, countRow, offsetCol, countCol);
 			return new(this.values + (offsetRow + offsetCol * this.leadDim), countRow, countCol, this.leadDim);
 		}
 
 		/// <inheritdoc/>
 		public void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, DenseMatrix<T, TS> overwrite)
 		{
-			((IBaseMatrix<T, DenseMatrix<T, TS>>)this).CheckRange(offsetRow, countRow, offsetCol, countCol, overwrite);
+			IBaseMatrix<T, DenseMatrix<T, TS>>.CheckRange(this, offsetRow, countRow, offsetCol, countCol, overwrite);
 			(this.values + (offsetRow + offsetCol * this.leadDim)).Copy2DTo<T, TS, TS>(this.leadDim, overwrite.values, overwrite.leadDim, countRow, countCol);
 		}
 
@@ -168,7 +175,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, DenseMatrix<T, TS> value)
 		{
-			((IBaseMatrix<T, DenseMatrix<T, TS>>)this).CheckRange(offsetRow, countRow, offsetCol, countCol, value);
+			IBaseMatrix<T, DenseMatrix<T, TS>>.CheckRange(this, offsetRow, countRow, offsetCol, countCol, value);
 			var dst = this.values + (offsetRow + offsetCol * this.leadDim);
 			var src = value.values;
 			src.Copy2DTo<T, TS, TS>(value.LeadDim, dst, this.leadDim, countRow, countCol);
@@ -179,12 +186,12 @@ namespace Althea.Arrays
 		{
 			get
 			{
-				((IBaseMatrix<T, DenseMatrix<T, TS>>)this).CheckIndex(x, y);
+				IBaseMatrix<T, DenseMatrix<T, TS>>.CheckIndex(this, x, y);
 				return (this.values + (x + y * this.leadDim)).ToManaged<T, TS>();
 			}
 			set
 			{
-				((IBaseMatrix<T, DenseMatrix<T, TS>>)this).CheckIndex(x, y);
+				IBaseMatrix<T, DenseMatrix<T, TS>>.CheckIndex(this, x, y);
 				(this.values + (x + y * this.leadDim)).FromManaged(value);
 			}
 		}
@@ -415,9 +422,9 @@ namespace Althea.Arrays
 		#region string
 		static string IMainPropertyFormattable<DenseMatrix<T, TS>>.StringMain => nameof(DenseMatrix<T, TS>);
 
-		static IEnumerable<string> IMainPropertyFormattable<DenseMatrix<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Rows", "Columns", "LeadDim" };
+		static IEnumerable<string> IMainPropertyFormattable<DenseMatrix<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "LeadDim" };
 
-		IEnumerable<object?> IMainPropertyFormattable<DenseMatrix<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.values, this.rows, this.cols, this.leadDim };
+		IEnumerable<object?> IMainPropertyFormattable<DenseMatrix<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.values, $"{this.rows}x{this.cols}", this.leadDim };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<DenseMatrix<T, TS>>.ToString(this);
@@ -431,7 +438,7 @@ namespace Althea.Arrays
 			int length = rows * cols;
 			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
 			this.values.ToManaged2D(this.leadDim, values, rows, cols);
-			return values.ToMatrixString(rows, this.cols - cols, settings.Value.Precision) + (this.rows == rows ? "" : String.Format(Resources.Print.MoreRows, this.rows - rows));
+			return values.ToMatrixString(rows, this.cols - cols, settings.Value.Precision) + (this.rows == rows ? "" : string.Format(Resources.Print.MoreRows, this.rows - rows));
 		}
 		#endregion
 	}

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Resources;
@@ -10,7 +8,7 @@ using Althea.Helpers;
 namespace Althea.Linq
 {
 	/// <summary>
-	/// A replacement of <see cref="System.Linq.Enumerable"/> based on <see cref="Span{T}"/> and <see cref="ReadOnlySpan{T}"/>
+	/// A replacement of <see cref="Enumerable"/> based on <see cref="Span{T}"/> and <see cref="ReadOnlySpan{T}"/>
 	/// </summary>
 	public static class SpanLinq
 	{
@@ -209,7 +207,6 @@ namespace Althea.Linq
 		/// <param name="array">The array to order</param>
 		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-		/// <returns>The re-ordered array</returns>
 		public static void ReOrderTo<T>(this Span<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
 			ReOrderTo((ReadOnlySpan<T>)array, target, indices);
@@ -222,7 +219,6 @@ namespace Althea.Linq
 		/// <param name="array">The array to order</param>
 		/// <param name="target">The array to put the reordered result</param>
 		/// <param name="indices">The indices to order, if this is empty, <paramref name="array"/> will be returned</param>
-		/// <returns>The re-ordered array</returns>
 		public static void ReOrderTo<T>(this ReadOnlySpan<T> array, Span<T> target, ReadOnlySpan<int> indices)
 		{
 			if (indices.IsEmpty)
@@ -795,6 +791,7 @@ namespace Althea.Linq
 			spanFirst = MemoryMarshal.CreateReadOnlySpan(ref spanFirst.Ref(), spanLen - size);
 			ReadOnlySpan<byte> spanLast = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.Add(ref spanFirst.Ref(), size), spanLen - size);
 			return spanFirst.SequenceEqual(spanLast);
+			// Ignore Spelling: memcmp
 			//// similar to C code "memcmp(memoryBlock, memoryBlock + 8, memoryBlockSize - 8)"
 		}
 
@@ -954,9 +951,9 @@ namespace Althea.Linq
 		/// <param name="span">The span to compare</param>
 		/// <param name="other">The other span to compare</param>
 		/// <returns>Sequentially larger or equals or not</returns>
-		public static bool SequenceLargerEqualThan(this Span<long> span, ReadOnlySpan<long> other)
+		public static bool SequenceLargerEqualThan<T>(this Span<T> span, ReadOnlySpan<T> other) where T : IComparisonOperators<T, T>
 		{
-			return SequenceLargerEqualThan((ReadOnlySpan<long>)span, other);
+			return SequenceLargerEqualThan((ReadOnlySpan<T>)span, other);
 		}
 
 		/// <summary>
@@ -965,7 +962,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to compare</param>
 		/// <param name="other">The other span to compare</param>
 		/// <returns>Sequentially larger or equals or not</returns>
-		public static bool SequenceLargerEqualThan(this ReadOnlySpan<long> span, ReadOnlySpan<long> other)
+		public static bool SequenceLargerEqualThan<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> other) where T : IComparisonOperators<T, T>
 		{
 			int len = span.Length;
 			if (len != other.Length)
@@ -1368,7 +1365,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to pick</param>
 		/// <returns>The number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
-		public static int DistinctCount<T>(this Span<T> span) where T : unmanaged, IEquatable<T>
+		public static int DistinctCount<T>(this Span<T> span) where T : unmanaged, INumber<T>
 		{
 			return DistinctCount((ReadOnlySpan<T>)span);
 		}
@@ -1378,13 +1375,23 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to pick</param>
 		/// <returns>The number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
-		public static int DistinctCount<T>(this ReadOnlySpan<T> span) where T : unmanaged, IEquatable<T>
+		public static int DistinctCount<T>(this ReadOnlySpan<T> span) where T : unmanaged, INumber<T>
 		{
-			if (span.Length <= 1)
-				return span.Length;
-			Span<T> temp = stackalloc T[span.Length];
+			int len = span.Length;
+			if (len <= 1)
+				return len;
+			if (len > 256)
+			{
+				var set = new HashSet<T>(len);
+				for (int i = 0; i < len; i++)
+				{
+					set.Add(span[i]);
+				}
+				return set.Count;
+			}
+			Span<T> temp = stackalloc T[len];
 			Span<T> slice = temp[..0];
-			int now = 0, len = span.Length;
+			int now = 0;
 			for (int i = 0; i < len; i++)
 			{
 				if (!slice.Contains(span[i]))
@@ -1707,7 +1714,7 @@ namespace Althea.Linq
 		/// <param name="start">The start value of the range</param>
 		/// <param name="step">The step of the range, default 0 will be replaced by 1</param>
 		/// <returns>The input <paramref name="span"/></returns>
-		public static Span<T> FillWithRange<T>(this Span<T> span, T start, T step = default) where T : unmanaged, IEquatable<T>, IAdditiveIdentity<T, T>, IMultiplicativeIdentity<T, T>, IAdditionOperators<T, T, T>
+		public static Span<T> FillWithRange<T>(this Span<T> span, T start, T step = default) where T : unmanaged, IAdditiveIdentity<T, T>, IMultiplicativeIdentity<T, T>, IAdditionOperators<T, T, T>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));

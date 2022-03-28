@@ -1,6 +1,4 @@
-﻿using System;
-
-using Althea.Helpers;
+﻿using Althea.Helpers;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 
@@ -30,10 +28,10 @@ namespace Althea.Arrays
 		bool HasPitch => !this.OuterSize.SequenceEqual(this.Size);
 
 		/// <summary>
-		/// When implemented by a derived class, get (the exclusive accumulated product of <see cref="OuterSize"/>) of this tensor at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
+		/// When implemented by a derived class, get the strides of this array at all dimensions as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		/// <remarks>The first element shall be 1 and the last element shall be the product of <see cref="OuterSize"/>. The returned <see cref="ReadOnlySpan{T}.Length">size</see> == rank + 1</remarks>
-		protected ReadOnlySpan<long> Strides { get; }
+		/// <remarks>Usually, the first element is 1 and the last element shall be the product of <see cref="OuterSize"/>. The returned <see cref="ReadOnlySpan{T}.Length">size</see> == rank + 1</remarks>
+		ReadOnlySpan<long> Strides { get; }
 		#endregion
 	}
 
@@ -111,6 +109,11 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the size of this array (the extent at all dimensions) in <typeparamref name="T"/> as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
 		/// </summary>
 		ReadOnlySpan<long> Size { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, get the presenting length (in <typeparamref name="T"/>) of this tensor.
+		/// </summary>
+		long Length { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get or set the label array as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> used to mark each index of this tensor.

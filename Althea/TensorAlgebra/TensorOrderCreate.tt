@@ -19,7 +19,7 @@ namespace Althea.TensorAlgebra
 {
 	public readonly ref partial struct TensorOrder
 	{
-<# for (int i = 2; i <= 16; i++) {  #>
+<# for (int i = 2; i <= 10; i++) {  #>
 		/// <summary>
 		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
 		/// </summary>

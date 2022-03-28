@@ -52,7 +52,7 @@ namespace Althea.Arrays
 		private readonly TSInd? blockSizesScan;
 		[FieldOffset(sizeof(long) * 6)]
 		private readonly SparseFormat format;
-		[FieldOffset(sizeof(long) * 6 + sizeof(int))] // sizeof(SparseFormat) == sizeof(int)
+		[FieldOffset(sizeof(long) * 7)] // align at sizeof(long)
 		private readonly T defaultValue;
 
 		ReadOnlySpan<long> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);
@@ -70,7 +70,9 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public T DefaultValue => this.defaultValue;
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Get the value storage of this vector as a <typeparamref name="TS"/>.
+		/// </summary>
 		public TS Storage => this.values.MakeReference();
 
 		/// <summary>
@@ -232,7 +234,7 @@ namespace Althea.Arrays
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private long GetOffset(long index)
 		{
-			((IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>)this).CheckIndex(index);
+			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
 			long offset;
 			if (this.format.BlockType == SparseFormat.Blocking.Element)
 			{
@@ -272,7 +274,7 @@ namespace Althea.Arrays
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private (long indexStart, long indexCount, long valueStart, long valueCount, long blockStartOffset, long blockEndSize) GetSliceInfo(long start, long count, SparseVector<T, TInd, TS, TSInd>? sub = null)
 		{
-			((IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>)this).CheckRange(start, count, sub);
+			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckRange(this, start, count, sub);
 			long indexStart, indexCount;
 			long valueStart, valueCount;
 			long blockStartOffset = 0, blockEndSize = 0;

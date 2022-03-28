@@ -29,18 +29,17 @@ namespace Althea.Arrays
 				return storage;
 			lock (managerLock)
 			{
-				if (References.ContainsKey(storage))
-					throw new ArgumentException(Resources.ParameterError.DuplicateValue, nameof(storage));
 				if (storage.Reference is null)
 				{
-					References.Add(storage, new() { storage });
+					if (!References.ContainsKey(storage))
+						References.Add(storage, new() { storage });
 				}
 				else
 				{
-					if (References.TryGetValue(storage.Reference, out var set))
-						set.Add(storage);
+					if (References.TryGetValue(storage.Reference, out var list))
+						list.Add(storage);
 					else
-						References.Add(storage.Reference, new() { storage.Reference, storage });
+						References.Add(storage.Reference, new() { storage });
 				}
 			}
 			return storage;
@@ -71,11 +70,13 @@ namespace Althea.Arrays
 			{
 				if (storage.Reference is null)
 				{
-					if (References.TryGetValue(storage, out var set))
+					if (References.TryGetValue(storage, out var list))
 					{
-						set.SwapRemove(storage);
-						if (set.Count == 0)
-							storage.Dispose();
+						list.SwapRemove(storage);
+						if (list.Count != 0)
+							return;
+						storage.Dispose();
+						References.Remove(storage);
 					}
 					else
 					{	// unmanaged storage
@@ -84,11 +85,13 @@ namespace Althea.Arrays
 				}
 				else
 				{
-					if (References.TryGetValue(storage.Reference, out var set))
+					if (References.TryGetValue(storage.Reference, out var list))
 					{
-						set.SwapRemove(storage);
-						if (set.Count == 0)
-							storage.Reference.Dispose();
+						list.SwapRemove(storage);
+						if (list.Count != 0)
+							return;
+						storage.Reference.Dispose();
+						References.Remove(storage.Reference);
 					}
 				}
 			}
@@ -111,7 +114,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this array (the extent at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>.
 		/// </summary>
-		ReadOnlySpan<long> Size { get; }
+		protected ReadOnlySpan<long> Size { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the presenting length (in <typeparamref name="T"/>) of this array.

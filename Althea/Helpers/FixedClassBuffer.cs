@@ -199,6 +199,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of class type <typeparamref name="T"/> with size = 4.
 	/// </summary>
@@ -385,6 +387,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of class type <typeparamref name="T"/> with size = 8.
 	/// </summary>
@@ -571,6 +575,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of class type <typeparamref name="T"/> with size = 16.
 	/// </summary>
@@ -757,4 +763,6 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 }

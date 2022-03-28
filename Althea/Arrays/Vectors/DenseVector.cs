@@ -55,7 +55,9 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public long Length => this.length;
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Get the value storage of this vector as a <typeparamref name="TS"/>.
+		/// </summary>
 		public TS Storage => this.values.MakeReference();
 
 		bool ICheckValid.IsValid() => this.values?.IsValid() ?? false;
@@ -130,12 +132,12 @@ namespace Althea.Arrays
 		{
 			get
 			{
-				((IBaseVector<T, DenseVector<T, TS>>)this).CheckIndex(index);
+				IBaseVector<T, DenseVector<T, TS>>.CheckIndex(this, index);
 				return (this.values + index * this.stride).ToManaged<T, TS>();
 			}
 			set
 			{
-				((IBaseVector<T, DenseVector<T, TS>>)this).CheckIndex(index);
+				IBaseVector<T, DenseVector<T, TS>>.CheckIndex(this, index);
 				(this.values + index * this.stride).FromManaged(value);
 			}
 		}
@@ -145,14 +147,14 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public DenseVector<T, TS> GetSlice(long start, long count)
 		{
-			((IBaseVector<T, DenseVector<T, TS>>)this).CheckRange(start, count);
+			IBaseVector<T, DenseVector<T, TS>>.CheckRange(this, start, count);
 			return new(this.values + start * this.stride, count, this.stride);
 		}
 
 		/// <inheritdoc/>
 		public void GetSlice(long start, long count, DenseVector<T, TS> overwrite)
 		{
-			((IBaseVector<T, DenseVector<T, TS>>)this).CheckRange(start, count, overwrite);
+			IBaseVector<T, DenseVector<T, TS>>.CheckRange(this, start, count, overwrite);
 			this.values.MakeReference(start * this.stride, (count - 1) * this.stride + 1).StridedCopyTo<T, TS, TS>(this.stride, overwrite.values, overwrite.stride);
 		}
 
@@ -167,7 +169,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public void SetSlice(long start, long count, DenseVector<T, TS> value)
 		{
-			((IBaseVector<T, DenseVector<T, TS>>)this).CheckRange(start, count, value);
+			IBaseVector<T, DenseVector<T, TS>>.CheckRange(this, start, count, value);
 			var src = value.values;
 			var dst = this.values + (start * this.stride);
 			src.StridedCopyTo<T, TS, TS>(this.stride, dst, this.stride);
@@ -241,7 +243,7 @@ namespace Althea.Arrays
 
 		#region conversion and clone
 		/// <inheritdoc/>
-		public DenseVector<T, TS> CreateAlike() => new(this.values.CreateAlike(), this.length, this.stride);
+		public DenseVector<T, TS> CreateAlike() => new(this.values.ResizeAlike(this.length), this.length);
 
 		/// <summary>
 		/// Copy the values from this dense vector to a new <typeparamref name="TS"/> without stride.

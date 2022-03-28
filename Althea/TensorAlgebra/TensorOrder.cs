@@ -1,11 +1,9 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Linq;
 using Althea.Arrays;
 using Althea.Helpers;
-using Althea.NativeTypes;
+using Althea.Linq;
 using Althea.Resources;
 
 
@@ -236,18 +234,17 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Get the actual permutation order in <see cref="int"/> <see cref="Span{T}"/> provided with the tensor rank
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="tensor">The target tensor</param>
 		/// <param name="allowPartial">Whether to allow the actual permutation order to be a partial order one or not, default false</param>
 		/// <param name="outputPermutation">The preallocated <see cref="Span{T}"/> of <see cref="int"/> used to store the output the permutation order</param>
 		/// <returns>The output the permutation order which is the first actual rank elements of <paramref name="outputPermutation"/></returns>
 		/// <remarks>If this <see cref="TensorOrder"/> is a default value, an identity permutation will be returned</remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> or its <see cref="ILabeledTensor.Labels"/> is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="tensor"/>.<see cref="ILabeledTensor.Rank">Rank</see> is too small or <paramref name="tensor"/>.<see cref="ILabeledTensor.Labels">Label</see> does not contain all of the <see cref="char"/> label(s) of this <see cref="TensorOrder"/></exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> or its <see cref="ILabeledTensor{T}.Labels"/> is null</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="tensor"/>.<see cref="ILabeledTensor{T}.Rank">Rank</see> is too small or <paramref name="tensor"/>.<see cref="ILabeledTensor{T}.Labels">Label</see> does not contain all of the <see cref="char"/> label(s) of this <see cref="TensorOrder"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="tensor"/> leads to duplicated result permutation order</exception>
-		public Span<int> GetIntSpanOrder(ILabeledTensor tensor, Span<int> outputPermutation, bool allowPartial = false)
+		public Span<int> GetIntSpanOrder<T>(ILabeledTensor<T> tensor!!, Span<int> outputPermutation, bool allowPartial = false) where T : unmanaged, INumber<T>
 		{
-			if (tensor is null)
-				throw new ArgumentNullException(nameof(tensor));
 			int rank = tensor.Rank;
 			int length = this.order.NonDefaults;
 			if (rank < length)
@@ -256,7 +253,7 @@ namespace Althea.TensorAlgebra
 				throw new ArgumentException(ParameterError.NotSameSize, nameof(outputPermutation));
 			var label = tensor.Labels;
 			if (label.Length != rank)
-				throw new ArgumentNullException(nameof(tensor));
+				throw new ArgumentException(ParameterError.WrongSize, nameof(tensor));
 
 			// shortcut
 			if (length == 0)
@@ -339,13 +336,14 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Get the actual permutation order in <see cref="int"/> array provided with the tensor rank
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="tensor">The target tensor</param>
 		/// <param name="allowPartial">allow the actual permutation order to be a partial one or not, default false</param>
 		/// <returns>an array of <see cref="int"/> of base-zero indicating the permutation order</returns>
-		/// <exception cref="ArgumentNullException">if <paramref name="tensor"/> or its <see cref="ILabeledTensor.Labels"/> is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="tensor"/>'s <see cref="ILabeledTensor.Rank"/> is too small</exception>
-		/// <exception cref="ArgumentException">if <paramref name="tensor"/> leads to duplicated result permutation order or ts <see cref="ILabeledTensor.Labels"/> does not contains the label here</exception>
-		public int[] GetIntArrayOrder(ILabeledTensor tensor, bool allowPartial = false)
+		/// <exception cref="ArgumentNullException">if <paramref name="tensor"/> or its <see cref="ILabeledTensor{T}.Labels"/> is null</exception>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="tensor"/>'s <see cref="ILabeledTensor{T}.Rank"/> is too small</exception>
+		/// <exception cref="ArgumentException">if <paramref name="tensor"/> leads to duplicated result permutation order or ts <see cref="ILabeledTensor{T}.Labels"/> does not contains the label here</exception>
+		public int[] GetIntArrayOrder<T>(ILabeledTensor<T> tensor, bool allowPartial = false) where T : unmanaged, INumber<T>
 		{
 			if (tensor is null)
 				throw new ArgumentNullException(nameof(tensor));
@@ -358,13 +356,14 @@ namespace Althea.TensorAlgebra
 		/// <summary>
 		/// Get the actual permutation order in <see cref="char"/> array provided with the tensor rank
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <param name="tensor">The target tensor</param>
 		/// <param name="allowPartial">allow the actual permutation order to be a partial one or not, default false</param>
-		/// <returns>an array of <see cref="char"/> corresponding the <see cref="ILabeledTensor.Labels"/> of <paramref name="tensor"/> indicating the permutation order</returns>
+		/// <returns>an array of <see cref="char"/> corresponding the <see cref="ILabeledTensor{T}.Labels"/> of <paramref name="tensor"/> indicating the permutation order</returns>
 		/// <exception cref="ArgumentNullException">if <paramref name="tensor"/> is null</exception>
-		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="tensor"/>'s <see cref="ILabeledTensor.Rank"/> is too small</exception>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="tensor"/>'s <see cref="ILabeledTensor{T}.Rank"/> is too small</exception>
 		/// <exception cref="ArgumentException">if <paramref name="tensor"/> leads to duplicated result permutation order</exception>
-		public char[] GetCharArrayOrder(ILabeledTensor tensor, bool allowPartial = false)
+		public char[] GetCharArrayOrder<T>(ILabeledTensor<T> tensor, bool allowPartial = false) where T : unmanaged, INumber<T>
 		{
 			if (tensor is null)
 				throw new ArgumentNullException(nameof(tensor));

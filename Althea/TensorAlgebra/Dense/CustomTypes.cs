@@ -245,14 +245,14 @@ namespace Althea.TensorAlgebra.Dense
 		/// <summary>
 		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with a given dense <paramref name="tensor"/>
 		/// </summary>
-		/// <param name="tensor">The given dense tensor as a <see cref="ILabeledTensor"/></param>
+		/// <param name="tensor">The given dense tensor as a <see cref="ILabeledTensor{T}"/></param>
 		/// <param name="storage">The storage of <paramref name="tensor"/></param>
 		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. Default 0 will be replaced by 1.</param>
 		/// <exception cref="ArgumentException">If <paramref name="tensor"/> is a <see cref="ISparseArray{T}"/></exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid while <paramref name="tensor"/> is not</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(ILabeledTensor? tensor, TS? storage, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
+		public DenseTensorWrapper(ILabeledTensor<T>? tensor, TS? storage, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
 		{
 			if (tensor is null)
 			{

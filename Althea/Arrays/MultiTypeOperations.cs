@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Althea.Linq;
 using Althea.LinearAlgebra;
 using Althea.TensorAlgebra;
 
@@ -623,6 +624,28 @@ namespace Althea.Arrays
 		where TTen2 : class, IBaseTensor<T, TTen2>
 	{
 		/// <summary>
+		/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, TTen2, UnaryOperation, BinaryOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static Span<int> CheckReduce(TTen1 A, TensorOrder order, T scalar, TTen2 B, Span<int> reduceInds)
+		{
+			if (scalar == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
+			reduceInds = order.GetIntSpanOrder(A, reduceInds, true);
+			if (A.Rank - reduceInds.Length == 0)
+			{
+				if (B.Rank != 1 || B.Length != 1)
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(B));
+			}
+			else
+			{
+				if (A.Rank - reduceInds.Length != B.Rank)
+					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(order));
+			}
+			return reduceInds;
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction (self partial summation) of tensor <paramref name="A"/> under the given <paramref name="order"/> to tensor <paramref name="B"/>.
 		/// </summary>
 		/// <param name="A">The input tensor to reduce</param>
@@ -634,6 +657,23 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
 		public abstract static void Reduce(TTen1 A, TensorOrder order, T scalar, TTen2 B, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition);
+
+		/// <summary>
+		/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, TTen2, UnaryOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckPermute(TTen1 A, TensorOrder order, T scalar, TTen2 B, Span<int> perm)
+		{
+			if (scalar == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
+			if (A.Rank != B.Rank)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(B));
+			order.GetIntSpanOrder(A, perm, false);
+			Span<long> permA = stackalloc long[A.Rank];
+			A.Size.ReOrderTo(permA, perm);
+			if (!permA.SequenceEqual(B.Size))
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(B));
+		}
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor permutation of tensor <paramref name="A"/> under the given <paramref name="order"/> to tensor <paramref name="B"/>.
@@ -662,6 +702,23 @@ namespace Althea.Arrays
 		where TTen3 : class, IBaseTensor<T, TTen3>
 	{
 		/// <summary>
+		/// Check the input parameters of <see cref="Contract(TTen1, UnaryOperation, TTen2, UnaryOperation, T, TTen3, UnaryOperation, T)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static StorableContractInfo CheckContract(TTen1 A, TTen2 B, T α, TTen3 C)
+		{
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+			int rank = TensorContractInfo.GetContractRank(A, B);
+			Span<int> leftConc = stackalloc int[rank];
+			Span<int> rightConc = stackalloc int[rank];
+			Span<int> leftFree = stackalloc int[A.Rank - rank];
+			Span<int> rightFree = stackalloc int[B.Rank - rank];
+			var info = TensorContractInfo.Create(A, B, C, leftConc, rightConc, leftFree, rightFree);
+			return info;
+		}
+
+		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction-addition: <c><paramref name="C"/> = <paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> .* <paramref name="opC"/>(<paramref name="C"/>)</c>.
 		/// </summary>
 		/// <remarks>The labels of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide contraction dimensions.</remarks>
@@ -679,12 +736,44 @@ namespace Althea.Arrays
 		public abstract static void Contract(TTen1 A, UnaryOperation opA, TTen2 B, UnaryOperation opB, T α, TTen3 C, UnaryOperation opC, T β);
 
 		/// <summary>
-		/// When implemented by a derived class, compute the tensor point-wise binary operation: <c><paramref name="C"/> = <paramref name="binary"/>(<paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>), <paramref name="β"/> .* <paramref name="opB"/>(<paramref name="B"/>))</c>.
+		/// Check the input parameters of <see cref="TensorsBinaryOperation(TTen1?, TensorOrder, UnaryOperation, T, TTen2?, TensorOrder, UnaryOperation, T, TTen3, BinaryOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckBinary(TTen1? A, TensorOrder orderA, T α, TTen2? B, TensorOrder orderB, T β, TTen3 C, Span<int> permA, Span<int> permB)
+		{
+			bool nullA = A is null || α == T.Zero;
+			bool nullB = B is null || β == T.Zero;
+			if (nullA && nullB)
+				throw new ArgumentException(Resources.ParameterError.CannotAllNull);
+#pragma warning disable CS8602, CS8604
+			if (!nullA)
+			{
+				orderA.GetIntSpanOrder(A, permA, false);
+				Span<long> newSizeA = stackalloc long[A.Rank];
+				A.Size.ReOrderTo(newSizeA, permA);
+				if (!C.Size.SequenceEqual(newSizeA))
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
+			}
+			if (!nullB)
+			{
+				orderB.GetIntSpanOrder(B, permB, false);
+				Span<long> newSizeB = stackalloc long[B.Rank];
+				B.Size.ReOrderTo(newSizeB, permB);
+				if (!C.Size.SequenceEqual(newSizeB))
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(B));
+			}
+#pragma warning restore CS8602, CS8604
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, compute the tensor point-wise binary operation: <c><paramref name="C"/> = <paramref name="binary"/>(<paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>[<paramref name="orderA"/>]), <paramref name="β"/> .* <paramref name="opB"/>(<paramref name="B"/>[<paramref name="orderB"/>]))</c>.
 		/// </summary>
 		/// <remarks>The labels of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide permutations. If <paramref name="A"/> or <paramref name="B"/> is null (<paramref name="α"/> or <paramref name="β"/> is 0), <paramref name="binary"/> is not used.</remarks>
 		/// <param name="A">The first input tensor</param>
 		/// <param name="B">The second input tensor</param>
 		/// <param name="C">The output result tensor</param>
+		/// <param name="orderA">The <see cref="TensorOrder"/> indicating the permutation order of <paramref name="A"/></param>
+		/// <param name="orderB">The <see cref="TensorOrder"/> indicating the permutation order of <paramref name="B"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/> during operation</param>
 		/// <param name="β">The scalar to multiply to <paramref name="B"/> during operation</param>
 		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="A"/> during operation</param>
@@ -692,7 +781,7 @@ namespace Althea.Arrays
 		/// <param name="binary">The <see cref="BinaryOperation"/> to apply simultaneously to both elements of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">If both <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If the operation cannot be performed due to incompatible size(s)</exception>
-		public abstract static void TensorsBinaryOperation(TTen1? A, UnaryOperation opA, T α, TTen2? B, UnaryOperation opB, T β, TTen3 C, BinaryOperation binary);
+		public abstract static void TensorsBinaryOperation(TTen1? A, TensorOrder orderA, UnaryOperation opA, T α, TTen2? B, TensorOrder orderB, UnaryOperation opB, T β, TTen3 C, BinaryOperation binary);
 	}
 
 	/// <summary>

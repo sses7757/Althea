@@ -26,7 +26,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Permute<T, TS1, TS2>(DenseTensorWrapper<T, TS2> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Permute<T, TS1, TS2>(DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor

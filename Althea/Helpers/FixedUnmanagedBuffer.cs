@@ -121,7 +121,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 8)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
@@ -142,7 +142,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 8)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -322,6 +322,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 12
 	/// </summary>
@@ -430,7 +432,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 12)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
@@ -451,7 +453,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 12)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -631,6 +633,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 16
 	/// </summary>
@@ -739,7 +743,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 16)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
@@ -760,7 +764,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 16)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -940,6 +944,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 24
 	/// </summary>
@@ -1048,7 +1054,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 24)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
@@ -1069,7 +1075,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 24)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -1249,6 +1255,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 32
 	/// </summary>
@@ -1357,7 +1365,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 32)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
@@ -1378,7 +1386,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 32)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -1558,6 +1566,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 64
 	/// </summary>
@@ -1666,7 +1676,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 64)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
@@ -1687,7 +1697,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 64)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -1867,6 +1877,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 128
 	/// </summary>
@@ -1975,7 +1987,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 128)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
@@ -1996,7 +2008,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 128)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -2176,6 +2188,8 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 	/// <summary>
 	/// The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 256
 	/// </summary>
@@ -2284,7 +2298,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 256)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			var s = new TStruct();
 			fixed (void* t = &this.field)
 			{
@@ -2305,7 +2319,7 @@ namespace Althea.Helpers
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size + copyStart > 256)
-				throw new InvalidOperationException(Resources.Other.InvalidGeneric);
+				throw new InvalidOperationException();
 			fixed (void* t = &this.field)
 			{
 				Unsafe.CopyBlock((byte*)t + copyStart, Unsafe.AsPointer(ref @struct), (uint)size);
@@ -2485,4 +2499,6 @@ namespace Althea.Helpers
 		}
 		#endregion
 	}
+
+
 }

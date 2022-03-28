@@ -21,36 +21,38 @@ namespace Althea.Arrays
 		int IReadOnlyCollection<T>.Count => (int)((IVectorMetric)this).Length;
 
 		/// <summary>
-		/// Check whether the given <paramref name="index"/> is out of range of this vector
+		/// Check whether the given <paramref name="index"/> is out of range of <paramref name="vector"/>.
 		/// </summary>
+		/// <param name="vector">The vector to be checked</param>
 		/// <param name="index">The index to be checked</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void CheckIndex(long index)
+		protected static void CheckIndex(TSelf vector, long index)
 		{
 			if (index < 0)
 				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.CannotNegative);
-			if (index >= ((IVectorMetric)this).Length)
+			if (index >= ((IVectorMetric)vector).Length)
 				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
 		}
 
 		/// <summary>
-		/// Check whether the given range indicated by <paramref name="offset"/> and <paramref name="length"/> is out of range of this vector
+		/// Check whether the given range indicated by <paramref name="offset"/> and <paramref name="length"/> is out of range of <paramref name="vector"/>.
 		/// </summary>
+		/// <param name="vector">The vector to be checked</param>
 		/// <param name="offset">The starting offset index to be checked</param>
 		/// <param name="length">The length to be checked</param>
 		/// <param name="sub">The sub vector to check which can be null to prevent checking</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and/or <paramref name="length"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void CheckRange(long offset, long length, IVectorMetric? sub = null)
+		protected static void CheckRange(TSelf vector, long offset, long length, IVectorMetric? sub = null)
 		{
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.CannotNegative);
-			if (offset >= ((IVectorMetric)this).Length)
+			if (offset >= ((IVectorMetric)vector).Length)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, Resources.ParameterError.InvalidValue);
 			if (length < 0)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.ParameterError.CannotNegative);
-			if (offset + length > ((IVectorMetric)this).Length)
+			if (offset + length > ((IVectorMetric)vector).Length)
 				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.ParameterError.InvalidValue);
 			if (sub is not null)
 			{
