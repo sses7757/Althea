@@ -16,14 +16,14 @@ using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
 namespace Althea.Arrays
 {
 	/// <summary>
-	/// The coordinated (or compressed) non-blocked (or blocked) sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+	/// The abstract sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public class SparseMatrix<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
+	public abstract class SparseMatrix<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
 		IBaseMatrix<T, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixVectorMultiplyOperations<T, DenseVector<T, TS>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>,
@@ -45,21 +45,16 @@ namespace Althea.Arrays
 
 		private readonly TSInd rowIndices, colIndices;
 
-		private readonly TSInd? rowBlockSizes, colBlockSizes;
-		private readonly TSInd? rowBlockSizesScan, colBlockSizesScan;
-
 		private readonly TS values;
 
-		private readonly TInd rowBlockSize, colBlockSize;
-		private readonly SparseFormat format;
 		private readonly T defaultValue;
 
 		ReadOnlySpan<long> IValueArray<T, SparseMatrix<T, TInd, TS, TSInd>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.rows, 2);
 
 		ReadOnlySpan<long> ISparseArray<T>.Size => ReflectionHelper.CreateReadOnlySpan(in this.rows, 2);
 		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => ReflectionHelper.CreateReadOnlySpan(in this.values, 1);
-		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => ReflectionHelper.CreateReadOnlySpan(in this.rowIndices, this.format.BlockType == SparseFormat.Blocking.Complicated ? 6 : 2);
-		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => this.format.BlockType == SparseFormat.Blocking.Simple ? ReflectionHelper.CreateReadOnlySpan(in this.rowBlockSize, 2) : default;
+		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => ReflectionHelper.CreateReadOnlySpan(in this.rowIndices, 2);
+		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => default;
 
 		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.rowIndices?.IsValid() ?? false) && (this.colIndices?.IsValid() ?? false);
 
@@ -69,7 +64,7 @@ namespace Althea.Arrays
 		public long NCols => this.cols;
 
 		/// <inheritdoc/>
-		public SparseFormat Format => this.format;
+		public abstract SparseFormat Format { get; }
 
 		/// <inheritdoc/>
 		public T DefaultValue => this.defaultValue;
@@ -95,45 +90,9 @@ namespace Althea.Arrays
 		public long Length => this.rows * this.cols;
 
 		/// <summary>
-		/// Get the row index array's original storage of this sparse vector.
-		/// </summary>
-		protected TSInd OrginalRowIndexStorage => this.rowIndices;
-		/// <summary>
-		/// Get the column index array's original storage of this sparse vector.
-		/// </summary>
-		protected TSInd OrginalColIndexStorage => this.colIndices;
-
-		/// <summary>
-		/// Get the row block size array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
-		/// </summary>
-		protected TSInd RowBlockSizes => this.rowBlockSizes ?? TSInd.Empty;
-		/// <summary>
-		/// Get the column block size array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
-		/// </summary>
-		protected TSInd ColBlockSizes => this.colBlockSizes ?? TSInd.Empty;
-
-		/// <summary>
-		/// Get the row block size array's accumulation array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
-		/// </summary>
-		protected TSInd RowBlockSizesScan => this.rowBlockSizesScan ?? TSInd.Empty;
-		/// <summary>
-		/// Get the column block size array's accumulation array's original storage of this sparse vector which shall be null if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Complicated"/>.
-		/// </summary>
-		protected TSInd ColBlockSizesScan => this.colBlockSizesScan ?? TSInd.Empty;
-
-		/// <summary>
-		/// Get the row block size if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Simple"/>.
-		/// </summary>
-		protected TInd RowBlockSize => this.rowBlockSize;
-		/// <summary>
-		/// Get the column block size if <see cref="ISparseArray{T}.Format"/> is not of <see cref="SparseFormat.Blocking.Simple"/>.
-		/// </summary>
-		protected TInd ColBlockSize => this.colBlockSize;
-
-		/// <summary>
 		/// Create a new <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
 		/// </summary>
-		/// <param name="format">The <see cref="SparseFormat"/></param>
+		/// <param name="format">The <see cref="SparseFormat"/>. Only the combinations of <see cref="SparseFormat.Type.Coordinated"/> or <see cref="SparseFormat.Type.Compressed"/>, <see cref="SparseFormat.Major.Row"/> or <see cref="SparseFormat.Major.Column"/> and <see cref="SparseFormat.Blocking.Element"/> or <see cref="SparseFormat.Blocking.Simple"/> or <see cref="SparseFormat.Blocking.Complicated"/> are supported.</param>
 		/// <param name="defaultValue">The default value</param>
 		/// <param name="rows">The presenting number of rows</param>
 		/// <param name="cols">The presenting number of columns</param>
@@ -150,7 +109,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="format"/> is not supported or <paramref name="values"/> is too short</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="rowBlockSizes"/> or <paramref name="colBlockSizes"/> is null when it shall not be according to <paramref name="format"/></exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public SparseMatrix(SparseFormat format, long rows, long cols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, TInd rowBlockSize = default, TInd colBlockSize = default, TSInd? rowBlockSizes = null, TSInd? rowBlockSizesScan = null, TSInd? colBlockSizes = null, TSInd? colBlockSizesScan = null, T defaultValue = default)
+		protected SparseMatrix(SparseFormat format, long rows, long cols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, TInd rowBlockSize = default, TInd colBlockSize = default, TSInd? rowBlockSizes = null, TSInd? rowBlockSizesScan = null, TSInd? colBlockSizes = null, TSInd? colBlockSizesScan = null, T defaultValue = default)
 		{
 			if (!format.IsAtomic ||
 				(format.Class & (SparseFormat.Type.Coordinated | SparseFormat.Type.Compressed)) == 0 ||
@@ -240,6 +199,10 @@ namespace Althea.Arrays
 					throw new ArgumentNullException(nameof(rowBlockSizes));
 				if (colBlockSizes is null)
 					throw new ArgumentNullException(nameof(colBlockSizes));
+				if (rowBlockSizesScan is not null && rowBlockSizesScan.Length != rowBlockSizes.Length)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowBlockSizesScan));
+				if (colBlockSizesScan is not null && colBlockSizesScan.Length != colBlockSizes.Length)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colBlockSizesScan));
 				if (format.Class == SparseFormat.Type.Coordinated)
 				{
 					if (rowBlockSizes.Length != rowIndices.Length)
@@ -248,32 +211,25 @@ namespace Althea.Arrays
 						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowBlockSizes));
 					if (colBlockSizes.Length != colIndices.Length)
 						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colBlockSizes));
-					if (rowBlockSizesScan is not null && rowBlockSizesScan.Length != rowBlockSizes.Length)
-						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowBlockSizesScan));
-					if (colBlockSizesScan is not null && colBlockSizesScan.Length != colBlockSizes.Length)
-						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colBlockSizesScan));
-					if (rowBlockSizesScan is null)
-						rowBlockSizesScan = rowBlockSizes.ApplyToAlike(static (org, @new) => ExtBlas.PartialSum<TInd, TSInd, TSInd>(org, 1, @new, 1, false));
-					if (colBlockSizesScan is null)
-						colBlockSizesScan = colBlockSizes.ApplyToAlike(static (org, @new) => ExtBlas.PartialSum<TInd, TSInd, TSInd>(org, 1, @new, 1, false));
 				}
 				else
 				{
+					long rowBlocks = rowBlockSizes.Length, colBlocks = colBlockSizes.Length;
 					if (format.MajorType == SparseFormat.Major.Row)
 					{
 						if (rowIndices.Length != rows)
 							throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(rowIndices));
-						if (colIndices.Length != actualLength)
-							throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colIndices));
 					}
 					else
 					{
-						if (rowIndices.Length != actualLength)
-							throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowIndices));
 						if (colIndices.Length != cols)
 							throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(colIndices));
 					}
 				}
+				if (rowBlockSizesScan is null)
+					rowBlockSizesScan = rowBlockSizes.ApplyToAlike(static (org, @new) => ExtBlas.PartialSum<TInd, TSInd, TSInd>(org, 1, @new, 1, false));
+				if (colBlockSizesScan is null)
+					colBlockSizesScan = colBlockSizes.ApplyToAlike(static (org, @new) => ExtBlas.PartialSum<TInd, TSInd, TSInd>(org, 1, @new, 1, false));
 			}
 
 			this.values = values.AddToManager();
@@ -353,16 +309,16 @@ namespace Althea.Arrays
 			{
 				offset = SpConv.IndexFind(this.indices, true, TInd.Create(index));
 			}
+			else if(this.format.BlockType == SparseFormat.Blocking.Simple)
+			{
+				var (blockIndex, insideBlockOffset) = index.DivRem(this.BS);
+				offset = SpConv.IndexFind(this.indices, true, TInd.Create(blockIndex));
+				if (offset >= 0)
+					offset = offset * this.BS + insideBlockOffset;
+			}
 			else
 			{
-				long blockIndex = SpConv.IndexBound(this.indices, TInd.Create(index + 1), true) - 1;
-				long blockSize = this.blockSizes is null ? this.blockSize.As<TInd, long>() : (this.blockSizes + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
-				long blockOffset = (this.indices + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
-				offset = index - blockOffset;
-				if (offset >= blockSize)
-					offset = -1;
-				else
-					offset += this.blockSizesScan is null ? blockSize * blockIndex : (this.blockSizesScan + blockIndex).ToManaged<TInd, TSInd>().As<TInd, long>();
+
 			}
 			return offset;
 		}

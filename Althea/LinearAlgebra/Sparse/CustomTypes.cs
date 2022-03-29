@@ -389,6 +389,15 @@ namespace Althea.LinearAlgebra.Sparse
 			this.BlockSize = blockSize;
 			this.OtherInfo = otherInfo;
 		}
+
+		/// <summary>
+		/// Invoke <see cref="IDisposable.Dispose"/> for all storages of this wrapper.
+		/// </summary>
+		public void DisposeAll()
+		{
+			this.ValueStorages.ClearList();
+			this.ValueStorages.ClearList();
+		}
 		#endregion
 	}
 }
