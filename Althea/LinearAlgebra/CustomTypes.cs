@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.NativeTypes;
@@ -396,9 +395,9 @@ namespace Althea.LinearAlgebra
 			// check sub
 			if (sub is not null)
 			{
-				if (countRow < sub.NRows)
+				if (countRow != sub.NRows)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sub));
-				if (countCol < sub.NCols)
+				if (countCol != sub.NCols)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sub));
 			}
 			// return

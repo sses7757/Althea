@@ -1,10 +1,6 @@
-﻿using System;
-
-using Althea.Arrays;
-using Althea.Helpers;
-using Althea.Storage;
-
+﻿using Althea.Arrays;
 using Althea.SourceGenerator;
+using Althea.Storage;
 
 
 namespace Althea.LinearAlgebra.Sparse
@@ -100,94 +96,121 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region vector and matrix
 		/// <summary>
-		/// When implemented by a derived class, convert the given sparse <paramref name="vector"/> to a sparse matrix of <paramref name="format"/> and presenting number of <paramref name="rows"/>.
+		/// When implemented by a derived class, convert the given sparse <paramref name="vector"/> to a sparse matrix.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <param name="vector">The input sparse vector as a <see cref="ISparseVector{T}"/></param>
-		/// <param name="rows">The desired number of rows of the target sparse matrix (the number of columns is calculated from this)</param>
-		/// <param name="format">The desired <see cref="SparseMatrixFormat"/> of the target sparse matrix, can be anatomic</param>
-		/// <param name="target">Output the created new <see cref="ISparseMatrix{T}"/> with format fitting <paramref name="format"/> and size fitting <paramref name="rows"/></param>
+		/// <typeparam name="TInd1">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TInd2">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
+		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
+		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
+		/// <param name="vector">The input sparse vector</param>
+		/// <param name="target">The output sparse matrix with desired format as <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Format"/> and desired size as <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Size"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="vector"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool SparseVectorToMatrix<T>(ISparseVector<T> vector, long rows, SparseMatrixFormat format, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
+		public abstract bool SparseVectorToMatrix<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> vector, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
-		/// When implemented by a derived class, convert the given sparse <paramref name="format"/> to a sparse vector of given <paramref name="format"/>.
+		/// When implemented by a derived class, convert the given sparse <paramref name="matrix"/> to a sparse vector.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <param name="matrix">The input sparse matrix as a <see cref="ISparseMatrix{T}"/></param>
-		/// <param name="format">The desired <see cref="SparseVectorFormat"/> of the target sparse vector, can be anatomic</param>
-		/// <param name="target">Output the created new <see cref="ISparseVector{T}"/> with format fitting <paramref name="format"/> and desired properties (the length is the product of <see cref="IMatrixMetric.NRows"/> and <see cref="IMatrixMetric.NCols"/>)</param>
+		/// <typeparam name="TInd1">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TInd2">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
+		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
+		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
+		/// <param name="matrix">The input sparse matrix</param>
+		/// <param name="target">The output sparse vector with desired format as <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Format"/> and desired size as <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Size"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool SparseMatrixToVector<T>(ISparseMatrix<T> matrix, SparseVectorFormat format, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
+		public abstract bool SparseMatrixToVector<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> matrix, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 		#endregion
 
 		#region matrix
 		/// <summary>
 		/// When implemented by a derived class, convert the given sparse matrix <paramref name="source"/> to a dense matrix <paramref name="destination"/>.
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output array</typeparam>
+		/// <typeparam name="TSInd">The concrete storage type of input index array</typeparam>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="destination">The storage of the destination dense matrix of the same size as <paramref name="source"/></param>
 		/// <param name="ld">The leading dimension of <paramref name="destination"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool MatrixSparseToDense<T>(ISparseMatrix<T> source, Storage<T> destination, long ld) where T : unmanaged, INumber<T>;
+		public abstract bool MatrixSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> source, TS2 destination, long ld) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
-		/// When implemented by a derived class, convert the given dense matrix <paramref name="source"/> to a sparse matrix of the given <paramref name="format"/>.
+		/// When implemented by a derived class, convert the given dense matrix <paramref name="source"/> to a sparse matrix with <paramref name="threshold"/>.
 		/// </summary>
-		/// <param name="m">The number of rows of <paramref name="source"/></param>
-		/// <param name="n">The number of columns of <paramref name="source"/></param>
-		/// <param name="source">The source dense matrix to convert from</param>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output array</typeparam>
+		/// <typeparam name="TSInd">The concrete storage type of output index array</typeparam>
+		/// <param name="source">The source dense matrix to convert from, its size is in <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Size"/></param>
 		/// <param name="ld">The leading dimension of <paramref name="source"/></param>
-		/// <param name="format">The destination <see cref="SparseMatrixFormat"/> of the target sparse matrix, must be atomic</param>
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
-		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of the given properties</param>
+		/// <param name="target">Output a created new sparse matrix with desired format as <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Format"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or <paramref name="format"/> is not atomic</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/>&lt; 0</exception>
 		[AbstractApiMethod]
-		public abstract bool MatrixDenseToSparse<T>(long m, long n, Storage<T> source, long ld, SparseMatrixFormat format, out SparseArrayWrapper<T> target, float threshold = 0) where T : unmanaged, INumber<T>;
+		public abstract bool MatrixDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 source, long ld, ref SparseArrayWrapper<T, TInd, TS2, TSInd> target, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, prune the given sparse matrix <paramref name="source"/> to a new one by filtering the values less than or equals to <paramref name="threshold"/>.
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd1">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TInd2">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
+		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
+		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
 		/// <param name="source">The source sparse matrix to convert from</param>
 		/// <param name="threshold">Any element in <paramref name="source"/> less than or equals to this value will be regarded as 0</param>
-		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/>; or <paramref name="source"/> it self if no conversion is necessary</param>
+		/// <param name="target">Output a created new sparse matrix of same properties as <paramref name="source"/> while the values (and the index arrays accordingly) are pruned by <paramref name="threshold"/>; or a reference to <paramref name="source"/> if no conversion is necessary</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> &lt; 0</exception>
 		[AbstractApiMethod]
-		public abstract bool MatrixSparsePrune<T>(ISparseMatrix<T> source, float threshold, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
+		public abstract bool MatrixSparsePrune<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, double threshold, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
-		/// When implemented by a derived class, convert the format of the given sparse matrix <paramref name="source"/> to a new one which fits <paramref name="format"/>.
+		/// When implemented by a derived class, convert the format of the given sparse matrix <paramref name="source"/> to a new one which fits the <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Format"/> in <paramref name="target"/>.
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd1">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TInd2">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
+		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
+		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
 		/// <param name="source">The source sparse matrix to convert from</param>
-		/// <param name="format">The target <see cref="SparseMatrixFormat"/>, can be anatomic</param>
-		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="format"/> while representing the same matrix as <paramref name="source"/>; or <paramref name="source"/> it self if no conversion is necessary</param>
-		/// <param name="otherInfo">The target sparse matrix's <see cref="IOtherInfo"/>, default null means letting the internal implementation determine</param>
+		/// <param name="target">Output a created new sparse matrix with desired format; or a reference to <paramref name="source"/> if no conversion is necessary</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool MatrixSparseFormatConvert<T>(ISparseMatrix<T> source, SparseMatrixFormat format, out SparseArrayWrapper<T> target, IOtherInfo? otherInfo = null) where T : unmanaged, INumber<T>;
+		public abstract bool MatrixSparseFormatConvert<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
-		/// When implemented by a derived class, reshape the given sparse matrix <paramref name="source"/> to a new one with <paramref name="newNRows"/>.
+		/// When implemented by a derived class, reshape the given sparse matrix <paramref name="source"/> to a new one with new size as <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}.Size"/> in <paramref name="target"/>.
 		/// </summary>
 		/// <param name="source">The source sparse matrix to convert from</param>
-		/// <param name="newNRows">The target sparse matrix's number of rows</param>
-		/// <param name="target">Output a created new <see cref="ISparseMatrix{T}"/> of desired <paramref name="newNRows"/></param>
+		/// <param name="target">Output a created new sparse matrix with desired size; or a reference to <paramref name="source"/> if no conversion is necessary</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newNRows"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the size in <paramref name="target"/> is not a reshape of <paramref name="source"/></exception>
 		[AbstractApiMethod]
-		public abstract bool MatrixSparseReshape<T>(ISparseMatrix<T> source, long newNRows, out SparseArrayWrapper<T> target) where T : unmanaged, INumber<T>;
+		public abstract bool MatrixSparseReshape<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 		#endregion
 
 		#region index only

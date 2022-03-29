@@ -269,14 +269,14 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public T Sum()
 		{
-			T defaultSum = this.defaultValue * T.Create(((IVectorMetric)this).Length - this.values.Length);
+			T defaultSum = this.defaultValue * T.Create(this.length - this.values.Length);
 			return defaultSum + ExtBlas.AggregateSum<T, TS>(this.values, 1);
 		}
 
 		/// <inheritdoc/>
 		public T AbsSum()
 		{
-			T defaultSum = T.Abs(this.defaultValue) * T.Create(((IVectorMetric)this).Length - this.values.Length);
+			T defaultSum = T.Abs(this.defaultValue) * T.Create(this.length - this.values.Length);
 			return defaultSum + Blas.AbsoluteValueSum<T, TS>(this.values, 1);
 		}
 
@@ -286,7 +286,7 @@ namespace Althea.Arrays
 			if (this.defaultValue == T.Zero)
 				return Blas.Norm<T, TS>(this.values, 1);
 			T abs = T.Abs(this.defaultValue);
-			T defaultSum = abs * abs * T.Create(((IVectorMetric)this).Length - this.values.Length);
+			T defaultSum = abs * abs * T.Create(this.length - this.values.Length);
 			T norm = Blas.Norm<T, TS>(this.values, 1);
 			double n = (norm * norm + defaultSum).As<T, double>();
 			return Math.Sqrt(n).As<double, T>();
@@ -739,12 +739,20 @@ namespace Althea.Arrays
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
 		public SimpleBlockedSparseVector(long length, TS values!!, TSInd indices!!, TInd blockSize, T defaultValue = default) : base(length, values, indices, defaultValue)
 		{
-			if (blockSize <= TInd.Zero)
-				throw new ArgumentOutOfRangeException(nameof(blockSize), Resources.ParameterError.MustPositive);
-			if (length % blockSize.As<TInd, long>() != 0)
-				throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(blockSize));
-			if (values.Length != indices.Length * blockSize.As<TInd, long>())
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
+			try
+			{
+				if (blockSize <= TInd.Zero)
+					throw new ArgumentOutOfRangeException(nameof(blockSize), Resources.ParameterError.MustPositive);
+				if (length % blockSize.As<TInd, long>() != 0)
+					throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(blockSize));
+				if (values.Length != indices.Length * blockSize.As<TInd, long>())
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
+			}
+			catch (Exception)
+			{
+				this.Dispose();
+				throw;
+			}
 			this.blockSize = blockSize;
 		}
 
