@@ -127,12 +127,34 @@ namespace Althea.Arrays
 		static SparseVector<T, TInd, TS, TSInd> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Empty => new CoorinatedSparseVector<T, TInd, TS, TSInd>();
 
 		/// <summary>
-		/// When implemented by a derived class, create a new sparse vector from the given <paramref name="wrapper"/>.
+		/// Encapsulates a method that statically create a new sparse vector from the given <paramref name="wrapper"/>.
 		/// </summary>
 		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
 		/// <param name="vector">A created <see cref="SparseVector{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
 		/// <returns>Success or not.</returns>
-		protected abstract bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector);
+		protected delegate bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector);
+
+		/// <summary>
+		/// The list used to store the <see cref="TryCreateFromWrapper"/>s for sub-classes.s
+		/// </summary>
+		protected static readonly List<TryCreateFromWrapper> Creators = new();
+
+		/// <summary>
+		/// Statically create a new sparse vector from the given <paramref name="wrapper"/>.
+		/// </summary>
+		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
+		/// <param name="vector">A created <see cref="SparseVector{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
+		/// <returns>Success or not.</returns>
+		public static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
+		{
+			foreach (var creator in Creators)
+			{
+				if (creator(in wrapper, out vector))
+					return true;
+			}
+			vector = null;
+			return false;
+		}
 		#endregion
 
 		#region equality
@@ -378,18 +400,14 @@ namespace Althea.Arrays
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
 			var wrapper = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
 			SpComp.VectorSparseAddSparse(scalarLeft, left, right, ref wrapper);
-			try
+			if (TryCreate(in wrapper, out var vec))
 			{
-				if (left.TryCreateFromWrapper(in wrapper, out var vec))
-					return vec;
-				if (right.TryCreateFromWrapper(in wrapper, out vec))
-					return vec;
-				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+				return vec;
 			}
-			catch (Exception)
+			else
 			{
 				wrapper.DisposeAll();
-				throw;
+				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 			}
 		}
 		#endregion
@@ -533,8 +551,10 @@ namespace Althea.Arrays
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
+		private static readonly SparseFormat format = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element, SparseFormat.Major.None);
+
 		/// <inheritdoc/>
-		public override SparseFormat Format => new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element, SparseFormat.Major.None);
+		public override SparseFormat Format => format;
 
 		/// <summary>
 		/// Create a new <see cref="CoorinatedSparseVector{T, TInd, TS, TSInd}"/> with given parameters.
@@ -557,11 +577,10 @@ namespace Althea.Arrays
 
 		internal CoorinatedSparseVector() : base() { }
 
-		/// <inheritdoc/>
-		protected override bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
+		private static bool TryCreate_(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
 		{
 			vector = null;
-			if (wrapper.Format != this.Format)
+			if (wrapper.Format != format)
 				return false;
 			if (wrapper.IndexStorages.Length != 1 || wrapper.ValueStorages.Length != 1 || wrapper.Size.Length != 1)
 				return false;
@@ -569,6 +588,11 @@ namespace Althea.Arrays
 				return false;
 			vector = new CoorinatedSparseVector<T, TInd, TS, TSInd>(wrapper.Size[0], wrapper.ValueStorages[0], wrapper.IndexStorages[0], wrapper.DefaultValue);
 			return true;
+		}
+
+		static CoorinatedSparseVector()
+		{
+			Creators.Add(TryCreate_);
 		}
 		#endregion
 
@@ -661,9 +685,9 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public override SparseVector<T, TInd, TS, TSInd> FromDense(DenseVector<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0)
 		{
-			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format, default, default, default);
+			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format);
 			SpConv.VectorDenseToSparse(ref sparse, dense.Storage, dense.Stride, threshold);
-			if (this.TryCreateFromWrapper(in sparse, out var vec))
+			if (TryCreate(in sparse, out var vec))
 				return vec;
 			sparse.DisposeAll();
 			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
@@ -723,8 +747,10 @@ namespace Althea.Arrays
 
 		private long BS => this.blockSize.As<TInd, long>();
 
+		private readonly static SparseFormat format = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, SparseFormat.Major.None);
+
 		/// <inheritdoc/>
-		public override SparseFormat Format => new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, SparseFormat.Major.None);
+		public override SparseFormat Format => format;
 
 		/// <summary>
 		/// Create a new <see cref="SimpleBlockedSparseVector{T, TInd, TS, TSInd}"/> with given parameters.
@@ -758,11 +784,10 @@ namespace Althea.Arrays
 
 		internal SimpleBlockedSparseVector() : base() { }
 
-		/// <inheritdoc/>
-		protected override bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
+		private static bool TryCreate_(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
 		{
 			vector = null;
-			if (wrapper.Size.Length != 1 || wrapper.BlockSize.Length != 1 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 1)
+			if (wrapper.Format != format || wrapper.Size.Length != 1 || wrapper.BlockSize.Length != 1 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 1)
 				return false;
 			var length = wrapper.Size[0];
 			var blockSize = wrapper.BlockSize[0];
@@ -776,6 +801,11 @@ namespace Althea.Arrays
 				return false;
 			vector = new SimpleBlockedSparseVector<T, TInd, TS, TSInd>(length, values, indices, blockSize, wrapper.DefaultValue);
 			return true;
+		}
+
+		static SimpleBlockedSparseVector()
+		{
+			Creators.Add(TryCreate_);
 		}
 		#endregion
 
@@ -885,9 +915,9 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public override SparseVector<T, TInd, TS, TSInd> FromDense(DenseVector<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0)
 		{
-			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format, default, default, default);
+			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format);
 			SpConv.VectorDenseToSparse(ref sparse, dense.Storage, dense.Stride, threshold);
-			if (this.TryCreateFromWrapper(in sparse, out var vec))
+			if (TryCreate(in sparse, out var vec))
 				return vec;
 			sparse.DisposeAll();
 			throw new InvalidOperationException();

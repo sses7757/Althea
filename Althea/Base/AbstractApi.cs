@@ -61,42 +61,27 @@ namespace Althea
 	{
 		private static readonly Dictionary<object, List<RuntimeTypeHandle>> InstanceApis = new();
 
-		private static readonly Dictionary<RuntimeTypeHandle, object> __lockers = new();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static object GetLocker<TApi>() where TApi : IAbstractRuntimeApi<TApi>
-		{
-			var handle = typeof(TApi).TypeHandle;
-			if (!__lockers.TryGetValue(handle, out var locker))
-			{
-				locker = new object();
-				__lockers[handle] = locker;
-			}
-			return locker;
-		}
+		private static readonly object __locker = new();
 
 		internal static int Count<TApi>() where TApi : IAbstractRuntimeApi<TApi>
 		{
-			lock (GetLocker<TApi>())
-				return AbstractApiSelector<TApi>.APIs.Count;
+			return AbstractApiSelector<TApi>.APIs.Count;
 		}
 
 		internal static TApi Get<TApi>(int index) where TApi : IAbstractRuntimeApi<TApi>
 		{
-			lock (GetLocker<TApi>())
-				return AbstractApiSelector<TApi>.APIs[index];
+			return AbstractApiSelector<TApi>.APIs[index];
 		}
 
 		internal static int IndexOf<TApi>(TApi instance) where TApi : IAbstractRuntimeApi<TApi>
 		{
-			lock (GetLocker<TApi>())
-				return AbstractApiSelector<TApi>.APIs.IndexOf(instance);
+			return AbstractApiSelector<TApi>.APIs.IndexOf(instance);
 		}
 
 		internal static void Add<TApi>(TApi instance) where TApi : IAbstractRuntimeApi<TApi>
 		{
 			var handle = typeof(TApi).TypeHandle;
-			lock (GetLocker<TApi>())
+			lock (__locker)
 			{
 				AbstractApiSelector<TApi>.APIs.Add(instance);
 				if (InstanceApis.TryGetValue(instance, out var list))
@@ -108,17 +93,28 @@ namespace Althea
 
 		internal static void Dispose<TApi>(int index) where TApi : IAbstractRuntimeApi<TApi>
 		{
-			lock (GetLocker<TApi>())
+			lock (__locker)
 			{
 				var instance = AbstractApiSelector<TApi>.APIs[index];
-				if (InstanceApis[instance].Count == 1)
+				var apis = InstanceApis[instance];
+				if (apis.Count == 1)
+				{
 					instance.Dispose();
+				}
+				else
+				{
+					var handle = typeof(TApi).TypeHandle;
+					int find = apis.IndexOf(handle);
+					if (find != apis.Count - 1)
+						apis[find] = apis[^1];
+					apis.RemoveAt(apis.Count - 1);
+				}
 			}
 		}
 
 		internal static void Initiate<TApi>(int index, Type actualType) where TApi : IAbstractRuntimeApi<TApi>
 		{
-			lock (GetLocker<TApi>())
+			lock (__locker)
 			{
 				var instance = IAbstractRuntimeApi<TApi>.Create(actualType);
 				var old = AbstractApiSelector<TApi>.APIs[index];

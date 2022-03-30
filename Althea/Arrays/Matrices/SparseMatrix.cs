@@ -3,7 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
+using Althea.Linq;
 using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Storage;
 using Althea.NativeTypes;
@@ -12,7 +14,7 @@ using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using SpComp = Althea.LinearAlgebra.Sparse.ComputationApiSelector;
 using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
-using Althea.LinearAlgebra;
+
 
 namespace Althea.Arrays
 {
@@ -27,17 +29,16 @@ namespace Althea.Arrays
 	public abstract class SparseMatrix<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
 		IBaseMatrix<T, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixVectorMultiplyOperations<T, DenseVector<T, TS>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>,
-		IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixVectorMultiplyOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>,
-		IMatrixVectorMultiplyOperators<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixGetDiagonalVector<T, SparseVector<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixGetDiagonalVectorVariant<T, SparseVector<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixSetDiagonalVector<T, SparseVector<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixOperations<T, DenseMatrix<T, TS>, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>>,
 		IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
+		IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixUnaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
-		IMatrixBinaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
-		IMatrixBinaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>
+		IMatrixBinaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
+		IMatrixBinaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>
 		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
@@ -147,12 +148,34 @@ namespace Althea.Arrays
 		static SparseMatrix<T, TInd, TS, TSInd> IValueArray<T, SparseMatrix<T, TInd, TS, TSInd>>.Empty => new();
 
 		/// <summary>
-		/// When implemented by a derived class, create a new sparse matrix from the given <paramref name="wrapper"/>.
+		/// Encapsulates a method that statically create a new sparse matrix from the given <paramref name="wrapper"/>.
 		/// </summary>
 		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
 		/// <param name="vector">A created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
 		/// <returns>Success or not.</returns>
-		protected abstract bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? vector);
+		protected delegate bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? vector);
+
+		/// <summary>
+		/// The list used to store the <see cref="TryCreateFromWrapper"/>s for sub-classes.s
+		/// </summary>
+		protected static readonly List<TryCreateFromWrapper> Creators = new();
+
+		/// <summary>
+		/// Statically create a new sparse matrix from the given <paramref name="wrapper"/>.
+		/// </summary>
+		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
+		/// <param name="matrix">A created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
+		/// <returns>Success or not.</returns>
+		public static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
+		{
+			foreach (var creator in Creators)
+			{
+				if (creator(in wrapper, out matrix))
+					return true;
+			}
+			matrix = null;
+			return false;
+		}
 		#endregion
 
 		#region equality
@@ -209,14 +232,28 @@ namespace Althea.Arrays
 		}
 
 		/// <inheritdoc/>
-		public abstract SparseMatrix<T, TInd, TS, TSInd> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol);
+		public SparseMatrix<T, TInd, TS, TSInd> GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol)
+		{
+			var sub = new SparseArrayWrapper<T, TInd, TS, TSInd>(this.defaultValue, SparseFormat.Any);
+			SpComp.SparseMatrixGetSlice(this, MatrixSliceWrapper.Create(offsetRow, countRow, offsetCol, countCol, this), ref sub);
+			if (TryCreate(in sub, out var mat))
+				return mat;
+			sub.DisposeAll();
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+		}
 
 		/// <inheritdoc/>
-		public abstract void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, SparseMatrix<T, TInd, TS, TSInd> overwrite);
-
+		public void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, SparseMatrix<T, TInd, TS, TSInd> overwrite)
+		{
+			var sub = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(overwrite);
+			SpComp.SparseMatrixGetSlice(this, MatrixSliceWrapper.Create(offsetRow, countRow, offsetCol, countCol, this, overwrite), ref sub);
+		}
 
 		/// <inheritdoc/>
-		public abstract void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, SparseMatrix<T, TInd, TS, TSInd> value);
+		public void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, SparseMatrix<T, TInd, TS, TSInd> value)
+		{
+			SpComp.SparseMatrixSetSlice(this, MatrixSliceWrapper.Create(offsetRow, countRow, offsetCol, countCol, this, value), value);
+		}
 
 		/// <inheritdoc/>
 		public abstract void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination);
@@ -330,178 +367,237 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void MatrixMultiplyVector(SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
 		{
-			throw new NotImplementedException();
+			IMatrixVectorMultiplyOperations<T, DenseVector<T, TS>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>.CheckMatMulVec(matrix, vector, vectorOut, α, operation);
+			SpComp.MatrixSparseMultiplyVectorDense(operation, α, matrix, vector.Storage, vector.Stride, β, vectorOut.Storage, vectorOut.Stride);
 		}
 
 		/// <inheritdoc/>
-		public static void VectorMultiplyMatrix(DenseVector<T, TS> vector, SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
-		{
-			throw new NotImplementedException();
-		}
-
-		/// <inheritdoc/>
-		public static void MatrixMultiplyVector(SparseMatrix<T, TInd, TS, TSInd> matrix, SparseVector<T, TInd, TS, TSInd> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
-		{
-			throw new NotImplementedException();
-		}
-
-		/// <inheritdoc/>
-		public static void VectorMultiplyMatrix(SparseVector<T, TInd, TS, TSInd> vector, SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
-		{
-			throw new NotImplementedException();
-		}
+		public static void VectorMultiplyMatrix(DenseVector<T, TS> vector, SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None) => MatrixMultiplyVector(matrix, vector, vectorOut, α, β, operation.Transpose());
 
 		/// <inheritdoc/>
 		public static SparseVector<T, TInd, TS, TSInd> GetDiag(SparseMatrix<T, TInd, TS, TSInd> matrix, long k)
 		{
-			throw new NotImplementedException();
+			var vector = new SparseArrayWrapper<T, TInd, TS, TSInd>(matrix.defaultValue, SparseFormat.Any);
+			SpComp.SparseMatrixGetDiag(matrix, k, ref vector);
+			if (SparseVector<T, TInd, TS, TSInd>.TryCreate(in vector, out var vec))
+				return vec;
+			vector.DisposeAll();
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 
 		/// <inheritdoc/>
 		public static void GetDiag(SparseMatrix<T, TInd, TS, TSInd> matrix, long k, SparseVector<T, TInd, TS, TSInd> overwrite)
 		{
-			throw new NotImplementedException();
+			var vector = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(overwrite);
+			SpComp.SparseMatrixGetDiag(matrix, k, ref vector);
 		}
 
 		/// <inheritdoc/>
 		public static void SetDiag(SparseMatrix<T, TInd, TS, TSInd> matrix, long k, SparseVector<T, TInd, TS, TSInd> value)
 		{
-			throw new NotImplementedException();
+			SpComp.SparseMatrixSetDiag(matrix, k, value);
 		}
 
 		/// <inheritdoc/>
 		public static void AddMatrices(DenseMatrix<T, TS>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			throw new NotImplementedException();
+			IMatrixOperations<T, DenseMatrix<T, TS>, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>>.CheckMatAdd(A, scalarA, B, scalarB, C, opA, opB);
+			if (B is null || scalarB == T.Zero)
+				throw new ArgumentNullException(nameof(B));
+			SpComp.MatrixDenseAddSparse(opA, opB, scalarA, A?.Storage, A?.LeadDim ?? 1, scalarB, B, C.Storage, C.LeadDim);
 		}
 
 		/// <inheritdoc/>
 		public static void MultiplyMatries(T α, DenseMatrix<T, TS> A, SparseMatrix<T, TInd, TS, TSInd> B, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			throw new NotImplementedException();
+			var (m, _, _) = IMatrixOperations<T, DenseMatrix<T, TS>, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			SpComp.MatrixDenseMultiplySparse(opA, opB, m, α, A.Storage, A.LeadDim, B, β, C.Storage, C.LeadDim);
 		}
 
 		/// <inheritdoc/>
-		public static void AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
-		{
-			throw new NotImplementedException();
-		}
+		public static void AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None) => AddMatrices(B, scalarB, A, scalarA, C, opB, opA);
 
 		/// <inheritdoc/>
 		public static void MultiplyMatries(T α, SparseMatrix<T, TInd, TS, TSInd> A, DenseMatrix<T, TS> B, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			throw new NotImplementedException();
+			var (_, n, _) = IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			SpComp.MatrixSparseMultiplyDense(opA, opB, n, α, A, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
+		}
+
+		/// <inheritdoc/>
+		public static void AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, SparseMatrix<T, TInd, TS, TSInd> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		{
+			IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>.CheckMatAdd(A, scalarA, B, scalarB, C, opA, opB);
+			var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(C);
+			SpComp.MatrixSparseAddSparse(opA, opB, scalarA, A, scalarB, B, ref target);
+		}
+
+		/// <inheritdoc/>
+		public static void MultiplyMatries(T α, SparseMatrix<T, TInd, TS, TSInd> A, SparseMatrix<T, TInd, TS, TSInd> B, T β, SparseMatrix<T, TInd, TS, TSInd> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		{
+			IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>.CheckMatMul(α, A, B, C, opA, opB);
+			var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(C);
+			SpComp.MatrixSparseMultiplySparse(opA, opB, α, A, B, β, C, ref target);
 		}
 		#endregion
 
 		#region operators
-
 		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator *(SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vector)
 		{
-			throw new NotImplementedException();
+			if (matrix.cols != vector.Length)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vector));
+			var output = vector.Storage.ResizeAlike(matrix.rows);
+			try
+			{
+				SpComp.MatrixSparseMultiplyVectorDense(MatrixOperation.None, T.One, matrix, vector.Storage, vector.Stride, T.Zero, output, 1);
+				return new(output, matrix.rows);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
 		}
 
 		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector, SparseMatrix<T, TInd, TS, TSInd> matrix)
 		{
-			throw new NotImplementedException();
+			if (matrix.cols != vector.Length)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vector));
+			var output = vector.Storage.ResizeAlike(matrix.rows);
+			try
+			{
+				SpComp.MatrixSparseMultiplyVectorDense(MatrixOperation.Transpose, T.One, matrix, vector.Storage, vector.Stride, T.Zero, output, 1);
+				return new(output, matrix.rows);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
 		}
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(SparseMatrix<T, TInd, TS, TSInd> matrix, SparseVector<T, TInd, TS, TSInd> vector)
-		{
-			throw new NotImplementedException();
-		}
+		public static SparseMatrix<T, TInd, TS, TSInd> operator -(SparseMatrix<T, TInd, TS, TSInd> matrix) => matrix.ApplyToAlike(static m => m.Scale(-T.One));
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(SparseVector<T, TInd, TS, TSInd> vector, SparseMatrix<T, TInd, TS, TSInd> matrix)
-		{
-			throw new NotImplementedException();
-		}
+		public static SparseMatrix<T, TInd, TS, TSInd> operator *(SparseMatrix<T, TInd, TS, TSInd> matrix, T scalar) => matrix.ApplyToAlike(m => m.Scale(scalar));
 
 		/// <inheritdoc/>
-		public static SparseMatrix<T, TInd, TS, TSInd> operator -(SparseMatrix<T, TInd, TS, TSInd> matrix)
-		{
-			throw new NotImplementedException();
-		}
+		public static SparseMatrix<T, TInd, TS, TSInd> operator *(T scalar, SparseMatrix<T, TInd, TS, TSInd> matrix) => matrix * scalar;
 
 		/// <inheritdoc/>
-		public static SparseMatrix<T, TInd, TS, TSInd> operator *(SparseMatrix<T, TInd, TS, TSInd> matrix, T scalar)
-		{
-			throw new NotImplementedException();
-		}
-
-		/// <inheritdoc/>
-		public static SparseMatrix<T, TInd, TS, TSInd> operator *(T scalar, SparseMatrix<T, TInd, TS, TSInd> matrix)
-		{
-			throw new NotImplementedException();
-		}
-
-		/// <inheritdoc/>
-		public static SparseMatrix<T, TInd, TS, TSInd> operator /(SparseMatrix<T, TInd, TS, TSInd> matrix, T scalar)
-		{
-			throw new NotImplementedException();
-		}
+		public static SparseMatrix<T, TInd, TS, TSInd> operator /(SparseMatrix<T, TInd, TS, TSInd> matrix, T scalar) => matrix * (T.One / scalar);
 
 		/// <inheritdoc/>
 		public static SparseMatrix<T, TInd, TS, TSInd> operator ^(SparseMatrix<T, TInd, TS, TSInd> matrix, MatrixOperation operation)
 		{
-			throw new NotImplementedException();
+			if (operation == MatrixOperation.None)
+				return ((ICloneable<SparseMatrix<T, TInd, TS, TSInd>>)matrix).Clone();
+			if (operation == MatrixOperation.Conjugate)
+				return matrix.ApplyToClone(static m => ExtBlas.PointWiseConjugate<T, TS>(m.values, 1));
+			using var trans = matrix.Transpose();
+			var clone = ((ICloneable<SparseMatrix<T, TInd, TS, TSInd>>)trans).Clone();
+			try
+			{
+				if (operation.Transpose() != MatrixOperation.Conjugate)
+					return clone;
+				ExtBlas.PointWiseConjugate<T, TS>(clone.values, 1);
+				return clone;
+			}
+			catch (Exception)
+			{
+				clone.Dispose();
+				throw;
+			}
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, get a referenced <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> which is the transpose of this matrix.
+		/// </summary>
+		/// <returns>A referenced <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> which is the transpose of this matrix.</returns>
+		public abstract SparseMatrix<T, TInd, TS, TSInd> Transpose();
 
 		/// <inheritdoc/>
 		public static SparseMatrix<T, TInd, TS, TSInd> operator +(SparseMatrix<T, TInd, TS, TSInd> left, SparseMatrix<T, TInd, TS, TSInd> right)
 		{
-			throw new NotImplementedException();
+			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
+			SpComp.MatrixSparseAddSparse(default, default, T.One, left, T.One, right, ref target);
+			if (TryCreate(in target, out var mat))
+				return mat;
+			target.DisposeAll();
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 
 		/// <inheritdoc/>
 		public static SparseMatrix<T, TInd, TS, TSInd> operator -(SparseMatrix<T, TInd, TS, TSInd> left, SparseMatrix<T, TInd, TS, TSInd> right)
 		{
-			throw new NotImplementedException();
+			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
+			SpComp.MatrixSparseAddSparse(default, default, T.One, left, -T.One, right, ref target);
+			if (TryCreate(in target, out var mat))
+				return mat;
+			target.DisposeAll();
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 
 		/// <inheritdoc/>
 		public static SparseMatrix<T, TInd, TS, TSInd> operator *(SparseMatrix<T, TInd, TS, TSInd> left, SparseMatrix<T, TInd, TS, TSInd> right)
 		{
-			throw new NotImplementedException();
+			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
+			SpComp.MatrixSparseMultiplySparse(default, default, T.One, left, right, T.Zero, null, ref target);
+			if (TryCreate(in target, out var mat))
+				return mat;
+			target.DisposeAll();
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator +(SparseMatrix<T, TInd, TS, TSInd> left, DenseMatrix<T, TS> right)
-		{
-			throw new NotImplementedException();
-		}
+		public static DenseMatrix<T, TS> operator +(SparseMatrix<T, TInd, TS, TSInd> left, DenseMatrix<T, TS> right) => right.ApplyToAlike(m => AddMatrices(left, T.One, right, T.One, m));
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator +(DenseMatrix<T, TS> left, SparseMatrix<T, TInd, TS, TSInd> right)
-		{
-			throw new NotImplementedException();
-		}
+		public static DenseMatrix<T, TS> operator +(DenseMatrix<T, TS> left, SparseMatrix<T, TInd, TS, TSInd> right) => left.ApplyToAlike(m => AddMatrices(left, T.One, right, T.One, m));
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator -(SparseMatrix<T, TInd, TS, TSInd> left, DenseMatrix<T, TS> right)
-		{
-			throw new NotImplementedException();
-		}
+		public static DenseMatrix<T, TS> operator -(SparseMatrix<T, TInd, TS, TSInd> left, DenseMatrix<T, TS> right) => right.ApplyToAlike(m => AddMatrices(left, T.One, right, -T.One, m));
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> left, SparseMatrix<T, TInd, TS, TSInd> right)
-		{
-			throw new NotImplementedException();
-		}
+		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> left, SparseMatrix<T, TInd, TS, TSInd> right) => left.ApplyToAlike(m => AddMatrices(left, T.One, right, -T.One, m));
 
 		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator *(SparseMatrix<T, TInd, TS, TSInd> left, DenseMatrix<T, TS> right)
 		{
-			throw new NotImplementedException();
+			if (left.NCols != right.NRows)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
+			var result = left.values.ResizeAlike(left.NRows * right.NCols);
+			try
+			{
+				SpComp.MatrixSparseMultiplyDense(default, default, right.NCols, T.One, left, right.Storage, right.LeadDim, T.Zero, result, left.NRows);
+				return new(result, left.NRows, right.NCols);
+			}
+			catch (Exception)
+			{
+				result.Dispose();
+				throw;
+			}
 		}
 
 		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> left, SparseMatrix<T, TInd, TS, TSInd> right)
 		{
-			throw new NotImplementedException();
+			if (left.NCols != right.NRows)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
+			var result = right.values.ResizeAlike(left.NRows * right.NCols);
+			try
+			{
+				SpComp.MatrixDenseMultiplySparse(default, default, left.NRows, T.One, left.Storage, left.LeadDim, right, T.Zero, result, left.NRows);
+				return new(result, left.NRows, right.NCols);
+			}
+			catch (Exception)
+			{
+				result.Dispose();
+				throw;
+			}
 		}
 		#endregion
 

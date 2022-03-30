@@ -377,17 +377,18 @@ namespace Althea.LinearAlgebra.Sparse
 		}
 
 		/// <summary>
-		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with given detailed parameters.
+		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with given <paramref name="array"/>.
 		/// </summary>
-		public SparseArrayWrapper(TVal defaultValue, SparseFormat format, ReadOnlySpan<long> size, ReadOnlySpan<TSVal> values, ReadOnlySpan<TSInd> indexes, ReadOnlySpan<TInd> blockSize = default, object? otherInfo = null)
+		public static SparseArrayWrapper<TVal, TInd, TSVal, TSInd> Create(Arrays.ISparseArray<TVal, TInd, TSVal, TSInd> array!!)
 		{
-			this.DefaultValue = defaultValue;
-			this.Format = format;
-			this.Size = size;
-			this.ValueStorages = values;
-			this.IndexStorages = indexes;
-			this.BlockSize = blockSize;
-			this.OtherInfo = otherInfo;
+			SparseArrayWrapper<TVal, TInd, TSVal, TSInd> wrapper = default;
+			wrapper.DefaultValue = array.DefaultValue;
+			wrapper.Format = array.Format;
+			wrapper.Size = array.Size;
+			wrapper.ValueStorages = array.ValueStorages;
+			wrapper.IndexStorages = array.IndexStorages;
+			wrapper.BlockSize = array.BlockSize;
+			return wrapper;
 		}
 
 		/// <summary>

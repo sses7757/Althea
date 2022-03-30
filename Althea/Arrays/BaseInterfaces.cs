@@ -1,4 +1,6 @@
-﻿using Althea.Helpers;
+﻿using System.Diagnostics.CodeAnalysis;
+
+using Althea.Helpers;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 

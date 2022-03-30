@@ -316,10 +316,40 @@ namespace Althea.Arrays
 
 		#region operators
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!) => vector.ApplyToAlike(v => MatrixMultiplyVector(matrix, vector, v, T.One));
+		public static DenseVector<T, TS> operator *(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!)
+		{
+			if (matrix.cols != vector.Length)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vector));
+			var output = vector.Storage.ResizeAlike(matrix.rows);
+			try
+			{
+				Blas.GeneralMatrixMultiplyVector(MatrixOperation.None, matrix.rows, matrix.cols, T.One, matrix.values, matrix.leadDim, vector.Storage, vector.Stride, T.Zero, output, 1);
+				return new(output, matrix.rows);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
+		}
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector!!, DenseMatrix<T, TS> matrix!!) => vector.ApplyToAlike(v => VectorMultiplyMatrix(vector, matrix, v, T.One));
+		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector!!, DenseMatrix<T, TS> matrix!!)
+		{
+			if (matrix.cols != vector.Length)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vector));
+			var output = vector.Storage.ResizeAlike(matrix.rows);
+			try
+			{
+				Blas.GeneralMatrixMultiplyVector(MatrixOperation.Transpose, matrix.rows, matrix.cols, T.One, matrix.values, matrix.leadDim, vector.Storage, vector.Stride, T.Zero, output, 1);
+				return new(output, matrix.rows);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
+		}
 
 		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> matrix!!) => matrix.ApplyToClone(static m => m.Scale(-T.One));
@@ -334,7 +364,24 @@ namespace Althea.Arrays
 		public static DenseMatrix<T, TS> operator /(DenseMatrix<T, TS> matrix!!, T scalar) => matrix.ApplyToClone(m => m.Scale(T.One / scalar));
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator ^(DenseMatrix<T, TS> matrix!!, MatrixOperation operation) => matrix.ApplyToAlike(m => AddMatrices(matrix, T.One, null, default, m));
+		public static DenseMatrix<T, TS> operator ^(DenseMatrix<T, TS> matrix!!, MatrixOperation operation)
+		{
+			if (operation == MatrixOperation.None)
+				return ((ICloneable<DenseMatrix<T, TS>>)matrix).Clone();
+			if (operation == MatrixOperation.Conjugate)
+				return matrix.ApplyToClone(static m => ExtBlas.PointWiseConjugate<T, TS>(m.values, 1));
+			var output = matrix.values.ResizeAlike(matrix.rows * matrix.cols);
+			try
+			{
+				ExtBlas.GeneralMatricesAdd(operation, default, matrix.cols, matrix.rows, T.One, matrix.values, matrix.leadDim, T.Zero, (TS?)null, 1, output, matrix.cols);
+				return new(output, matrix.rows, matrix.cols);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
+		}
 
 		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator +(DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!) => left.ApplyToAlike(m => AddMatrices(left, T.One, right, T.One, m));

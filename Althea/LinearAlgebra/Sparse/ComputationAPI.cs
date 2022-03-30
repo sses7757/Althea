@@ -188,6 +188,46 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		[AbstractApiMethod]
 		public abstract bool VectorSparseOuter<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(bool conjY, ISparseArray<T, TInd1, TS1, TSInd1> x, ISparseArray<T, TInd2, TS2, TSInd2> y, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TInd3 : unmanaged, IBinaryInteger<TInd3> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd1 : class, IStorage<TInd1, TSInd1> where TSInd2 : class, IStorage<TInd2, TSInd2> where TSInd3 : class, IStorage<TInd3, TSInd3>;
+
+		/// <summary>
+		/// When implemented by a derived class, get the <paramref name="k"/>-th diagonal of the given sparse matrix <paramref name="source"/> and write the result to <paramref name="vector"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd1">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TInd2">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
+		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
+		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
+		/// <param name="source">The input sparse matrix to get diagonal</param>
+		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+		/// <param name="vector">Output the sliced sub matrix of <paramref name="source"/>. If the storages inside is not null, they will be overwritten.</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the storage(s) in <paramref name="vector"/> cannot be overwritten</exception>
+		[AbstractApiMethod]
+		public abstract bool SparseMatrixGetDiag<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, long k, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> vector) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+
+		/// <summary>
+		/// When implemented by a derived class, set the <paramref name="k"/>-th diagonal of the given sparse <paramref name="matrix"/> to the <paramref name="vector"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd1">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TInd2">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
+		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
+		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
+		/// <param name="matrix">The sparse matrix to set diagonal</param>
+		/// <param name="k">The diagonal index: 0 for diagonal, 1 for super-diagonal at one above, -1 for sub-diagonal at one below, etc.</param>
+		/// <param name="vector">The sub sparse matrix to overwrite the sliced <paramref name="matrix"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="k"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If <paramref name="vector"/> cannot overwrite the sliced <paramref name="matrix"/></exception>
+		[AbstractApiMethod]
+		public abstract bool SparseMatrixSetDiag<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd2, TS2, TSInd2> matrix, long k, ISparseArray<T, TInd1, TS1, TSInd1> vector) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 		#endregion
 
 		#region matrix
@@ -209,7 +249,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the storage(s) in <paramref name="slice"/> cannot be overwritten</exception>
 		[AbstractApiMethod]
-		public abstract bool SparseMatrixSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, MatrixSliceWrapper slice, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> sub) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+		public abstract bool SparseMatrixGetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, MatrixSliceWrapper slice, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> sub) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
 		/// When implemented by a derived class, set the given sparse <paramref name="matrix"/>'s <paramref name="slice"/> to the <paramref name="sub"/> matrix.
@@ -226,7 +266,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="sub">The sub sparse matrix to overwrite the sliced <paramref name="matrix"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is default</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot overwrite the sliced <paramref name="matrix"/></exception>
 		[AbstractApiMethod]
 		public abstract bool SparseMatrixSetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd2, TS2, TSInd2> matrix, MatrixSliceWrapper slice, ISparseArray<T, TInd1, TS1, TSInd1> sub) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
@@ -243,7 +283,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="MatrixOperation"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
-		/// <param name="A">The input dense matrix</param>
+		/// <param name="A">The input dense matrix that can be null to prevent adding</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="β">The scalar to multiply to <paramref name="B"/></param>
 		/// <param name="B">The input sparse matrix</param>
@@ -253,7 +293,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
 		[AbstractApiMethod]
-		public abstract bool MatrixDenseAddSparse<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation opA, MatrixOperation opB, T α, TS1 A, long lda, T β, ISparseArray<T, TInd, TS2, TSInd> B, TS3 C, long ldc) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract bool MatrixDenseAddSparse<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation opA, MatrixOperation opB, T α, TS1? A, long lda, T β, ISparseArray<T, TInd, TS2, TSInd> B, TS3 C, long ldc) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd : class, IStorage<TInd, TSInd>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the sparse matrices addition: <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
