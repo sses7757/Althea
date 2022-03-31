@@ -100,9 +100,11 @@ namespace Althea.Solver
 
 			// sort first to reduce errors
 			int length = input.Length;
-			Span<(T, IntPtr)> temp = length.CheckStackLimit<(T, IntPtr)>() ?? stackalloc (T, IntPtr)[length];
+			using var tempArray = length.CheckStackLimit<(T, IntPtr)>();
+			Span<(T, IntPtr)> temp = tempArray.IsEmpty ? stackalloc (T, IntPtr)[length] : tempArray.Data;
+			using var tempKeys = length.CheckStackLimit<double>();
+			Span<double> keys = tempKeys.IsEmpty ? stackalloc double[length] : tempKeys.Data;
 			Span<(T val, TVec vec)> values = MemoryMarshal.CreateSpan(ref Unsafe.As<(T, IntPtr), (T, TVec)>(ref temp[0]), length);
-			Span<double> keys = length.CheckStackLimit<double>() ?? stackalloc double[length];
 			TVec[] vectors = unjoinedVectors.ToArray();
 			for (int i = 0; i < length; i++)
 			{

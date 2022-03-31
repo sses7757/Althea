@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.Arm;
 using System.Text;
 
@@ -6,6 +8,7 @@ using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
+using static Althea.Helpers.SpanHelper;
 
 namespace Althea.Helpers
 {
@@ -553,7 +556,8 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Print out 1D sparse array by <see cref="Settings"/> or the override <paramref name="precision"/> settings.
 		/// </summary>
-		/// <typeparam name="T">The supported data type</typeparam>
+		/// <typeparam name="TVal">The supported data type</typeparam>
+		/// <typeparam name="TInd">The supported index type</typeparam>
 		/// <param name="values">The values of the sparse vector to print</param>
 		/// <param name="indices">The indices of the sparse vector to print</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
@@ -564,9 +568,9 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
 		/// <exception cref="FormatException">If any value in <paramref name="values"/> or <paramref name="indices"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToSparseVectorString<T>(this Span<T> values, ReadOnlySpan<long> indices, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
+		public static string ToSparseVectorString<TVal, TInd>(this Span<TVal> values, ReadOnlySpan<TInd> indices, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where TVal : ISpanFormattable, IAdditiveIdentity<TVal, TVal>, IEquatable<TVal> where TInd : ISpanFormattable
 		{
-			return ToSparseVectorString((ReadOnlySpan<T>)values, indices, precision, prefix, postfix, provider);
+			return ToSparseVectorString((ReadOnlySpan<TVal>)values, indices, precision, prefix, postfix, provider);
 		}
 
 		/// <summary>
@@ -982,6 +986,144 @@ namespace Althea.Helpers
 			{
 				item.Value?.Dispose();
 			}
+		}
+		#endregion
+	}
+
+
+	/// <summary>
+	/// A static class that contains helper functions for <see cref="Span{T}"/>s and <see cref="ReadOnlySpan{T}"/>s.
+	/// </summary>
+	public static class SpanHelper
+	{
+		#region create
+		/// <summary>
+		/// Creates a new read-only span over a portion of a regular managed object.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="value">The reference to the first element</param>
+		/// <param name="length">The number of elements in <paramref name="value"/></param>
+		/// <returns>A <see cref="ReadOnlySpan{T}"/> on <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ReadOnlySpan<T> CreateReadOnlySpan<T>(in T value, int length) => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in value), length);
+
+		/// <summary>
+		/// Creates a new read-only span over a portion of a regular managed object.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="value">The reference to the first element</param>
+		/// <param name="length">The number of elements in <paramref name="value"/></param>
+		/// <returns>A <see cref="Span{T}"/> on <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<T> CreateSpan<T>(ref T value, int length) => MemoryMarshal.CreateSpan(ref value, length);
+		#endregion
+
+		#region temporary span
+		/// <summary>
+		/// The ref struct used as a temporary <see cref="Span{T}"/>
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		public readonly ref struct TemporarySpan<T> where T : notnull
+		{
+			/// <summary>
+			/// Get the underlying <see cref="Span{T}"/>.
+			/// </summary>
+			public Span<T> Data { get; }
+
+			/// <summary>
+			/// Check whether this <see cref="TemporarySpan{T}"/> is empty or not.
+			/// </summary>
+			public bool IsEmpty => Data.IsEmpty;
+
+			private readonly byte[]? array;
+
+			internal TemporarySpan(int length)
+			{
+				this.array = ArrayPool<byte>.Shared.Rent(length * Unsafe.SizeOf<T>());
+				this.Data = CreateSpan(ref Unsafe.As<byte, T>(ref this.array[0]), length);
+			}
+
+			/// <summary>
+			/// Return this temporary span's underlying array if it is rented from <see cref="ArrayPool{T}"/>.
+			/// </summary>
+			public void Dispose()
+			{
+				if (this.array is not null)
+					ArrayPool<byte>.Shared.Return(this.array);
+			}
+		}
+
+		/// <summary>
+		/// Check whether the given <paramref name="length"/> and type <typeparamref name="T"/> fits the <see cref="Settings.StackAllocLimit"/> or not.<br/>
+		/// If the size is small, array of <typeparamref name="T"/> will not be created and you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="length">The desired length to allocate</param>
+		/// <returns>The allocated or rented array inside a disposable <see cref="TemporarySpan{T}"/> or a empty one.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TemporarySpan<T> CheckStackLimit<T>(this int length) where T : notnull
+		{
+			if (length * Unsafe.SizeOf<T>() > Settings.StackAllocLimit)
+				return new(length);
+			else
+				return default;
+		}
+		#endregion
+	}
+
+
+	/// <summary>
+	/// A static class that contains helper functions using reflections
+	/// </summary>
+	public static class ReflectionHelper
+	{
+		#region generic type string
+		/// <summary>
+		/// Get the name string representation of given <paramref name="type"/> together with its generic parameters
+		/// </summary>
+		/// <param name="type">The given <see cref="Type"/> to get name</param>
+		/// <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
+		public static string GetGenericString(this Type type)
+		{
+			string name = type.Name;
+			if (type.IsGenericType)
+			{
+				var args = type.GenericTypeArguments;
+				name += $"<{string.Join(", ", args.Select(a => a.GetGenericString()).ToArray())}>";
+			}
+			return name;
+		}
+
+		internal static Type? GetTypeWithPostfix(this Type type, string postfix, int skipGeneric = 0)
+		{
+			Type[] generics = type.GenericTypeArguments;
+			string fullName = type.AssemblyQualifiedName ?? throw new ArgumentException(ParameterError.UnexpectedValue, nameof(type));
+			int genericStart = fullName.IndexOf('`');
+			string postfixedName;
+			if (genericStart >= 0)
+			{
+				int genericEnd = fullName.IndexOf("]]");
+				if (genericEnd < 0)
+					throw new ArgumentException(ParameterError.UnexpectedValue, nameof(type));
+				genericEnd += 2;
+				if (generics.Length > skipGeneric)
+				{
+					generics = generics[skipGeneric..];
+					var genericNames = generics.Select(static g => g.AssemblyQualifiedName).ToArray();
+					postfixedName = fullName[..genericStart] + $"`{generics.Length}[[{string.Join("],[", genericNames)}]]" + fullName[genericEnd..];
+				}
+				else
+				{
+					postfixedName = fullName[..genericStart] + fullName[genericEnd..];
+				}
+			}
+			else
+			{
+				postfixedName = fullName;
+			}
+			postfixedName += postfix;
+			// return
+			return Type.GetType(postfixedName) ?? throw new TypeAccessException();
 		}
 		#endregion
 	}

@@ -51,10 +51,10 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public long NCols => this.cols;
 
-		ReadOnlySpan<long> IValueArray<T, DenseMatrix<T, TS>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.rows, 2);
-		ReadOnlySpan<long> IPitchedArray<T>.Size => ReflectionHelper.CreateReadOnlySpan(in this.rows, 2);
-		ReadOnlySpan<long> IPitchedArray<T>.Strides => ReflectionHelper.CreateReadOnlySpan(in this.__stride1, 3);
-		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => ReflectionHelper.CreateReadOnlySpan(in this.__ld, 2);
+		ReadOnlySpan<long> IValueArray<T, DenseMatrix<T, TS>>.Size => SpanHelper.CreateReadOnlySpan(in this.rows, 2);
+		ReadOnlySpan<long> IPitchedArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.rows, 2);
+		ReadOnlySpan<long> IPitchedArray<T>.Strides => SpanHelper.CreateReadOnlySpan(in this.__stride1, 3);
+		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => SpanHelper.CreateReadOnlySpan(in this.__ld, 2);
 
 		private DenseMatrix()
 		{
@@ -447,7 +447,7 @@ namespace Althea.Arrays
 		}
 
 		/// <inheritdoc/>
-		public DenseMatrix<T, TS> JsonDeserialize(string json!!)
+		public static DenseMatrix<T, TS> JsonDeserialize(string json!!)
 		{
 			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
 			return new(repr.Values, repr.Rows, repr.Cols, repr.LeadDim);
@@ -471,7 +471,8 @@ namespace Althea.Arrays
 			int rows = Math.Min((int)this.rows, settings.Value.MatrixRow);
 			int cols = Math.Min((int)this.cols, settings.Value.MatrixColumn);
 			int length = rows * cols;
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			using var temp = length.CheckStackLimit<T>();
+			Span<T> values = temp.IsEmpty ? stackalloc T[length] : temp.Data;
 			this.values.ToManaged2D(this.leadDim, values, rows, cols);
 			return values.ToMatrixString(rows, this.cols - cols, settings.Value.Precision) + (this.rows == rows ? "" : string.Format(Resources.Print.MoreRows, this.rows - rows));
 		}

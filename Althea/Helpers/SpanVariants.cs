@@ -186,9 +186,17 @@ namespace Althea.Helpers
 			// otherwise
 			T value = this._span[index];
 			// allocate temp
-			var heapArray = this._size.CheckStackLimit<T>();
-			var tmpPtr = stackalloc byte[heapArray is null ? 0 : Unsafe.SizeOf<T>() * this._size];
-			Span<T> temp = heapArray ?? new Span<T>(tmpPtr, this._size);
+			using var tempArray = this._size.CheckStackLimit<T>();
+			Span<T> temp;
+			if (tempArray.IsEmpty)
+			{
+				byte* ptr = stackalloc byte[this._size * Unsafe.SizeOf<T>()];
+				temp = SpanHelper.CreateSpan(ref Unsafe.AsRef<T>(ptr), this._size);
+			}
+			else
+			{
+				temp = tempArray.Data;
+			}
 			// copy
 			if (index > 0)
 				this._span[..index].CopyTo(temp);

@@ -91,7 +91,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="y"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is out of range or <paramref name="threshold"/> &lt; 0</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, TS1 x, long strideX, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>;
 		#endregion
 
 		#region vector and matrix

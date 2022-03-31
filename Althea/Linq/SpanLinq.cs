@@ -1315,7 +1315,8 @@ namespace Althea.Linq
 			if (span.Length <= 1)
 				return true;
 			int len = span.Length;
-			Span<T> temp = len.CheckStackLimit<T>() ?? stackalloc T[len];
+			using var tempArray = len.CheckStackLimit<T>();
+			Span<T> temp = tempArray.IsEmpty ? stackalloc T[len] : tempArray.Data;
 			var slice = temp[..0];
 			int now = 0;
 			for (int i = 0; i < len; i++)

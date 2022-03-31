@@ -37,7 +37,7 @@ namespace Althea.Arrays
 		IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixUnaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
-		IMatrixBinaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
+		IMatrixBinaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>, DenseMatrix<T, TS >>,
 		IMatrixBinaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>
 		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
@@ -51,11 +51,11 @@ namespace Althea.Arrays
 
 		private readonly T defaultValue;
 
-		ReadOnlySpan<long> IValueArray<T, SparseMatrix<T, TInd, TS, TSInd>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.rows, 2);
+		ReadOnlySpan<long> IValueArray<T, SparseMatrix<T, TInd, TS, TSInd>>.Size => SpanHelper.CreateReadOnlySpan(in this.rows, 2);
 
-		ReadOnlySpan<long> ISparseArray<T>.Size => ReflectionHelper.CreateReadOnlySpan(in this.rows, 2);
-		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => ReflectionHelper.CreateReadOnlySpan(in this.values, 1);
-		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => ReflectionHelper.CreateReadOnlySpan(in this.rowIndices, 2);
+		ReadOnlySpan<long> ISparseArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.rows, 2);
+		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => SpanHelper.CreateReadOnlySpan(in this.values, 1);
+		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => SpanHelper.CreateReadOnlySpan(in this.rowIndices, 2);
 		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => default;
 
 		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.rowIndices?.IsValid() ?? false) && (this.colIndices?.IsValid() ?? false);
@@ -145,37 +145,7 @@ namespace Althea.Arrays
 			this.values = TS.Empty; this.rowIndices = TSInd.Empty; this.colIndices = TSInd.Empty;
 		}
 
-		static SparseMatrix<T, TInd, TS, TSInd> IValueArray<T, SparseMatrix<T, TInd, TS, TSInd>>.Empty => new();
-
-		/// <summary>
-		/// Encapsulates a method that statically create a new sparse matrix from the given <paramref name="wrapper"/>.
-		/// </summary>
-		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
-		/// <param name="vector">A created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
-		/// <returns>Success or not.</returns>
-		protected delegate bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? vector);
-
-		/// <summary>
-		/// The list used to store the <see cref="TryCreateFromWrapper"/>s for sub-classes.s
-		/// </summary>
-		protected static readonly List<TryCreateFromWrapper> Creators = new();
-
-		/// <summary>
-		/// Statically create a new sparse matrix from the given <paramref name="wrapper"/>.
-		/// </summary>
-		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
-		/// <param name="matrix">A created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
-		/// <returns>Success or not.</returns>
-		public static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
-		{
-			foreach (var creator in Creators)
-			{
-				if (creator(in wrapper, out matrix))
-					return true;
-			}
-			matrix = null;
-			return false;
-		}
+		static SparseMatrix<T, TInd, TS, TSInd> IValueArray<T, SparseMatrix<T, TInd, TS, TSInd>>.Empty => new CoordinateSparseMatrix<T, TInd, TS, TSInd>();
 		#endregion
 
 		#region equality
@@ -236,10 +206,7 @@ namespace Althea.Arrays
 		{
 			var sub = new SparseArrayWrapper<T, TInd, TS, TSInd>(this.defaultValue, SparseFormat.Any);
 			SpComp.SparseMatrixGetSlice(this, MatrixSliceWrapper.Create(offsetRow, countRow, offsetCol, countCol, this), ref sub);
-			if (TryCreate(in sub, out var mat))
-				return mat;
-			sub.DisposeAll();
-			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+			return Create(sub);
 		}
 
 		/// <inheritdoc/>
@@ -524,10 +491,7 @@ namespace Althea.Arrays
 		{
 			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
 			SpComp.MatrixSparseAddSparse(default, default, T.One, left, T.One, right, ref target);
-			if (TryCreate(in target, out var mat))
-				return mat;
-			target.DisposeAll();
-			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+			return Create(target);
 		}
 
 		/// <inheritdoc/>
@@ -535,10 +499,7 @@ namespace Althea.Arrays
 		{
 			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
 			SpComp.MatrixSparseAddSparse(default, default, T.One, left, -T.One, right, ref target);
-			if (TryCreate(in target, out var mat))
-				return mat;
-			target.DisposeAll();
-			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+			return Create(target);
 		}
 
 		/// <inheritdoc/>
@@ -546,10 +507,7 @@ namespace Althea.Arrays
 		{
 			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
 			SpComp.MatrixSparseMultiplySparse(default, default, T.One, left, right, T.Zero, null, ref target);
-			if (TryCreate(in target, out var mat))
-				return mat;
-			target.DisposeAll();
-			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+			return Create(target);
 		}
 
 		/// <inheritdoc/>
@@ -621,13 +579,18 @@ namespace Althea.Arrays
 		/// <param name="defaultValue">The target default value</param>
 		/// <param name="threshold">The threshold used to truncate to sparse array</param>
 		/// <returns>The created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/>.</returns>
-		public abstract SparseMatrix<T, TInd, TS, TSInd> FromDense(DenseVector<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0);
+		public static SparseMatrix<T, TInd, TS, TSInd> FromDense(DenseMatrix<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0)
+		{
+			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format);
+			SpConv.MatrixDenseToSparse(dense.Storage, dense.LeadDim, ref sparse, threshold);
+			return Create(sparse);
+		}
 
 		/// <inheritdoc/>
 		public abstract SparseMatrix<T, TInd, TS, TSInd> CreateAlike();
 		#endregion
 
-		#region serialization
+		#region string
 		/// <summary>
 		/// The <see cref="JsonSerializerOptions"/> used for <see cref="JsonSerialize"/> and <see cref="JsonDeserialize(string)"/>.
 		/// </summary>
@@ -640,11 +603,6 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public abstract string JsonSerialize();
 
-		/// <inheritdoc/>
-		public abstract SparseMatrix<T, TInd, TS, TSInd> JsonDeserialize(string json);
-		#endregion
-
-		#region string
 		static string IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.StringMain => nameof(SparseMatrix<T, TInd, TS, TSInd>);
 
 		static IEnumerable<string> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyNames => new[] { "DataType", "IndexType", "Format", "DefaultValue", "Values", "RowIndices", "ColumnIndices" };
@@ -657,5 +615,236 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public abstract string Print(PrintSettings? settings = null);
 		#endregion
+
+		#region protected static
+		/// <summary>
+		/// Encapsulates a method that statically create a new sparse matrix from the given <paramref name="wrapper"/>.
+		/// </summary>
+		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
+		/// <param name="matrix">A created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
+		/// <returns>Success or not.</returns>
+		protected delegate bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix);
+
+		/// <summary>
+		/// The list used to store the <see cref="TryCreateFromWrapper"/>s for sub-classes.
+		/// </summary>
+		/// <remarks>Any sub-class that inherits <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> SHALL add its own <see cref="TryCreateFromWrapper"/> implementation to this list.</remarks>
+		protected static readonly List<TryCreateFromWrapper> Creators = new();
+
+		/// <summary>
+		/// Statically create a new sparse matrix from the given <paramref name="wrapper"/>.
+		/// </summary>
+		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
+		/// <returns>A created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/>.</returns>
+		/// <exception cref="NotSupportedException">If none of the creators in sub-classes can be used to create a <see cref="SparseMatrix{T, TInd, TS, TSInd}"/></exception>
+		public static SparseMatrix<T, TInd, TS, TSInd> Create(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper)
+		{
+			foreach (var creator in Creators)
+			{
+				if (creator(in wrapper, out var mat))
+					return mat;
+			}
+			wrapper.DisposeAll();
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+		}
+
+		/// <summary>
+		/// Encapsulates a method that statically deserialize the given <paramref name="json"/> to a new sparse matrix.
+		/// </summary>
+		/// <param name="json">The JSON string to create from.</param>
+		/// <param name="matrix">A created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> from the given <paramref name="json"/></param>
+		/// <returns>Success or not.</returns>
+		protected delegate bool TryDeserialize(string json, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix);
+
+		/// <summary>
+		/// The list used to store the JSON deserializers for sub-classes.
+		/// </summary>
+		/// <remarks>Any sub-class that inherits <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> SHALL add its own <see cref="TryDeserialize"/> implementation to this list.</remarks>
+		protected static readonly List<TryDeserialize> Deserializers = new();
+
+		/// <inheritdoc/>
+		public static SparseMatrix<T, TInd, TS, TSInd> JsonDeserialize(string json!!)
+		{
+			foreach (var deserializer in Deserializers)
+			{
+				if (deserializer(json, out var mat))
+					return mat;
+			}
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+		}
+		#endregion
+	}
+
+
+	/// <summary>
+	/// The concrete element-wise coordinated sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
+	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
+	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+	public sealed class CoordinateSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
+		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+	{
+		#region basic
+		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
+
+		private bool rowMajor;
+
+		/// <inheritdoc/>
+		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
+
+		/// <summary>
+		/// Create a new <see cref="CoordinateSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
+		/// </summary>
+		/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
+		/// <param name="defaultValue">The default value</param>
+		/// <param name="rows">The presenting number of rows</param>
+		/// <param name="cols">The presenting number of columns</param>
+		/// <param name="values">The original value array</param>
+		/// <param name="rowIndices">The original row index array</param>
+		/// <param name="colIndices">The original column index array</param>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
+		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
+		public CoordinateSparseMatrix(bool rowMajor, long rows, long cols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default) : base(rows, cols, values, rowIndices, colIndices, defaultValue)
+		{
+			this.rowMajor = rowMajor;
+			long nnz = values.Length;
+			if (rowIndices.Length != nnz)
+			{
+				this.Dispose();
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowIndices));
+			}
+			if (colIndices.Length != nnz)
+			{
+				this.Dispose();
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colIndices));
+			}
+		}
+
+		internal CoordinateSparseMatrix() : base() { }
+		#endregion
+
+		#region implementation
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected override long GetValueOffset(long row, long col)
+		{
+			TInd x = TInd.Create(row), y = TInd.Create(col);
+			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
+			if (!this.rowMajor)
+			{
+				(x, y) = (y, x);
+				(xInd, yInd) = (yInd, xInd);
+			}
+			long find = SpConv.IndexFind(xInd, true, x);
+			if (find < 0)
+				return -1;
+			long lower = SpConv.IndexBound(xInd, x, true);
+			long upper = SpConv.IndexBound(xInd, x, false);
+			find = SpConv.IndexFind(yInd.MakeReference(lower, upper - lower), true, y);
+			if (find < 0)
+				return -1;
+			return find + lower;
+		}
+
+		/// <inheritdoc/>
+		public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
+		{
+			if (destination is not CoordinateSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue)
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
+			if (mat.Length != this.Length || mat.NStored != this.NStored)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
+			mat.rowMajor = this.rowMajor;
+			this.Storage.CopyTo<T, TS, TS>(destination.Storage);
+			this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
+			this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
+		}
+
+		/// <inheritdoc/>
+		public override CoordinateSparseMatrix<T, TInd, TS, TSInd> Transpose() => new(!this.rowMajor, this.NCols, this.NRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage);
+
+		/// <inheritdoc/>
+		public override CoordinateSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike());
+
+		/// <inheritdoc/>
+		public override string Print(PrintSettings? settings = null)
+		{
+			var ps = settings ?? Settings.PrintSetting;
+			int nnz = (int)Math.Min(this.NStored, ps.ArrayLength);
+			using var tempVal = nnz.CheckStackLimit<T>();
+			using var tempInd1 = nnz.CheckStackLimit<TInd>();
+			using var tempInd2 = nnz.CheckStackLimit<TInd>();
+			Span<T> values = tempVal.IsEmpty ? stackalloc T[nnz] : tempVal.Data;
+			Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
+			Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
+			this.Storage.ToManaged(values);
+			this.RowIndexStorage.ToManaged(rowInd);
+			this.ColIndexStorage.ToManaged(colInd);
+			return values.ToSparseMatrixString<T, TInd>(rowInd, colInd, ps.Precision) + (nnz == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - nnz));
+		}
+		#endregion
+
+		#region serialization
+		private record struct Repr(bool RowMajor, long NRows, long NCols, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
+
+		private CoordinateSparseMatrix(Repr repr) : this(repr.RowMajor, repr.NRows, repr.NCols, repr.Values, repr.RowIndices, repr.ColIndices, repr.Default) { }
+
+		/// <inheritdoc/>
+		public override string JsonSerialize() => JsonSerializer.Serialize(new Repr(this.rowMajor, this.NRows, this.NCols, this.DefaultValue, this.Storage, this.RowIndexStorage, this.ColIndexStorage), JsonOptions);
+
+		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
+		{
+			try
+			{
+				matrix = new CoordinateSparseMatrix<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
+				return true;
+			}
+			catch (Exception)
+			{
+				matrix = null;
+				return false;
+			}
+		}
+
+		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
+		{
+			matrix = null;
+			if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 0 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
+				return false;
+			long rows = wrapper.Size[0], cols = wrapper.Size[1];
+			TS values = wrapper.ValueStorages[0];
+			TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
+			if (values.Length > rows * cols)
+				return false;
+			if (values.Length != rowIndices.Length || values.Length != colIndices.Length)
+				return false;
+			matrix = new CoordinateSparseMatrix<T, TInd, TS, TSInd>(wrapper.Format.MajorType == SparseFormat.Major.Row, rows, cols, values, rowIndices, colIndices, wrapper.DefaultValue);
+			return true;
+		}
+
+		static CoordinateSparseMatrix()
+		{
+			Creators.Add(TryCreate);
+			Deserializers.Add(TryJsonDeserialize);
+		}
+		#endregion
+	}
+
+
+	/// <summary>
+	/// The concrete element-wise compressed sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
+	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
+	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+	public sealed class CompressSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
+		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+	{
+
 	}
 }

@@ -32,10 +32,10 @@ namespace Althea.Arrays
 		private readonly long outerSize;
 		private readonly TS values;
 
-		ReadOnlySpan<long> IValueArray<T, DenseVector<T, TS>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);
-		ReadOnlySpan<long> IPitchedArray<T>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);
-		ReadOnlySpan<long> IPitchedArray<T>.Strides => ReflectionHelper.CreateReadOnlySpan(in this.stride, 1);
-		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => ReflectionHelper.CreateReadOnlySpan(in this.outerSize, 1);
+		ReadOnlySpan<long> IValueArray<T, DenseVector<T, TS>>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
+		ReadOnlySpan<long> IPitchedArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
+		ReadOnlySpan<long> IPitchedArray<T>.Strides => SpanHelper.CreateReadOnlySpan(in this.stride, 1);
+		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => SpanHelper.CreateReadOnlySpan(in this.outerSize, 1);
 
 		private DenseVector()
 		{
@@ -276,7 +276,7 @@ namespace Althea.Arrays
 		}
 
 		/// <inheritdoc/>
-		public DenseVector<T, TS> JsonDeserialize(string json!!)
+		public static DenseVector<T, TS> JsonDeserialize(string json!!)
 		{
 			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
 			return new(repr.Values, repr.Values.Length + repr.Stride - 1, repr.Stride);
@@ -298,7 +298,8 @@ namespace Althea.Arrays
 		{
 			settings ??= Settings.PrintSetting;
 			int length = Math.Min((int)this.values.Length, settings.Value.ArrayLength);
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
+			using var temp = length.CheckStackLimit<T>();
+			Span<T> values = temp.IsEmpty ? stackalloc T[length] : temp.Data;
 			this.values.ToManaged(values);
 			return values.ToVectorString(settings.Value.Precision) + (length == this.values.Length ? "" : string.Format(Resources.Print.MoreStored, this.values.Length - length));
 		}

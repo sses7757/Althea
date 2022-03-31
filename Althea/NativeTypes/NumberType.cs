@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 
 
@@ -228,7 +227,7 @@ namespace Althea.NativeTypes
 		/// Check whether the given <paramref name="value"/> contains only real value or not.
 		/// </summary>
 		/// <param name="value">The given value of type <typeparamref name="T"/> to check</param>
-		public static bool IsRealValue(T value) => !IsComplex || T.Abs(value * T.Sign(value)) == value;1 
+		public static bool IsRealValue(T value) => !IsComplex || T.Abs(value * T.Sign(value)) == value;
 
 		/// <summary>
 		/// Get whether type <typeparamref name="T"/> is a primitive type or not.

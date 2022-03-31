@@ -5,6 +5,7 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
+using Althea.LinearAlgebra.Dense;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
@@ -47,11 +48,11 @@ namespace Althea.Arrays
 
 		private readonly T defaultValue;
 
-		ReadOnlySpan<long> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);
+		ReadOnlySpan<long> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
 
-		ReadOnlySpan<long> ISparseArray<T>.Size => ReflectionHelper.CreateReadOnlySpan(in this.length, 1);
-		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => ReflectionHelper.CreateReadOnlySpan(in this.values, 1);
-		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => ReflectionHelper.CreateReadOnlySpan(in this.indices, 1);
+		ReadOnlySpan<long> ISparseArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
+		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => SpanHelper.CreateReadOnlySpan(in this.values, 1);
+		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => SpanHelper.CreateReadOnlySpan(in this.indices, 1);
 		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => default;
 
 		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.indices?.IsValid() ?? false);
@@ -124,37 +125,7 @@ namespace Althea.Arrays
 			this.values = TS.Empty; this.indices = TSInd.Empty;
 		}
 
-		static SparseVector<T, TInd, TS, TSInd> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Empty => new CoorinatedSparseVector<T, TInd, TS, TSInd>();
-
-		/// <summary>
-		/// Encapsulates a method that statically create a new sparse vector from the given <paramref name="wrapper"/>.
-		/// </summary>
-		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
-		/// <param name="vector">A created <see cref="SparseVector{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
-		/// <returns>Success or not.</returns>
-		protected delegate bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector);
-
-		/// <summary>
-		/// The list used to store the <see cref="TryCreateFromWrapper"/>s for sub-classes.s
-		/// </summary>
-		protected static readonly List<TryCreateFromWrapper> Creators = new();
-
-		/// <summary>
-		/// Statically create a new sparse vector from the given <paramref name="wrapper"/>.
-		/// </summary>
-		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
-		/// <param name="vector">A created <see cref="SparseVector{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
-		/// <returns>Success or not.</returns>
-		public static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
-		{
-			foreach (var creator in Creators)
-			{
-				if (creator(in wrapper, out vector))
-					return true;
-			}
-			vector = null;
-			return false;
-		}
+		static SparseVector<T, TInd, TS, TSInd> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Empty => new CoordinateSparseVector<T, TInd, TS, TSInd>();
 		#endregion
 
 		#region equality
@@ -400,15 +371,7 @@ namespace Althea.Arrays
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
 			var wrapper = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
 			SpComp.VectorSparseAddSparse(scalarLeft, left, right, ref wrapper);
-			if (TryCreate(in wrapper, out var vec))
-			{
-				return vec;
-			}
-			else
-			{
-				wrapper.DisposeAll();
-				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
-			}
+			return Create(wrapper);
 		}
 		#endregion
 
@@ -493,14 +456,19 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, statically create a new sparse vector of type <see cref="SparseVector{T, TInd, TS, TSInd}"/> from <paramref name="dense"/> vector truncating by <paramref name="threshold"/>.
+		///Statically create a new sparse vector of type <see cref="SparseVector{T, TInd, TS, TSInd}"/> from <paramref name="dense"/> vector truncating by <paramref name="threshold"/>.
 		/// </summary>
 		/// <param name="dense">The input dense vector to convert</param>
 		/// <param name="format">The target format</param>
 		/// <param name="defaultValue">The target default value</param>
 		/// <param name="threshold">The threshold used to truncate to sparse array</param>
 		/// <returns>The created sparse vector of type <see cref="SparseVector{T, TInd, TS, TSInd}"/>.</returns>
-		public abstract SparseVector<T, TInd, TS, TSInd> FromDense(DenseVector<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0);
+		public static SparseVector<T, TInd, TS, TSInd> FromDense(DenseVector<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0)
+		{
+			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format);
+			SpConv.VectorDenseToSparse(dense.Storage, dense.Stride, ref sparse, threshold);
+			return Create(sparse);
+		}
 
 		/// <inheritdoc/>
 		public abstract SparseVector<T, TInd, TS, TSInd> CreateAlike();
@@ -518,9 +486,6 @@ namespace Althea.Arrays
 
 		/// <inheritdoc/>
 		public abstract string JsonSerialize();
-
-		/// <inheritdoc/>
-		public abstract SparseVector<T, TInd, TS, TSInd> JsonDeserialize(string json);
 		#endregion
 
 		#region string
@@ -536,6 +501,64 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public abstract string Print(PrintSettings? settings = null);
 		#endregion
+
+		#region protected static
+		/// <summary>
+		/// Encapsulates a method that statically create a new sparse vector from the given <paramref name="wrapper"/>.
+		/// </summary>
+		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
+		/// <param name="vector">A created <see cref="SparseVector{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/></param>
+		/// <returns>Success or not.</returns>
+		protected delegate bool TryCreateFromWrapper(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector);
+
+		/// <summary>
+		/// The list used to store the <see cref="TryCreateFromWrapper"/>s for sub-classes.
+		/// </summary>
+		/// <remarks>Any sub-class that inherits <see cref="SparseVector{T, TInd, TS, TSInd}"/> SHALL add its own <see cref="TryCreateFromWrapper"/> implementation to this list.</remarks>
+		protected static readonly List<TryCreateFromWrapper> Creators = new();
+
+		/// <summary>
+		/// Statically create a new sparse vector from the given <paramref name="wrapper"/>.
+		/// </summary>
+		/// <param name="wrapper">The <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to create from.</param>
+		/// <returns>A created <see cref="SparseVector{T, TInd, TS, TSInd}"/> from the given <paramref name="wrapper"/>.</returns>
+		/// <exception cref="NotSupportedException">If none of the creators in sub-classes can be used to create a <see cref="SparseVector{T, TInd, TS, TSInd}"/></exception>
+		public static SparseVector<T, TInd, TS, TSInd> Create(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper)
+		{
+			foreach (var creator in Creators)
+			{
+				if (creator(in wrapper, out var mat))
+					return mat;
+			}
+			wrapper.DisposeAll();
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+		}
+
+		/// <summary>
+		/// Encapsulates a method that statically deserialize the given <paramref name="json"/> to a new sparse matrix.
+		/// </summary>
+		/// <param name="json">The JSON string to create from.</param>
+		/// <param name="matrix">A created <see cref="SparseVector{T, TInd, TS, TSInd}"/> from the given <paramref name="json"/></param>
+		/// <returns>Success or not.</returns>
+		protected delegate bool TryDeserialize(string json, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? matrix);
+
+		/// <summary>
+		/// The list used to store the JSON deserializers for sub-classes.
+		/// </summary>
+		/// <remarks>Any sub-class that inherits <see cref="SparseVector{T, TInd, TS, TSInd}"/> SHALL add its own <see cref="TryDeserialize"/> implementation to this list.</remarks>
+		protected static readonly List<TryDeserialize> Deserializers = new();
+
+		/// <inheritdoc/>
+		public static SparseVector<T, TInd, TS, TSInd> JsonDeserialize(string json!!)
+		{
+			foreach (var deserializer in Deserializers)
+			{
+				if (deserializer(json, out var mat))
+					return mat;
+			}
+			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+		}
+		#endregion
 	}
 
 	/// <summary>
@@ -546,7 +569,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Pack = sizeof(long))]
-	public sealed class CoorinatedSparseVector<T, TInd, TS, TSInd> : SparseVector<T, TInd, TS, TSInd>
+	public sealed class CoordinateSparseVector<T, TInd, TS, TSInd> : SparseVector<T, TInd, TS, TSInd>
 		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
@@ -557,7 +580,7 @@ namespace Althea.Arrays
 		public override SparseFormat Format => format;
 
 		/// <summary>
-		/// Create a new <see cref="CoorinatedSparseVector{T, TInd, TS, TSInd}"/> with given parameters.
+		/// Create a new <see cref="CoordinateSparseVector{T, TInd, TS, TSInd}"/> with given parameters.
 		/// </summary>
 		/// <param name="defaultValue">The default value</param>
 		/// <param name="length">The presenting length</param>
@@ -566,7 +589,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoorinatedSparseVector(long length, TS values!!, TSInd indices!!, T defaultValue = default) : base(length, values, indices, defaultValue)
+		public CoordinateSparseVector(long length, TS values!!, TSInd indices!!, T defaultValue = default) : base(length, values, indices, defaultValue)
 		{
 			if (values.Length != indices.Length)
 			{
@@ -575,25 +598,7 @@ namespace Althea.Arrays
 			}
 		}
 
-		internal CoorinatedSparseVector() : base() { }
-
-		private static bool TryCreate_(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
-		{
-			vector = null;
-			if (wrapper.Format != format)
-				return false;
-			if (wrapper.IndexStorages.Length != 1 || wrapper.ValueStorages.Length != 1 || wrapper.Size.Length != 1)
-				return false;
-			if (wrapper.IndexStorages[0].Length != wrapper.ValueStorages[0].Length || wrapper.Size[0] != wrapper.IndexStorages[0].Length)
-				return false;
-			vector = new CoorinatedSparseVector<T, TInd, TS, TSInd>(wrapper.Size[0], wrapper.ValueStorages[0], wrapper.IndexStorages[0], wrapper.DefaultValue);
-			return true;
-		}
-
-		static CoorinatedSparseVector()
-		{
-			Creators.Add(TryCreate_);
-		}
+		internal CoordinateSparseVector() : base() { }
 		#endregion
 
 		#region index
@@ -622,7 +627,7 @@ namespace Althea.Arrays
 		}
 
 		/// <inheritdoc/>
-		public override CoorinatedSparseVector<T, TInd, TS, TSInd> GetSlice(long start, long count)
+		public override CoordinateSparseVector<T, TInd, TS, TSInd> GetSlice(long start, long count)
 		{
 			var (indexStart, indexCount) = this.GetSliceInfo(start, count);
 			if (indexStart == 0 && indexCount == this.IndexStorage.Length)
@@ -654,8 +659,8 @@ namespace Althea.Arrays
 
 		/// <inheritdoc/>
 		public override void CopyTo(SparseVector<T, TInd, TS, TSInd> destination)
-		{
-			if (destination.Format != this.Format)
+{
+			if (destination.Format != this.Format || destination.DefaultValue != this.DefaultValue)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
 			if (destination.IndexStorage.Length != this.IndexStorage.Length)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
@@ -683,47 +688,64 @@ namespace Althea.Arrays
 
 		#region conversion and clone
 		/// <inheritdoc/>
-		public override SparseVector<T, TInd, TS, TSInd> FromDense(DenseVector<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0)
-		{
-			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format);
-			SpConv.VectorDenseToSparse(ref sparse, dense.Storage, dense.Stride, threshold);
-			if (TryCreate(in sparse, out var vec))
-				return vec;
-			sparse.DisposeAll();
-			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
-		}
-
-		/// <inheritdoc/>
-		public override CoorinatedSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.DefaultValue);
+		public override CoordinateSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.DefaultValue);
 		#endregion
 
 		#region serialization
-		private record struct ElementRepr(int Format, T Default, long Length, TS Values, TSInd Indices);
+		private record struct Repr(int Format, T Default, long Length, TS Values, TSInd Indices);
 
-		private CoorinatedSparseVector(ElementRepr repr) : this(repr.Length, repr.Values, repr.Indices, repr.Default) { }
-
-		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize<ElementRepr>(new(this.Format.Data, this.DefaultValue, this.Length, this.Storage, this.IndexStorage), JsonOptions);
+		private CoordinateSparseVector(Repr repr) : this(repr.Length, repr.Values, repr.Indices, repr.Default) { }
 
 		/// <inheritdoc/>
-		public override CoorinatedSparseVector<T, TInd, TS, TSInd> JsonDeserialize(string json!!) => new(JsonSerializer.Deserialize<ElementRepr>(json, JsonOptions));
+		public override string JsonSerialize() => JsonSerializer.Serialize<Repr>(new(this.Format.Data, this.DefaultValue, this.Length, this.Storage, this.IndexStorage), JsonOptions);
+
+		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
+		{
+			try
+			{
+				vector = new CoordinateSparseVector<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
+				return true;
+			}
+			catch (Exception)
+			{
+				vector = null;
+				return false;
+			}
+		}
+
+		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
+		{
+			vector = null;
+			if (wrapper.Format != format)
+				return false;
+			if (wrapper.IndexStorages.Length != 1 || wrapper.ValueStorages.Length != 1 || wrapper.Size.Length != 1)
+				return false;
+			if (wrapper.IndexStorages[0].Length != wrapper.ValueStorages[0].Length || wrapper.Size[0] != wrapper.IndexStorages[0].Length)
+				return false;
+			vector = new CoordinateSparseVector<T, TInd, TS, TSInd>(wrapper.Size[0], wrapper.ValueStorages[0], wrapper.IndexStorages[0], wrapper.DefaultValue);
+			return true;
+		}
+
+		static CoordinateSparseVector()
+		{
+			Creators.Add(TryCreate);
+			Deserializers.Add(TryJsonDeserialize);
+		}
 		#endregion
 
 		#region string
 		/// <inheritdoc/>
-		public override unsafe string Print(PrintSettings? settings = null)
+		public override string Print(PrintSettings? settings = null)
 		{
 			settings ??= Settings.PrintSetting;
 			int length = Math.Min((int)this.NStored, settings.Value.ArrayLength);
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			Span<long> indices = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			using var tempVal = length.CheckStackLimit<T>();
+			Span<T> values = tempVal.IsEmpty ? stackalloc T[length] : tempVal.Data;
+			using var tempInd = length.CheckStackLimit<TInd>();
+			Span<TInd> indices = tempInd.IsEmpty ? stackalloc TInd[length] : tempInd.Data;
 			this.Storage.ToManaged(values);
-			fixed (long* inds = indices)
-			{
-				var mp = new ManagedPureStorage<long>(new ManagedPointer(new(inds), length * sizeof(long)));
-				ExtBlas.PointWiseCast<TInd, long, TSInd, ManagedPureStorage<long>>(this.IndexStorage, 1, mp, 1);
-			}
-			return values.ToSparseVectorString(indices, settings.Value.Precision) + (length == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - length));
+			this.IndexStorage.ToManaged(indices);
+			return values.ToSparseVectorString<T, TInd>(indices, settings.Value.Precision) + (length == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - length));
 		}
 		#endregion
 	}
@@ -743,7 +765,7 @@ namespace Althea.Arrays
 		#region basic
 		private readonly TInd blockSize;
 		
-		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => ReflectionHelper.CreateReadOnlySpan(in this.blockSize, 1);
+		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockSize, 1);
 
 		private long BS => this.blockSize.As<TInd, long>();
 
@@ -783,30 +805,6 @@ namespace Althea.Arrays
 		}
 
 		internal SimpleBlockedSparseVector() : base() { }
-
-		private static bool TryCreate_(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
-		{
-			vector = null;
-			if (wrapper.Format != format || wrapper.Size.Length != 1 || wrapper.BlockSize.Length != 1 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 1)
-				return false;
-			var length = wrapper.Size[0];
-			var blockSize = wrapper.BlockSize[0];
-			var values = wrapper.ValueStorages[0];
-			var indices = wrapper.IndexStorages[0];
-			if (blockSize <= TInd.Zero || length % blockSize.As<TInd, long>() != 0)
-				return false;
-			if (values is null || indices is null)
-				return false;
-			if (values.Length != indices.Length * blockSize.As<TInd, long>())
-				return false;
-			vector = new SimpleBlockedSparseVector<T, TInd, TS, TSInd>(length, values, indices, blockSize, wrapper.DefaultValue);
-			return true;
-		}
-
-		static SimpleBlockedSparseVector()
-		{
-			Creators.Add(TryCreate_);
-		}
 		#endregion
 
 		#region equality
@@ -887,7 +885,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public override void CopyTo(SparseVector<T, TInd, TS, TSInd> destination)
 		{
-			if (destination is not SimpleBlockedSparseVector<T, TInd, TS, TSInd> vec || vec.blockSize != this.blockSize || vec.IndexStorage.Length != this.IndexStorage.Length || vec.Storage.Length != this.NStored)
+			if (destination is not SimpleBlockedSparseVector<T, TInd, TS, TSInd> vec || vec.DefaultValue != this.DefaultValue || vec.blockSize != this.blockSize || vec.IndexStorage.Length != this.IndexStorage.Length || vec.Storage.Length != this.NStored)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
 			this.Storage.CopyTo<T, TS, TS>(destination.Storage);
 			this.IndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.IndexStorage);
@@ -913,53 +911,77 @@ namespace Althea.Arrays
 
 		#region conversion and clone
 		/// <inheritdoc/>
-		public override SparseVector<T, TInd, TS, TSInd> FromDense(DenseVector<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0)
-		{
-			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format);
-			SpConv.VectorDenseToSparse(ref sparse, dense.Storage, dense.Stride, threshold);
-			if (TryCreate(in sparse, out var vec))
-				return vec;
-			sparse.DisposeAll();
-			throw new InvalidOperationException();
-		}
-
-		/// <inheritdoc/>
 		public override SimpleBlockedSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.blockSize, this.DefaultValue);
 		#endregion
 
 		#region serialization
-		private record struct SimpleBlockRepr(int Format, T Default, long Length, TS Values, TSInd Indices, TInd BlockSize);
+		private record struct Repr(int Format, T Default, long Length, TS Values, TSInd Indices, TInd BlockSize);
 
-		private SimpleBlockedSparseVector(SimpleBlockRepr repr) : this(repr.Length, repr.Values, repr.Indices, repr.BlockSize, repr.Default) { }
-
-		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize<SimpleBlockRepr>(new(this.Format.Data, this.DefaultValue, this.Length, this.Storage, this.IndexStorage, this.blockSize), JsonOptions);
+		private SimpleBlockedSparseVector(Repr repr) : this(repr.Length, repr.Values, repr.Indices, repr.BlockSize, repr.Default) { }
 
 		/// <inheritdoc/>
-		public override SimpleBlockedSparseVector<T, TInd, TS, TSInd> JsonDeserialize(string json!!) => new(JsonSerializer.Deserialize<SimpleBlockRepr>(json, JsonOptions));
+		public override string JsonSerialize() => JsonSerializer.Serialize<Repr>(new(this.Format.Data, this.DefaultValue, this.Length, this.Storage, this.IndexStorage, this.blockSize), JsonOptions);
+
+
+		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
+		{
+			try
+			{
+				vector = new SimpleBlockedSparseVector<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
+				return true;
+			}
+			catch (Exception)
+			{
+				vector = null;
+				return false;
+			}
+		}
+
+		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
+		{
+			vector = null;
+			if (wrapper.Format != format || wrapper.Size.Length != 1 || wrapper.BlockSize.Length != 1 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 1)
+				return false;
+			var length = wrapper.Size[0];
+			var blockSize = wrapper.BlockSize[0];
+			var values = wrapper.ValueStorages[0];
+			var indices = wrapper.IndexStorages[0];
+			if (blockSize <= TInd.Zero || length % blockSize.As<TInd, long>() != 0)
+				return false;
+			if (values is null || indices is null)
+				return false;
+			if (values.Length != indices.Length * blockSize.As<TInd, long>())
+				return false;
+			vector = new SimpleBlockedSparseVector<T, TInd, TS, TSInd>(length, values, indices, blockSize, wrapper.DefaultValue);
+			return true;
+		}
+
+		static SimpleBlockedSparseVector()
+		{
+			Creators.Add(TryCreate);
+			Deserializers.Add(TryJsonDeserialize);
+		}
 		#endregion
 
 		#region string
 		/// <inheritdoc/>
-		public override unsafe string Print(PrintSettings? settings = null)
+		public override string Print(PrintSettings? settings = null)
 		{
 			settings ??= Settings.PrintSetting;
 			int length = Math.Min((int)this.NStored, settings.Value.ArrayLength);
-			Span<T> values = length.CheckStackLimit<T>() ?? stackalloc T[length];
-			Span<long> indices = length.CheckStackLimit<long>() ?? stackalloc long[length];
+			using var tempVal = length.CheckStackLimit<T>();
+			Span<T> values = tempVal.IsEmpty ? stackalloc T[length] : tempVal.Data;
+			using var tempInd = length.CheckStackLimit<TInd>();
+			Span<TInd> indices = tempInd.IsEmpty ? stackalloc TInd[length] : tempInd.Data;
 			this.Storage.ToManaged(values);
 			int bs = this.blockSize.As<TInd, int>();
-			fixed (long* inds = indices)
-			{
-				var mp = new ManagedPureStorage<long>(new ManagedPointer(new(inds), length * sizeof(long)));
-				ExtBlas.PointWiseCast<TInd, long, TSInd, ManagedPureStorage<long>>(this.IndexStorage, 1, mp, bs);
-			}
+			this.IndexStorage.ToManagedStride(1, indices, bs);
 			for (int i = 0; i < length; i++)
 			{
 				int diff = i % bs;
-				indices[i] = indices[i - diff] * bs + diff;
+				indices[i] = TInd.Create(indices[i - diff].As<TInd, int>() * bs + diff);
 			}
-			return values.ToSparseVectorString(indices, settings.Value.Precision) + (length == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - length));
+			return values.ToSparseVectorString<T, TInd>(indices, settings.Value.Precision) + (length == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - length));
 		}
 		#endregion
 	}

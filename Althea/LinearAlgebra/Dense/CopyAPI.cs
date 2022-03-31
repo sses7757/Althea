@@ -1,13 +1,8 @@
-﻿using System;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
+﻿using System.Reflection;
 
-using Althea.Helpers;
-using Althea.Storage;
 using Althea.Resources;
-
 using Althea.SourceGenerator;
+using Althea.Storage;
 
 
 namespace Althea.LinearAlgebra.Dense

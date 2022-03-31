@@ -58,7 +58,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// The major of a <see cref="SparseFormat"/>, other majoring types can be supported manually.
 		/// </summary>
-		public enum Major : short
+		public enum Major : byte
 		{
 			/// <summary>
 			/// No major -- the <see cref="Major"/> is not applicable

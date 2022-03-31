@@ -298,12 +298,12 @@ namespace Althea.Arrays
 		string JsonSerialize();
 		
 		/// <summary>
-		/// When implemented by a derived factory class, reconstruct a <typeparamref name="TSelf"/> from the given <paramref name="json"/> object <see cref="string"/>.
+		/// When implemented by a derived factory class, statically reconstruct a <typeparamref name="TSelf"/> from the given <paramref name="json"/> object <see cref="string"/>.
 		/// </summary>
 		/// <param name="json">The JSON object string used to deserialize</param>
 		/// <returns>The reconstructed <typeparamref name="TSelf"/> from <paramref name="json"/>.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="json"/> is not a valid JSON serialization from <see cref="JsonSerialize"/></exception>
-		TSelf JsonDeserialize(string json);
+		abstract static TSelf JsonDeserialize(string json);
 		#endregion
 	}
 }

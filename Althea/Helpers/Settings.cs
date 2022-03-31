@@ -137,7 +137,7 @@ namespace Althea.Helpers
 				this.LogSettings = new();
 				this.PrintSettings = new();
 				this.ImplementationSettings = new();
-				this.StackAllocLimit = 32 * 1024;
+				this.StackAllocLimit = 1024;
 			}
 		}
 
@@ -369,22 +369,6 @@ namespace Althea.Helpers
 			if (Type.GetType($"Althea.Backend.{name}.{name}Implementations")?.GetConstructor(Type.EmptyTypes)?.Invoke(null) is not ISetBackend res)
 				throw new InvalidOperationException();
 			return res;
-		}
-
-		/// <summary>
-		/// Check whether the given <paramref name="length"/> and an unmanaged type <typeparamref name="T"/> fits the <see cref="StackAllocLimit"/> or not.<br/>
-		/// If the size is too large, array of <typeparamref name="T"/> will not be created and you shall <c>stackalloc <typeparamref name="T"/>[<paramref name="length"/>]</c> yourself.
-		/// </summary>
-		/// <typeparam name="T">The data type</typeparam>
-		/// <param name="length">The desired length to allocate</param>
-		/// <returns>The allocated C# array of given <paramref name="length"/> or null</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T[]? CheckStackLimit<T>(this int length) where T : notnull
-		{
-			if (length * Unsafe.SizeOf<T>() > StackAllocLimit)
-				return new T[length];
-			else
-				return null;
 		}
 		#endregion
 	}

@@ -445,7 +445,7 @@ namespace Althea.Arrays.Tensors
 		}
 
 		/// <inheritdoc/>
-		public DenseTensor<T, TS> JsonDeserialize(string json!!)
+		public static DenseTensor<T, TS> JsonDeserialize(string json!!)
 		{
 			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
 			return new(repr.Values, repr.Size, repr.OuterSize);
@@ -623,13 +623,14 @@ namespace Althea.Arrays.Tensors
 			{
 				if (tensor.size.Length == 2)
 				{
-					var temp = ((int)info.MatrixNowLength).CheckStackLimit<T>() ?? stackalloc T[(int)info.MatrixNowLength];
-					fixed (T* tt = temp)
+					using var temp = ((int)info.MatrixNowLength).CheckStackLimit<T>();
+					Span<T> values = temp.IsEmpty ? stackalloc T[((int)info.MatrixNowLength)] : temp.Data;
+					fixed (T* tt = values)
 					{
-						var mp = new ManagedPureStorage<T>(new(new(tt), temp.Length * sizeof(T)));
+						var mp = new ManagedPureStorage<T>(new(new(tt), values.Length * sizeof(T)));
 						Ten.Permute<T, TS, ManagedPureStorage<T>>(new(tensor.storage, info.MatrixSize, info.OuterSize, stackalloc long[] { 1, info.MatrixNowLD }), new(mp, info.MatrixSize), stackalloc int[info.MatrixSize.Length].FillWithRange(0));
 					}
-					return temp.ToMatrixString((int)info.MatrixOrgRows, info.MatrixSize[1] - info.MatrixOrgCols, info.Settings.Precision, prefix, postfix);
+					return values.ToMatrixString((int)info.MatrixOrgRows, info.MatrixSize[1] - info.MatrixOrgCols, info.Settings.Precision, prefix, postfix);
 				}
 				// else
 				StringBuilder sb = new();

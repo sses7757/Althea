@@ -63,16 +63,19 @@ namespace Althea
 
 		private static readonly object __locker = new();
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static int Count<TApi>() where TApi : IAbstractRuntimeApi<TApi>
 		{
 			return AbstractApiSelector<TApi>.APIs.Count;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static TApi Get<TApi>(int index) where TApi : IAbstractRuntimeApi<TApi>
 		{
 			return AbstractApiSelector<TApi>.APIs[index];
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static int IndexOf<TApi>(TApi instance) where TApi : IAbstractRuntimeApi<TApi>
 		{
 			return AbstractApiSelector<TApi>.APIs.IndexOf(instance);
@@ -158,6 +161,7 @@ namespace Althea
 			/// Get a <see cref="ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind
 			/// </summary>
 			/// <returns>A new <see cref="ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind</returns>
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ApiEnumerator GetEnumerator() => new();
 		}
 
@@ -174,16 +178,25 @@ namespace Althea
 		{
 			private int current = 0;
 
-			private static int EndIndex => (CurrentApiIndex + 1) % ApiManager.Count<TApi>();
+			private static int EndIndex
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => (CurrentApiIndex + 1) % ApiManager.Count<TApi>();
+			}
 
 			/// <summary>
 			/// Get the current API instance
 			/// </summary>
-			public TApi Current => ApiManager.Get<TApi>(current);
+			public TApi Current
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get => ApiManager.Get<TApi>(current);
+			}
 
 			/// <summary>
 			/// The default constructor of <see cref="ApiEnumerator"/>
 			/// </summary>
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ApiEnumerator()
 			{
 				this.Reset();
@@ -192,6 +205,7 @@ namespace Althea
 			/// <summary>
 			/// Sets the API enumerator to its initial position, which is before the first API in the API collection.
 			/// </summary>
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Reset()
 			{
 				this.current = CurrentApiIndex - 1;
@@ -203,6 +217,7 @@ namespace Althea
 			/// Advances the API enumerator to the next API instance of the API collection.
 			/// </summary>
 			/// <returns>true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool MoveNext()
 			{
 				do
