@@ -216,6 +216,16 @@ namespace Althea.Arrays
 		TSelf GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
 
 		/// <summary>
+		/// When implemented by a derived class, get the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and <paramref name="lengths"/> and overwrite the result to <paramref name="overwrite"/>.
+		/// </summary>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="lengths">The lengths of the target sub-tensor at each dimension, in <typeparamref name="T"/></param>
+		/// <param name="overwrite">The sub-tensor to be overwritten</param>
+		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
+		void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, TSelf overwrite);
+
+		/// <summary>
 		/// When implemented by a derived class, set the sub-tensor (of same rank) indicated by the given starting <paramref name="offsets"/> and the size of <paramref name="value"/> to the underlying tensor of <paramref name="value"/>.
 		/// </summary>
 		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at each dimension, in <typeparamref name="T"/></param>

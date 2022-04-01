@@ -41,8 +41,12 @@ namespace Althea.Arrays
 	{
 		#region basic
 		private readonly long length;
+		private long nnz;
 
-		private readonly TSInd indices;
+		/// <summary>
+		/// The index array's storage of this sparse vector.
+		/// </summary>
+		protected readonly TSInd indices;
 
 		private readonly TS values;
 
@@ -66,18 +70,27 @@ namespace Althea.Arrays
 		/// <summary>
 		/// Get the value storage of this vector as a <typeparamref name="TS"/>.
 		/// </summary>
-		public TS Storage => this.values.MakeReference();
+		public TS Storage => this.values.MakeReference(0, this.nnz);
 
 		/// <summary>
 		/// Get the index array's storage of this sparse vector.
 		/// </summary>
-		public TSInd IndexStorage => this.indices.MakeReference();
-
-		/// <inheritdoc/>
-		public long NStored => this.values.Length;
+		public virtual TSInd IndexStorage => this.indices.MakeReference(0, this.nnz);
 
 		/// <inheritdoc/>
 		public long Length => this.length;
+
+		/// <inheritdoc/>
+		public long NStored 
+		{
+			get => this.nnz; 
+			protected set => this.nnz = value < this.nnz || value > this.MaxStored ? throw new ArgumentOutOfRangeException(nameof(value)) : value;
+		}
+
+		/// <summary>
+		/// Get the number of maximum possible elements that can be stored in this sparse vector.
+		/// </summary>
+		protected long MaxStored => this.values.Length;
 
 		/// <summary>
 		/// Create a new <see cref="SparseVector{T, TInd, TS, TSInd}"/> with given parameters.
@@ -86,16 +99,19 @@ namespace Althea.Arrays
 		/// <param name="length">The presenting length</param>
 		/// <param name="values">The original value array</param>
 		/// <param name="indices">The original index array</param>
+		/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If the <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		protected SparseVector(long length, TS values!!, TSInd indices!!, T defaultValue = default)
+		protected SparseVector(long length, TS values!!, TSInd indices!!, T defaultValue = default, long nnz = -1)
 		{
 			this.defaultValue = defaultValue;
 			if (length < 0)
 				throw new ArgumentOutOfRangeException(nameof(length), Resources.ParameterError.CannotNegative);
-			this.length = length;
-			if (length < values.Length || values.Length < indices.Length)
+			if (nnz < 0)
+				nnz = values.Length;
+			this.length = length; this.nnz = nnz;
+			if (length < values.Length || values.Length < indices.Length || nnz > values.Length)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
 			this.values = values.AddToManager();
 			this.indices = indices.AddToManager();
@@ -159,11 +175,12 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get the offset to <see cref="Storage"/> of the corresponding <paramref name="index"/>.
 		/// </summary>
 		/// <param name="index">The presenting index</param>
-		/// <returns>The offset in <typeparamref name="T"/> compared to <see cref="Storage"/>.</returns>
+		/// <returns>The offset in <typeparamref name="T"/> compared to <see cref="Storage"/> if it is stored, or the bitwise NOT of the position of insertion.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected abstract long GetValueOffset(long index);
 
 		/// <inheritdoc/>
+		/// <remarks>This method is usually quite expensive to call inside a loop to add values. Please use constructor instead.</remarks>
 		public T this[long index]
 		{
 			get
@@ -174,11 +191,27 @@ namespace Althea.Arrays
 			set
 			{
 				long offset = this.GetValueOffset(index);
-				if (offset < 0)
-					throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(index));
-				(this.values + offset).FromManaged(value);
+				if (offset >= 0)
+				{
+					(this.values + offset).FromManaged(value);
+				}
+				else
+				{
+					if (!this.TryInsert(index, offset, value))
+						throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(index));
+				}
 			}
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, set the element at <paramref name="index"/> to <paramref name="value"/> when the element at <paramref name="index"/> is a <see cref="DefaultValue"/>. 
+		/// </summary>
+		/// <param name="index">The presenting index to set <paramref name="value"/> at</param>
+		/// <param name="offset">The offset compared to <see cref="Storage"/> obtained from <see cref="GetValueOffset(long)"/></param>
+		/// <param name="value">The value to set at <paramref name="index"/></param>
+		/// <returns>Success or not.</returns>
+		/// <remarks>This method is usually quite expensive to call inside a loop to add values. Please use constructor instead.</remarks>
+		protected abstract bool TryInsert(long index, long offset, T value);
 
 		/// <inheritdoc/>
 		public abstract SparseVector<T, TInd, TS, TSInd> GetSlice(long start, long count);
@@ -262,14 +295,14 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public T Sum()
 		{
-			T defaultSum = this.defaultValue * T.Create(this.length - this.values.Length);
+			T defaultSum = this.defaultValue * T.Create(this.length - this.NStored);
 			return defaultSum + ExtBlas.AggregateSum<T, TS>(this.values, 1);
 		}
 
 		/// <inheritdoc/>
 		public T AbsSum()
 		{
-			T defaultSum = T.Abs(this.defaultValue) * T.Create(this.length - this.values.Length);
+			T defaultSum = T.Abs(this.defaultValue) * T.Create(this.length - this.NStored);
 			return defaultSum + Blas.AbsoluteValueSum<T, TS>(this.values, 1);
 		}
 
@@ -279,7 +312,7 @@ namespace Althea.Arrays
 			if (this.defaultValue == T.Zero)
 				return Blas.Norm<T, TS>(this.values, 1);
 			T abs = T.Abs(this.defaultValue);
-			T defaultSum = abs * abs * T.Create(this.length - this.values.Length);
+			T defaultSum = abs * abs * T.Create(this.length - this.NStored);
 			T norm = Blas.Norm<T, TS>(this.values, 1);
 			double n = (norm * norm + defaultSum).As<T, double>();
 			return Math.Sqrt(n).As<double, T>();
@@ -586,10 +619,11 @@ namespace Althea.Arrays
 		/// <param name="length">The presenting length</param>
 		/// <param name="values">The original value array</param>
 		/// <param name="indices">The original index array</param>
+		/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoordinateSparseVector(long length, TS values!!, TSInd indices!!, T defaultValue = default) : base(length, values, indices, defaultValue)
+		public CoordinateSparseVector(long length, TS values!!, TSInd indices!!, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
 		{
 			if (values.Length != indices.Length)
 			{
@@ -606,8 +640,13 @@ namespace Althea.Arrays
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override long GetValueOffset(long index)
 		{
+			var ind = TInd.Create(index);
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
-			return SpConv.IndexFind(this.IndexStorage, true, TInd.Create(index));
+			long find = SpConv.IndexBound(this.IndexStorage, ind, true);
+			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
+				return ~find;
+			else
+				return find;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -620,10 +659,30 @@ namespace Althea.Arrays
 			long indexCount = SpConv.IndexBound(this.IndexStorage, TInd.Create(start + count), true);
 			if (sub is not null)
 			{
-				if (sub.IndexStorage.Length != indexCount || sub.Storage.Length != indexCount)
+				if (sub.IndexStorage.Length != indexCount || sub.NStored != indexCount)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sub));
 			}
 			return (indexStart, indexCount);
+		}
+
+		/// <inheritdoc/>
+		protected override bool TryInsert(long index, long offset, T value)
+		{
+			if (offset >= 0)
+				return false;
+			offset = ~offset;
+			long nnz = this.NStored;
+			if (nnz + 1 > this.MaxStored)
+				return false;
+
+			using var tempVal = this.Storage.MakeReference(offset).Clone();
+			using var tempInd = this.IndexStorage.MakeReference(offset).Clone();
+			this.NStored = nnz + 1;
+			this.Storage.MakeReference(offset, 1).FromManaged(value);
+			this.IndexStorage.MakeReference(offset, 1).FromManaged(TInd.Create(index));
+			tempVal.CopyTo<T, TS, TS>(this.Storage + (++offset));
+			tempInd.CopyTo<TInd, TSInd, TSInd>(this.IndexStorage + offset);
+			return true;
 		}
 
 		/// <inheritdoc/>
@@ -688,7 +747,7 @@ namespace Althea.Arrays
 
 		#region conversion and clone
 		/// <inheritdoc/>
-		public override CoordinateSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.DefaultValue);
+		public override CoordinateSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.DefaultValue, 0);
 		#endregion
 
 		#region serialization
@@ -769,6 +828,8 @@ namespace Althea.Arrays
 
 		private long BS => this.blockSize.As<TInd, long>();
 
+		private int BS_ => this.blockSize.As<TInd, int>();
+
 		private readonly static SparseFormat format = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, SparseFormat.Major.None);
 
 		/// <inheritdoc/>
@@ -782,10 +843,11 @@ namespace Althea.Arrays
 		/// <param name="values">The original value array</param>
 		/// <param name="indices">The original index array of blocks</param>
 		/// <param name="blockSize">The constant block size</param>
+		/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public SimpleBlockedSparseVector(long length, TS values!!, TSInd indices!!, TInd blockSize, T defaultValue = default) : base(length, values, indices, defaultValue)
+		public SimpleBlockedSparseVector(long length, TS values!!, TSInd indices!!, TInd blockSize, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
 		{
 			try
 			{
@@ -827,10 +889,12 @@ namespace Althea.Arrays
 		{
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
 			var (blockIndex, insideBlockOffset) = index.DivRem(this.BS);
-			long offset = SpConv.IndexFind(this.IndexStorage, true, TInd.Create(blockIndex));
-			if (offset >= 0)
-				offset = offset * this.BS + insideBlockOffset;
-			return offset;
+			var ind = TInd.Create(blockIndex);
+			long find = SpConv.IndexBound(this.IndexStorage, ind, true);
+			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
+				return ~(find * this.BS);
+			else
+				return find * this.BS + insideBlockOffset;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -849,6 +913,32 @@ namespace Althea.Arrays
 			indexCount = SpConv.IndexBound(this.IndexStorage, TInd.Create(start + count), true);
 			indexCount -= indexStart;
 			return (indexStart, indexCount);
+		}
+
+		/// <inheritdoc/>
+		protected override bool TryInsert(long index, long offsetVal, T value)
+		{
+			if (offsetVal >= 0)
+				return false;
+			offsetVal = ~offsetVal;
+			long nnz = this.NStored + this.BS;
+			if (nnz + this.BS > this.MaxStored)
+				return false;
+
+			long offsetInd = offsetVal / this.BS;
+			using var tempVal = this.Storage.MakeReference(offsetInd).Clone();
+			using var tempInd = this.IndexStorage.MakeReference(offsetVal).Clone();
+			{
+				this.NStored = nnz + this.BS;
+				using var temp = this.BS_.CheckStackLimit<T>();
+				Span<T> values = temp.IsEmpty ? stackalloc T[this.BS_] : temp.Data;
+				values.Fill(this.DefaultValue); values[(int)(index % this.BS)] = value;
+				this.Storage.MakeReference(offsetVal, this.BS).FromManaged<T, TS>(values);
+				this.IndexStorage.MakeReference(offsetInd, 1).FromManaged(TInd.Create(index) / this.blockSize);
+			}
+			tempVal.CopyTo<T, TS, TS>(this.Storage + (offsetVal + this.BS));
+			tempInd.CopyTo<TInd, TSInd, TSInd>(this.IndexStorage + (offsetInd + 1));
+			return true;
 		}
 
 		/// <inheritdoc/>
@@ -885,7 +975,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public override void CopyTo(SparseVector<T, TInd, TS, TSInd> destination)
 		{
-			if (destination is not SimpleBlockedSparseVector<T, TInd, TS, TSInd> vec || vec.DefaultValue != this.DefaultValue || vec.blockSize != this.blockSize || vec.IndexStorage.Length != this.IndexStorage.Length || vec.Storage.Length != this.NStored)
+			if (destination is not SimpleBlockedSparseVector<T, TInd, TS, TSInd> vec || vec.DefaultValue != this.DefaultValue || vec.blockSize != this.blockSize || vec.IndexStorage.Length != this.IndexStorage.Length || vec.NStored != this.NStored)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
 			this.Storage.CopyTo<T, TS, TS>(destination.Storage);
 			this.IndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.IndexStorage);
@@ -911,7 +1001,7 @@ namespace Althea.Arrays
 
 		#region conversion and clone
 		/// <inheritdoc/>
-		public override SimpleBlockedSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.blockSize, this.DefaultValue);
+		public override SimpleBlockedSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.blockSize, this.DefaultValue, 0);
 		#endregion
 
 		#region serialization

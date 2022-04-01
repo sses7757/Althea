@@ -365,11 +365,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with only meta information.
 		/// </summary>
-		public SparseArrayWrapper(TVal defaultValue, SparseFormat format)
+		public SparseArrayWrapper(TVal defaultValue, SparseFormat format, ReadOnlySpan<long> size = default)
 		{
 			this.DefaultValue = defaultValue;
 			this.Format = format;
-			this.Size = default;
+			this.Size = size;
 			this.ValueStorages = default;
 			this.IndexStorages = default;
 			this.BlockSize = default;

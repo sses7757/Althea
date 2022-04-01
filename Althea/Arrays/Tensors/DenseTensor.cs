@@ -13,7 +13,7 @@ using ExtTen = Althea.TensorAlgebra.Dense.ExtendApiSelector;
 using Ten = Althea.TensorAlgebra.Dense.BaseApiSelector;
 
 
-namespace Althea.Arrays.Tensors
+namespace Althea.Arrays
 {
 	/// <summary>
 	/// The base dense tensor class whose only storage is of type <typeparamref name="TS"/>.
@@ -109,8 +109,6 @@ namespace Althea.Arrays.Tensors
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
 			this.labels.CopyFromSpan(labels);
 		}
-
-		long IValueArray<T, DenseTensor<T, TS>>.Length => this.length;
 
 		private DenseTensor() => this.values = TS.Empty;
 
@@ -230,6 +228,13 @@ namespace Althea.Arrays.Tensors
 		{
 			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, this.Strides);
 			return new(storage, lengths, this.OuterSize);
+		}
+
+		/// <inheritdoc/>
+		public void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, DenseTensor<T, TS> overwrite)
+		{
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, this.Strides, overwrite);
+			Ten.Permute<T, TS, TS>(new(storage, lengths, this.OuterSize, this.Strides), new(overwrite, overwrite.values), stackalloc int[this.rank].FillWithRange(0));
 		}
 
 		/// <inheritdoc/>

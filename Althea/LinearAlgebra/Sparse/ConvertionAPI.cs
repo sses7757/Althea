@@ -215,6 +215,31 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region index only
 		/// <summary>
+		/// When implemented by a derived class, sort the values of the given <paramref name="array"/>.
+		/// </summary>
+		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="array">The storage of the array to be sorted</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+		[AbstractApiMethod]
+		public abstract bool Sort<T, TS>(TS array) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with <paramref name="values"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the key type</typeparam>
+		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TOther">Any unmanaged number as the value type</typeparam>
+		/// <typeparam name="TS2">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="keys">The storage of the key array to be sorted</param>
+		/// <param name="values">The storage of the value array to be sorted</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="keys"/> is null or invalid</exception>
+		[AbstractApiMethod]
+		public abstract bool Sort<T, TOther, TS, TS2>(TS keys, TS2 values) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, INumber<TOther> where TS2 : class, IStorage<TOther, TS2>;
+
+		/// <summary>
 		/// When implemented by a derived class, find the minimum and maximum values of the given integer-typed <paramref name="array"/>.
 		/// </summary>
 		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
