@@ -834,7 +834,7 @@ namespace Althea.TensorAlgebra
 			if (reducePerm.Length != rank)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(reducePerm));
 			// get reduce permutation
-			reducePerm = order.GetIntSpanOrder(tensor, reducePerm, allowPartial: true);
+			reducePerm = order.GetOrder(tensor, reducePerm, allowPartial: true);
 			// get output permutation
 			int outRank = rank - reducePerm.Length;
 			Span<int> outPerm = stackalloc int[outRank];

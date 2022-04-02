@@ -101,46 +101,11 @@ namespace Althea
 	/// <summary>
 	/// The interface used to set the back-end implementations all at once
 	/// </summary>
-	public interface ISetBackend
+	public partial interface ISetBackend
 	{
 		/// <summary>
 		/// Check whether all the back-end implementations are available.
 		/// </summary>
 		bool Available { get; }
-
-		/// <summary>
-		/// The implementation type of <see cref="Althea.Storage.IAbstractApi"/>
-		/// </summary>
-		Type StorageImplementation { get; }
-
-		/// <summary>
-		/// The implementation type of <see cref="Althea.LinearAlgebra.Dense.AbstractApi"/>
-		/// </summary>
-		Type DenseLinearAlgebraImplementation { get; }
-
-		/// <summary>
-		/// The implementation type of <see cref="Althea.LinearAlgebra.Sparse.IAbstractApi"/>
-		/// </summary>
-		Type SparseLinearAlgebraImplementation { get; }
-
-		/// <summary>
-		/// The implementation type of <see cref="Althea.TensorAlgebra.Dense.AbstractApi"/>
-		/// </summary>
-		Type DenseTensorAlgebraImplementation { get; }
-
-		/// <summary>
-		/// The implementation type of <see cref="Althea.TensorAlgebra.Sparse.AbstractApi"/>
-		/// </summary>
-		Type SparseTensorAlgebraImplementation { get; }
-
-		/// <summary>
-		/// The implementation type of <see cref="Althea.Random.AbstractApi"/>
-		/// </summary>
-		Type RandomImplementation { get; }
-
-		/// <summary>
-		/// The implementation type of <see cref="Althea.Solver.AbstractApi"/>
-		/// </summary>
-		Type SolverImplementation { get; }
 	}
 }

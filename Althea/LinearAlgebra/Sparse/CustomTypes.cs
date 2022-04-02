@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
@@ -9,14 +8,14 @@ using Althea.Storage;
 namespace Althea.LinearAlgebra.Sparse
 {
 	/// <summary>
-	/// The structure for the format of any sparse array
+	/// The structure for the format of any sparse array with size the same as an <see cref="int"/>.
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
 	public readonly struct SparseFormat : IEqualityOperators<SparseFormat, SparseFormat>, IBitwiseOperators<SparseFormat, SparseFormat, SparseFormat>
 	{
 		#region enumerates
 		/// <summary>
-		/// The type of a <see cref="SparseFormat"/>, other types like ELLPACK is not built in but can be supported manually.
+		/// The class type of a <see cref="SparseFormat"/>, other types like ELLPACK is not built in but can be supported manually.
 		/// </summary>
 		[Flags]
 		public enum Type : byte
@@ -29,6 +28,10 @@ namespace Althea.LinearAlgebra.Sparse
 			/// The compressed type
 			/// </summary>
 			Compressed = 1 << 1,
+			/// <summary>
+			/// Any class type
+			/// </summary>
+			Any = 255
 		}
 
 		/// <summary>
@@ -53,6 +56,10 @@ namespace Althea.LinearAlgebra.Sparse
 			/// Complicated blocking -- indices are for contiguous blocks of possibly different sizes that divides the overall array into <c>blockSize.Length</c> blocks
 			/// </summary>
 			Complicated = 1 << 2,
+			/// <summary>
+			/// Any blocking type
+			/// </summary>
+			Any = 255
 		}
 
 		/// <summary>
@@ -72,6 +79,10 @@ namespace Althea.LinearAlgebra.Sparse
 			/// The row major
 			/// </summary>
 			Row = 1 << 1,
+			/// <summary>
+			/// Any major type
+			/// </summary>
+			Any = 255
 		}
 		#endregion
 
@@ -104,7 +115,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// Statically get a <see cref="SparseFormat"/> representing any format.
 		/// </summary>
-		public static SparseFormat Any => new((Type)255, (Blocking)255, (Major)255);
+		public static SparseFormat Any => new(Type.Any, Blocking.Any, Major.Any);
 
 		/// <summary>
 		/// Statically get a <see cref="SparseFormat"/> representing none of the format.
@@ -316,69 +327,135 @@ namespace Althea.LinearAlgebra.Sparse
 	}
 
 	/// <summary>
-	/// The wrapper ref struct for any sparse array.
+	/// The wrapper struct for any sparse array.
 	/// </summary>
 	/// <typeparam name="TVal">Any unmanaged number as the value data type</typeparam>
 	/// <typeparam name="TSVal">The storage type used by the value array(s)</typeparam>
 	/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
 	/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
-	public ref struct SparseArrayWrapper<TVal, TInd, TSVal, TSInd>
+	/// <remarks>The wrapper is quite large and therefore shall be passed by reference if possible.</remarks>
+	[StructLayout(LayoutKind.Explicit)]
+	public struct SparseArrayWrapper<TVal, TInd, TSVal, TSInd>
 		where TVal : unmanaged, INumber<TVal> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TSVal : class, IStorage<TVal, TSVal> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
+		static SparseArrayWrapper()
+		{
+			if (NativeTypes.Unmanaged<TInd>.Size > 8)
+				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
+		}
+
+		[FieldOffset(0)]
+		private readonly FixedBuffer_128<long> size;
+		[FieldOffset(128 - sizeof(long))]
+		private int rank;
+		[FieldOffset(128)]
+		private readonly FixedClassBuffer_8<TSVal> valueStorage;
+		[FieldOffset(128 + 64)]
+		private readonly FixedClassBuffer_8<TSInd> indexStorage;
+		[FieldOffset(128 * 2)]
+		private readonly FixedBuffer_128<TInd> blockSize;
+		[FieldOffset(128 * 3 - sizeof(long))]
+		private int vals;
+		[FieldOffset(128 * 3 - sizeof(int))]
+		private int inds;
+		[FieldOffset(128 * 3)]
+		private SparseFormat format;
+		[FieldOffset(128 * 3 + sizeof(int))]
+		private TVal defaultVal;
+
+		private const byte MAX_RANK = 15;
+
 		/// <summary>
 		/// The default value of this sparse array
 		/// </summary>
-		public TVal DefaultValue { get; set; }
+		public TVal DefaultValue
+		{
+			get => this.defaultVal;
+			set => this.defaultVal = value;
+		}
 
 		/// <summary>
 		/// The <see cref="SparseFormat"/> of this sparse array
 		/// </summary>
-		public SparseFormat Format { get; set; }
-		
+		public SparseFormat Format
+		{
+			get => this.format;
+			set => this.format = value;
+		}
+
 		/// <summary>
 		/// The size of this sparse array
 		/// </summary>
-		public ReadOnlySpan<long> Size { get; set; }
+		public ReadOnlySpan<long> Size
+		{
+			get => this.size.AsSpan(this.rank);
+			set
+			{
+				this.rank = value.Length;
+				if (this.rank > MAX_RANK)
+					throw new NotSupportedException(Resources.ParameterError.WrongSize);
+				this.size.CopyFromSpan(value);
+			}
+		}
 
 		/// <summary>
 		/// The value array(s) of this sparse array
 		/// </summary>
-		public ReadOnlySpan<TSVal> ValueStorages { get; set; }
+		public ReadOnlySpan<TSVal> ValueStorages
+		{
+			get => this.valueStorage.AsSpan(this.vals);
+			set
+			{
+				this.vals = value.Length;
+				value.CopyTo(this.valueStorage.AsSpan(this.vals));
+			}
+		}
 
 		/// <summary>
 		/// The index array(s) of this sparse array
 		/// </summary>
-		public ReadOnlySpan<TSInd> IndexStorages { get; set; }
+		public ReadOnlySpan<TSInd> IndexStorages
+		{
+			get => this.indexStorage.AsSpan(this.inds);
+			set
+			{
+				this.inds = value.Length;
+				value.CopyTo(this.indexStorage.AsSpan(this.inds));
+			}
+		}
 
 		/// <summary>
 		/// The constant block size of this sparse array, can be empty if it is not a <see cref="SparseFormat.Blocking.Simple"/>
 		/// </summary>
-		public ReadOnlySpan<TInd> BlockSize { get; set; }
-
-		/// <summary>
-		/// Other information related to this sparse array as a <see cref="object"/>
-		/// </summary>
-		public object? OtherInfo { get; set; }
+		public ReadOnlySpan<TInd> BlockSize
+		{
+			get => this.blockSize.AsSpan(this.rank);
+			set
+			{
+				if (value.Length != this.rank)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(value));
+				this.rank = value.Length;
+				this.blockSize.CopyFromSpan(value);
+			}
+		}
 
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with only meta information.
 		/// </summary>
 		public SparseArrayWrapper(TVal defaultValue, SparseFormat format, ReadOnlySpan<long> size = default)
 		{
-			this.DefaultValue = defaultValue;
-			this.Format = format;
+			this = default;
+			this.defaultVal = defaultValue;
+			this.format = format;
 			this.Size = size;
-			this.ValueStorages = default;
-			this.IndexStorages = default;
-			this.BlockSize = default;
-			this.OtherInfo = default;
 		}
 
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with given <paramref name="array"/>.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static SparseArrayWrapper<TVal, TInd, TSVal, TSInd> Create(Arrays.ISparseArray<TVal, TInd, TSVal, TSInd> array!!)
 		{
 			SparseArrayWrapper<TVal, TInd, TSVal, TSInd> wrapper = default;
@@ -397,7 +474,7 @@ namespace Althea.LinearAlgebra.Sparse
 		public void DisposeAll()
 		{
 			this.ValueStorages.ClearList();
-			this.ValueStorages.ClearList();
+			this.IndexStorages.ClearList();
 		}
 		#endregion
 	}

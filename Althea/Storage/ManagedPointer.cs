@@ -1,9 +1,8 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json.Serialization;
 
-using Althea.Linq;
 using Althea.Helpers;
+using Althea.Linq;
 using Althea.NativeTypes;
 
 
@@ -103,7 +102,9 @@ namespace Althea.Storage
 
 		long IStorage.TotalOffsetInBytes => 0;
 
-		static JsonConverter<ManagedPureStorage<T>>? IStorage<T, ManagedPureStorage<T>>.JsonConverter => null;
+#pragma warning disable CS8603
+		static JsonConverter<ManagedPureStorage<T>> IStorage<T, ManagedPureStorage<T>>.JsonConverter => null;
+#pragma warning restore CS8603
 
 		public PointerSegment<ManagedPointer> Pointer { get; }
 
@@ -171,6 +172,19 @@ namespace Althea.Storage
 		public override bool Equals(object? obj) => this.Equals(obj as ManagedPureStorage<T>);
 
 		public override int GetHashCode() => this.Pointer.GetHashCode();
+
+		ReadOnlySpan<long> IStorage<T, ManagedPureStorage<T>>.GetPointerSizes(Span<long> sizes)
+		{
+			if (sizes.Length < 1)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+			sizes[0] = this.Pointer.LengthInBytes;
+			return sizes[..1];
+		}
+
+		bool IStorage.OverlapWith(IStorage other)
+		{
+			return other is ManagedPureStorage<T> mp && this.Pointer.OverlapWith(mp.Pointer);
+		}
 		#endregion
 	}
 }

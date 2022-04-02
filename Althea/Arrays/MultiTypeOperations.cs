@@ -569,6 +569,16 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
+		/// When implemented by a derived class, compute solves of the linear systems: <c><paramref name="opCoef"/>(<paramref name="coefficients"/>) * <paramref name="outSolves"/> == <paramref name="rightHandSides"/></c>.
+		/// </summary>
+		/// <param name="coefficients">The input coefficient matrix to be solved</param>
+		/// <param name="rightHandSides">The input right-hand-side matrix to be solved</param>
+		/// <param name="outSolves">The output solve matrix</param>
+		/// <param name="opCoef">The operation to apply to <paramref name="coefficients"/> during calculation</param>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void LinearSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves, MatrixOperation opCoef = MatrixOperation.None);
+
+		/// <summary>
 		/// Check the input parameters of <see cref="LeastSquareSolve(TMat1, TMat2, TMat3)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -579,16 +589,6 @@ namespace Althea.Arrays
 			if (rightHandSides.NRows != outSolves.NRows || rightHandSides.NCols != outSolves.NCols)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(rightHandSides));
 		}
-
-		/// <summary>
-		/// When implemented by a derived class, compute solves of the linear systems: <c><paramref name="opCoef"/>(<paramref name="coefficients"/>) * <paramref name="outSolves"/> == <paramref name="rightHandSides"/></c>.
-		/// </summary>
-		/// <param name="coefficients">The input coefficient matrix to be solved</param>
-		/// <param name="rightHandSides">The input right-hand-side matrix to be solved</param>
-		/// <param name="outSolves">The output solve matrix</param>
-		/// <param name="opCoef">The operation to apply to <paramref name="coefficients"/> during calculation</param>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void LinearSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves, MatrixOperation opCoef = MatrixOperation.None);
 
 		/// <summary>
 		/// When implemented by a derived class, least square solve the linear systems: <c><paramref name="coefficients"/> * <paramref name="outSolves"/> == <paramref name="rightHandSides"/></c>.
@@ -661,7 +661,7 @@ namespace Althea.Arrays
 		{
 			if (scalar == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
-			reduceInds = order.GetIntSpanOrder(A, reduceInds, true);
+			reduceInds = order.GetOrder(A, reduceInds, true);
 			if (A.Rank - reduceInds.Length == 0)
 			{
 				if (B.Rank != 1 || B.Length != 1)
@@ -698,7 +698,7 @@ namespace Althea.Arrays
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
 			if (A.Rank != B.Rank)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(B));
-			order.GetIntSpanOrder(A, perm, false);
+			order.GetOrder(A, perm, false);
 			Span<long> permA = stackalloc long[A.Rank];
 			A.Size.ReOrderTo(permA, perm);
 			if (!permA.SequenceEqual(B.Size))
@@ -712,10 +712,10 @@ namespace Althea.Arrays
 		/// <param name="order">The given <see cref="TensorOrder"/> to indicate the permutation order</param>
 		/// <param name="scalar">The scalar to multiply to the result</param>
 		/// <param name="B">The output tensor to be replaced</param>
-		/// <param name="op">The <see cref="UnaryOperation"/> to apply to each element during the operation</param>
+		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to each element during the operation</param>
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract static void Permute(TTen1 A, TensorOrder order, T scalar, TTen2 B, UnaryOperation op = UnaryOperation.Identity);
+		public abstract static void Permute(TTen1 A, TensorOrder order, T scalar, TTen2 B, UnaryOperation opA = UnaryOperation.Identity);
 	}
 
 	/// <summary>
@@ -778,7 +778,7 @@ namespace Althea.Arrays
 #pragma warning disable CS8602, CS8604
 			if (!nullA)
 			{
-				orderA.GetIntSpanOrder(A, permA, false);
+				orderA.GetOrder(A, permA, false);
 				Span<long> newSizeA = stackalloc long[A.Rank];
 				A.Size.ReOrderTo(newSizeA, permA);
 				if (!C.Size.SequenceEqual(newSizeA))
@@ -786,7 +786,7 @@ namespace Althea.Arrays
 			}
 			if (!nullB)
 			{
-				orderB.GetIntSpanOrder(B, permB, false);
+				orderB.GetOrder(B, permB, false);
 				Span<long> newSizeB = stackalloc long[B.Rank];
 				B.Size.ReOrderTo(newSizeB, permB);
 				if (!C.Size.SequenceEqual(newSizeB))
@@ -901,6 +901,30 @@ namespace Althea.Arrays
 		/// <param name="right">One original tensor as the right operand</param>
 		/// <returns>A new <typeparamref name="TTen3"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
 		public abstract static TTen3 operator -(TTen1 left, TTen2 right);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the which is the tensor contraction of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// </summary>
+		/// <param name="left">One original tensor as the left operand</param>
+		/// <param name="right">One original tensor as the right operand</param>
+		/// <returns>A new <typeparamref name="TTen3"/> which is the contraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors</returns>
+		public abstract static TTen3 operator *(TTen2 left, TTen1 right);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// </summary>
+		/// <param name="left">One original tensor as the left operand</param>
+		/// <param name="right">One original tensor as the right operand</param>
+		/// <returns>A new <typeparamref name="TTen3"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
+		public abstract static TTen3 operator +(TTen2 left, TTen1 right);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TTen3"/> which is the (point-wise) subtraction result of the given <paramref name="left"/> and <paramref name="right"/> tensors.
+		/// </summary>
+		/// <param name="left">One original tensor as the left operand</param>
+		/// <param name="right">One original tensor as the right operand</param>
+		/// <returns>A new <typeparamref name="TTen3"/> which is the addition result of the given <paramref name="left"/> and <paramref name="right"/> tensor</returns>
+		public abstract static TTen3 operator -(TTen2 left, TTen1 right);
 	}
 	#endregion
 }

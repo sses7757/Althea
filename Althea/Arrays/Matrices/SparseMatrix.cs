@@ -718,7 +718,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	public sealed class CoordinateSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
+	public class CoordinateSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
 		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
@@ -903,7 +903,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	public sealed class CompressSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
+	public class CompressSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
 		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{

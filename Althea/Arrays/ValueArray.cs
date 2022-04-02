@@ -31,7 +31,9 @@ namespace Althea.Arrays
 			{
 				if (storage.Reference is null)
 				{
-					if (!References.ContainsKey(storage))
+					if (References.TryGetValue(storage, out var list))
+						list.Add(storage);
+					else
 						References.Add(storage, new() { storage });
 				}
 				else

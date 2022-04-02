@@ -61,6 +61,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
     </Compile>
+    <Compile Update="Random\API.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>API.tt</DependentUpon>
+    </Compile>
     <Compile Update="Resources\ArithmeticError.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -164,6 +169,10 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SwapSort.cs</LastGenOutput>
     </None>
+    <None Update="Random\API.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>API.cs</LastGenOutput>
+    </None>
     <None Update="Storage\MixedStorage.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>MixedStorage.cs</LastGenOutput>
@@ -176,6 +185,14 @@
 
   <ItemGroup>
     <Folder Include="documents\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Random\API.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>API.tt</DependentUpon>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

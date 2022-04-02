@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -8,7 +9,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-// Ignore Spelling: nameof
+// Ignore Spelling: nameof foreach api namespace
 
 namespace Althea.SourceGenerator
 {
@@ -83,12 +84,14 @@ namespace Althea.SourceGenerator
 						continue;
 					if (!m.HasAttribute(nameof(AbstractApiMethodAttribute)))
 						continue;
-
+					if (m.TypeParameterList is null)
+						continue;
 					var typeParams = m.TypeParameterList.Parameters.Zip(m.ConstraintClauses, (p, c) => (p, c)).Where(pc => pc.p.Identifier.ToString() == "T" && pc.c.Constraints.Where(cc => cc.ToString() == "unmanaged").Any());
 					if (typeParams.Any())
 					{
 						typeT = typeParams.First().p;
 						typeTConstraint = typeParams.First().c;
+						break;
 					}
 				}
 			}
@@ -184,14 +187,14 @@ namespace {ns.Name}
 					methodMain = Regex.Replace(methodMain, @"\[\]\r?\n", "");
 					if (methodMain.EndsWith(";"))
 						methodMain = methodMain.Substring(0, methodMain.Length - 1);
-					string newParamsInvoke = string.Join(", ", newParams.Select(p => duplicateT && p.HasAttribute(nameof(DuplicateTParameterAttribute)) ? $"{p.Identifier} * Unmanaged<T>.Size" : p.Identifier.ToString()));
+					string newParamsInvoke = string.Join(", ", newParams.Select(p => duplicateT && p.HasAttribute(nameof(DuplicateTParameterAttribute)) ? $"{p.Identifier} * Unmanaged<T>.Size" : p.InvokeRepr()));
 					if (duplicateT)
 					{
 						methodMain += $" => {method.Identifier}{orgTypeParams}({newParamsInvoke})" + (hasReturn && returnParam.HasAttribute(nameof(DuplicateTParameterAttribute)) ? " * Unmanaged<T>.Size;" : ";");
 					}
 					else if (hasReturn)
 					{
-						string allParamsInvoke = string.Join(", ", allParams.Select(p => p == returnParam ? $"out {p.Type} {p.Identifier}" : p.Identifier.ToString()));
+						string allParamsInvoke = string.Join(", ", allParams.Select(p => p == returnParam ? $"out {p.Type} {p.Identifier}" : p.InvokeRepr()));
 						string body = $@"
 		{{
 			foreach (var api in ApiEnumerable)
@@ -205,7 +208,7 @@ namespace {ns.Name}
 					}
 					else
 					{
-						string allParamsInvoke = string.Join(", ", allParams.Select(p => p.Identifier));
+						string allParamsInvoke = string.Join(", ", allParams.Select(p => p.InvokeRepr()));
 						string body = $@"
 		{{
 			foreach (var api in ApiEnumerable)
@@ -246,18 +249,9 @@ namespace {ns.Name}
 
 		public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
 		{
-			// Business logic to decide what we're interested in goes here
 			if (syntaxNode is InterfaceDeclarationSyntax cds && cds.HasAttribute(nameof(AbstractRuntimeApiAttribute)))
 			{
 				ApiInterfaces.Add(cds);
-				////var ns = cds.Parent as NamespaceDeclarationSyntax;
-				////string name = ns.Name + "." + cds.Identifier.ToString().Replace("Abstract", "") + "Selector";
-				////int count = 0; string actualName = name;
-				////while (FileNames.Contains(actualName))
-				////{
-				////	actualName = name + (++count);
-				////}
-				////FileNames.Add(actualName);
 			}
 			if (this.VoidReturnType is null && syntaxNode is MethodDeclarationSyntax mds && mds.ReturnType.ToString() == "void")
 			{
@@ -325,6 +319,15 @@ namespace {ns.Name}
 						return true;
 			}
 			return false;
+		}
+
+		public static string InvokeRepr(this ParameterSyntax param)
+		{
+			var modifiers = param.Modifiers;
+			string repr = string.Join(" ", modifiers);
+			if (repr.Length > 0)
+				repr += " ";
+			return repr + param.Identifier.ToString();
 		}
 	}
 }

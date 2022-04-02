@@ -353,7 +353,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static DenseTensor<T, TS> operator ^(DenseTensor<T, TS> tensor!!, TensorOrder order)
 		{
-			var perm = order.GetIntSpanOrder(tensor, stackalloc int[tensor.rank]);
+			var perm = order.GetOrder(tensor, stackalloc int[tensor.rank]);
 			Span<long> newSize = stackalloc long[tensor.rank];
 			tensor.Size.ReOrderTo(newSize, perm);
 			var storage = tensor.values.ResizeAlike(tensor.length);
