@@ -542,19 +542,17 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface for matrices' in-place solvers.
+	/// The interface for matrices' in-place linear solver.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat4">The fourth matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixSolvers<T, in TMat1, in TMat2, in TMat3, in TMat4>
+	public interface IMatrixLinearSolve<T, in TMat1, in TMat2, in TMat3>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
 		where TMat3 : class, IBaseMatrix<T, TMat3>
-		where TMat4 : class, IBaseMatrix<T, TMat4>
 	{
 		/// <summary>
 		/// Check the input parameters of <see cref="LinearSolve(TMat1, TMat2, TMat3, MatrixOperation)"/>.
@@ -577,7 +575,21 @@ namespace Althea.Arrays
 		/// <param name="opCoef">The operation to apply to <paramref name="coefficients"/> during calculation</param>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public abstract static void LinearSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves, MatrixOperation opCoef = MatrixOperation.None);
+	}
 
+	/// <summary>
+	/// The interface for matrices' in-place least square solver.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixLeastSolve<T, in TMat1, in TMat2, in TMat3>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+	{
 		/// <summary>
 		/// Check the input parameters of <see cref="LeastSquareSolve(TMat1, TMat2, TMat3)"/>.
 		/// </summary>
@@ -598,12 +610,26 @@ namespace Althea.Arrays
 		/// <param name="outSolves">The output solve matrix</param>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public abstract static void LeastSquareSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves);
+	}
 
+	/// <summary>
+	/// The interface for matrices' in-place QR solvers.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixQRSolve<T, in TMat1, in TMat2, in TMat3>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+	{
 		/// <summary>
-		/// Check the input parameters of <see cref="QRDecomposition(TMat1, TMat3, TMat4?, bool)"/>.
+		/// Check the input parameters of <see cref="QRDecomposition(TMat1, TMat2, TMat3?, bool)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckQR(TMat1 matrix, TMat3 outTriangular, TMat4? outUnary, bool full)
+		protected static void CheckQR(TMat1 matrix, TMat2 outTriangular, TMat3? outUnary, bool full)
 		{
 			if (matrix.NRows == matrix.NCols)
 			{
@@ -637,7 +663,7 @@ namespace Althea.Arrays
 		/// <param name="full">Whether to compute the full QR or partial QR</param>
 		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void QRDecomposition(TMat1 matrix, TMat3 outTriangular, TMat4? outUnary, bool full = false);
+		public abstract static void QRDecomposition(TMat1 matrix, TMat2 outTriangular, TMat3? outUnary, bool full = false);
 	}
 	#endregion
 

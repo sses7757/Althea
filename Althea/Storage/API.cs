@@ -808,6 +808,8 @@ namespace Althea.Storage
 				throw new ArgumentNullException(nameof(source));
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
+			if (source == destination)
+				return 0;
 			if (source.OverlapWith(destination))
 				throw new InvalidOperationException(StorageError.CannotCopyOverlap);
 
