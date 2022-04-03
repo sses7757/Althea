@@ -1,23 +1,26 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.Storage;
 
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
-using Lapack = Althea.LinearAlgebra.Dense.LapackApiSelector;
 using HalfBlas = Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector;
+using Lapack = Althea.LinearAlgebra.Dense.LapackApiSelector;
 
 
-namespace Althea.Arrays.Matrices
+namespace Althea.Arrays
 {
 	/// <summary>
-	/// The static class for dense matrices and dense vectors' operations of same data type and storage type.
+	/// The static class for dense linear algebra and tensor algebra operations of same data type and storage type.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
-	public sealed class DenseLinearAlgebraOperation<T, TS> :
+	public sealed class DenseOperation<T, TS> :
+		IVectorOperations<T, DenseVector<T, TS>, DenseVector<T, TS>>,
+
 		IMatrixGetDiagonalVector<T, DenseVector<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixSetDiagonalVector<T, DenseVector<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixGetDiagonalVectorVariant<T, DenseVector<T, TS>, DenseMatrix<T, TS>>,
@@ -42,7 +45,15 @@ namespace Althea.Arrays.Matrices
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
 	{
-		#region diag
+		#region vector
+		/// <inheritdoc/>
+		public static T Dot(DenseVector<T, TS> left!!, DenseVector<T, TS> right!!, bool conjugateLeft = true) => Blas.Dot<T, TS, TS>(conjugateLeft, left.Storage, left.Stride, right.Storage, right.Stride);
+
+		/// <inheritdoc/>
+		public static void AddBy(DenseVector<T, TS> left!!, DenseVector<T, TS> right!!, T scalar) => Blas.Add(scalar, right.Storage, right.Stride, left.Storage, left.Stride);
+		#endregion
+
+		#region matrix diag
 		/// <inheritdoc/>
 		public static DenseVector<T, TS> GetDiag(DenseMatrix<T, TS> matrix!!, long k)
 		{
@@ -325,10 +336,10 @@ namespace Althea.Arrays.Matrices
 			}
 			else
 			{
-				A.TransposeCopyTo(C);
+				HalfBlas.HalfMatrixCopy<T, TS, TS>(A.Upper, !A.UnitDiagonal, MatrixOperation.Transpose, m, n, A.Storage, A.LeadDim, C.Storage, C.LeadDim);
 				opA = opA.Transpose();
 			}
-			ExtBlas.MatrixClearUpperLowerPart<T, TS>(A.Upper, Math.Min(m, n), C.Storage, C.LeadDim);
+			HalfBlas.HalfMatrixClearPart<T, TS>(A.UnitDiagonal, A.Upper, m, n, C.Storage, C.LeadDim);
 			if (A.UnitDiagonal)
 				ExtBlas.FillWithValue(C.Storage, T.One, C.LeadDim + 1);
 			AddMatrices(C, scalarA, B, scalarB, C, opA, opB);
@@ -414,11 +425,29 @@ namespace Althea.Arrays.Matrices
 		/// <returns>A created <see cref="TriangularMatrix{T, TS}"/> as the addition result.</returns>
 		public static TriangularMatrix<T, TS> AddMatrices(TriangularMatrix<T, TS>? A, T scalarA, TriangularMatrix<T, TS>? B, T scalarB, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
+#pragma warning disable CS8604
+			if (A is null || scalarA == T.Zero)
+				return OutOfPlaceOp(B, scalarB, opB);
+			if (B is null || scalarB == T.Zero)
+				return OutOfPlaceOp(A, scalarA, opA);
+#pragma warning restore CS8604
+			bool upperA = false, unitA = false;
+			if (A is not null)
+			{
+				upperA = A.Upper == opA.CanInPlace(); unitA = A.UnitDiagonal;
+			}
+			bool upperB = upperA, unitB = false;
+			if (B is not null)
+			{
+				upperB = B.Upper == opB.CanInPlace(); unitB = B.UnitDiagonal;
+			}
+			if (upperA != upperB || (unitA & unitB))
+				throw new ArgumentException(Resources.ParameterError.InvalidValue);
 			var output = CheckOutOfPlaceAdd(A, scalarA, B, scalarB, opA, opB, A?.Storage ?? B?.Storage, out long m, out long n);
 			try
 			{
-				AddMatrices(A, scalarA, B, scalarB, output, opA, opB);
-				return output;
+				HalfBlas.HalfMatricesAdd(!unitA || !unitB, upperA, opA, opB, m, n, scalarA, A?.Storage, A?.LeadDim ?? 1, scalarB, B?.Storage, B?.LeadDim ?? 1, output, m);
+				return new TriangularMatrix<T, TS>(upperA, output, m, n, 0, unitA);
 			}
 			catch (Exception)
 			{
@@ -430,15 +459,14 @@ namespace Althea.Arrays.Matrices
 		private static TriangularMatrix<T, TS> OutOfPlaceOp(TriangularMatrix<T, TS> matrix, T scalar, MatrixOperation operation)
 		{
 			if (operation == MatrixOperation.None)
-				return ((ICloneable<TriangularMatrix<T, TS>>) matrix).Clone();
+				return matrix.ApplyToClone(m => m.Scale(scalar));
 			if (operation == MatrixOperation.Conjugate)
-				return matrix.ApplyToClone(static m => ExtBlas.PointWiseConjugate<T, TS>(m.values, 1));
-			var output = matrix.values.ResizeAlike(matrix.rows * matrix.cols);
+				return matrix.ApplyToClone(m => { ExtBlas.PointWiseConjugate<T, TS>(m.Storage, 1); m.Scale(scalar); });
+			var output = matrix.Storage.ResizeAlike(matrix.NRows * matrix.NCols);
 			try
 			{
-				matrix.values.Copy2DTo<T, TS, TS>(matrix.leadDim, output, matrix.rows, matrix.rows, matrix.cols);
-				ExtBlas.GeneralMatricesAdd(operation, default, matrix.cols, matrix.rows, scalar, output, matrix.rows, default, (TS?)null, 1, output, matrix.cols); // in-place transpose
-				return new (!matrix.upper, output, matrix.cols, matrix.rows, 0, matrix.unitDiag);
+				HalfBlas.HalfMatrixCopy<T, TS, TS>(matrix.Upper, !matrix.UnitDiagonal, operation, matrix.NRows, matrix.NCols, matrix.Storage, matrix.LeadDim, output, matrix.NCols);
+				return new (!matrix.Upper, output, matrix.NCols, matrix.NRows, 0, matrix.UnitDiagonal);
 			}
 			catch (Exception)
 			{
@@ -459,11 +487,15 @@ namespace Althea.Arrays.Matrices
 		/// <exception cref="ArgumentException">If any of the matrices is null or empty; or the multiplication cannot be performed due to incompatible sizes</exception>
 		public static TriangularMatrix<T, TS> MultiplyMatries(T α, TriangularMatrix<T, TS> A!!, TriangularMatrix<T, TS> B!!, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
+			bool upperA = A.Upper == opA.CanInPlace();
+			bool upperB = B.Upper == opB.CanInPlace();
+			if (upperA != upperB || A.UnitDiagonal != B.UnitDiagonal)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue);
 			var output = CheckOutOfPlaceMul(α, A, B, opA, opB, A.Storage, out long m, out long n, out long k);
 			try
 			{
-				Blas.TriangularMatrixMultiply(false, B.Upper, B.UnitDiagonal, opB, opA, m, n, k, α, B.Storage, B.LeadDim, A.Storage, A.LeadDim, output, m);
-				return new(output, m, n);
+				HalfBlas.TriangularMatricesMultiply(A.UnitDiagonal, upperA, opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, T.Zero, output, m);
+				return new(upperA, output, m, n, 0, A.UnitDiagonal);
 			}
 			catch (Exception)
 			{
@@ -472,19 +504,35 @@ namespace Althea.Arrays.Matrices
 			}
 		}
 		/// <inheritdoc/>
-		public static void AddMatrices(TriangularMatrix<T, TS>? A, T scalarA, TriangularMatrix<T, TS>? B, T scalarB, TriangularMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		/// <exception cref="ArgumentException">If the <see cref="TriangularMatrix{T, TS}.Upper"/>s or <see cref="TriangularMatrix{T, TS}.UnitDiagonal"/>s are incompatible</exception>
+		public static void AddMatrices(TriangularMatrix<T, TS>? A, T scalarA, TriangularMatrix<T, TS>? B, T scalarB, TriangularMatrix<T, TS> C!!, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (m, n) = IMatrixOperations<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>.CheckMatAdd(A, scalarA, B, scalarB, C, opA, opB);
-			if (A is null || scalarA == T.Zero)
+			bool upperA = C.Upper, unitA = false;
+			if (A is not null)
 			{
-				
+				upperA = A.Upper == opA.CanInPlace(); unitA = A.UnitDiagonal;
 			}
+			bool upperB = C.Upper, unitB = false;
+			if (B is not null)
+			{
+				upperB = B.Upper == opB.CanInPlace(); unitB = B.UnitDiagonal;
+			}
+			if (upperA != upperB || upperA != C.Upper || (unitA && unitB) || (unitA || unitB) != C.UnitDiagonal)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue);
+			HalfBlas.HalfMatricesAdd(!unitA || !unitB, upperA, opA, opB, m, n, scalarA, A?.Storage, A?.LeadDim ?? 1, scalarB, B?.Storage, B?.LeadDim ?? 1, C.Storage, C.LeadDim);
 		}
 
 		/// <inheritdoc/>
-		public static void MultiplyMatries(T α, TriangularMatrix<T, TS> A, TriangularMatrix<T, TS> B, T β, TriangularMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		/// <exception cref="ArgumentException">If the <see cref="TriangularMatrix{T, TS}.Upper"/>s or <see cref="TriangularMatrix{T, TS}.UnitDiagonal"/>s are incompatible</exception>
+		public static void MultiplyMatries(T α, TriangularMatrix<T, TS> A!!, TriangularMatrix<T, TS> B!!, T β, TriangularMatrix<T, TS> C!!, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			throw new NotImplementedException();
+			var (m, n, k) = IMatrixOperations<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			bool upperA = A.Upper == opA.CanInPlace();
+			bool upperB = B.Upper == opB.CanInPlace();
+			if (upperA != upperB || upperA != C.Upper || A.UnitDiagonal != B.UnitDiagonal || A.UnitDiagonal != C.UnitDiagonal)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue);
+			HalfBlas.TriangularMatricesMultiply(A.UnitDiagonal, upperA, opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
 		}
 		#endregion
 
@@ -529,7 +577,7 @@ namespace Althea.Arrays.Matrices
 					using var temp = matrix.ToCompact();
 					Lapack.QRDecomposition<T, TS, TS>(full, matrix.NRows, matrix.NCols, temp, matrix.NRows, outUnary?.Storage, outUnary?.LeadDim ?? 1);
 					temp.Copy2DTo<T, TS, TS>(matrix.NRows, outTriangular.Storage, outTriangular.LeadDim, matrix.NCols, matrix.NCols);
-					ExtBlas.MatrixClearUpperLowerPart<T, TS>(true, matrix.NCols, outTriangular.Storage, outTriangular.LeadDim);
+					HalfBlas.HalfMatrixClearPart<T, TS>(false, true, matrix.NRows, matrix.NCols, outTriangular.Storage, outTriangular.LeadDim);
 				}
 			}
 		}

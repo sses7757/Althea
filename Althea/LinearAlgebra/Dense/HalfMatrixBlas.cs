@@ -25,9 +25,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
+		/// <param name="addDiag">Whether to add the matrices' diagonal elements or not</param>
+		/// <param name="upper">Whether all matrices' (after <see cref="MatrixOperation"/>s) upper half or lower half is stored</param>
 		/// <param name="opA">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
 		/// <param name="opB">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="B"/></param>
 		/// <param name="m">The number of rows of matrix <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="C"/></param>
@@ -38,16 +37,45 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="β">The scalar used for multiplication. If <c><paramref name="β"/> == 0</c>, <paramref name="B"/> does not have to be a valid input</param>
 		/// <param name="B">The array of dimensions <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="MatrixOperation.None"/> and <c><paramref name="ldb"/>×<paramref name="m"/></c> with <c><paramref name="ldb"/> ≥ max(1, <paramref name="n"/>)</c> otherwise</param>
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store the matrix <paramref name="B"/></param>
-		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c>, its upper is implied by <paramref name="upperA"/>, <paramref name="upperB"/>, <paramref name="opA"/> and <paramref name="opB"/></param>
+		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store the matrix <paramref name="C"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentException">If the parameters do not fit any mode</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatricesAdd<T, TS1, TS2, TS3>(bool unitDiag, bool upperA, bool upperB,MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool HalfMatricesAdd<T, TS1, TS2, TS3>(bool addDiag, bool upper, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
-		/// When implemented by a derived class, copy the matrix <paramref name="A"/>'s upper or lower part to the other part and set the diagonal elements to its absolute value is <typeparamref name="T"/> is a complex type.
+		/// When implemented by a derived class, perform the triangular matrix-matrix multiplication:<br/>
+		/// <paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/>.<br/>
+		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars; <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are matrices stored in column-major format with dimensions <paramref name="opA"/>(<paramref name="A"/>) → <paramref name="m"/>×<paramref name="k"/>, <paramref name="opB"/>(<paramref name="B"/>) → <paramref name="k"/>×<paramref name="n"/> and <paramref name="C"/> → <paramref name="m"/>×<paramref name="n"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upper">Whether all matrices' (after <see cref="MatrixOperation"/>s) upper or lower parts are stored</param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="B"/></param>
+		/// <param name="m">The number of rows of matrix <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="C"/></param>
+		/// <param name="n">The number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
+		/// <param name="k">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and rows of <paramref name="opB"/>(<paramref name="B"/>)</param>
+		/// <param name="α">The scalar to be multiplied to <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>)</param>
+		/// <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="m"/>)</c> if <paramref name="opA"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="k"/>)</c> otherwise</param>
+		/// <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
+		/// <param name="B">The array of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c> with <c><paramref name="ldb"/> ≥ max(0, <paramref name="k"/>)</c> if <paramref name="opB"/> == <see cref="MatrixOperation.None"/>, and <c><paramref name="ldb"/>×<paramref name="k"/></c> with <c><paramref name="lda"/> ≥ max(0, <paramref name="n"/>)</c> otherwise</param>
+		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
+		/// <param name="β">The scalar to be multiplied to <paramref name="C"/>. If this is 0, the original values of <paramref name="C"/> will be ignored.</param>
+		/// <param name="C">The array of dimensions <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(0, <paramref name="m"/>)</c></param>
+		/// <param name="ldc">The leading dimension of a two-dimensional array used to store the matrix <paramref name="C"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+		[AbstractApiMethod]
+		public abstract bool TriangularMatricesMultiply<T, TS1, TS2, TS3>(bool unitDiag, bool upper, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <summary>
+		/// When implemented by a derived class, make the matrix <paramref name="A"/> a normal one by copying its upper or lower part to the other part and set the diagonal elements to its absolute value is <typeparamref name="T"/> is a complex type.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
@@ -59,13 +87,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool MatrixCopyUpperLowerParts<T, TS>(bool upper, bool hermitian, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool SymmetricMatrixToNormal<T, TS>(bool upper, bool hermitian, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, clear the matrix <paramref name="A"/>'s upper or lower part (not including the diagonal elements) to 0.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="clearDiag">Whether the diagonal of <paramref name="A"/> shall be cleared or not</param>
 		/// <param name="clearLower">Whether the lower triangular part of <paramref name="A"/> shall be cleared or its upper part</param>
 		/// <param name="m">The number of rows of <paramref name="A"/></param>
 		/// <param name="n">The number of columns of <paramref name="A"/></param>
@@ -74,7 +103,27 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool MatrixClearUpperLowerPart<T, TS>(bool clearLower, long m, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool HalfMatrixClearPart<T, TS>(bool clearDiag, bool clearLower, long m, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, copy the matrix <paramref name="opA"/>(<paramref name="A"/>)'s upper or lower part to <paramref name="B"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS1">The actual input storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The actual output storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="copyDiag">Whether to copy the diagonal of <paramref name="A"/> or not</param>
+		/// <param name="upper">Whether the upper triangular part of <paramref name="A"/> is stored or its lower part</param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+		/// <param name="m">The number of rows of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="n">The number of columns of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="A">The input matrix with size <paramref name="m"/>×<paramref name="n"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="m"/></param>
+		/// <param name="B">The output matrix with size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/>, must be at least <paramref name="m"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+		[AbstractApiMethod]
+		public abstract bool HalfMatrixCopy<T, TS1, TS2>(bool upper, bool copyDiag, MatrixOperation opA, long m, long n, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 
 		#region matrix math
@@ -83,6 +132,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -100,6 +151,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
+		/// <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to be checked</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -119,6 +173,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
+		/// <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to be multiplied in-place</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -137,6 +194,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
+		/// <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to be divided in-place</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -154,6 +214,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to be powered in-place</param>
 		/// <param name="p">The exponent as a <typeparamref name="T"/></param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -170,6 +232,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to be added in-place</param>
 		/// <param name="scalar">The scalar to add</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -188,6 +252,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TOut">Any unmanaged number as the output data type</typeparam>
 		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperSrc">Whether <paramref name="source"/>'s upper half or lower half is stored</param>
+		/// <param name="upperDst">Whether <paramref name="destination"/>'s upper half or lower half is stored</param>
 		/// <param name="source">The source matrix</param>
 		/// <param name="rows">The number of rows</param>
 		/// <param name="cols">The number of columns</param>
@@ -205,6 +272,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to be truncated in-place</param>
 		/// <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -221,6 +290,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to sum</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -233,10 +304,30 @@ namespace Althea.LinearAlgebra.Dense
 		public abstract bool TriangularMatrixSum<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
+		/// When implemented by a derived class, aggregately sum the absolute values of the elements in matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
+		/// <param name="A">The matrix to sum</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool TriangularMatrixAbsSum<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
 		/// When implemented by a derived class, aggregately sum the elements in matrix <paramref name="A"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="symmHerm">Whether all matrices are symmetric or Hermitian</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to sum</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -253,6 +344,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="symmHerm">Whether all matrices are symmetric or Hermitian</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to sum</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -269,6 +362,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to sum</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -285,6 +380,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="symmHerm">Whether all matrices are symmetric or Hermitian</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to sum</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -301,6 +398,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="symmHerm">Whether all matrices are symmetric or Hermitian</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to product</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -317,6 +416,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to sum</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -326,13 +427,33 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixAbsArgMax<T, TS>(TS A, bool upperA, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool TriangularMatrixAbsArgMax<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
-		/// When implemented by a derived class, get the index of the index of the element with smallest absolute value in matrix <paramref name="A"/>.
+		/// When implemented by a derived class, get the index of the element with largest absolute value in matrix <paramref name="A"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="symmHerm">Whether all matrices are symmetric or Hermitian</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
+		/// <param name="A">The matrix to sum</param>
+		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		[AbstractApiMethod]
+		public abstract bool SymmetricMatrixAbsArgMax<T, TS>(bool symmHerm, TS A, bool upperA, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, get the index of the element with smallest absolute value in matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="symmHerm">Whether all matrices are symmetric or Hermitian</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to sum</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -350,6 +471,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="symmHerm">Whether all matrices are symmetric or Hermitian (true or false) or triangular (null)</param>
+		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to sum</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -368,6 +492,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="symmHerm">Whether all matrices are symmetric or Hermitian</param>
+		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
 		/// <param name="A">The matrix to product</param>
 		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
@@ -380,6 +506,5 @@ namespace Althea.LinearAlgebra.Dense
 		[AbstractApiMethod]
 		public abstract bool SymmetricMatrixProductColumns<T, TS1, TS2>(bool symmHerm, TS1 A, bool upperA, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1>;
 		#endregion
-
 	}
 }

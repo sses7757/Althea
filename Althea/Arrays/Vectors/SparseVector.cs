@@ -373,7 +373,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void SetDiag(DenseMatrix<T, TS> matrix, long k, SparseVector<T, TInd, TS, TSInd> value)
 		{
-			var diag = DenseMatrix<T, TS>.GetDiag(matrix, k);
+			var diag = DenseOperation<T, TS>.GetDiag(matrix, k);
 			diag.FillWith(T.Zero);
 			AddBy(diag, value, T.One);
 		}

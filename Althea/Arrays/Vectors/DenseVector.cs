@@ -20,7 +20,6 @@ namespace Althea.Arrays
 	[StructLayout(LayoutKind.Sequential)]
 	public class DenseVector<T, TS> : IPitchedArray<T>,
 		IBaseVector<T, DenseVector<T, TS>>,
-		IVectorOperations<T, DenseVector<T, TS>, DenseVector<T, TS>>,
 		IVectorUnaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>>,
 		IVectorBinaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseVector<T, TS>>
 		where T : unmanaged, INumber<T>
@@ -209,20 +208,12 @@ namespace Althea.Arrays
 		public T ValueWithMinAbs() => (this.values + Blas.AbsoluteValueArgMin<T, TS>(this.values, this.stride)).ToManaged<T, TS>();
 		#endregion
 
-		#region operations
-		/// <inheritdoc/>
-		public static T Dot(DenseVector<T, TS> left, DenseVector<T, TS> right, bool conjugateLeft = true) => Blas.Dot<T, TS, TS>(conjugateLeft, left.values, left.stride, right.values, right.stride);
-
-		/// <inheritdoc/>
-		public static void AddBy(DenseVector<T, TS> left, DenseVector<T, TS> right, T scalar) => Blas.Add(scalar, right.values, right.stride, left.values, left.stride);
-		#endregion
-
 		#region operators
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator -(DenseVector<T, TS> vector) => vector.ApplyToClone(static c => c.Scale(-T.One));
+		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector, T scalar) => vector.ApplyToClone(c => c.Scale(scalar));
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector, T scalar) => vector.ApplyToClone(c => c.Scale(scalar));
+		public static DenseVector<T, TS> operator -(DenseVector<T, TS> vector) => vector * (-T.One);
 
 		/// <inheritdoc/>
 		public static DenseVector<T, TS> operator *(T scalar, DenseVector<T, TS> vector) => vector * scalar;
@@ -231,10 +222,10 @@ namespace Althea.Arrays
 		public static DenseVector<T, TS> operator /(DenseVector<T, TS> vector, T scalar) => vector * (T.One / scalar);
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator +(DenseVector<T, TS> left, DenseVector<T, TS> right) => left.ApplyToClone(c => AddBy(c, right, T.One));
+		public static DenseVector<T, TS> operator +(DenseVector<T, TS> left, DenseVector<T, TS> right) => left.ApplyToClone(c => DenseOperation<T, TS>.AddBy(c, right, T.One));
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator -(DenseVector<T, TS> left, DenseVector<T, TS> right) => left.ApplyToClone(c => AddBy(c, right, -T.One));
+		public static DenseVector<T, TS> operator -(DenseVector<T, TS> left, DenseVector<T, TS> right) => left.ApplyToClone(c => DenseOperation<T, TS>.AddBy(c, right, -T.One));
 		#endregion
 
 		#region conversion and clone

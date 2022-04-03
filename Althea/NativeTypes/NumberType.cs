@@ -41,6 +41,15 @@ namespace Althea.NativeTypes
 	#region native types
 	internal static class ComplexConverter
 	{
+		private static unsafe TComp DirectConvertComplexConj<TComp, TReal>(TComp value)
+			where TComp : unmanaged, INumber<TComp> where TReal : unmanaged, INumber<TReal>
+		{
+			TComp result = value;
+			TReal real = *(TReal*)&value;
+			((TReal*)&result)[0] = real;
+			return result;
+		}
+
 		private static unsafe bool DirectConvertComp2Comp<TFrom, TTFrom, TTo, TTTo>(TFrom value, out TTo result)
 			where TFrom : unmanaged, INumber<TFrom> where TTFrom : unmanaged, INumber<TTFrom>
 			where TTo : unmanaged, INumber<TTo> where TTTo : unmanaged, INumber<TTTo>
@@ -54,6 +63,31 @@ namespace Althea.NativeTypes
 			*(TTTo*)&temp = real; *(1 + (TTTo*)&temp) = imag;
 			result = temp;
 			return true;
+		}
+
+		internal static class Conjugater<T> where T : INumber<T>
+		{
+			internal delegate T DelegateComplexConjuagte(T value);
+
+			internal static readonly DelegateComplexConjuagte? Default;
+
+			static Conjugater()
+			{
+				if (!typeof(T).IsGenericType || typeof(T).GenericTypeArguments.Length != 1 || !NumberType<T>.IsComplex)
+				{
+					Default = null;
+					return;
+				}
+				try
+				{
+					var method = typeof(ComplexConverter).GetMethod(nameof(ComplexConverter.DirectConvertComplexConj), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(typeof(T), typeof(T).GenericTypeArguments[0]);
+					Default = method?.CreateDelegate<DelegateComplexConjuagte>();
+				}
+				catch (Exception)
+				{
+					Default = null;
+				}
+			}
 		}
 
 		private static unsafe TTo SatConvertComp2Comp<TFrom, TTFrom, TTo, TTTo>(TFrom v)
@@ -100,7 +134,7 @@ namespace Althea.NativeTypes
 					method = typeof(ComplexConverter).GetMethod(nameof(ComplexConverter.TruConvertComp2Comp), BindingFlags.NonPublic | BindingFlags.Static)?.MakeGenericMethod(typeof(TFrom), typeof(TFrom).GenericTypeArguments[0], typeof(TTo), typeof(TTo).GenericTypeArguments[0]);
 					Truncating = method?.CreateDelegate<DelegateNonDirectConvertToComplex>();
 				}
-				catch (System.Exception)
+				catch (Exception)
 				{
 					Default = null;
 					Saturating = Truncating = null;
@@ -148,6 +182,22 @@ namespace Althea.NativeTypes
 				return y;
 			else
 				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
+		}
+
+		/// <summary>
+		/// Get the conjugate of a number <paramref name="x"/> of any number type if it is a complex type, otherwise <paramref name="x"/> itself.
+		/// </summary>
+		/// <typeparam name="T">The number type</typeparam>
+		/// <param name="x">The number to get conjugate</param>
+		/// <returns>The conjugate of <paramref name="x"/> if it is a complex type, otherwise <paramref name="x"/> itself.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe static T Conjugate<T>(this T x) where T : unmanaged, INumber<T>
+		{
+			if (!NumberType<T>.IsComplex)
+				return x;
+			if (ComplexConverter.Conjugater<T>.Default is null)
+				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
+			return ComplexConverter.Conjugater<T>.Default.Invoke(x);
 		}
 	}
 
