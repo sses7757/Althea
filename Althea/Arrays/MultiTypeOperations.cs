@@ -1,7 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Althea.Linq;
 using Althea.LinearAlgebra;
+using Althea.Linq;
+using Althea.Storage;
 using Althea.TensorAlgebra;
 
 
@@ -40,7 +41,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec1">The current concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec2">The other concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	public interface IVectorOperations<T, in TVec1, in TVec2>
+	public interface IVectorOperations<T, TVec1, TVec2>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>
 		where TVec2 : class, IBaseVector<T, TVec2>
@@ -69,7 +70,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	public interface IVectorUnaryOperators<T, in TVec1, out TVec2>
+	public interface IVectorUnaryOperators<T, TVec1, TVec2>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>, IVectorUnaryOperators<T, TVec1, TVec2>
 		where TVec2 : class, IBaseVector<T, TVec2>
@@ -114,7 +115,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TVec1">The first input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec2">The second input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec3">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	public interface IVectorBinaryOperators<T, in TVec1, in TVec2, out TVec3>
+	public interface IVectorBinaryOperators<T, TVec1, TVec2, TVec3>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>, IVectorBinaryOperators<T, TVec1, TVec2, TVec3>
 		where TVec2 : class, IBaseVector<T, TVec2>
@@ -146,17 +147,17 @@ namespace Althea.Arrays
 	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixVectorMultiplyOperations<T, in TVec1, in TVec2, in TMat>
+	public interface IMatrixVectorMultiplyOperations<T, TVec1, TVec2, TMat>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>
 		where TVec2 : class, IBaseVector<T, TVec2>
 		where TMat : class, IBaseMatrix<T, TMat>
 	{
 		/// <summary>
-		/// Check the input parameters of <see cref="MatrixMultiplyVector(TMat, TVec1, TVec2, T, T, MatrixOperation)"/> and <see cref="VectorMultiplyMatrix(TVec1, TMat, TVec2, T, T, MatrixOperation)"/>.
+		/// Check the input parameters of <see cref="MatrixMultiplyVector(TMat, TVec1, TVec2, T, T, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckMatMulVec(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, MatrixOperation operation)
+		protected static void CheckMatMulVec(TMat matrix!!, TVec1 vector!!, TVec2 vectorOut!!, T α, MatrixOperation operation)
 		{
 			long n = operation.CanInPlace() ? matrix.NCols : matrix.NRows;
 			if (n != vector.Length || vector.Length != vectorOut.Length)
@@ -177,15 +178,29 @@ namespace Althea.Arrays
 		public abstract static void MatrixMultiplyVector(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None);
 
 		/// <summary>
-		/// When implemented by a derived class, compute the addition of the multiplication result of the given <paramref name="vector"/> and <paramref name="matrix"/> (scaled by <paramref name="α"/>) with <paramref name="vectorOut"/> (scaled by <paramref name="β"/>).
+		/// Check the input parameters of <see cref="MatrixMultiplyVector(TMat, TVec1, T, MatrixOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static TS CheckMatMulVec<TS>(TMat matrix!!, TVec1 vector!!, TS storage!!, T α, MatrixOperation operation) where TS : class, IStorage<T, TS>
+		{
+			var (m, n) = (matrix.NRows, matrix.NCols);
+			if (!operation.CanInPlace())
+				(m, n) = (n, m);
+			if (n != vector.Length)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vector));
+			if (α == T.Zero)
+				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
+			return storage.ResizeAlike(m);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TVec2"/> as the multiplication result of the given <paramref name="matrix"/> and <paramref name="vector"/> (scaled by <paramref name="α"/>).
 		/// </summary>
 		/// <param name="matrix">The input matrix to be multiplied</param>
 		/// <param name="vector">The input vector to be multiplied</param>
-		/// <param name="vectorOut">The output vector to be added in-place</param>
 		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
-		/// <param name="β">The scalar to be multiplied to <paramref name="vectorOut"/> of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
-		public abstract static void VectorMultiplyMatrix(TVec1 vector, TMat matrix, TVec2 vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None);
+		public abstract static TVec2 MatrixMultiplyVector(TMat matrix, TVec1 vector, T α, MatrixOperation operation = MatrixOperation.None);
 	}
 
 	/// <summary>
@@ -195,7 +210,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixVectorMultiplyOperators<T, in TVec1, out TVec2, in TMat>
+	public interface IMatrixVectorMultiplyOperators<T, TVec1, TVec2, TMat>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>
 		where TVec2 : class, IBaseVector<T, TVec2>
@@ -223,7 +238,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IVectorMatrixMultiplyOperators<T, in TVec1, out TVec2, in TMat>
+	public interface IVectorMatrixMultiplyOperators<T, TVec1, TVec2, TMat>
 		where T : unmanaged, INumber<T>
 		where TVec1 : class, IBaseVector<T, TVec1>, IVectorMatrixMultiplyOperators<T, TVec1, TVec2, TMat>
 		where TVec2 : class, IBaseVector<T, TVec2>
@@ -250,7 +265,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixGetDiagonalVector<T, out TVec, in TMat>
+	public interface IMatrixGetDiagonalVector<T, TVec, TMat>
 		where T : unmanaged, INumber<T>
 		where TVec : class, IBaseVector<T, TVec>
 		where TMat : class, IBaseMatrix<T, TMat>
@@ -272,7 +287,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixGetDiagonalVectorVariant<T, in TVec, in TMat>
+	public interface IMatrixGetDiagonalVectorVariant<T, TVec, TMat>
 		where T : unmanaged, INumber<T>
 		where TVec : class, IBaseVector<T, TVec>
 		where TMat : class, IBaseMatrix<T, TMat>
@@ -296,7 +311,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixSetDiagonalVector<T, in TVec, in TMat>
+	public interface IMatrixSetDiagonalVector<T, TVec, TMat>
 		where T : unmanaged, INumber<T>
 		where TVec : class, IBaseVector<T, TVec>
 		where TMat : class, IBaseMatrix<T, TMat>
@@ -312,17 +327,29 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="value"/> is null or invalid</exception>
 		public abstract static void SetDiag(TMat matrix, long k, TVec value);
 	}
+
+	/// <summary>
+	/// The interface for operations that get or set diagonal elements of matrices.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixDiagonalVector<T, TVec, TMat> : IMatrixGetDiagonalVector<T, TVec, TMat>, IMatrixGetDiagonalVectorVariant<T, TVec, TMat>, IMatrixSetDiagonalVector<T, TVec, TMat>
+		where T : unmanaged, INumber<T>
+		where TVec : class, IBaseVector<T, TVec>
+		where TMat : class, IBaseMatrix<T, TMat>
+	{ }
 	#endregion
 
 	#region matrix
 	/// <summary>
-	/// The interface for vectors' in-place operations.
+	/// The interface for matrices addition operations.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixOperations<T, in TMat1, in TMat2, in TMat3>
+	public interface IMatrixAddOperations<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
@@ -332,7 +359,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="AddMatrices(TMat1?, T, TMat2?, T, TMat3, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static (long m, long n) CheckMatAdd(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C, MatrixOperation opA, MatrixOperation opB)
+		protected static (long m, long n) CheckMatAdd(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C!!, MatrixOperation opA, MatrixOperation opB)
 		{
 			bool nullA = A is null || scalarA == T.Zero;
 			bool nullB = B is null || scalarB == T.Zero;
@@ -376,10 +403,68 @@ namespace Althea.Arrays
 		public abstract static void AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
 
 		/// <summary>
-		/// Check the input parameters of <see cref="MultiplyMatries(T, TMat1, TMat2, T, TMat3, MatrixOperation, MatrixOperation)"/>.
+		/// Check the input parameters of <see cref="AddMatrices(TMat1?, T, TMat2?, T, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static (long m, long n, long k) CheckMatMul(T α, TMat1 A, TMat2 B, TMat3 C, MatrixOperation opA, MatrixOperation opB)
+		protected static TS CheckAdd<TS>(TMat1? A, T scalarA, TMat2? B, T scalarB, MatrixOperation opA, MatrixOperation opB, TS? storage, out long m, out long n) where TS : class, IStorage<T, TS>
+		{
+			bool nullA = A is null || scalarA == T.Zero;
+			bool nullB = B is null || scalarB == T.Zero;
+			if (nullA && nullB)
+				throw new ArgumentException(Resources.ParameterError.CannotAllNull);
+			m = 0; n = 0;
+			if (!nullA)
+			{
+#pragma warning disable CS8602
+				(m, n) = (A.NRows, A.NCols);
+#pragma warning restore CS8602
+				if (!opA.CanInPlace())
+					(m, n) = (n, m);
+			}
+			if (!nullB)
+			{
+#pragma warning disable CS8602
+				var (m1, n1) = (B.NRows, B.NCols);
+#pragma warning restore CS8602
+				if (!opB.CanInPlace())
+					(m1, n1) = (n1, m1);
+				if (m1 != m || n1 != n)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(B));
+			}
+			return storage?.ResizeAlike(m * n) ?? TS.Empty;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, statically create a new <typeparamref name="TMat3"/> as the addition of <c><paramref name="opA"/>(<paramref name="A"/>) + <paramref name="opB"/>(<paramref name="B"/>)</c>.
+		/// </summary>
+		/// <param name="scalarA">The scalar to multiply to matrix <paramref name="A"/> before addition</param>
+		/// <param name="scalarB">The scalar to multiply to matrix <paramref name="B"/> before addition</param>
+		/// <param name="A">The input left matrix to add</param>
+		/// <param name="B">The input right matrix to add</param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before addition</param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before addition</param>
+		/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or empty; or both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the addition cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+	}
+
+	/// <summary>
+	/// The interface for matrices multiplication operations.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixMultiplyOperations<T, TMat1, TMat2, TMat3>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+	{
+		/// <summary>
+		/// Check the input parameters of <see cref="MultiplyMatries(TMat1, TMat2, T, T, TMat3, MatrixOperation, MatrixOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static (long m, long n, long k) CheckMatMul(T α, TMat1 A!!, TMat2 B!!, TMat3 C!!, MatrixOperation opA, MatrixOperation opB)
 		{
 			if (α == T.Zero)
 				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
@@ -408,8 +493,52 @@ namespace Althea.Arrays
 		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before multiplication</param>
 		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before multiplication</param>
 		/// <exception cref="ArgumentException">If any of the matrices is null or empty; or the multiplication cannot be performed due to incompatible sizes</exception>
-		public abstract static void MultiplyMatries(T α, TMat1 A, TMat2 B, T β, TMat3 C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+		public abstract static void MultiplyMatries(TMat1 A, TMat2 B, T α, T β, TMat3 C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+
+		/// <summary>
+		/// Check the input parameters of <see cref="MultiplyMatries(TMat1, TMat2, T, MatrixOperation, MatrixOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static TS CheckMul<TS>(T α, TMat1 A!!, TMat2 B!!, MatrixOperation opA, MatrixOperation opB, TS storage, out long m, out long n, out long k) where TS : class, IStorage<T, TS>
+		{
+			if (α == T.Zero)
+				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
+			(m, k) = (A.NRows, A.NCols);
+			if (!opA.CanInPlace())
+				(m, k) = (k, m);
+			(long s, n) = (B.NRows, B.NCols);
+			if (!opB.CanInPlace())
+				(s, n) = (n, s);
+			if (k != s)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
+			return storage.ResizeAlike(m * n);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, statically create a new <typeparamref name="TMat3"/> as the multiplication result of <c><paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>)</c>.
+		/// </summary>
+		/// <param name="α">The scalar to multiply to matrix multiplication result</param>
+		/// <param name="A">The input left matrix to multiply</param>
+		/// <param name="B">The input right matrix to multiply</param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before multiplication</param>
+		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before multiplication</param>
+		/// <exception cref="ArgumentException">If any of the matrices is null or empty; or the multiplication cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 MultiplyMatries(TMat1 A, TMat2 B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
 	}
+
+	/// <summary>
+	/// The interface for matrices' addition and multiplication operations.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixOperations<T, TMat1, TMat2, TMat3> : IMatrixAddOperations<T, TMat1, TMat2, TMat3>, IMatrixMultiplyOperations<T, TMat1, TMat2, TMat3>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+	{ }
 
 	/// <summary>
 	/// The interface for matrices' unary matrix out-of-place operators.
@@ -417,7 +546,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TMat1">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixUnaryOperators<T, in TMat1, out TMat2>
+	public interface IMatrixUnaryOperators<T, TMat1, TMat2>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixUnaryOperators<T, TMat1, TMat2>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
@@ -468,15 +597,49 @@ namespace Althea.Arrays
 	}
 
 	/// <summary>
-	/// The interface for matrices' binary matrix out-of-place operators.
+	/// The interface for matrices'  out-of-place multiplication operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixBinaryOperators<T, in TMat1, in TMat2, out TMat3>
+	public interface IMatrixMultiplyOperator<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixBinaryOperators<T, TMat1, TMat2, TMat3>
+		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixMultiplyOperator<T, TMat1, TMat2, TMat3>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+	{
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+		/// </summary>
+		/// <param name="left">The input <typeparamref name="TMat1"/> to be multiplied at left</param>
+		/// <param name="right">The input <typeparamref name="TMat2"/> to be multiplied at right</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 operator *(TMat1 left, TMat2 right);
+
+		/// <summary>
+		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
+		/// </summary>
+		/// <param name="left">The input <typeparamref name="TMat2"/> to be multiplied at left</param>
+		/// <param name="right">The input <typeparamref name="TMat1"/> to be multiplied at right</param>
+		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
+		public abstract static TMat3 operator *(TMat2 left, TMat1 right);
+	}
+
+	/// <summary>
+	/// The interface for matrices' out-of-place addition operators.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixAddOperators<T, TMat1, TMat2, TMat3>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixAddOperators<T, TMat1, TMat2, TMat3>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
 		where TMat3 : class, IBaseMatrix<T, TMat3>
 	{
@@ -519,27 +682,21 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
 		/// <exception cref="ArgumentException">If the subtraction cannot be performed due to incompatible sizes</exception>
 		public abstract static TMat3 operator -(TMat2 left, TMat1 right);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
-		/// </summary>
-		/// <param name="left">The input <typeparamref name="TMat1"/> to be multiplied at left</param>
-		/// <param name="right">The input <typeparamref name="TMat2"/> to be multiplied at right</param>
-		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
-		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
-		public abstract static TMat3 operator *(TMat1 left, TMat2 right);
-
-		/// <summary>
-		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
-		/// </summary>
-		/// <param name="left">The input <typeparamref name="TMat2"/> to be multiplied at left</param>
-		/// <param name="right">The input <typeparamref name="TMat1"/> to be multiplied at right</param>
-		/// <returns>A new <typeparamref name="TMat3"/> as the result of <paramref name="left"/> * <paramref name="right"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
-		/// <exception cref="ArgumentException">If the multiplication cannot be performed due to incompatible sizes</exception>
-		public abstract static TMat3 operator *(TMat2 left, TMat1 right);
 	}
+
+	/// <summary>
+	/// The interface for matrices' binary matrix out-of-place operators.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	public interface IMatrixBinaryOperators<T, TMat1, TMat2, TMat3> : IMatrixMultiplyOperator<T, TMat1, TMat2, TMat3>, IMatrixAddOperators<T, TMat1, TMat2, TMat3>
+		where T : unmanaged, INumber<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixBinaryOperators<T, TMat1, TMat2, TMat3>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+	{ }
 
 	/// <summary>
 	/// The interface for matrices' in-place linear solver.
@@ -548,7 +705,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixLinearSolve<T, in TMat1, in TMat2, in TMat3>
+	public interface IMatrixLinearSolve<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
@@ -558,7 +715,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="LinearSolve(TMat1, TMat2, TMat3, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckLinear(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves)
+		protected static void CheckLinear(TMat1 coefficients!!, TMat2 rightHandSides!!, TMat3 outSolves!!)
 		{
 			if (coefficients.NRows != coefficients.NCols || coefficients.NRows != rightHandSides.NRows)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
@@ -584,7 +741,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixLeastSolve<T, in TMat1, in TMat2, in TMat3>
+	public interface IMatrixLeastSolve<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
@@ -594,7 +751,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="LeastSquareSolve(TMat1, TMat2, TMat3)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckLeast(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves)
+		protected static void CheckLeast(TMat1 coefficients!!, TMat2 rightHandSides!!, TMat3 outSolves!!)
 		{
 			if (coefficients.NRows <= coefficients.NCols || coefficients.NRows != rightHandSides.NRows)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
@@ -619,7 +776,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IMatrixQRSolve<T, in TMat1, in TMat2, in TMat3>
+	public interface IMatrixQRSolve<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
@@ -629,7 +786,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="QRDecomposition(TMat1, TMat2, TMat3?, bool)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckQR(TMat1 matrix, TMat2 outTriangular, TMat3? outUnary, bool full)
+		protected static void CheckQR(TMat1 matrix!!, TMat2 outTriangular!!, TMat3? outUnary, bool full)
 		{
 			if (matrix.NRows == matrix.NCols)
 			{
@@ -674,7 +831,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TTen1">The first concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
 	/// <typeparam name="TTen2">The second concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
-	public interface ITensorOperations<T, in TTen1, in TTen2>
+	public interface ITensorOperations<T, TTen1, TTen2>
 		where T : unmanaged, INumber<T>
 		where TTen1 : class, IBaseTensor<T, TTen1>
 		where TTen2 : class, IBaseTensor<T, TTen2>
@@ -683,7 +840,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, TTen2, UnaryOperation, BinaryOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static Span<int> CheckReduce(TTen1 A, TensorOrder order, T scalar, TTen2 B, Span<int> reduceInds)
+		protected static Span<int> CheckReduce(TTen1 A!!, TensorOrder order, T scalar, TTen2 B!!, Span<int> reduceInds)
 		{
 			if (scalar == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
@@ -718,7 +875,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, TTen2, UnaryOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckPermute(TTen1 A, TensorOrder order, T scalar, TTen2 B, Span<int> perm)
+		protected static void CheckPermute(TTen1 A!!, TensorOrder order, T scalar, TTen2 B!!, Span<int> perm)
 		{
 			if (scalar == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
@@ -751,7 +908,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TTen1">The first concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
 	/// <typeparam name="TTen2">The second concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
 	/// <typeparam name="TTen3">The third concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
-	public interface ITensorOperations<T, in TTen1, in TTen2, in TTen3>
+	public interface ITensorOperations<T, TTen1, TTen2, TTen3>
 		where T : unmanaged, INumber<T>
 		where TTen1 : class, IBaseTensor<T, TTen1>
 		where TTen2 : class, IBaseTensor<T, TTen2>
@@ -761,7 +918,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="Contract(TTen1, UnaryOperation, TTen2, UnaryOperation, T, TTen3, UnaryOperation, T)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static StorableContractInfo CheckContract(TTen1 A, TTen2 B, T α, TTen3 C)
+		protected static StorableContractInfo CheckContract(TTen1 A!!, TTen2 B!!, T α, TTen3 C!!)
 		{
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -795,7 +952,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="TensorsBinaryOperation(TTen1?, TensorOrder, UnaryOperation, T, TTen2?, TensorOrder, UnaryOperation, T, TTen3, BinaryOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckBinary(TTen1? A, TensorOrder orderA, T α, TTen2? B, TensorOrder orderB, T β, TTen3 C, Span<int> permA, Span<int> permB)
+		protected static void CheckBinary(TTen1? A, TensorOrder orderA, T α, TTen2? B, TensorOrder orderB, T β, TTen3 C!!, Span<int> permA, Span<int> permB)
 		{
 			bool nullA = A is null || α == T.Zero;
 			bool nullB = B is null || β == T.Zero;
@@ -846,7 +1003,7 @@ namespace Althea.Arrays
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TTen1">The input concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
 	/// <typeparam name="TTen2">The output concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
-	public interface ITensorUnaryOperators<T, in TTen1, out TTen2>
+	public interface ITensorUnaryOperators<T, TTen1, TTen2>
 		where T : unmanaged, INumber<T>
 		where TTen1 : class, IBaseTensor<T, TTen1>, ITensorUnaryOperators<T, TTen1, TTen2>
 		where TTen2 : class, IBaseTensor<T, TTen2>
@@ -898,7 +1055,7 @@ namespace Althea.Arrays
 	/// <typeparam name="TTen1">The first input concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
 	/// <typeparam name="TTen2">The second input concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
 	/// <typeparam name="TTen3">The output concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
-	public interface ITensorBinaryOperators<T, in TTen1, in TTen2, out TTen3>
+	public interface ITensorBinaryOperators<T, TTen1, TTen2, TTen3>
 		where T : unmanaged, INumber<T>
 		where TTen1 : class, IBaseTensor<T, TTen1>, ITensorBinaryOperators<T, TTen1, TTen2, TTen3>
 		where TTen2 : class, IBaseTensor<T, TTen2>

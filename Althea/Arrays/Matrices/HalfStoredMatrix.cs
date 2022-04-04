@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -156,10 +155,10 @@ namespace Althea.Arrays
 		public void AddScalar(T value) => HalfBlas.HalfMatrixAddScalar(this.unitDiag, this.Storage, this.upper, this.LeadDim, value, this.NRows, this.NCols);
 
 		/// <inheritdoc/>
-		public void Scale(T value) => HalfBlas.HalfMatricesAdd(!this.unitDiag, this.upper, MatrixOperation.None, default, this.NRows, this.NCols, value, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
+		public void Scale(T value) => HalfBlas.TriangularMatricesAdd(this.unitDiag, this.upper, MatrixOperation.None, default, this.NRows, this.NCols, value, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public void Conjugate() => HalfBlas.HalfMatricesAdd(!this.unitDiag, this.upper, MatrixOperation.Conjugate, default, this.NRows, this.NCols, T.One, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
+		public void Conjugate() => HalfBlas.TriangularMatricesAdd(this.unitDiag, this.upper, MatrixOperation.Conjugate, default, this.NRows, this.NCols, T.One, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
 		public void Power(T power) => HalfBlas.HalfMatrixPower(this.unitDiag, this.Storage, this.upper, this.LeadDim, power, this.NRows, this.NCols);
@@ -219,10 +218,10 @@ namespace Althea.Arrays
 		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> left, TriangularMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(right, -T.One, left, T.One);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator *(TriangularMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(T.One, left, right);
+		public static DenseMatrix<T, TS> operator *(TriangularMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(left, right, T.One);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> left, TriangularMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(T.One, left, right);
+		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> left, TriangularMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(left, right, T.One);
 
 		/// <inheritdoc/>
 		public static TriangularMatrix<T, TS> operator +(TriangularMatrix<T, TS> left, TriangularMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(left, T.One, right, T.One);
@@ -231,7 +230,7 @@ namespace Althea.Arrays
 		public static TriangularMatrix<T, TS> operator -(TriangularMatrix<T, TS> left, TriangularMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(left, T.One, right, -T.One);
 
 		/// <inheritdoc/>
-		public static TriangularMatrix<T, TS> operator *(TriangularMatrix<T, TS> left, TriangularMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(T.One, left, right);
+		public static TriangularMatrix<T, TS> operator *(TriangularMatrix<T, TS> left, TriangularMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(left, right, T.One);
 		#endregion
 
 		#region conversion and clone
@@ -329,12 +328,13 @@ namespace Althea.Arrays
 		IMatrixVectorMultiplyOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, SymmetricMatrix<T, TS>>,
 		IMatrixUnaryOperators<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>>,
 		IMatrixBinaryOperators<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IMatrixBinaryOperators<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>>
+		IMatrixAddOperators<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>>,
+		IMatrixMultiplyOperator<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic
-		private readonly bool upper, symmHerm;
+		private readonly bool upper, herm;
 
 		/// <summary>
 		/// Get whether this symmetric matrix is upper symmetric or lower symmetric.
@@ -342,9 +342,9 @@ namespace Althea.Arrays
 		public bool Upper => this.upper;
 
 		/// <summary>
-		/// Get whether this symmetric matrix is simply symmetric or Hermitian rather than symmetric.
+		/// Get whether this symmetric matrix is Hermitian or simply symmetric.
 		/// </summary>
-		public bool SimplySymmtric => this.symmHerm;
+		public bool Hermitian => this.herm;
 
 		ReadOnlySpan<long> IValueArray<T, SymmetricMatrix<T, TS>>.Size => ((IPitchedArray<T>)this).Size;
 
@@ -360,21 +360,21 @@ namespace Althea.Arrays
 		/// <param name="storage">The storage of type <typeparamref name="TS"/> to create from</param>
 		/// <param name="n">The number of rows and columns of the matrix to create</param>
 		/// <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="n"/></param>
-		/// <param name="symmHerm">Whether the symmetric matrix is simply symmetric or Hermitian rather than symmetric or according to <typeparamref name="T"/> (null)</param>
+		/// <param name="herm">Whether the symmetric matrix is Hermitian or simply symmetric or according to <typeparamref name="T"/> (null)</param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0</exception>
-		public SymmetricMatrix(bool upper, TS storage!!, long n, long leadDim = 0, bool? symmHerm = null) : base(storage, n, n, leadDim)
+		public SymmetricMatrix(bool upper, TS storage!!, long n, long leadDim = 0, bool? herm = null) : base(storage, n, n, leadDim)
 		{
 			this.upper = upper;
-			this.symmHerm = symmHerm ?? false;
+			this.herm = herm ?? true;
 			if (!NumberType<T>.IsComplex)
-				this.symmHerm = true;
+				this.herm = false;
 		}
 		#endregion
 
 		#region equality
 		/// <inheritdoc/>
-		public bool Equals(SymmetricMatrix<T, TS>? other) => other is not null && this.upper == other.upper && this.symmHerm == other.symmHerm && this.NRows == other.NRows && this.NCols == other.NCols && this.LeadDim == other.LeadDim && this.Storage == other.Storage;
+		public bool Equals(SymmetricMatrix<T, TS>? other) => other is not null && this.upper == other.upper && this.herm == other.herm && this.NRows == other.NRows && this.NCols == other.NCols && this.LeadDim == other.LeadDim && this.Storage == other.Storage;
 
 		/// <inheritdoc/>
 		public static bool operator ==(SymmetricMatrix<T, TS>? left, SymmetricMatrix<T, TS>? right) => (left is null && right is null) || (left is not null && left.Equals(right));
@@ -386,7 +386,7 @@ namespace Althea.Arrays
 		public override bool Equals(object? obj) => this.Equals(obj as SymmetricMatrix<T, TS>);
 
 		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.upper, this.symmHerm, this.Storage, this.NRows, this.NCols, this.LeadDim);
+		public override int GetHashCode() => HashCode.Combine(this.upper, this.herm, this.Storage, this.NRows, this.NCols, this.LeadDim);
 		#endregion
 
 		#region index
@@ -401,36 +401,36 @@ namespace Althea.Arrays
 		}
 
 		/// <inheritdoc/>
-		/// <exception cref="ArgumentException">If <paramref name="offsetRow"/> != <paramref name="offsetCol"/> or <paramref name="countRow"/> != <paramref name="countCol"/> or the <see cref="Upper"/>s or <see cref="SimplySymmtric"/>s are different</exception>
+		/// <exception cref="ArgumentException">If <paramref name="offsetRow"/> != <paramref name="offsetCol"/> or <paramref name="countRow"/> != <paramref name="countCol"/> or the <see cref="Upper"/>s or <see cref="Hermitian"/>s are different</exception>
 		public void GetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, SymmetricMatrix<T, TS> overwrite)
 		{
 			IBaseMatrix<T, SymmetricMatrix<T, TS>>.CheckRange(this, offsetRow, countRow, offsetCol, countCol, overwrite);
 			if (offsetRow != offsetCol || countRow != countCol)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue);
-			if (overwrite.symmHerm != this.symmHerm || overwrite.upper != this.upper)
+			if (overwrite.herm != this.herm || overwrite.upper != this.upper)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(overwrite));
 			HalfBlas.HalfMatrixCopy<T, TS, TS>(this.upper, true, MatrixOperation.None, overwrite.NRows, overwrite.NCols, overwrite.Storage, overwrite.LeadDim, this.Storage + (offsetRow + offsetCol * this.LeadDim), this.LeadDim);
 		}
 
 		/// <inheritdoc/>
-		/// <exception cref="ArgumentException">If <paramref name="offsetRow"/> != <paramref name="offsetCol"/> or the <see cref="Upper"/>s or <see cref="SimplySymmtric"/>s are different</exception>
+		/// <exception cref="ArgumentException">If <paramref name="offsetRow"/> != <paramref name="offsetCol"/> or the <see cref="Upper"/>s or <see cref="Hermitian"/>s are different</exception>
 		public void SetSubmatrix(long offsetRow, long countRow, long offsetCol, long countCol, SymmetricMatrix<T, TS> value)
 		{
 			IBaseMatrix<T, SymmetricMatrix<T, TS>>.CheckRange(this, offsetRow, countRow, offsetCol, countCol, value);
 			if (offsetRow != offsetCol)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue);
-			if (value.symmHerm != this.symmHerm || value.upper != this.upper)
+			if (value.herm != this.herm || value.upper != this.upper)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(value));
 			HalfBlas.HalfMatrixCopy<T, TS, TS>(this.upper, true, MatrixOperation.None, value.NRows, value.NCols, this.Storage + (offsetRow + offsetCol * this.LeadDim), this.LeadDim, value.Storage, value.LeadDim);
 		}
 
 		/// <inheritdoc/>
-		/// <exception cref="ArgumentException">If the <see cref="Upper"/>s or <see cref="SimplySymmtric"/>s are different</exception>
+		/// <exception cref="ArgumentException">If the <see cref="Upper"/>s or <see cref="Hermitian"/>s are different</exception>
 		public void CopyTo(SymmetricMatrix<T, TS> destination)
 		{
 			if (destination.NRows != this.NRows || destination.NCols != this.NCols)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
-			if (destination.symmHerm != this.symmHerm || destination.upper != this.upper)
+			if (destination.herm != this.herm || destination.upper != this.upper)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
 			HalfBlas.HalfMatrixCopy<T, TS, TS>(this.upper, true, MatrixOperation.None, this.NRows, this.NCols, this.Storage, this.LeadDim, destination.Storage, destination.LeadDim);
 		}
@@ -442,7 +442,7 @@ namespace Althea.Arrays
 			get
 			{
 				if ((this.upper && x > y) || (!this.upper && x < y))
-					return this.symmHerm ? this[y, x] : this[y, x].Conjugate();
+					return this.herm ? this[y, x] : this[y, x].Conjugate();
 				IBaseMatrix<T, SymmetricMatrix<T, TS>>.CheckIndex(this, x, y);
 				return (this.Storage + (x + y * this.LeadDim)).ToManaged<T, TS>();
 			}
@@ -450,7 +450,7 @@ namespace Althea.Arrays
 			{
 #pragma warning disable CA2011
 				if ((this.upper && x > y) || (!this.upper && x < y))
-					this[y, x] = this.symmHerm ? value : value.Conjugate();
+					this[y, x] = this.herm ? value : value.Conjugate();
 #pragma warning restore CA2011
 				IBaseMatrix<T, SymmetricMatrix<T, TS>>.CheckIndex(this, x, y);
 				(this.Storage + (x + y * this.LeadDim)).FromManaged(value);
@@ -463,7 +463,7 @@ namespace Althea.Arrays
 		/// <exception cref="InvalidOperationException">If this is a Hermitian matrix and <paramref name="value"/> is not a real number</exception>
 		public void FillWith(T value)
 		{
-			if (this.symmHerm || value.Conjugate() == value)
+			if (this.herm || value.Conjugate() == value)
 				HalfBlas.HalfMatrixFill(false, this.Storage, this.upper, this.LeadDim, value, this.NRows, this.NCols);
 			else
 				throw new InvalidOperationException();
@@ -472,7 +472,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public void AddScalar(T value)
 		{
-			if (this.symmHerm || value.Conjugate() == value)
+			if (this.herm || value.Conjugate() == value)
 				HalfBlas.HalfMatrixAddScalar(false, this.Storage, this.upper, this.LeadDim, value, this.NRows, this.NCols);
 			else
 				throw new InvalidOperationException();
@@ -481,19 +481,19 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public void Scale(T value)
 		{
-			if (this.symmHerm || value.Conjugate() == value)
-				HalfBlas.HalfMatricesAdd(true, this.upper, MatrixOperation.None, default, this.NRows, this.NCols, value, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
+			if (this.herm || value.Conjugate() == value)
+				HalfBlas.SymmetricMatricesAdd(this.upper, false, this.upper, default, default, this.NRows, value, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
 			else
 				throw new InvalidOperationException();
 		}
 
 		/// <inheritdoc/>
-		public void Conjugate() => HalfBlas.HalfMatricesAdd(true, this.upper, MatrixOperation.Conjugate, default, this.NRows, this.NCols, T.One, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
+		public void Conjugate() => HalfBlas.SymmetricMatricesAdd(this.upper, false, this.upper, MatrixOperation.Conjugate, default, this.NRows, T.One, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
 		public void Power(T power)
 		{
-			if (this.symmHerm || power.Conjugate() == power)
+			if (this.herm || power.Conjugate() == power)
 				HalfBlas.HalfMatrixPower(false, this.Storage, this.upper, this.LeadDim, power, this.NRows, this.NCols);
 			else
 				throw new InvalidOperationException();
@@ -505,19 +505,19 @@ namespace Althea.Arrays
 
 		#region simple aggregation operations
 		/// <inheritdoc/>
-		public T Sum() => HalfBlas.SymmetricMatrixSum<T, TS>(this.symmHerm, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols);
+		public T Sum() => HalfBlas.SymmetricMatrixSum<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows);
 
 		/// <inheritdoc/>
-		public T AbsSum() => HalfBlas.SymmetricMatrixAbsSum<T, TS>(this.symmHerm, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols);
+		public T AbsSum() => HalfBlas.SymmetricMatrixAbsSum<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows);
 
 		/// <inheritdoc/>
-		public T Norm() => HalfBlas.SymmetricMatrixNorm<T, TS>(this.symmHerm, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols);
+		public T Norm() => HalfBlas.SymmetricMatrixNorm<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows);
 
 		/// <inheritdoc/>
-		public T ValueWithMaxAbs() => (this.Storage + HalfBlas.SymmetricMatrixAbsArgMax<T, TS>(this.symmHerm, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols)).ToManaged<T, TS>();
+		public T ValueWithMaxAbs() => (this.Storage + HalfBlas.SymmetricMatrixAbsArgMax<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows)).ToManaged<T, TS>();
 
 		/// <inheritdoc/>
-		public T ValueWithMinAbs() => (this.Storage + HalfBlas.SymmetricMatrixAbsArgMin<T, TS>(this.symmHerm, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols)).ToManaged<T, TS>();
+		public T ValueWithMinAbs() => (this.Storage + HalfBlas.SymmetricMatrixAbsArgMin<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows)).ToManaged<T, TS>();
 		#endregion
 
 		#region operators
@@ -554,10 +554,10 @@ namespace Althea.Arrays
 		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> left, SymmetricMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(right, -T.One, left, T.One);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator *(SymmetricMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(T.One, left, right);
+		public static DenseMatrix<T, TS> operator *(SymmetricMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(left, right, T.One);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> left, SymmetricMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(T.One, left, right);
+		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> left, SymmetricMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(left, right, T.One);
 
 		/// <inheritdoc/>
 		public static SymmetricMatrix<T, TS> operator +(SymmetricMatrix<T, TS> left, SymmetricMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(left, T.One, right, T.One);
@@ -566,12 +566,12 @@ namespace Althea.Arrays
 		public static SymmetricMatrix<T, TS> operator -(SymmetricMatrix<T, TS> left, SymmetricMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(left, T.One, right, -T.One);
 
 		/// <inheritdoc/>
-		public static SymmetricMatrix<T, TS> operator *(SymmetricMatrix<T, TS> left, SymmetricMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(T.One, left, right);
+		public static DenseMatrix<T, TS> operator *(SymmetricMatrix<T, TS> left, SymmetricMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(left, right, T.One);
 		#endregion
 
 		#region conversion and clone
 		/// <inheritdoc/>
-		public SymmetricMatrix<T, TS> CreateAlike() => new(this.upper, this.Storage.ResizeAlike(this.NRows * this.NCols), this.NRows, 0, this.symmHerm);
+		public SymmetricMatrix<T, TS> CreateAlike() => new(this.upper, this.Storage.ResizeAlike(this.NRows * this.NCols), this.NRows, 0, this.herm);
 
 		/// <summary>
 		/// Copy the values from this symmetric matrix to a new dense <typeparamref name="TS"/> with <see cref="AbstractDenseMatrix{T, TS}.LeadDim"/> == <see cref="AbstractDenseMatrix{T, TS}.NRows"/>.
@@ -583,7 +583,7 @@ namespace Althea.Arrays
 			try
 			{
 				this.Storage.Copy2DTo<T, TS, TS>(this.LeadDim, compact, this.NRows, this.NRows, this.NCols);
-				HalfBlas.SymmetricMatrixToNormal<T, TS>(this.upper, !this.symmHerm, this.NRows, compact, this.NRows);
+				HalfBlas.SymmetricMatrixToNormal<T, TS>(this.upper, this.herm, this.NRows, compact, this.NRows);
 				return compact;
 			}
 			catch (Exception)
@@ -605,7 +605,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public string JsonSerialize()
 		{
-			return JsonSerializer.Serialize<Repr>(new(this.Storage, this.NRows, this.LeadDim, this.upper, this.symmHerm), JsonOptions);
+			return JsonSerializer.Serialize<Repr>(new(this.Storage, this.NRows, this.LeadDim, this.upper, this.herm), JsonOptions);
 		}
 
 		/// <inheritdoc/>
@@ -619,9 +619,9 @@ namespace Althea.Arrays
 		#region string
 		static string IMainPropertyFormattable<SymmetricMatrix<T, TS>>.StringMain => nameof(SymmetricMatrix<T, TS>);
 
-		static IEnumerable<string> IMainPropertyFormattable<SymmetricMatrix<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "LeadDim", "Upper", "SymmetricOrHermitian" };
+		static IEnumerable<string> IMainPropertyFormattable<SymmetricMatrix<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "LeadDim", "Upper", "Hermitian" };
 
-		IEnumerable<object?> IMainPropertyFormattable<SymmetricMatrix<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.Storage, $"{this.NRows}x{this.NCols}", this.LeadDim, this.upper, this.symmHerm };
+		IEnumerable<object?> IMainPropertyFormattable<SymmetricMatrix<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.Storage, $"{this.NRows}x{this.NCols}", this.LeadDim, this.upper, this.herm };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<SymmetricMatrix<T, TS>>.ToString(this);
@@ -641,7 +641,7 @@ namespace Althea.Arrays
 				for (int x = 0; x < rows; x++)
 				{
 					if ((this.upper && x > y) || (!this.upper && x < y))
-						values[x + y * rows] = this.symmHerm ? values[y + x * rows] : values[y + x * rows].Conjugate();
+						values[x + y * rows] = this.herm ? values[y + x * rows] : values[y + x * rows].Conjugate();
 				}
 			}
 			return values.ToMatrixString(rows, this.NCols - cols, settings.Value.Precision) + (this.NRows == rows ? "" : string.Format(Resources.Print.MoreRows, this.NRows - rows));
