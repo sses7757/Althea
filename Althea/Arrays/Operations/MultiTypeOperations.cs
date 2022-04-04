@@ -10,32 +10,6 @@ namespace Althea.Arrays
 {
 	#region vector
 	/// <summary>
-	/// The interface for vectors' out-of-place conversions.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The first concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec2">The second concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	public interface IVectorConversion<T, TVec1, TVec2>
-		where T : unmanaged, INumber<T>
-		where TVec1 : class, IBaseVector<T, TVec1>
-		where TVec2 : class, IBaseVector<T, TVec2>
-	{
-		/// <summary>
-		/// When implemented by a derived class, statically convert the <paramref name="input"/> <typeparamref name="TVec1"/> to a new <typeparamref name="TVec2"/>.
-		/// </summary>
-		/// <param name="input">The input vector of type <typeparamref name="TVec1"/> to convert</param>
-		/// <returns>A created new vector of <typeparamref name="TVec2"/>.</returns>
-		public abstract static TVec2 Convert(TVec1 input);
-
-		/// <summary>
-		/// When implemented by a derived class, statically convert the <paramref name="input"/> <typeparamref name="TVec2"/> to a new <typeparamref name="TVec1"/>.
-		/// </summary>
-		/// <param name="input">The input vector of type <typeparamref name="TVec2"/> to convert</param>
-		/// <returns>A created new vector of <typeparamref name="TVec1"/>.</returns>
-		public abstract static TVec1 Convert(TVec2 input);
-	}
-
-	/// <summary>
 	/// The interface for vectors' in-place operations.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
@@ -200,6 +174,7 @@ namespace Althea.Arrays
 		/// <param name="vector">The input vector to be multiplied</param>
 		/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
 		/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
+		/// <returns>The created new <typeparamref name="TVec2"/> as the result.</returns>
 		public abstract static TVec2 MatrixMultiplyVector(TMat matrix, TVec1 vector, T α, MatrixOperation operation = MatrixOperation.None);
 	}
 
@@ -443,6 +418,7 @@ namespace Althea.Arrays
 		/// <param name="B">The input right matrix to add</param>
 		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before addition</param>
 		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before addition</param>
+		/// <returns>The created new <typeparamref name="TMat3"/> as the result.</returns>
 		/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or empty; or both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the addition cannot be performed due to incompatible sizes</exception>
 		public abstract static TMat3 AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
 	}
@@ -522,6 +498,7 @@ namespace Althea.Arrays
 		/// <param name="B">The input right matrix to multiply</param>
 		/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before multiplication</param>
 		/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before multiplication</param>
+		/// <returns>The created new <typeparamref name="TMat3"/> as the result.</returns>
 		/// <exception cref="ArgumentException">If any of the matrices is null or empty; or the multiplication cannot be performed due to incompatible sizes</exception>
 		public abstract static TMat3 MultiplyMatries(TMat1 A, TMat2 B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
 	}
@@ -854,6 +831,17 @@ namespace Althea.Arrays
 			{
 				if (A.Rank - reduceInds.Length != B.Rank)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(order));
+				Span<int> restInds = stackalloc int[A.Rank - reduceInds.Length];
+				int n = 0;
+				for (int i = 0; i < A.Rank; i++)
+				{
+					if (!restInds.Contains(i))
+						restInds[n++] = i;
+				}
+				Span<long> sizeB = stackalloc long[B.Rank];
+				A.Size.ReOrderTo(sizeB, restInds);
+				if (!B.Size.SequenceEqual(sizeB))
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(B));
 			}
 			return reduceInds;
 		}
@@ -899,6 +887,71 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
 		public abstract static void Permute(TTen1 A, TensorOrder order, T scalar, TTen2 B, UnaryOperation opA = UnaryOperation.Identity);
+
+
+		/// <summary>
+		/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, UnaryOperation, BinaryOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckReduce(TTen1 A!!, TensorOrder order, T scalar, ref Span<int> reduceInds, ref Span<long> outputSize)
+		{
+			if (scalar == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
+			reduceInds = order.GetOrder(A, reduceInds, true);
+			if (A.Rank - reduceInds.Length == 0)
+			{
+				outputSize = outputSize.SetValue(1);
+			}
+			else
+			{
+				Span<int> restInds = stackalloc int[A.Rank - reduceInds.Length];
+				int n = 0;
+				for (int i = 0; i < A.Rank; i++)
+				{
+					if (!restInds.Contains(i))
+						restInds[n++] = i;
+				}
+				A.Size.ReOrderTo(outputSize, restInds);
+				outputSize = outputSize[..n];
+			}	
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, create a new tensor as the reduction (self partial summation) of tensor <paramref name="A"/> under the given <paramref name="order"/>.
+		/// </summary>
+		/// <param name="A">The input tensor to reduce</param>
+		/// <param name="order">The given <see cref="TensorOrder"/> to indicate which part(s) of dimension(s) in <paramref name="A"/> to sum, its order will be ignored</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to each element of <typeparamref name="TTen1"/> during the operation</param>
+		/// <param name="reduce">The <see cref="BinaryOperation"/> used to reduce elements</param>
+		/// <returns>The created new <typeparamref name="TTen2"/> as the result.</returns>
+		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public abstract static TTen2 Reduce(TTen1 A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition);
+
+		/// <summary>
+		/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, UnaryOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static void CheckPermute(TTen1 A!!, TensorOrder order, T scalar, Span<int> perm, Span<long> outputSize)
+		{
+			if (scalar == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
+			order.GetOrder(A, perm, false);
+			A.Size.ReOrderTo(outputSize, perm);
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, create a new tensor as the permutation of tensor <paramref name="A"/> under the given <paramref name="order"/>.
+		/// </summary>
+		/// <param name="A">The input tensor to permute</param>
+		/// <param name="order">The given <see cref="TensorOrder"/> to indicate the permutation order</param>
+		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to each element during the operation</param>
+		/// <returns>The created new <typeparamref name="TTen2"/> as the result.</returns>
+		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+		public abstract static TTen2 Permute(TTen1 A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity);
 	}
 
 	/// <summary>
@@ -979,22 +1032,101 @@ namespace Althea.Arrays
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute the tensor point-wise binary operation: <c><paramref name="C"/> = <paramref name="binary"/>(<paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>[<paramref name="orderA"/>]), <paramref name="β"/> .* <paramref name="opB"/>(<paramref name="B"/>[<paramref name="orderB"/>]))</c>.
+		/// When implemented by a derived class, compute the tensor point-wise binary operation: <c><paramref name="C"/> = <paramref name="binary"/>(<paramref name="scalarA"/> .* <paramref name="opA"/>(<paramref name="A"/>[<paramref name="orderA"/>]), <paramref name="scalarB"/> .* <paramref name="opB"/>(<paramref name="B"/>[<paramref name="orderB"/>]))</c>.
 		/// </summary>
-		/// <remarks>The labels of <paramref name="A"/>, <paramref name="B"/> and <paramref name="C"/> are used to guide permutations. If <paramref name="A"/> or <paramref name="B"/> is null (<paramref name="α"/> or <paramref name="β"/> is 0), <paramref name="binary"/> is not used.</remarks>
 		/// <param name="A">The first input tensor</param>
 		/// <param name="B">The second input tensor</param>
 		/// <param name="C">The output result tensor</param>
 		/// <param name="orderA">The <see cref="TensorOrder"/> indicating the permutation order of <paramref name="A"/></param>
 		/// <param name="orderB">The <see cref="TensorOrder"/> indicating the permutation order of <paramref name="B"/></param>
-		/// <param name="α">The scalar to multiply to <paramref name="A"/> during operation</param>
-		/// <param name="β">The scalar to multiply to <paramref name="B"/> during operation</param>
+		/// <param name="scalarA">The scalar to multiply to <paramref name="A"/> during operation</param>
+		/// <param name="scalarB">The scalar to multiply to <paramref name="B"/> during operation</param>
 		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="A"/> during operation</param>
 		/// <param name="opB">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="B"/> during operation</param>
 		/// <param name="binary">The <see cref="BinaryOperation"/> to apply simultaneously to both elements of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <exception cref="ArgumentNullException">If both <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If the operation cannot be performed due to incompatible size(s)</exception>
-		public abstract static void TensorsBinaryOperation(TTen1? A, TensorOrder orderA, UnaryOperation opA, T α, TTen2? B, TensorOrder orderB, UnaryOperation opB, T β, TTen3 C, BinaryOperation binary);
+		public abstract static void TensorsBinaryOperation(TTen1? A, TensorOrder orderA, UnaryOperation opA, T scalarA, TTen2? B, TensorOrder orderB, UnaryOperation opB, T scalarB, TTen3 C, BinaryOperation binary);
+
+		/// <summary>
+		/// Check the input parameters of <see cref="Contract(TTen1, UnaryOperation, TTen2, UnaryOperation, T)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static StorableContractInfo CheckContract(TTen1 A!!, TTen2 B!!, T α, ref Span<long> outputSize, ref Span<char> outputLabel)
+		{
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+			int rank = TensorContractInfo.GetContractRank(A, B);
+			Span<int> leftConc = stackalloc int[rank];
+			Span<int> rightConc = stackalloc int[rank];
+			Span<int> leftFree = stackalloc int[A.Rank - rank];
+			Span<int> rightFree = stackalloc int[B.Rank - rank];
+			var info = TensorContractInfo.Create(A, B, null, leftConc, rightConc, leftFree, rightFree, outputSize, outputLabel);
+			int outRank = A.Rank + B.Rank - 2 * rank;
+			outputSize = outputSize[..outRank];
+			outputLabel = outputLabel[..outRank];
+			return info;
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, create a new tensor as the contraction result of <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="opB"/>(<paramref name="B"/>).
+		/// </summary>
+		/// <remarks>The labels of <paramref name="A"/> and <paramref name="B"/> are used to guide contraction dimensions.</remarks>
+		/// <param name="A">The first input contraction tensor</param>
+		/// <param name="B">The second input contraction tensor</param>
+		/// <param name="α">The scalar to multiply to <paramref name="A"/> or <paramref name="B"/> during operation</param>
+		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="A"/> during operation</param>
+		/// <param name="opB">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="B"/> during operation</param>
+		/// <returns>The created new <typeparamref name="TTen3"/> as the result.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/>, <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="A"/> or <paramref name="B"/>'s labels indicate that they cannot contract or add</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
+		public abstract static TTen3 Contract(TTen1 A, UnaryOperation opA, TTen2 B, UnaryOperation opB, T α);
+
+		/// <summary>
+		/// Check the input parameters of <see cref="TensorsBinaryOperation(TTen1?, TensorOrder, UnaryOperation, T, TTen2?, TensorOrder, UnaryOperation, T, BinaryOperation)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static TS CheckBinary<TS>(TTen1? A, TensorOrder orderA, T α, TTen2? B, TensorOrder orderB, T β, Span<int> permA, Span<int> permB, Span<long> outputSize, TS? storage) where TS : class, IStorage<T, TS>
+		{
+			bool nullA = A is null || α == T.Zero;
+			bool nullB = B is null || β == T.Zero;
+			if (nullA && nullB)
+				throw new ArgumentException(Resources.ParameterError.CannotAllNull);
+#pragma warning disable CS8602, CS8604
+			if (!nullA)
+			{
+				orderA.GetOrder(A, permA, false);
+				A.Size.ReOrderTo(outputSize, permA);
+			}
+			if (!nullB)
+			{
+				orderB.GetOrder(B, permB, false);
+				Span<long> newSizeB = stackalloc long[B.Rank];
+				B.Size.ReOrderTo(newSizeB, permB);
+				if (!nullA && !outputSize.SequenceEqual(newSizeB))
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(B));
+			}
+			return storage?.ResizeAlike(outputSize.Prod()) ?? TS.Empty;
+#pragma warning restore CS8602, CS8604
+		}
+
+		/// <summary>
+		/// When implemented by a derived class, create a new tensor as the point-wise binary operation result: <c><paramref name="binary"/>(<paramref name="scalarA"/> .* <paramref name="opA"/>(<paramref name="A"/>[<paramref name="orderA"/>]), <paramref name="scalarB"/> .* <paramref name="opB"/>(<paramref name="B"/>[<paramref name="orderB"/>]))</c>.
+		/// </summary>
+		/// <param name="A">The first input tensor</param>
+		/// <param name="B">The second input tensor</param>
+		/// <param name="orderA">The <see cref="TensorOrder"/> indicating the permutation order of <paramref name="A"/></param>
+		/// <param name="orderB">The <see cref="TensorOrder"/> indicating the permutation order of <paramref name="B"/></param>
+		/// <param name="scalarA">The scalar to multiply to <paramref name="A"/> during operation</param>
+		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="A"/> during operation</param>
+		/// <param name="opB">The <see cref="UnaryOperation"/> to apply to elements of <paramref name="B"/> during operation</param>
+		/// <param name="scalarB">The scalar to multiply to <paramref name="B"/> during operation</param>
+		/// <param name="binary">The <see cref="BinaryOperation"/> to apply simultaneously to both elements of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <returns>The created new <typeparamref name="TTen3"/> as the result.</returns>
+		/// <exception cref="ArgumentNullException">If both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
+		/// <exception cref="ArgumentException">If the operation cannot be performed due to incompatible size(s)</exception>
+		public abstract static TTen3 TensorsBinaryOperation(TTen1? A, TensorOrder orderA, UnaryOperation opA, T scalarA, TTen2? B, TensorOrder orderB, UnaryOperation opB, T scalarB, BinaryOperation binary);
 	}
 
 	/// <summary>

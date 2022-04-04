@@ -28,11 +28,6 @@ namespace Althea.Arrays
 	[StructLayout(LayoutKind.Explicit)]
 	public abstract class SparseTensor<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
 		IBaseTensor<T, SparseTensor<T, TInd, TS, TSInd>>,
-		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>,
-		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>,
-		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>, DenseTensor<T, TS>>,
-		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>,
-		ITensorOperations<T, DenseTensor<T, TS>, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>,
 		ITensorUnaryOperators<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>,
 		ITensorBinaryOperators<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>, DenseTensor<T, TS>>,
 		ITensorBinaryOperators<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>
@@ -215,7 +210,7 @@ namespace Althea.Arrays
 			this.values = TS.Empty; this.indices = TSInd.Empty;
 		}
 
-		static SparseTensor<T, TInd, TS, TSInd> IValueArray<T, SparseTensor<T, TInd, TS, TSInd>>.Empty => new CoordinateSparseMatrix<T, TInd, TS, TSInd>();
+		static SparseTensor<T, TInd, TS, TSInd> IValueArray<T, SparseTensor<T, TInd, TS, TSInd>>.Empty => new CoordinateSparseTensor<T, TInd, TS, TSInd>();
 		#endregion
 
 		#region equality
@@ -426,87 +421,6 @@ namespace Althea.Arrays
 			else
 				return min;
 		}
-		#endregion
-
-		#region operations
-		/// <inheritdoc/>
-		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, SparseTensor<T, TInd, TS, TSInd> B!!, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
-		{
-			Span<int> reduceInds = stackalloc int[A.rank];
-			reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckReduce(A, order, scalar, B, reduceInds);
-			var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(B);
-			SpTen.Reduce(reduce, A, scalar, opA, reduceInds, ref target);
-		}
-
-		/// <inheritdoc/>
-		public static void Permute(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, SparseTensor<T, TInd, TS, TSInd> B!!, UnaryOperation opA = UnaryOperation.Identity)
-		{
-			Span<int> perm = stackalloc int[A.rank];
-			ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckPermute(A, order, scalar, B, perm);
-			var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(B);
-			SpTen.Permute(A, scalar, opA, perm, ref target);
-		}
-
-		/// <inheritdoc/>
-		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
-		{
-			Span<int> reduceInds = stackalloc int[A.rank];
-			reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckReduce(A, order, scalar, B, reduceInds);
-			SpTen.Reduce(reduce, A, scalar, opA, reduceInds, new DenseTensorWrapper<T, TS>(B, B.Storage));
-		}
-
-		/// <inheritdoc/>
-		public static void Permute(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation op = UnaryOperation.Identity)
-		{
-			Span<int> perm = stackalloc int[A.rank];
-			ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
-			SpTen.Permute(A, scalar, op, perm, new DenseTensorWrapper<T, TS>(B, B.Storage));
-		}
-
-		/// <inheritdoc/>
-		public static void Contract(SparseTensor<T, TInd, TS, TSInd> A!!, UnaryOperation opA, SparseTensor<T, TInd, TS, TSInd> B!!, UnaryOperation opB, T α, SparseTensor<T, TInd, TS, TSInd> C, UnaryOperation opC, T β)
-		{
-			var info = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckContract(A, B, α, C);
-			var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(C);
-			SpTen.Contract(α, A, opA, B, opB, in info, β, ref target, opC);
-		}
-
-		/// <inheritdoc/>
-		public static void TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, UnaryOperation opB, T β, SparseTensor<T, TInd, TS, TSInd> C!!, BinaryOperation binary)
-		{
-			Span<int> permA = stackalloc int[A?.rank ?? 0], permB = stackalloc int[B?.rank ?? 0];
-			ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
-			var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(C);
-			SpTen.OperationBinary(binary, A, permA, α, opA, B, permB, β, opB, ref target);
-		}
-
-		/// <inheritdoc/>
-		public static void Contract(SparseTensor<T, TInd, TS, TSInd> A!!, UnaryOperation opA, DenseTensor<T, TS> B!!, UnaryOperation opB, T α, DenseTensor<T, TS> C!!, UnaryOperation opC, T β)
-		{
-			if (α == T.Zero)
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
-			int rank = TensorContractInfo.GetContractRank(A, B);
-			Span<int> leftConc = stackalloc int[rank];
-			Span<int> rightConc = stackalloc int[rank];
-			Span<int> leftFree = stackalloc int[A.Rank - rank];
-			Span<int> rightFree = stackalloc int[B.Rank - rank];
-			var info = TensorContractInfo.Create(A, B, C, leftConc, rightConc, leftFree, rightFree);
-			SpTen.Contract(A, opA, new DenseTensorWrapper<T, TS>(B, B.Storage, opB, α), info, new DenseTensorWrapper<T, TS>(C, C.Storage, opC));
-		}
-
-		/// <inheritdoc/>
-		public static void TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C!!, BinaryOperation binary)
-		{
-			Span<int> permA = stackalloc int[A?.rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
-			ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
-			SpTen.OperationBinary(binary, A, permA, α, opA, B is null ? default : new DenseTensorWrapper<T, TS>(B, B.Storage, opB, β), permB, new DenseTensorWrapper<T, TS>(C, C.Storage));
-		}
-
-		/// <inheritdoc/>
-		public static void Contract(DenseTensor<T, TS> A, UnaryOperation opA, SparseTensor<T, TInd, TS, TSInd> B, UnaryOperation opB, T α, DenseTensor<T, TS> C, UnaryOperation opC, T β) => Contract(B, opB, A, opA, α, C, opC, β);
-
-		/// <inheritdoc/>
-		public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C, BinaryOperation binary) => TensorsBinaryOperation(B, orderB, opB, β, A, orderA, opA, α, C, binary);
 		#endregion
 
 		#region operators

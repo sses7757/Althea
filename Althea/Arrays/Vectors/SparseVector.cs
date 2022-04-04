@@ -29,12 +29,9 @@ namespace Althea.Arrays
 	[StructLayout(LayoutKind.Sequential, Pack = sizeof(long))]
 	public abstract class SparseVector<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
 		IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>,
-		IVectorOperations<T, DenseVector<T, TS>, SparseVector<T, TInd, TS, TSInd>>,
 		IVectorUnaryOperators<T, SparseVector<T, TInd, TS, TSInd>, SparseVector<T, TInd, TS, TSInd>>,
 		IVectorBinaryOperators<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseVector<T, TS>>,
 		IVectorBinaryOperators<T, SparseVector<T, TInd, TS, TSInd>, SparseVector<T, TInd, TS, TSInd>, SparseVector<T, TInd, TS, TSInd>>,
-		IMatrixSetDiagonalVector<T, SparseVector<T, TInd, TS, TSInd>, DenseMatrix<T, TS>>,
-		IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>,
 		IVectorMatrixMultiplyOperators<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>
 		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
@@ -336,75 +333,6 @@ namespace Althea.Arrays
 				return this.defaultValue;
 			else
 				return min;
-		}
-		#endregion
-
-		#region operations
-		/// <inheritdoc/>
-		public static T Dot(DenseVector<T, TS> left, SparseVector<T, TInd, TS, TSInd> right, bool conjugateLeft = true)
-		{
-			if (left.Length != right.Length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(right));
-			return SpComp.VectorSparseDotDense(conjugateLeft, right, left.Storage, left.Stride);
-		}
-
-		/// <summary>
-		/// Statically compute the dot (inner) product of <paramref name="left"/> and <paramref name="right"/>.
-		/// </summary>
-		/// <param name="left">The left vector to perform the dot product</param>
-		/// <param name="right">The right vector to perform the dot product</param>
-		/// <param name="conjugateLeft">Whether the dot product is performed on the conjugation of <paramref name="left"/> or directly.</param>
-		/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-		public static T Dot(SparseVector<T, TInd, TS, TSInd> left, SparseVector<T, TInd, TS, TSInd> right, bool conjugateLeft = true)
-		{
-			if (left.Length != right.Length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(right));
-			return SpComp.VectorSparseDotSparse(conjugateLeft, right, left);
-		}
-
-		/// <inheritdoc/>
-		public static void AddBy(DenseVector<T, TS> left, SparseVector<T, TInd, TS, TSInd> right, T scalar)
-		{
-			if (left.Length != right.Length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(right));
-			SpComp.VectorSparseAddToDense(scalar, right, left.Storage, left.Stride);
-		}
-
-		/// <inheritdoc/>
-		public static void SetDiag(DenseMatrix<T, TS> matrix, long k, SparseVector<T, TInd, TS, TSInd> value)
-		{
-			var diag = DenseOperation<T, TS>.GetDiag(matrix, k);
-			diag.FillWith(T.Zero);
-			AddBy(diag, value, T.One);
-		}
-
-		/// <inheritdoc/>
-		public static void MatrixMultiplyVector(DenseMatrix<T, TS> matrix, SparseVector<T, TInd, TS, TSInd> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
-		{
-			IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>.CheckMatMulVec(matrix, vector, vectorOut, α, operation);
-			SpComp.MatrixDenseMultiplyVectorSparse(operation, α, operation.CanInPlace() ? matrix.NRows : matrix.NCols, matrix.Storage, matrix.LeadDim, vector, β, vectorOut.Storage, vectorOut.Stride);
-		}
-
-		/// <inheritdoc/>
-		public static void VectorMultiplyMatrix(SparseVector<T, TInd, TS, TSInd> vector, DenseMatrix<T, TS> matrix, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None) => MatrixMultiplyVector(matrix, vector, vectorOut, α, β, operation.Transpose());
-
-		/// <summary>
-		/// Statically compute the out-of-place addition for two <see cref="SparseVector{T, TInd, TS, TSInd}"/>s.
-		/// </summary>
-		/// <param name="scalarLeft">The scalar to multiply to <paramref name="left"/> during computation</param>
-		/// <param name="left">The input left sparse vector</param>
-		/// <param name="right">The input right sparse vector</param>
-		/// <returns>The created new sparse vector as the addition result.</returns>
-		/// <exception cref="ArgumentException">If <paramref name="scalarLeft"/> == 0 or <paramref name="left"/> and <paramref name="right"/> have different lengths</exception>
-		public static SparseVector<T, TInd, TS, TSInd> VectorsAdd(T scalarLeft, SparseVector<T, TInd, TS, TSInd> left, SparseVector<T, TInd, TS, TSInd> right)
-		{
-			if (scalarLeft == T.Zero)
-				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(scalarLeft));
-			if (left.length != right.length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			var wrapper = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
-			SpComp.VectorSparseAddSparse(scalarLeft, left, right, ref wrapper);
-			return Create(wrapper);
 		}
 		#endregion
 

@@ -22,8 +22,6 @@ namespace Althea.Arrays
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
 	public class DenseTensor<T, TS> : IPitchedArray<T>, IBaseTensor<T, DenseTensor<T, TS>>,
-		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
-		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>,
 		ITensorUnaryOperators<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
 		ITensorBinaryOperators<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>
 		where T : unmanaged, INumber<T>
@@ -308,107 +306,30 @@ namespace Althea.Arrays
 		public T ValueWithMinAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.AbsoluteValue, BinaryOperation.Mininum);
 		#endregion
 
-		#region operations
-		/// <inheritdoc/>
-		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
-		{
-			Span<int> reduceInd = stackalloc int[A.rank];
-			reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, scalar, B, reduceInd);
-			Ten.Reduce<T, TS, TS>(reduce, new(A, A.values, opA), new(B, B.values), reduceInd);
-		}
-
-		/// <inheritdoc/>
-		public static void Permute(DenseTensor<T, TS> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation op = UnaryOperation.Identity)
-		{
-			Span<int> perm = stackalloc int[A.rank];
-			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
-			Ten.Permute<T, TS, TS>(new(A, A.values, op, scalar), new(B, B.values), perm);
-		}
-
-		/// <inheritdoc/>
-		public static void Contract(DenseTensor<T, TS> A!!, UnaryOperation opA, DenseTensor<T, TS> B!!, UnaryOperation opB, T α, DenseTensor<T, TS> C!!, UnaryOperation opC, T β)
-		{
-			////TensorContractInfo info = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckContract(A, B, α, C);
-			if (α == T.Zero)
-				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
-			int rank = TensorContractInfo.GetContractRank(A, B);
-			Span<int> leftConc = stackalloc int[rank];
-			Span<int> rightConc = stackalloc int[rank];
-			Span<int> leftFree = stackalloc int[A.Rank - rank];
-			Span<int> rightFree = stackalloc int[B.Rank - rank];
-			var info = TensorContractInfo.Create(A, B, C, leftConc, rightConc, leftFree, rightFree);
-			Ten.Contract<T, TS, TS, TS>(new(A, A.values, opA, α), new(B, B.values, opB), new(C, C.values, opC), info);
-		}
-
-		/// <inheritdoc/>
-		public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C!!, BinaryOperation binary)
-		{
-			Span<int> permA = stackalloc int[A?.rank ?? 0], permB = stackalloc int[B?.rank ?? 0];
-			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
-			Ten.OperationBinary<T, TS, TS, TS>(binary, A is null ? default : new(A, A.values, opA, α), permA, B is null ? default : new(B, B.values, opB, β), permB, new(C, C.values));
-		}
-		#endregion
-
 		#region operators
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator ^(DenseTensor<T, TS> tensor!!, TensorOrder order)
-		{
-			var perm = order.GetOrder(tensor, stackalloc int[tensor.rank]);
-			Span<long> newSize = stackalloc long[tensor.rank];
-			tensor.Size.ReOrderTo(newSize, perm);
-			var storage = tensor.values.ResizeAlike(tensor.length);
-			try
-			{
-				Ten.Permute<T, TS, TS>(new(tensor, tensor.values), new(storage, newSize), perm);
-				return new(storage, newSize);
-			}
-			catch (Exception)
-			{
-				storage.Dispose();
-				throw;
-			}
-		}
+		public static DenseTensor<T, TS> operator ^(DenseTensor<T, TS> tensor, TensorOrder order) => DenseOperation<T, TS>.Permute(tensor, order, T.One);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> tensor!!, T scalar) => tensor.ApplyToAlike(t => Permute(tensor, TensorOrder.Identity, scalar, t));
+		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> tensor, T scalar) => DenseOperation<T, TS>.Permute(tensor, TensorOrder.Identity, scalar);
 
 		/// <inheritdoc/>
 		public static DenseTensor<T, TS> operator *(T scalar, DenseTensor<T, TS> tensor!!) => tensor * scalar;
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> tensor!!) => tensor.ApplyToAlike(t => Permute(tensor, TensorOrder.Identity, T.One, t, UnaryOperation.Negate));
+		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> tensor) => tensor * (-T.One);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator /(DenseTensor<T, TS> tensor!!, T scalar) => tensor * (T.One / scalar);
+		public static DenseTensor<T, TS> operator /(DenseTensor<T, TS> tensor, T scalar) => tensor * (T.One / scalar);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> left!!, DenseTensor<T, TS> right!!)
-		{
-			int conc = TensorContractInfo.GetContractRank(left, right);
-			int outRank = left.rank + right.rank - 2 * conc;
-			Span<int> leftConc = stackalloc int[conc], rightConc = stackalloc int[conc];
-			Span<int> leftFree = stackalloc int[left.rank - conc], rightFree = stackalloc int[right.rank - conc];
-			Span<char> labelOut = stackalloc char[outRank];
-			Span<long> sizeOut = stackalloc long[outRank];
-			var info = TensorContractInfo.Create(left, right, null, leftConc, rightConc, leftFree, rightFree, sizeOut, labelOut);
-			var storage = left.values.ResizeAlike(sizeOut.Prod());
-			try
-			{
-				Ten.Contract<T, TS, TS, TS>(new(left, left.values), new(right, right.values), new(storage, sizeOut), info);
-				return new(storage, sizeOut, default, labelOut);
-			}
-			catch (Exception)
-			{
-				storage.Dispose();
-				throw;
-			}
-		}
+		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => DenseOperation<T, TS>.Contract(left, UnaryOperation.Identity, right, UnaryOperation.Identity, T.One);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator +(DenseTensor<T, TS> left!!, DenseTensor<T, TS> right!!) => left.ApplyToAlike(t => TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, t, BinaryOperation.Addition));
+		public static DenseTensor<T, TS> operator +(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => DenseOperation<T, TS>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Addition);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left!!, DenseTensor<T, TS> right!!) => left.ApplyToAlike(t => TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, t, BinaryOperation.Addition));
+		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => DenseOperation<T, TS>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Addition);
 		#endregion
 
 		#region conversion and clone

@@ -3,13 +3,16 @@
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
+using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
+using Althea.TensorAlgebra;
 
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using HalfBlas = Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector;
 using Lapack = Althea.LinearAlgebra.Dense.LapackApiSelector;
+using Ten = Althea.TensorAlgebra.Dense.BaseApiSelector;
 
 
 namespace Althea.Arrays
@@ -43,7 +46,10 @@ namespace Althea.Arrays
 		IMatrixLeastSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixQRSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixLinearSolve<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IMatrixQRSolve<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>
+		IMatrixQRSolve<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>,
+
+		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
+		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>
 
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
@@ -661,11 +667,63 @@ namespace Althea.Arrays
 		/// <param name="opB">The operation to be applied to <paramref name="B"/></param>
 		public static void RankKUpdate(SymmetricMatrix<T, TS> A!!, DenseMatrix<T, TS> B!!, T α, T β = default, MatrixOperation opB = MatrixOperation.None)
 		{
-			if (A.NRows != B.NRows)
+			var (n, k) = (B.NRows, B.NCols);
+			if (!opB.CanInPlace())
+				(n, k) = (k, n);
+			if (A.NRows != n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
-			Blas.SymmetricRankKUpdate(A.Upper, opB, A.Hermitian, A.);
+			Blas.SymmetricRankKUpdate(A.Upper, opB, A.Hermitian, n, k, α, B.Storage, B.LeadDim, β, A.Storage, A.LeadDim);
+		}
+
+		/// <summary>
+		/// Symmetrically update the matrix <paramref name="A"/> by adding the positive-definite products of the matrices: <c><paramref name="α"/> * (<paramref name="B"/> * <paramref name="C"/>^T + <paramref name="C"/> * <paramref name="B"/>^T)</c>.
+		/// </summary>
+		/// <param name="A">The matrix to be updated</param>
+		/// <param name="B">The left and right matrix to positive-definite product</param>
+		/// <param name="C">Another left and right matrix to positive-definite product</param>
+		/// <param name="α">The scalar to multiply to <paramref name="B"/> or <paramref name="C"/></param>
+		/// <param name="β">The scalar to multiply to <paramref name="A"/></param>
+		/// <param name="op">The operation to be applied to both <paramref name="B"/> and <paramref name="C"/></param>
+		public static void RankTwoKUpdate(SymmetricMatrix<T, TS> A!!, DenseMatrix<T, TS> B!!, DenseMatrix<T, TS> C!!, T α, T β = default, MatrixOperation op = MatrixOperation.None)
+		{
+			var (n, k) = (B.NRows, B.NCols);
+			if (!op.CanInPlace())
+				(n, k) = (k, n);
+			if (A.NRows != n)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
+			if (C.NRows != B.NRows || C.NCols != B.NCols)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(C));
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
+			Blas.SymmetricRankTwoKUpdate(A.Upper, op, A.Hermitian, n, k, α, B.Storage, B.LeadDim, C.Storage, C.LeadDim, β, A.Storage, A.LeadDim);
+		}
+
+		/// <summary>
+		/// Update the square matrix <paramref name="A"/> by adding the product of matrices <paramref name="left"/> and <paramref name="right"/>.
+		/// </summary>
+		/// <param name="A">The matrix to be updated</param>
+		/// <param name="left">The left matrix to product</param>
+		/// <param name="right">The right matrix to product</param>
+		/// <param name="α">The scalar to multiply to <paramref name="left"/> or <paramref name="right"/></param>
+		/// <param name="β">The scalar to multiply to <paramref name="A"/></param>
+		/// <param name="op">The operation to be applied to both <paramref name="left"/> and <paramref name="right"/></param>
+		/// <param name="conjugateRight">Whether to use the conjugate transpose of <paramref name="right"/> or simply transpose.</param>
+		public static void RankKUpdate(DenseMatrix<T, TS> A!!, DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!, T α, T β = default, MatrixOperation op = MatrixOperation.None, bool conjugateRight = true)
+		{
+			if (!NumberType<T>.IsComplex)
+				conjugateRight = false;
+			var (n, k) = (left.NRows, left.NCols);
+			if (!op.CanInPlace())
+				(n, k) = (k, n);
+			if (A.NRows != n || A.NCols != n)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
+			if (right.NRows != left.NRows || right.NCols != left.NCols)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(right));
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
+			Blas.GeneralRankKUpdate(op, conjugateRight, n, k, α, left.Storage, left.LeadDim, right.Storage, right.LeadDim, β, A.Storage, A.LeadDim);
 		}
 		#endregion
 
@@ -742,5 +800,128 @@ namespace Althea.Arrays
 			Blas.TriangularMatrixSolve(true, coefficients.Upper, coefficients.UnitDiagonal, opCoef, coefficients.NRows, outSolves.NCols, T.One, coefficients.Storage, coefficients.LeadDim, outSolves.Storage, outSolves.LeadDim);
 		}
 		#endregion
+
+		#region tensor
+		/// <inheritdoc/>
+		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		{
+			Span<int> reduceInd = stackalloc int[A.Rank];
+			reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, scalar, B, reduceInd);
+			Ten.Reduce<T, TS, TS>(reduce, new(A, A.Storage, opA), new(B, B.Storage), reduceInd);
+		}
+
+		/// <inheritdoc/>
+		public static void Permute(DenseTensor<T, TS> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation op = UnaryOperation.Identity)
+		{
+			Span<int> perm = stackalloc int[A.Rank];
+			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
+			Ten.Permute<T, TS, TS>(new(A, A.Storage, op, scalar), new(B, B.Storage), perm);
+		}
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> Reduce(DenseTensor<T, TS> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		{
+			Span<int> reduceInd = stackalloc int[A.Rank];
+			Span<long> sizeB = stackalloc long[A.Rank];
+			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, scalar, ref reduceInd, ref sizeB);
+			var output = A.Storage.ResizeAlike(sizeB.Prod());
+			try
+			{
+				Ten.Reduce<T, TS, TS>(reduce, new(A, A.Storage, opA, scalar), new(output, sizeB), reduceInd);
+				return new(output, sizeB);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
+		}
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> Permute(DenseTensor<T, TS> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity)
+		{
+			Span<int> perm = stackalloc int[A.Rank];
+			Span<long> sizeB = stackalloc long[A.Rank];
+			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, perm, sizeB);
+			var output = A.Storage.ResizeAlike(A.Length);
+			try
+			{
+				Ten.Permute<T, TS, TS>(new(A, A.Storage, opA, scalar), new(output, sizeB), perm);
+				return new(output, sizeB);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
+		}
+
+		/// <inheritdoc/>
+		public static void Contract(DenseTensor<T, TS> A!!, UnaryOperation opA, DenseTensor<T, TS> B!!, UnaryOperation opB, T α, DenseTensor<T, TS> C!!, UnaryOperation opC, T β)
+		{
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+			int rank = TensorContractInfo.GetContractRank(A, B);
+			Span<int> leftConc = stackalloc int[rank];
+			Span<int> rightConc = stackalloc int[rank];
+			Span<int> leftFree = stackalloc int[A.Rank - rank];
+			Span<int> rightFree = stackalloc int[B.Rank - rank];
+			var info = TensorContractInfo.Create(A, B, C, leftConc, rightConc, leftFree, rightFree);
+			Ten.Contract<T, TS, TS, TS>(new(A, A.Storage, opA, α), new(B, B.Storage, opB), new(C, C.Storage, opC), info);
+		}
+
+		/// <inheritdoc/>
+		public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C!!, BinaryOperation binary)
+		{
+			Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
+			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
+			Ten.OperationBinary<T, TS, TS, TS>(binary, A is null ? default : new(A, A.Storage, opA, α), permA, B is null ? default : new(B, B.Storage, opB, β), permB, new(C, C.Storage));
+		}
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> Contract(DenseTensor<T, TS> A, UnaryOperation opA, DenseTensor<T, TS> B, UnaryOperation opB, T α)
+		{
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+			int rank = TensorContractInfo.GetContractRank(A, B);
+			Span<int> leftConc = stackalloc int[rank];
+			Span<int> rightConc = stackalloc int[rank];
+			Span<int> leftFree = stackalloc int[A.Rank - rank];
+			Span<int> rightFree = stackalloc int[B.Rank - rank];
+			Span<long> sizeC = stackalloc long[leftFree.Length + rightFree.Length];
+			Span<char> labelC = stackalloc char[sizeC.Length];
+			var info = TensorContractInfo.Create(A, B, null, leftConc, rightConc, leftFree, rightFree, sizeC, labelC);
+			var output = A.Storage.ResizeAlike(sizeC.Prod());
+			try
+			{
+				Ten.Contract<T, TS, TS, TS>(new(A, A.Storage, opA, α), new(B, B.Storage, opB), new(output, sizeC), info);
+				return new(output, sizeC, default, labelC);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
+		}
+
+		/// <inheritdoc/>
+		public static DenseTensor<T, TS> TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T scalarA, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T scalarB, BinaryOperation binary)
+		{
+			Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
+			Span<long> sizeC = stackalloc long[A?.Rank ?? B?.Rank ?? 0];
+			var output = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, scalarA, B, orderB, scalarB, permA, permB, sizeC, A?.Storage ?? B?.Storage);
+			try
+			{
+				Ten.OperationBinary<T, TS, TS, TS>(binary, A is null ? default : new(A, A.Storage, opA, scalarA), permA, B is null ? default : new(B, B.Storage, opB, scalarB), permB, new(output, sizeC));
+				return new(output, sizeC);
+			}
+			catch (Exception)
+			{
+				output.Dispose();
+				throw;
+			}
+		}
+		#endregion
+
 	}
 }
