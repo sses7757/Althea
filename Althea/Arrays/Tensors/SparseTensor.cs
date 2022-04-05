@@ -9,7 +9,6 @@ using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
 using Althea.TensorAlgebra;
-using Althea.TensorAlgebra.Dense;
 
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
@@ -425,156 +424,46 @@ namespace Althea.Arrays
 
 		#region operators
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> operator ^(SparseTensor<T, TInd, TS, TSInd> tensor!!, TensorOrder order)
-		{
-			Span<int> perm = stackalloc int[tensor.rank];
-			order.GetOrder(tensor, perm, false);
-			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(tensor.defaultValue, SparseFormat.Any);
-			SpTen.Permute(tensor, T.One, UnaryOperation.Identity, perm, ref target);
-			return Create(in target);
-		}
+		public static SparseTensor<T, TInd, TS, TSInd> operator ^(SparseTensor<T, TInd, TS, TSInd> tensor, TensorOrder order) => SparseOperation<T, TInd, TS, TSInd>.Permute(tensor, order, T.One);
 
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> operator *(SparseTensor<T, TInd, TS, TSInd> tensor!!, T scalar)
-		{
-			Span<int> perm = stackalloc int[tensor.rank].FillWithRange(0);
-			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(tensor.defaultValue, SparseFormat.Any);
-			SpTen.Permute(tensor, scalar, UnaryOperation.Identity, perm, ref target);
-			return Create(in target);
-		}
+		public static SparseTensor<T, TInd, TS, TSInd> operator *(SparseTensor<T, TInd, TS, TSInd> tensor, T scalar) => SparseOperation<T, TInd, TS, TSInd>.Permute(tensor, TensorOrder.Identity, scalar);
 
 		/// <inheritdoc/>
 		public static SparseTensor<T, TInd, TS, TSInd> operator *(T scalar, SparseTensor<T, TInd, TS, TSInd> tensor) => tensor * scalar;
 
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> operator -(SparseTensor<T, TInd, TS, TSInd> tensor!!) => tensor * (-T.One);
+		public static SparseTensor<T, TInd, TS, TSInd> operator -(SparseTensor<T, TInd, TS, TSInd> tensor) => tensor * (-T.One);
 
 		/// <inheritdoc/>
 		public static SparseTensor<T, TInd, TS, TSInd> operator /(SparseTensor<T, TInd, TS, TSInd> tensor, T scalar) => tensor * (T.One / scalar);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator *(SparseTensor<T, TInd, TS, TSInd> left!!, DenseTensor<T, TS> right!!)
-		{
-			int conc = TensorContractInfo.GetContractRank(left, right);
-			int outRank = left.rank + right.Rank - 2 * conc;
-			Span<int> leftConc = stackalloc int[conc], rightConc = stackalloc int[conc];
-			Span<int> leftFree = stackalloc int[left.rank - conc], rightFree = stackalloc int[right.Rank - conc];
-			Span<char> labelOut = stackalloc char[outRank];
-			Span<long> sizeOut = stackalloc long[outRank];
-			var info = TensorContractInfo.Create(left, right, null, leftConc, rightConc, leftFree, rightFree, sizeOut, labelOut);
-			var storage = right.Storage.ResizeAlike(sizeOut.Prod());
-			try
-			{
-				SpTen.Contract(left, UnaryOperation.Identity, new DenseTensorWrapper<T, TS>(right, right.Storage), info, new DenseTensorWrapper<T, TS>(storage, sizeOut));
-				return new(storage, sizeOut, default, labelOut);
-			}
-			catch (Exception)
-			{
-				storage.Dispose();
-				throw;
-			}
-		}
+		public static DenseTensor<T, TS> operator *(SparseTensor<T, TInd, TS, TSInd> left, DenseTensor<T, TS> right) => SparseOperation<T, TInd, TS, TSInd>.Contract(left, UnaryOperation.Identity, right, UnaryOperation.Identity, T.One);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator +(SparseTensor<T, TInd, TS, TSInd> left!!, DenseTensor<T, TS> right!!)
-		{
-			if (!left.Size.SequenceEqual(right.Size))
-				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			var storage = right.Storage.ResizeAlike(left.length);
-			try
-			{
-				Span<int> identityPerm = stackalloc int[left.rank].FillWithRange(0);
-				SpTen.OperationBinary(BinaryOperation.Addition, left, identityPerm, T.One, UnaryOperation.Identity, new DenseTensorWrapper<T, TS>(right, right.Storage), identityPerm, new DenseTensorWrapper<T, TS>(storage, left.Size));
-				return new(storage, left.Size);
-			}
-			catch (Exception)
-			{
-				storage.Dispose();
-				throw;
-			}
-		}
+		public static DenseTensor<T, TS> operator +(SparseTensor<T, TInd, TS, TSInd> left, DenseTensor<T, TS> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Addition);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator -(SparseTensor<T, TInd, TS, TSInd> left!!, DenseTensor<T, TS> right!!)
-		{
-			if (!left.Size.SequenceEqual(right.Size))
-				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			var storage = right.Storage.ResizeAlike(left.length);
-			try
-			{
-				Span<int> identityPerm = stackalloc int[left.rank].FillWithRange(0);
-				SpTen.OperationBinary(BinaryOperation.Addition, left, identityPerm, T.One, UnaryOperation.Identity, new DenseTensorWrapper<T, TS>(right, right.Storage, UnaryOperation.Negate), identityPerm, new DenseTensorWrapper<T, TS>(storage, left.Size));
-				return new(storage, left.Size);
-			}
-			catch (Exception)
-			{
-				storage.Dispose();
-				throw;
-			}
-		}
+		public static DenseTensor<T, TS> operator -(SparseTensor<T, TInd, TS, TSInd> left, DenseTensor<T, TS> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Addition);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> left!!, SparseTensor<T, TInd, TS, TSInd> right!!) => right * left;
+		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> left, SparseTensor<T, TInd, TS, TSInd> right) => right * left;
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator +(DenseTensor<T, TS> left!!, SparseTensor<T, TInd, TS, TSInd> right!!) => right + left;
+		public static DenseTensor<T, TS> operator +(DenseTensor<T, TS> left, SparseTensor<T, TInd, TS, TSInd> right) => right + left;
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left!!, SparseTensor<T, TInd, TS, TSInd> right!!)
-		{
-			if (!left.Size.SequenceEqual(right.Size))
-				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			var storage = left.Storage.ResizeAlike(right.length);
-			try
-			{
-				Span<int> identityPerm = stackalloc int[right.rank].FillWithRange(0);
-				SpTen.OperationBinary(BinaryOperation.Addition, right, identityPerm, T.One, UnaryOperation.Negate, new DenseTensorWrapper<T, TS>(left, left.Storage), identityPerm, new DenseTensorWrapper<T, TS>(storage, left.Size));
-				return new(storage, left.Size);
-			}
-			catch (Exception)
-			{
-				storage.Dispose();
-				throw;
-			}
-		}
+		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Addition);
 
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> operator *(SparseTensor<T, TInd, TS, TSInd> left!!, SparseTensor<T, TInd, TS, TSInd> right!!)
-		{
-			if (left.defaultValue != T.Zero || right.defaultValue != T.Zero)
-				throw new InvalidOperationException(Resources.SparseError.CannotSetSparse);
-			int conc = TensorContractInfo.GetContractRank(left, right);
-			int outRank = left.rank + right.rank - 2 * conc;
-			Span<int> leftConc = stackalloc int[conc], rightConc = stackalloc int[conc];
-			Span<int> leftFree = stackalloc int[left.rank - conc], rightFree = stackalloc int[right.rank - conc];
-			Span<char> labelOut = stackalloc char[outRank];
-			Span<long> sizeOut = stackalloc long[outRank];
-			var info = TensorContractInfo.Create(left, right, null, leftConc, rightConc, leftFree, rightFree, sizeOut, labelOut);
-			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(T.Zero, SparseFormat.Any);
-			return Create(in target);
-		}
+		public static SparseTensor<T, TInd, TS, TSInd> operator *(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.Contract(left, UnaryOperation.Identity, right, UnaryOperation.Identity, T.One);
 
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> operator +(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right)
-		{
-			if (!left.Size.SequenceEqual(right.Size))
-				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
-			Span<int> identityPerm = stackalloc int[left.rank].FillWithRange(0);
-			SpTen.OperationBinary(BinaryOperation.Addition, left, identityPerm, T.One, UnaryOperation.Identity, right, identityPerm, T.One, UnaryOperation.Identity, ref target);
-			return Create(in target);
-		}
+		public static SparseTensor<T, TInd, TS, TSInd> operator +(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Addition);
 
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> operator -(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right)
-		{
-			if (!left.Size.SequenceEqual(right.Size))
-				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(left.defaultValue + right.defaultValue, SparseFormat.Any);
-			Span<int> identityPerm = stackalloc int[left.rank].FillWithRange(0);
-			SpTen.OperationBinary(BinaryOperation.Addition, left, identityPerm, T.One, UnaryOperation.Negate, right, identityPerm, T.One, UnaryOperation.Identity, ref target);
-			return Create(in target);
-		}
+		public static SparseTensor<T, TInd, TS, TSInd> operator -(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Addition);
 		#endregion
 
 		#region conversion and clone

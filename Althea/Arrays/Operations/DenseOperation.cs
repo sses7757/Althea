@@ -116,11 +116,9 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void SetDiag(TriangularMatrix<T, TS> matrix, long k, DenseVector<T, TS> value) => value.CopyTo(GetDiag(matrix, k));
 
-		/// <inheritdoc/>
-		public static DenseVector<T, TS> GetDiag(SymmetricMatrix<T, TS> matrix, long k)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static DenseVector<T, TS> GetDiagRaw(SymmetricMatrix<T, TS> matrix, long k)
 		{
-			if ((matrix.Upper && k < 0) || (!matrix.Upper && k > 0))
-				return GetDiag(matrix, -k);
 			if (matrix.NRows >= matrix.NCols)
 			{
 				if (k >= 0)
@@ -138,10 +136,47 @@ namespace Althea.Arrays
 		}
 
 		/// <inheritdoc/>
-		public static void GetDiag(SymmetricMatrix<T, TS> matrix, long k, DenseVector<T, TS> overwrite) => GetDiag(matrix, k).CopyTo(overwrite);
+		/// <remarks>If <paramref name="k"/> refers to values not stored, a <b>new</b> <see cref="DenseVector{T, TS}"/> will be returned.</remarks>
+		public static DenseVector<T, TS> GetDiag(SymmetricMatrix<T, TS> matrix, long k)
+		{
+			if ((matrix.Upper && k < 0) || (!matrix.Upper && k > 0))
+			{
+				var vec = GetDiagRaw(matrix, -k);
+				if (!matrix.Hermitian)
+					return vec;
+				var output = vec.ToCompact();
+				try
+				{
+					ExtBlas.PointWiseConjugate<T, TS>(output, 1);
+					return new(output, output.Length);
+				}
+				catch (Exception)
+				{
+					output.Dispose();
+					throw;
+				}
+			}
+			return GetDiagRaw(matrix, k);
+		}
 
 		/// <inheritdoc/>
-		public static void SetDiag(SymmetricMatrix<T, TS> matrix, long k, DenseVector<T, TS> value) => value.CopyTo(GetDiag(matrix, k));
+		public static void GetDiag(SymmetricMatrix<T, TS> matrix, long k, DenseVector<T, TS> overwrite)
+		{
+			GetDiagRaw(matrix, k).CopyTo(overwrite);
+			if (!matrix.Hermitian || !((matrix.Upper && k < 0) || (!matrix.Upper && k > 0)))
+				return;
+			overwrite.Conjugate();
+		}
+
+		/// <inheritdoc/>
+		public static void SetDiag(SymmetricMatrix<T, TS> matrix, long k, DenseVector<T, TS> value)
+		{
+			var vec = GetDiagRaw(matrix, k);
+			value.CopyTo(vec);
+			if (!matrix.Hermitian || !((matrix.Upper && k < 0) || (!matrix.Upper && k > 0)))
+				return;
+			vec.Conjugate();
+		}
 		#endregion
 
 		#region matrix vector
@@ -475,14 +510,14 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void AddMatrices(DenseMatrix<T, TS>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n) = IMatrixOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatAdd(A, scalarA, B, scalarB, C, opA, opB);
+			var (m, n) = IMatrixOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckAdd(A, scalarA, B, scalarB, C, opA, opB);
 			ExtBlas.GeneralMatricesAdd(opA, opB, m, n, scalarA, A?.Storage, A?.LeadDim ?? 1, scalarB, B?.Storage, B?.LeadDim ?? 1, C.Storage, C.LeadDim);
 		}
 
 		/// <inheritdoc/>
 		public static void MultiplyMatries(DenseMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, k) = IMatrixOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			var (m, n, k) = IMatrixOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			Blas.GeneralMatricesMultiply(opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
 		}
 
@@ -494,7 +529,7 @@ namespace Althea.Arrays
 				AddMatrices((DenseMatrix<T, TS>?)null, T.Zero, B, scalarB, C, opA, opB);
 				return;
 			}
-			var (m, n) = IMatrixOperations<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatAdd(A, scalarA, B, scalarB, C, opA, opB);
+			var (m, n) = IMatrixOperations<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckAdd(A, scalarA, B, scalarB, C, opA, opB);
 			if (opA.CanInPlace())
 			{
 				A.Storage.Copy2DTo<T, TS, TS>(A.LeadDim, C.Storage, C.LeadDim, m, n);
@@ -513,7 +548,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void MultiplyMatries(TriangularMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, k) = IMatrixOperations<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			var (m, n, k) = IMatrixOperations<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			Blas.TriangularMatrixMultiply(true, A.Upper, A.UnitDiagonal, opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
 		}
 
@@ -523,7 +558,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void MultiplyMatries(DenseMatrix<T, TS> A, TriangularMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, k) = IMatrixOperations<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			var (m, n, k) = IMatrixOperations<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			Blas.TriangularMatrixMultiply(false, B.Upper, B.UnitDiagonal, opB, opA, m, n, k, α, B.Storage, B.LeadDim, A.Storage, A.LeadDim, β, C.Storage, C.LeadDim);
 		}
 
@@ -531,7 +566,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If the <see cref="TriangularMatrix{T, TS}.Upper"/>s or <see cref="TriangularMatrix{T, TS}.UnitDiagonal"/>s are incompatible</exception>
 		public static void AddMatrices(TriangularMatrix<T, TS>? A, T scalarA, TriangularMatrix<T, TS>? B, T scalarB, TriangularMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n) = IMatrixOperations<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>.CheckMatAdd(A, scalarA, B, scalarB, C, opA, opB);
+			var (m, n) = IMatrixOperations<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>.CheckAdd(A, scalarA, B, scalarB, C, opA, opB);
 			var (upper, unit) = CheckUpper(A, B, opA, opB);
 			if (upper != C.Upper || unit != C.UnitDiagonal)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue);
@@ -542,7 +577,7 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If the <see cref="TriangularMatrix{T, TS}.Upper"/>s or <see cref="TriangularMatrix{T, TS}.UnitDiagonal"/>s are incompatible</exception>
 		public static void MultiplyMatries(TriangularMatrix<T, TS> A, TriangularMatrix<T, TS> B, T α, T β, TriangularMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, k) = IMatrixOperations<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			var (m, n, k) = IMatrixOperations<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			bool upperA = A.Upper == opA.CanInPlace();
 			bool upperB = B.Upper == opB.CanInPlace();
 			if (upperA != upperB || upperA != C.Upper || A.UnitDiagonal != B.UnitDiagonal || A.UnitDiagonal != C.UnitDiagonal)
@@ -559,7 +594,7 @@ namespace Althea.Arrays
 				AddMatrices((DenseMatrix<T, TS>?)null, T.Zero, B, scalarB, C, opA, opB);
 				return;
 			}
-			var (m, n) = IMatrixOperations<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatAdd(A, scalarA, B, scalarB, C, opA, opB);
+			var (m, n) = IMatrixOperations<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckAdd(A, scalarA, B, scalarB, C, opA, opB);
 			if (opA.CanInPlace())
 			{
 				A.Storage.Copy2DTo<T, TS, TS>(A.LeadDim, C.Storage, C.LeadDim, m, n);
@@ -576,7 +611,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void MultiplyMatries(SymmetricMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, _) = IMatrixOperations<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			var (m, n, _) = IMatrixOperations<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			Blas.SymmetricMatrixMultiplyGeneral(A.Upper, true, A.Hermitian, opA, opB, m, n, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
 		}
 
@@ -586,7 +621,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void MultiplyMatries(DenseMatrix<T, TS> A, SymmetricMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (m, n, _) = IMatrixOperations<T, DenseMatrix<T, TS>, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			var (m, n, _) = IMatrixOperations<T, DenseMatrix<T, TS>, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			Blas.SymmetricMatrixMultiplyGeneral(B.Upper, false, B.Hermitian, opB, opA, m, n, α, B.Storage, B.LeadDim, A.Storage, A.LeadDim, β, C.Storage, C.LeadDim);
 		}
 
@@ -596,7 +631,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public static void MultiplyMatries(SymmetricMatrix<T, TS> A, SymmetricMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
-			var (_, n, _) = IMatrixOperations<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMatMul(α, A, B, C, opA, opB);
+			var (_, n, _) = IMatrixOperations<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			HalfBlas.SymmetricMatricesMultiply(A.Upper, B.Upper, A.Hermitian, B.Hermitian, opA, opB, n, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
 		}
 		#endregion

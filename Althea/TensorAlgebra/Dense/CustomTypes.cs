@@ -1,9 +1,8 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using Althea.Arrays;
-using Althea.Linq;
 using Althea.Helpers;
+using Althea.Linq;
 using Althea.Storage;
 
 
@@ -145,9 +144,9 @@ namespace Althea.TensorAlgebra.Dense
 		public override bool Equals(object? obj) => false;
 
 		/// <summary>
-		/// Always throws <see cref="NotSupportedException"/> since a ref struct cannot be stored on heap
+		/// Always throws <see cref="InvalidOperationException"/> since a ref struct cannot be stored on heap
 		/// </summary>
-		public override int GetHashCode() => throw new NotSupportedException();
+		public override int GetHashCode() => throw new InvalidOperationException();
 
 		/// <summary>
 		/// Get the string representation of this <see cref="DenseTensorWrapper{T, TS}"/>

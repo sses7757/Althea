@@ -132,6 +132,46 @@ namespace Althea.LinearAlgebra.Sparse
 
 		#region matrix
 		/// <summary>
+		/// When implemented by a derived class, slice the given sparse matrix <paramref name="source"/> with the given <paramref name="slice"/> and write the result to <paramref name="sub"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd1">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TInd2">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
+		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
+		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
+		/// <param name="source">The input sparse matrix to be sliced</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">Output the sliced sub matrix of <paramref name="source"/>. If the storages inside is not null, they will be overwritten.</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the storage(s) in <paramref name="slice"/> cannot be overwritten</exception>
+		[AbstractApiMethod]
+		public abstract bool SparseMatrixGetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, MatrixSliceWrapper slice, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> sub) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+
+		/// <summary>
+		/// When implemented by a derived class, set the given sparse <paramref name="matrix"/>'s <paramref name="slice"/> to the <paramref name="sub"/> matrix.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TInd1">Any integral-typed unmanaged number as the input index type</typeparam>
+		/// <typeparam name="TInd2">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
+		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
+		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
+		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
+		/// <param name="matrix">The sparse matrix whose <paramref name="slice"/> will be overwritten by <paramref name="sub"/> matrix</param>
+		/// <param name="slice">The slicing parameters as a <see cref="MatrixSliceWrapper"/></param>
+		/// <param name="sub">The sub sparse matrix to overwrite the sliced <paramref name="matrix"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="matrix"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="slice"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If <paramref name="sub"/> cannot overwrite the sliced <paramref name="matrix"/></exception>
+		[AbstractApiMethod]
+		public abstract bool SparseMatrixSetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd2, TS2, TSInd2> matrix, MatrixSliceWrapper slice, ISparseArray<T, TInd1, TS1, TSInd1> sub) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+
+		/// <summary>
 		/// When implemented by a derived class, convert the given sparse matrix <paramref name="source"/> to a dense matrix <paramref name="destination"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>

@@ -334,7 +334,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="AddMatrices(TMat1?, T, TMat2?, T, TMat3, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static (long m, long n) CheckMatAdd(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C!!, MatrixOperation opA, MatrixOperation opB)
+		protected static (long m, long n) CheckAdd(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C!!, MatrixOperation opA, MatrixOperation opB)
 		{
 			bool nullA = A is null || scalarA == T.Zero;
 			bool nullB = B is null || scalarB == T.Zero;
@@ -440,7 +440,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="MultiplyMatries(TMat1, TMat2, T, T, TMat3, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static (long m, long n, long k) CheckMatMul(T α, TMat1 A!!, TMat2 B!!, TMat3 C!!, MatrixOperation opA, MatrixOperation opB)
+		protected static (long m, long n, long k) CheckMul(T α, TMat1 A!!, TMat2 B!!, TMat3 C!!, MatrixOperation opA, MatrixOperation opB)
 		{
 			if (α == T.Zero)
 				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
@@ -475,7 +475,7 @@ namespace Althea.Arrays
 		/// Check the input parameters of <see cref="MultiplyMatries(TMat1, TMat2, T, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static TS CheckMul<TS>(T α, TMat1 A!!, TMat2 B!!, MatrixOperation opA, MatrixOperation opB, TS storage, out long m, out long n, out long k) where TS : class, IStorage<T, TS>
+		protected static TS CheckMul<TS>(T α, TMat1 A!!, TMat2 B!!, MatrixOperation opA, MatrixOperation opB, TS? storage, out long m, out long n, out long k) where TS : class, IStorage<T, TS>
 		{
 			if (α == T.Zero)
 				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
@@ -487,7 +487,7 @@ namespace Althea.Arrays
 				(s, n) = (n, s);
 			if (k != s)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			return storage.ResizeAlike(m * n);
+			return storage?.ResizeAlike(m * n) ?? TS.Empty;
 		}
 
 		/// <summary>
