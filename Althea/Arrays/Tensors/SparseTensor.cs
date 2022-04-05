@@ -142,6 +142,7 @@ namespace Althea.Arrays
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
 			this.labels.CopyFromSpan(labels);
 		}
+
 		/// <summary>
 		/// Create a new <see cref="SparseTensor{T, TInd, TS, TSInd}"/> with given parameters.
 		/// </summary>
@@ -501,7 +502,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// The <see cref="JsonSerializerOptions"/> used for <see cref="JsonSerialize"/> and <see cref="JsonDeserialize(string)"/>.
 		/// </summary>
-		protected static readonly JsonSerializerOptions JsonOptions = new()
+		protected static JsonSerializerOptions JsonOptions => new()
 		{
 			Converters = { TS.JsonConverter, TSInd.JsonConverter },
 			WriteIndented = true,

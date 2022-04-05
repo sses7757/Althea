@@ -408,7 +408,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// The <see cref="JsonSerializerOptions"/> used for <see cref="JsonSerialize"/> and <see cref="JsonDeserialize(string)"/>.
 		/// </summary>
-		protected static readonly JsonSerializerOptions JsonOptions = new()
+		protected static JsonSerializerOptions JsonOptions => new()
 		{
 			Converters = { TS.JsonConverter, TSInd.JsonConverter },
 			WriteIndented = true,

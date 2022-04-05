@@ -254,7 +254,7 @@ namespace Althea.Arrays
 
 		#region serialization
 		private record struct Repr(TS Values, long Stride);
-		private static readonly JsonSerializerOptions JsonOptions = new()
+		private static JsonSerializerOptions JsonOptions => new()
 		{
 			Converters = { TS.JsonConverter },
 			WriteIndented = true,

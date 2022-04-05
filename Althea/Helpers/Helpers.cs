@@ -8,7 +8,6 @@ using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Resources;
 
-using static Althea.Helpers.SpanHelper;
 
 namespace Althea.Helpers
 {
@@ -618,20 +617,21 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="matrix">The column-major values of the dense matrix to print</param>
-		/// <param name="rows">The number of rows of the given matrix</param>
+		/// <param name="leadDim">The leading dimension of the given matrix</param>
+		/// <param name="rowMajor">Whether <paramref name="leadDim"/> is number of rows or number of columns</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
+		/// <param name="more">The neglected number of elements of each row/column of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
 		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is not a positive number</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="leadDim"/></exception>
 		/// <exception cref="FormatException">If any value in <paramref name="matrix"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToMatrixString<T>(this Span<T> matrix, int rows, long more = 0, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
+		public static string ToMatrixString<T>(this Span<T> matrix, int leadDim, bool rowMajor = false, long more = 0, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
 		{
-			return ToMatrixString((ReadOnlySpan<T>)matrix, rows, more, precision, prefix, postfix, provider);
+			return ToMatrixString((ReadOnlySpan<T>)matrix, leadDim, rowMajor, more, precision, prefix, postfix, provider);
 		}
 
 		/// <summary>
@@ -639,38 +639,39 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <typeparam name="T">The supported data type</typeparam>
 		/// <param name="matrix">The column-major values of the dense matrix to print</param>
-		/// <param name="rows">The number of rows of the given matrix</param>
+		/// <param name="leadDim">The leading dimension of the given matrix</param>
+		/// <param name="rowMajor">Whether <paramref name="leadDim"/> is number of rows or number of columns</param>
 		/// <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-		/// <param name="more">The neglected number of elements of each row of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
+		/// <param name="more">The neglected number of elements of each row/column of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
 		/// <param name="prefix">The prefix <see cref="string"/> to add at each line</param>
 		/// <param name="postfix">The postfix <see cref="string"/> to add at each line</param>
 		/// <param name="provider">The <see cref="IFormatProvider"/> used in formatting</param>
 		/// <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> is not a positive number</exception>
-		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="rows"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="leadDim"/> is not a positive number</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="leadDim"/></exception>
 		/// <exception cref="FormatException">If any value in <paramref name="matrix"/> cannot be formatted</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToMatrixString<T>(this ReadOnlySpan<T> matrix, int rows, long more = 0, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
+		public static string ToMatrixString<T>(this ReadOnlySpan<T> matrix, int leadDim, bool rowMajor = false, long more = 0, int precision = -1, string? prefix = null, string? postfix = null, IFormatProvider? provider = null) where T : ISpanFormattable, IAdditiveIdentity<T, T>, IEquatable<T>
 		{
 			if (matrix.IsEmpty)
 				return string.Empty;
-			if (rows <= 0)
-				throw new ArgumentOutOfRangeException(nameof(rows), rows, ParameterError.MustPositive);
-			if (matrix.Length % rows != 0)
+			if (leadDim <= 0)
+				throw new ArgumentOutOfRangeException(nameof(leadDim), leadDim, ParameterError.MustPositive);
+			if (matrix.Length % leadDim != 0)
 				throw new ArgumentException(ArithmeticError.CannotDivide);
 
-			int cols = matrix.Length / rows;
+			int cols = matrix.Length / leadDim;
 			string moreStr = more > 0 ? string.Format("  " + Print.RowMore, more) : "  ";
 			ReadOnlySpan<char> pre = prefix, pos = (postfix ?? string.Empty) + moreStr + Environment.NewLine;
-			int maxLength = matrix.Length * (precision + 8) + rows * (pre.Length + pos.Length);
+			int maxLength = matrix.Length * (precision + 8) + leadDim * (pre.Length + pos.Length);
 			char[] chars = new char[maxLength];
 			Span<char> str = chars;
-			for (int i = 0; i < rows; i++)
+			for (int i = 0; i < leadDim; i++)
 			{
 				pre.CopyTo(str); str = str[pre.Length..];
 				for (int j = 0; j < cols; j++)
 				{
-					if (!GetNumberString(matrix[i + j * rows], str, out int numberStrWidth, provider, precision))
+					if (!GetNumberString(rowMajor ? matrix[i * leadDim + j] : matrix[i + j * leadDim], str, out int numberStrWidth, provider, precision))
 						throw new FormatException();
 					str = str[numberStrWidth..];
 				}
@@ -758,7 +759,7 @@ namespace Althea.Helpers
 		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
 		/// <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToClone<T>(this T array, Action<T> action) where T : IDisposable, ICloneable<T>
+		public static T ApplyToClone<T>(this T array!!, Action<T> action) where T : IDisposable, ICloneable<T>
 		{
 			var clone = array.Clone();
 			try
@@ -782,7 +783,7 @@ namespace Althea.Helpers
 		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
 		/// <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToAlike<T>(this T array, Action<T> action) where T : IDisposable, ICreateAlike<T>
+		public static T ApplyToAlike<T>(this T array!!, Action<T> action) where T : IDisposable, ICreateAlike<T>
 		{
 			var alike = array.CreateAlike();
 			try
@@ -806,7 +807,7 @@ namespace Althea.Helpers
 		/// <param name="action">The <see cref="Action{T, T}"/> whose first input is <paramref name="array"/> and second input is its clone</param>
 		/// <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToClone<T>(this T array, Action<T, T> action) where T : IDisposable, ICloneable<T>
+		public static T ApplyToClone<T>(this T array!!, Action<T, T> action) where T : IDisposable, ICloneable<T>
 		{
 			var clone = array.Clone();
 			try
@@ -830,7 +831,7 @@ namespace Althea.Helpers
 		/// <param name="action">The <see cref="Action{T, T}"/> whose first input is <paramref name="array"/> and second input is its alike one</param>
 		/// <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToAlike<T>(this T array, Action<T, T> action) where T : IDisposable, ICreateAlike<T>
+		public static T ApplyToAlike<T>(this T array!!, Action<T, T> action) where T : IDisposable, ICreateAlike<T>
 		{
 			var alike = array.CreateAlike();
 			try

@@ -262,7 +262,7 @@ namespace Althea.Arrays
 
 		#region serialization
 		private record struct Repr(TS Values, long Rows, long Cols, long LeadDim, bool Upper, bool UnitDiag);
-		private static readonly JsonSerializerOptions JsonOptions = new()
+		private static JsonSerializerOptions JsonOptions => new()
 		{
 			Converters = { TS.JsonConverter },
 			WriteIndented = true,
@@ -312,7 +312,7 @@ namespace Althea.Arrays
 						values[x + y * rows] = T.One;
 				}
 			}
-			return values.ToMatrixString(rows, this.NCols - cols, settings.Value.Precision) + (this.NRows == rows ? "" : string.Format(Resources.Print.MoreRows, this.NRows - rows));
+			return values.ToMatrixString(rows, false, this.NCols - cols, settings.Value.Precision) + (this.NRows == rows ? "" : string.Format(Resources.Print.MoreRows, this.NRows - rows));
 		}
 		#endregion
 	}
@@ -596,7 +596,7 @@ namespace Althea.Arrays
 
 		#region serialization
 		private record struct Repr(TS Values, long N, long LeadDim, bool Upper, bool SymmetricOrHermitian);
-		private static readonly JsonSerializerOptions JsonOptions = new()
+		private static JsonSerializerOptions JsonOptions => new()
 		{
 			Converters = { TS.JsonConverter },
 			WriteIndented = true,
@@ -644,7 +644,7 @@ namespace Althea.Arrays
 						values[x + y * rows] = this.herm ? values[y + x * rows] : values[y + x * rows].Conjugate();
 				}
 			}
-			return values.ToMatrixString(rows, this.NCols - cols, settings.Value.Precision) + (this.NRows == rows ? "" : string.Format(Resources.Print.MoreRows, this.NRows - rows));
+			return values.ToMatrixString(rows, false, this.NCols - cols, settings.Value.Precision) + (this.NRows == rows ? "" : string.Format(Resources.Print.MoreRows, this.NRows - rows));
 		}
 		#endregion
 	}

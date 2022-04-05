@@ -358,7 +358,7 @@ namespace Althea.Arrays
 
 		#region serialization
 		private record struct Repr(TS Values, long[] Size, long[] OuterSize);
-		private static readonly JsonSerializerOptions JsonOptions = new()
+		private static JsonSerializerOptions JsonOptions => new()
 		{
 			Converters = { TS.JsonConverter },
 			WriteIndented = true,
@@ -556,7 +556,7 @@ namespace Althea.Arrays
 						var mp = new ManagedPureStorage<T>(new(new(tt), values.Length * sizeof(T)));
 						Ten.Permute<T, TS, ManagedPureStorage<T>>(new(tensor.storage, info.MatrixSize, info.OuterSize, stackalloc long[] { 1, info.MatrixNowLD }), new(mp, info.MatrixSize), stackalloc int[info.MatrixSize.Length].FillWithRange(0));
 					}
-					return values.ToMatrixString((int)info.MatrixOrgRows, info.MatrixSize[1] - info.MatrixOrgCols, info.Settings.Precision, prefix, postfix);
+					return values.ToMatrixString((int)info.MatrixOrgRows, false, info.MatrixSize[1] - info.MatrixOrgCols, info.Settings.Precision, prefix, postfix);
 				}
 				// else
 				StringBuilder sb = new();

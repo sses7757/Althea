@@ -14,7 +14,7 @@ using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
 
 
-namespace Althea.Arrays.Vectors
+namespace Althea.Arrays
 {
 	/// <summary>
 	/// The coordinated non-blocked sparse vector class that inherits <see cref="SparseVector{T, TInd, TS, TSInd}"/>.
@@ -173,12 +173,12 @@ namespace Althea.Arrays.Vectors
 		#endregion
 
 		#region serialization
-		private record struct Repr(int Format, T Default, long Length, TS Values, TSInd Indices);
+		private record struct Repr(int Format, T Default, long Length, long NonZeros, TS Values, TSInd Indices);
 
-		private CoordinateSparseVector(Repr repr) : this(repr.Length, repr.Values, repr.Indices, repr.Default) { }
+		private CoordinateSparseVector(Repr repr) : this(repr.Length, repr.Values, repr.Indices, repr.Default, repr.NonZeros) { }
 
 		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize<Repr>(new(this.Format.Data, this.DefaultValue, this.Length, this.Storage, this.IndexStorage), JsonOptions);
+		public override string JsonSerialize() => JsonSerializer.Serialize<Repr>(new(this.Format.Data, this.DefaultValue, this.Length, this.NStored, this.Storage, this.IndexStorage), JsonOptions);
 
 		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
 		{
@@ -240,7 +240,7 @@ namespace Althea.Arrays.Vectors
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Pack = sizeof(long))]
-	public class SimpleBlockedSparseVector<T, TInd, TS, TSInd> : SparseVector<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
+	public class BlockSparseVector<T, TInd, TS, TSInd> : SparseVector<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
 		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
@@ -249,9 +249,7 @@ namespace Althea.Arrays.Vectors
 
 		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockSize, 1);
 
-		private long BS => this.blockSize.As<TInd, long>();
-
-		private int BS_ => this.blockSize.As<TInd, int>();
+		private int BS => this.blockSize.As<TInd, int>();
 
 		private readonly static SparseFormat format = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, SparseFormat.Major.None);
 
@@ -259,7 +257,7 @@ namespace Althea.Arrays.Vectors
 		public override SparseFormat Format => format;
 
 		/// <summary>
-		/// Create a new <see cref="SimpleBlockedSparseVector{T, TInd, TS, TSInd}"/> with given parameters.
+		/// Create a new <see cref="BlockSparseVector{T, TInd, TS, TSInd}"/> with given parameters.
 		/// </summary>
 		/// <param name="defaultValue">The default value</param>
 		/// <param name="length">The presenting length</param>
@@ -270,26 +268,28 @@ namespace Althea.Arrays.Vectors
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public SimpleBlockedSparseVector(long length, TS values!!, TSInd indices!!, TInd blockSize, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
+		public BlockSparseVector(long length, TS values!!, TSInd indices!!, TInd blockSize, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
 		{
+			this.blockSize = blockSize;
 			try
 			{
 				if (blockSize <= TInd.Zero)
 					throw new ArgumentOutOfRangeException(nameof(blockSize), Resources.ParameterError.MustPositive);
-				if (length % blockSize.As<TInd, long>() != 0)
+				if (length % this.BS != 0)
 					throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(blockSize));
-				if (values.Length != indices.Length * blockSize.As<TInd, long>())
+				if (values.Length != indices.Length * this.BS)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
+				if (this.NStored % this.BS != 0)
+					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(nnz));
 			}
 			catch (Exception)
 			{
 				this.Dispose();
 				throw;
 			}
-			this.blockSize = blockSize;
 		}
 
-		internal SimpleBlockedSparseVector() : base() { }
+		internal BlockSparseVector() : base() { }
 		#endregion
 
 		#region equality
@@ -298,7 +298,7 @@ namespace Althea.Arrays.Vectors
 		{
 			if (!base.Equals(other))
 				return false;
-			return other is SimpleBlockedSparseVector<T, TInd, TS, TSInd> vec && this.blockSize == vec.blockSize;
+			return other is BlockSparseVector<T, TInd, TS, TSInd> vec && this.blockSize == vec.blockSize;
 		}
 
 		/// <inheritdoc/>
@@ -324,7 +324,7 @@ namespace Althea.Arrays.Vectors
 		private (long indexStart, long indexCount) GetSliceInfo(long start, long count, SparseVector<T, TInd, TS, TSInd>? sub = null)
 		{
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckRange(this, start, count, sub);
-			if (sub is not null && (sub is not SimpleBlockedSparseVector<T, TInd, TS, TSInd> vec || vec.blockSize != this.blockSize))
+			if (sub is not null && (sub is not BlockSparseVector<T, TInd, TS, TSInd> vec || vec.blockSize != this.blockSize))
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(sub));
 			long indexStart, indexCount;
 			if (start % this.BS != 0)
@@ -353,8 +353,8 @@ namespace Althea.Arrays.Vectors
 			using var tempInd = this.IndexStorage.MakeReference(offsetVal).Clone();
 			{
 				this.NStored = nnz + this.BS;
-				using var temp = this.BS_.CheckStackLimit<T>();
-				Span<T> values = temp.IsEmpty ? stackalloc T[this.BS_] : temp.Data;
+				using var temp = this.BS.CheckStackLimit<T>();
+				Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
 				values.Fill(this.DefaultValue); values[(int)(index % this.BS)] = value;
 				this.Storage.MakeReference(offsetVal, this.BS).FromManaged<T, TS>(values);
 				this.IndexStorage.MakeReference(offsetInd, 1).FromManaged(TInd.Create(index) / this.blockSize);
@@ -365,7 +365,7 @@ namespace Althea.Arrays.Vectors
 		}
 
 		/// <inheritdoc/>
-		public override SimpleBlockedSparseVector<T, TInd, TS, TSInd> GetSlice(long start, long count)
+		public override BlockSparseVector<T, TInd, TS, TSInd> GetSlice(long start, long count)
 		{
 			var (indexStart, indexCount) = this.GetSliceInfo(start, count);
 			if (indexStart == 0 && indexCount == this.IndexStorage.Length)
@@ -398,7 +398,7 @@ namespace Althea.Arrays.Vectors
 		/// <inheritdoc/>
 		public override void CopyTo(SparseVector<T, TInd, TS, TSInd> destination)
 		{
-			if (destination is not SimpleBlockedSparseVector<T, TInd, TS, TSInd> vec || vec.DefaultValue != this.DefaultValue || vec.blockSize != this.blockSize || vec.IndexStorage.Length != this.IndexStorage.Length || vec.NStored != this.NStored)
+			if (destination is not BlockSparseVector<T, TInd, TS, TSInd> vec || vec.DefaultValue != this.DefaultValue || vec.blockSize != this.blockSize || vec.IndexStorage.Length != this.IndexStorage.Length || vec.NStored != this.NStored)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
 			this.Storage.CopyTo<T, TS, TS>(destination.Storage);
 			this.IndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.IndexStorage);
@@ -424,23 +424,23 @@ namespace Althea.Arrays.Vectors
 
 		#region conversion and clone
 		/// <inheritdoc/>
-		public override SimpleBlockedSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.blockSize, this.DefaultValue, 0);
+		public override BlockSparseVector<T, TInd, TS, TSInd> CreateAlike() => new(this.Length, this.Storage.CreateAlike(), this.IndexStorage.CreateAlike(), this.blockSize, this.DefaultValue, 0);
 		#endregion
 
 		#region serialization
-		private record struct Repr(int Format, T Default, long Length, TS Values, TSInd Indices, TInd BlockSize);
+		private record struct Repr(int Format, T Default, long Length, long NonZeros, TS Values, TSInd Indices, TInd BlockSize);
 
-		private SimpleBlockedSparseVector(Repr repr) : this(repr.Length, repr.Values, repr.Indices, repr.BlockSize, repr.Default) { }
+		private BlockSparseVector(Repr repr) : this(repr.Length, repr.Values, repr.Indices, repr.BlockSize, repr.Default, repr.NonZeros) { }
 
 		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize<Repr>(new(this.Format.Data, this.DefaultValue, this.Length, this.Storage, this.IndexStorage, this.blockSize), JsonOptions);
+		public override string JsonSerialize() => JsonSerializer.Serialize<Repr>(new(this.Format.Data, this.DefaultValue, this.Length, this.NStored, this.Storage, this.IndexStorage, this.blockSize), JsonOptions);
 
 
 		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseVector<T, TInd, TS, TSInd>? vector)
 		{
 			try
 			{
-				vector = new SimpleBlockedSparseVector<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
+				vector = new BlockSparseVector<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
 				return true;
 			}
 			catch (Exception)
@@ -465,11 +465,11 @@ namespace Althea.Arrays.Vectors
 				return false;
 			if (values.Length != indices.Length * blockSize.As<TInd, long>())
 				return false;
-			vector = new SimpleBlockedSparseVector<T, TInd, TS, TSInd>(length, values, indices, blockSize, wrapper.DefaultValue);
+			vector = new BlockSparseVector<T, TInd, TS, TSInd>(length, values, indices, blockSize, wrapper.DefaultValue);
 			return true;
 		}
 
-		static SimpleBlockedSparseVector()
+		static BlockSparseVector()
 		{
 			Creators.Add(TryCreate);
 			Deserializers.Add(TryJsonDeserialize);
@@ -498,7 +498,4 @@ namespace Althea.Arrays.Vectors
 		}
 		#endregion
 	}
-
-
-
 }

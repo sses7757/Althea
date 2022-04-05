@@ -451,7 +451,7 @@ namespace Althea.Arrays
 		/// <summary>
 		/// The <see cref="JsonSerializerOptions"/> used for <see cref="JsonSerialize"/> and <see cref="JsonDeserialize(string)"/>.
 		/// </summary>
-		protected static readonly JsonSerializerOptions JsonOptions = new()
+		protected static JsonSerializerOptions JsonOptions => new()
 		{
 			Converters = { TS.JsonConverter, TSInd.JsonConverter },
 			WriteIndented = true,
@@ -462,9 +462,9 @@ namespace Althea.Arrays
 
 		static string IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.StringMain => nameof(SparseMatrix<T, TInd, TS, TSInd>);
 
-		static IEnumerable<string> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyNames => new[] { "DataType", "IndexType", "Format", "DefaultValue", "Values", "RowIndices", "ColumnIndices" };
+		static IEnumerable<string> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyNames => new[] { "DataType", "IndexType", "Format", "DefaultValue", "Size", "BlockSize", "Non-zeros", "Values", "RowIndices", "ColumnIndices" };
 
-		IEnumerable<object?> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyValues => new object[] { Unmanaged<T>.DataType, Unmanaged<TInd>.DataType, this.Format, this.defaultValue, this.values, this.rowIndices, this.colIndices };
+		IEnumerable<object?> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyValues => new object[] { Unmanaged<T>.DataType, Unmanaged<TInd>.DataType, this.Format, this.defaultValue, $"{this.rows}x{this.cols}", ((ISparseArray<T, TInd, TS, TSInd>)this).BlockSize.SpanJoin('x'), this.nnz, this.values, this.rowIndices, this.colIndices };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.ToString(this);

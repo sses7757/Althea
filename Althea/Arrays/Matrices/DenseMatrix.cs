@@ -243,34 +243,34 @@ namespace Althea.Arrays
 
 		#region operators
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One);
+		public static DenseVector<T, TS> operator *(DenseMatrix<T, TS> matrix, DenseVector<T, TS> vector) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One);
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector!!, DenseMatrix<T, TS> matrix!!) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One, MatrixOperation.Transpose);
+		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector, DenseMatrix<T, TS> matrix) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One, MatrixOperation.Transpose);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> matrix!!) => matrix.ApplyToClone(static m => m.Scale(-T.One));
+		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> matrix, T scalar) => DenseOperation<T, TS>.AddMatrices(matrix, scalar, (DenseMatrix<T, TS>?)null, default);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> matrix!!, T scalar) => matrix.ApplyToClone(m => m.Scale(scalar));
+		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> matrix) => matrix * (-T.One);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator *(T scalar, DenseMatrix<T, TS> matrix!!) => matrix.ApplyToClone(m => m.Scale(scalar));
+		public static DenseMatrix<T, TS> operator *(T scalar, DenseMatrix<T, TS> matrix) => matrix * scalar;
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator /(DenseMatrix<T, TS> matrix!!, T scalar) => matrix.ApplyToClone(m => m.Scale(T.One / scalar));
+		public static DenseMatrix<T, TS> operator /(DenseMatrix<T, TS> matrix, T scalar) => matrix * (T.One / scalar);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator ^(DenseMatrix<T, TS> matrix!!, MatrixOperation operation) => DenseOperation<T, TS>.AddMatrices(matrix, T.One, null, default, operation, default);
+		public static DenseMatrix<T, TS> operator ^(DenseMatrix<T, TS> matrix, MatrixOperation operation) => DenseOperation<T, TS>.AddMatrices(matrix, T.One, (DenseMatrix<T, TS>?)null, default, operation);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator +(DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!) => left.ApplyToAlike(m => DenseOperation<T, TS>.AddMatrices(left, T.One, right, T.One, m));
+		public static DenseMatrix<T, TS> operator +(DenseMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(left, T.One, right, T.One);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!) => left.ApplyToAlike(m => DenseOperation<T, TS>.AddMatrices(left, T.One, right, -T.One, m));
+		public static DenseMatrix<T, TS> operator -(DenseMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(left, T.One, right, -T.One);
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!) => DenseOperation<T, TS>.MultiplyMatries(T.One, left, right);
+		public static DenseMatrix<T, TS> operator *(DenseMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.MultiplyMatries(left, right, T.One);
 		#endregion
 
 		#region conversion and clone
@@ -299,7 +299,7 @@ namespace Althea.Arrays
 
 		#region serialization
 		private record struct Repr(TS Values, long Rows, long Cols, long LeadDim);
-		private static readonly JsonSerializerOptions JsonOptions = new()
+		private static JsonSerializerOptions JsonOptions => new()
 		{
 			Converters = { TS.JsonConverter },
 			WriteIndented = true,
@@ -339,7 +339,7 @@ namespace Althea.Arrays
 			using var temp = length.CheckStackLimit<T>();
 			Span<T> values = temp.IsEmpty ? stackalloc T[length] : temp.Data;
 			this.Storage.ToManaged2D(this.LeadDim, values, rows, cols);
-			return values.ToMatrixString(rows, this.NCols - cols, settings.Value.Precision) + (this.NRows == rows ? "" : string.Format(Resources.Print.MoreRows, this.NRows - rows));
+			return values.ToMatrixString(rows, false, this.NCols - cols, settings.Value.Precision) + (this.NRows == rows ? "" : string.Format(Resources.Print.MoreRows, this.NRows - rows));
 		}
 		#endregion
 	}
