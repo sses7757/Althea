@@ -106,7 +106,7 @@
       <FileName>Storage\Storages.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Althea.Arrays.MatrixBase&lt;T&gt;" Collapsed="true">
+  <Class Name="Althea.Array.MatrixBase&lt;T&gt;" Collapsed="true">
     <Position X="40.25" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>CAEFAAAAAIAAiAAAaEUAAAABIAIAAJAAAAiBAQIAAUA=</HashCode>
@@ -114,7 +114,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Althea.Arrays.BaseSparseMatrix&lt;T, TInd&gt;" Collapsed="true">
+  <Class Name="Althea.Array.BaseSparseMatrix&lt;T, TInd&gt;" Collapsed="true">
     <Position X="40" Y="10.75" Width="2" />
     <TypeIdentifier>
       <HashCode>IAAQAEEAACAAAAIQgEgAAAAQAAhQAYCEAACQACAAABA=</HashCode>
@@ -122,7 +122,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Althea.Arrays.BaseSparseTensor&lt;T, TInd&gt;" Collapsed="true">
+  <Class Name="Althea.Array.BaseSparseTensor&lt;T, TInd&gt;" Collapsed="true">
     <Position X="44.5" Y="10.75" Width="2" />
     <TypeIdentifier>
       <HashCode>IAAQAEEAACAAAAIQgEgAAAAQAAhQAYCEAACQACAAABA=</HashCode>
@@ -130,7 +130,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Althea.Arrays.TensorBase&lt;T&gt;" Collapsed="true">
+  <Class Name="Althea.Array.TensorBase&lt;T&gt;" Collapsed="true">
     <Position X="44.75" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>SMABAEAAGBACoAAQaAUABACQEBoBEEAAABqIAAIAAAA=</HashCode>
@@ -138,7 +138,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Althea.Arrays.BaseSparseVector&lt;T, TInd&gt;" Collapsed="true">
+  <Class Name="Althea.Array.BaseSparseVector&lt;T, TInd&gt;" Collapsed="true">
     <Position X="42.25" Y="10.75" Width="2" />
     <TypeIdentifier>
       <HashCode>IBAQAEEAACAAAAIQgEgAAAAQAAhQAYSEAACQACAEABA=</HashCode>
@@ -146,7 +146,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Althea.Arrays.VectorBase&lt;T&gt;" Collapsed="true">
+  <Class Name="Althea.Array.VectorBase&lt;T&gt;" Collapsed="true">
     <Position X="42.5" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>CAABAAAAACACoAAAaAUgAAQACAoEAAAEAACAAACAAQA=</HashCode>
@@ -154,7 +154,7 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Althea.Arrays.AbstractArray&lt;T&gt;" Collapsed="true">
+  <Class Name="Althea.Array.AbstractArray&lt;T&gt;" Collapsed="true">
     <Position X="42.5" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAABAAAAACAAgAIMgAAAAABAAAgAAIAAAAAAAAAGAjA=</HashCode>
@@ -162,14 +162,14 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="Althea.Arrays.ValueArrayFactory&lt;T&gt;" Collapsed="true">
+  <Class Name="Althea.Array.ValueArrayFactory&lt;T&gt;" Collapsed="true">
     <Position X="47" Y="7.25" Width="2" />
     <TypeIdentifier>
       <HashCode>AAQAAAAAAAAAAAAASAAAAAAAAAAAgEAAAAAAAAAAAAA=</HashCode>
       <FileName>Arrays\Factories.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Althea.Arrays.ValueArray&lt;T&gt;" Collapsed="true">
+  <Class Name="Althea.Array.ValueArray&lt;T&gt;" Collapsed="true">
     <Position X="42.5" Y="7.75" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAASAFAAACBAAAIUmAsABANAAgAFQYADCCcAAQgAAjQ=</HashCode>
@@ -323,70 +323,70 @@
       <FileName>Storage\Storages.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.IArrayFactory" Collapsed="true">
+  <Interface Name="Althea.Array.IArrayFactory" Collapsed="true">
     <Position X="47.25" Y="6.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Arrays\Factories.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.IPitchedArray&lt;T&gt;" Collapsed="true">
+  <Interface Name="Althea.Array.IPitchedArray&lt;T&gt;" Collapsed="true">
     <Position X="37.75" Y="10.75" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAgAAAAAAAAAAAIAAAAAAABAIAAAAAAAA=</HashCode>
       <FileName>Arrays\Interfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.ISparseArray&lt;T&gt;" Collapsed="true">
+  <Interface Name="Althea.Array.ISparseArray&lt;T&gt;" Collapsed="true">
     <Position X="35.75" Y="7.75" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAQAAAAACAEAAAAAAgAAAAQAABAAAAAAgAAAAAAAgA=</HashCode>
       <FileName>Arrays\Interfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.ISparseArray&lt;T, TIndex&gt;" Collapsed="true">
+  <Interface Name="Althea.Array.ISparseArray&lt;T, TIndex&gt;" Collapsed="true">
     <Position X="32.25" Y="7.75" Width="2.5" />
     <TypeIdentifier>
       <HashCode>AAAQAAIAAAAAQIIQgAAAAAAAAAAUAIAEAABAACACABQ=</HashCode>
       <FileName>Arrays\Interfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.ISparseVector&lt;T&gt;" Collapsed="true">
+  <Interface Name="Althea.Array.ISparseVector&lt;T&gt;" Collapsed="true">
     <Position X="33.75" Y="9.25" Width="1.75" />
     <TypeIdentifier>
       <HashCode>IAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Arrays\Interfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.ISparseMatrix&lt;T&gt;" Collapsed="true">
+  <Interface Name="Althea.Array.ISparseMatrix&lt;T&gt;" Collapsed="true">
     <Position X="35.75" Y="9.25" Width="1.75" />
     <TypeIdentifier>
       <HashCode>IAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Arrays\Interfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.ISparseTensor&lt;T&gt;" Collapsed="true">
+  <Interface Name="Althea.Array.ISparseTensor&lt;T&gt;" Collapsed="true">
     <Position X="37.75" Y="9.25" Width="1.75" />
     <TypeIdentifier>
       <HashCode>IAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Arrays\Interfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.IVector" Collapsed="true">
+  <Interface Name="Althea.Array.IVector" Collapsed="true">
     <Position X="33.75" Y="10.75" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Arrays\Interfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.IMatrix" Collapsed="true">
+  <Interface Name="Althea.Array.IMatrix" Collapsed="true">
     <Position X="35.75" Y="10.75" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAQA=</HashCode>
       <FileName>Arrays\Interfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.Arrays.ITensor" Collapsed="true">
+  <Interface Name="Althea.Array.ITensor" Collapsed="true">
     <Position X="38" Y="7.75" Width="1.25" />
     <TypeIdentifier>
       <HashCode>AAABAAAAEAAAgAAAAAAAAAAQAAABAAAAAAAAAAAAAAA=</HashCode>

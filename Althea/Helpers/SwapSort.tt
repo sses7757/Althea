@@ -105,10 +105,9 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-<# for (int j = 1; j <= i; j++) { #>					TVal<#=j#>.Swap(ref values<#=j#>[i], ref values<#=j#>[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+<# for (int j = 1; j <= i; j++) { #>
+				TVal<#=j#>.Swap(ref values<#=j#>[i], ref values<#=j#>[j]);
 <# } #>
 			}
 		}
@@ -116,10 +115,9 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys<#=valuesPara#>, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
-<# for (int j = 1; j <= i; j++) { #>			TVal<#=j#>.Swap(ref values<#=j#>[i], ref values<#=j#>[j]);
+			(keys[j], keys[i]) = (keys[i], keys[j]);
+<# for (int j = 1; j <= i; j++) { #>
+			TVal<#=j#>.Swap(ref values<#=j#>[i], ref values<#=j#>[j]);
 <# } #>
 		}
 
@@ -226,7 +224,8 @@ namespace Althea.Helpers
 				while (j >= 0 && comparer.Compare(key0, keys[j]) < 0)
 				{
 					keys[j + 1] = keys[j];
-<# for (int j = 1; j <= i; j++) { #>					TVal<#=j#>.Swap(ref values<#=j#>[j + 1], ref values<#=j#>[j]);
+<# for (int j = 1; j <= i; j++) { #>
+					TVal<#=j#>.Swap(ref values<#=j#>[j + 1], ref values<#=j#>[j]);
 <# } #>
 					j--;
 				}

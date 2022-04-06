@@ -6,7 +6,7 @@ using Althea.Storage;
 using Althea.TensorAlgebra;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	#region vector
 	/// <summary>

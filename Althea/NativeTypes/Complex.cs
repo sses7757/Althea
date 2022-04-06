@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -173,12 +172,12 @@ namespace Althea.NativeTypes
 		{
 			// generic type check
 			if (typeof(T).IsGenericType)
-				throw new InvalidOperationException(Support.DataType);
+				throw new InvalidOperationException(Resources.ArithmeticError.DataTypeNotAllow);
 			// native type check
 			if (NumberType<T>.Classification < DataTypeClassification.FloatPoint_IEEE754 ||
 				NumberType<T>.Classification == DataTypeClassification.SignedInteger ||
 				NumberType<T>.Classification == DataTypeClassification.UnsignedInteger)
-				throw new InvalidOperationException(Support.DataType);
+				throw new InvalidOperationException(Resources.ArithmeticError.DataTypeNotAllow);
 		}
 		#endregion
 
@@ -429,7 +428,7 @@ namespace Althea.NativeTypes
 				throw new ArgumentNullException(nameof(str));
 			bool success = TryParse(str, style, provider, out Complex<T> result);
 			if (!success)
-				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(T).Name), nameof(str));
+				throw new ArgumentException(string.Format(Resources.ArithmeticError.CannotParseComplex, str, typeof(T).Name), nameof(str));
 			return result;
 		}
 
@@ -514,7 +513,7 @@ namespace Althea.NativeTypes
 		public static Complex<T> Create<TOther>(TOther value) where TOther : INumber<TOther>
 		{
 			if (!TryCreate(value, out var c))
-				throw new NotSupportedException(Support.DataType);
+				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			return c;
 		}
 		/// <summary>
@@ -1270,11 +1269,11 @@ namespace Althea.NativeTypes
 		{
 			// generic type check
 			if (typeof(T).IsGenericType)
-				throw new InvalidOperationException(Support.DataType);
+				throw new InvalidOperationException(Resources.ArithmeticError.DataTypeNotAllow);
 			// native type check
 			if (NumberType<T>.Classification != DataTypeClassification.SignedInteger &&
 				NumberType<T>.Classification != DataTypeClassification.UnsignedInteger)
-				throw new InvalidOperationException(Support.DataType);
+				throw new InvalidOperationException(Resources.ArithmeticError.DataTypeNotAllow);
 		}
 		#endregion
 
@@ -1330,7 +1329,7 @@ namespace Althea.NativeTypes
 				throw new ArgumentNullException(nameof(str));
 			bool success = TryParse(str, style, provider, out ComplexInteger<T> result);
 			if (!success)
-				throw new ArgumentException(string.Format(Other.CannotParseComplex, str, typeof(T).Name), nameof(str));
+				throw new ArgumentException(string.Format(Resources.ArithmeticError.CannotParseComplex, str, typeof(T).Name), nameof(str));
 			return result;
 		}
 
@@ -1410,7 +1409,7 @@ namespace Althea.NativeTypes
 		public static ComplexInteger<T> Create<TOther>(TOther value) where TOther : INumber<TOther>
 		{
 			if (!TryCreate(value, out var c))
-				throw new NotSupportedException(Support.DataType);
+				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			return c;
 		}
 		/// <summary>
@@ -1422,7 +1421,7 @@ namespace Althea.NativeTypes
 		public static ComplexInteger<T> CreateSaturating<TOther>(TOther value) where TOther : INumber<TOther>
 		{
 			if (!typeof(TOther).IsValueType)
-				throw new NotSupportedException(Support.DataType);
+				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			// complex
 			if (value is ComplexInteger<T> c)
 			{
@@ -1430,7 +1429,7 @@ namespace Althea.NativeTypes
 			}
 			if (NumberType<TOther>.IsComplex)
 			{
-				return ComplexConverter.Converter<ComplexInteger<T>, TOther>.Saturating?.Invoke(value) ?? throw new NotSupportedException(Support.DataType);
+				return ComplexConverter.Converter<ComplexInteger<T>, TOther>.Saturating?.Invoke(value) ?? throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			}
 			// real
 			return new(T.CreateSaturating(value));
@@ -1444,7 +1443,7 @@ namespace Althea.NativeTypes
 		public static ComplexInteger<T> CreateTruncating<TOther>(TOther value) where TOther : INumber<TOther>
 		{
 			if (!typeof(TOther).IsValueType)
-				throw new NotSupportedException(Support.DataType);
+				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			// complex
 			if (value is ComplexInteger<T> c)
 			{
@@ -1452,7 +1451,7 @@ namespace Althea.NativeTypes
 			}
 			if (NumberType<TOther>.IsComplex)
 			{
-				return ComplexConverter.Converter<ComplexInteger<T>, TOther>.Truncating?.Invoke(value) ?? throw new NotSupportedException(Support.DataType);
+				return ComplexConverter.Converter<ComplexInteger<T>, TOther>.Truncating?.Invoke(value) ?? throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			}
 			// real
 			return new(T.CreateTruncating(value));

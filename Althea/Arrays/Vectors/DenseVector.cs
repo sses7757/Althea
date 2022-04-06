@@ -10,7 +10,7 @@ using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The base dense vector class whose only storage is of type <typeparamref name="TS"/>.
@@ -32,7 +32,7 @@ namespace Althea.Arrays
 		private readonly TS values;
 
 		ReadOnlySpan<long> IValueArray<T, DenseVector<T, TS>>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
-		ReadOnlySpan<long> IPitchedArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
+		ReadOnlySpan<long> IArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
 		ReadOnlySpan<long> IPitchedArray<T>.Strides => SpanHelper.CreateReadOnlySpan(in this.stride, 1);
 		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => SpanHelper.CreateReadOnlySpan(in this.outerSize, 1);
 

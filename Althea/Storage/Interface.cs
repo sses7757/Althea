@@ -1,10 +1,7 @@
-﻿using System;
-using System.Drawing;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
-using Althea.Helpers;
 using Althea.NativeTypes;
 using Althea.Resources;
 
@@ -191,6 +188,24 @@ namespace Althea.Storage
 				storage?.Dispose();
 				throw;
 			}
+		}
+		
+		/// <summary>
+		/// If this storage have enough space after the presenting length, insert the <paramref name="values"/> to the <paramref name="offset"/> position.
+		/// </summary>
+		/// <param name="offset">The starting offset in <typeparamref name="T"/> of the <paramref name="values"/> insertion</param>
+		/// <param name="values">The values to be inserted</param>
+		/// <returns>True if the <paramref name="values"/> are successfully inserted, false otherwise.</returns>
+		virtual bool TryInsert(long offset, ReadOnlySpan<T> values)
+		{
+			if (values.IsEmpty)
+				return false;
+			if (offset < 0 || offset > this.Length || !this.IsOffsetValid(this.Length, values.Length))
+				return false;
+			using var temp = this.MakeReference(offset).Clone();
+			this.MakeReference(offset, values.Length).FromManaged(values);
+			temp.CopyTo<T, TSelf, TSelf>(this.MakeReference(offset + values.Length, temp.Length));
+			return true;
 		}
 
 		/// <summary>
@@ -389,7 +404,7 @@ namespace Althea.Storage
 			if (newLength <= 0)
 				newLength = storage.LengthInBytes - offset;
 			// dereference first
-			while (storage is IReferenceStorage<T, TStorage> @ref)
+			if (storage is IReferenceStorage<T, TStorage> @ref)
 			{
 				if (@ref.Reference is null)
 					return default;

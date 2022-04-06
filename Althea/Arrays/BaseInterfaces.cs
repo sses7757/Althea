@@ -3,27 +3,34 @@ using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
-	/// The interface of (column-major) dense array that may exist extra pitch at each dimension and thus the strides are not simply the accumulated product of its size.
+	/// The interface of (column-major) dense arrays.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface IPitchedArray<T> where T : unmanaged, INumber<T>
+	public interface IArray<T> where T : unmanaged, INumber<T>
 	{
-		#region properties
 		/// <summary>
 		/// When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this array (the extent at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
 		/// </summary>
 		ReadOnlySpan<long> Size { get; }
+	}
 
+	/// <summary>
+	/// The interface of (column-major) dense arrays that may exist extra pitch at each dimension and thus the strides are not simply the accumulated product of its size.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	public interface IPitchedArray<T> : IArray<T> where T : unmanaged, INumber<T>
+	{
+		#region properties
 		/// <summary>
-		/// When implemented by a derived class, get the pitch (in <typeparamref name="T"/>) of this array (the outer size at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>. It must has length equals to <see cref="Size"/> and consists numbers larger than or equals to <see cref="Size"/> respectively.
+		/// When implemented by a derived class, get the pitch (in <typeparamref name="T"/>) of this array (the outer size at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>. It must has length equals to <see cref="IArray{T}.Size"/> and consists numbers larger than or equals to <see cref="IArray{T}.Size"/> respectively.
 		/// </summary>
 		ReadOnlySpan<long> OuterSize { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, check whether this array is actually pitched. The default implementation simply checks the point-wise equality of <see cref="Size"/> and <see cref="OuterSize"/>.
+		/// When implemented by a derived class, check whether this array is actually pitched. The default implementation simply checks the point-wise equality of <see cref="IArray{T}.Size"/> and <see cref="OuterSize"/>.
 		/// </summary>
 		bool HasPitch => !this.OuterSize.SequenceEqual(this.Size);
 
@@ -39,13 +46,13 @@ namespace Althea.Arrays
 	/// The base interface for sparse arrays.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface ISparseArray<T> where T : unmanaged, INumber<T>
+	public interface ISparseArray<T> : IArray<T> where T : unmanaged, INumber<T>
 	{
 		#region properties
 		/// <summary>
-		/// When implemented by a derived class, get the sparse format of this sparse array as a <see cref="LinearAlgebra.Sparse.SparseFormat"/>.
+		/// When implemented by a derived class, get the sparse format of this sparse array as a <see cref="SparseFormat"/>.
 		/// </summary>
-		LinearAlgebra.Sparse.SparseFormat Format { get; }
+		SparseFormat Format { get; }
 
 		/// <summary>
 		/// When implemented by a derived class, get the default value of this sparse array
@@ -56,11 +63,6 @@ namespace Althea.Arrays
 		/// When implemented by a derived class, get number of elements actually stored this sparse vector.
 		/// </summary>
 		long NStored { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, get the size of this array (the extent at all dimensions) in <typeparamref name="T"/> as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
-		/// </summary>
-		ReadOnlySpan<long> Size { get; }
 		#endregion
 	}
 

@@ -15,7 +15,7 @@ using Lapack = Althea.LinearAlgebra.Dense.LapackApiSelector;
 using Ten = Althea.TensorAlgebra.Dense.BaseApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The static class for dense linear algebra and tensor algebra operations of same data type and storage type.

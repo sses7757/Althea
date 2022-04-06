@@ -10,7 +10,7 @@ using Althea.Storage;
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The abstract dense matrix class whose only storage is of type <typeparamref name="TS"/>.
@@ -39,7 +39,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public long NCols => this.cols;
 
-		ReadOnlySpan<long> IPitchedArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.rows, 2);
+		ReadOnlySpan<long> IArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.rows, 2);
 		ReadOnlySpan<long> IPitchedArray<T>.Strides => SpanHelper.CreateReadOnlySpan(in this.__stride1, 3);
 		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => SpanHelper.CreateReadOnlySpan(in this.__ld, 2);
 

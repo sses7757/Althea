@@ -5,7 +5,6 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Dense;
-using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
@@ -14,7 +13,7 @@ using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The coordinated non-blocked sparse vector class that inherits <see cref="SparseVector{T, TInd, TS, TSInd}"/>.
@@ -90,20 +89,13 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		protected override bool TryInsert(long index, long offset, T value)
 		{
-			if (offset >= 0)
-				return false;
 			offset = ~offset;
 			long nnz = this.NStored;
 			if (nnz + 1 > this.MaxStored)
 				return false;
-
-			using var tempVal = this.Storage.MakeReference(offset).Clone();
-			using var tempInd = this.IndexStorage.MakeReference(offset).Clone();
+			this.Storage.TryInsert(offset, stackalloc T[] { value });
+			this.IndexStorage.TryInsert(offset, stackalloc TInd[] { TInd.Create(index) });
 			this.NStored = nnz + 1;
-			this.Storage.MakeReference(offset, 1).FromManaged(value);
-			this.IndexStorage.MakeReference(offset, 1).FromManaged(TInd.Create(index));
-			tempVal.CopyTo<T, TS, TS>(this.Storage + (++offset));
-			tempInd.CopyTo<TInd, TSInd, TSInd>(this.IndexStorage + offset);
 			return true;
 		}
 
@@ -113,7 +105,6 @@ namespace Althea.Arrays
 			var (indexStart, indexCount) = this.GetSliceInfo(start, count);
 			if (indexStart == 0 && indexCount == this.IndexStorage.Length)
 				return new(count, this.Storage.Clone(), this.IndexStorage.Clone(), this.DefaultValue);
-
 			var newVals = this.Storage.MakeReference(indexStart, indexCount);
 			var newInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			if (start != 0)
@@ -256,6 +247,9 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public override SparseFormat Format => format;
 
+		/// <inheritdoc/>
+		public override TSInd IndexStorage => this.indices.MakeReference(0, this.NStored / this.BS); 
+
 		/// <summary>
 		/// Create a new <see cref="BlockSparseVector{T, TInd, TS, TSInd}"/> with given parameters.
 		/// </summary>
@@ -341,26 +335,17 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		protected override bool TryInsert(long index, long offsetVal, T value)
 		{
-			if (offsetVal >= 0)
-				return false;
 			offsetVal = ~offsetVal;
 			long nnz = this.NStored + this.BS;
 			if (nnz + this.BS > this.MaxStored)
 				return false;
-
 			long offsetInd = offsetVal / this.BS;
-			using var tempVal = this.Storage.MakeReference(offsetInd).Clone();
-			using var tempInd = this.IndexStorage.MakeReference(offsetVal).Clone();
-			{
-				this.NStored = nnz + this.BS;
-				using var temp = this.BS.CheckStackLimit<T>();
-				Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
-				values.Fill(this.DefaultValue); values[(int)(index % this.BS)] = value;
-				this.Storage.MakeReference(offsetVal, this.BS).FromManaged<T, TS>(values);
-				this.IndexStorage.MakeReference(offsetInd, 1).FromManaged(TInd.Create(index) / this.blockSize);
-			}
-			tempVal.CopyTo<T, TS, TS>(this.Storage + (offsetVal + this.BS));
-			tempInd.CopyTo<TInd, TSInd, TSInd>(this.IndexStorage + (offsetInd + 1));
+			using var temp = this.BS.CheckStackLimit<T>();
+			Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
+			values.Fill(this.DefaultValue); values[(int)(index % this.BS)] = value;
+			this.Storage.TryInsert(offsetVal, values);
+			this.IndexStorage.TryInsert(offsetInd, stackalloc TInd[] { TInd.Create(index / this.BS) });
+			this.NStored = nnz + 1;
 			return true;
 		}
 
@@ -370,7 +355,6 @@ namespace Althea.Arrays
 			var (indexStart, indexCount) = this.GetSliceInfo(start, count);
 			if (indexStart == 0 && indexCount == this.IndexStorage.Length)
 				return new(count, this.Storage.Clone(), this.IndexStorage.Clone(), this.blockSize, this.DefaultValue);
-
 			var newVals = this.Storage.MakeReference(indexStart * this.BS, indexCount * this.BS);
 			var newInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			if (start == 0)

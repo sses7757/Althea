@@ -246,19 +246,15 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 		}
 
@@ -387,20 +383,16 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
-					TVal2.Swap(ref values2[i], ref values2[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 			TVal2.Swap(ref values2[i], ref values2[j]);
 		}
@@ -531,21 +523,17 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
-					TVal2.Swap(ref values2[i], ref values2[j]);
-					TVal3.Swap(ref values3[i], ref values3[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+				TVal3.Swap(ref values3[i], ref values3[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 			TVal2.Swap(ref values2[i], ref values2[j]);
 			TVal3.Swap(ref values3[i], ref values3[j]);
@@ -678,22 +666,18 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
-					TVal2.Swap(ref values2[i], ref values2[j]);
-					TVal3.Swap(ref values3[i], ref values3[j]);
-					TVal4.Swap(ref values4[i], ref values4[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+				TVal3.Swap(ref values3[i], ref values3[j]);
+				TVal4.Swap(ref values4[i], ref values4[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Span<TVal4> values4, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 			TVal2.Swap(ref values2[i], ref values2[j]);
 			TVal3.Swap(ref values3[i], ref values3[j]);
@@ -828,23 +812,19 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
-					TVal2.Swap(ref values2[i], ref values2[j]);
-					TVal3.Swap(ref values3[i], ref values3[j]);
-					TVal4.Swap(ref values4[i], ref values4[j]);
-					TVal5.Swap(ref values5[i], ref values5[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+				TVal3.Swap(ref values3[i], ref values3[j]);
+				TVal4.Swap(ref values4[i], ref values4[j]);
+				TVal5.Swap(ref values5[i], ref values5[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Span<TVal4> values4, Span<TVal5> values5, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 			TVal2.Swap(ref values2[i], ref values2[j]);
 			TVal3.Swap(ref values3[i], ref values3[j]);
@@ -981,24 +961,20 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
-					TVal2.Swap(ref values2[i], ref values2[j]);
-					TVal3.Swap(ref values3[i], ref values3[j]);
-					TVal4.Swap(ref values4[i], ref values4[j]);
-					TVal5.Swap(ref values5[i], ref values5[j]);
-					TVal6.Swap(ref values6[i], ref values6[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+				TVal3.Swap(ref values3[i], ref values3[j]);
+				TVal4.Swap(ref values4[i], ref values4[j]);
+				TVal5.Swap(ref values5[i], ref values5[j]);
+				TVal6.Swap(ref values6[i], ref values6[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Span<TVal4> values4, Span<TVal5> values5, Span<TVal6> values6, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 			TVal2.Swap(ref values2[i], ref values2[j]);
 			TVal3.Swap(ref values3[i], ref values3[j]);
@@ -1137,25 +1113,21 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
-					TVal2.Swap(ref values2[i], ref values2[j]);
-					TVal3.Swap(ref values3[i], ref values3[j]);
-					TVal4.Swap(ref values4[i], ref values4[j]);
-					TVal5.Swap(ref values5[i], ref values5[j]);
-					TVal6.Swap(ref values6[i], ref values6[j]);
-					TVal7.Swap(ref values7[i], ref values7[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+				TVal3.Swap(ref values3[i], ref values3[j]);
+				TVal4.Swap(ref values4[i], ref values4[j]);
+				TVal5.Swap(ref values5[i], ref values5[j]);
+				TVal6.Swap(ref values6[i], ref values6[j]);
+				TVal7.Swap(ref values7[i], ref values7[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Span<TVal4> values4, Span<TVal5> values5, Span<TVal6> values6, Span<TVal7> values7, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 			TVal2.Swap(ref values2[i], ref values2[j]);
 			TVal3.Swap(ref values3[i], ref values3[j]);
@@ -1296,26 +1268,22 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
-					TVal2.Swap(ref values2[i], ref values2[j]);
-					TVal3.Swap(ref values3[i], ref values3[j]);
-					TVal4.Swap(ref values4[i], ref values4[j]);
-					TVal5.Swap(ref values5[i], ref values5[j]);
-					TVal6.Swap(ref values6[i], ref values6[j]);
-					TVal7.Swap(ref values7[i], ref values7[j]);
-					TVal8.Swap(ref values8[i], ref values8[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+				TVal3.Swap(ref values3[i], ref values3[j]);
+				TVal4.Swap(ref values4[i], ref values4[j]);
+				TVal5.Swap(ref values5[i], ref values5[j]);
+				TVal6.Swap(ref values6[i], ref values6[j]);
+				TVal7.Swap(ref values7[i], ref values7[j]);
+				TVal8.Swap(ref values8[i], ref values8[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Span<TVal4> values4, Span<TVal5> values5, Span<TVal6> values6, Span<TVal7> values7, Span<TVal8> values8, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 			TVal2.Swap(ref values2[i], ref values2[j]);
 			TVal3.Swap(ref values3[i], ref values3[j]);
@@ -1458,27 +1426,23 @@ namespace Althea.Helpers
 		{
 			if (comparer.Compare(keys[i], keys[j]) > 0)
 			{
-				TKey val = keys[i];
-				keys[i] = keys[j];
-				keys[j] = val;
-					TVal1.Swap(ref values1[i], ref values1[j]);
-					TVal2.Swap(ref values2[i], ref values2[j]);
-					TVal3.Swap(ref values3[i], ref values3[j]);
-					TVal4.Swap(ref values4[i], ref values4[j]);
-					TVal5.Swap(ref values5[i], ref values5[j]);
-					TVal6.Swap(ref values6[i], ref values6[j]);
-					TVal7.Swap(ref values7[i], ref values7[j]);
-					TVal8.Swap(ref values8[i], ref values8[j]);
-					TVal9.Swap(ref values9[i], ref values9[j]);
+				(keys[j], keys[i]) = (keys[i], keys[j]);
+				TVal1.Swap(ref values1[i], ref values1[j]);
+				TVal2.Swap(ref values2[i], ref values2[j]);
+				TVal3.Swap(ref values3[i], ref values3[j]);
+				TVal4.Swap(ref values4[i], ref values4[j]);
+				TVal5.Swap(ref values5[i], ref values5[j]);
+				TVal6.Swap(ref values6[i], ref values6[j]);
+				TVal7.Swap(ref values7[i], ref values7[j]);
+				TVal8.Swap(ref values8[i], ref values8[j]);
+				TVal9.Swap(ref values9[i], ref values9[j]);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Swap(Span<TKey> keys, Span<TVal1> values1, Span<TVal2> values2, Span<TVal3> values3, Span<TVal4> values4, Span<TVal5> values5, Span<TVal6> values6, Span<TVal7> values7, Span<TVal8> values8, Span<TVal9> values9, int i, int j)
 		{
-			TKey val = keys[i];
-			keys[i] = keys[j];
-			keys[j] = val;
+			(keys[j], keys[i]) = (keys[i], keys[j]);
 			TVal1.Swap(ref values1[i], ref values1[j]);
 			TVal2.Swap(ref values2[i], ref values2[j]);
 			TVal3.Swap(ref values3[i], ref values3[j]);

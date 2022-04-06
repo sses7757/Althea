@@ -10,7 +10,7 @@ using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using HalfBlas = Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The base dense triangular matrix class whose only storage is of type <typeparamref name="TS"/>.

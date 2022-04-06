@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Althea.Arrays;
+using Althea.Array;
 using Althea.Helpers;
 using Althea.Linq;
 using Althea.Storage;
@@ -300,6 +300,11 @@ namespace Althea.TensorAlgebra.Dense
 			this.m_op = operation;
 			this.m_scalar = scalar;
 		}
+
+		/// <summary>
+		/// Implicitly convert a <see cref="DenseArrayWrapper{T, TS}"/> to a <see cref="DenseTensorWrapper{T, TS}"/>.
+		/// </summary>
+		public static implicit operator DenseTensorWrapper<T, TS>(DenseArrayWrapper<T, TS> array) => new(array.ValueStorage, array.Size, array.OuterSize, array.Strides);
 		#endregion
 	}
 }

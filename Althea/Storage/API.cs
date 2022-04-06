@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.NativeTypes;
 using Althea.Resources;
 
 using Althea.SourceGenerator;

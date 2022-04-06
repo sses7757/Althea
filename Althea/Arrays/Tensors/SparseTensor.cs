@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 
 using Althea.Helpers;
-using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
@@ -15,7 +14,7 @@ using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using SpTen = Althea.TensorAlgebra.Sparse.ApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The abstract sparse tensor class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
@@ -297,7 +296,7 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensor<T, TInd, TS, TSInd> overwrite)
 		{
-			IBaseTensor<T, SparseTensor<T, TInd, TS, TSInd>>.CheckRange(this, offsets, lengths, this.SizeProd, overwrite);
+			IBaseTensor<T, SparseTensor<T, TInd, TS, TSInd>>.CheckRange(this, offsets, lengths, overwrite);
 			var sub = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(overwrite);
 			SpTen.GetSlice(this, offsets, ref sub);
 		}
@@ -305,15 +304,18 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, SparseTensor<T, TInd, TS, TSInd> value)
 		{
-			IBaseTensor<T, SparseTensor<T, TInd, TS, TSInd>>.CheckRange(this, offsets, lengths, this.SizeProd, value);
+			IBaseTensor<T, SparseTensor<T, TInd, TS, TSInd>>.CheckRange(this, offsets, lengths, value);
 			SpTen.SetSlice(this, offsets, value);
 		}
 
 		/// <inheritdoc/>
-		public abstract SparseTensor<T, TInd, TS, TSInd> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
+		public abstract SparseTensor<T, TInd, TS, TSInd> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
 
 		/// <inheritdoc/>
-		public abstract void SetFirstDims(int n, ReadOnlySpan<long> restIndices, SparseTensor<T, TInd, TS, TSInd> value, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths);
+		public abstract void GetFirstDims(int n, ReadOnlySpan<long> restIndices, SparseTensor<T, TInd, TS, TSInd> overwrite, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
+
+		/// <inheritdoc/>
+		public abstract void SetFirstDims(int n, ReadOnlySpan<long> restIndices, SparseTensor<T, TInd, TS, TSInd> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
 
 		/// <inheritdoc/>
 		public abstract void CopyTo(SparseTensor<T, TInd, TS, TSInd> destination);

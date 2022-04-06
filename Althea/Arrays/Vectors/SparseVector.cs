@@ -5,7 +5,6 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
@@ -15,7 +14,7 @@ using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The abstract sparse vector abstract class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
@@ -49,7 +48,7 @@ namespace Althea.Arrays
 
 		ReadOnlySpan<long> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
 
-		ReadOnlySpan<long> ISparseArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
+		ReadOnlySpan<long> IArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
 		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => SpanHelper.CreateReadOnlySpan(in this.values, 1);
 		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => SpanHelper.CreateReadOnlySpan(in this.indices, 1);
 		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => default;

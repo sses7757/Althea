@@ -4,7 +4,7 @@ using Althea.Helpers;
 using Althea.Linq;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The interface for all tensors with labeled dimensions.
@@ -65,24 +65,13 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long CheckIndex(TSelf tensor, ReadOnlySpan<long> indices) => CheckIndex(tensor, indices, tensor.SizeProd);
-
-		/// <summary>
-		/// Check whether the given <paramref name="indices"/> is out of range of <paramref name="tensor"/>.
-		/// </summary>
-		/// <param name="tensor">The tensor to be checked</param>
-		/// <param name="indices">The indices as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
-		/// <param name="outerSizeProd">The (inclusive) accumulated product of the outer size (i.e. the strides of all dimensions)</param>
-		/// <returns>The equivalent total offset of the given position.</returns>
-		/// <exception cref="ArgumentException">If <paramref name="indices"/>'s length is not the same as the rank</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="indices"/> is out of range</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long CheckIndex(TSelf tensor, ReadOnlySpan<long> indices, ReadOnlySpan<long> outerSizeProd)
+		protected static long CheckIndex(TSelf tensor, ReadOnlySpan<long> indices)
 		{
 			int rank = tensor.Rank;
 			var size = ((ILabeledTensor<T>)tensor).Size;
 			if (indices.Length != rank)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(indices));
+			var outerSizeProd = tensor is IPitchedArray<T> p ? p.Strides : tensor.SizeProd;
 			long offset = 0;
 			for (int i = 0; i < rank; i++)
 			{
@@ -114,25 +103,12 @@ namespace Althea.Arrays
 		/// <param name="tensor">The tensor to be checked</param>
 		/// <param name="offsets">The starting offset indices as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
 		/// <param name="lengths">The lengths as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
-		/// <returns>The equivalent total offset of the position indicated by <paramref name="offsets"/>.</returns>
-		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long CheckRange(TSelf tensor, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths) => CheckRange(tensor, offsets, lengths, tensor.SizeProd);
-
-		/// <summary>
-		/// Check whether the given ranges indicated by <paramref name="offsets"/> and <paramref name="lengths"/> are out of range of <paramref name="tensor"/>.
-		/// </summary>
-		/// <param name="tensor">The tensor to be checked</param>
-		/// <param name="offsets">The starting offset indices as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
-		/// <param name="lengths">The lengths as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/> to be checked</param>
-		/// <param name="outerSizeProd">The (inclusive) accumulated product of the outer size (i.e. the strides of all dimensions)</param>
 		/// <param name="sub">The sub tensor to check which can be null to ignore checking</param>
 		/// <returns>The equivalent total offset of the position indicated by <paramref name="offsets"/>.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="offsets"/> and/or <paramref name="lengths"/>'s length is not the same as the rank</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> and/or <paramref name="lengths"/> is out of range</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long CheckRange(TSelf tensor, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, ReadOnlySpan<long> outerSizeProd, ILabeledTensor<T>? sub = null)
+		protected static long CheckRange(TSelf tensor, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, ILabeledTensor<T>? sub = null)
 		{
 			int rank = tensor.Rank;
 			var size = ((ILabeledTensor<T>)tensor).Size;
@@ -140,6 +116,7 @@ namespace Althea.Arrays
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(offsets));
 			if (lengths.Length != rank)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(lengths));
+			var outerSizeProd = tensor is IPitchedArray<T> p ? p.Strides : tensor.SizeProd;
 			long offset = 0;
 			for (int i = 0; i < rank; i++)
 			{
@@ -285,13 +262,12 @@ namespace Althea.Arrays
 		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
 		/// <param name="allOffsets">The output overall offsets of all dimensions, must be of size == rank</param>
 		/// <param name="allLengths">The output overall lengths of all dimensions, must be of size == rank</param>
-		/// <param name="outerSizeProd">The (inclusive) accumulated product of the outer size (i.e. the strides of all dimensions)</param>
 		/// <param name="sub">The sub tensor to check which can be null to ignore checking</param>
 		/// <returns>The equivalent total offset of the position indicated by (at exit) <paramref name="allOffsets"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static long CheckFirstDims(TSelf tensor, int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Span<long> allOffsets, Span<long> allLengths, ReadOnlySpan<long> outerSizeProd, ILabeledTensor<T>? sub = null)
+		protected static long CheckFirstDims(TSelf tensor, int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Span<long> allOffsets, Span<long> allLengths, ILabeledTensor<T>? sub = null)
 		{
 			int rank = tensor.Rank;
 			if (n <= 0 || n >= rank - 1)
@@ -309,6 +285,10 @@ namespace Althea.Arrays
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(offsets));
 				offsets.CopyTo(allOffsets[..n]);
 			}
+			else
+			{
+				allOffsets[..n].Fill(0);
+			}
 			if (!lengths.IsEmpty)
 			{
 				if (lengths.Length != n)
@@ -324,7 +304,7 @@ namespace Althea.Arrays
 				}
 			}
 			// check ranges and return
-			return CheckRange(tensor, allOffsets, allLengths, outerSizeProd);
+			return CheckRange(tensor, allOffsets, allLengths, sub);
 		}
 
 		/// <summary>
@@ -338,6 +318,19 @@ namespace Althea.Arrays
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
 		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
 		TSelf GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
+
+		/// <summary>
+		/// When implemented by a derived class, get the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</c> and write to <paramref name="overwrite"/>.
+		/// </summary>
+		/// <param name="n">The first <paramref name="n"/> dimensions to get</param>
+		/// <param name="restIndices">The position of the target sub-tensor at the rest (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>) dimensions</param>
+		/// <param name="overwrite">The sub-tensor to be overwritten</param>
+		/// <param name="offsets">The starting offsets of the target sub-tensor compared to this tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means all zeros.</param>
+		/// <param name="lengths">The lengths of the target sub-tensor at the first <paramref name="n"/> dimensions. Default (an empty one) means the max possible values.</param>
+		/// <returns>The sub-tensor at the first <paramref name="n"/> dimensions</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0 or <paramref name="n"/> ≥ <see cref="ILabeledTensor{T}.Rank">rank</see> - 1; or any of <paramref name="offsets"/> and <paramref name="lengths"/> is out of range</exception>
+		/// <exception cref="ArgumentException">If the length of <paramref name="restIndices"/> is not (<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</exception>
+		void GetFirstDims(int n, ReadOnlySpan<long> restIndices, TSelf overwrite, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default);
 
 		/// <summary>
 		/// When implemented by a derived class, set the sub-tensor of rank <paramref name="n"/> with <paramref name="offsets"/> and <paramref name="lengths"/> compared to the sub-tensor located by the given <paramref name="restIndices"/> of length <c>(<see cref="ILabeledTensor{T}.Rank">rank</see> - <paramref name="n"/>)</c> to the given <paramref name="value"/>.

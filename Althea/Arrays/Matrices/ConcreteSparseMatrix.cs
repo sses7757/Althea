@@ -6,7 +6,6 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Dense;
-using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
@@ -15,7 +14,7 @@ using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The concrete element-wise coordinated sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
@@ -105,17 +104,10 @@ namespace Althea.Arrays
 			long nnz = this.NStored;
 			if (nnz + 1 > this.MaxStored)
 				return false;
-
-			using var tempVal = this.Storage.MakeReference(offset).Clone();
-			using var tempRow = this.RowIndexStorage.MakeReference(offset).Clone();
-			using var tempCol = this.ColIndexStorage.MakeReference(offset).Clone();
+			this.Storage.TryInsert(offset, stackalloc T[] { value });
+			this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { TInd.Create(row) });
+			this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { TInd.Create(col) });
 			this.NStored = nnz + 1;
-			this.Storage.MakeReference(offset, 1).FromManaged(value);
-			this.RowIndexStorage.MakeReference(offset, 1).FromManaged(TInd.Create(row));
-			this.ColIndexStorage.MakeReference(offset, 1).FromManaged(TInd.Create(col));
-			tempVal.CopyTo<T, TS, TS>(this.Storage + (++offset));
-			tempRow.CopyTo<TInd, TSInd, TSInd>(this.RowIndexStorage + offset);
-			tempCol.CopyTo<TInd, TSInd, TSInd>(this.ColIndexStorage + offset);
 			return true;
 		}
 
@@ -296,27 +288,18 @@ namespace Althea.Arrays
 				return false;
 			if (nnz == 0)
 				(this.rowMajor ? this.rowIndices : this.colIndices).FillWith(TInd.Zero);
-
-			using var tempVal = this.Storage.MakeReference(offset).Clone();
-			using var tempRow = this.rowMajor ? null : this.RowIndexStorage.MakeReference(offset).Clone();
-			using var tempCol = this.rowMajor ? this.ColIndexStorage.MakeReference(offset).Clone() : null;
-			this.NStored = nnz + 1;
-			this.Storage.MakeReference(offset, 1).FromManaged(value);
-			if (this.rowMajor)
-				this.ColIndexStorage.MakeReference(offset, 1).FromManaged(TInd.Create(row));
-			else
-				this.RowIndexStorage.MakeReference(offset, 1).FromManaged(TInd.Create(col));
-			tempVal.CopyTo<T, TS, TS>(this.Storage + (++offset));
+			this.Storage.TryInsert(offset, stackalloc T[] { value });
 			if (this.rowMajor)
 			{
-				tempCol?.CopyTo<TInd, TSInd, TSInd>(this.ColIndexStorage + offset);
+				this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { TInd.Create(col) });
 				ExtBlas.PointWiseAddScalar(this.rowIndices + (row + 1), 1, TInd.One);
 			}
 			else
 			{
-				tempRow?.CopyTo<TInd, TSInd, TSInd>(this.RowIndexStorage + offset);
+				this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { TInd.Create(row) });
 				ExtBlas.PointWiseAddScalar(this.colIndices + (col + 1), 1, TInd.One);
 			}
+			this.NStored = nnz + 1;
 			return true;
 		}
 
@@ -466,6 +449,12 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
 
+		/// <inheritdoc/>
+		public override TSInd RowIndexStorage => this.rowIndices.MakeReference(0, this.NStored / this.BR);
+
+		/// <inheritdoc/>
+		public override TSInd ColIndexStorage => this.colIndices.MakeReference(0, this.NStored / this.BC);
+
 		/// <summary>
 		/// Create a new <see cref="CoordinateBlockSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
 		/// </summary>
@@ -555,21 +544,14 @@ namespace Althea.Arrays
 			long nnz = this.NStored;
 			if (nnz + this.BS > this.MaxStored)
 				return false;
-
-			using var tempVal = this.Storage.MakeReference(offsetVal).Clone();
-			using var tempRow = this.RowIndexStorage.MakeReference(offsetInd).Clone();
-			using var tempCol = this.ColIndexStorage.MakeReference(offsetInd).Clone();
-			this.NStored = nnz + this.BS;
 			using var temp = this.BS.CheckStackLimit<T>();
 			Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
 			values.Fill(this.DefaultValue);
 			values[(int)(offsetVal % this.BS)] = value;
-			this.Storage.MakeReference(offsetVal, this.BS).FromManaged<T, TS>(values);
-			this.RowIndexStorage.MakeReference(offsetInd, 1).FromManaged(TInd.Create(row / this.BR));
-			this.ColIndexStorage.MakeReference(offsetInd, 1).FromManaged(TInd.Create(col / this.BC));
-			tempVal.CopyTo<T, TS, TS>(this.Storage + (offsetVal + this.BS));
-			tempRow.CopyTo<TInd, TSInd, TSInd>(this.RowIndexStorage + (offsetInd + 1));
-			tempCol.CopyTo<TInd, TSInd, TSInd>(this.ColIndexStorage + (offsetInd + 1));
+			this.Storage.TryInsert(offsetVal, values);
+			this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { TInd.Create(row) });
+			this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { TInd.Create(col) });
+			this.NStored = nnz + 1;
 			return true;
 		}
 
@@ -702,9 +684,10 @@ namespace Althea.Arrays
 		private readonly bool rowMajor;
 
 		/// <inheritdoc/>
-		public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : base.RowIndexStorage;
+		public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : this.rowIndices.MakeReference(0, this.NStored / this.BR);
+
 		/// <inheritdoc/>
-		public override TSInd ColIndexStorage => this.rowMajor ? base.ColIndexStorage : this.colIndices.MakeReference();
+		public override TSInd ColIndexStorage => this.rowMajor ? this.colIndices.MakeReference(0, this.NStored / this.BC) : this.colIndices.MakeReference();
 
 		/// <inheritdoc/>
 		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
@@ -737,7 +720,7 @@ namespace Althea.Arrays
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockCols));
 				if (this.NStored % this.BS != 0)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(nnz));
-				if ( rowMajor && (colIndices.Length * this.BS != values.Length || (rowIndices.Length - 1) * this.BR != rows))
+				if (rowMajor && (colIndices.Length * this.BS != values.Length || (rowIndices.Length - 1) * this.BR != rows))
 					throw new ArgumentException(Resources.ParameterError.WrongSize);
 				if (!rowMajor && (rowIndices.Length * this.BS != values.Length || (colIndices.Length - 1) * this.BC != cols))
 					throw new ArgumentException(Resources.ParameterError.WrongSize);
@@ -798,31 +781,22 @@ namespace Althea.Arrays
 				return false;
 			if (nnz == 0)
 				(this.rowMajor ? this.rowIndices : this.colIndices).FillWith(TInd.Zero);
-
-			using var tempVal = this.Storage.MakeReference(offsetVal).Clone();
-			using var tempRow = this.rowMajor ? null : this.RowIndexStorage.MakeReference(offsetInd).Clone();
-			using var tempCol = this.rowMajor ? this.ColIndexStorage.MakeReference(offsetInd).Clone() : null;
-			this.NStored = nnz + this.BS;
 			using var temp = this.BS.CheckStackLimit<T>();
 			Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
 			values.Fill(this.DefaultValue);
 			values[(int)(offsetVal % this.BS)] = value;
-			this.Storage.MakeReference(offsetVal, this.BS).FromManaged<T, TS>(values);
-			if (this.rowMajor)
-				this.ColIndexStorage.MakeReference(offsetInd, 1).FromManaged(TInd.Create(row / this.BR));
-			else
-				this.RowIndexStorage.MakeReference(offsetInd, 1).FromManaged(TInd.Create(col / this.BC));
-			tempVal.CopyTo<T, TS, TS>(this.Storage + (offsetVal + this.BS));
+			this.Storage.TryInsert(offsetVal, values);
 			if (this.rowMajor)
 			{
-				tempCol?.CopyTo<TInd, TSInd, TSInd>(this.ColIndexStorage + (offsetInd + 1));
-				ExtBlas.PointWiseAddScalar(this.rowIndices + (row / this.BR + 1), 1, TInd.One);
+				this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { TInd.Create(col / this.BC) });
+				ExtBlas.PointWiseAddScalar(this.rowIndices + (row + 1), 1, TInd.One);
 			}
 			else
 			{
-				tempRow?.CopyTo<TInd, TSInd, TSInd>(this.RowIndexStorage + (offsetInd + 1));
-				ExtBlas.PointWiseAddScalar(this.colIndices + (col / this.BC + 1), 1, TInd.One);
+				this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { TInd.Create(row / this.BR) });
+				ExtBlas.PointWiseAddScalar(this.colIndices + (col + 1), 1, TInd.One);
 			}
+			this.NStored = nnz + this.BS;
 			return true;
 		}
 

@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.Linq;
 using Althea.Resources;
 
 
-namespace Althea
+namespace Althea.Storage
 {
 	#region storage location enum
 	/// <summary>
@@ -148,6 +146,73 @@ namespace Althea
 			}
 			chars[^1] = '}';
 			return new(chars);
+		}
+	}
+	#endregion
+
+
+	#region URI related
+	/// <summary>
+	/// The enum representing the URI schemes which can be used as a storage location detail <see cref="StorageLocation.Detail"/>.
+	/// </summary>
+	/// <remarks>See <see cref="Uri.UriSchemeFile"/>, etc.</remarks>
+	public enum UriScheme : short
+	{
+		/// <summary>
+		/// Specifies that the URI scheme is unknown
+		/// </summary>
+		Unknown = 0,
+		/// <summary>
+		/// Specifies that the URI is a pointer to a file
+		/// </summary>
+		File = 1,
+		/// <summary>
+		/// Specifies that the URI is accessed through the TCP/IP directly.
+		/// </summary>
+		TCP = 2,
+		/// <summary>
+		/// Specifies that the URI is accessed through the File Transfer Protocol (FTP).
+		/// </summary>
+		FTP = 3,
+		/// <summary>
+		/// Specifies that the URI is accessed through the Hypertext Transfer Protocol (HTTP).
+		/// </summary>
+		HTTP = 4,
+		/// <summary>
+		/// Specifies that the URI is accessed through the Secure Hypertext Transfer Protocol (HTTPS).
+		/// </summary>
+		HTTPS = 5,
+	}
+
+	/// <summary>
+	/// The static class for extension methods of <see cref="UriScheme"/>
+	/// </summary>
+	public static class UriSchemeExtension
+	{
+		/// <summary>
+		/// Get the <see cref="UriScheme"/> from a <see cref="Uri"/>
+		/// </summary>
+		/// <param name="uri">The absolute <see cref="Uri"/></param>
+		/// <returns>the <see cref="UriScheme"/> of <paramref name="uri"/>, or <see cref="UriScheme.Unknown"/> if <paramref name="uri"/>'s scheme is not in <see cref="UriScheme"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="uri"/> is not an absolute URI</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static UriScheme GetScheme(this Uri uri)
+		{
+			if (!uri.IsAbsoluteUri)
+				throw new ArgumentOutOfRangeException(nameof(uri), uri, ParameterError.InvalidValue);
+			if (uri.Scheme == Uri.UriSchemeFile)
+				return UriScheme.File;
+			if (string.Compare(uri.Scheme, @"TCP", true) == 0 || uri.Scheme == Uri.UriSchemeNetTcp)
+				return UriScheme.TCP;
+			if (uri.Scheme == Uri.UriSchemeFtp)
+				return UriScheme.FTP;
+			if (uri.Scheme == Uri.UriSchemeHttp)
+				return UriScheme.HTTP;
+			if (uri.Scheme == Uri.UriSchemeHttps)
+				return UriScheme.HTTPS;
+			if (EnumHelper.TryParse(uri.Scheme, out UriScheme s))
+				return s;
+			return UriScheme.Unknown;
 		}
 	}
 	#endregion
@@ -513,8 +578,7 @@ namespace Althea
 	/// The interface for an immutable pointer which can be read, overwritten and positioned at any possible storage location, including any type of memory and any scheme of URI.
 	/// </summary>
 	/// <typeparam name="TSelf">The actual implementation type</typeparam>
-	public interface IPointer<TSelf> : ICheckValid, IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>
-		where TSelf : IPointer<TSelf>
+	public interface IPointer<TSelf> : ICheckValid, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf> where TSelf : IPointer<TSelf>
 	{
 		/// <summary>
 		/// When implemented by derived classes, statically get the <see cref="StorageLocation"/> of this pointer's underlying type.
@@ -544,9 +608,7 @@ namespace Althea
 	/// </summary>
 	/// <typeparam name="T">The type of <see cref="IPointer{T}"/></typeparam>
 	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used to store information of memory blocks.</remarks>
-	public readonly struct PointerSegment<T> :
-		ICheckValid,
-		IMainPropertyFormattable<PointerSegment<T>>,
+	public readonly struct PointerSegment<T> : ICheckValid, IMainPropertyFormattable<PointerSegment<T>>,
 		IEqualityOperators<PointerSegment<T>, PointerSegment<T>>,
 		IAdditiveIdentity<PointerSegment<T>, long>,
 		IAdditionOperators<PointerSegment<T>, long, PointerSegment<T>>,
@@ -609,7 +671,7 @@ namespace Althea
 			if (off > pointer.Pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, ParameterError.InvalidValue);
 			if (newLength <= 0)
-				newLength = pointer.Pointer.LengthInBytes - off;
+				newLength = pointer.LengthInBytes - off;
 			if (off + newLength > pointer.Pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, ParameterError.InvalidValue);
 
@@ -623,7 +685,7 @@ namespace Althea
 		/// <param name="newLength">The new length in bytes to set, default 0 means auto calculation from <paramref name="offset"/>. A value less than or equals to 0 means automatically calculate.</param>
 		/// <returns>The new <see cref="PointerSegment{T}"/> moved from this pointer by <paramref name="offset"/> bytes and set the new presenting length to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		public PointerSegment<T> MoveBy(long offset, long newLength = 0) => offset == 0 && newLength <= 0 ? this : new(this, offset, newLength);
+		public PointerSegment<T> MoveBy(long offset, long newLength = 0) => offset == 0 && newLength == 0 ? this : new(this, offset, newLength);
 
 		/// <summary>
 		/// Create a new <see cref="PointerSegment{T}"/> with given <paramref name="newLength"/>
@@ -660,7 +722,7 @@ namespace Althea
 		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="PointerSegment{T}"/>.
 		/// </summary>
 		/// <returns>The hash code</returns>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer.GetHashCode(), this.OffsetInBytes);
+		public override int GetHashCode() => HashCode.Combine(this.Pointer.GetHashCode(), this.OffsetInBytes, this.LengthInBytes);
 
 		/// <summary>
 		/// Equality operator

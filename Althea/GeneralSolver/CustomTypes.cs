@@ -1,15 +1,13 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.CompilerServices;
 
-using Althea.Arrays;
+using Althea.Array;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 
 
-namespace Althea.Solver
+namespace Althea.GeneralSolver
 {
 	#region interface
 	/// <summary>
@@ -17,20 +15,14 @@ namespace Althea.Solver
 	/// </summary>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface IKrylovVector<TVec, T> : ICloneable<TVec>, IDisposable
-		where TVec : class, IKrylovVector<TVec, T>, ICloneable<TVec>, IDisposable, new()
-		where T : unmanaged, INumber<T>
+	public interface IKrylovVector<T, TVec> : ICreateAlike<TVec>, IDisposable
+		where TVec : class, IKrylovVector<T, TVec>
+		where T : unmanaged, IFloatingPoint<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the total presenting length of this vector
 		/// </summary>
 		long Length { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, create a new vector alike this one. The sparsities storages shall NOT be deep cloned.
-		/// </summary>
-		/// <returns>The new vector alike this one</returns>
-		TVec NewArrayAlike();
 
 		/// <summary>
 		/// When implemented by a derived class, fill this vector with the given <paramref name="value"/>
@@ -48,7 +40,7 @@ namespace Althea.Solver
 		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
 		/// </summary>
 		/// <returns>The 2-norm of this vector</returns>
-		double Norm();
+		T Norm();
 
 		/// <summary>
 		/// When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
@@ -81,7 +73,7 @@ namespace Althea.Solver
 		void ReplaceBy(TVec other);
 
 		/// <summary>
-		/// When implemented by a derived class, multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <typeparamref name="TVec"/>.
+		/// Statically multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <typeparamref name="TVec"/>.
 		/// </summary>
 		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
 		/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
@@ -89,7 +81,7 @@ namespace Althea.Solver
 		/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
 		/// <exception cref="ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
-		TVec OperateOn(ReadOnlySpan<TVec> unjoinedVectors, ReadOnlySpan<T> input)
+		static TVec OperateOn(ReadOnlySpan<TVec> unjoinedVectors, ReadOnlySpan<T> input)
 		{
 			if (unjoinedVectors.IsEmpty)
 				throw new ArgumentNullException(nameof(unjoinedVectors));
@@ -99,26 +91,25 @@ namespace Althea.Solver
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
 
 			// sort first to reduce errors
-			int length = input.Length;
-			using var tempArray = length.CheckStackLimit<(T, IntPtr)>();
-			Span<(T, IntPtr)> temp = tempArray.IsEmpty ? stackalloc (T, IntPtr)[length] : tempArray.Data;
-			using var tempKeys = length.CheckStackLimit<double>();
-			Span<double> keys = tempKeys.IsEmpty ? stackalloc double[length] : tempKeys.Data;
-			Span<(T val, TVec vec)> values = MemoryMarshal.CreateSpan(ref Unsafe.As<(T, IntPtr), (T, TVec)>(ref temp[0]), length);
-			TVec[] vectors = unjoinedVectors.ToArray();
-			for (int i = 0; i < length; i++)
+			int cols = input.Length;
+			using var tempArray = cols.CheckStackLimit<(T, IntPtr)>();
+			Span<(T, IntPtr)> temp = tempArray.IsEmpty ? stackalloc (T, IntPtr)[cols] : tempArray.Data;
+			using var tempKeys = cols.CheckStackLimit<T>();
+			Span<T> keys = tempKeys.IsEmpty ? stackalloc T[cols] : tempKeys.Data;
+			Span<(T val, TVec vec)> values = SpanHelper.CreateSpan(ref Unsafe.As<(T, IntPtr), (T, TVec)>(ref temp[0]), cols);
+			for (int i = 0; i < cols; i++)
 			{
 				values[i] = (input[i], unjoinedVectors[i]);
-				keys[i] = Const<T>.AbsoluteDelegate.Invoke(input[i]);
+				keys[i] = input[i] * input[i].Conjugate();
 			}
 			keys.Sort(values);
 
-			long vecLen = this.Length;
-			var vec = this.NewArrayAlike();
+			long vecLen = unjoinedVectors[0].Length;
+			var vec = unjoinedVectors[0].CreateAlike();
 			try
 			{
-				vec.FillWith(default);
-				for (int i = 0; i < length; i++)
+				vec.FillWith(T.Zero);
+				for (int i = 0; i < cols; i++)
 				{
 					var dnvec = values[i].vec;
 					var val = values[i].val;
@@ -126,7 +117,7 @@ namespace Althea.Solver
 						throw new ArgumentNullException(nameof(unjoinedVectors));
 					if (dnvec.Length != vecLen)
 						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(unjoinedVectors));
-					if (!val.IsZero())
+					if (val != T.Zero)
 						vec.AddBy(dnvec, val);
 				}
 				return vec;
@@ -140,208 +131,44 @@ namespace Althea.Solver
 	}
 
 	/// <summary>
-	/// The interface of multipliable matrices
+	/// The interface of matrices that can be converted to vectors.
 	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TMat">The concrete matrix type</typeparam>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface IMultipliableMatrix<TMat, TVec, T> : IMatrixMetric, IDisposable
-		where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
-		where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
+	public interface IConvertibleMatrix<T, TMat, TVec> : IBaseMatrix<T, TMat>,
+		IMatrixAddOperations<T, TMat, TMat, TMat>, IMatrixMultiplyOperations<T, TMat, TMat, TMat>
+		where TMat : class, IConvertibleMatrix<T, TMat, TVec>, IDisposable
+		where TVec : class, IConvertibleVector<T, TVec, TMat>, IDisposable
 		where T : unmanaged, INumber<T>
 	{
 		/// <summary>
-		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether this matrix can perform in-place matrix operations or not
-		/// </summary>
-		bool CanOperateInPlace { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result to this matrix in-place. (May be invalid if <see cref="CanOperateInPlace"/> is false.)
-		/// </summary>
-		/// <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
-		/// <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
-		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
-		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
-		/// <param name="opLeft">The <see cref="MatrixOperation"/> to be applied to <paramref name="left"/> before multiplication</param>
-		/// <param name="opRight">The <see cref="MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
-		void InPlaceFusedMultiplyAdd(TMat left, TMat right, T scalar, T scalarThis = default, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
-
-		/// <summary>
-		/// When implemented by a derived class, add the <paramref name="other"/> matrix to this matrix in-place. (May be invalid if <see cref="CanOperateInPlace"/> is false.)
-		/// </summary>
-		/// <param name="other">The other matrix to be added as a <typeparamref name="TMat"/></param>
-		/// <param name="scalarThis">The scalar to multiply to this matrix</param>
-		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix</param>
-		void InPlaceAdd(TMat other, T scalarThis, T scalarOther);
-
-		/// <summary>
-		/// When implemented by a derived class, multiply the <paramref name="left"/> and <paramref name="right"/> matrices and add the result with this matrix out-of-place. (Shall be valid even if <see cref="CanOperateInPlace"/> is true.)
-		/// </summary>
-		/// <param name="left">The left matrix to be multiplied as a <typeparamref name="TMat"/></param>
-		/// <param name="right">The right matrix to be multiplied as a <typeparamref name="TMat"/></param>
-		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
-		/// <param name="scalarThis">The scalar to multiply to this matrix before addition</param>
-		/// <param name="opLeft">The <see cref="MatrixOperation"/> to be applied to <paramref name="left"/> before multiplication</param>
-		/// <param name="opRight">The <see cref="MatrixOperation"/> to be applied to <paramref name="right"/> before multiplication</param>
-		/// <returns><c><paramref name="scalar"/> * <paramref name="opLeft"/>(<paramref name="left"/>) * <paramref name="opRight"/>(<paramref name="right"/>) + <paramref name="scalarThis"/> * this</c></returns>
-		TMat OutOfPlaceFusedMultiplyAdd(TMat left, TMat right, T scalar, T scalarThis = default, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
-
-		/// <summary>
-		/// When implemented by a derived class, multiply this matrix and the <paramref name="other"/> matrix out-of-place. (Shall be valid even if <see cref="CanOperateInPlace"/> is true.)
-		/// </summary>
-		/// <param name="other">The other matrix to be multiplied as a <typeparamref name="TMat"/></param>
-		/// <param name="scalar">The scalar to multiply to the multiplication result</param>
-		/// <param name="opLeft">The <see cref="MatrixOperation"/> to be applied to this matrix before multiplication</param>
-		/// <param name="opRight">The <see cref="MatrixOperation"/> to be applied to <paramref name="other"/> matrix before multiplication</param>
-		/// <returns><c><paramref name="scalar"/> * <paramref name="opLeft"/>(this) * <paramref name="opRight"/>(<paramref name="other"/>)</c></returns>
-		TMat OutOfPlaceMultiply(TMat other, T scalar, MatrixOperation opLeft = MatrixOperation.None, MatrixOperation opRight = MatrixOperation.None);
-
-		/// <summary>
-		/// When implemented by a derived class, add the <paramref name="other"/> matrix to this matrix out-of-place. (Shall be valid even if <see cref="CanOperateInPlace"/> is true.)
-		/// </summary>
-		/// <param name="other">The other matrix to be added as a <typeparamref name="TMat"/></param>
-		/// <param name="scalarThis">The scalar to multiply to this matrix</param>
-		/// <param name="scalarOther">The scalar to multiply to the <paramref name="other"/> matrix</param>
-		/// <returns><c><paramref name="scalarThis"/> * this + <paramref name="scalarOther"/> * <paramref name="other"/></c></returns>
-		TMat OutOfPlaceAdd(TMat other, T scalarThis, T scalarOther);
-
-		/// <summary>
 		/// When implemented by a derived class, convert this matrix to a vector of type <typeparamref name="TVec"/>
 		/// </summary>
-		/// <returns>The converted vector as a <typeparamref name="TVec"/>. Shall not contain any referenced storage.</returns>
+		/// <returns>The converted vector as a <typeparamref name="TVec"/> that shall NOT contain any referenced storage.</returns>
 		TVec ToVector();
 	}
 
 	/// <summary>
-	/// The interface of vectors that can be converted to matrices
+	/// The interface of vectors that can be converted to matrices.
 	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TMat">The concrete matrix type</typeparam>
 	/// <typeparam name="TVec">The concrete vector type</typeparam>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface IConvertibleVector<TVec, TMat, T> : IVectorMetric, IDisposable
-		where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
-		where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
+	public interface IConvertibleVector<T, TVec, TMat> : IBaseVector<T, TVec>, IDisposable
+		where TMat : class, IConvertibleMatrix<T, TMat, TVec>, IDisposable
+		where TVec : class, IConvertibleVector<T, TVec, TMat>, IDisposable
 		where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, convert this vector to a matrix of type <typeparamref name="TMat"/>
 		/// </summary>
 		/// <param name="rows">The number of rows of the target matrix</param>
-		/// <returns>The converted matrix as a <typeparamref name="TMat"/>. Shall not contain any referenced storage.</returns>
+		/// <returns>The converted matrix as a <typeparamref name="TMat"/> that shall NOT contain any referenced storage.</returns>
 		TMat ToMatrix(long rows);
 	}
 	#endregion
 
-	#region Krylov subspace algorithms restart strategy
-	/// <summary>
-	/// The interface for a user-defined (or a built in) restart strategy
-	/// </summary>
-	public interface IPreserveSelector
-	{
-		/// <summary>
-		/// When implemented by a derived class, get the <see cref="RestartStrategy"/> of this selector
-		/// </summary>
-		RestartStrategy Strategy { get; }
-
-		/// <summary>
-		/// When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
-		/// </summary>
-		/// <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
-		/// <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
-		/// <param name="nConverged">THe number of converged eigen-pairs</param>
-		/// <param name="nTarget">The number of smallest eigen-pairs wanted</param>
-		/// <param name="maxIter">The maximum number of iteration (per restart)</param>
-		/// <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
-		/// <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
-		/// <returns>The actual preserved count</returns>
-		/// <remarks>This method will only be invoked internally.</remarks>
-		int PreserveSelect(Span<ComplexDouble> estimateEigvals, Span<ComplexDouble> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true);
-	}
-
-	internal sealed class BuiltInPreserveSelector : IPreserveSelector
-	{
-		public RestartStrategy Strategy { get; }
-
-		public BuiltInPreserveSelector(RestartStrategy strategy)
-		{
-			this.Strategy = strategy;
-		}
-
-		int IPreserveSelector.PreserveSelect(Span<ComplexDouble> estimateEigvals, Span<ComplexDouble> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged)
-		{
-			int length = estimateEigvals.Length;
-			int indexMax = 0;
-			int upperCount = length * 2 / 3;
-			switch (this.Strategy)
-			{
-				case RestartStrategy.Naive:
-					indexMax = Math.Min(Math.Max(maxIter * 2 / 5, nTarget), length);
-					if (withConverged)
-						indexMax = Math.Max(indexMax, nConverged);
-					break;
-				case RestartStrategy.IndexBased:
-					indexMax = Math.Min(nTarget, (int)((maxIter - nConverged) * (0.4 + nTarget / 10.0 / maxIter)));
-					indexMax = Math.Min(indexMax, upperCount);
-					if (withConverged)
-						indexMax = Math.Max(indexMax, nConverged);
-					break;
-				case RestartStrategy.CurrentResidualBest:
-					if (nTarget >= upperCount)
-					{
-						output[..upperCount].FillWithRange(0);
-						return upperCount;
-					}
-					Span<ComplexDouble> lastRow = length.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[length];
-					for (int i = 0; i < length; i++)
-					{
-						lastRow[i] = estimateEigvecs[length * (i + 1) - 1];
-					}
-					var lastMax = lastRow.Max(static v => v.Abs());
-					var lastNeig = lastRow[nTarget - 1].Abs();
-					var upperBound = Math.Max(Math.Sqrt(lastMax * lastNeig), 2 * lastNeig);
-					for (indexMax = 0; indexMax < upperCount; indexMax++)
-					{
-						if (lastRow[indexMax].Abs() >= upperBound)
-							break;
-					}
-					if (!withConverged)
-						indexMax -= nConverged;
-					indexMax--;
-					break;
-				case RestartStrategy.OneStepResidualImprove:
-					indexMax = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
-					if (!withConverged)
-						indexMax -= nConverged;
-					indexMax = Math.Min(indexMax, upperCount);
-					break;
-				case RestartStrategy.WholeIterResidualImprove:
-					upperCount = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
-					double abs0 = estimateEigvals[0].Abs(), gap = estimateEigvals[^1].Abs() - abs0;
-					double maxVal = 0;
-					for (int i = 0; i < upperCount; i++)
-					{
-						double val = (maxIter - i - 1) * (estimateEigvals[i + 1].Abs() - abs0) / gap;
-						if (val > maxVal)
-						{
-							maxVal = val;
-							indexMax = i;
-						}
-					}
-					break;
-				case RestartStrategy.KrylovSchur:
-					indexMax = nTarget + Math.Min(nConverged, (maxIter - nTarget) / 2);
-					if (indexMax == 1 && maxIter > 3)
-						indexMax = maxIter / 2;
-					break;
-				default:
-					throw new NotSupportedException();
-			}
-			// return
-			output[..indexMax].FillWithRange(0);
-			return indexMax;
-		}
-	}
-	#endregion
 
 	#region enum
 	/// <summary>
@@ -354,7 +181,7 @@ namespace Althea.Solver
 		/// The naïve strategy which only preserve the lowest Ritz eigen-pair and converged ones.
 		/// </summary>
 		Naive,
-		// Ignore Spelling: \mathrm eig \left \right \underset
+		// Ignore Spelling: \mathrm eig \left \right \underset \frac argmax
 		/// <summary>
 		/// Based on the index of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
 		/// $$k=n_c+\min{\left\{n_{\mathrm{eig}},\left(p-n_c\right)\left(\frac{2}{5}+\frac{n_{\mathrm{eig}}}{10p}\right)\right\}}$$
@@ -442,13 +269,129 @@ namespace Althea.Solver
 	}
 	#endregion
 
+
+	#region Krylov subspace algorithms restart strategy
+	/// <summary>
+	/// The interface for a user-defined (or a built in) restart strategy
+	/// </summary>
+	public interface IPreserveSelector
+	{
+		/// <summary>
+		/// When implemented by a derived class, get the <see cref="RestartStrategy"/> of this selector
+		/// </summary>
+		RestartStrategy Strategy { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
+		/// </summary>
+		/// <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
+		/// <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
+		/// <param name="nConverged">THe number of converged eigen-pairs</param>
+		/// <param name="nTarget">The number of smallest eigen-pairs wanted</param>
+		/// <param name="maxIter">The maximum number of iteration (per restart)</param>
+		/// <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
+		/// <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
+		/// <returns>The actual preserved count</returns>
+		/// <remarks>This method will only be invoked internally.</remarks>
+		int PreserveSelect(Span<Complex<double>> estimateEigvals, Span<Complex<double>> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true);
+	}
+
+	internal sealed class BuiltInPreserveSelector : IPreserveSelector
+	{
+		public RestartStrategy Strategy { get; }
+
+		public BuiltInPreserveSelector(RestartStrategy strategy)
+		{
+			this.Strategy = strategy;
+		}
+
+		int IPreserveSelector.PreserveSelect(Span<Complex<double>> estimateEigvals, Span<Complex<double>> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged)
+		{
+			int length = estimateEigvals.Length;
+			int indexMax = 0;
+			int upperCount = length * 2 / 3;
+			switch (this.Strategy)
+			{
+				case RestartStrategy.Naive:
+					indexMax = Math.Min(Math.Max(maxIter * 2 / 5, nTarget), length);
+					if (withConverged)
+						indexMax = Math.Max(indexMax, nConverged);
+					break;
+				case RestartStrategy.IndexBased:
+					indexMax = Math.Min(nTarget, (int)((maxIter - nConverged) * (0.4 + nTarget / 10.0 / maxIter)));
+					indexMax = Math.Min(indexMax, upperCount);
+					if (withConverged)
+						indexMax = Math.Max(indexMax, nConverged);
+					break;
+				case RestartStrategy.CurrentResidualBest:
+					if (nTarget >= upperCount)
+					{
+						output[..upperCount].FillWithRange(0);
+						return upperCount;
+					}
+					using (var temp = length.CheckStackLimit<Complex<double>>())
+					{
+						Span<Complex<double>> lastRow = temp.IsEmpty ? stackalloc Complex<double>[length] : temp.Data;
+						for (int i = 0; i < length; i++)
+						{
+							lastRow[i] = estimateEigvecs[length * (i + 1) - 1];
+						}
+						var lastMax = lastRow.Max(static v => v.Magnitude);
+						var lastNeig = lastRow[nTarget - 1].Magnitude;
+						var upperBound = Math.Max(Math.Sqrt(lastMax * lastNeig), 2 * lastNeig);
+						for (indexMax = 0; indexMax < upperCount; indexMax++)
+						{
+							if (lastRow[indexMax].Magnitude >= upperBound)
+								break;
+						}
+					}
+					if (!withConverged)
+						indexMax -= nConverged;
+					indexMax--;
+					break;
+				case RestartStrategy.OneStepResidualImprove:
+					indexMax = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
+					if (!withConverged)
+						indexMax -= nConverged;
+					indexMax = Math.Min(indexMax, upperCount);
+					break;
+				case RestartStrategy.WholeIterResidualImprove:
+					upperCount = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
+					double abs0 = estimateEigvals[0].Magnitude, gap = estimateEigvals[^1].Magnitude - abs0;
+					double maxVal = 0;
+					for (int i = 0; i < upperCount; i++)
+					{
+						double val = (maxIter - i - 1) * (estimateEigvals[i + 1].Magnitude - abs0) / gap;
+						if (val > maxVal)
+						{
+							maxVal = val;
+							indexMax = i;
+						}
+					}
+					break;
+				case RestartStrategy.KrylovSchur:
+					indexMax = nTarget + Math.Min(nConverged, (maxIter - nTarget) / 2);
+					if (indexMax == 1 && maxIter > 3)
+						indexMax = maxIter / 2;
+					break;
+				default:
+					throw new NotSupportedException();
+			}
+			// return
+			output[..indexMax].FillWithRange(0);
+			return indexMax;
+		}
+	}
+	#endregion
+
+
 	#region wrapper
 	/// <summary>
-	/// The information used as input and output of Krylov subspace methods
+	/// The information ref struct used as input and output of Krylov subspace methods.
 	/// </summary>
-	/// <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
+	/// <typeparam name="T">Any floating point number as the data type</typeparam>
 	/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-	public readonly ref struct KrylovSubspaceSolveInfo<TVec, T> where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged, INumber<T>
+	public readonly ref struct KrylovSubspaceSolveInfo<T, TVec> where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 	{
 		#region fields
 		/// <summary>
@@ -472,9 +415,9 @@ namespace Althea.Solver
 		public readonly TVec? OtherVector;
 
 		/// <summary>
-		/// The tolerance of the convergence, default 0 means <c>machine_precision_of_<typeparamref name="T"/> ^ 0.9</c>
+		/// The tolerance of the convergence, default 0 means <c><see cref="NumberType{T}.MachinePrecision"/> ^ 0.9</c>
 		/// </summary>
-		public readonly double Tolerance;
+		public readonly double Tolerance = Math.Pow(NumberType<T>.MachinePrecision, 0.9);
 
 		/// <summary>
 		/// The <see cref="IPreserveSelector"/> used for selecting the preservation Ritz pairs, default null means <c>new <see cref="BuiltInPreserveSelector(RestartStrategy)">BuiltInRestartStrategy</see>(<see cref="RestartStrategy"/>)</c>.
@@ -487,9 +430,9 @@ namespace Althea.Solver
 		public readonly Span<double> Eigenvalues;
 
 		/// <summary>
-		/// The output converged eigenvalues of <see cref="ComplexDouble"/> if the matrix is not hermitian, sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+		/// The output converged eigenvalues of <see cref="Complex{T}"/> type if the matrix is not hermitian, sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
 		/// </summary>
-		public readonly Span<ComplexDouble> EigenvaluesComplex;
+		public readonly Span<Complex<double>> EigenvaluesComplex;
 
 		/// <summary>
 		/// The output converged eigenvectors (or its real parts if <typeparamref name="T"/> is not a complex type and <see cref="MatrixFunction"/> is not hermitian), sorted with <see cref="Eigenvalues"/> or <see cref="EigenvaluesComplex"/>.
@@ -538,12 +481,6 @@ namespace Althea.Solver
 		#endregion
 
 		#region create
-		static KrylovSubspaceSolveInfo()
-		{
-			if (Const<T>.IsIntegralType)
-				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotFloat);
-		}
-
 		/// <summary>
 		/// Create a <see cref="KrylovSubspaceSolveInfo{TVec, T}"/> of the given naïve hermitian matrix eigen-solve problem
 		/// </summary>
@@ -567,7 +504,6 @@ namespace Althea.Solver
 			this.WhichEigenvaluesDesired = default;
 			this.MaxRestarts = maxIter;
 			this.IterationsPerRestart = 0;
-			this.Tolerance = 0;
 			this.ReorthogonalizeMethod = default;
 			this.UseGapEstimation = default;
 			this.CheckMatrixFunction = check;
@@ -587,7 +523,7 @@ namespace Althea.Solver
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
 		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> or <paramref name="outputCompEigenvectors"/> is too short</exception>
 		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
-									   Span<ComplexDouble> outputEigenvalues,
+									   Span<Complex<double>> outputEigenvalues,
 									   Span<TVec> outputRealEigenvectors, Span<TVec> outputCompEigenvectors,
 									   int nEig = 1, WhichEigenvalues which = WhichEigenvalues.LargestAbsolute,
 									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
@@ -621,7 +557,8 @@ namespace Althea.Solver
 			this.WhichEigenvaluesDesired = which;
 			this.MaxRestarts = maxRestarts;
 			this.IterationsPerRestart = iterPerRestart;
-			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
+			if (tolerance != 0)
+				this.Tolerance = tolerance;
 			this.ReorthogonalizeMethod = reorthogonalize;
 			this.UseGapEstimation = useGap;
 			this.CheckMatrixFunction = check;
@@ -671,7 +608,8 @@ namespace Althea.Solver
 			this.WhichEigenvaluesDesired = WhichEigenvalues.SmallestReal;
 			this.MaxRestarts = maxRestarts;
 			this.IterationsPerRestart = iterPerRestart;
-			this.Tolerance = tolerance == 0 ? Const<T>.MachinePrecision * 5 : tolerance;
+			if (tolerance != 0)
+				this.Tolerance = tolerance;
 			this.ReorthogonalizeMethod = reorthogonalize;
 			this.UseGapEstimation = useGap;
 			this.CheckMatrixFunction = check;
@@ -717,7 +655,8 @@ namespace Althea.Solver
 			this.WhichEigenvaluesDesired = default;
 			this.MaxRestarts = maxRestarts;
 			this.IterationsPerRestart = iterPerRestart;
-			this.Tolerance = tolerance == 0 ? (Math.Pow(Const<T>.MachinePrecision, 0.9)) : tolerance;
+			if (tolerance != 0)
+				this.Tolerance = tolerance;
 			this.ReorthogonalizeMethod = reorthogonalize;
 			this.UseGapEstimation = useGap;
 			this.CheckMatrixFunction = check;
@@ -734,7 +673,7 @@ namespace Althea.Solver
 		/// </summary>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, Func<TVec, TVec>? M, TVec initial, TVec? other, ref KrylovSubspaceSolveInfo<TVec, T> old)
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, Func<TVec, TVec>? M, TVec initial, TVec? other, ref KrylovSubspaceSolveInfo<T, TVec> old)
 		{
 			if (matrixFunction is null)
 				throw new ArgumentNullException(nameof(matrixFunction));

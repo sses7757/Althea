@@ -53,7 +53,7 @@ namespace Althea.Backend.CSharp.Solver
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected internal static new bool KroneckerMultiplyVector<TMat, TVec, T>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
-			where TMat : class, IMultipliableMatrix<TMat, TVec, T>, IDisposable, new()
+			where TMat : class, IConvertibleMatrix<TMat, TVec, T>, IDisposable, new()
 			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
 			where T : unmanaged
 		{

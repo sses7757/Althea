@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using Althea.LinearAlgebra;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The base vector interface.

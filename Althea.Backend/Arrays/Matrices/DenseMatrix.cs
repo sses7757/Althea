@@ -152,7 +152,7 @@ namespace Althea.Backend.Arrays
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged struct as the data type</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public class DenseMatrix<T> : IBaseMatrix<T>, IKrylovVector<DenseMatrix<T>, T>, IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>, IPitchedArray<T>, IDenseMatrix<T>
+	public class DenseMatrix<T> : IBaseMatrix<T>, IKrylovVector<DenseMatrix<T>, T>, IConvertibleMatrix<DenseMatrix<T>, DenseVector<T>, T>, IPitchedArray<T>, IDenseMatrix<T>
 		where T : unmanaged
 	{
 		#region basic
@@ -903,17 +903,17 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IMultipliableMatrix
-		bool IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.CanOperateInPlace => true;
+		bool IConvertibleMatrix<DenseMatrix<T>, DenseVector<T>, T>.CanOperateInPlace => true;
 
-		void IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.InPlaceAdd(DenseMatrix<T> other, T scalarThis, T scalarOther) => this.OverwriteByMatricesSum(this, other, scalarThis, scalarOther);
+		void IConvertibleMatrix<DenseMatrix<T>, DenseVector<T>, T>.InPlaceAdd(DenseMatrix<T> other, T scalarThis, T scalarOther) => this.OverwriteByMatricesSum(this, other, scalarThis, scalarOther);
 
-		DenseMatrix<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceAdd(DenseMatrix<T> other, T scalarThis, T scalarOther) => this.AddMatrix(scalarThis, scalarOther, other);
+		DenseMatrix<T> IConvertibleMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceAdd(DenseMatrix<T> other, T scalarThis, T scalarOther) => this.AddMatrix(scalarThis, scalarOther, other);
 
-		void IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.InPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => this.OverwriteByMatricesProduct(scalar, left, right, scalarThis, opLeft, opRight);
+		void IConvertibleMatrix<DenseMatrix<T>, DenseVector<T>, T>.InPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => this.OverwriteByMatricesProduct(scalar, left, right, scalarThis, opLeft, opRight);
 
-		DenseMatrix<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceMultiply(DenseMatrix<T> other, T scalar, MatrixOperation opLeft, MatrixOperation opRight) => (DenseMatrix<T>)this.MultiplyMatrix(scalar, other, opLeft, opRight);
+		DenseMatrix<T> IConvertibleMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceMultiply(DenseMatrix<T> other, T scalar, MatrixOperation opLeft, MatrixOperation opRight) => (DenseMatrix<T>)this.MultiplyMatrix(scalar, other, opLeft, opRight);
 
-		DenseMatrix<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight)
+		DenseMatrix<T> IConvertibleMatrix<DenseMatrix<T>, DenseVector<T>, T>.OutOfPlaceFusedMultiplyAdd(DenseMatrix<T> left, DenseMatrix<T> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight)
 		{
 			var (m, n, k) = ((IDenseMatrix<T>)this).CheckOverwriteByProduct(scalar, left, right, ref opLeft, ref opRight);
 			var storage = Storage<T>.Create(this.Storage[0].Location, this.Length);
@@ -931,7 +931,7 @@ namespace Althea.Backend.Arrays
 			}
 		}
 
-		DenseVector<T> IMultipliableMatrix<DenseMatrix<T>, DenseVector<T>, T>.ToVector()
+		DenseVector<T> IConvertibleMatrix<DenseMatrix<T>, DenseVector<T>, T>.ToVector()
 		{
 			var vec = this.ToVector();
 			if (vec.Storage.SameOriginAs(this.Storage))

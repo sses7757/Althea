@@ -1,5 +1,4 @@
 ﻿using Althea.LinearAlgebra;
-using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
 using Althea.Storage;
 using Althea.TensorAlgebra;
@@ -9,7 +8,7 @@ using SpComp = Althea.LinearAlgebra.Sparse.ComputationApiSelector;
 using SpTen = Althea.TensorAlgebra.Sparse.ApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The static class for sparse linear algebra and tensor algebra operations of same data type and storage type.

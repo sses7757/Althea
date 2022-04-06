@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-using Althea.Arrays;
+using Althea.Array;
 using Althea.Helpers;
 using Althea.Linq;
 using Althea.Resources;

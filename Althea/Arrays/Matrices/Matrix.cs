@@ -4,7 +4,7 @@ using Althea.Helpers;
 using Althea.LinearAlgebra;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The base matrix interface.

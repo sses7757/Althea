@@ -5,7 +5,7 @@ using Althea.Linq;
 using Althea.Storage;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	#region manager
 	/// <summary>

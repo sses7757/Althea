@@ -24,7 +24,7 @@ namespace Althea.Backend.Arrays
 	/// <typeparam name="TInd">Any integer-typed unmanaged struct as the index type</typeparam>
 	/// <remarks>The <see cref="SparseMatrix{T, TInd}.RowIndexStorage"/> and <see cref="SparseMatrix{T, TInd}.ColIndexStorage"/> are sorted according to <see cref="Althea.Arrays.BaseSparseMatrix{T, TInd}.Format"/>. Any external operation that disturbs such order may result in unexpected consequences.</remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public class SparseMatrix<T, TInd> : BaseSparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>, IMatrix<T>
+	public class SparseMatrix<T, TInd> : BaseSparseMatrix<T, TInd>, IKrylovVector<SparseMatrix<T, TInd>, T>, IConvertibleMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>, IMatrix<T>
 		where T : unmanaged
 		where TInd : unmanaged
 	{
@@ -955,11 +955,11 @@ namespace Althea.Backend.Arrays
 		#endregion
 
 		#region IMultipliableMatrix
-		bool IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.CanOperateInPlace => false;
+		bool IConvertibleMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.CanOperateInPlace => false;
 
-		void IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.InPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => throw new NotImplementedException();
+		void IConvertibleMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.InPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight) => throw new NotImplementedException();
 
-		SparseMatrix<T, TInd> IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight)
+		SparseMatrix<T, TInd> IConvertibleMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceFusedMultiplyAdd(SparseMatrix<T, TInd> left, SparseMatrix<T, TInd> right, T scalar, T scalarThis, MatrixOperation opLeft, MatrixOperation opRight)
 		{
 			var (m, n, _) = ((IMatrix<T>)left).CheckMultiply(scalar, right, ref opLeft, ref opRight);
 			if (!scalarThis.IsZero() && (this.NRows != m || this.NCols != n))
@@ -976,11 +976,11 @@ namespace Althea.Backend.Arrays
 			}
 		}
 
-		void IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.InPlaceAdd(SparseMatrix<T, TInd> other, T scalarThis, T scalarOther) => throw new NotImplementedException();
+		void IConvertibleMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.InPlaceAdd(SparseMatrix<T, TInd> other, T scalarThis, T scalarOther) => throw new NotImplementedException();
 
-		SparseMatrix<T, TInd> IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceMultiply(SparseMatrix<T, TInd> other, T scalar, MatrixOperation opLeft, MatrixOperation opRight) => (SparseMatrix<T, TInd>)this.MultiplyMatrix(scalar, other, opLeft, opRight);
+		SparseMatrix<T, TInd> IConvertibleMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceMultiply(SparseMatrix<T, TInd> other, T scalar, MatrixOperation opLeft, MatrixOperation opRight) => (SparseMatrix<T, TInd>)this.MultiplyMatrix(scalar, other, opLeft, opRight);
 
-		SparseMatrix<T, TInd> IMultipliableMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceAdd(SparseMatrix<T, TInd> other, T scalarThis, T scalarOther) => (SparseMatrix<T, TInd>)this.AddMatrix(scalarThis, scalarOther, other);
+		SparseMatrix<T, TInd> IConvertibleMatrix<SparseMatrix<T, TInd>, SparseVector<T, TInd>, T>.OutOfPlaceAdd(SparseMatrix<T, TInd> other, T scalarThis, T scalarOther) => (SparseMatrix<T, TInd>)this.AddMatrix(scalarThis, scalarOther, other);
 		#endregion
 
 		#region print

@@ -13,7 +13,7 @@ using ExtTen = Althea.TensorAlgebra.Dense.ExtendApiSelector;
 using Ten = Althea.TensorAlgebra.Dense.BaseApiSelector;
 
 
-namespace Althea.Arrays
+namespace Althea.Array
 {
 	/// <summary>
 	/// The base dense tensor class whose only storage is of type <typeparamref name="TS"/>.
@@ -211,11 +211,11 @@ namespace Althea.Arrays
 		{
 			get
 			{
-				return (this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckIndex(this, indices, this.Strides)).ToManaged<T, TS>();
+				return (this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckIndex(this, indices)).ToManaged<T, TS>();
 			}
 			set
 			{
-				(this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckIndex(this, indices, this.Strides)).FromManaged(value);
+				(this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckIndex(this, indices)).FromManaged(value);
 			}
 		}
 		#endregion
@@ -224,14 +224,14 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public DenseTensor<T, TS> GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
 		{
-			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, this.Strides);
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths);
 			return new(storage, lengths, this.OuterSize);
 		}
 
 		/// <inheritdoc/>
 		public void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, DenseTensor<T, TS> overwrite)
 		{
-			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, this.Strides, overwrite);
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, overwrite);
 			Ten.Permute<T, TS, TS>(new(storage, lengths, this.OuterSize, this.Strides), new(overwrite, overwrite.values), stackalloc int[this.rank].FillWithRange(0));
 		}
 
@@ -246,26 +246,34 @@ namespace Althea.Arrays
 		/// <inheritdoc/>
 		public void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, DenseTensor<T, TS> value)
 		{
-			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, this.Strides, value);
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, value);
 			Ten.Permute<T, TS, TS>(new(value, value.values), new(storage, lengths, this.OuterSize, this.Strides), stackalloc int[this.rank].FillWithRange(0));
 		}
 		#endregion
 
 		#region first few dimensions indexing
 		/// <inheritdoc/>
-		public DenseTensor<T, TS> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
+		public DenseTensor<T, TS> GetFirstDims(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
 		{
 			Span<long> allOffsets = stackalloc long[this.rank], allLengths = stackalloc long[this.rank];
-			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths, this.Strides);
-			return new(storage, lengths, this.OuterSize[..n]);
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths);
+			return new(storage, allLengths[..n], this.OuterSize[..n]);
 		}
 
 		/// <inheritdoc/>
-		public void SetFirstDims(int n, ReadOnlySpan<long> restIndices, DenseTensor<T, TS> value, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths)
+		public void GetFirstDims(int n, ReadOnlySpan<long> restIndices, DenseTensor<T, TS> overwrite, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
 		{
 			Span<long> allOffsets = stackalloc long[this.rank], allLengths = stackalloc long[this.rank];
-			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths, this.Strides, value);
-			Ten.Permute<T, TS, TS>(new(value, value.values), new(storage, lengths, this.OuterSize[..n], this.Strides[..(n + 1)]), stackalloc int[n].FillWithRange(0));
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths, overwrite);
+			Ten.Permute<T, TS, TS>(new(storage, allLengths[..n], this.OuterSize[..n], this.Strides[..(n + 1)]), new(overwrite, overwrite.values), stackalloc int[n].FillWithRange(0));
+		}
+
+		/// <inheritdoc/>
+		public void SetFirstDims(int n, ReadOnlySpan<long> restIndices, DenseTensor<T, TS> value, ReadOnlySpan<long> offsets = default, ReadOnlySpan<long> lengths = default)
+		{
+			Span<long> allOffsets = stackalloc long[this.rank], allLengths = stackalloc long[this.rank];
+			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths, value);
+			Ten.Permute<T, TS, TS>(new(value, value.values), new(storage, allLengths[..n], this.OuterSize[..n], this.Strides[..(n + 1)]), stackalloc int[n].FillWithRange(0));
 		}
 		#endregion
 

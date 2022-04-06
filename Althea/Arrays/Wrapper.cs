@@ -2,11 +2,210 @@
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
+using Althea.NativeTypes;
 using Althea.Storage;
 
 
-namespace Althea.LinearAlgebra.Sparse
+namespace Althea.Array
 {
+	/// <summary>
+	/// The wrapper structure for any dense array.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+	public readonly ref struct DenseArrayWrapper<T, TS> where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+	{
+		#region basic
+		private readonly TS m_values;
+
+		private readonly ReadOnlySpan<long> m_size, m_outerSize, m_strides;
+
+		/// <summary>
+		/// Get the value array of this tensor as a <typeparamref name="TS"/>
+		/// </summary>
+		public readonly TS ValueStorage
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_values;
+		}
+
+		/// <summary>
+		/// Get the presenting size of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		public readonly ReadOnlySpan<long> Size
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size;
+		}
+
+		/// <summary>
+		/// Get the rank (number of dimensions) of this tensor as a <see cref="int"/>
+		/// </summary>
+		public readonly int Rank
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_size.Length;
+		}
+
+		/// <summary>
+		/// Get the outer size (actual size of all dimensions) of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		/// <remarks>If there is not pitch, <see cref="OuterSize"/> == <see cref="Size"/> (reference equals)</remarks>
+		public readonly ReadOnlySpan<long> OuterSize
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_outerSize;
+		}
+
+		/// <summary>
+		/// Get the strides between consecutive elements in each dimension of this tensor as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>
+		/// </summary>
+		/// <remarks>If there is not pitch, <see cref="Strides"/> is empty</remarks>
+		public readonly ReadOnlySpan<long> Strides
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.m_outerSize;
+		}
+		#endregion
+
+		#region equality
+		/// <summary>
+		/// Check whether this <see cref="DenseArrayWrapper{T, TS}"/> is identical to the <paramref name="other"/> one
+		/// </summary>
+		/// <param name="other">The other <see cref="DenseArrayWrapper{T, TS}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool Equals(DenseArrayWrapper<T, TS> other)
+		{
+			return this.m_values == other.m_values && this.m_size.SequenceEqual(other.m_size) && this.m_outerSize.SequenceEqual(other.m_outerSize);
+		}
+
+		/// <summary>
+		/// Check whether this <see cref="DenseArrayWrapper{T, TS}"/> has identical size (and outer size) as the <paramref name="other"/> one
+		/// </summary>
+		/// <param name="other">The other <see cref="DenseArrayWrapper{T, TS}"/> to compare</param>
+		/// <returns>this == <paramref name="other"/> for sizes</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool SizeEquals(DenseArrayWrapper<T, TS> other)
+		{
+			return this.m_size.SequenceEqual(other.m_size) && this.m_outerSize.SequenceEqual(other.m_outerSize);
+		}
+
+		/// <summary>
+		/// Equality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator ==(DenseArrayWrapper<T, TS> left, DenseArrayWrapper<T, TS> right)
+		{
+			return left.Equals(right);
+		}
+
+		/// <summary>
+		/// Inequality operator
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool operator !=(DenseArrayWrapper<T, TS> left, DenseArrayWrapper<T, TS> right)
+		{
+			return !left.Equals(right);
+		}
+
+		/// <summary>
+		/// Always returns false since a ref struct cannot be boxed
+		/// </summary>
+		public override bool Equals(object? obj) => false;
+
+		/// <summary>
+		/// Always throws <see cref="InvalidOperationException"/> since a ref struct cannot be stored on heap
+		/// </summary>
+		public override int GetHashCode() => throw new InvalidOperationException();
+
+		/// <summary>
+		/// Get the string representation of this <see cref="DenseArrayWrapper{T, TS}"/>
+		/// </summary>
+		/// <returns>The string representation of this <see cref="DenseArrayWrapper{T, TS}"/></returns>
+		public override string ToString()
+		{
+			return nameof(DenseArrayWrapper<T, TS>) + $"[ValueStorage={this.m_values}, Size={this.m_size.SpanJoin('x')}" + (this.m_size == this.m_outerSize ? "]" : $"OuterSize={this.m_outerSize.SpanJoin('x')}]");
+		}
+		#endregion
+
+		#region create
+		/// <summary>
+		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with all given parameters and scalar set to 1 and assuming that there is not pitch
+		/// </summary>
+		/// <param name="value">The given dense storage</param>
+		/// <param name="size">The presenting size / extent of all dimensions</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public DenseArrayWrapper(TS value, ReadOnlySpan<long> size)
+		{
+			this.m_values = value;
+			this.m_size = size;
+			this.m_outerSize = size;
+			this.m_strides = default;
+		}
+
+		/// <summary>
+		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with all given parameters and scalar set to 1
+		/// </summary>
+		/// <param name="value">The given dense storage</param>
+		/// <param name="size">The presenting size / extent of all dimensions</param>
+		/// <param name="outerSize">The actual outer size, will be replaced by <paramref name="size"/> if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
+		/// <param name="strides">The strides between consecutive elements in each dimension, will be replaced by empty if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public DenseArrayWrapper(TS value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides)
+		{
+			this.m_values = value; this.m_size = size;
+			if (outerSize.SequenceEqual(size))
+			{
+				outerSize = size;
+				strides = default;
+			}
+			this.m_outerSize = outerSize;
+			this.m_strides = strides;
+		}
+
+		/// <summary>
+		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with a given dense <paramref name="array"/>
+		/// </summary>
+		/// <param name="array">The given dense array as a <see cref="IArray{T}"/></param>
+		/// <param name="storage">The storage of <paramref name="array"/></param>
+		/// <exception cref="ArgumentException">If <paramref name="array"/> is a <see cref="ISparseArray{T}"/></exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid while <paramref name="array"/> is not</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public DenseArrayWrapper(IArray<T>? array, TS? storage)
+		{
+			if (array is null)
+			{
+				this = default; this.m_values = TS.Empty;
+				return;
+			}
+			if (storage is null || !storage.IsValid())
+				throw new ArgumentNullException(nameof(storage));
+			if (array is ISparseArray<T>)
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(array));
+
+			ReadOnlySpan<long> outerSize, strides;
+			if (array is IPitchedArray<T> p)
+			{
+				if (p.OuterSize.SequenceEqual(p.Size))
+				{
+					outerSize = p.Size; strides = default;
+				}
+				else
+				{
+					outerSize = p.OuterSize; strides = p.Strides;
+				}
+			}
+			else
+			{
+				outerSize = array.Size; strides = default;
+			}
+			this = new(storage, array.Size, outerSize, strides);
+		}
+		#endregion
+	}
+
+
 	/// <summary>
 	/// The structure for the format of any sparse array with size the same as an <see cref="int"/>.
 	/// </summary>
@@ -326,8 +525,9 @@ namespace Althea.LinearAlgebra.Sparse
 		#endregion
 	}
 
+
 	/// <summary>
-	/// The wrapper struct for any sparse array.
+	/// The wrapper structure for any sparse array.
 	/// </summary>
 	/// <typeparam name="TVal">Any unmanaged number as the value data type</typeparam>
 	/// <typeparam name="TSVal">The storage type used by the value array(s)</typeparam>
@@ -342,7 +542,7 @@ namespace Althea.LinearAlgebra.Sparse
 		#region basic
 		static SparseArrayWrapper()
 		{
-			if (NativeTypes.Unmanaged<TInd>.Size > 8)
+			if (Unmanaged<TInd>.Size > sizeof(long))
 				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 

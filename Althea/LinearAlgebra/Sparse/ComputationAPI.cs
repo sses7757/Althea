@@ -1,4 +1,4 @@
-﻿using Althea.Arrays;
+﻿using Althea.Array;
 using Althea.SourceGenerator;
 using Althea.Storage;
 

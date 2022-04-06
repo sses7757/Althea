@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-using Althea.NativeTypes;
+﻿using Althea.NativeTypes;
 using Althea.Storage;
 
 
@@ -109,13 +106,13 @@ namespace Althea.Helpers
 		{
 			string format = reason switch
 			{
-				MismatchReason.CannotConvert => Resources.Exception.MismatchCannotConvert,
-				MismatchReason.IsNotRealCorrespondence => Resources.Exception.MismatchNotRealCorrespondence,
-				MismatchReason.IsNotComplexCorrespondence => Resources.Exception.MismatchNotComplexCorrespondence,
-				MismatchReason.NotInteger => Resources.Exception.MismatchNotInteger,
-				MismatchReason.NotFloat => Resources.Exception.MismatchNotFloat,
-				MismatchReason.NotReal => Resources.Exception.MismatchNotReal,
-				_ => Resources.Exception.MismatchOtherReason
+				MismatchReason.CannotConvert => Resources.OtherError.MismatchCannotConvert,
+				MismatchReason.IsNotRealCorrespondence => Resources.OtherError.MismatchNotRealCorrespondence,
+				MismatchReason.IsNotComplexCorrespondence => Resources.OtherError.MismatchNotComplexCorrespondence,
+				MismatchReason.NotInteger => Resources.OtherError.MismatchNotInteger,
+				MismatchReason.NotFloat => Resources.OtherError.MismatchNotFloat,
+				MismatchReason.NotReal => Resources.OtherError.MismatchNotReal,
+				_ => Resources.OtherError.MismatchOtherReason
 			};
 			string? fromString = from.GetGenericString(), toString = to?.GetGenericString();
 			return toString is null ? string.Format(format, fromString) : string.Format(format, fromString, toString);
