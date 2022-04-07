@@ -357,7 +357,7 @@ namespace Althea.Storage
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, }.Max()];
+				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, }.Max()];
 				int size;
 				writer.WriteStartObject();
 				
@@ -838,7 +838,7 @@ namespace Althea.Storage
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, }.Max()];
+				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, }.Max()];
 				int size;
 				writer.WriteStartObject();
 				
@@ -1360,7 +1360,7 @@ namespace Althea.Storage
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, }.Max()];
+				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, }.Max()];
 				int size;
 				writer.WriteStartObject();
 				
@@ -1923,7 +1923,7 @@ namespace Althea.Storage
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, }.Max()];
+				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, }.Max()];
 				int size;
 				writer.WriteStartObject();
 				
@@ -2527,7 +2527,7 @@ namespace Althea.Storage
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, }.Max()];
+				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, }.Max()];
 				int size;
 				writer.WriteStartObject();
 				
@@ -3172,7 +3172,7 @@ namespace Althea.Storage
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, }.Max()];
+				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, }.Max()];
 				int size;
 				writer.WriteStartObject();
 				
@@ -3858,7 +3858,7 @@ namespace Althea.Storage
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, }.Max()];
+				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, }.Max()];
 				int size;
 				writer.WriteStartObject();
 				
@@ -4585,7 +4585,7 @@ namespace Althea.Storage
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[new[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, value.Pointer9.LengthInBytes, }.Max()];
+				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, value.Pointer9.LengthInBytes, }.Max()];
 				int size;
 				writer.WriteStartObject();
 				

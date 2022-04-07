@@ -329,7 +329,7 @@ namespace Althea.Array
 		}
 		#endregion
 
-		#region tensor in-place operations
+		#region tensor out-of-place operations
 		/// <inheritdoc/>
 		/// <exception cref="ArgumentException">If <paramref name="A"/>'s default value is not zero</exception>
 		static SparseTensor<T, TInd, TS, TSInd> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, UnaryOperation opA, BinaryOperation reduce)
@@ -356,15 +356,15 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static DenseTensor<T, TS> Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T α,  UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
 		{
 			Span<int> reduceInds = stackalloc int[A.Rank];
 			Span<long> sizeB = stackalloc long[A.Rank];
-			ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckReduce(A, order, scalar, ref reduceInds, ref sizeB);
+			ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckReduce(A, order, α, ref reduceInds, ref sizeB);
 			var output = A.Storage.ResizeAlike(sizeB.Prod());
 			try
 			{
-				SpTen.Reduce(reduce, A, scalar, opA, reduceInds, new DenseTensorWrapper<T, TS>(output, sizeB));
+				SpTen.Reduce(reduce, A, α, opA, reduceInds, new DenseTensorWrapper<T, TS>(output, sizeB));
 				return new(output, sizeB);
 			}
 			catch (Exception)
@@ -383,7 +383,7 @@ namespace Althea.Array
 			var output = A.Storage.ResizeAlike(sizeB.Prod());
 			try
 			{
-				SpTen.Permute(A, scalar, op, perm, new DenseTensorWrapper<T, TS>(output, sizeB));
+				SpTen.Permute(A, scalar, op, perm, new DenseArrayWrapper<T, TS>(output, sizeB));
 				return new(output, sizeB);
 			}
 			catch (Exception)
@@ -436,7 +436,7 @@ namespace Althea.Array
 			var output = B.Storage.ResizeAlike(sizeC.Prod());
 			try
 			{
-				SpTen.Contract(A, opA, new DenseTensorWrapper<T, TS>(B, B.Storage, opB, α), info, new DenseTensorWrapper<T, TS>(output, sizeC));
+				SpTen.Contract(A, opA, new DenseTensorWrapper<T, TS>(B, opB, α), info, new DenseTensorWrapper<T, TS>(output, sizeC));
 				return new(output, sizeC, default, labelC);
 			}
 			catch (Exception)
@@ -454,7 +454,7 @@ namespace Althea.Array
 			var output = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, permA, permB, sizeC, B?.Storage ?? A?.Storage);
 			try
 			{
-				SpTen.OperationBinary(binary, A, permA, α, opA, B is null ? default : new DenseTensorWrapper<T, TS>(B, B.Storage, opB, β), permB, new DenseTensorWrapper<T, TS>(output, sizeC));
+				SpTen.OperationBinary(binary, A, permA, α, opA, B is null ? default : new DenseTensorWrapper<T, TS>(B, opB, β), permB, new DenseArrayWrapper<T, TS>(output, sizeC));
 				return new(output, sizeC);
 			}
 			catch (Exception)
@@ -473,12 +473,12 @@ namespace Althea.Array
 
 		#region tensor out-of-place operations
 		/// <inheritdoc/>
-		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, SparseTensor<T, TInd, TS, TSInd> B, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, SparseTensor<T, TInd, TS, TSInd> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
 		{
 			Span<int> reduceInds = stackalloc int[A.Rank];
-			reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckReduce(A, order, scalar, B, reduceInds);
+			reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckReduce(A, order, α, B, reduceInds);
 			var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(B);
-			SpTen.Reduce(reduce, A, scalar, opA, reduceInds, ref target);
+			SpTen.Reduce(reduce, A, α, opA, reduceInds, ref target);
 		}
 
 		/// <inheritdoc/>
@@ -491,11 +491,11 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, DenseTensor<T, TS> B, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, DenseTensor<T, TS> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
 		{
 			Span<int> reduceInds = stackalloc int[A.Rank];
-			reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckReduce(A, order, scalar, B, reduceInds);
-			SpTen.Reduce(reduce, A, scalar, opA, reduceInds, new DenseTensorWrapper<T, TS>(B, B.Storage));
+			reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckReduce(A, order, α, B, reduceInds);
+			SpTen.Reduce(reduce, A, α, opA, reduceInds, new DenseTensorWrapper<T, TS>(B, opB, β));
 		}
 
 		/// <inheritdoc/>
@@ -503,7 +503,7 @@ namespace Althea.Array
 		{
 			Span<int> perm = stackalloc int[A.Rank];
 			ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
-			SpTen.Permute(A, scalar, op, perm, new DenseTensorWrapper<T, TS>(B, B.Storage));
+			SpTen.Permute(A, scalar, op, perm, new DenseArrayWrapper<T, TS>(B));
 		}
 
 		/// <inheritdoc/>
@@ -534,7 +534,7 @@ namespace Althea.Array
 			Span<int> leftFree = stackalloc int[A.Rank - rank];
 			Span<int> rightFree = stackalloc int[B.Rank - rank];
 			var info = TensorContractInfo.Create(A, B, C, leftConc, rightConc, leftFree, rightFree);
-			SpTen.Contract(A, opA, new DenseTensorWrapper<T, TS>(B, B.Storage, opB, α), info, new DenseTensorWrapper<T, TS>(C, C.Storage, opC));
+			SpTen.Contract(A, opA, new DenseTensorWrapper<T, TS>(B, opB, α), info, new DenseTensorWrapper<T, TS>(C, opC));
 		}
 
 		/// <inheritdoc/>
@@ -542,7 +542,7 @@ namespace Althea.Array
 		{
 			Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 			ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
-			SpTen.OperationBinary(binary, A, permA, α, opA, B is null ? default : new DenseTensorWrapper<T, TS>(B, B.Storage, opB, β), permB, new DenseTensorWrapper<T, TS>(C, C.Storage));
+			SpTen.OperationBinary(binary, A, permA, α, opA, B is null ? default : new DenseTensorWrapper<T, TS>(B, opB, β), permB, new DenseArrayWrapper<T, TS>(C));
 		}
 
 		/// <inheritdoc/>

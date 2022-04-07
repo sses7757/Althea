@@ -96,7 +96,7 @@ namespace Althea.Storage
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IStorage<T, TSelf>
 	{
-		T IReadOnlyList<T>.this[int index] => ((TSelf)this.MakeReference(index, 1)).ToManaged<T, TSelf>();
+		T IReadOnlyList<T>.this[int index] => this.MakeReference(index, 1).ToManaged<T, TSelf>();
 
 		int IReadOnlyCollection<T>.Count => checked((int)this.Length);
 
@@ -105,11 +105,11 @@ namespace Althea.Storage
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
 			long length = this.Length;
-			Span<T> buffer = stackalloc T[(int)Math.Min(length, Settings.StackAllocLimit / Unmanaged<T>.Size)];
+			var buffer = System.Buffers.ArrayPool<T>.Shared.Rent((int)Math.Min(length, Settings.StackAllocLimit));
 			long offset = 0;
 			while (offset < length)
 			{
-				((TSelf)this + offset).ToManaged(buffer);
+				((TSelf)this + offset).ToManaged<T, TSelf>(buffer);
 				for (int i = 0; i < buffer.Length; i++)
 				{
 					yield return buffer[i];

@@ -316,7 +316,6 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
 		/// <param name="index">Output the zero-based index of the target bound in <paramref name="array"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>If not found, <paramref name="index"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="IStorage{T, TSelf}.Length">Length</see> otherwise.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		[AbstractApiMethod]
 		public abstract bool IndexBound<T, TS>(TS array, T value, bool lowerBound, out long index) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS>;

@@ -131,7 +131,7 @@ namespace Althea.Array
 
 		#region create
 		/// <summary>
-		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with all given parameters and scalar set to 1 and assuming that there is not pitch
+		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with given parameters and assuming that there is not pitch.
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
 		/// <param name="size">The presenting size / extent of all dimensions</param>
@@ -145,7 +145,7 @@ namespace Althea.Array
 		}
 
 		/// <summary>
-		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with all given parameters and scalar set to 1
+		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with all given parameters.
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
 		/// <param name="size">The presenting size / extent of all dimensions</param>
@@ -165,42 +165,31 @@ namespace Althea.Array
 		}
 
 		/// <summary>
-		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with a given dense <paramref name="array"/>
+		/// Create a new <see cref="DenseArrayWrapper{T, TS}"/> with a given dense <paramref name="array"/>.
 		/// </summary>
-		/// <param name="array">The given dense array as a <see cref="IArray{T}"/></param>
-		/// <param name="storage">The storage of <paramref name="array"/></param>
+		/// <param name="array">The given dense array as a <see cref="IDenseArray{T, TS}"/></param>
 		/// <exception cref="ArgumentException">If <paramref name="array"/> is a <see cref="ISparseArray{T}"/></exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid while <paramref name="array"/> is not</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseArrayWrapper(IArray<T>? array, TS? storage)
+		public DenseArrayWrapper(IDenseArray<T, TS>? array)
 		{
 			if (array is null)
 			{
 				this = default; this.m_values = TS.Empty;
 				return;
 			}
-			if (storage is null || !storage.IsValid())
-				throw new ArgumentNullException(nameof(storage));
 			if (array is ISparseArray<T>)
 				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(array));
 
 			ReadOnlySpan<long> outerSize, strides;
-			if (array is IPitchedArray<T> p)
-			{
-				if (p.OuterSize.SequenceEqual(p.Size))
-				{
-					outerSize = p.Size; strides = default;
-				}
-				else
-				{
-					outerSize = p.OuterSize; strides = p.Strides;
-				}
-			}
-			else
+			if (array.OuterSize.SequenceEqual(array.Size))
 			{
 				outerSize = array.Size; strides = default;
 			}
-			this = new(storage, array.Size, outerSize, strides);
+			else
+			{
+				outerSize = array.OuterSize; strides = array.Strides;
+			}
+			this = new(array.Storage, array.Size, outerSize, strides);
 		}
 		#endregion
 	}
@@ -656,7 +645,7 @@ namespace Althea.Array
 		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with given <paramref name="array"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SparseArrayWrapper<TVal, TInd, TSVal, TSInd> Create(Arrays.ISparseArray<TVal, TInd, TSVal, TSInd> array!!)
+		public static SparseArrayWrapper<TVal, TInd, TSVal, TSInd> Create(ISparseArray<TVal, TInd, TSVal, TSInd> array!!)
 		{
 			SparseArrayWrapper<TVal, TInd, TSVal, TSInd> wrapper = default;
 			wrapper.DefaultValue = array.DefaultValue;

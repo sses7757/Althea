@@ -492,7 +492,7 @@ namespace Althea.Array
 		public static SparseTensor<T, TInd, TS, TSInd> FromDense(DenseTensor<T, TS> dense, SparseFormat format, T defaultValue, double threshold = 0)
 		{
 			var sparse = new SparseArrayWrapper<T, TInd, TS, TSInd>(defaultValue, format);
-			SpTen.FromDense<T, TInd, TS, TS, TSInd>(new(dense, dense.Storage), ref sparse, threshold);
+			SpTen.FromDense<T, TInd, TS, TS, TSInd>(new(dense), ref sparse, threshold);
 			return Create(in sparse);
 		}
 

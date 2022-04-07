@@ -67,11 +67,8 @@ namespace Althea.SourceGenerator
 			context.RegisterForSyntaxNotifications(() => new ApiIntefaceSyntaxReceiver());
 		}
 
-		public void Execute(GeneratorExecutionContext context)
+		private void AddSelectors(GeneratorExecutionContext context, List<InterfaceDeclarationSyntax> apiClasses, TypeSyntax voidType)
 		{
-			ApiIntefaceSyntaxReceiver syntaxReceiver = (ApiIntefaceSyntaxReceiver)context.SyntaxReceiver;
-			var apiClasses = syntaxReceiver.ApiInterfaces;
-
 			// get type parameter T
 			TypeParameterSyntax typeT = null;
 			TypeParameterConstraintClauseSyntax typeTConstraint = null;
@@ -165,7 +162,7 @@ namespace {ns.Name}
 
 					// add method declaration
 					var newAttrs = method.RemoveAttribute(nameof(AbstractApiMethodAttribute));
-					var retType = hasReturn ? returnParam.Type : syntaxReceiver.VoidReturnType;
+					var retType = hasReturn ? returnParam.Type : voidType;
 					var newParams = hasReturn ? allParams.Remove(returnParam) : allParams;
 					var typeParams = duplicateT ? orgTypeParams.WithParameters(default).AddParameters(typeT).AddParameters(orgTypeParams.Parameters.ToArray()) : orgTypeParams;
 					var typeParamsConstrain = duplicateT ? new SyntaxList<TypeParameterConstraintClauseSyntax>().Add(typeTConstraint).AddRange(method.ConstraintClauses) : method.ConstraintClauses;
@@ -183,7 +180,7 @@ namespace {ns.Name}
 											   .Replace(" ;", ";")
 											   .Replace($"[DuplicateTParameter] ", "");
 					methodMain = Regex.Replace(methodMain, @"<T,([^ ])", @"<T, $1");
-					methodMain = Regex.Replace(methodMain, @"([^ ])where" , @"$1 where");
+					methodMain = Regex.Replace(methodMain, @"([^ ])where", @"$1 where");
 					methodMain = Regex.Replace(methodMain, @"\[\]\r?\n", "");
 					if (methodMain.EndsWith(";"))
 						methodMain = methodMain.Substring(0, methodMain.Length - 1);
@@ -236,6 +233,122 @@ namespace {ns.Name}
 				SourceText sourceText = SourceText.From(generated, Encoding.UTF8);
 				context.AddSource($"{ns.Name}.{selectorName}.cs", sourceText);
 			}
+		}
+
+		public void AddSettings(GeneratorExecutionContext context, List<InterfaceDeclarationSyntax> apiClasses)
+		{
+			// Ignore Spelling: bool impls
+			string backendInterface = @"namespace Althea
+{
+	/// <summary>
+	/// The interface used to set the back-end implementations all at once.
+	/// </summary>
+	public partial interface IBackends
+	{
+		/// <summary>
+		/// Check whether all the back-end implementations are available.
+		/// </summary>
+		bool Available { get; }";
+
+
+			string implSetting = @"using System.Text.Json;
+using System.Text.Json.Serialization;
+
+
+namespace Althea
+{
+	internal record struct ImplementationSettings
+	{
+		public ImplementationSettings() : this(Settings.GetInternalBackend(""CSharp""))
+		{ }
+
+		public bool DisposeNotCurrentImplementation { get; set; }";
+			string implSettingSet = @"
+
+		internal void SetBackends()
+		{";
+			string implSettingBackend = @"
+
+		internal ImplementationSettings(IBackends impls)
+		{
+			this.DisposeNotCurrentImplementation = false;";
+			string implSettingJson = @"
+
+		[JsonConstructor]
+		internal ImplementationSettings(bool disposeNotCurrentImplementation";
+			string implSettingJson2 = @"
+		{
+			this.DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
+			Type? type;";
+			string implSettingJson3 = @"
+
+		internal sealed class JsonConverter : JsonConverter<ImplementationSettings>
+		{
+			public override ImplementationSettings Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				return JsonSerializer.Deserialize<ImplementationSettings>(ref reader);
+			}
+
+			public override void Write(Utf8JsonWriter writer, ImplementationSettings value, JsonSerializerOptions options)
+			{
+				writer.WriteStartObject();
+				writer.WriteBoolean(nameof(DisposeNotCurrentImplementation), value.DisposeNotCurrentImplementation);
+				writer.WriteString(nameof(LinearAlgebraDenseBlas), value.LinearAlgebraDenseBlas?.GetType()?.AssemblyQualifiedName);";
+
+			foreach (var apiClass in apiClasses)
+			{
+				var ns = apiClass.Parent as NamespaceDeclarationSyntax;
+				string selectorName = apiClass.Identifier.ToString().Replace("Abstract", "") + "Selector";
+				if (selectorName[0] == 'I')
+					selectorName = selectorName.Substring(1);
+				string[] namespaces = ns.Name.ToString().Split('.');
+				string propertyName = string.Join("", namespaces.Skip(1));
+				propertyName += apiClass.Identifier.ToString().Substring(1).Replace("AbstractApi", "");
+				string propertyNameFirstLower = propertyName.Substring(0, 1).ToLower() + propertyName.Substring(1);
+				backendInterface += $@"
+
+		/// <summary>
+		/// The API implementation of <see cref=""{ns.Name}.{apiClass.Identifier}""/>.
+		/// </summary>
+		{ns.Name}.{apiClass.Identifier} {propertyName} {{ get; }}";
+
+				implSetting += $@"
+
+		public {ns.Name}.{apiClass.Identifier} {propertyName} {{ get; set; }}";
+				implSettingBackend += $@"
+			this.{propertyName} = impls.{propertyName};";
+				implSettingSet += $@"
+			{ns.Name}.{selectorName}.SetImplementation(this.{propertyName});";
+				implSettingJson += $@", string {propertyNameFirstLower}";
+				implSettingJson2 += $@"
+			type = Type.GetType({propertyNameFirstLower});
+			if (type is null)
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof({propertyNameFirstLower}));
+			this.{propertyName} = IAbstractRuntimeApi<{ns.Name}.{apiClass.Identifier}>.Create(type);";
+				implSettingJson3 += $@"
+				writer.WriteString(nameof({propertyName}), value.{propertyName}?.GetType()?.AssemblyQualifiedName);";
+			}
+
+			backendInterface += Environment.NewLine + "\t}" + Environment.NewLine + "}";
+			SourceText sourceText = SourceText.From(backendInterface, Encoding.UTF8);
+			context.AddSource($"IBackends.cs", sourceText);
+
+			implSetting += implSettingSet + Environment.NewLine + "\t\t}" + implSettingBackend + Environment.NewLine + "\t\t}" + implSettingJson + ")" + implSettingJson2 + Environment.NewLine + "\t\t}" + implSettingJson3 + @"
+				writer.WriteEndObject();
+			}
+		}
+	}
+}";
+			sourceText = SourceText.From(implSetting, Encoding.UTF8);
+			context.AddSource($"ImplementationSettings.cs", sourceText);
+		}
+
+		public void Execute(GeneratorExecutionContext context)
+		{
+			ApiIntefaceSyntaxReceiver syntaxReceiver = (ApiIntefaceSyntaxReceiver)context.SyntaxReceiver;
+			var apiClasses = syntaxReceiver.ApiInterfaces;
+			this.AddSelectors(context, apiClasses, syntaxReceiver.VoidReturnType);
+			this.AddSettings(context, apiClasses);
 		}
 	}
 
@@ -327,7 +440,7 @@ namespace {ns.Name}
 			string repr = string.Join(" ", modifiers);
 			if (repr.Length > 0)
 				repr += " ";
-			return repr + param.Identifier.ToString();
+			return repr.Replace("params ", "") + param.Identifier.ToString();
 		}
 	}
 }

@@ -1,6 +1,4 @@
-﻿using Althea.Helpers;
-using Althea.LinearAlgebra.Sparse;
-using Althea.Linq;
+﻿using Althea.Linq;
 
 
 namespace Althea.Array
@@ -39,6 +37,21 @@ namespace Althea.Array
 		/// </summary>
 		/// <remarks>Usually, the first element is 1 and the last element shall be the product of <see cref="OuterSize"/>. The returned <see cref="ReadOnlySpan{T}.Length">size</see> == rank + 1</remarks>
 		ReadOnlySpan<long> Strides { get; }
+		#endregion
+	}
+
+	/// <summary>
+	/// The interface of (column-major) dense arrays with only one value storage that may has pitch.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="TS">The storage type used by the value array</typeparam>
+	public interface IDenseArray<T, TS> : IPitchedArray<T> where T : unmanaged, INumber<T> where TS : class, Storage.IStorage<T, TS>
+	{
+		#region properties
+		/// <summary>
+		/// When implemented by a derived class, get the value array of this dense array.
+		/// </summary>
+		TS Storage { get; }
 		#endregion
 	}
 

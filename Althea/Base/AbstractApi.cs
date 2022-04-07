@@ -37,7 +37,7 @@ namespace Althea
 		{
 			if (!CreateDelegates.ContainsKey(type))
 			{
-				var method = typeof(IAbstractRuntimeApi<TApi>).GetMethod(nameof(Create), 1, BindingFlags.NonPublic | BindingFlags.Static, null, Array.Empty<Type>(), null)?.MakeGenericMethod(type);
+				var method = typeof(IAbstractRuntimeApi<TApi>).GetMethod(nameof(Create), 1, BindingFlags.NonPublic | BindingFlags.Static, null, System.Array.Empty<Type>(), null)?.MakeGenericMethod(type);
 				if (method is null)
 					throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(type));
 				CreateDelegates[type] = method.CreateDelegate<CreateDelegate>();

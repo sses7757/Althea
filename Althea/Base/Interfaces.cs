@@ -95,15 +95,4 @@ namespace Althea
 		/// <returns>A new object alike the current instance.</returns>
 		T CreateAlike();
 	}
-
-	/// <summary>
-	/// The interface used to set the back-end implementations all at once
-	/// </summary>
-	public partial interface ISetBackend
-	{
-		/// <summary>
-		/// Check whether all the back-end implementations are available.
-		/// </summary>
-		bool Available { get; }
-	}
 }

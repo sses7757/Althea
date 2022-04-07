@@ -915,7 +915,7 @@ namespace Althea.Linq
 		/// <param name="other">The other span to compare</param>
 		/// <param name="equalityComparer">The function used to compare equality</param>
 		/// <returns>Sequentially equals or not</returns>
-		public static bool SequenceEqual<TL, TR>(this Span<TL> span, ReadOnlySpan<TR> other, EqualComparer<TL, TR> equalityComparer)
+		public static bool SequenceEqual<TL, TR>(this Span<TL> span, ReadOnlySpan<TR> other, Func<TL, TR, bool> equalityComparer)
 		{
 			return SequenceEqual((ReadOnlySpan<TL>)span, other, equalityComparer);
 		}
@@ -929,7 +929,7 @@ namespace Althea.Linq
 		/// <param name="other">The other span to compare</param>
 		/// <param name="equalityComparer">The function used to compare equality</param>
 		/// <returns>Sequentially equals or not</returns>
-		public static bool SequenceEqual<TL, TR>(this ReadOnlySpan<TL> span, ReadOnlySpan<TR> other, EqualComparer<TL, TR> equalityComparer)
+		public static bool SequenceEqual<TL, TR>(this ReadOnlySpan<TL> span, ReadOnlySpan<TR> other, Func<TL, TR, bool> equalityComparer)
 		{
 			int len = span.Length;
 			if (len != other.Length)
@@ -1272,6 +1272,8 @@ namespace Althea.Linq
 			return HashCodeOfSpan((ReadOnlySpan<T>)span);
 		}
 
+		internal const int CRC_CONST = 314159;
+
 		/// <summary>
 		/// Get the hash code of an span using CRC method
 		/// </summary>
@@ -1286,7 +1288,7 @@ namespace Althea.Linq
 			int hc = span.Length;
 			for (int i = 0; i < span.Length; ++i)
 			{
-				hc = unchecked(hc * ArrayLinq.CRC_CONST + span[i].GetHashCode()); // CRC
+				hc = unchecked(hc * CRC_CONST + span[i].GetHashCode()); // CRC
 			}
 			return hc;
 		}

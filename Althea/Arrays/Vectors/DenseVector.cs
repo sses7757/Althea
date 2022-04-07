@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
 
+using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
@@ -18,10 +19,11 @@ namespace Althea.Array
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public class DenseVector<T, TS> : IPitchedArray<T>,
+	public class DenseVector<T, TS> : IDenseArray<T, TS>,
 		IBaseVector<T, DenseVector<T, TS>>,
 		IVectorUnaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>>,
-		IVectorBinaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseVector<T, TS>>
+		IVectorBinaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseVector<T, TS>>,
+		IKrylovVector<T, DenseVector<T, TS>>, IConvertibleVector<T, DenseVector<T, TS>, DenseMatrix<T, TS>>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
 	{
@@ -249,6 +251,24 @@ namespace Althea.Array
 				compact.Dispose();
 				throw;
 			}
+		}
+		#endregion
+
+		#region Krylov
+		void IKrylovVector<T, DenseVector<T, TS>>.Normalize() => ((IValueArray<T, DenseVector<T, TS>>)this).Normalize();
+
+		T IKrylovVector<T, DenseVector<T, TS>>.Dot(DenseVector<T, TS> other) => DenseOperation<T, TS>.Dot(this, other);
+
+		void IKrylovVector<T, DenseVector<T, TS>>.AddBy(DenseVector<T, TS> other, T scalar) => DenseOperation<T, TS>.AddBy(this, other, scalar);
+
+		void IKrylovVector<T, DenseVector<T, TS>>.ReplaceBy(DenseVector<T, TS> other) => other.CopyTo(this);
+
+		DenseMatrix<T, TS> IConvertibleVector<T, DenseVector<T, TS>, DenseMatrix<T, TS>>.ToMatrix(long rows)
+		{
+			if (this.length % rows != 0)
+				throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(rows));
+			var output = this.ToCompact();
+			return new(output, rows, this.length / rows);
 		}
 		#endregion
 

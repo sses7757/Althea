@@ -814,7 +814,7 @@ namespace Althea.Array
 		where TTen2 : class, IBaseTensor<T, TTen2>
 	{
 		/// <summary>
-		/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, TTen2, UnaryOperation, BinaryOperation)"/>.
+		/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, TTen2, T, UnaryOperation, UnaryOperation, BinaryOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static Span<int> CheckReduce(TTen1 A!!, TensorOrder order, T scalar, TTen2 B!!, Span<int> reduceInds)
@@ -847,17 +847,19 @@ namespace Althea.Array
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute the tensor reduction (self partial summation) of tensor <paramref name="A"/> under the given <paramref name="order"/> to tensor <paramref name="B"/>.
+		/// When implemented by a derived class, compute the tensor reduction (self partial summation): <c><paramref name="B"/> = <paramref name="α"/> * <paramref name="reduce"/>(<paramref name="opA"/>(<paramref name="A"/>[<paramref name="order"/>])) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
 		/// </summary>
 		/// <param name="A">The input tensor to reduce</param>
 		/// <param name="order">The given <see cref="TensorOrder"/> to indicate which part(s) of dimension(s) in <paramref name="A"/> to sum, its order will be ignored</param>
-		/// <param name="scalar">The scalar to multiply to the result</param>
+		/// <param name="α">The scalar to multiply to <paramref name="A"/> during computation</param>
 		/// <param name="B">The output tensor to be replaced</param>
-		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to each element of <typeparamref name="TTen1"/> during the operation</param>
+		/// <param name="β">The scalar to multiply to <paramref name="B"/> during computation</param>
+		/// <param name="opA">The <see cref="UnaryOperation"/> to apply to each element of <paramref name="A"/> during the operation</param>
+		/// <param name="opB">The <see cref="UnaryOperation"/> to apply to each element of <paramref name="B"/> during the operation</param>
 		/// <param name="reduce">The <see cref="BinaryOperation"/> used to reduce elements</param>
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract static void Reduce(TTen1 A, TensorOrder order, T scalar, TTen2 B, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition);
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
+		public abstract static void Reduce(TTen1 A, TensorOrder order, T α, TTen2 B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition);
 
 		/// <summary>
 		/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, TTen2, UnaryOperation)"/>.

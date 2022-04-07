@@ -17,7 +17,7 @@ namespace Althea.GeneralSolver
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	public interface IKrylovVector<T, TVec> : ICreateAlike<TVec>, IDisposable
 		where TVec : class, IKrylovVector<T, TVec>
-		where T : unmanaged, IFloatingPoint<T>
+		where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the total presenting length of this vector

@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
 
+using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
@@ -18,7 +19,7 @@ namespace Althea.Array
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public abstract class AbstractDenseMatrix<T, TS> : ICheckValid, IDisposable, IMatrixMetric, IPitchedArray<T>
+	public abstract class AbstractDenseMatrix<T, TS> : ICheckValid, IDisposable, IMatrixMetric, IDenseArray<T, TS>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
 	{
@@ -113,7 +114,8 @@ namespace Althea.Array
 		IBaseMatrix<T, DenseMatrix<T, TS>>,
 		IMatrixVectorMultiplyOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixUnaryOperators<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IMatrixBinaryOperators<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>
+		IMatrixBinaryOperators<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
+		IConvertibleMatrix<T, DenseMatrix<T, TS>, DenseVector<T, TS>>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
 	{
@@ -295,6 +297,22 @@ namespace Althea.Array
 				throw;
 			}
 		}
+		#endregion
+
+		#region Krylov
+		DenseVector<T, TS> IConvertibleMatrix<T, DenseMatrix<T, TS>, DenseVector<T, TS>>.ToVector()
+		{
+			var output = this.ToCompact();
+			return new(output, this.NRows * this.NCols);
+		}
+
+		static void IMatrixAddOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.AddMatrices(DenseMatrix<T, TS>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA, MatrixOperation opB) => DenseOperation<T, TS>.AddMatrices(A, scalarA, B, scalarB, C, opA, opB);
+
+		static DenseMatrix<T, TS> IMatrixAddOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.AddMatrices(DenseMatrix<T, TS>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, MatrixOperation opA, MatrixOperation opB) => DenseOperation<T, TS>.AddMatrices(A, scalarA, B, scalarB, opA, opB);
+
+		static void IMatrixMultiplyOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.MultiplyMatries(DenseMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA, MatrixOperation opB) => DenseOperation<T, TS>.MultiplyMatries(A, B, α, β, C, opA, opB);
+
+		static DenseMatrix<T, TS> IMatrixMultiplyOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.MultiplyMatries(DenseMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, MatrixOperation opA, MatrixOperation opB) => DenseOperation<T, TS>.MultiplyMatries(A, B, α, opA, opB);
 		#endregion
 
 		#region serialization

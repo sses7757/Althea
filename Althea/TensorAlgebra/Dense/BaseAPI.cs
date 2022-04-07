@@ -1,5 +1,6 @@
 ﻿using Althea.Storage;
 using Althea.SourceGenerator;
+using Althea.Array;
 
 
 namespace Althea.TensorAlgebra.Dense
@@ -17,14 +18,14 @@ namespace Althea.TensorAlgebra.Dense
 		/// <typeparam name="TS1">The input storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The output storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T, TS}"/></param>
-		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T, TS}"/>, its <see cref="DenseTensorWrapper{T, TS}.Operation"/> and <see cref="DenseTensorWrapper{T, TS}.Scalar"/> are ignored.</param>
+		/// <param name="destination">The destination dense tensor as a <see cref="DenseArrayWrapper{T, TS}"/></param>
 		/// <param name="permutationOrder">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks>If <paramref name="permutationOrder"/> is an identity permutation, this method shall simply perform (pitched) tensor copy</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Permute<T, TS1, TS2>(DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Permute<T, TS1, TS2>(DenseTensorWrapper<T, TS1> source, DenseArrayWrapper<T, TS2> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
@@ -38,12 +39,12 @@ namespace Althea.TensorAlgebra.Dense
 		/// <param name="right">The right input dense tensor as a <see cref="DenseTensorWrapper{T, TS}"/>, can be invalid</param>
 		/// <param name="leftPerm">The full permutation order to be applied to <paramref name="left"/> before the binary operation, can be empty if <paramref name="left"/> is invalid</param>
 		/// <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
-		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T, TS}"/>, its <see cref="DenseTensorWrapper{T, TS}.Operation"/> and <see cref="DenseTensorWrapper{T, TS}.Scalar"/> are ignored.</param>
+		/// <param name="destination">The destination dense tensor as a <see cref="DenseArrayWrapper{T, TS}"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid or both <paramref name="left"/> and <paramref name="right"/> are invalid</exception>
 		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool OperationBinary<T, TS1, TS2, TS3>(BinaryOperation binary, DenseTensorWrapper<T, TS1> left, Span<int> leftPerm, DenseTensorWrapper<T, TS2> right, Span<int> rightPerm, DenseTensorWrapper<T, TS3> destination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool OperationBinary<T, TS1, TS2, TS3>(BinaryOperation binary, DenseTensorWrapper<T, TS1> left, ReadOnlySpan<int> leftPerm, DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="reduceDimensions"/>:<br/>

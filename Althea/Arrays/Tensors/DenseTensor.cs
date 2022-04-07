@@ -21,7 +21,8 @@ namespace Althea.Array
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public class DenseTensor<T, TS> : IPitchedArray<T>, IBaseTensor<T, DenseTensor<T, TS>>,
+	public class DenseTensor<T, TS> : IDenseArray<T, TS>,
+		IBaseTensor<T, DenseTensor<T, TS>>,
 		ITensorUnaryOperators<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
 		ITensorBinaryOperators<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>
 		where T : unmanaged, INumber<T>
@@ -232,7 +233,7 @@ namespace Althea.Array
 		public void GetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, DenseTensor<T, TS> overwrite)
 		{
 			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, overwrite);
-			Ten.Permute<T, TS, TS>(new(storage, lengths, this.OuterSize, this.Strides), new(overwrite, overwrite.values), stackalloc int[this.rank].FillWithRange(0));
+			Ten.Permute<T, TS, TS>(new(storage, lengths, this.OuterSize, this.Strides), new(overwrite), stackalloc int[this.rank].FillWithRange(0));
 		}
 
 		/// <inheritdoc/>
@@ -240,14 +241,14 @@ namespace Althea.Array
 		{
 			if (!this.Size.SequenceEqual(destination.Size))
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
-			Ten.Permute<T, TS, TS>(new(this, this.values), new(destination, destination.values), stackalloc int[this.rank].FillWithRange(0));
+			Ten.Permute<T, TS, TS>(new(this), new(destination), stackalloc int[this.rank].FillWithRange(0));
 		}
 
 		/// <inheritdoc/>
 		public void SetSlice(ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, DenseTensor<T, TS> value)
 		{
 			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckRange(this, offsets, lengths, value);
-			Ten.Permute<T, TS, TS>(new(value, value.values), new(storage, lengths, this.OuterSize, this.Strides), stackalloc int[this.rank].FillWithRange(0));
+			Ten.Permute<T, TS, TS>(new(value), new(storage, lengths, this.OuterSize, this.Strides), stackalloc int[this.rank].FillWithRange(0));
 		}
 		#endregion
 
@@ -265,7 +266,7 @@ namespace Althea.Array
 		{
 			Span<long> allOffsets = stackalloc long[this.rank], allLengths = stackalloc long[this.rank];
 			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths, overwrite);
-			Ten.Permute<T, TS, TS>(new(storage, allLengths[..n], this.OuterSize[..n], this.Strides[..(n + 1)]), new(overwrite, overwrite.values), stackalloc int[n].FillWithRange(0));
+			Ten.Permute<T, TS, TS>(new(storage, allLengths[..n], this.OuterSize[..n], this.Strides[..(n + 1)]), new(overwrite), stackalloc int[n].FillWithRange(0));
 		}
 
 		/// <inheritdoc/>
@@ -273,45 +274,45 @@ namespace Althea.Array
 		{
 			Span<long> allOffsets = stackalloc long[this.rank], allLengths = stackalloc long[this.rank];
 			var storage = this.values + IBaseTensor<T, DenseTensor<T, TS>>.CheckFirstDims(this, n, restIndices, offsets, lengths, allOffsets, allLengths, value);
-			Ten.Permute<T, TS, TS>(new(value, value.values), new(storage, allLengths[..n], this.OuterSize[..n], this.Strides[..(n + 1)]), stackalloc int[n].FillWithRange(0));
+			Ten.Permute<T, TS, TS>(new(value), new(storage, allLengths[..n], this.OuterSize[..n], this.Strides[..(n + 1)]), stackalloc int[n].FillWithRange(0));
 		}
 		#endregion
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtTen.PointWiseBinary<T, TS>(new(this, this.values), value, BinaryOperation.GetSecond);
+		public void FillWith(T value) => ExtTen.PointWiseBinary<T, TS>(new(this), value, BinaryOperation.GetSecond);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtTen.PointWiseBinary<T, TS>(new(this, this.values), value, BinaryOperation.Addition);
+		public void AddScalar(T value) => ExtTen.PointWiseBinary<T, TS>(new(this), value, BinaryOperation.Addition);
 
 		/// <inheritdoc/>
-		public void Scale(T value) => Ten.Permute<T, TS, TS>(new(this, this.values, scalar: value), new(this, this.values), stackalloc int[this.rank].FillWithRange(0));
+		public void Scale(T value) => Ten.Permute<T, TS, TS>(new(this, default, value), new(this), stackalloc int[this.rank].FillWithRange(0));
 
 		/// <inheritdoc/>
-		public void Conjugate() => Ten.Permute<T, TS, TS>(new(this, this.values, UnaryOperation.Conjugate), new(this, this.values), stackalloc int[this.rank].FillWithRange(0));
+		public void Conjugate() => Ten.Permute<T, TS, TS>(new(this, UnaryOperation.Conjugate), new(this), stackalloc int[this.rank].FillWithRange(0));
 
 		/// <inheritdoc/>
-		public void Power(T power) => ExtTen.PointWiseBinary<T, TS>(new(this, this.values), power, BinaryOperation.Power);
+		public void Power(T power) => ExtTen.PointWiseBinary<T, TS>(new(this), power, BinaryOperation.Power);
 
 		/// <inheritdoc/>
-		public void Truncate(double threshold) => ExtTen.PointWiseBinary<T, TS>(new(this, this.values), T.Create(threshold), BinaryOperation.ClipFirstBySecond);
+		public void Truncate(double threshold) => ExtTen.PointWiseBinary<T, TS>(new(this), T.Create(threshold), BinaryOperation.ClipFirstBySecond);
 		#endregion
 
 		#region simple aggregation operations
 		/// <inheritdoc/>
-		public T Sum() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.Identity, BinaryOperation.Addition);
+		public T Sum() => ExtTen.PointWiseAggregation<T, TS>(new(this), UnaryOperation.Identity, BinaryOperation.Addition);
 
 		/// <inheritdoc/>
-		public T AbsSum() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.AbsoluteValue, BinaryOperation.Addition);
+		public T AbsSum() => ExtTen.PointWiseAggregation<T, TS>(new(this), UnaryOperation.AbsoluteValue, BinaryOperation.Addition);
 
 		/// <inheritdoc/>
-		public T Norm() => ExtTen.Norm<T, TS>(new(this, this.values));
+		public T Norm() => ExtTen.Norm<T, TS>(new(this));
 
 		/// <inheritdoc/>
-		public T ValueWithMaxAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.AbsoluteValue, BinaryOperation.Maximum);
+		public T ValueWithMaxAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this), UnaryOperation.AbsoluteValue, BinaryOperation.Maximum);
 
 		/// <inheritdoc/>
-		public T ValueWithMinAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this, this.values), UnaryOperation.AbsoluteValue, BinaryOperation.Mininum);
+		public T ValueWithMinAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this), UnaryOperation.AbsoluteValue, BinaryOperation.Mininum);
 		#endregion
 
 		#region operators
@@ -353,7 +354,7 @@ namespace Althea.Array
 			var compact = this.values.ResizeAlike(this.length);
 			try
 			{
-				Ten.Permute<T, TS, TS>(new(this, this.values), new(compact, this.Size), stackalloc int[this.rank].FillWithRange(0));
+				Ten.Permute<T, TS, TS>(new(this), new(compact, this.Size), stackalloc int[this.rank].FillWithRange(0));
 				return compact;
 			}
 			catch (Exception)

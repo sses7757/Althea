@@ -938,7 +938,7 @@ namespace Althea.Helpers
 			{
 				array[i]?.Dispose();
 			}
-			Array.Clear(array, 0, array.Length);
+			System.Array.Clear(array, 0, array.Length);
 		}
 
 		/// <summary>
@@ -1017,6 +1017,17 @@ namespace Althea.Helpers
 		/// <returns>A <see cref="Span{T}"/> on <paramref name="value"/>.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Span<T> CreateSpan<T>(ref T value, int length) => MemoryMarshal.CreateSpan(ref value, length);
+
+		/// <summary>
+		/// Creates a new read-only span over a portion of a regular managed object.
+		/// </summary>
+		/// <typeparam name="TFrom">The source data type</typeparam>
+		/// <typeparam name="TTo">The destination data type</typeparam>
+		/// <param name="value">The reference to the first element</param>
+		/// <param name="length">The number of elements in <typeparamref name="TTo"/></param>
+		/// <returns>A <see cref="Span{T}"/> on <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<TTo> CreateSpan<TFrom, TTo>(ref TFrom value, int length) => MemoryMarshal.CreateSpan(ref Unsafe.As<TFrom, TTo>(ref value), length);
 		#endregion
 
 		#region temporary span

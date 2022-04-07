@@ -39,6 +39,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
     <NoWarn>1701;1702</NoWarn>
+    <Optimize>False</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">

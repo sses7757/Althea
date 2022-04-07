@@ -377,7 +377,7 @@ namespace Althea.Array
 				throw;
 			}
 		}
-		
+
 		private static TriangularMatrix<T, TS> OutOfPlaceOp(TriangularMatrix<T, TS> matrix, T scalar, MatrixOperation operation)
 		{
 			if (operation == MatrixOperation.None)
@@ -838,11 +838,11 @@ namespace Althea.Array
 
 		#region tensor
 		/// <inheritdoc/>
-		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T α, DenseTensor<T, TS> B!!, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
 		{
 			Span<int> reduceInd = stackalloc int[A.Rank];
-			reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, scalar, B, reduceInd);
-			Ten.Reduce<T, TS, TS>(reduce, new(A, A.Storage, opA), new(B, B.Storage), reduceInd);
+			reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, α, B, reduceInd);
+			Ten.Reduce<T, TS, TS>(reduce, new(A, opA, α), new(B, opB, β), reduceInd);
 		}
 
 		/// <inheritdoc/>
@@ -850,7 +850,7 @@ namespace Althea.Array
 		{
 			Span<int> perm = stackalloc int[A.Rank];
 			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
-			Ten.Permute<T, TS, TS>(new(A, A.Storage, op, scalar), new(B, B.Storage), perm);
+			Ten.Permute<T, TS, TS>(new(A, op, scalar), new(B), perm);
 		}
 
 		/// <inheritdoc/>
@@ -862,7 +862,7 @@ namespace Althea.Array
 			var output = A.Storage.ResizeAlike(sizeB.Prod());
 			try
 			{
-				Ten.Reduce<T, TS, TS>(reduce, new(A, A.Storage, opA, scalar), new(output, sizeB), reduceInd);
+				Ten.Reduce<T, TS, TS>(reduce, new(A, opA, scalar), new(output, sizeB), reduceInd);
 				return new(output, sizeB);
 			}
 			catch (Exception)
@@ -881,7 +881,7 @@ namespace Althea.Array
 			var output = A.Storage.ResizeAlike(A.Length);
 			try
 			{
-				Ten.Permute<T, TS, TS>(new(A, A.Storage, opA, scalar), new(output, sizeB), perm);
+				Ten.Permute<T, TS, TS>(new(A, opA, scalar), new(output, sizeB), perm);
 				return new(output, sizeB);
 			}
 			catch (Exception)
@@ -902,7 +902,7 @@ namespace Althea.Array
 			Span<int> leftFree = stackalloc int[A.Rank - rank];
 			Span<int> rightFree = stackalloc int[B.Rank - rank];
 			var info = TensorContractInfo.Create(A, B, C, leftConc, rightConc, leftFree, rightFree);
-			Ten.Contract<T, TS, TS, TS>(new(A, A.Storage, opA, α), new(B, B.Storage, opB), new(C, C.Storage, opC), info);
+			Ten.Contract<T, TS, TS, TS>(new(A, opA, α), new(B, opB), new(C, opC), info);
 		}
 
 		/// <inheritdoc/>
@@ -910,7 +910,7 @@ namespace Althea.Array
 		{
 			Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
-			Ten.OperationBinary<T, TS, TS, TS>(binary, A is null ? default : new(A, A.Storage, opA, α), permA, B is null ? default : new(B, B.Storage, opB, β), permB, new(C, C.Storage));
+			Ten.OperationBinary<T, TS, TS, TS>(binary, A is null ? default : new(A, opA, α), permA, B is null ? default : new(B, opB, β), permB, new(C));
 		}
 
 		/// <inheritdoc/>
@@ -929,7 +929,7 @@ namespace Althea.Array
 			var output = A.Storage.ResizeAlike(sizeC.Prod());
 			try
 			{
-				Ten.Contract<T, TS, TS, TS>(new(A, A.Storage, opA, α), new(B, B.Storage, opB), new(output, sizeC), info);
+				Ten.Contract<T, TS, TS, TS>(new(A, opA, α), new(B, opB), new(output, sizeC), info);
 				return new(output, sizeC, default, labelC);
 			}
 			catch (Exception)
@@ -947,7 +947,7 @@ namespace Althea.Array
 			var output = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, scalarA, B, orderB, scalarB, permA, permB, sizeC, A?.Storage ?? B?.Storage);
 			try
 			{
-				Ten.OperationBinary<T, TS, TS, TS>(binary, A is null ? default : new(A, A.Storage, opA, scalarA), permA, B is null ? default : new(B, B.Storage, opB, scalarB), permB, new(output, sizeC));
+				Ten.OperationBinary<T, TS, TS, TS>(binary, A is null ? default : new(A, opA, scalarA), permA, B is null ? default : new(B, opB, scalarB), permB, new(output, sizeC));
 				return new(output, sizeC);
 			}
 			catch (Exception)

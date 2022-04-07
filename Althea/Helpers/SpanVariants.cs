@@ -390,7 +390,7 @@ namespace Althea.Helpers
 		{
 			if (this._size == 0)
 			{
-				return Array.Empty<T>();
+				return System.Array.Empty<T>();
 			}
 			T[] array = new T[this._size];
 			Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(array)), ref Unsafe.As<T, byte>(ref this._span[0]), (uint)this._size);
@@ -869,7 +869,7 @@ namespace Althea.Helpers
 		public readonly T[][] ToArray()
 		{
 			if (this.IsEmpty)
-				return Array.Empty<T[]>();
+				return System.Array.Empty<T[]>();
 
 			uint size = (uint)(this._rows * Unsafe.SizeOf<T>());
 			T[][] array = new T[this._cols][];
@@ -942,23 +942,11 @@ namespace Althea.Helpers
 
 			private readonly void* colStart;
 
-			[ThreadStatic]
-			private static byte[]? _buffer;
-
 			internal ColumnSwapping(SpanMatrix<T> mat, IntPtr start, int column)
 			{
 				this.rows = mat._rows * Unsafe.SizeOf<T>();
 				int ld = mat._leadDim * Unsafe.SizeOf<T>();
 				this.colStart = column * ld + (byte*)start.ToPointer();
-				if (_buffer is null)
-				{
-					if (this.rows > Settings.StackAllocLimit)
-						_buffer = new byte[this.rows];
-				}
-				else if (_buffer.Length < this.rows)
-				{
-					_buffer = Settings.CheckStackLimit<byte>(this.rows);
-				}
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -968,7 +956,8 @@ namespace Althea.Helpers
 				if (a.rows != b.rows)
 					throw new ArgumentException(Resources.ParameterError.NotSameSize);
 #endif
-				Span<byte> buf =  _buffer ?? stackalloc byte[a.rows];
+				using var temp = a.rows.CheckStackLimit<byte>();
+				Span<byte> buf = temp.IsEmpty ? stackalloc byte[a.rows] : temp.Data;
 				Span<byte> aa = new(a.colStart, a.rows), bb = new(b.colStart, b.rows);
 				aa.CopyTo(buf);
 				bb.CopyTo(aa);

@@ -160,65 +160,35 @@ namespace Althea.TensorAlgebra.Dense
 
 		#region create
 		/// <summary>
-		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all given parameters and scalar set to 1 and assuming that there is not pitch
+		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all given parameters and scalar set to 1 and assuming that there is not pitch.
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
 		/// <param name="size">The presenting size / extent of all dimensions</param>
-		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, UnaryOperation operation = UnaryOperation.Identity)
-		{
-			this.m_values = value;
-			this.m_size = size;
-			this.m_outerSize = size;
-			this.m_strides = default;
-			this.m_op = operation;
-			this.m_scalar = T.One;
-		}
+		public DenseTensorWrapper(TS value, ReadOnlySpan<long> size) : this(value, size, size, default, UnaryOperation.Identity, T.One) { }
 
 		/// <summary>
-		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all given parameters and scalar set to 1 and assuming that there is not pitch
+		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all given parameters.
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
 		/// <param name="size">The presenting size / extent of all dimensions</param>
 		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 		/// <param name="scalar">The scalar which is about to be applied to this wrapper</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, T scalar, UnaryOperation operation = UnaryOperation.Identity)
-		{
-			this.m_values = value;
-			this.m_size = size;
-			this.m_outerSize = size;
-			this.m_strides = default;
-			this.m_op = operation;
-			this.m_scalar = scalar;
-		}
+		public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, UnaryOperation operation, T scalar) : this(value, size, size, default, operation, scalar) { }
 
 		/// <summary>
-		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all given parameters and scalar set to 1
+		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all given parameters and scalar set to 1.
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
 		/// <param name="size">The presenting size / extent of all dimensions</param>
 		/// <param name="outerSize">The actual outer size, will be replaced by <paramref name="size"/> if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
 		/// <param name="strides">The strides between consecutive elements in each dimension, will be replaced by empty if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
-		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, UnaryOperation operation = UnaryOperation.Identity)
-		{
-			this.m_values = value; this.m_size = size;
-			if (outerSize.SequenceEqual(size))
-			{
-				outerSize = size;
-				strides = default;
-			}
-			this.m_outerSize = outerSize;
-			this.m_strides = strides;
-			this.m_op = operation;
-			this.m_scalar = T.One;
-		}
+		public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides) : this(value, size, outerSize, strides, UnaryOperation.Identity, T.One) { }
 
 		/// <summary>
-		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all given parameters
+		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all parameters.
 		/// </summary>
 		/// <param name="value">The given dense storage</param>
 		/// <param name="size">The presenting size / extent of all dimensions</param>
@@ -227,7 +197,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, T scalar, UnaryOperation operation = UnaryOperation.Identity)
+		public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, UnaryOperation operation, T scalar)
 		{
 			this.m_values = value; this.m_size = size;
 			if (outerSize.SequenceEqual(size))
@@ -242,56 +212,46 @@ namespace Althea.TensorAlgebra.Dense
 		}
 
 		/// <summary>
-		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with a given dense <paramref name="tensor"/>
+		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with a given dense <paramref name="tensor"/>.
 		/// </summary>
 		/// <param name="tensor">The given dense tensor as a <see cref="ILabeledTensor{T}"/></param>
-		/// <param name="storage">The storage of <paramref name="tensor"/></param>
 		/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
-		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. Default 0 will be replaced by 1.</param>
+		/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. Default null means 1.</param>
 		/// <exception cref="ArgumentException">If <paramref name="tensor"/> is a <see cref="ISparseArray{T}"/></exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid while <paramref name="tensor"/> is not</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is not a <see cref="IDenseArray{T, TS}"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(ILabeledTensor<T>? tensor, TS? storage, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
+		public DenseTensorWrapper(ILabeledTensor<T>? tensor, UnaryOperation operation = UnaryOperation.Identity, T? scalar = null)
 		{
 			if (tensor is null)
 			{
 				this = default; this.m_values = TS.Empty;
 				return;
 			}
-			if (storage is null || !storage.IsValid())
-				throw new ArgumentNullException(nameof(storage));
+			if (tensor is not IDenseArray<T, TS> dense)
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(tensor));
 			if (tensor is ISparseArray<T>)
 				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(tensor));
 
 			ReadOnlySpan<long> outerSize, strides;
-			if (tensor is IPitchedArray<T> p)
+			if (dense.OuterSize.SequenceEqual(dense.Size))
 			{
-				if (p.OuterSize.SequenceEqual(p.Size))
-				{
-					outerSize = p.Size; strides = default;
-				}
-				else
-				{
-					outerSize = p.OuterSize; strides = p.Strides;
-				}
+				outerSize = dense.Size; strides = default;
 			}
 			else
 			{
-				outerSize = tensor.Size; strides = default;
+				outerSize = dense.OuterSize; strides = dense.Strides;
 			}
-			if (scalar == T.Zero)
-				scalar = T.One;
-			this = new(storage, tensor.Size, outerSize, strides, scalar, operation);
+			this = new(dense.Storage, tensor.Size, outerSize, strides, operation, scalar ?? T.One);
 		}
 
 		/// <summary>
-		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with the given original <paramref name="tensor"/> and new <paramref name="operation"/> and <paramref name="scalar"/>
+		/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with the given original <paramref name="tensor"/> and new <paramref name="operation"/> and <paramref name="scalar"/>.
 		/// </summary>
 		/// <param name="tensor">The original <see cref="DenseTensorWrapper{T, TS}"/></param>
 		/// <param name="operation">The new <see cref="UnaryOperation"/></param>
 		/// <param name="scalar">The new scalar</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public DenseTensorWrapper(DenseTensorWrapper<T, TS> tensor, UnaryOperation operation = UnaryOperation.Identity, T scalar = default)
+		public DenseTensorWrapper(DenseTensorWrapper<T, TS> tensor, UnaryOperation operation, T scalar)
 		{
 			this.m_values = tensor.m_values;
 			this.m_size = tensor.m_size;

@@ -76,7 +76,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or format of <paramref name="destination"/> is not atomic</exception>
 		[AbstractApiMethod]
-		public abstract bool FromDense<T, TInd, TS1, TS2, TSInd>(Dense.DenseTensorWrapper<T, TS1> source, ref SparseArrayWrapper<T, TInd, TS2, TSInd> destination, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool FromDense<T, TInd, TS1, TS2, TSInd>(DenseArrayWrapper<T, TS1> source, ref SparseArrayWrapper<T, TInd, TS2, TSInd> destination, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and overwrite the result multiplied by <paramref name="scalar"/> to <paramref name="destination"/>.
@@ -90,12 +90,12 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <param name="scalar">The scalar to multiply during computation</param>
 		/// <param name="op">The <see cref="UnaryOperation"/> to be applied to <paramref name="source"/> during computation</param>
 		/// <param name="permutationOrder">The permutation order as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/></param>
-		/// <param name="destination">The output dense tensor as a <see cref="Dense.DenseTensorWrapper{T, TS}"/></param>
+		/// <param name="destination">The output dense tensor as a <see cref="DenseArrayWrapper{T, TS}"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
 		[AbstractApiMethod]
-		public abstract bool Permute<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> source, T scalar, UnaryOperation op, ReadOnlySpan<int> permutationOrder, Dense.DenseTensorWrapper<T, TS2> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Permute<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> source, T scalar, UnaryOperation op, ReadOnlySpan<int> permutationOrder, DenseArrayWrapper<T, TS2> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and output the result multiplied by <paramref name="scalar"/> to <paramref name="destination"/>.
@@ -135,11 +135,11 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <param name="right">The right input dense tensor as a <see cref="Dense.DenseTensorWrapper{T, TS}"/>, can be invalid</param>
 		/// <param name="leftPerm">The full permutation order to be applied to <paramref name="left"/> before the binary operation, can be empty if <paramref name="left"/> is invalid</param>
 		/// <param name="rightPerm">The full permutation order to be applied to <paramref name="right"/> before the binary operation, can be empty if <paramref name="right"/> is invalid</param>
-		/// <param name="destination">The output tensor as a <see cref="Dense.DenseTensorWrapper{T, TS}"/></param>
+		/// <param name="destination">The output tensor as a <see cref="DenseArrayWrapper{T, TS}"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool OperationBinary<T, TInd, TS1, TS2, TS3, TSInd>(BinaryOperation binary, ISparseArray<T, TInd, TS1, TSInd>? left, ReadOnlySpan<int> leftPerm, T scalarLeft, UnaryOperation opLeft, Dense.DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, Dense.DenseTensorWrapper<T, TS3> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool OperationBinary<T, TInd, TS1, TS2, TS3, TSInd>(BinaryOperation binary, ISparseArray<T, TInd, TS1, TSInd>? left, ReadOnlySpan<int> leftPerm, T scalarLeft, UnaryOperation opLeft, Dense.DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
@@ -171,7 +171,7 @@ namespace Althea.TensorAlgebra.Sparse
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and overwrite the result to <paramref name="destination"/>:<br/>
-		/// <c><paramref name="destination"/> = <paramref name="scalar"/> * <paramref name="reduce"/>(<paramref name="op"/>(<paramref name="source"/>)[<paramref name="reduceDimensions"/>])</c>.
+		/// <c><paramref name="destination"/> = <paramref name="α"/> * <paramref name="reduce"/>(<paramref name="op"/>(<paramref name="source"/>)[<paramref name="reduceDimensions"/>]) + <paramref name="destination"/>.<see cref="Dense.DenseTensorWrapper{T, TS}.Scalar">β</see> * <paramref name="destination"/>.<see cref="Dense.DenseTensorWrapper{T, TS}.Operation">op</see>(<paramref name="destination"/>)</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TInd">Any integral-typed unmanaged number as the input index type</typeparam>
@@ -180,15 +180,15 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <typeparam name="TSInd">The concrete storage type of input index array</typeparam>
 		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="BinaryOperation"/></param>
 		/// <param name="source">The source sparse tensor as a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to be reduced</param>
-		/// <param name="scalar">The scalar to multiply during computation</param>
+		/// <param name="α">The scalar to multiply during computation</param>
 		/// <param name="op">The <see cref="UnaryOperation"/> to be applied to <paramref name="source"/> during computation</param>
 		/// <param name="reduceDimensions">The values in this <b>set</b> (as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>) are the dimensions of which <paramref name="source"/> tensor are reduced</param>
-		/// <param name="destination">The output dense tensor as a <see cref="Dense.DenseTensorWrapper{T, TS}"/></param>
+		/// <param name="destination">The output dense tensor as a <see cref=" Dense.DenseTensorWrapper{T, TS}"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Reduce<T, TInd, TS1, TS2, TSInd>(BinaryOperation reduce, ISparseArray<T, TInd, TS1, TSInd> source, T scalar, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, Dense.DenseTensorWrapper<T, TS2> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Reduce<T, TInd, TS1, TS2, TSInd>(BinaryOperation reduce, ISparseArray<T, TInd, TS1, TSInd> source, T α, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, Dense.DenseTensorWrapper<T, TS2> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>:<br/>
@@ -227,7 +227,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <param name="opLeft">The <see cref="UnaryOperation"/> to be applied to <paramref name="left"/> during computation</param>
 		/// <param name="right">The right input sparse tensor as a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to be contracted</param>
 		/// <param name="info">The <see cref="TensorContractInfo"/> indicating how the contraction shall be performed</param>
-		/// <param name="destination">The output tensor as a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/></param>
+		/// <param name="destination">The output tensor as a <see cref="Dense.DenseTensorWrapper{T, TS}"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="info"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>

@@ -50,82 +50,6 @@ namespace Althea
 	public static partial class Settings
 	{
 		#region class for settings
-		internal record struct ImplementationSettings
-		{
-			public bool DisposeNotCurrentImplementation { get; set; }
-
-			public Storage.IAbstractApi? Storage { get; set; }
-			public LinearAlgebra.Dense.AbstractApi? LinearAlgebraDense { get; set; }
-			public LinearAlgebra.Sparse.IAbstractApi? LinearAlgebraSparse { get; set; }
-			public TensorAlgebra.Dense.AbstractApi? TensorAlgebraDense { get; set; }
-			public TensorAlgebra.Sparse.AbstractApi? TensorAlgebraSparse { get; set; }
-			public Random.AbstractApi? Random { get; set; }
-			public Solver.AbstractApi? Solver { get; set; }
-
-			public ImplementationSettings() : this(GetInternalBackend("CSharp"))
-			{ }
-
-			internal ImplementationSettings(ISetBackend impls)
-			{
-				DisposeNotCurrentImplementation = true;
-
-				Althea.Storage.IAbstractApi.SetImplementation(impls.StorageImplementation);
-				this.Storage = Althea.Storage.IAbstractApi.Current;
-
-				LinearAlgebra.Dense.AbstractApi.SetImplementation(impls.DenseLinearAlgebraImplementation);
-				this.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
-
-				LinearAlgebra.Sparse.IAbstractApi.SetImplementation(impls.SparseLinearAlgebraImplementation);
-				this.LinearAlgebraSparse = LinearAlgebra.Sparse.IAbstractApi.Current;
-
-				TensorAlgebra.Dense.AbstractApi.SetImplementation(impls.DenseTensorAlgebraImplementation);
-				this.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
-				
-				TensorAlgebra.Sparse.AbstractApi.SetImplementation(impls.SparseTensorAlgebraImplementation);
-				this.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.Current;
-
-				Althea.Random.AbstractApi.SetImplementation(impls.RandomImplementation);
-				this.Random = Althea.Random.AbstractApi.Current;
-
-				Althea.Solver.AbstractApi.SetImplementation(impls.SolverImplementation);
-				this.Solver = Althea.Solver.AbstractApi.Current;
-			}
-
-			[JsonConstructor]
-			internal ImplementationSettings(bool disposeNotCurrentImplementation,
-				Storage.IAbstractApi? storage,
-				LinearAlgebra.Dense.AbstractApi? linearAlgebraDense,
-				LinearAlgebra.Sparse.IAbstractApi? linearAlgebraSparse,
-				TensorAlgebra.Dense.AbstractApi? tensorAlgebraDense,
-				TensorAlgebra.Sparse.AbstractApi? tensorAlgebraSparse,
-				Random.AbstractApi? random,
-				Solver.AbstractApi? solver)
-			{
-				DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
-
-				Althea.Storage.IAbstractApi.SetImplementation(storage);
-				this.Storage = Althea.Storage.IAbstractApi.Current;
-
-				LinearAlgebra.Dense.AbstractApi.SetImplementation(linearAlgebraDense);
-				this.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
-
-				LinearAlgebra.Sparse.IAbstractApi.SetImplementation(linearAlgebraSparse);
-				this.LinearAlgebraSparse = LinearAlgebra.Sparse.IAbstractApi.Current;
-
-				TensorAlgebra.Dense.AbstractApi.SetImplementation(tensorAlgebraDense);
-				this.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
-
-				TensorAlgebra.Sparse.AbstractApi.SetImplementation(tensorAlgebraSparse);
-				this.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.Current;
-
-				Althea.Random.AbstractApi.SetImplementation(random);
-				this.Random = Althea.Random.AbstractApi.Current;
-
-				Althea.Solver.AbstractApi.SetImplementation(solver);
-				this.Solver = Althea.Solver.AbstractApi.Current;
-			}
-		}
-
 		internal record JsonSettings
 		{
 			public LogSettings LogSettings { get; set; }
@@ -138,11 +62,13 @@ namespace Althea
 				this.LogSettings = new();
 				this.PrintSettings = new();
 				this.ImplementationSettings = new();
-				this.StackAllocLimit = 1024;
+				this.StackAllocLimit = 8192;
 			}
 		}
 
-		internal static volatile JsonSettings settings;
+		internal static JsonSettings settings;
+
+		private static readonly object __lockSetting = new();
 		#endregion
 
 		#region print settings
@@ -190,9 +116,7 @@ namespace Althea
 			get => settings.PrintSettings.MatrixFormTensor;
 			set => settings.PrintSettings = settings.PrintSettings with { MatrixFormTensor = value };
 		}
-		#endregion
 
-		#region other settings
 		// Ignore Spelling: stackalloc
 		/// <summary>
 		/// Get and set the maximum size in bytes when using C# keyword "stackalloc" to reduce GC pressure. The default stack size of x64 C# program is 4MB, set a value larger than this may cause unexpected error(s).
@@ -205,49 +129,32 @@ namespace Althea
 
 		#region implementation settings
 		/// <summary>
-		/// When a new implementation is indicated, whether elder ones will be disposed or not.<br/>
-		/// If the value is true while 'UseRecentImplementation' is true, there may be creations and dispositions of implementation classes.<br/>
-		/// If the value is false and some implementation classes maintains large memory blocks (such as handle of cuBLAS), they will be maintained so that there will be some memory loss.
+		/// When a new implementation is indicated, whether elder ones will be disposed or not.
 		/// </summary>
+		/// <remarks>If the value is true, there may be creations and dispositions of implementation classes that may introduce more time loss.<br/>
+		/// Otherwise, there may be maintained storages of implementation classes that may introduce some memory loss.</remarks>
 		public static bool DisposeNotCurrentImplementation {
 			get => settings.ImplementationSettings.DisposeNotCurrentImplementation;
 			set => settings.ImplementationSettings = settings.ImplementationSettings with { DisposeNotCurrentImplementation = value };
 		}
 
-		private static bool CheckAllBackend(ISetBackend backend)
-		{
-			return	settings.ImplementationSettings.Storage?.GetType() == backend.StorageImplementation &&
-					settings.ImplementationSettings.LinearAlgebraDense?.GetType() == backend.DenseLinearAlgebraImplementation &&
-					settings.ImplementationSettings.LinearAlgebraSparse?.GetType() == backend.SparseLinearAlgebraImplementation &&
-					settings.ImplementationSettings.TensorAlgebraDense?.GetType() == backend.DenseTensorAlgebraImplementation &&
-					settings.ImplementationSettings.TensorAlgebraSparse?.GetType() == backend.SparseTensorAlgebraImplementation &&
-					settings.ImplementationSettings.Random?.GetType() == backend.RandomImplementation &&
-					settings.ImplementationSettings.Solver?.GetType() == backend.SolverImplementation;
-		}
-		private static bool CheckAnyBackend(ISetBackend backend)
-		{
-			return	settings.ImplementationSettings.Storage?.GetType() == backend.StorageImplementation ||
-					settings.ImplementationSettings.LinearAlgebraDense?.GetType() == backend.DenseLinearAlgebraImplementation ||
-					settings.ImplementationSettings.LinearAlgebraSparse?.GetType() == backend.SparseLinearAlgebraImplementation ||
-					settings.ImplementationSettings.TensorAlgebraDense?.GetType() == backend.DenseTensorAlgebraImplementation ||
-					settings.ImplementationSettings.TensorAlgebraSparse?.GetType() == backend.SparseTensorAlgebraImplementation ||
-					settings.ImplementationSettings.Random?.GetType() == backend.RandomImplementation ||
-					settings.ImplementationSettings.Solver?.GetType() == backend.SolverImplementation;
-		}
-
 		/// <summary>
-		/// Set all back-end implementations at once
+		/// Try to set all back-end implementations at once.
 		/// </summary>
-		/// <param name="backend">The <see cref="ISetBackend"/> used to set all back-ends</param>
+		/// <param name="backend">The <see cref="IBackends"/> used to set all back-ends</param>
 		/// <return>Success or not. Some implementation may still be changed even if this returns false.</return>
-		public static bool SetBackend(ISetBackend backend)
+		public static bool TrySetBackend(IBackends backend)
 		{
 			if (backend is null || !backend.Available)
 				return false;
 			try
 			{
-				settings.ImplementationSettings = new(backend);
-				return CheckAllBackend(backend);
+				lock (__lockSetting)
+				{
+					settings.ImplementationSettings = new(backend);
+					settings.ImplementationSettings.SetBackends();
+				}
+				return true;
 			}
 			catch (Exception)
 			{
@@ -265,6 +172,7 @@ namespace Althea
 			NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
 			WriteIndented = true,
 			IgnoreReadOnlyProperties = true,
+			Converters = { new ImplementationSettings.JsonConverter() }
 		};
 
 		private static string fileName = "Althea.json";
@@ -277,17 +185,22 @@ namespace Althea
 		{
 			try
 			{
-				var settings = JsonSerializer.Deserialize<JsonSettings>(File.ReadAllText(fileName), options);
-				return CheckAnyBackend(GetInternalBackend("CSharp"));
+				lock (__lockSetting)
+				{
+					settings = JsonSerializer.Deserialize<JsonSettings>(File.ReadAllText(fileName), options) ?? throw new InvalidOperationException();
+					settings.ImplementationSettings.SetBackends();
+				}
+				return true;
 			}
 			catch (Exception e)
 			{
-				settings = new JsonSettings();
-				if (logError)
+				lock (__lockSetting)
 				{
-					Log.Write(Resources.Other.ErrorOccur + e.Message, level: LogLevel.Error);
-					Log.Write(Resources.Other.UseDefault);
+					settings = new JsonSettings();
+					settings.ImplementationSettings.SetBackends();
 				}
+				if (logError)
+					Log.Write(Resources.FileError.FileCorrupted + Environment.NewLine + e.Message, level: LogLevel.Error);
 				return false;
 			}
 		}
@@ -305,14 +218,22 @@ namespace Althea
 			return Import(logError: false);
 		}
 
+		internal static IBackends GetInternalBackend(string name)
+		{
+			if (Type.GetType($"Althea.Backend.{name}.{name}Implementations")?.GetConstructor(Type.EmptyTypes)?.Invoke(null) is not IBackends impls)
+				throw new InvalidOperationException();
+			return impls;
+		}
+
+		// Ignore Spelling: Cuda Mkl
 		static Settings()
 		{
 			// set default implementations
 			settings = new();
 			// CUDA implementations
-			SetBackend(GetInternalBackend(@"Cuda"));
+			TrySetBackend(GetInternalBackend(@"Cuda"));
 			// MKL implementations, the real default implementation
-			SetBackend(GetInternalBackend(@"Mkl"));
+			TrySetBackend(GetInternalBackend(@"Mkl"));
 			// import at last
 			Import(logError: true);
 		}
@@ -322,54 +243,8 @@ namespace Althea
 		/// </summary>
 		public static void ExportSettings()
 		{
-			var currentOptions = new JsonSerializerOptions(options);
-
-			settings.ImplementationSettings.Storage = Storage.IAbstractApi.Current;
-			var converter = Storage.IAbstractApi.Current?.CurrentConverter;
-			if (converter is not null)
-				currentOptions.Converters.Add(converter);
-
-			settings.ImplementationSettings.LinearAlgebraDense = LinearAlgebra.Dense.AbstractApi.Current;
-			converter = LinearAlgebra.Dense.AbstractApi.Current?.CurrentConverter;
-			if (converter is not null)
-				currentOptions.Converters.Add(converter);
-
-			settings.ImplementationSettings.LinearAlgebraSparse = LinearAlgebra.Sparse.IAbstractApi.Current;
-			converter = LinearAlgebra.Sparse.IAbstractApi.Current?.CurrentConverter;
-			if (converter is not null)
-				currentOptions.Converters.Add(converter);
-
-			settings.ImplementationSettings.TensorAlgebraDense = TensorAlgebra.Dense.AbstractApi.Current;
-			converter = TensorAlgebra.Dense.AbstractApi.Current?.CurrentConverter;
-			if (converter is not null)
-				currentOptions.Converters.Add(converter);
-
-			settings.ImplementationSettings.TensorAlgebraSparse = TensorAlgebra.Sparse.AbstractApi.Current;
-			converter = TensorAlgebra.Sparse.AbstractApi.Current?.CurrentConverter;
-			if (converter is not null)
-				currentOptions.Converters.Add(converter);
-
-			settings.ImplementationSettings.Random = Random.AbstractApi.Current;
-			converter = Random.AbstractApi.Current?.CurrentConverter;
-			if (converter is not null)
-				currentOptions.Converters.Add(converter);
-
-			settings.ImplementationSettings.Solver = Solver.AbstractApi.Current;
-			converter = Solver.AbstractApi.Current?.CurrentConverter;
-			if (converter is not null)
-				currentOptions.Converters.Add(converter);
-
-			string json = JsonSerializer.Serialize(settings, currentOptions);
+			string json = JsonSerializer.Serialize(settings, options);
 			File.WriteAllText(fileName, json);
-		}
-		#endregion
-
-		#region extension methods
-		private static ISetBackend GetInternalBackend(string name)
-		{
-			if (Type.GetType($"Althea.Backend.{name}.{name}Implementations")?.GetConstructor(Type.EmptyTypes)?.Invoke(null) is not ISetBackend res)
-				throw new InvalidOperationException();
-			return res;
 		}
 		#endregion
 	}

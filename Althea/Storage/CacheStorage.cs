@@ -256,7 +256,7 @@ namespace Althea.Storage
 		public override bool Equals(object? obj) => obj is DirectMappingStrategy strategy && this.Equals(strategy);
 
 		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.lineSizeLog2, this.lineInfo.HashCodeOfArray());
+		public override int GetHashCode() => HashCode.Combine(this.lineSizeLog2, SpanLinq.HashCodeOfSpan<CacheLineInfo>(this.lineInfo));
 		#endregion
 	}
 	#endregion
