@@ -56,7 +56,7 @@ namespace Althea.Backend.Mkl
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="workSpaceHostT"/> is less than 0</exception>
 		/// <exception cref="OutOfMemoryException">If the requested number of bytes are too large to be allocated</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe CpuBuffer Create<T>(int workSpaceHostT = 0, bool extraDeviceInfo = false) where T : unmanaged
+		public static unsafe CpuBuffer Create<T>(int workSpaceHostT = 0, bool extraDeviceInfo = false) where T : unmanaged, INumber<T>
 		{
 			return new((long)workSpaceHostT * sizeof(T) + (extraDeviceInfo ? sizeof(int) : 0));
 		}

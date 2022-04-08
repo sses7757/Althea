@@ -237,11 +237,8 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public TriangularMatrix<T, TS> CreateAlike() => new(this.upper, this.Storage.ResizeAlike(this.NRows * this.NCols), this.NRows, this.NCols, 0, this.unitDiag);
 
-		/// <summary>
-		/// Copy the values from this triangular matrix to a new dense <typeparamref name="TS"/> with <see cref="AbstractDenseMatrix{T, TS}.LeadDim"/> == <see cref="AbstractDenseMatrix{T, TS}.NRows"/>.
-		/// </summary>
-		/// <returns>The created compact vector's storage as a <typeparamref name="TS"/></returns>
-		public TS ToCompact()
+		/// <inheritdoc/>
+		public override TS ToCompact()
 		{
 			var compact = this.Storage.ResizeAlike(this.NRows * this.NCols);
 			try
@@ -573,11 +570,8 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public SymmetricMatrix<T, TS> CreateAlike() => new(this.upper, this.Storage.ResizeAlike(this.NRows * this.NCols), this.NRows, 0, this.herm);
 
-		/// <summary>
-		/// Copy the values from this symmetric matrix to a new dense <typeparamref name="TS"/> with <see cref="AbstractDenseMatrix{T, TS}.LeadDim"/> == <see cref="AbstractDenseMatrix{T, TS}.NRows"/>.
-		/// </summary>
-		/// <returns>The created compact vector's storage as a <typeparamref name="TS"/></returns>
-		public TS ToCompact()
+		/// <inheritdoc/>
+		public override TS ToCompact()
 		{
 			var compact = this.Storage.ResizeAlike(this.NRows * this.NCols);
 			try

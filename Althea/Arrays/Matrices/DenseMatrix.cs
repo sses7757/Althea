@@ -102,6 +102,12 @@ namespace Althea.Array
 		{
 			this.Dispose();
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, copy the values from this dense matrix to a new <typeparamref name="TS"/> with all values stored in compact mode that <see cref="AbstractDenseMatrix{T, TS}.LeadDim"/> == <see cref="AbstractDenseMatrix{T, TS}.NRows"/>.
+		/// </summary>
+		/// <returns>The created compact matrix's storage as a <typeparamref name="TS"/></returns>
+		public abstract TS ToCompact();
 		#endregion
 	}
 
@@ -279,11 +285,8 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public DenseMatrix<T, TS> CreateAlike() => new(this.Storage.ResizeAlike(this.NRows * this.NCols), this.NRows, this.NCols);
 
-		/// <summary>
-		/// Copy the values from this dense matrix to a new <typeparamref name="TS"/> with <see cref="AbstractDenseMatrix{T, TS}.LeadDim"/> == <see cref="AbstractDenseMatrix{T, TS}.NRows"/>.
-		/// </summary>
-		/// <returns>The created compact vector's storage as a <typeparamref name="TS"/></returns>
-		public TS ToCompact()
+		/// <inheritdoc/>
+		public override TS ToCompact()
 		{
 			var compact = this.Storage.ResizeAlike(this.NRows * this.NCols);
 			try

@@ -850,6 +850,25 @@ namespace Althea.Helpers
 
 		#region index and range related
 		/// <summary>
+		/// Remove the last occurrence of <paramref name="value"/> in <paramref name="list"/> if present by swapping it with the last element in <paramref name="list"/>.
+		/// </summary>
+		/// <typeparam name="T">The data type of <paramref name="list"/></typeparam>
+		/// <param name="list">The <see cref="List{T}"/> whose last <paramref name="value"/> will be removed</param>
+		/// <param name="value">The value to remove</param>
+		/// <returns>Success or not.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool SwapRemove<T>(this List<T> list, T value)
+		{
+			int find = list.LastIndexOf(value);
+			if (find < 0)
+				return false;
+			if (find != list.Count - 1)
+				list[find] = list[^1];
+			list.RemoveAt(list.Count - 1);
+			return true;
+		}
+
+		/// <summary>
 		/// Calculate the offset from the start using the giving collection length.
 		/// </summary>
 		/// <param name="index">The <see cref="Index"/></param>

@@ -21,7 +21,7 @@ namespace Althea.Backend.Random
 	//$$P_{\vec\mu,\Sigma}(\vec x) = \frac{1}{(2\pi)^{D/2}}\frac{1}{\sqrt{\det(\Sigma)}}
 	//\exp{\left( -\frac12(\vec x - \vec \mu)^T \Sigma^{-1} (\vec x - \vec \mu) \right)}$$
 	//where $D$ is the number of dimensions, $\vec\mu$ is the mean values of all dimensions, $\Sigma$ is the covariance matrix (which is symmetric-definite).
-	public class MultiNormalDistribution<T> : RealTypedDistribution<T>, IEquatable<MultiNormalDistribution<T>> where T : unmanaged
+	public class MultiNormalDistribution<T> : RealTypedDistribution<T>, IEquatable<MultiNormalDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		private readonly T[] mean, covariance;
 
@@ -175,10 +175,10 @@ namespace Althea.Backend.Random
 			int length = this.CovarianceStorage == StorageType.Full || this.CovarianceStorage == StorageType.CholeskyFull ? this.Rank * this.Rank : this.Rank;
 			fixed (T* m1 = this.mean, m2 = other.mean, c1 = this.covariance, c2 = other.covariance)
 			{
-				CSharp.LinearAlgebra.DenseApi.PointWiseEquals(new ManagedPureStorage<T>(m1, this.Rank), new ManagedPureStorage<T>(m2, this.Rank), out bool equals);
+				CSharp.LinearAlgebra.Api.PointWiseEquals(new ManagedPureStorage<T>(m1, this.Rank), new ManagedPureStorage<T>(m2, this.Rank), out bool equals);
 				if (!equals)
 					return false;
-				CSharp.LinearAlgebra.DenseApi.PointWiseEquals(new ManagedPureStorage<T>(c1, length), new ManagedPureStorage<T>(c2, length), out equals);
+				CSharp.LinearAlgebra.Api.PointWiseEquals(new ManagedPureStorage<T>(c1, length), new ManagedPureStorage<T>(c2, length), out equals);
 				return equals;
 			}
 		}
@@ -233,7 +233,7 @@ namespace Althea.Backend.Random
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
 	//tex:Multinomial normal distribution PDF:
 	//$$P_{m,\vec p}(\vec k) = \frac{m!}{\prod_i{k_i}} \prod_i{p^{k_i}}$$
-	public class MultinomialDistribution<T> : IntegerTypedDistribution<T>, IEquatable<MultinomialDistribution<T>> where T : unmanaged
+	public class MultinomialDistribution<T> : IntegerTypedDistribution<T>, IEquatable<MultinomialDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		private readonly double[] probabilities;
 

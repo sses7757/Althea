@@ -32,7 +32,7 @@ namespace Althea.Backend.Cuda
 
 		// TODO: sparse API
 		////[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		////internal static DenseVectorWrapper ToWrapper<T>(this Arrays.DenseVector<T> vector, SparseApi api) where T : unmanaged
+		////internal static DenseVectorWrapper ToWrapper<T>(this Arrays.DenseVector<T> vector, SparseApi api) where T : unmanaged, INumber<T>
 		////{
 		////	api.GetPointer(vector.Storage, out IntPtr p, out long length);
 		////	return new(api.InternalInfo, length, p, Const<T>.DataType.ToCudaDataType());

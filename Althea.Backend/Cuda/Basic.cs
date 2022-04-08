@@ -9,14 +9,14 @@ using Althea.Storage;
 
 namespace Althea.Backend.Cuda
 {
-	internal sealed class TempGpuStorage<T> : PureOrMixedStorage<T> where T : unmanaged
+	internal sealed class TempGpuStorage<T> : PureOrMixedStorage<T> where T : unmanaged, INumber<T>
 	{
 		private readonly PointerSegment pointerSegment;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal TempGpuStorage(IntPtr pointer, long length) : base(stackalloc StorageLocation[] { new(LocationType.GpuRam, CudaRuntime.CurrentDeviceID) }, stackalloc[] { length })
 		{
-			this.pointerSegment = new(MemoryPointer.Create<T>(pointer, length, this.LocationDescription[0]));
+			this.pointerSegment = new(CpuMemoryPointer.Create<T>(pointer, length, this.LocationDescription[0]));
 		}
 
 		// no disposition
@@ -32,7 +32,7 @@ namespace Althea.Backend.Cuda
 			get => 1;
 		}
 
-		public override bool Equals(Storage<T>? obj) => obj is TempGpuStorage<T> m && ((MemoryPointer)this.pointerSegment.Pointer).Pointer == ((MemoryPointer)m.pointerSegment.Pointer).Pointer;
+		public override bool Equals(Storage<T>? obj) => obj is TempGpuStorage<T> m && ((CpuMemoryPointer)this.pointerSegment.Pointer).Pointer == ((CpuMemoryPointer)m.pointerSegment.Pointer).Pointer;
 
 		public override bool IsValid() => this.pointerSegment.LengthInBytes > 0;
 
@@ -235,7 +235,7 @@ namespace Althea.Backend.Cuda
 		/// <exception cref="OutOfMemoryException">If the requested number of bytes are too large to be allocated</exception>
 		/// <exception cref="StatusException">If the CUDA API call returns other error status</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe CudaBuffer Create<T>(int workSpaceDeviceT, int workSpaceHostT = 0, bool extraDeviceInfo = true) where T : unmanaged
+		public static unsafe CudaBuffer Create<T>(int workSpaceDeviceT, int workSpaceHostT = 0, bool extraDeviceInfo = true) where T : unmanaged, INumber<T>
 		{
 			return new((long)workSpaceDeviceT * sizeof(T), (long)workSpaceHostT * sizeof(T), extraDeviceInfo ? sizeof(int) : 0);
 		}

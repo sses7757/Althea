@@ -12,11 +12,11 @@ using Althea.NativeTypes;
 namespace Althea.Backend.CSharp.LinearAlgebra
 {
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
-	public partial class DenseApi : AbstractApi
+	public partial class Api : AbstractApi
 	{
 		#region equals
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static unsafe bool PointWiseEquals<T>(Storage<T> x, Storage<T> y, out bool equals) where T : unmanaged
+		internal protected static unsafe bool PointWiseEquals<T>(Storage<T> x, Storage<T> y, out bool equals) where T : unmanaged, INumber<T>
 		{
 			equals = false;
 			if (x.Length != y.Length)
@@ -72,7 +72,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorsBinaryManaged<T, Op>(T* x, T* y, int length, T scalar) where T : unmanaged
+		private static unsafe void VectorsBinaryManaged<T, Op>(T* x, T* y, int length, T scalar) where T : unmanaged, INumber<T>
 		{
 			BinaryModify op;
 			if (typeof(Op) == typeof(B_Multiply))
@@ -126,7 +126,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorsBinaryReal<T, Op>(T* x, T* y, int length, T scalar) where T : unmanaged
+		private static unsafe void VectorsBinaryReal<T, Op>(T* x, T* y, int length, T scalar) where T : unmanaged, INumber<T>
 		{
 			BinaryModify op;
 			if (typeof(Op) == typeof(B_Multiply))
@@ -309,7 +309,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static unsafe bool VectorsBinary<T, Op>(Storage<T> x, Storage<T> y, T scalar) where T : unmanaged
+		internal protected static unsafe bool VectorsBinary<T, Op>(Storage<T> x, Storage<T> y, T scalar) where T : unmanaged, INumber<T>
 		{
 			if (!GetPointer(x, out T* px, out int lenx))
 				return false;
@@ -360,19 +360,19 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static unsafe bool PointWiseDivide<T>(Storage<T> x, Storage<T> y) where T : unmanaged
+		internal protected static unsafe bool PointWiseDivide<T>(Storage<T> x, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			return VectorsBinary<T, B_Divide>(x, y, default);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static unsafe bool PointWiseMultiply<T>(Storage<T> x, Storage<T> y) where T : unmanaged
+		internal protected static unsafe bool PointWiseMultiply<T>(Storage<T> x, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			return VectorsBinary<T, B_Multiply>(x, y, default);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static unsafe bool VectorGeneralAdd<T>(T α, Storage<T> x, Storage<T> y) where T : unmanaged
+		internal protected static unsafe bool VectorGeneralAdd<T>(T α, Storage<T> x, Storage<T> y) where T : unmanaged, INumber<T>
 		{
 			if (α.IsZero())
 				return true;
@@ -393,7 +393,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		// Helper structures are not used since JIT may not optimize them thoroughly
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe Vector<U> GenericNoWiden<T, U>(Vector<T> src) where T : unmanaged where U : unmanaged
+		private static unsafe Vector<U> GenericNoWiden<T, U>(Vector<T> src) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			var dst = *(Vector<U>*)&src;
 			if (typeof(T) == typeof(uint) && typeof(U) == typeof(float))
@@ -420,7 +420,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void GenericWidenX2<T, U>(Vector<T> src, out Vector<U> dst1, out Vector<U> dst2) where T : unmanaged where U : unmanaged
+		private static unsafe void GenericWidenX2<T, U>(Vector<T> src, out Vector<U> dst1, out Vector<U> dst2) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			dst1 = dst2 = default;
 			if (typeof(T) == typeof(byte) && (typeof(U) == typeof(ushort) || typeof(U) == typeof(short)))
@@ -497,7 +497,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void GenericWidenX4<T, U>(Vector<T> src, out Vector<U> dst1, out Vector<U> dst2, out Vector<U> dst3, out Vector<U> dst4) where T : unmanaged where U : unmanaged
+		private static unsafe void GenericWidenX4<T, U>(Vector<T> src, out Vector<U> dst1, out Vector<U> dst2, out Vector<U> dst3, out Vector<U> dst4) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			dst1 = dst2 = dst3 = dst4 = default;
 			if (typeof(T) == typeof(byte))
@@ -575,7 +575,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void GenericWidenX8<T, U>(Vector<T> src, out Vector<U> dst1, out Vector<U> dst2, out Vector<U> dst3, out Vector<U> dst4, out Vector<U> dst5, out Vector<U> dst6, out Vector<U> dst7, out Vector<U> dst8) where T : unmanaged where U : unmanaged
+		private static unsafe void GenericWidenX8<T, U>(Vector<T> src, out Vector<U> dst1, out Vector<U> dst2, out Vector<U> dst3, out Vector<U> dst4, out Vector<U> dst5, out Vector<U> dst6, out Vector<U> dst7, out Vector<U> dst8) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			dst1 = dst2 = dst3 = dst4 = dst5 = dst6 = dst7 = dst8 = default;
 			if (typeof(T) == typeof(byte))
@@ -639,7 +639,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		#region Vector<T> narrow
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe Vector<U> GenericNarrowX2<T, U>(Vector<T> src1, Vector<T> src2) where T : unmanaged where U : unmanaged
+		private static unsafe Vector<U> GenericNarrowX2<T, U>(Vector<T> src1, Vector<T> src2) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			if (typeof(T) == typeof(ushort) && (typeof(U) == typeof(byte) || typeof(U) == typeof(sbyte)))
 			{
@@ -697,7 +697,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe Vector<U> GenericNarrowX4<T, U>(Vector<T> src1, Vector<T> src2, Vector<T> src3, Vector<T> src4) where T : unmanaged where U : unmanaged
+		private static unsafe Vector<U> GenericNarrowX4<T, U>(Vector<T> src1, Vector<T> src2, Vector<T> src3, Vector<T> src4) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			if (typeof(T) == typeof(uint) && (typeof(U) == typeof(byte) || typeof(U) == typeof(sbyte)))
 			{
@@ -753,7 +753,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe Vector<U> GenericNarrowX8<T, U>(Vector<T> src1, Vector<T> src2, Vector<T> src3, Vector<T> src4, Vector<T> src5, Vector<T> src6, Vector<T> src7, Vector<T> src8) where T : unmanaged where U : unmanaged
+		private static unsafe Vector<U> GenericNarrowX8<T, U>(Vector<T> src1, Vector<T> src2, Vector<T> src3, Vector<T> src4, Vector<T> src5, Vector<T> src6, Vector<T> src7, Vector<T> src8) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			if (typeof(T) == typeof(ulong) && (typeof(U) == typeof(byte) || typeof(U) == typeof(sbyte)))
 			{
@@ -802,7 +802,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		#region other helper
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorToComplex<T>(Vector<T> zeros, Vector<T> input, out Vector<T> output1, out Vector<T> output2) where T : unmanaged
+		private static unsafe void VectorToComplex<T>(Vector<T> zeros, Vector<T> input, out Vector<T> output1, out Vector<T> output2) where T : unmanaged, INumber<T>
 		{
 			switch (sizeof(T))
 			{
@@ -833,14 +833,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorToComplex<T>(Vector<T> zeros, Vector<T> input1, Vector<T> input2, out Vector<T> output1, out Vector<T> output2, out Vector<T> output3, out Vector<T> output4) where T : unmanaged
+		private static unsafe void VectorToComplex<T>(Vector<T> zeros, Vector<T> input1, Vector<T> input2, out Vector<T> output1, out Vector<T> output2, out Vector<T> output3, out Vector<T> output4) where T : unmanaged, INumber<T>
 		{
 			VectorToComplex(zeros, input1, out output1, out output2);
 			VectorToComplex(zeros, input2, out output3, out output4);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorToComplex<T>(Vector<T> zeros, Vector<T> input1, Vector<T> input2, Vector<T> input3, Vector<T> input4, out Vector<T> output1, out Vector<T> output2, out Vector<T> output3, out Vector<T> output4, out Vector<T> output5, out Vector<T> output6, out Vector<T> output7, out Vector<T> output8) where T : unmanaged
+		private static unsafe void VectorToComplex<T>(Vector<T> zeros, Vector<T> input1, Vector<T> input2, Vector<T> input3, Vector<T> input4, out Vector<T> output1, out Vector<T> output2, out Vector<T> output3, out Vector<T> output4, out Vector<T> output5, out Vector<T> output6, out Vector<T> output7, out Vector<T> output8) where T : unmanaged, INumber<T>
 		{
 			VectorToComplex(zeros, input1, input2, out output1, out output2, out output3, out output4);
 			VectorToComplex(zeros, input3, input4, out output5, out output6, out output7, out output8);
@@ -848,7 +848,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		#endregion
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorCastManaged<T, U>(T* src, U* dst, int length) where T : unmanaged where U : unmanaged
+		private static unsafe void VectorCastManaged<T, U>(T* src, U* dst, int length) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			for (int i = 0; i < length; i++)
 			{
@@ -857,7 +857,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorCastReal<T, U, ToComp>(T* src, U* dst, int length) where T : unmanaged where U : unmanaged
+		private static unsafe void VectorCastReal<T, U, ToComp>(T* src, U* dst, int length) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			bool toComp = typeof(ToComp) == typeof(bool);
 			int lengthLeft = length, offset = 0;
@@ -966,11 +966,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorCastReal2Real<T, U>(T* src, U* dst, int length) where T : unmanaged where U : unmanaged
+		private static unsafe void VectorCastReal2Real<T, U>(T* src, U* dst, int length) where T : unmanaged, INumber<T> where U : unmanaged
 			=> VectorCastReal<T, U, byte>(src, dst, length);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorCastReal2Comp<T, U>(T* src, U* dst, int length) where T : unmanaged where U : unmanaged
+		private static unsafe void VectorCastReal2Comp<T, U>(T* src, U* dst, int length) where T : unmanaged, INumber<T> where U : unmanaged
 			=> VectorCastReal<T, U, bool>(src, dst, length);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1095,7 +1095,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static unsafe bool PointWiseCast<T, TOut>(Storage<T> x, Storage<TOut> y) where T : unmanaged where TOut : unmanaged
+		internal protected static unsafe bool PointWiseCast<T, TOut>(Storage<T> x, Storage<TOut> y) where T : unmanaged, INumber<T> where TOut : unmanaged
 		{
 			if (typeof(TOut) == typeof(char))
 				return PointWiseCast(x, y.As<ushort>());

@@ -189,7 +189,7 @@ namespace Althea.Backend.Cuda.Storage
 				if (err == CudaError.ErrorOutOfMemory)
 					throw new OutOfMemoryException();
 				err.Check();
-				result = new(new MemoryPointer(ptr, length, location));
+				result = new(new CpuMemoryPointer(ptr, length, location));
 			}
 			else
 			{
@@ -235,20 +235,20 @@ namespace Althea.Backend.Cuda.Storage
 
 		protected override unsafe bool FillWithValue_<T>(PointerSegment pointer, T value)
 		{
-			if (value.IsZero() || Const<T>.SizeT == sizeof(byte))
+			if (value.IsZero() || Unmanaged<T>.Size == sizeof(byte))
 				return FillWithValue_(pointer, *(byte*)&value);
 			long offset = pointer.GetPointerOffsetCuda(out var mp, out var sp);
 			if (offset == NOT_SUPPORT)
 				return false;
 			if (mp is not null)
-				NativeMethods.vecFillVal(Const<T>.DataType, mp.OffsetPointer(offset), &value, pointer.LengthInBytes / Const<T>.SizeT, 1);
+				NativeMethods.vecFillVal(Const<T>.DataType, mp.OffsetPointer(offset), &value, pointer.LengthInBytes / Unmanaged<T>.Size, 1);
 			if (sp is not null)
 				sp.NativeStream.SetValues(value, pointer.LengthInBytes);
 			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static new bool FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged => Default.FillWithValue_(pointer, value);
+		internal static new bool FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged, INumber<T> => Default.FillWithValue_(pointer, value);
 		#endregion
 
 		#region copy
@@ -322,7 +322,7 @@ namespace Althea.Backend.Cuda.Storage
 		
 		protected override unsafe bool FromManaged_<T>(PointerSegment destination, T value)
 		{
-			return MemoryCopy_(new(MemoryPointer.Create<T>((IntPtr)(&value), 1)), destination, out _);
+			return MemoryCopy_(new(CpuMemoryPointer.Create<T>((IntPtr)(&value), 1)), destination, out _);
 		}
 		
 		protected override unsafe bool FromManaged_<T>(PointerSegment destination, ReadOnlySpan<T> values, out long actualCopied)
@@ -344,7 +344,7 @@ namespace Althea.Backend.Cuda.Storage
 		protected override unsafe bool ToManaged_<T>(PointerSegment source, out T value)
 		{
 			value = default;
-			return MemoryCopy_(source, new(MemoryPointer.Create<T>((IntPtr)Unsafe.AsPointer(ref value), 1)), out _);
+			return MemoryCopy_(source, new(CpuMemoryPointer.Create<T>((IntPtr)Unsafe.AsPointer(ref value), 1)), out _);
 		}
 		
 		protected override unsafe bool ToManaged_<T>(PointerSegment source, Span<T> destination, out long actualCopied)
@@ -357,7 +357,7 @@ namespace Althea.Backend.Cuda.Storage
 		#endregion
 
 		#region strided copy
-		internal static unsafe bool PointerStridedCopy<T>(IntPtr source, int incrementSource, IntPtr destination, int incrementDestination, MemoryCopyKind copyKind, int copies) where T : unmanaged
+		internal static unsafe bool PointerStridedCopy<T>(IntPtr source, int incrementSource, IntPtr destination, int incrementDestination, MemoryCopyKind copyKind, int copies) where T : unmanaged, INumber<T>
 		{
 			if (incrementSource == 1 && incrementDestination == 1)
 			{

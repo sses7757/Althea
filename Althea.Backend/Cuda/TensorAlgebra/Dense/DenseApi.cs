@@ -75,7 +75,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static IntPtr GetPointer<T>(Storage<T> s) where T : unmanaged
+		internal static IntPtr GetPointer<T>(Storage<T> s) where T : unmanaged, INumber<T>
 		{
 			if (s is null || !s.IsValid() || s.Count != 1)
 				return default;
@@ -122,7 +122,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public static DenseTensorDescription Create<T>(DenseTensorWrapper<T> tensor) where T : unmanaged
+			public static DenseTensorDescription Create<T>(DenseTensorWrapper<T> tensor) where T : unmanaged, INumber<T>
 			{
 				int r = tensor.Rank;
 				Span<int> size = stackalloc int[r], outerSize = stackalloc int[r];
@@ -183,7 +183,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public static ContractionDescription Create<T>(DenseTensorWrapper<T> A, DenseTensorWrapper<T> B, DenseTensorWrapper<T> C, TensorContractInfo info, ContractionAlgorithm algorithm) where T : unmanaged
+			public static ContractionDescription Create<T>(DenseTensorWrapper<T> A, DenseTensorWrapper<T> B, DenseTensorWrapper<T> C, TensorContractInfo info, ContractionAlgorithm algorithm) where T : unmanaged, INumber<T>
 			{
 				var dA = DenseTensorDescription.Create(A);
 				var dB = DenseTensorDescription.Create(B);
@@ -263,7 +263,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			return true;
 		}
 
-		protected internal unsafe bool OperationTrinary<T>(BinaryOperation binaryAB, BinaryOperation binaryABC, DenseTensorWrapper<T> A, Span<int> permA, DenseTensorWrapper<T> B, Span<int> permB, DenseTensorWrapper<T> C, Span<int> permC, DenseTensorWrapper<T> destination, Span<int> permD) where T : unmanaged
+		protected internal unsafe bool OperationTrinary<T>(BinaryOperation binaryAB, BinaryOperation binaryABC, DenseTensorWrapper<T> A, Span<int> permA, DenseTensorWrapper<T> B, Span<int> permB, DenseTensorWrapper<T> C, Span<int> permC, DenseTensorWrapper<T> destination, Span<int> permD) where T : unmanaged, INumber<T>
 		{
 			IntPtr pA = GetPointer(A.ValueStorage), pB = GetPointer(B.ValueStorage), pC = GetPointer(C.ValueStorage), pD = GetPointer(destination.ValueStorage);
 			if ((pA == default && pB == default && pC == default) || pC == default)
@@ -335,7 +335,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			return true;
 		}
 
-		protected internal unsafe bool Reduce<T>(BinaryOperation reduce, DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<char> labelSource, ReadOnlySpan<char> labelDestination) where T : unmanaged
+		protected internal unsafe bool Reduce<T>(BinaryOperation reduce, DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<char> labelSource, ReadOnlySpan<char> labelDestination) where T : unmanaged, INumber<T>
 		{
 			IntPtr pA = GetPointer(source.ValueStorage), pB = GetPointer(destination.ValueStorage);
 			if (pA == default || pB == default)

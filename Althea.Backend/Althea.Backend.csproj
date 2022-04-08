@@ -1,19 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Library</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <EnablePreviewFeatures>True</EnablePreviewFeatures>
-    <Nullable>enable</Nullable>
+    <LangVersion>preview</LangVersion>
     <Platforms>x64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>D:\Works\git\ALTHEA\Althea.Backend\doucuments\Althea.Backend.xml</DocumentationFile>
+  <ItemGroup>
+    <Folder Include="documents\" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
+    <NoWarn>1701;1702</NoWarn>
+    <Optimize>False</Optimize>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,7 +47,7 @@
     <None Update="Cuda\SupplementCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Mkl\SupplementOMP.dll">
+    <None Update="Mkl\SupplementTBB.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

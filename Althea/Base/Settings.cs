@@ -220,7 +220,8 @@ namespace Althea
 
 		internal static IBackends GetInternalBackend(string name)
 		{
-			if (Type.GetType($"Althea.Backend.{name}.{name}Implementations")?.GetConstructor(Type.EmptyTypes)?.Invoke(null) is not IBackends impls)
+			// Ignore spelling: Backend
+			if (Type.GetType($"Althea.Backend.{name}Backend")?.GetConstructor(Type.EmptyTypes)?.Invoke(null) is not IBackends impls)
 				throw new InvalidOperationException();
 			return impls;
 		}

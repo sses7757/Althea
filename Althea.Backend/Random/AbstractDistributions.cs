@@ -11,7 +11,7 @@ namespace Althea.Backend.Random
 	/// The abstract class for one-dimensional distributions which contain the <see cref="Displacement"/> and <see cref="ScaleFactor"/> of type <typeparamref name="T"/> as the parameters, implements <see cref="IRandomDistribution"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
-	public abstract class DisplaceScaleDistribution<T> : OneDimensionalFloatTypedDistribution<T> where T : unmanaged
+	public abstract class DisplaceScaleDistribution<T> : OneDimensionalFloatTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the displacement (<c>a</c>) of this <see cref="DisplaceScaleDistribution{T}"/>
@@ -99,7 +99,7 @@ namespace Althea.Backend.Random
 	/// The abstract class for one-dimensional distributions which contain the extract <see cref="ShapeFactor"/> and the parameters of <see cref="DisplaceScaleDistribution{T}"/> of type <typeparamref name="T"/> as the parameters, implements <see cref="IRandomDistribution"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
-	public abstract class ShapeDisplaceScaleDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged
+	public abstract class ShapeDisplaceScaleDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the shaping factor (<c>α</c>) of this <see cref="ShapeDisplaceScaleDistribution{T}"/>
@@ -180,7 +180,7 @@ namespace Althea.Backend.Random
 	/// The abstract class for one-dimensional distributions based on the Bernoulli trial, implements <see cref="OneDimensionalIntegerTypedDistribution{T}"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
-	public abstract class BernoulliBasedDistribution<T> : OneDimensionalIntegerTypedDistribution<T> where T : unmanaged
+	public abstract class BernoulliBasedDistribution<T> : OneDimensionalIntegerTypedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the probability of the trial success of this <see cref="BernoulliBasedDistribution{T}"/>

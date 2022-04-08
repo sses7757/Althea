@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-using Althea.Helpers;
+﻿using Althea.Helpers;
 using Althea.Linq;
 using Althea.Storage;
 
@@ -45,18 +43,6 @@ namespace Althea.Array
 				}
 			}
 			return storage;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool SwapRemove<T>(this List<T> list, T value)
-		{
-			int find = list.LastIndexOf(value);
-			if (find < 0)
-				return false;
-			if (find != list.Count - 1)
-				list[find] = list[^1];
-			list.RemoveAt(list.Count - 1);
-			return true;
 		}
 
 		/// <summary>

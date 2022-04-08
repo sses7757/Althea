@@ -142,7 +142,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? s, out IntPtr ptr, out int length, int stride = 1) where T : unmanaged
+		private bool CheckPointer<T>(Storage<T>? s, out IntPtr ptr, out int length, int stride = 1) where T : unmanaged, INumber<T>
 		{
 			ptr = default; length = 0;
 			if (s is null)
@@ -150,7 +150,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = s[0];
 			if (s.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			long len = p.LengthInBytes / Const<T>.SizeT;
+			long len = p.LengthInBytes / Unmanaged<T>.Size;
 			len = (len - 1) / stride + 1;
 			if (len > int.MaxValue)
 				return false;
@@ -160,20 +160,20 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointerLong<T>(Storage<T> s, out IntPtr ptr, out long length, int stride = 1) where T : unmanaged
+		private bool CheckPointerLong<T>(Storage<T> s, out IntPtr ptr, out long length, int stride = 1) where T : unmanaged, INumber<T>
 		{
 			ptr = default; length = 0;
 			var p = s[0];
 			if (s.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			length = p.LengthInBytes / Const<T>.SizeT;
+			length = p.LengthInBytes / Unmanaged<T>.Size;
 			length = (length - 1) / stride + 1;
 			ptr = mp.OffsetPointer(p.OffsetInBytes);
 			return true;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
+		private bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged, INumber<T>
 		{
 			ptr = default; r = c = l = 1;
 			if (A is null) // specific null input
@@ -181,7 +181,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = A[0];
 			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			long len = p.LengthInBytes / Const<T>.SizeT;
+			long len = p.LengthInBytes / Unmanaged<T>.Size;
 			if (ld < rows)
 				throw new ArgumentOutOfRangeException(nameof(ld), ld, Resources.Parameter.InvalidValue);
 			if (cols * ld > len)
@@ -193,7 +193,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			return true;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? A, MatrixOperation op, long rowsAfterOp, long colsAfterOp, long ld, out CuBlasOperation opCuda, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged
+		private bool CheckPointer<T>(Storage<T>? A, MatrixOperation op, long rowsAfterOp, long colsAfterOp, long ld, out CuBlasOperation opCuda, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged, INumber<T>
 		{
 			ptr = default; r = c = l = 1; opCuda = op.Simplify<T>().ToCuda();
 			if (A is null) // specific null input
@@ -203,7 +203,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = A[0];
 			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			long len = p.LengthInBytes / Const<T>.SizeT;
+			long len = p.LengthInBytes / Unmanaged<T>.Size;
 			long cols = op.CanInPlace() ? colsAfterOp : rowsAfterOp;
 			long rows = op.CanInPlace() ? rowsAfterOp : colsAfterOp;
 			if (ld < rows)
@@ -218,7 +218,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointerLong<T>(Storage<T>? A, long cols, long ld, out IntPtr ptr) where T : unmanaged
+		private bool CheckPointerLong<T>(Storage<T>? A, long cols, long ld, out IntPtr ptr) where T : unmanaged, INumber<T>
 		{
 			ptr = default;
 			if (A is null) // specific null input
@@ -226,7 +226,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = A[0];
 			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			long len = p.LengthInBytes / Const<T>.SizeT;
+			long len = p.LengthInBytes / Unmanaged<T>.Size;
 			if (cols * ld > len)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
 			ptr = mp.OffsetPointer(p.OffsetInBytes);
@@ -337,7 +337,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">The output real index in <paramref name="x"/></param>
 		/// <returns>Support or not</returns>
-		protected internal unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
+		protected internal unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>
 		{
 			index = -1;
 			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
@@ -377,7 +377,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">The output real index in <paramref name="x"/></param>
 		/// <returns>Support or not</returns>
-		protected internal unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged
+		protected internal unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>
 		{
 			index = -1;
 			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
@@ -418,7 +418,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="sum">Output the sum as a <see cref="double"/></param>
 		/// <returns>Support or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected internal unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged
+		protected internal unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>
 		{
 			sum = 0;
 			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
@@ -532,7 +532,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged
+		private unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>
 		{
 			bool doSum = typeof(Sum) == typeof(bool);
 			sum = 0;

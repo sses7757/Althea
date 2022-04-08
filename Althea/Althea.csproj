@@ -9,6 +9,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="documents\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <DocumentationMarkdown>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).md</DocumentationMarkdown>
     <Win32Resource />
@@ -182,10 +186,6 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>TensorOrderCreate.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="documents\" />
   </ItemGroup>
 
   <ItemGroup>

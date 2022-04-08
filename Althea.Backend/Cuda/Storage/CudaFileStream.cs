@@ -339,7 +339,7 @@ namespace Althea.Backend.Cuda.Storage
 			NativeMethods.cudaMalloc(out IntPtr buf, Math.Min(bufferSize, length)).Check();
 			try
 			{
-				PointerSegment ptr = new(new MemoryPointer(buf, bufferSize, new(LocationType.GpuRam, 0)));
+				PointerSegment ptr = new(new CpuMemoryPointer(buf, bufferSize, new(LocationType.GpuRam, 0)));
 				StorageApi.FillWithValue(ptr, value);
 				if (length <= bufferSize)
 				{
@@ -383,11 +383,11 @@ namespace Althea.Backend.Cuda.Storage
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
-		public void SetValues<T>(T value, long length, IntPtr buffer, long bufferSize, bool doRegister) where T : unmanaged
+		public void SetValues<T>(T value, long length, IntPtr buffer, long bufferSize, bool doRegister) where T : unmanaged, INumber<T>
 		{
 			length = this.SetValuesCheck<T>(length);
 
-			PointerSegment ptr = new(new MemoryPointer(buffer, bufferSize, new(LocationType.GpuRam, 0)));
+			PointerSegment ptr = new(new CpuMemoryPointer(buffer, bufferSize, new(LocationType.GpuRam, 0)));
 			StorageApi.FillWithValue(ptr, value);
 			if (length <= bufferSize)
 			{   // do not register

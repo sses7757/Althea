@@ -22,7 +22,7 @@ namespace Althea.Backend.CSharp.Solver
 	{
 		#region from T to double
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool ToDoubleCheck<T>(this T value, out double d) where T : unmanaged
+		internal static bool ToDoubleCheck<T>(this T value, out double d) where T : unmanaged, INumber<T>
 		{
 			if (Const<T>.IsComplex)
 			{
@@ -39,7 +39,7 @@ namespace Althea.Backend.CSharp.Solver
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static double ToDoubleCheck<T>(this T value) where T : unmanaged
+		internal static double ToDoubleCheck<T>(this T value) where T : unmanaged, INumber<T>
 		{
 			if (Const<T>.IsComplex)
 			{
@@ -79,7 +79,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void CheckParas<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int smallestK, ref int maxIter, bool herm)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			// check MatrixFunction
 			if (matrixFunction is null)
@@ -159,7 +159,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void RobustOrthogonalize<TVec, T>(TVec r, ReadOnlySpan<TVec> qs, Span<T> weights, bool robust = true)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			if (qs.IsEmpty)
 				return;
@@ -217,7 +217,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static TVec RSetToBSubAx<TVec, T>(Func<TVec, TVec> A, TVec x, TVec b)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			TVec r = A.Invoke(x);
 			try
@@ -236,7 +236,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void RSetToBSubAx<TVec, T>(Func<TVec, TVec> A, ref TVec r, TVec x, TVec b)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			r?.Dispose();
 			r = A.Invoke(x);
@@ -261,7 +261,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void LanczosInit<TVec, T>(Func<TVec, TVec> matrixFunction, ref TVec q0, out TVec r, out double α0, out double β0)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			q0.Normalize();
 			//tex: $\vec r = A \vec q$
@@ -278,7 +278,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void LanczosInit<TVec, T>(Func<TVec, TVec> matrixFunction, double ψ, out TVec r, ref SpanList<TVec> qs, ref SpanList<double> αs, ref SpanList<double> βs, ref RestartBasicInfo<TVec, T> info)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			// deal with restart Ritz vectors
 			int NRitz = info.UnconvergedEigenvalues.Count;
@@ -325,7 +325,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void LanczosMainCalc<TVec, T>(Func<TVec, TVec> matrixFunction, TVec q, ref TVec r, ref SpanList<double> αs, ref SpanList<double> βs, ref TVec newq, bool dispose = true)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			//tex: $\vec v=\vec q$
 			/*var v = q;*/
@@ -351,7 +351,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void LanczosMainCalc<TVec, T>(Func<TVec, TVec> MatMulVecFunc, SpanList<TVec> qs, ref TVec r, ref SpanList<double> αs, ref SpanList<double> βs)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			TVec newq = new();
 			LanczosMainCalc<TVec, T>(MatMulVecFunc, qs[^1], ref r, ref αs, ref βs, ref newq, dispose: false);
@@ -415,7 +415,7 @@ namespace Althea.Backend.CSharp.Solver
 		#region restart info
 		private ref struct RestartBasicInfo<TVec, T>
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			internal TVec ResidualVec;
 
@@ -488,7 +488,7 @@ namespace Althea.Backend.CSharp.Solver
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			internal string Reorthonalize<TVec, T>(TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<TVec> converged, double thre1, double thre2)
 				where TVec : class, IKrylovVector<TVec, T>, new()
-				where T : unmanaged
+				where T : unmanaged, INumber<T>
 			{
 #if DEBUG
 				var stringBuilder = new StringBuilder("\tre-orthogonalize the new basis vector to the ");
@@ -638,7 +638,7 @@ namespace Althea.Backend.CSharp.Solver
 		#region get eigenvector
 		private static TVec GetRealEigenvector<TVec, T>(TVec r, SpanList<TVec> Q, SpanMatrix<double> eigvecs)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			Span<T> eigvec = stackalloc T[Q.Count];
 			eigvecs[0].CopyTo(eigvec, static e => e.FromDouble<T>());
@@ -661,7 +661,7 @@ namespace Althea.Backend.CSharp.Solver
 		#region add unconverged vectors
 		private static void AddUnconvergedVectors<TVec, T>(ref RestartBasicInfo<TVec, T> info, ReadOnlySpan<TVec> Q, ReadOnlySpan<int> preserve, Span<double> eigvals, SpanMatrix<double> eigvecs, TVec r, double rNorm)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			Span<T> tempSVec = stackalloc T[eigvecs.Rows];
 			Span<double> lastRow = stackalloc double[eigvecs.Cols];
@@ -686,7 +686,7 @@ namespace Althea.Backend.CSharp.Solver
 		#region naive Lanczos
 		internal static (double val, TVec vec) NaiveLanczos<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool checkFirst, TimeSpan interval)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			#region basic check
 			if (matrixFunction is null)
@@ -774,7 +774,7 @@ namespace Althea.Backend.CSharp.Solver
 		#region restart lanczos
 		internal static int? RestartLanczos<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, Span<double> outEigvals, Span<TVec> outEigvecs, TimeSpan interval)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			#region basic
 			if (initial is null)
@@ -911,7 +911,7 @@ namespace Althea.Backend.CSharp.Solver
 
 		private static bool RestartLanczosInner<TVec, T>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, bool? robustOrth, bool useGap, ref RestartBasicInfo<TVec, T> restartInfo, Span<double> eigvals, SpanMatrix<double> eigvecs, ref SpanList<TVec> qs, ref SpanList<double> αs, ref SpanList<double> βs, out TVec r)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			#region constants
 			double machinePrecision = Const<T>.MachinePrecision,
@@ -1030,7 +1030,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static (double relativeError, TVec solve)? CheckLinearSolve<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out double normB, out double realTolerance)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			#region basic
 			if (initial is null)
@@ -1070,7 +1070,7 @@ namespace Althea.Backend.CSharp.Solver
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static (double relativeError, TVec solve)? CheckLinearSolveInitial<TVec, T>(Func<TVec, TVec> matrix, TVec initial, TVec b, double normB, double realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out double minResidual)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			#region initial vector check
 			x = initial;
@@ -1109,7 +1109,7 @@ namespace Althea.Backend.CSharp.Solver
 		#region preconditioned conjugate gradient
 		internal static (double relativeError, TVec solve) ConjugateGradient<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			#region basic
 			var simpleSolution = CheckLinearSolve<TVec, T>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out double normB, out double realTolerance);
@@ -1277,7 +1277,7 @@ namespace Althea.Backend.CSharp.Solver
 		#region preconditioned minimal residual
 		internal static (double relativeError, TVec solve) MinimalResidual<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
 			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			#region basic
 			var simpleSolution = CheckLinearSolve<TVec, T>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out double normB, out double realTolerance);

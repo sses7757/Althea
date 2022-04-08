@@ -13,7 +13,7 @@ namespace Althea.Backend.Mkl.Storage
 	/// <summary>
 	/// The MKL back-end of <see cref="IAbstractApi"/> that supports storage locations of CPU and file.
 	/// </summary>
-	public class StorageApi : CSharp.Storage.StorageApi
+	public class StorageApi : CSharp.Storage.Api
 	{
 		public override (int major, int minor) DriverVersion(StorageLocation location)
 		{
@@ -24,7 +24,7 @@ namespace Althea.Backend.Mkl.Storage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe bool PointerStridedCopy<T>(T* source, int strideSource, T* destination, int strideDestination, int count) where T : unmanaged
+		internal static unsafe bool PointerStridedCopy<T>(T* source, int strideSource, T* destination, int strideDestination, int count) where T : unmanaged, INumber<T>
 		{
 			// shortcut
 			if (strideSource == 1 && strideDestination == 1)

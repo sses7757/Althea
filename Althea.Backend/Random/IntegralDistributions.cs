@@ -13,7 +13,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
 	//tex:Poisson distribution PDF: $$P_{\lambda}(k)=\frac{\lambda^k e^{-k}}{k!}$$
-	public class PoissonDistribution<T> : OneDimensionalIntegerTypedDistribution<T>, IEquatable<PoissonDistribution<T>> where T : unmanaged
+	public class PoissonDistribution<T> : OneDimensionalIntegerTypedDistribution<T>, IEquatable<PoissonDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the λ value of this Poisson distribution
@@ -79,7 +79,7 @@ namespace Althea.Backend.Random
 	/// The class for one-dimensional Bernoulli distribution, implements <see cref="BernoulliBasedDistribution{T}"/>
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
-	public class BernoulliDistribution<T> : BernoulliBasedDistribution<T> where T : unmanaged
+	public class BernoulliDistribution<T> : BernoulliBasedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a <see cref="BernoulliDistribution{T}"/> with given <paramref name="p"/> and the random <paramref name="seed"/>
@@ -95,7 +95,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
 	//tex:Geometric distribution PDF: $P_p(k)=p(1-p)^k$
-	public class GeometricDistribution<T> : BernoulliBasedDistribution<T> where T : unmanaged
+	public class GeometricDistribution<T> : BernoulliBasedDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a <see cref="GeometricDistribution{T}"/> with given <paramref name="p"/> and the random <paramref name="seed"/>
@@ -111,7 +111,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
 	//tex:Binomial distribution PDF: $$P_{p,m}(k)=\binom{k}{m}p^k(1-p)^{m-k}$$
-	public class BinomialDistribution<T> : BernoulliBasedDistribution<T>, IEquatable<BinomialDistribution<T>> where T : unmanaged
+	public class BinomialDistribution<T> : BernoulliBasedDistribution<T>, IEquatable<BinomialDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the number of trials of this <see cref="BinomialDistribution{T}"/>
@@ -179,7 +179,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
 	//tex:Negative binomial distribution PDF: $$P_{r,p}(k)=\frac{\Gamma(r+k)}{k!\Gamma(r)}p^{r}(1-p)^{k}$$
-	public class NegativeBinomialDistribution<T> : BernoulliBasedDistribution<T>, IEquatable<NegativeBinomialDistribution<T>> where T : unmanaged
+	public class NegativeBinomialDistribution<T> : BernoulliBasedDistribution<T>, IEquatable<NegativeBinomialDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the number of success Bernoulli trials of this <see cref="NegativeBinomialDistribution{T}"/>
@@ -247,7 +247,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
 	//tex:Hyper-geometric distribution PDF: $$P_{l,s,m}(k)=\frac{\binom{k}{m}\binom{s-k}{l-m}}{\binom{s}{l}}$$
-	public class HypergeometricDistribution<T> : OneDimensionalIntegerTypedDistribution<T>, IEquatable<HypergeometricDistribution<T>> where T : unmanaged
+	public class HypergeometricDistribution<T> : OneDimensionalIntegerTypedDistribution<T>, IEquatable<HypergeometricDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the lost size (<c>l</c>) of this <see cref="HypergeometricDistribution{T}"/>

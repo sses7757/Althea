@@ -407,7 +407,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		private readonly UnaryOperation operation;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> tensor, out TensorDescription descr) where T : unmanaged
+		public static bool Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> tensor, out TensorDescription descr) where T : unmanaged, INumber<T>
 		{
 			var dataType = Const<T>.DataType.ToCudaDataType();
 			var op = tensor.Operation.ToCudaOp();
@@ -432,7 +432,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static TensorDescription Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> tensor, CudaDataType dataType) where T : unmanaged
+		internal static TensorDescription Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> tensor, CudaDataType dataType) where T : unmanaged, INumber<T>
 		{
 			TensorDescription descr;
 			if (tensor.Strides.IsEmpty)
@@ -479,7 +479,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 
 		// return supported or not
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> A, DenseTensorWrapper<T> B, DenseTensorWrapper<T> C, DenseTensorWrapper<T> D, TensorContractInfo info, out ContractDescription descr, ComputeType computeType = 0) where T : unmanaged
+		public static bool Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> A, DenseTensorWrapper<T> B, DenseTensorWrapper<T> C, DenseTensorWrapper<T> D, TensorContractInfo info, out ContractDescription descr, ComputeType computeType = 0) where T : unmanaged, INumber<T>
 		{
 			descr = default;
 			if (info.IsInvalid())

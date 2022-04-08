@@ -63,7 +63,7 @@ namespace Althea.Backend.Mkl.Random
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static IntPtr GetPointer<T>(Storage<T> s) where T : unmanaged
+		internal static IntPtr GetPointer<T>(Storage<T> s) where T : unmanaged, INumber<T>
 		{
 			if (s is null || !s.IsValid() || s.Count != 1 || !Supported(s.LocationDescription))
 				return default;
@@ -108,7 +108,7 @@ namespace Althea.Backend.Mkl.Random
 		const DistributionType INVALID = (DistributionType)(-1);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out int length, out DistributionType type) where T : unmanaged
+		private static bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out int length, out DistributionType type) where T : unmanaged, INumber<T>
 		{
 			pointer = default; length = 0;
 			if (storage is null || !storage.IsValid())
@@ -124,18 +124,18 @@ namespace Althea.Backend.Mkl.Random
 				return false; // not support
 			if (Const<T>.IsComplex)
 				return false; // not support
-			if (ss.LengthInBytes / Const<T>.SizeT > int.MaxValue)
+			if (ss.LengthInBytes / Unmanaged<T>.Size > int.MaxValue)
 				return false; // not support
 
 			pointer = (IntPtr)(p.Pointer.ToInt64() + ss.OffsetInBytes);
-			length = (int)(ss.LengthInBytes / Const<T>.SizeT);
+			length = (int)(ss.LengthInBytes / Unmanaged<T>.Size);
 
 			if (distribution is SimpleJointRandomDistribution join && join.Count == 1)
 				distribution = join[0];
 			type = distribution switch
 			{
 				UniformDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) || typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Uniform : INVALID,
-				RandomBitsDistribution<T> => Const<T>.SizeT == sizeof(int) || Const<T>.SizeT == sizeof(long) ? DistributionType.RandomBits : INVALID,
+				RandomBitsDistribution<T> => Unmanaged<T>.Size == sizeof(int) || Unmanaged<T>.Size == sizeof(long) ? DistributionType.RandomBits : INVALID,
 
 				BetaDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Beta : INVALID,
 				CauchyDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Cauchy : INVALID,
@@ -203,7 +203,7 @@ namespace Althea.Backend.Mkl.Random
 
 		#region methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe void Fill1D<T>(IntPtr p, int n, IRandomDistribution distribution, DistributionType type) where T : unmanaged
+		private unsafe void Fill1D<T>(IntPtr p, int n, IRandomDistribution distribution, DistributionType type) where T : unmanaged, INumber<T>
 		{
 			T shape1, shape2, scale, displace, mean, sigma;
 			switch (type)
@@ -510,12 +510,12 @@ namespace Althea.Backend.Mkl.Random
 		internal static unsafe ulong* AsU8(this IntPtr v) => (ulong*)v;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe float AsF4<T>(this T v) where T : unmanaged => *(float*)&v;
+		internal static unsafe float AsF4<T>(this T v) where T : unmanaged, INumber<T> => *(float*)&v;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe double AsF8<T>(this T v) where T : unmanaged => *(double*)&v;
+		internal static unsafe double AsF8<T>(this T v) where T : unmanaged, INumber<T> => *(double*)&v;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe int AsI4<T>(this T v) where T : unmanaged => *(int*)&v;
+		internal static unsafe int AsI4<T>(this T v) where T : unmanaged, INumber<T> => *(int*)&v;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe uint AsU4<T>(this T v) where T : unmanaged => *(uint*)&v;
+		internal static unsafe uint AsU4<T>(this T v) where T : unmanaged, INumber<T> => *(uint*)&v;
 	}
 }

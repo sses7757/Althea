@@ -40,7 +40,7 @@ namespace Althea.Backend.CSharp.Solver
 		public int MaxStagnationSteps { get; set; } = 3;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckT<T>() where T : unmanaged
+		private static bool CheckT<T>() where T : unmanaged, INumber<T>
 		{
 			return Const<T>.IsIntegralType;
 		}
@@ -55,7 +55,7 @@ namespace Althea.Backend.CSharp.Solver
 		protected internal static new bool KroneckerMultiplyVector<TMat, TVec, T>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default)
 			where TMat : class, IConvertibleMatrix<TMat, TVec, T>, IDisposable, new()
 			where TVec : class, IConvertibleVector<TVec, TMat, T>, IDisposable, new()
-			where T : unmanaged
+			where T : unmanaged, INumber<T>
 		{
 			if (scalar.IsZero())
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.Parameter.CannotZero);
@@ -115,7 +115,7 @@ namespace Althea.Backend.CSharp.Solver
 			return NaiveKrylovSubspaceEigenHermitain<TVec, T>(ref info, out eigenvalue, out eigenvector, this.InfoLogInterval);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool NaiveKrylovSubspaceEigenHermitain<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector, TimeSpan interval) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged
+		internal protected static bool NaiveKrylovSubspaceEigenHermitain<TVec, T>(ref KrylovSubspaceSolveInfo<TVec, T> info, out double eigenvalue, out TVec eigenvector, TimeSpan interval) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged, INumber<T>
 		{
 			(eigenvalue, eigenvector) = (0, new());
 			if (CheckT<T>())
@@ -129,7 +129,7 @@ namespace Althea.Backend.CSharp.Solver
 			return RestartKrylovSubspaceEigen<TVec, T>(hermitian, ref info, out converged, this.InfoLogInterval);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool RestartKrylovSubspaceEigen<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged, TimeSpan interval) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged
+		internal protected static bool RestartKrylovSubspaceEigen<TVec, T>(bool hermitian, ref KrylovSubspaceSolveInfo<TVec, T> info, out int converged, TimeSpan interval) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged, INumber<T>
 		{
 			converged = 0;
 			if (CheckT<T>())
@@ -164,7 +164,7 @@ namespace Althea.Backend.CSharp.Solver
 			return RestartKrylovSubspaceLinearSolve(hermitianOrDefinite, ref info, out relativeError, out solve, this.InfoLogInterval, this.MaxStagnationSteps);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool RestartKrylovSubspaceLinearSolve<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve, TimeSpan interval, int maxStagnations) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged
+		internal protected static bool RestartKrylovSubspaceLinearSolve<TVec, T>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<TVec, T> info, out double relativeError, out TVec solve, TimeSpan interval, int maxStagnations) where TVec : class, IKrylovVector<TVec, T>, new() where T : unmanaged, INumber<T>
 		{
 			if (info.OtherVector is null)
 				throw new ArgumentNullException(nameof(info), nameof(info.OtherVector));

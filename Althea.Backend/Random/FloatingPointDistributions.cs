@@ -13,7 +13,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	//tex:Normal distribution PDF: $$P_{\mu,\sigma}(x)=\frac{1}{\sigma\sqrt{2\pi}}\exp{\left( -\frac{(x-\mu)^2}{2\sigma^2} \right)}$$
-	public class NormalDistribution<T> : OneDimensionalFloatTypedDistribution<T>, IEquatable<NormalDistribution<T>> where T : unmanaged
+	public class NormalDistribution<T> : OneDimensionalFloatTypedDistribution<T>, IEquatable<NormalDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the mean value of this normal distribution
@@ -100,7 +100,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	//tex:$\chi^2$ distribution PDF: $$P_{v}(x)=\begin{cases}\dfrac{x^{(v-2)/2}e^{-x/2}}{2^{v/2}\Gamma(v/2)} & x \ge 0 \\ 0 & x \lt 0 \end{cases}$$
-	public class ChiSquareDistribution<T> : OneDimensionalFloatTypedDistribution<T>, IEquatable<ChiSquareDistribution<T>> where T : unmanaged
+	public class ChiSquareDistribution<T> : OneDimensionalFloatTypedDistribution<T>, IEquatable<ChiSquareDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the degree of freedom of this χ² distribution
@@ -170,7 +170,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	//tex:Log normal distribution PDF: $$P_{\mu,\sigma,b,\beta}(x)=\frac{1}{\sigma(x-b)\sqrt{2\pi}}\exp{\left[ -\frac{\left( \ln{\frac{x-b}{\beta}} - \mu \right)^2}{2\sigma^2} \right]}$$
-	public class LogNormalDistribution<T> : DisplaceScaleDistribution<T>, IEquatable<LogNormalDistribution<T>> where T : unmanaged
+	public class LogNormalDistribution<T> : DisplaceScaleDistribution<T>, IEquatable<LogNormalDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the mean value (<c>μ</c>) of this log normal distribution's subject normal distribution
@@ -259,7 +259,7 @@ namespace Althea.Backend.Random
 	//tex:Exponential distribution PDF: $$P_{a,\beta}(x) =
 	//\begin{cases} \dfrac{1}{\beta}\exp{\left( -\dfrac{x-a}{\beta} \right)} & x \ge a \\
 	//0 & x \lt a \end{cases}$$
-	public class ExponentialDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged
+	public class ExponentialDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a standard <see cref="ExponentialDistribution{T}"/> with a=0, β=1, and random seed is not set
@@ -281,7 +281,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	//tex:Laplace distribution PDF: $$P_{a,\beta}(x) = \frac{1}{\sqrt{2\beta}} \exp{\left( -\frac{|x-a|}{\beta} \right)}$$
-	public class LaplaceDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged
+	public class LaplaceDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a standard <see cref="LaplaceDistribution{T}"/> with a=0, β=1, and random seed is not set
@@ -305,7 +305,7 @@ namespace Althea.Backend.Random
 	//tex:Weibull distribution PDF: $$P_{a,\alpha,\beta}(x) =
 	//\begin{cases} \dfrac{\alpha}{\beta^\alpha} (x-a)^{\alpha-1} \exp{\left[ -\left(\dfrac{x-a}{\beta}\right)^\alpha \right]} & x \ge a \\
 	//0 & x \lt a\end{cases}$$
-	public class WeibullDistribution<T> : ShapeDisplaceScaleDistribution<T> where T : unmanaged
+	public class WeibullDistribution<T> : ShapeDisplaceScaleDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a standard <see cref="WeibullDistribution{T}"/> with a=0,α=1, β=1, and random seed is not set
@@ -328,7 +328,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	//tex:Cauchy distribution PDF: $$P_{a,\beta}(x) = \frac{1}{\pi\beta\left[ 1 + \left( \frac{x-a}{\beta} \right)^2 \right]}$$
-	public class CauchyDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged
+	public class CauchyDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a standard <see cref="CauchyDistribution{T}"/> with a=0, β=1, and random seed is not set
@@ -350,7 +350,7 @@ namespace Althea.Backend.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	//tex:Rayleigh distribution PDF: $$P_{a,\beta}(x) = \frac{2(x-a)}{\beta^2}\exp{\left[ - \left( \frac{x-a}{\beta} \right)^2 \right]}$$
-	public class RayleighDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged
+	public class RayleighDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a standard <see cref="RayleighDistribution{T}"/> with a=0, β=1, and random seed is not set
@@ -373,7 +373,7 @@ namespace Althea.Backend.Random
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	//tex:Gumbel distribution PDF: $$P_{a,\beta}(x) = \frac{1}{\beta} \exp{\left( \frac{x-a}{\beta} \right)} \cdot
 	//\exp{\left[ -\exp{\left( \frac{x-a}{\beta} \right)} \right]}$$
-	public class GumbelDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged
+	public class GumbelDistribution<T> : DisplaceScaleDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a standard <see cref="GumbelDistribution{T}"/> with a=0, β=1, and random seed is not set
@@ -398,7 +398,7 @@ namespace Althea.Backend.Random
 	//\dfrac{1}{\Gamma(\alpha)\beta^\alpha} (x-a)^{\alpha-1} \exp{\left( -\dfrac{x-a}{\beta} \right)} & x \ge a \\
 	//0 & x \lt a \end{cases}$$
 	//where $\Gamma(a)$ is the complete gamma function.
-	public class GammaDistribution<T> : ShapeDisplaceScaleDistribution<T> where T : unmanaged
+	public class GammaDistribution<T> : ShapeDisplaceScaleDistribution<T> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Create a standard <see cref="GammaDistribution{T}"/> with a=0,α=1, β=1, and random seed is not set
@@ -424,7 +424,7 @@ namespace Althea.Backend.Random
 	//\dfrac{(x-a)^{\alpha-1} (\beta+a-x)^{\alpha'-1}}{B(\alpha,\alpha')\beta^{\alpha+\alpha'-1}} & a \le x \lt a+\beta \\
 	//0 & x \lt a \mbox{ or } x \ge a+\beta \end{cases}$$
 	//where $B(p,q)$ is the complete beta function.
-	public class BetaDistribution<T> : ShapeDisplaceScaleDistribution<T>, IEquatable<BetaDistribution<T>> where T : unmanaged
+	public class BetaDistribution<T> : ShapeDisplaceScaleDistribution<T>, IEquatable<BetaDistribution<T>> where T : unmanaged, INumber<T>
 	{
 		/// <summary>
 		/// Get the second shaping factor (<c>α'</c>) of this <see cref="BetaDistribution{T}"/>

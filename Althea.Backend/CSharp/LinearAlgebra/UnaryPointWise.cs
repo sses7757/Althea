@@ -13,7 +13,7 @@ using Althea.NativeTypes;
 namespace Althea.Backend.CSharp.LinearAlgebra
 {
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
-	public partial class DenseApi : AbstractApi
+	public partial class Api : AbstractApi
 	{
 		private struct U_AddScalar { }
 		private struct U_MultiplyScalar { }
@@ -39,7 +39,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			Reciprocal,
 		}
 
-		private static class OtherOp<T> where T : unmanaged
+		private static class OtherOp<T> where T : unmanaged, INumber<T>
 		{
 			internal static readonly Func<T, T, T> ModuloDelegate;
 			internal static readonly Func<T, double, T> TruncateDelegate;
@@ -98,7 +98,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorModifyManaged<T, U, Op>(T* x, int length, U scalar) where T : unmanaged where U : unmanaged
+		private static unsafe void VectorModifyManaged<T, U, Op>(T* x, int length, U scalar) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			Modify op;
 			if (typeof(Op) == typeof(U_AddScalar))
@@ -183,7 +183,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void VectorModifyReal<T, U, Op>(T* x, int length, U scalar) where T : unmanaged where U : unmanaged
+		private static unsafe void VectorModifyReal<T, U, Op>(T* x, int length, U scalar) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			T scalarT = scalar.NativeConvert<U, T>();
 			Modify op;
@@ -475,7 +475,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static unsafe bool VectorModify<T, U, Op>(Storage<T> x, U scalar) where T : unmanaged where U : unmanaged
+		internal protected static unsafe bool VectorModify<T, U, Op>(Storage<T> x, U scalar) where T : unmanaged, INumber<T> where U : unmanaged
 		{
 			if (!GetPointer(x, out T* px, out int length))
 				return false;
@@ -512,13 +512,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool PointWiseAddScalar<T>(Storage<T> x, T scalr) where T : unmanaged
+		internal protected static bool PointWiseAddScalar<T>(Storage<T> x, T scalr) where T : unmanaged, INumber<T>
 		{
 			return VectorModify<T, T, U_AddScalar>(x, scalr);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool PointWiseModulo<T>(Storage<T> x, T mod) where T : unmanaged
+		internal protected static bool PointWiseModulo<T>(Storage<T> x, T mod) where T : unmanaged, INumber<T>
 		{
 			if (Const<T>.IsComplex || !Const<T>.IsIntegralType)
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
@@ -526,7 +526,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool PointWiseConjugate<T>(Storage<T> x) where T : unmanaged
+		internal protected static bool PointWiseConjugate<T>(Storage<T> x) where T : unmanaged, INumber<T>
 		{
 			if (Const<T>.IsComplex)
 				return VectorModify<T, T, U_Conjugate>(x, default);
@@ -535,7 +535,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool PointWisePower<T>(Storage<T> x, double p) where T : unmanaged
+		internal protected static bool PointWisePower<T>(Storage<T> x, double p) where T : unmanaged, INumber<T>
 		{
 			if (p == 0)
 			{
@@ -562,7 +562,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool PointWisePower<T>(Storage<T> x, T p) where T : unmanaged
+		internal protected static bool PointWisePower<T>(Storage<T> x, T p) where T : unmanaged, INumber<T>
 		{
 			if (p.IsZero())
 			{
@@ -589,13 +589,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal protected static bool Scale<T>(Storage<T> x, T scalar) where T : unmanaged
+		internal protected static bool Scale<T>(Storage<T> x, T scalar) where T : unmanaged, INumber<T>
 		{
 			return VectorModify<T, T, U_MultiplyScalar>(x, scalar);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool TruncateArray<T>(Storage<T> x, double threshold) where T : unmanaged
+		internal static bool TruncateArray<T>(Storage<T> x, double threshold) where T : unmanaged, INumber<T>
 		{
 			return VectorModify<T, double, U_Truncate>(x, threshold);
 		}

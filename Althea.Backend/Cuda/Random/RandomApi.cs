@@ -33,7 +33,7 @@ namespace Althea.Backend.Cuda.Random
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static IntPtr GetPointer<T>(Storage<T> s) where T : unmanaged
+		internal static IntPtr GetPointer<T>(Storage<T> s) where T : unmanaged, INumber<T>
 		{
 			if (s is null || !s.IsValid() || s.Count != 1 || !Supported(s.LocationDescription))
 				return default;
@@ -74,7 +74,7 @@ namespace Althea.Backend.Cuda.Random
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out long length, out UniformDistribution<T>? uniform, out RandomBitsDistribution<T>? bits, out NormalDistribution<T>? normal, out LogNormalDistribution<T>? logNormal, out PoissonDistribution<T>? poisson) where T : unmanaged
+		private static unsafe bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out long length, out UniformDistribution<T>? uniform, out RandomBitsDistribution<T>? bits, out NormalDistribution<T>? normal, out LogNormalDistribution<T>? logNormal, out PoissonDistribution<T>? poisson) where T : unmanaged, INumber<T>
 		{
 			pointer = default; length = 0;
 			if (storage is null)
@@ -121,7 +121,7 @@ namespace Althea.Backend.Cuda.Random
 
 		#region methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe void Generate<T>(Storage<T> s, IntPtr p, long length, UniformDistribution<T>? uniform, RandomBitsDistribution<T>? bits, NormalDistribution<T>? normal, LogNormalDistribution<T>? logNormal, PoissonDistribution<T>? poisson) where T : unmanaged
+		private unsafe void Generate<T>(Storage<T> s, IntPtr p, long length, UniformDistribution<T>? uniform, RandomBitsDistribution<T>? bits, NormalDistribution<T>? normal, LogNormalDistribution<T>? logNormal, PoissonDistribution<T>? poisson) where T : unmanaged, INumber<T>
 		{
 			if (uniform is not null)
 			{

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 using Althea.Helpers;
-
 
 [assembly: CLSCompliant(true)]
 
@@ -63,14 +61,14 @@ namespace Althea.Backend
 		/// <param name="trace">The customize stack trace, default null means creating a new one and skipping one frame</param>
 		protected AbstractStatusException(Enum error1, Enum error2, StackTrace? trace = null)
 		{
-			int code1;
-			if (error1 is null || (code1 = (int)(object)error1) != 0)
+			long code1;
+			if (error1 is null || (code1 = (long)(object)error1) != 0)
 			{
 				this.overwriteMessage = false;
 				return;
 			}
-			int code2;
-			if (error2 is null || (code2 = (int)(object)error2) != 0)
+			long code2;
+			if (error2 is null || (code2 = (long)(object)error2) != 0)
 			{
 				this.overwriteMessage = false;
 				return;
@@ -88,9 +86,9 @@ namespace Althea.Backend
 
 		private readonly StackTrace? stackTrace = null;
 
-		private readonly (string? type, int code, string descr)? error = null;
+		private readonly (string? type, long code, string descr)? error = null;
 
-		private readonly (string? type, int code, string descr)? error2 = null;
+		private readonly (string? type, long code, string descr)? error2 = null;
 
 		private string? MethodString {
 			get {
@@ -140,6 +138,60 @@ namespace Althea.Backend
 					return this.stackTrace.ToString();
 			}
 		}
+	}
+	#endregion
+
+
+	#region back-ends
+	/// <summary>
+	/// The back-ends for C# implementations.
+	/// </summary>
+	public sealed class CSharpBackend : IBackends
+	{
+		/// <inheritdoc/>
+		public bool Available => true;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IBaseAbstractApi TensorAlgebraDenseBase => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi LinearAlgebraDenseHalfMatrixBlas => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IExtendBlasAbstractApi LinearAlgebraDenseExtendBlas => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IBlasAbstractApi LinearAlgebraDenseBlas => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IConversionAbstractApi LinearAlgebraSparseConversion => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public GeneralSolver.IAbstractApi GeneralSolver => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public Transformer.IAbstractApi Transformer => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.ICopyAbstractApi LinearAlgebraDenseCopy => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public Althea.Storage.IAbstractApi Storage => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Sparse.IAbstractApi TensorAlgebraSparse => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.ILapackAbstractApi LinearAlgebraDenseLapack => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public Althea.Random.IAbstractApi Random => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IComputationAbstractApi LinearAlgebraSparseComputation => throw new NotImplementedException();
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IExtendAbstractApi TensorAlgebraDenseExtend => throw new NotImplementedException();
 	}
 	#endregion
 }
