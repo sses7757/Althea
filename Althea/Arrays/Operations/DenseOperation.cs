@@ -541,7 +541,7 @@ namespace Althea.Array
 			}
 			HalfBlas.HalfMatrixClearPart<T, TS>(A.UnitDiagonal, A.Upper, m, n, C.Storage, C.LeadDim);
 			if (A.UnitDiagonal)
-				ExtBlas.FillWithValue(C.Storage, T.One, C.LeadDim + 1);
+				ExtBlas.FillWithValue(C.Storage, C.LeadDim + 1, T.One);
 			AddMatrices(C, scalarA, B, scalarB, C, opA, opB);
 		}
 

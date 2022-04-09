@@ -27,6 +27,11 @@ namespace Althea.Backend.CSharp.Random
 
 		/// <inheritdoc/>
 		public bool Disposed { get; set; } = false;
+
+		/// <summary>
+		/// Get the default <see cref="Api"/>.
+		/// </summary>
+		internal protected static readonly Api Default = new();
 		#endregion
 
 		#region operations
@@ -93,44 +98,25 @@ namespace Althea.Backend.CSharp.Random
 			switch (type)
 			{
 				case DataType.RealSingle:
-					var pS = new ManagedPureStorage<float>(p, len);
-					LAD.PointWiseCast(new ManagedPureStorage<uint>(p, len), pS);
-					LAD.Scale(pS, *(float*)&scale);
-					LAD.PointWiseAddScalar(pS, *(float*)&offset);
+					LAD.PointWiseCast((uint*)p, (float*)p, len);
+					LAD.VectorModify<float, float, LAD.U_MultiplyScalar>((float*)p, len, *(float*)&scale);
 					break;
 				case DataType.RealDouble:
-					var pD = new ManagedPureStorage<double>(p, len);
-					LAD.PointWiseCast(new ManagedPureStorage<ulong>(p, len), pD);
-					LAD.Scale(pD, *(double*)&scale);
-					LAD.PointWiseAddScalar(pD, *(double*)&offset);
+					LAD.PointWiseCast((ulong*)p, (double*)p, len);
+					LAD.VectorModify<double, double, LAD.U_MultiplyScalar>((double*)p, len, *(double*)&scale);
 					break;
 				case DataType.RealInt8:
-					LAD.PointWiseModulo(new ManagedPureStorage<byte>(p, len), *(byte*)&scale);
-					LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
-					break;
 				case DataType.RealInt16:
-					LAD.PointWiseModulo(new ManagedPureStorage<ushort>(p, len), *(ushort*)&scale);
-					LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
-					break;
 				case DataType.RealInt32:
-					LAD.PointWiseModulo(new ManagedPureStorage<uint>(p, len), *(uint*)&scale);
-					LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
-					break;
 				case DataType.RealInt64:
-					LAD.PointWiseModulo(new ManagedPureStorage<ulong>(p, len), *(ulong*)&scale);
-					LAD.PointWiseAddScalar(new ManagedPureStorage<T>(p, len), offset);
-					break;
 				case DataType.RealUInt8:
 				case DataType.RealUInt16:
 				case DataType.RealUInt32:
 				case DataType.RealUInt64:
-					var pU = new ManagedPureStorage<T>(p, len);
-					LAD.PointWiseModulo(pU, scale);
-					LAD.PointWiseAddScalar(pU, offset);
-					break;
-				default:
+					LAD.VectorModify<T, T, LAD.U_Modulo>((T*)p, len, scale);
 					break;
 			}
+			LAD.VectorModify<T, T, LAD.U_AddScalar>((T*)p, len, offset);
 		}
 
 		/// <inheritdoc/>
@@ -139,6 +125,7 @@ namespace Althea.Backend.CSharp.Random
 			if (!Check(storage, distribution, out var ptr, out int len, out T offset, out T scale))
 				return false;
 			Generate(ptr, len, offset, scale);
+			return true;
 		}
 
 		bool Althea.Random.IAbstractApi.FillWithRandom(IRandomDistribution distribution, params IStorage[] storages) => false;

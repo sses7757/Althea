@@ -750,6 +750,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 
 		#region vector (absolute) min / max
+		//// Test == int, uint, long, ulong   for   AbsMax, AbsMin, Max, Min
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static T VectorMinMaxReal<T, Test>(T* x, int length) where T : unmanaged, INumber<T>
 		{
@@ -880,7 +881,6 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return extreme;
 		}
 
-		//// Test == int, uint, long, ulong   for   AbsMax, AbsMin, Max, Min
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool VectorMinMaxManaged<T, Test>(T* x, int length, out T extreme) where T : unmanaged, INumber<T>
 		{

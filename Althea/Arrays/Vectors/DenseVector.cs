@@ -175,7 +175,7 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtBlas.FillWithValue(this.values, value, this.stride);
+		public void FillWith(T value) => ExtBlas.FillWithValue(this.values, this.stride, value);
 
 		/// <inheritdoc/>
 		public void AddScalar(T value) => ExtBlas.PointWiseAddScalar(this.values, this.stride, value);

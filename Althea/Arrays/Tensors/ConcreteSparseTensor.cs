@@ -60,7 +60,7 @@ namespace Althea.Array
 		private bool GetOffsets(long presentIndex, Span<long> offsets)
 		{
 			var ind = TInd.Create(presentIndex);
-			long find = SpConv.IndexBound(this.IndexStorage, ind, true);
+			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
 			offsets[0] = find;
 			if (offsets.Length > 1)
 				offsets[1] = presentIndex;
@@ -307,7 +307,7 @@ namespace Althea.Array
 		{
 			long insideBlockOffset = presentIndex % this.blockLength;
 			var ind = TInd.Create(presentIndex / this.blockLength);
-			long find = SpConv.IndexBound(this.IndexStorage, ind, true);
+			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
 			offsets[0] = find * this.blockLength + insideBlockOffset;
 			if (offsets.Length > 1)
 				offsets[1] = find;
@@ -349,6 +349,7 @@ namespace Althea.Array
 			this.IndexStorage.CopyTo<TInd, TSInd, TSInd>(ten.IndexStorage);
 		}
 
+		// TODO: block sparse tensor first few dimensions
 		/* Ignore Spelling: nameof inds
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private (long startOffsetInd, long countInd) GetFirstDimOffsets(int n, ReadOnlySpan<long> restIndices, ReadOnlySpan<long> offsets, ReadOnlySpan<long> lengths, Span<long> allLengths, SparseTensor<T, TInd, TS, TSInd>? sub)

@@ -151,47 +151,51 @@ namespace Althea.Backend
 		/// <inheritdoc/>
 		public bool Available => true;
 
-		/// <inheritdoc/>
-		public TensorAlgebra.Dense.IBaseAbstractApi TensorAlgebraDenseBase => throw new NotImplementedException();
+		private readonly CSharp.Storage.Api ST = new();
+		private readonly CSharp.LinearAlgebra.Api LA = new();
+		private readonly CSharp.Random.Api RN = new();
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi LinearAlgebraDenseHalfMatrixBlas => throw new NotImplementedException();
+		public TensorAlgebra.Dense.IBaseAbstractApi? TensorAlgebraDenseBase => null;
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Dense.IExtendBlasAbstractApi LinearAlgebraDenseExtendBlas => throw new NotImplementedException();
+		public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => null;
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Dense.IBlasAbstractApi LinearAlgebraDenseBlas => throw new NotImplementedException();
+		public LinearAlgebra.Dense.IExtendBlasAbstractApi? LinearAlgebraDenseExtendBlas => LA;
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Sparse.IConversionAbstractApi LinearAlgebraSparseConversion => throw new NotImplementedException();
+		public LinearAlgebra.Dense.IBlasAbstractApi? LinearAlgebraDenseBlas => LA;
 
 		/// <inheritdoc/>
-		public GeneralSolver.IAbstractApi GeneralSolver => throw new NotImplementedException();
+		public LinearAlgebra.Sparse.IConversionAbstractApi? LinearAlgebraSparseConversion => LA;
 
 		/// <inheritdoc/>
-		public Transformer.IAbstractApi Transformer => throw new NotImplementedException();
+		public GeneralSolver.IAbstractApi? GeneralSolver => throw new NotImplementedException();
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Dense.ICopyAbstractApi LinearAlgebraDenseCopy => throw new NotImplementedException();
+		public Transformer.IAbstractApi? Transformer => null;
 
 		/// <inheritdoc/>
-		public Althea.Storage.IAbstractApi Storage => throw new NotImplementedException();
+		public LinearAlgebra.Dense.ICopyAbstractApi? LinearAlgebraDenseCopy => ST;
 
 		/// <inheritdoc/>
-		public TensorAlgebra.Sparse.IAbstractApi TensorAlgebraSparse => throw new NotImplementedException();
+		public Althea.Storage.IAbstractApi? Storage => ST;
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Dense.ILapackAbstractApi LinearAlgebraDenseLapack => throw new NotImplementedException();
+		public TensorAlgebra.Sparse.IAbstractApi? TensorAlgebraSparse => null;
 
 		/// <inheritdoc/>
-		public Althea.Random.IAbstractApi Random => throw new NotImplementedException();
+		public LinearAlgebra.Dense.ILapackAbstractApi? LinearAlgebraDenseLapack => null;
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Sparse.IComputationAbstractApi LinearAlgebraSparseComputation => throw new NotImplementedException();
+		public Althea.Random.IAbstractApi? Random => RN;
 
 		/// <inheritdoc/>
-		public TensorAlgebra.Dense.IExtendAbstractApi TensorAlgebraDenseExtend => throw new NotImplementedException();
+		public LinearAlgebra.Sparse.IComputationAbstractApi? LinearAlgebraSparseComputation => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IExtendAbstractApi? TensorAlgebraDenseExtend => null;
 	}
 	#endregion
 }

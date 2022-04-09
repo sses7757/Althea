@@ -21,6 +21,11 @@ namespace Althea.Backend.CSharp.Storage
 
 		/// <inheritdoc/>
 		public bool Disposed { get; set; } = false;
+
+		/// <summary>
+		/// Get the default <see cref="Api"/>.
+		/// </summary>
+		internal protected static readonly Api Default = new();
 		#endregion
 
 		#region operations

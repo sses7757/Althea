@@ -75,18 +75,18 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region vector math
 		/// <summary>
-		/// When implemented by a derived class, fill the vector <paramref name="x"/>'s values separated by <paramref name="stride"/> by same <paramref name="value"/>.
+		/// When implemented by a derived class, fill the vector <paramref name="x"/>'s values separated by <paramref name="strideX"/> by same <paramref name="value"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="x">The vector to be filled</param>
 		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
-		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool FillWithValue<T, TS>(TS x, T value, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool FillWithValue<T, TS>(TS x, long strideX, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="x"/> and <paramref name="y"/> are equal: <c><paramref name="x"/>[i] == <paramref name="y"/>[j]</c> (point-wise equals).
@@ -165,18 +165,18 @@ namespace Althea.LinearAlgebra.Dense
 		public abstract bool PointWiseConjugate<T, TS>(TS x, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalr"/></c> (point-wise addition).
+		/// When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalar"/></c> (point-wise addition).
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="x">The vector to be added in-place</param>
 		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="scalr">The scalar to add</param>
+		/// <param name="scalar">The scalar to add</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseAddScalar<T, TS>(TS x, long stride, T scalr) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool PointWiseAddScalar<T, TS>(TS x, long stride, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, cast the given vector from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
@@ -186,14 +186,14 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="source">The source vector</param>
-		/// <param name="incSrc">The stride between consecutive elements of <paramref name="source"/></param>
+		/// <param name="strideSource">The stride between consecutive elements of <paramref name="source"/></param>
 		/// <param name="destination">The destination vector</param>
-		/// <param name="incDst">The stride between consecutive elements of <paramref name="destination"/></param>
+		/// <param name="strideDestination">The stride between consecutive elements of <paramref name="destination"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="incSrc"/> or <paramref name="incDst"/> ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, int incSrc, TSOut destination, int incDst) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+		public abstract bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <summary>
 		/// When implemented by a derived class, truncate the vector by comparing each element's absolute value in <paramref name="x"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
@@ -522,7 +522,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixSumColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1>;
+		public abstract bool GeneralMatrixSumColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, aggregately product the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
@@ -540,7 +540,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixProductColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1>;
+		public abstract bool GeneralMatrixProductColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 
 		#region matrix extended

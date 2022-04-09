@@ -63,7 +63,7 @@ namespace Althea.Array
 		{
 			var ind = TInd.Create(index);
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
-			long find = SpConv.IndexBound(this.IndexStorage, ind, true);
+			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
 			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
 				return ~find;
 			else
@@ -76,8 +76,8 @@ namespace Althea.Array
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckRange(this, start, count, sub);
 			if (sub is not null && sub.Format != this.Format)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(sub));
-			long indexStart = SpConv.IndexBound(this.IndexStorage, TInd.Create(start), true);
-			long indexCount = SpConv.IndexBound(this.IndexStorage, TInd.Create(start + count), true);
+			long indexStart = SpConv.IndexBound(this.IndexStorage, 1, TInd.Create(start), true);
+			long indexCount = SpConv.IndexBound(this.IndexStorage, 1, TInd.Create(start + count), true);
 			if (sub is not null)
 			{
 				if (sub.IndexStorage.Length != indexCount || sub.NStored != indexCount)
@@ -307,7 +307,7 @@ namespace Althea.Array
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
 			var (blockIndex, insideBlockOffset) = index.DivRem(this.BS);
 			var ind = TInd.Create(blockIndex);
-			long find = SpConv.IndexBound(this.IndexStorage, ind, true);
+			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
 			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
 				return ~(find * this.BS);
 			else
@@ -326,8 +326,8 @@ namespace Althea.Array
 			if (count % this.BS != 0)
 				throw new ArgumentException(Resources.SparseError.CannotCutSimpleBlocking, nameof(start));
 			start /= this.BS; count /= this.BS;
-			indexStart = SpConv.IndexBound(this.IndexStorage, TInd.Create(start), true);
-			indexCount = SpConv.IndexBound(this.IndexStorage, TInd.Create(start + count), true);
+			indexStart = SpConv.IndexBound(this.IndexStorage, 1, TInd.Create(start), true);
+			indexCount = SpConv.IndexBound(this.IndexStorage, 1, TInd.Create(start + count), true);
 			indexCount -= indexStart;
 			return (indexStart, indexCount);
 		}

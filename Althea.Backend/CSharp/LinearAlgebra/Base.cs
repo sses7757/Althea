@@ -29,9 +29,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		/// <inheritdoc/>
 		public bool Disposed { get; set; } = false;
+
+		/// <summary>
+		/// Get the default <see cref="Api"/>.
+		/// </summary>
+		internal protected static readonly Api Default = new();
 		#endregion
 
-		
+
 		#region helpers
 		#region load and simple op
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,31 +61,24 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Vector<T> LoadVector<T>(T* r) where T : unmanaged, INumber<T>
-		{
-			return Unsafe.ReadUnaligned<Vector<T>>(r);
-		}
+		private static Vector<T> LoadVector<T>(T* r) where T : unmanaged, INumber<T> => Unsafe.ReadUnaligned<Vector<T>>(r);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Vector<T> LoadVector<T>(void* r) where T : unmanaged, INumber<T>
-		{
-			return Unsafe.ReadUnaligned<Vector<T>>(r);
-		}
+		private static Vector<T> LoadVector<T>(void* r) where T : unmanaged, INumber<T> => Unsafe.ReadUnaligned<Vector<T>>(r);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Vector256<T> LoadVector256<T>(T* r) where T : unmanaged, INumber<T>
-		{
-			return Unsafe.ReadUnaligned<Vector256<T>>(r);
-		}
+		private static Vector256<T> LoadVector256<T>(T* r) where T : unmanaged, INumber<T> => Unsafe.ReadUnaligned<Vector256<T>>(r);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Vector256<T> LoadVector256<T>(void* r) where T : unmanaged, INumber<T>
-		{
-			return Unsafe.ReadUnaligned<Vector256<T>>(r);
-		}
+		private static Vector256<T> LoadVector256<T>(void* r) where T : unmanaged, INumber<T> => Unsafe.ReadUnaligned<Vector256<T>>(r);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void LoadVector<T>(T* r, out Vector<T> v1, out Vector<T> v2) where T : unmanaged, INumber<T>
 		{
 			v1 = Unsafe.ReadUnaligned<Vector<T>>(r);
 			v2 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count);
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void LoadVector<T>(T* r, out Vector<T> v1, out Vector<T> v2, out Vector<T> v3, out Vector<T> v4) where T : unmanaged, INumber<T>
 		{
@@ -89,6 +87,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			v3 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 2);
 			v4 = Unsafe.ReadUnaligned<Vector<T>>(r + Vector<T>.Count * 3);
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void LoadVector<T>(T* r, out Vector<T> v1, out Vector<T> v2, out Vector<T> v3, out Vector<T> v4, out Vector<T> v5, out Vector<T> v6, out Vector<T> v7, out Vector<T> v8) where T : unmanaged, INumber<T>
 		{
@@ -103,20 +102,17 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void StoreVector<T>(Vector<T> v, void* r) where T : unmanaged, INumber<T>
-		{
-			Unsafe.WriteUnaligned(r, v);
-		}
+		private static void StoreVector<T>(Vector<T> v, void* r) where T : unmanaged, INumber<T> => Unsafe.WriteUnaligned(r, v);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void StoreVector256<T>(Vector256<T> v, void* r) where T : unmanaged, INumber<T>
-		{
-			Unsafe.WriteUnaligned(r, v);
-		}
+		private static void StoreVector256<T>(Vector256<T> v, void* r) where T : unmanaged, INumber<T> => Unsafe.WriteUnaligned(r, v);
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void StoreVector<T>(Vector<T> v1, Vector<T> v2, T* r) where T : unmanaged, INumber<T>
 		{
 			Unsafe.WriteUnaligned(r, v1); Unsafe.WriteUnaligned(r + Vector<T>.Count, v2);
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void StoreVector<T>(Vector<T> v1, Vector<T> v2, Vector<T> v3, Vector<T> v4, T* r) where T : unmanaged, INumber<T>
 		{
@@ -125,6 +121,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			Unsafe.WriteUnaligned(r + Vector<T>.Count * 2, v3);
 			Unsafe.WriteUnaligned(r + Vector<T>.Count * 3, v4);
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void StoreVector<T>(Vector<T> v1, Vector<T> v2, Vector<T> v3, Vector<T> v4, Vector<T> v5, Vector<T> v6, Vector<T> v7, Vector<T> v8, T* r) where T : unmanaged, INumber<T>
 		{
@@ -344,6 +341,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				}
 			}
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void ComplexMultiplyAdd<Conj>(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, ref Vector256<float> realC, ref Vector256<float> imagC)
 		{
@@ -356,6 +354,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
 			UnpackComplexMultiplyAdd<Conj>(realA, imagA, realB, imagB, ref realC, ref imagC);
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void ComplexMultiply<Conj, PackOut>(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, out Vector256<float> c0, out Vector256<float> c1)
 		{
@@ -471,6 +470,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			ComplexMultiplyAdd<Conj>(a0, a1, b0, b1, ref realC, ref imagC);
 		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void ComplexMultiply<Conj>(Complex<float>* a, Complex<float>* b, out Vector256<float> left, out Vector256<float> right)
 		{
@@ -604,16 +604,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		public virtual partial bool Dot<T, TS1, TS2>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <inheritdoc/>
-		public virtual partial bool FillWithValue<T, TS>(TS x, T value, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool FillWithValue<T, TS>(TS x, long strideX, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual partial bool PointWiseEquals<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool PointWiseEquals<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <inheritdoc/>
-		public virtual partial bool PointWiseMultiply<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool PointWiseMultiply<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <inheritdoc/>
-		public virtual partial bool PointWiseDivide<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool PointWiseDivide<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <inheritdoc/>
 		public virtual partial bool PointWisePower<T, TS>(TS x, long stride, T p) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
@@ -622,10 +622,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		public virtual partial bool PointWiseConjugate<T, TS>(TS x, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual partial bool PointWiseAddScalar<T, TS>(TS x, long stride, T scalr) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool PointWiseAddScalar<T, TS>(TS x, long stride, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual partial bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, int incSrc, TSOut destination, int incDst) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <inheritdoc/>
 		public virtual partial bool PointWiseTruncate<T, TS>(TS x, long stride, double threshold) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
@@ -643,92 +643,120 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		public virtual partial bool PartialProduct<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixFill<T, TS>(TS A, long ld, T value, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool Sort<T, TS>(TS array, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatricesEquals<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual partial bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, INumber<TOther> where TS2 : class, IStorage<TOther, TS2>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatricesMultiply<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual partial bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatricesDivide<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual partial bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixPower<T, TS>(TS A, long ld, T p, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixAddScalar<T, TS>(TS A, long ld, T scalar, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, IBinaryInteger<TOut> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixCast<TIn, TOut, TSIn, TSOut>(TSIn source, long lds, TSOut destination, long ldd, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) where T : unmanaged, IBinaryInteger<T> where TOut : unmanaged, IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixTruncate<T, TS>(TS A, long ld, double threshold, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixSum<T, TS>(TS A, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool VectorSetValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixAbsSum<T, TS>(TS A, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool VectorGatherValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixNorm<T, TS>(TS A, long ld, long rows, long cols, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual partial bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 
 		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixProduct<T, TS>(TS A, long ld, long rows, long cols, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixAbsArgMax<T, TS>(TS A, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixAbsArgMin<T, TS>(TS A, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixSumColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
-
-		/// <inheritdoc/>
-		public virtual partial bool GeneralMatrixProductColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
-
-		/// <inheritdoc/>
-		public virtual partial bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool VectorSetValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool VectorGatherValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool Sort<T, TS>(TS array) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool Sort<T, TOther, TS, TS2>(TS keys, TS2 values) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool IndexMinMax<T, TS>(TS array, bool sorted, out (T Min, T Max) minmax) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool IndexFind<T, TS>(TS array, bool sorted, T value, out long find) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool IndexBound<T, TS>(TS array, T value, bool lowerBound, out long index) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) => throw new NotImplementedException();
+		public virtual partial bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 		#endregion
 
 
 		#region not supported
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixFill<T, TS>(TS A, long ld, T value, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => false;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatricesEquals<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			equals = default;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatricesMultiply<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatricesDivide<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixPower<T, TS>(TS A, long ld, T p, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => false;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixAddScalar<T, TS>(TS A, long ld, T scalar, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => false;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixCast<TIn, TOut, TSIn, TSOut>(TSIn source, long lds, TSOut destination, long ldd, long rows, long cols) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut> => false;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixTruncate<T, TS>(TS A, long ld, double threshold, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => false;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixSum<T, TS>(TS A, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			sum = default;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixAbsSum<T, TS>(TS A, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			sum = default;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixNorm<T, TS>(TS A, long ld, long rows, long cols, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			norm = default;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixProduct<T, TS>(TS A, long ld, long rows, long cols, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			product = default;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixAbsArgMax<T, TS>(TS A, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			index = default;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixAbsArgMin<T, TS>(TS A, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			index = default;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixSumColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixProductColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+
 		bool IBlasAbstractApi.GeneralMatrixMultiplyVector<T, TSM, TSV1, TSV2>(MatrixOperation op, long m, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) => false;
 
 		bool IBlasAbstractApi.SymmetricMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool hermA, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) => false;

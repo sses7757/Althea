@@ -310,21 +310,29 @@ namespace Althea
 		/// <summary>
 		/// The API implementation of <see cref=""{ns.Name}.{apiClass.Identifier}""/>.
 		/// </summary>
-		{ns.Name}.{apiClass.Identifier} {propertyName} {{ get; }}";
+		{ns.Name}.{apiClass.Identifier}? {propertyName} {{ get; }}";
 
 				implSetting += $@"
 
-		public {ns.Name}.{apiClass.Identifier} {propertyName} {{ get; set; }}";
+		public {ns.Name}.{apiClass.Identifier}? {propertyName} {{ get; set; }}";
 				implSettingBackend += $@"
 			this.{propertyName} = impls.{propertyName};";
 				implSettingSet += $@"
-			{ns.Name}.{selectorName}.SetImplementation(this.{propertyName});";
-				implSettingJson += $@", string {propertyNameFirstLower}";
+			if (this.{propertyName} is not null)
+				{ns.Name}.{selectorName}.SetImplementation(this.{propertyName});";
+				implSettingJson += $@", string? {propertyNameFirstLower}";
 				implSettingJson2 += $@"
-			type = Type.GetType({propertyNameFirstLower});
-			if (type is null)
-				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof({propertyNameFirstLower}));
-			this.{propertyName} = IAbstractRuntimeApi<{ns.Name}.{apiClass.Identifier}>.Create(type);";
+			if ({propertyNameFirstLower} is null)
+			{{
+				this.{propertyName} = null;
+			}}
+			else
+			{{
+				type = Type.GetType({propertyNameFirstLower});
+				if (type is null)
+					throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof({propertyNameFirstLower}));
+				this.{propertyName} = IAbstractRuntimeApi<{ns.Name}.{apiClass.Identifier}>.Create(type);
+			}}";
 				implSettingJson3 += $@"
 				writer.WriteString(nameof({propertyName}), value.{propertyName}?.GetType()?.AssemblyQualifiedName);";
 			}

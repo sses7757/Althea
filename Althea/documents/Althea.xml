@@ -435,6 +435,12 @@
             Deconstructor to be invoked by GC.
             </summary>
         </member>
+        <member name="M:Althea.Array.AbstractDenseMatrix`2.ToCompact">
+            <summary>
+            When implemented by a derived class, copy the values from this dense matrix to a new <typeparamref name="TS"/> with all values stored in compact mode that <see cref="P:Althea.Array.AbstractDenseMatrix`2.LeadDim"/> == <see cref="P:Althea.Array.AbstractDenseMatrix`2.NRows"/>.
+            </summary>
+            <returns>The created compact matrix's storage as a <typeparamref name="TS"/></returns>
+        </member>
         <member name="T:Althea.Array.DenseMatrix`2">
             <summary>
             The base dense general matrix class whose only storage is of type <typeparamref name="TS"/>.
@@ -550,10 +556,7 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseMatrix`2.ToCompact">
-            <summary>
-            Copy the values from this dense matrix to a new <typeparamref name="TS"/> with <see cref="P:Althea.Array.AbstractDenseMatrix`2.LeadDim"/> == <see cref="P:Althea.Array.AbstractDenseMatrix`2.NRows"/>.
-            </summary>
-            <returns>The created compact vector's storage as a <typeparamref name="TS"/></returns>
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseMatrix`2.JsonSerialize">
             <inheritdoc/>
@@ -717,10 +720,7 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.TriangularMatrix`2.ToCompact">
-            <summary>
-            Copy the values from this triangular matrix to a new dense <typeparamref name="TS"/> with <see cref="P:Althea.Array.AbstractDenseMatrix`2.LeadDim"/> == <see cref="P:Althea.Array.AbstractDenseMatrix`2.NRows"/>.
-            </summary>
-            <returns>The created compact vector's storage as a <typeparamref name="TS"/></returns>
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Array.TriangularMatrix`2.JsonSerialize">
             <inheritdoc/>
@@ -884,10 +884,7 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SymmetricMatrix`2.ToCompact">
-            <summary>
-            Copy the values from this symmetric matrix to a new dense <typeparamref name="TS"/> with <see cref="P:Althea.Array.AbstractDenseMatrix`2.LeadDim"/> == <see cref="P:Althea.Array.AbstractDenseMatrix`2.NRows"/>.
-            </summary>
-            <returns>The created compact vector's storage as a <typeparamref name="TS"/></returns>
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SymmetricMatrix`2.JsonSerialize">
             <inheritdoc/>
@@ -7226,6 +7223,15 @@
             <param name="action">The <see cref="T:System.Action`2"/> whose first input is <paramref name="array"/> and second input is its alike one</param>
             <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
         </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SwapRemove``1(System.Collections.Generic.List{``0},``0)">
+            <summary>
+            Remove the last occurrence of <paramref name="value"/> in <paramref name="list"/> if present by swapping it with the last element in <paramref name="list"/>.
+            </summary>
+            <typeparam name="T">The data type of <paramref name="list"/></typeparam>
+            <param name="list">The <see cref="T:System.Collections.Generic.List`1"/> whose last <paramref name="value"/> will be removed</param>
+            <param name="value">The value to remove</param>
+            <returns>Success or not.</returns>
+        </member>
         <member name="M:Althea.Helpers.ExtensionHelper.GetPosition(System.Index,System.Int64,System.Boolean)">
             <summary>
             Calculate the offset from the start using the giving collection length.
@@ -8970,18 +8976,18 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.FillWithValue``2(``1,``0,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.FillWithValue``2(``1,System.Int64,``0)">
             <summary>
-            When implemented by a derived class, fill the vector <paramref name="x"/>'s values separated by <paramref name="stride"/> by same <paramref name="value"/>.
+            When implemented by a derived class, fill the vector <paramref name="x"/>'s values separated by <paramref name="strideX"/> by same <paramref name="value"/>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="x">The vector to be filled</param>
             <param name="value">The value to set as a <typeparamref name="T"/></param>
-            <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.PointWiseEquals``3(``1,System.Int64,``2,System.Int64,System.Boolean@)">
             <summary>
@@ -9056,18 +9062,18 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.PointWiseAddScalar``2(``1,System.Int64,``0)">
             <summary>
-            When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalr"/></c> (point-wise addition).
+            When implemented by a derived class, compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalar"/></c> (point-wise addition).
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="x">The vector to be added in-place</param>
             <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-            <param name="scalr">The scalar to add</param>
+            <param name="scalar">The scalar to add</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.PointWiseCast``4(``2,System.Int32,``3,System.Int32)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.PointWiseCast``4(``2,System.Int64,``3,System.Int64)">
             <summary>
             When implemented by a derived class, cast the given vector from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
             </summary>
@@ -9076,12 +9082,12 @@
             <typeparam name="TSIn">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TSOut">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="source">The source vector</param>
-            <param name="incSrc">The stride between consecutive elements of <paramref name="source"/></param>
+            <param name="strideSource">The stride between consecutive elements of <paramref name="source"/></param>
             <param name="destination">The destination vector</param>
-            <param name="incDst">The stride between consecutive elements of <paramref name="destination"/></param>
+            <param name="strideDestination">The stride between consecutive elements of <paramref name="destination"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="incSrc"/> or <paramref name="incDst"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.PointWiseTruncate``2(``1,System.Int64,System.Double)">
             <summary>
@@ -10745,17 +10751,17 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.FillWithValue``2(``1,``0,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.FillWithValue``2(``1,System.Int64,``0)">
             <summary>
-            Fill the vector <paramref name="x"/>'s values separated by <paramref name="stride"/> by same <paramref name="value"/>.
+            Fill the vector <paramref name="x"/>'s values separated by <paramref name="strideX"/> by same <paramref name="value"/>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="x">The vector to be filled</param>
             <param name="value">The value to set as a <typeparamref name="T"/></param>
-            <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.PointWiseEquals``3(``1,System.Int64,``2,System.Int64)">
@@ -10831,18 +10837,18 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.PointWiseAddScalar``2(``1,System.Int64,``0)">
             <summary>
-            Compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalr"/></c> (point-wise addition).
+            Compute <c><paramref name="x"/> = <paramref name="x"/> + <paramref name="scalar"/></c> (point-wise addition).
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="x">The vector to be added in-place</param>
             <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-            <param name="scalr">The scalar to add</param>
+            <param name="scalar">The scalar to add</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.PointWiseCast``4(``2,System.Int32,``3,System.Int32)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.PointWiseCast``4(``2,System.Int64,``3,System.Int64)">
             <summary>
             Cast the given vector from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
             </summary>
@@ -10851,11 +10857,11 @@
             <typeparam name="TSIn">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TSOut">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="source">The source vector</param>
-            <param name="incSrc">The stride between consecutive elements of <paramref name="source"/></param>
+            <param name="strideSource">The stride between consecutive elements of <paramref name="source"/></param>
             <param name="destination">The destination vector</param>
-            <param name="incDst">The stride between consecutive elements of <paramref name="destination"/></param>
+            <param name="strideDestination">The stride between consecutive elements of <paramref name="destination"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="incSrc"/> or <paramref name="incDst"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.PointWiseTruncate``2(``1,System.Int64,System.Double)">
@@ -12536,17 +12542,19 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If the size in <paramref name="target"/> is not a reshape of <paramref name="source"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.Sort``2(``1)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.Sort``2(``1,System.Int64)">
             <summary>
             When implemented by a derived class, sort the values of the given <paramref name="array"/>.
             </summary>
             <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="array">The storage of the array to be sorted</param>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.Sort``4(``2,``3)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.Sort``4(``2,System.Int64,``3,System.Int64)">
             <summary>
             When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with <paramref name="values"/>.
             </summary>
@@ -12556,46 +12564,53 @@
             <typeparam name="TS2">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="keys">The storage of the key array to be sorted</param>
             <param name="values">The storage of the value array to be sorted</param>
+            <param name="strideKeys">The stride between consecutive elements in <paramref name="keys"/></param>
+            <param name="strideValues">The stride between consecutive elements in <paramref name="values"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="keys"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideKeys"/> or <paramref name="strideValues"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.IndexMinMax``2(``1,System.Boolean,System.ValueTuple{``0,``0}@)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.MinMax``2(``1,System.Int64,System.ValueTuple{``0,``0}@)">
             <summary>
-            When implemented by a derived class, find the minimum and maximum values of the given integer-typed <paramref name="array"/>.
+            When implemented by a derived class, find the minimum and maximum values of the given <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
             <param name="array">The storage of the integer-typed array</param>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <param name="minmax">Output the minimum and maximum values</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.IndexFind``2(``1,System.Boolean,``0,System.Int64@)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.IndexOf``2(``1,System.Int64,System.Boolean,``0,System.Int64@)">
             <summary>
-            When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
+            When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the index type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <param name="array">The storage of the integer-typed array</param>
             <param name="value">The target value to find</param>
             <param name="find">Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/> if it is found; otherwise, output a negative number</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.IndexBound``2(``1,``0,System.Boolean,System.Int64@)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.IndexBound``2(``1,System.Int64,``0,System.Boolean,System.Int64@)">
             <summary>
-            When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
+            When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the index type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <param name="value">The target value to find</param>
             <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
             <param name="index">Output the zero-based index of the target bound in <paramref name="array"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.IConversionAbstractApi.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)">
             <summary>
@@ -13210,17 +13225,19 @@
             <exception cref="T:System.ArgumentException">If the size in <paramref name="target"/> is not a reshape of <paramref name="source"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.Sort``2(``1)">
+        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.Sort``2(``1,System.Int64)">
             <summary>
             Sort the values of the given <paramref name="array"/>.
             </summary>
             <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="array">The storage of the array to be sorted</param>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.Sort``4(``2,``3)">
+        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.Sort``4(``2,System.Int64,``3,System.Int64)">
             <summary>
             Sort the elements of the given integer-typed <paramref name="keys"/> with <paramref name="values"/>.
             </summary>
@@ -13230,45 +13247,52 @@
             <typeparam name="TS2">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="keys">The storage of the key array to be sorted</param>
             <param name="values">The storage of the value array to be sorted</param>
+            <param name="strideKeys">The stride between consecutive elements in <paramref name="keys"/></param>
+            <param name="strideValues">The stride between consecutive elements in <paramref name="values"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="keys"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideKeys"/> or <paramref name="strideValues"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.IndexMinMax``2(``1,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.MinMax``2(``1,System.Int64)">
             <summary>
-            Find the minimum and maximum values of the given integer-typed <paramref name="array"/>.
+            Find the minimum and maximum values of the given <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
             <param name="array">The storage of the integer-typed array</param>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <returns>Output the minimum and maximum values.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.IndexFind``2(``1,System.Boolean,``0)">
+        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.IndexOf``2(``1,System.Int64,System.Boolean,``0)">
             <summary>
-            Find the zero-based index of the target <paramref name="value"/> in the given <b>sorted</b> integer-typed <paramref name="array"/>.
+            Find the zero-based index of the target <paramref name="value"/> in the given <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the index type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <param name="array">The storage of the integer-typed array</param>
             <param name="value">The target value to find</param>
             <returns>Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/> if it is found; otherwise, output a negative number.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.IndexBound``2(``1,``0,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.IndexBound``2(``1,System.Int64,``0,System.Boolean)">
             <summary>
-            Find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> integer-typed <paramref name="array"/>.
+            Find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the index type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <param name="value">The target value to find</param>
             <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
             <returns>Output the zero-based index of the target bound in <paramref name="array"/>.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.ConversionApiSelector.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)">
@@ -13694,6 +13718,14 @@
             <param name="sortedSpan">The sorted span to find in</param>
             <param name="value">The value to find</param>
             <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.AllBytesSame``1(``0)">
+            <summary>
+            Check if all bytes in the given <paramref name="value"/> are the same.
+            </summary>
+            <typeparam name="T">The data type whose address can be obtained</typeparam>
+            <param name="value">The input value to check</param>
+            <returns>True if all bytes in the given <paramref name="value"/> are the same; false otherwise.</returns>
         </member>
         <member name="M:Althea.Linq.SpanLinq.FastAllZeros``1(System.Span{``0})">
             <summary>

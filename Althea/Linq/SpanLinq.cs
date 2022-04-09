@@ -764,6 +764,17 @@ namespace Althea.Linq
 
 		#region predicate
 		/// <summary>
+		/// Check if all bytes in the given <paramref name="value"/> are the same.
+		/// </summary>
+		/// <typeparam name="T">The data type whose address can be obtained</typeparam>
+		/// <param name="value">The input value to check</param>
+		/// <returns>True if all bytes in the given <paramref name="value"/> are the same; false otherwise.</returns>
+		public static unsafe bool AllBytesSame<T>(this T value) where T : unmanaged
+		{
+			return new ReadOnlySpan<byte>(&value, sizeof(T)).AllSame();
+		}
+
+		/// <summary>
 		/// Check if all elements of <paramref name="span"/> are zeros by checking if all the bytes in <paramref name="span"/> are 0
 		/// </summary>
 		/// <param name="span">The span to check</param>
@@ -1693,7 +1704,7 @@ namespace Althea.Linq
 			// shortcut
 			if (set1.Length != set2.Length)
 				return false;
-			if (set1.IsEmpty && set2.IsEmpty || set1 == set2)
+			if ((set1.IsEmpty && set2.IsEmpty) || set1 == set2)
 				return true;
 			// else
 			int len = set1.Length;
