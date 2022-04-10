@@ -47,7 +47,7 @@ namespace Althea.GeneralSolver
 		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{T, TVec}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{T, TVec}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{T, TVec}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{T, TVec}.OtherVector"/> is used as the output eigenvector.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		[AbstractApiMethod]
-		public abstract bool NaiveKrylovSubspaceEigenHermitain<T, TVec>(ref KrylovSubspaceSolveInfo<T, TVec> info, out (double Value, TVec Vector) eigen) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>, new();
+		public abstract bool NaiveKrylovSubspaceEigenHermitain<T, TVec>(ref KrylovSubspaceSolveInfo<T, TVec> info, out (double Value, TVec Vector) eigen) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
@@ -58,10 +58,10 @@ namespace Althea.GeneralSolver
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{T, TVec}"/> used as input information and output container</param>
 		/// <param name="converged">Output the number of converged eigen-pairs</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{T, TVec}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{T, TVec}.EigenvaluesComplex"/> and <see cref="KrylovSubspaceSolveInfo{T, TVec}.EigenvectorsImag"/> are not used</remarks>
+		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{T, TVec}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{T, TVec}.EigenvaluesImag"/> and <see cref="KrylovSubspaceSolveInfo{T, TVec}.EigenvectorsImag"/> are not used</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		[AbstractApiMethod]
-		public abstract bool RestartKrylovSubspaceEigen<T, TVec>(bool hermitian, ref KrylovSubspaceSolveInfo<T, TVec> info, out int converged) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>, new();
+		public abstract bool RestartKrylovSubspaceEigen<T, TVec>(bool hermitian, ref KrylovSubspaceSolveInfo<T, TVec> info, out int converged) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
@@ -75,6 +75,6 @@ namespace Althea.GeneralSolver
 		/// <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="KrylovSubspaceSolveInfo{T, TVec}.OtherVector"/> is used as the output solve.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		[AbstractApiMethod]
-		public abstract bool RestartKrylovSubspaceLinearSolve<T, TVec>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<T, TVec> info, out (TVec Vector, double RelativeError) solve) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>, new();
+		public abstract bool RestartKrylovSubspaceLinearSolve<T, TVec>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<T, TVec> info, out (TVec Vector, double RelativeError) solve) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>;
 	}
 }

@@ -73,6 +73,11 @@ namespace Althea.GeneralSolver
 		void ReplaceBy(TVec other);
 
 		/// <summary>
+		/// When implemented by a derived class, statically get an empty <typeparamref name="TVec"/>.
+		/// </summary>
+		abstract static TVec Empty { get; }
+
+		/// <summary>
 		/// Statically multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <typeparamref name="TVec"/>.
 		/// </summary>
 		/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
@@ -284,6 +289,7 @@ namespace Althea.GeneralSolver
 		/// <summary>
 		/// When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
 		/// <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
 		/// <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
 		/// <param name="nConverged">THe number of converged eigen-pairs</param>
@@ -291,9 +297,9 @@ namespace Althea.GeneralSolver
 		/// <param name="maxIter">The maximum number of iteration (per restart)</param>
 		/// <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
 		/// <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
-		/// <returns>The actual preserved count</returns>
+		/// <returns>The <paramref name="output"/> with correct size.</returns>
 		/// <remarks>This method will only be invoked internally.</remarks>
-		int PreserveSelect(Span<Complex<double>> estimateEigvals, Span<Complex<double>> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true);
+		ReadOnlySpan<int> PreserveSelect<T>(Span<T> estimateEigvals, Span<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPoint<T>;
 	}
 
 	internal sealed class BuiltInPreserveSelector : IPreserveSelector
@@ -305,7 +311,7 @@ namespace Althea.GeneralSolver
 			this.Strategy = strategy;
 		}
 
-		int IPreserveSelector.PreserveSelect(Span<Complex<double>> estimateEigvals, Span<Complex<double>> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged)
+		public ReadOnlySpan<int> PreserveSelect<T>(Span<T> estimateEigvals, Span<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPoint<T>
 		{
 			int length = estimateEigvals.Length;
 			int indexMax = 0;
@@ -327,21 +333,21 @@ namespace Althea.GeneralSolver
 					if (nTarget >= upperCount)
 					{
 						output[..upperCount].FillWithRange(0);
-						return upperCount;
+						return output[..upperCount];
 					}
-					using (var temp = length.CheckStackLimit<Complex<double>>())
+					using (var temp = length.CheckStackLimit<T>())
 					{
-						Span<Complex<double>> lastRow = temp.IsEmpty ? stackalloc Complex<double>[length] : temp.Data;
+						Span<T> lastRow = temp.IsEmpty ? stackalloc T[length] : temp.Data;
 						for (int i = 0; i < length; i++)
 						{
 							lastRow[i] = estimateEigvecs[length * (i + 1) - 1];
 						}
-						var lastMax = lastRow.Max(static v => v.Magnitude);
-						var lastNeig = lastRow[nTarget - 1].Magnitude;
-						var upperBound = Math.Max(Math.Sqrt(lastMax * lastNeig), 2 * lastNeig);
+						T lastMax = lastRow.Max(static v => T.Abs(v));
+						T lastNeig = T.Abs(lastRow[nTarget - 1]);
+						T upperBound = T.Max(T.Sqrt(lastMax * lastNeig), (T.One + T.One) * lastNeig);
 						for (indexMax = 0; indexMax < upperCount; indexMax++)
 						{
-							if (lastRow[indexMax].Magnitude >= upperBound)
+							if (T.Abs(lastRow[indexMax]) >= upperBound)
 								break;
 						}
 					}
@@ -357,11 +363,11 @@ namespace Althea.GeneralSolver
 					break;
 				case RestartStrategy.WholeIterResidualImprove:
 					upperCount = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
-					double abs0 = estimateEigvals[0].Magnitude, gap = estimateEigvals[^1].Magnitude - abs0;
-					double maxVal = 0;
+					T abs0 = T.Abs(estimateEigvals[0]), gap = T.Abs(estimateEigvals[^1]) - abs0;
+					T maxVal = T.Zero;
 					for (int i = 0; i < upperCount; i++)
 					{
-						double val = (maxIter - i - 1) * (estimateEigvals[i + 1].Magnitude - abs0) / gap;
+						T val = T.Create(maxIter - i - 1) * (T.Abs(estimateEigvals[i + 1]) - abs0) / gap;
 						if (val > maxVal)
 						{
 							maxVal = val;
@@ -379,7 +385,7 @@ namespace Althea.GeneralSolver
 			}
 			// return
 			output[..indexMax].FillWithRange(0);
-			return indexMax;
+			return output[..indexMax];
 		}
 	}
 	#endregion
@@ -425,22 +431,22 @@ namespace Althea.GeneralSolver
 		public readonly IPreserveSelector PreserveSelector;
 
 		/// <summary>
-		/// The output converged eigenvalues of <see cref="double"/> if the matrix is hermitian, sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+		/// The output converged eigenvalues sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
 		/// </summary>
-		public readonly Span<double> Eigenvalues;
+		public readonly Span<T> Eigenvalues;
 
 		/// <summary>
-		/// The output converged eigenvalues of <see cref="Complex{T}"/> type if the matrix is not hermitian, sorted by the given order of <see cref="WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+		/// Another <see cref="Eigenvalues"/> if the matrix is not hermitian and <typeparamref name="T"/> is not a complex.
 		/// </summary>
-		public readonly Span<Complex<double>> EigenvaluesComplex;
+		public readonly Span<T> EigenvaluesImag;
 
 		/// <summary>
-		/// The output converged eigenvectors (or its real parts if <typeparamref name="T"/> is not a complex type and <see cref="MatrixFunction"/> is not hermitian), sorted with <see cref="Eigenvalues"/> or <see cref="EigenvaluesComplex"/>.
+		/// The output converged eigenvectors (or its real parts if <typeparamref name="T"/> is not a complex type and <see cref="MatrixFunction"/> is not hermitian), sorted with <see cref="Eigenvalues"/> or <see cref="EigenvaluesImag"/>.
 		/// </summary>
 		public readonly Span<TVec> Eigenvectors;
 
 		/// <summary>
-		/// The output converged eigenvectors' imaginary parts, sorted with <see cref="EigenvaluesComplex"/>. The corresponding element may be null if the eigenvector has no imaginary parts.
+		/// The output converged eigenvectors' imaginary parts, sorted with <see cref="EigenvaluesImag"/>. The corresponding element may be null if the eigenvector has no imaginary parts.
 		/// </summary>
 		public readonly Span<TVec> EigenvectorsImag;
 
@@ -510,7 +516,7 @@ namespace Althea.GeneralSolver
 			this.PreserveSelector = new BuiltInPreserveSelector(default);
 
 			this.Eigenvalues = default;
-			this.EigenvaluesComplex = default;
+			this.EigenvaluesImag = default;
 			this.Eigenvectors = default;
 			this.EigenvectorsImag = default;
 		}
@@ -523,7 +529,7 @@ namespace Althea.GeneralSolver
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
 		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> or <paramref name="outputCompEigenvectors"/> is too short</exception>
 		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
-									   Span<Complex<double>> outputEigenvalues,
+									   Span<T> outputEigenvalues, Span<T> outputEigenvaluesImag,
 									   Span<TVec> outputRealEigenvectors, Span<TVec> outputCompEigenvectors,
 									   int nEig = 1, WhichEigenvalues which = WhichEigenvalues.LargestAbsolute,
 									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
@@ -564,8 +570,8 @@ namespace Althea.GeneralSolver
 			this.CheckMatrixFunction = check;
 			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
 
-			this.Eigenvalues = default;
-			this.EigenvaluesComplex = outputEigenvalues;
+			this.Eigenvalues = outputEigenvalues;
+			this.EigenvaluesImag = outputEigenvaluesImag;
 			this.Eigenvectors = outputRealEigenvectors;
 			this.EigenvectorsImag = outputCompEigenvectors;
 		}
@@ -578,7 +584,7 @@ namespace Althea.GeneralSolver
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
 		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/> or <paramref name="outputEigenvectors"/> is too short</exception>
 		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
-									   Span<double> outputEigenvalues, Span<TVec> outputEigenvectors,
+									   Span<T> outputEigenvalues, Span<TVec> outputEigenvectors,
 									   int nEig = 1, int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
 									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull,
 									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
@@ -616,7 +622,7 @@ namespace Althea.GeneralSolver
 			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
 
 			this.Eigenvalues = outputEigenvalues;
-			this.EigenvaluesComplex = default;
+			this.EigenvaluesImag = default;
 			this.Eigenvectors = outputEigenvectors;
 			this.EigenvectorsImag = default;
 		}
@@ -663,7 +669,7 @@ namespace Althea.GeneralSolver
 			this.PreserveSelector = selector ?? new BuiltInPreserveSelector(RestartStrategy.KrylovSchur);
 
 			this.Eigenvalues = default;
-			this.EigenvaluesComplex = default;
+			this.EigenvaluesImag = default;
 			this.Eigenvectors = default;
 			this.EigenvectorsImag = default;
 		}
@@ -695,7 +701,7 @@ namespace Althea.GeneralSolver
 			this.PreserveSelector = old.PreserveSelector;
 
 			this.Eigenvalues = old.Eigenvalues;
-			this.EigenvaluesComplex = old.EigenvaluesComplex;
+			this.EigenvaluesImag = old.EigenvaluesImag;
 			this.Eigenvectors = old.Eigenvectors;
 			this.EigenvectorsImag = old.EigenvectorsImag;
 		}

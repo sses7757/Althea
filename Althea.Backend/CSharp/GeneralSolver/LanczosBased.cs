@@ -1,285 +1,73 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using Althea.Backend.Storage;
+using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.Solver;
-
-using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
-
 
 namespace Althea.Backend.CSharp.Solver
 {
-	internal static class Common
-	{
-		#region from T to double
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool ToDoubleCheck<T>(this T value, out double d) where T : unmanaged, INumber<T>
-		{
-			if (Const<T>.IsComplex)
-			{
-				d = value.NativeRealPart();
-				double im = value.NativeImagPart();
-				// check whether the imaginary is small enough
-				return Math.Abs(im / d) <= Const<T>.MachinePrecisionHalf;
-			}
-			else
-			{
-				d = value.ToDouble();
-				return double.IsFinite(d);
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static double ToDoubleCheck<T>(this T value) where T : unmanaged, INumber<T>
-		{
-			if (Const<T>.IsComplex)
-			{
-				double re = value.NativeRealPart();
-				double im = value.NativeImagPart();
-				// check whether the imaginary is small enough (the absolute value equals to the real part in machine precision)
-				if (Math.Abs(im / re) > Const<T>.MachinePrecisionHalf)
-					throw new ArithmeticException(string.Format(Resource.GenericNotNormalReal, value));
-				return re;
-			}
-			else
-			{
-				double d = value.ToDouble();
-				if (!double.IsFinite(d))
-					throw new ArithmeticException(string.Format(Resource.GenericNotNormalReal, value));
-				return d;
-			}
-		}
-		#endregion
-
-		#region parameters check
-		internal const int HERM_MAX_ITER = 35, NON_HERM_MAX_ITER = 25;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static SpanList<T> ClearList<T>(this SpanList<T> list) where T : IDisposable
-		{
-			list.Clear(static elem => elem?.Dispose());
-			return list;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void ClearSpan<T>(this Span<T> span) where T : IDisposable
-		{
-			span.ForEach(static elem => elem?.Dispose());
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void CheckParas<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int smallestK, ref int maxIter, bool herm)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
-		{
-			// check MatrixFunction
-			if (matrixFunction is null)
-				throw new ArgumentNullException(nameof(matrixFunction));
-			try
-			{
-				// test matrix apply
-				using var testOutput = matrixFunction.Invoke(initial);
-				if (testOutput.Length != initial.Length)
-					throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(matrixFunction));
-				// test add
-				testOutput.AddBy(initial, Const<T>.One);
-			}
-			catch (Exception e)
-			{
-				if (e is ArgumentException ee && ee.ParamName == nameof(matrixFunction))
-					throw;
-				else
-					throw new System.Reflection.TargetInvocationException(e);
-			}
-
-			// check smallest k
-			if (smallestK <= 0 || smallestK > initial.Length)
-				throw new ArgumentOutOfRangeException(nameof(smallestK));
-			int sqrtSize = Convert.ToInt32(Math.Sqrt(initial.Length));
-			if (smallestK >= sqrtSize)
-			{
-				Log.Write(string.Format(Resource.TooMuchEigenvaluesRequired, smallestK), level: LogLevel.Warning);
-			}
-
-			// estimate iteration number
-			int estimateIter = Math.Min(maxIter <= 0 ? int.MaxValue : maxIter, sqrtSize);
-			if (herm)
-				estimateIter = Math.Min(estimateIter, HERM_MAX_ITER);
-			else
-				estimateIter = Math.Min(estimateIter, NON_HERM_MAX_ITER);
-			if (maxIter <= 0)
-				maxIter = estimateIter;
-		}
-		#endregion
-
-		#region gap
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static double GetGap(double beta, double tol, ReadOnlySpan<ComplexDouble> vals, ReadOnlySpan<ComplexDouble> vecsLastRow, int target = 0, ReadOnlySpan<int> conjugatePairs = default, double normA = 0)
-		{
-			if (normA == 0)
-				normA = vals.Max(static v => v.Abs());
-			double normTol = 2 * normA * Math.Sqrt(tol); // 2 for error upper bound, 1 for average
-			var targetVal = vals[target];
-			var targetSji = vecsLastRow[target];
-			var targetEta = targetSji.Abs() * beta;
-			double gap = double.NaN;
-			for (int i = 0; i < vals.Length; i++)
-			{
-				if (!conjugatePairs.IsEmpty && conjugatePairs[i] == conjugatePairs[target] && conjugatePairs[i] != 0)
-					continue;
-				var g = (vals[i] - targetVal).Abs();
-				if (g < gap && g > normTol)
-				{
-					//tex:$\eta_i = \left\| \left(A-\vartheta_i^{\left(j\right)}I\right){\vec{y}}_i^{\left(j\right)} \right\| / \|{\vec{y}}_i^{\left(j\right)}\|=\beta_j\left|s_{j,i}^{\left(j\right)}\right|$
-					//tex:$|\lambda_i|$ must lies within $\left[|\vartheta_i|-\eta_i,|\vartheta_i|+\eta_i\right]$
-					var eta = vecsLastRow[i].Abs() * beta;
-					if (g > eta + targetEta) // no overlap, this is a candidate gap
-					{
-						gap = g;
-					}
-				}
-			}
-			// set to the smallest absolute value if cannot be found
-			if (double.IsNaN(gap))
-				gap = vals.Min(e => Math.Max(normTol, e.Abs()));
-			return gap;
-		}
-		#endregion
-
-		#region orthogonalization
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void RobustOrthogonalize<TVec, T>(TVec r, ReadOnlySpan<TVec> qs, Span<T> weights, bool robust = true)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
-		{
-			if (qs.IsEmpty)
-				return;
-			int len = qs.Length;
-			for (int i = len - 1; i >= 0; i--)
-			{
-				var q = qs[i];
-				weights[i] = q.Dot(r);
-				r.AddBy(q, weights[i].NativeNegate());
-			}
-			if (!robust || len <= 4)
-				return;
-
-			// one more time will be enough in most cases
-			for (int i = len - 1; i >= 0; i--)
-			{
-				var q = qs[i];
-				var dot = q.Dot(r);
-				if (dot.IsZero())
-					continue;
-				weights[i] = weights[i].NativeAdd(dot);
-				r.AddBy(q, dot.NativeNegate());
-			}
-			return;
-		}
-		#endregion
-
-		#region set delegate
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void SetDelegate<TApi, TDelegate>(this TApi? pre, TApi? now, string name, ref Delegate? @delegate) where TApi : AbstractApiSelector where TDelegate : Delegate
-		{
-			if (@delegate is not null)
-				return;
-			try
-			{
-				if (pre is not null && pre != now)
-				{	// set implementation back
-					typeof(TApi).GetMethod("SetImplementation", BindingFlags.Static | BindingFlags.NonPublic)?.Invoke(null, new object[] { pre.GetType() });
-				}
-				if (now is not null)
-				{	// create delegate
-					@delegate = now.GetType().GetMethod(name + "_", BindingFlags.NonPublic)?.CreateDelegate<TDelegate>();
-					if (@delegate is null)
-						throw new MethodAccessException();
-				}
-			}
-			catch (Exception)
-			{
-				Log.Write(string.Format(Resource.CannotCreateDelegate, nameof(LAD) + "." + nameof(LAD.EigenSpecialMatrixHermitian)), level: LogLevel.Warning);
-			}
-		}
-		#endregion
-
-		#region linear solve helper
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static TVec RSetToBSubAx<TVec, T>(Func<TVec, TVec> A, TVec x, TVec b)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
-		{
-			TVec r = A.Invoke(x);
-			try
-			{
-				r.Scale(Const<T>.MinusOne);
-				r.AddBy(b, Const<T>.One);
-				return r;
-			}
-			catch (Exception)
-			{
-				r?.Dispose();
-				throw;
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void RSetToBSubAx<TVec, T>(Func<TVec, TVec> A, ref TVec r, TVec x, TVec b)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
-		{
-			r?.Dispose();
-			r = A.Invoke(x);
-			try
-			{
-				r.Scale(Const<T>.MinusOne);
-				r.AddBy(b, Const<T>.One);
-			}
-			catch (Exception)
-			{
-				r?.Dispose();
-				throw;
-			}
-		}
-
-		#endregion
-	}
-
 	internal static class LanczosBased
 	{
+		#region restart info
+		private ref struct RestartBasicInfo<T, TVec> where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		{
+			internal TVec ResidualVec;
+
+			internal readonly SpanList<T> ResidualScalars;
+
+			internal readonly SpanList<T> UnconvergedEigenvalues;
+
+			internal readonly SpanList<TVec> UnconvergedEigenvectors;
+
+			internal readonly SpanList<TVec> ConvergedEigenvectors;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			internal RestartBasicInfo(TVec residual, Span<T> scalarHolder1, Span<T> scalarHolder2, Span<TVec> vectorHolder1, Span<TVec> vectorHolder2)
+			{
+				this.ResidualVec = residual;
+				this.ResidualScalars = new(scalarHolder1);
+				this.UnconvergedEigenvalues = new(scalarHolder2);
+				this.UnconvergedEigenvectors = new(vectorHolder1);
+				this.ConvergedEigenvectors = new(vectorHolder2);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			internal void Clear(TVec residual)
+			{
+				this.ResidualVec = residual;
+				this.ResidualScalars.Clear();
+				this.UnconvergedEigenvalues.Clear();
+				this.UnconvergedEigenvectors.Clear();
+			}
+		}
+		#endregion
+
 		#region initialize Lanczos
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void LanczosInit<TVec, T>(Func<TVec, TVec> matrixFunction, ref TVec q0, out TVec r, out double α0, out double β0)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, ref TVec q0, out TVec r, out T α0, out T β0) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			q0.Normalize();
 			//tex: $\vec r = A \vec q$
 			r = matrixFunction.Invoke(q0);
 			//tex:$\alpha_0 = \vec q^* \vec r$
 			T alpha = q0.Dot(r);
-			α0 = alpha.ToDoubleCheck();
+			α0 = alpha.ToRealCheck();
 			//tex:$\vec r = \vec r - \alpha_0 \vec q_0$
-			r.AddBy(q0, alpha.NativeNegate());
+			r.AddBy(q0, -alpha);
 			//tex: $\beta_0=\|\vec r_0\|$
 			β0 = r.Norm();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void LanczosInit<TVec, T>(Func<TVec, TVec> matrixFunction, double ψ, out TVec r, ref SpanList<TVec> qs, ref SpanList<double> αs, ref SpanList<double> βs, ref RestartBasicInfo<TVec, T> info)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, T ψ, out TVec r, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, ref RestartBasicInfo<T, TVec> info) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
+			T oneFourth = T.One / ((T.One + T.One) + (T.One + T.One));
+
 			// deal with restart Ritz vectors
 			int NRitz = info.UnconvergedEigenvalues.Count;
 			for (int i = 0; i < NRitz; i++)
@@ -300,22 +88,22 @@ namespace Althea.Backend.CSharp.Solver
 			if (info.ResidualScalars.Count > 0 && info.ResidualScalars.Count == info.UnconvergedEigenvectors.Count)
 			{
 				//tex:${\vec{r}}={\vec{r}}-\sum_{i=1}^{n}{\sigma_i{\vec{y}}_i}$
-				if (info.ResidualScalars.AsSpan().Any(s => s <= Math.Pow(ψ, 0.25/*0.5*/)))
+				if (info.ResidualScalars.AsSpan().Any(s => s <= T.Pow(ψ, oneFourth/*0.5*/)))
 				{   // scalar is not accurate now 
 					Span<T> w = stackalloc T[info.UnconvergedEigenvectors.Count];
-					Common.RobustOrthogonalize<TVec, T>(r, info.UnconvergedEigenvectors, w);
+					Common.RobustOrthogonalize<T, TVec>(r, info.UnconvergedEigenvectors, w);
 					for (int i = 0; i < w.Length; i++)
 					{
-						info.ResidualScalars[i] = w[i].ToDoubleCheck();
+						info.ResidualScalars[i] = w[i].ToRealCheck();
 					}
 				}
 			}
 			//tex:$\alpha_0 = \vec q^* \vec r$
 			T alpha = q0.Dot(r);
-			double α = alpha.ToDoubleCheck();
+			T α = alpha.ToRealCheck();
 			αs.Add(α);
 			//tex:$\vec r = \vec r - \alpha_0 \vec q_0$
-			r.AddBy(q0, alpha.NativeNegate());
+			r.AddBy(q0, -alpha);
 			//tex: $\beta_0=\|\vec r_0\|$
 			βs.Add(r.Norm());
 		}
@@ -323,53 +111,44 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region main loop of Lanczos
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void LanczosMainCalc<TVec, T>(Func<TVec, TVec> matrixFunction, TVec q, ref TVec r, ref SpanList<double> αs, ref SpanList<double> βs, ref TVec newq, bool dispose = true)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> matrixFunction, TVec q, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs, ref TVec newq, bool dispose = true) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			//tex: $\vec v=\vec q$
 			/*var v = q;*/
 			//tex:$\vec q = \vec r / \beta_{j-1}$
-			r.Scale((1 / βs[^1]).FromDouble<T>());
+			r.Scale(T.One / βs[^1]);
 			newq = r;
 			//tex: $\vec r = A \vec q$
 			r = matrixFunction(newq);
 			// a new vector is generated here
 			//tex:$\alpha_j = \vec q^* \vec r$
-			double α = newq.Dot(r).ToDoubleCheck();
+			T α = newq.Dot(r).ToRealCheck();
 			αs.Add(α);
 			//tex:$\vec r = \vec r - \alpha_j \vec q - \beta_{j-1} \vec v$
-			r.AddBy(newq, (-αs[^1]).FromDouble<T>());
-			r.AddBy(q, (-βs[^1]).FromDouble<T>());
+			r.AddBy(newq, -αs[^1]);
+			r.AddBy(q, -βs[^1]);
 			//tex: $\beta_j = \|\vec r\|$
 			βs.Add(r.Norm());
-
 			if (dispose)
 				q.Dispose();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void LanczosMainCalc<TVec, T>(Func<TVec, TVec> MatMulVecFunc, SpanList<TVec> qs, ref TVec r, ref SpanList<double> αs, ref SpanList<double> βs)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> MatMulVecFunc, SpanList<TVec> qs, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
-			TVec newq = new();
-			LanczosMainCalc<TVec, T>(MatMulVecFunc, qs[^1], ref r, ref αs, ref βs, ref newq, dispose: false);
+			TVec newq = TVec.Empty;
+			LanczosMainCalc(MatMulVecFunc, qs[^1], ref r, ref αs, ref βs, ref newq, dispose: false);
 			qs.Add(newq);
 		}
 		#endregion
 
 		#region tridiagonal solve Lanczos
-		private delegate bool EigensolveDelegate(SolveVectorMode mode, long n, Storage<double> valOut, Storage<double> A, long lda);
-
-		private static EigensolveDelegate? TridiagSolve = null;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe static void LanczosTridiagSolve(SpanList<double> αs, SpanList<double> βs, Span<double> eigval, SpanMatrix<double> eigvec, int firstNResidual = 0)
+		private static unsafe void LanczosTridiagSolve<T>(SpanList<T> αs, SpanList<T> βs, Span<T> eigval, SpanMatrix<T> eigvec, int firstNResidual = 0) where T : unmanaged, IFloatingPoint<T>
 		{
 			// check NaN
-			if (αs.AsSpan().Any(static a => !double.IsFinite(a)) || βs.AsSpan().Any(static b => !double.IsFinite(b)))
-				throw new ArithmeticException(Resources.Other.AbnormalOccured);
+			if (αs.AsSpan().Any(static a => !T.IsFinite(a)) || βs.AsSpan().Any(static b => !T.IsFinite(b)))
+				throw new ArithmeticException(Resources.ArithmeticError.AbnormalOccured);
 			// fill matrix
 			int N = αs.Count;
 			if (firstNResidual > 0)
@@ -390,77 +169,57 @@ namespace Althea.Backend.CSharp.Solver
 				}
 			}
 			// tridiagonal solve
-			fixed (double* matPtr = eigvec.UnderlyingSpan, valPtr = eigval)
+			fixed (T* matPtr = eigvec.UnderlyingSpan, valPtr = eigval)
 			{
-				var tridiag = new ManagedPureStorage<double>(matPtr, eigvec.LeadDim * N);
-				var valsOut = new ManagedPureStorage<double>(valPtr, N);
-				if (TridiagSolve is null)
+				if (NumberType<T>.IsComplex)
 				{
-					LAD? pre = LAD.Current;
-					LAD.EigenSpecialMatrixHermitian(SolveVectorMode.Vector, N, valsOut, tridiag, eigvec.LeadDim);
-					LAD? now = LAD.Current;
-					Delegate? d = null;
-					pre.SetDelegate<LAD, EigensolveDelegate>(now, nameof(LAD.EigenSpecialMatrixHermitian), ref d);
-					if (d is EigensolveDelegate dd)
-						TridiagSolve = dd;
+					int size = sizeof(T) / 2;
+					byte* diag = stackalloc byte[N * size];
+					byte* offDiag = stackalloc byte[(N - 1) * size];
+					for (int i = 0; i < N; i++)
+					{
+						T val = αs[i];
+						Unsafe.CopyBlockUnaligned(diag + i * size, &val, (uint)size);
+					}
+					for (int i = 0; i < N - 1; i++)
+					{
+						T val = βs[i];
+						Unsafe.CopyBlockUnaligned(offDiag + i * size, &val, (uint)size);
+					}
+					Mkl.LinearAlgebra.Dense.DenseApi.TridiagEigen(SolveVectorMode.Vector, N, diag, offDiag, matPtr, eigvec.LeadDim);
+					for (int i = 0; i < N; i++)
+					{
+						Unsafe.CopyBlockUnaligned(valPtr + i, diag + i * size, (uint)size);
+					}
 				}
 				else
 				{
-					TridiagSolve.Invoke(SolveVectorMode.Vector, N, valsOut, tridiag, eigvec.LeadDim);
+					αs.CopyTo(eigval);
+					T* offDiag = stackalloc T[N];
+					βs.CopyTo(new(offDiag, N));
+					Mkl.LinearAlgebra.Dense.DenseApi.TridiagEigen(SolveVectorMode.Vector, N, eigval, offDiag, matPtr, eigvec.LeadDim);
 				}
-			}
-		}
-		#endregion
-
-		#region restart info
-		private ref struct RestartBasicInfo<TVec, T>
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
-		{
-			internal TVec ResidualVec;
-
-			internal readonly SpanList<double> ResidualScalars;
-
-			internal readonly SpanList<double> UnconvergedEigenvalues;
-
-			internal readonly SpanList<TVec> UnconvergedEigenvectors;
-
-			internal readonly SpanList<TVec> ConvergedEigenvectors;
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			internal RestartBasicInfo(TVec residual, Span<double> scalarHolder1, Span<double> scalarHolder2, Span<TVec> vectorHolder1, Span<TVec> vectorHolder2)
-			{
-				this.ResidualVec = residual;
-				this.ResidualScalars = new(scalarHolder1);
-				this.UnconvergedEigenvalues = new(scalarHolder2);
-				this.UnconvergedEigenvectors = new(vectorHolder1);
-				this.ConvergedEigenvectors = new(vectorHolder2);
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			internal void Clear(TVec residual)
-			{
-				this.ResidualVec = residual;
-				this.ResidualScalars.Clear();
-				this.UnconvergedEigenvalues.Clear();
-				this.UnconvergedEigenvectors.Clear();
 			}
 		}
 		#endregion
 
 		#region orthogonality tracker
-		private readonly ref struct OrthogonalityTracker
+		private readonly ref struct OrthogonalityTracker<T> where T : unmanaged, IFloatingPoint<T>
 		{
-			internal readonly SpanList<double> pre;
+			private static readonly T TWO = T.One + T.One;
+			private static readonly T FIVE = T.One + T.One + T.One + T.One + T.One;
+			private static readonly T ONE_HAND = T.Pow(FIVE * TWO, TWO);
 
-			internal readonly SpanList<double> now;
+			internal readonly SpanList<T> pre;
 
-			private readonly double explicitValue;
+			internal readonly SpanList<T> now;
+
+			private readonly T explicitValue;
 
 			private readonly int convergedCount, unconvergedCount;
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			internal OrthogonalityTracker(double ψ, int convergedRitz, int unconvergedRitz, Span<double> scalarHolder1, Span<double> scalarHolder2)
+			internal OrthogonalityTracker(T ψ, int convergedRitz, int unconvergedRitz, Span<T> scalarHolder1, Span<T> scalarHolder2)
 			{
 				this.explicitValue = ψ;
 				this.convergedCount = convergedRitz;
@@ -469,26 +228,24 @@ namespace Althea.Backend.CSharp.Solver
 				this.now = new(scalarHolder2);
 				if (unconvergedRitz + convergedRitz >= 1)
 				{
-					Span<double> temp1 = scalarHolder1[..(unconvergedRitz + convergedRitz - 1)];
+					Span<T> temp1 = scalarHolder1[..(unconvergedRitz + convergedRitz - 1)];
 					// 100 for not estimated orthogonality loss of Ritz vector
-					temp1.Fill(100 * ψ);
+					temp1.Fill(ONE_HAND * ψ);
 					pre.AddRange(temp1);
 					pre.Add(ψ);
 				}
-				Span<double> temp2 = scalarHolder2[..(unconvergedRitz + convergedRitz)];
+				Span<T> temp2 = scalarHolder2[..(unconvergedRitz + convergedRitz)];
 				// 100 for not estimated orthogonality loss of Ritz vector
-				temp2.Fill(100 * ψ);
+				temp2.Fill(ONE_HAND * ψ);
 				now.AddRange(temp2);
 				now.Add(ψ);
 				// +1 for iteration No.0
-				pre.Add(1);
-				now.Add(1);
+				pre.Add(T.One);
+				now.Add(T.One);
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			internal string Reorthonalize<TVec, T>(TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<TVec> converged, double thre1, double thre2)
-				where TVec : class, IKrylovVector<TVec, T>, new()
-				where T : unmanaged, INumber<T>
+			internal string Reorthonalize<TVec>(TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<TVec> converged, T thre1, T thre2) where TVec : class, IKrylovVector<T, TVec>
 			{
 #if DEBUG
 				var stringBuilder = new StringBuilder("\tre-orthogonalize the new basis vector to the ");
@@ -510,7 +267,7 @@ namespace Althea.Backend.CSharp.Solver
 							stringBuilder.Append(", ");
 #endif
 							var q = qs[i];
-							r.AddBy(q, q.Dot(r).NativeNegate());
+							r.AddBy(q, -q.Dot(r));
 							this.now[j] = this.explicitValue;
 						}
 					}
@@ -530,7 +287,7 @@ namespace Althea.Backend.CSharp.Solver
 							stringBuilder.Append(", ");
 #endif
 							var q = qs[k - this.convergedCount];
-							r.AddBy(q, q.Dot(r).NativeNegate());
+							r.AddBy(q, -q.Dot(r));
 							this.now[k] = this.explicitValue;
 						}
 					}
@@ -544,7 +301,7 @@ namespace Althea.Backend.CSharp.Solver
 							stringBuilder.Append(", ");
 #endif
 							var q = converged[k];
-							r.AddBy(q, q.Dot(r).NativeNegate());
+							r.AddBy(q, -q.Dot(r));
 							this.now[k] = this.explicitValue;
 						}
 					}
@@ -561,10 +318,10 @@ namespace Althea.Backend.CSharp.Solver
 					return string.Empty;
 			}
 
-			internal void ReorthogonalityUpdate(ReadOnlySpan<double> αs, ReadOnlySpan<double> βs, ReadOnlySpan<double> residuals, double φ)
+			internal void ReorthogonalityUpdate(ReadOnlySpan<T> αs, ReadOnlySpan<T> βs, ReadOnlySpan<T> residuals, T φ)
 			{
-				Span<double> ωNew = stackalloc double[this.now.Count + 1];
-				ωNew[^1] = 1;
+				Span<T> ωNew = stackalloc T[this.now.Count + 1];
+				ωNew[^1] = T.One;
 				ωNew[^2] = this.explicitValue;
 				// the structure of ω is [converged, unconverged, Krylov basis]
 				// iteration = unconverged + basis
@@ -577,24 +334,24 @@ namespace Althea.Backend.CSharp.Solver
 						ωNew[k] = (βs[i] * this.now[k + 1] + (αs[i] - αs[^1]) * this.now[k] - βs[^2] * this.pre[k]) / βs[^1];
 					else
 						ωNew[k] = (βs[i] * this.now[k + 1] + (αs[i] - αs[^1]) * this.now[k] + βs[i - 1] * this.now[k - 1] - βs[^2] * this.pre[k]) / βs[^1];
-					ωNew[k] = Math.Abs(ωNew[k]) + φ;
+					ωNew[k] = T.Abs(ωNew[k]) + φ;
 				}
 				// end for normal basis track
 				if (totalCount > 0)
 				{
 					//tex:$$\sum_l{\sigma_l \omega_{j,-l}} = \left| - \alpha_0 \omega_{j,0} - \beta_0 \omega_{j,1} \right| + \vec{q}_j^* \vec{f}_0$$
-					var totalError = Math.Abs(αs[this.unconvergedCount] * ωNew[totalCount] + βs[this.unconvergedCount] * ωNew[totalCount + 1]) + φ;
+					T totalError = T.Abs(αs[this.unconvergedCount] * ωNew[totalCount] + βs[this.unconvergedCount] * ωNew[totalCount + 1]) + φ;
 					////var sumResiduals = residuals.Sum(r => Math.Abs(r));
-					var minResidual = residuals.Min(r => Math.Abs(r));
+					T minResidual = residuals.Min(r => T.Abs(r));
 					for (int k = this.convergedCount; k < totalCount; k++)
 					{
-						var i = k - this.convergedCount; // the index of q, α, β
-						ωNew[k] = totalError / minResidual / this.unconvergedCount; // upper bound
+						int i = k - this.convergedCount; // the index of q, α, β
+						ωNew[k] = totalError / minResidual / T.Create(this.unconvergedCount); // upper bound
 					}
 					// end for unconverged Ritz vector track
 					for (int k = 0; k < this.convergedCount; k++)
 					{
-						ωNew[k] = totalError / this.explicitValue / this.convergedCount;
+						ωNew[k] = totalError / this.explicitValue / T.Create(this.convergedCount);
 					}
 					// end for converged eigenvector track
 				}
@@ -605,22 +362,22 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region convergence check
-		private static (bool converge, string message, string trace) LanczosConvergenceCheck(ReadOnlySpan<double> eigval, SpanMatrix<double> eigvec, double beta, double tol, int nConverged, bool useGap)
+		private static (bool converge, string message, string trace) LanczosConvergenceCheck<T>(ReadOnlySpan<T> eigval, SpanMatrix<T> eigvec, T beta, T tol, int nConverged, bool useGap) where T : unmanaged, IFloatingPoint<T>
 		{
-			var iter = eigval.Length - 1;
+			int iter = eigval.Length - 1;
 			// get θ_0  S_j,0 for convergence check
-			Span<ComplexDouble> lastRow = stackalloc ComplexDouble[eigval.Length], complexVal = stackalloc ComplexDouble[eigval.Length];
+			Span<T> lastRow = stackalloc T[eigval.Length], complexVal = stackalloc T[eigval.Length];
 			int row = eigvec.Rows - 1;
 			for (int i = 0; i < eigval.Length; i++)
 			{
 				lastRow[i] = eigvec[row, i];
 				complexVal[i] = eigval[i];
 			}
-			double Sj0 = lastRow[0].Real;
-			double θ0 = eigval[0];
-			var βMulS = beta * Math.Abs(Sj0);
+			T Sj0 = lastRow[0].ToReal();
+			T θ0 = eigval[0];
+			T βMulS = beta * T.Abs(Sj0);
 			// get gap
-			double gap = useGap ? Common.GetGap(beta, tol, complexVal, lastRow) : Math.Max(Math.Abs(eigval[0]), Math.Abs(eigval[^1]));
+			T gap = useGap ? Common.GetGap(beta, tol, complexVal, lastRow) : T.Max(T.Abs(eigval[0]), T.Abs(eigval[^1]));
 			// test convergence
 			bool converge = βMulS / gap <= tol;
 			// log convergence
@@ -630,41 +387,15 @@ namespace Althea.Backend.CSharp.Solver
 			else
 				message = string.Empty;
 			// trace log
-			string trace = $"the {nConverged.ToOrdinal()} eigen-pair has: θ = {θ0}, S = {Math.Abs(Sj0)}, γ = {gap}";
+			string trace = $"the {nConverged.ToOrdinal()} eigen-pair has: θ = {θ0}, S = {T.Abs(Sj0)}, γ = {gap}";
 			return (converge, message, trace);
 		}
 		#endregion
 
-		#region get eigenvector
-		private static TVec GetRealEigenvector<TVec, T>(TVec r, SpanList<TVec> Q, SpanMatrix<double> eigvecs)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
-		{
-			Span<T> eigvec = stackalloc T[Q.Count];
-			eigvecs[0].CopyTo(eigvec, static e => e.FromDouble<T>());
-			return r.OperateOn(Q, eigvec);
-		}
-		#endregion
-
-		#region preserve select
-		private static Span<int> PreserveSelect(IPreserveSelector selector, Span<double> eigvals, SpanMatrix<double> eigvecs, int converged, int target, int iters, Span<int> result)
-		{
-			Span<ComplexDouble> values = stackalloc ComplexDouble[eigvals.Length];
-			Span<ComplexDouble> vectors = eigvecs.PresentingLength.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[eigvecs.PresentingLength];
-			eigvals.CopyTo(values, static v => v);
-			eigvecs.CopyTo(vectors, static v => v);
-			int count = selector.PreserveSelect(values, vectors, converged, target, iters, result, withConverged: false);
-			return result[..count];
-		}
-		#endregion
-
 		#region add unconverged vectors
-		private static void AddUnconvergedVectors<TVec, T>(ref RestartBasicInfo<TVec, T> info, ReadOnlySpan<TVec> Q, ReadOnlySpan<int> preserve, Span<double> eigvals, SpanMatrix<double> eigvecs, TVec r, double rNorm)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void AddUnconvergedVectors<T, TVec>(ref RestartBasicInfo<T, TVec> info, ReadOnlySpan<TVec> Q, ReadOnlySpan<int> preserve, Span<T> eigvals, SpanMatrix<T> eigvecs, TVec r, T rNorm) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
-			Span<T> tempSVec = stackalloc T[eigvecs.Rows];
-			Span<double> lastRow = stackalloc double[eigvecs.Cols];
+			Span<T> lastRow = stackalloc T[eigvecs.Cols];
 			//tex:$\vec{r}$ so that $A\vec{y}_i - \vartheta_i\vec{y}_i = \sigma_i\vec{r}$
 			eigvecs.CopyRowTo(eigvecs.Rows - 1, lastRow);
 			// calculate new unconverged Ritz vectors
@@ -674,8 +405,7 @@ namespace Althea.Backend.CSharp.Solver
 				info.ResidualScalars.Add(lastRow[i] * rNorm);
 				//tex:$\vartheta_i$ and $\vec{y}_i = Q \vec{s}_i$
 				info.UnconvergedEigenvalues.Add(eigvals[i]);
-				eigvecs[i].CopyTo(tempSVec, static a => a.FromDouble<T>());
-				var unconverged = r.OperateOn(Q, tempSVec);
+				var unconverged = IKrylovVector<T, TVec>.OperateOn(Q, eigvecs[i]);
 				unconverged.Normalize();
 				info.UnconvergedEigenvectors.Add(unconverged);
 			}
@@ -684,9 +414,7 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region naive Lanczos
-		internal static (double val, TVec vec) NaiveLanczos<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool checkFirst, TimeSpan interval)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		internal static (double val, TVec vec) NaiveLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool checkFirst, TimeSpan interval) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic check
 			if (matrixFunction is null)
@@ -694,19 +422,19 @@ namespace Althea.Backend.CSharp.Solver
 			if (initial is null)
 				throw new ArgumentNullException(nameof(initial));
 			if (checkFirst)
-				Common.CheckParas<TVec, T>(matrixFunction, initial, smallestK: 1, ref maxIter, herm: true);
+				Common.CheckParas<T, TVec>(matrixFunction, initial, 1, ref maxIter, true);
 			else if (maxIter <= 0)
-				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.ParameterError.MustPositive);
 			#endregion
 
 			#region initialize
 			// new inner stop watch and get outer stopwatch
 			var stopwatch = Stopwatch.StartNew();
 			// transformation matrix Q which will be disposed after return or exception automatically
-			Span<IntPtr> tempQ = maxIter.CheckStackLimit<IntPtr>() ?? stackalloc IntPtr[maxIter];
+			Span<IntPtr> tempQ = stackalloc IntPtr[maxIter];
 			var qs = new SpanList<TVec>(tempQ.AsClassType<TVec>());
-			var αs = new SpanList<double>(maxIter.CheckStackLimit<double>() ?? stackalloc double[maxIter]);
-			var βs = new SpanList<double>(maxIter.CheckStackLimit<double>() ?? stackalloc double[maxIter]);
+			var αs = new SpanList<T>(stackalloc T[maxIter]);
+			var βs = new SpanList<T>(stackalloc T[maxIter]);
 			// intermediate vector
 			TVec? r = null;
 			#endregion
@@ -720,7 +448,7 @@ namespace Althea.Backend.CSharp.Solver
 				// copy initial vector
 				initial = initial.Clone();
 				// step 0
-				LanczosInit<TVec, T>(matrixFunction, ref initial, out r, out double α0, out double β0);
+				LanczosInit(matrixFunction, ref initial, out r, out T α0, out T β0);
 				αs.Add(α0);
 				βs.Add(β0);
 				qs.Add(initial);
@@ -738,8 +466,8 @@ namespace Althea.Backend.CSharp.Solver
 					}
 					#endregion
 
-					LanczosMainCalc<TVec, T>(matrixFunction, qs, ref r, ref αs, ref βs);
-					if (βs[j] == 0)
+					LanczosMainCalc(matrixFunction, qs, ref r, ref αs, ref βs);
+					if (βs[j] == T.Zero)
 						break;
 				}
 				#endregion
@@ -749,15 +477,15 @@ namespace Althea.Backend.CSharp.Solver
 				Log.Write(string.Format(Resource.NaiveLanczosFinish, αs[^1], βs[^1]));
 
 				int n = qs.Count;
-				Span<double> eigenvalues = n.CheckStackLimit<double>() ?? stackalloc double[n];
-				Span<double> eigvec = (n * n).CheckStackLimit<double>() ?? stackalloc double[n * n];
-				SpanMatrix<double> eigenvectors = new(eigvec, n);
+				Span<T> eigenvalues = stackalloc T[n];
+				Span<T> eigvec = stackalloc T[n * n];
+				SpanMatrix<T> eigenvectors = new(eigvec, n);
 				LanczosTridiagSolve(αs, βs, eigenvalues, eigenvectors);
 				#endregion
 
 				#region output
-				var vecOut = GetRealEigenvector<TVec, T>(r, qs, eigenvectors);
-				return (eigenvalues[0], vecOut);
+				var vecOut = IKrylovVector<T, TVec>.OperateOn(qs.UnderlyingSpan, eigenvectors[0]);
+				return (eigenvalues[0].As<T, double>(), vecOut);
 				#endregion
 			}
 			finally
@@ -772,19 +500,17 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region restart lanczos
-		internal static int? RestartLanczos<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, Span<double> outEigvals, Span<TVec> outEigvecs, TimeSpan interval)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		internal static int? RestartLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, Span<T> outEigvals, Span<TVec> outEigvecs, TimeSpan interval) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
 			if (initial is null)
 				throw new ArgumentNullException(nameof(initial));
 			if (tolerance <= 0)
-				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.MustPositive);
 			// check parameters
 			int smallestK = outEigvals.Length;
 			if (checkFirst)
-				Common.CheckParas<TVec, T>(matrixFunction, initial, smallestK, ref iterPerRestart, herm: true);
+				Common.CheckParas<T, TVec>(matrixFunction, initial, smallestK, ref iterPerRestart, herm: true);
 			else
 				iterPerRestart = Math.Min(iterPerRestart, Common.HERM_MAX_ITER);
 			// check other
@@ -802,20 +528,20 @@ namespace Althea.Backend.CSharp.Solver
 			TVec guess = initial.Clone();
 			Span<IntPtr> tempQ = stackalloc IntPtr[iterPerRestart];
 			var qs = new SpanList<TVec>(tempQ.AsClassType<TVec>());
-			Span<double> eigvals = stackalloc double[iterPerRestart];
-			Span<double> eigvecSpan = (iterPerRestart * iterPerRestart).CheckStackLimit<double>() ?? stackalloc double[iterPerRestart * iterPerRestart];
-			SpanMatrix<double> eigvecs = new(eigvecSpan, iterPerRestart);
+			Span<T> eigvals = stackalloc T[iterPerRestart];
+			Span<T> eigvecSpan = stackalloc T[iterPerRestart * iterPerRestart];
+			SpanMatrix<T> eigvecs = new(eigvecSpan, iterPerRestart);
 
-			Span<double> tempHolder1 = stackalloc double[iterPerRestart], tempHolder2 = stackalloc double[iterPerRestart];
+			Span<T> tempHolder1 = stackalloc T[iterPerRestart], tempHolder2 = stackalloc T[iterPerRestart];
 			Span<IntPtr> tempQ1 = stackalloc IntPtr[iterPerRestart]; Span<IntPtr> tempQ2 = stackalloc IntPtr[smallestK];
-			var restartInfo = new RestartBasicInfo<TVec, T>(residual: guess, tempHolder1, tempHolder2, tempQ1.AsClassType<TVec>(), tempQ2.AsClassType<TVec>());
+			var restartInfo = new RestartBasicInfo<T, TVec>(residual: guess, tempHolder1, tempHolder2, tempQ1.AsClassType<TVec>(), tempQ2.AsClassType<TVec>());
 
-			SpanList<double> alphas = new(stackalloc double[iterPerRestart]), betas = new(stackalloc double[iterPerRestart]);
+			SpanList<T> αs = new(stackalloc T[iterPerRestart]), βs = new(stackalloc T[iterPerRestart]);
 			#endregion
 
 			#region main
-			SpanList<double> eigenvalues = new(stackalloc double[smallestK]);
-			TVec? r = null;
+			SpanList<T> eigenvalues = new(stackalloc T[smallestK]);
+			TVec r = TVec.Empty;
 			try
 			{
 				#region restart loop
@@ -824,18 +550,18 @@ namespace Althea.Backend.CSharp.Solver
 				for (int nRestart = 0; nRestart < maxRestarts; nRestart++)
 				{
 					// calculate
-					var converged = RestartLanczosInner(matrixFunction, iterPerRestart, tolerance, reorthogonalize == ReorthogonalizeMethod.Selective ? null : reorthogonalize == ReorthogonalizeMethod.RobustFull, useGap, ref restartInfo, eigvals, eigvecs, ref qs, ref alphas, ref betas, out r);
+					var converged = RestartLanczosInner(matrixFunction, iterPerRestart, tolerance, reorthogonalize == ReorthogonalizeMethod.Selective ? null : reorthogonalize == ReorthogonalizeMethod.RobustFull, useGap, ref restartInfo, eigvals, eigvecs, ref qs, ref αs, ref βs, out r);
 
 					#region if converge
-					Span<double> eigvalsNow = eigvals;
-					SpanMatrix<double> eigvecsNow = eigvecs;
+					Span<T> eigvalsNow = eigvals;
+					SpanMatrix<T> eigvecsNow = eigvecs;
 					if (converged)
 					{
 						// output newest eigenvalue
 						Log.Write($"The newest unconverged eigenvalue is {eigvals[0]}", level: LogLevel.Trace);
 						// calculate last eigenvector
 						eigenvalues.Add(eigvals[0]);
-						var newConverged = GetRealEigenvector<TVec, T>(r, qs, eigvecs);
+						var newConverged = IKrylovVector<T, TVec>.OperateOn(qs, eigvecs[0]);
 						newConverged.Normalize();
 						restartInfo.ConvergedEigenvectors.Add(newConverged);
 						// remove the newly converged one from eigen pairs
@@ -866,15 +592,15 @@ namespace Althea.Backend.CSharp.Solver
 					try
 					{
 						// select the Ritz pairs to preserve
-						var preserveIndices = PreserveSelect(selector, eigvalsNow, eigvecsNow, restartInfo.ConvergedEigenvectors.Count, smallestK, iterPerRestart, preserveIndicesSpan);
+						var preserveIndices = selector.PreserveSelect(eigvalsNow, eigvecsNow.UnderlyingSpan, restartInfo.ConvergedEigenvectors.Count, smallestK, iterPerRestart, preserveIndicesSpan);
 						if (preserveIndices.Length == 1)
 							Log.Write($"Restarting with only one preserved Ritz pair may never improve the result.", level: LogLevel.Warning);
 						// cannot dispose old unconverged vectors and residual vector since they are in Q now
 						////restartInfo.UnconvergedEigenvectors.ClearList<TVec>();
 						////restartInfo.ResidualVec.ForceDispose();
-						restartInfo.Clear(residual: r);
+						restartInfo.Clear(r);
 						// add unconverged vectors
-						AddUnconvergedVectors(ref restartInfo, qs, preserveIndices, eigvalsNow, eigvecsNow, r, rNorm: betas[^1]);
+						AddUnconvergedVectors(ref restartInfo, qs, preserveIndices, eigvalsNow, eigvecsNow, r, rNorm: βs[^1]);
 					}
 					catch (Exception)
 					{
@@ -909,15 +635,18 @@ namespace Althea.Backend.CSharp.Solver
 		}
 
 
-		private static bool RestartLanczosInner<TVec, T>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, bool? robustOrth, bool useGap, ref RestartBasicInfo<TVec, T> restartInfo, Span<double> eigvals, SpanMatrix<double> eigvecs, ref SpanList<TVec> qs, ref SpanList<double> αs, ref SpanList<double> βs, out TVec r)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static bool RestartLanczosInner<T, TVec>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, bool? robustOrth, bool useGap, ref RestartBasicInfo<T, TVec> restartInfo, Span<T> eigvals, SpanMatrix<T> eigvecs, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, out TVec r) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region constants
-			double machinePrecision = Const<T>.MachinePrecision,
-				   thresholdSqrt = Math.Pow(machinePrecision, 0.6/*0.5*/), thresholdPow = Math.Pow(machinePrecision, 0.75),
-				   explicitNormalizeError = machinePrecision/* * info.MatrixNorm*/,
-				   φ = machinePrecision * 2/* * Math.Sqrt(info.MatrixNorm)*/;
+			double _machinePrecision = NumberType<T>.MachinePrecision,
+				   _thresholdSqrt = Math.Pow(_machinePrecision, 0.6/*0.5*/), _thresholdPow = Math.Pow(_machinePrecision, 0.75),
+				   _explicitNormalizeError = _machinePrecision/* * info.MatrixNorm*/,
+				   _φ = _machinePrecision * 2/* * Math.Sqrt(info.MatrixNorm)*/;
+			T explicitNormalizeError = T.Create(_explicitNormalizeError);
+			T thresholdSqrt = T.Create(_thresholdSqrt);
+			T thresholdPow = T.Create(_thresholdPow);
+			T φ = T.Create(_φ);
+			T tol = T.Create(tolerance);
 			#endregion
 
 			#region initialize
@@ -939,8 +668,8 @@ namespace Althea.Backend.CSharp.Solver
 				Log.Write($"Restart with max number of iterations = {nIter}", level: LogLevel.Trace);
 
 				// iteration 0
-				Span<double> tempHolder1 = stackalloc double[nIter + 1], tempHolder2 = stackalloc double[nIter + 1];
-				var tracker = new OrthogonalityTracker(explicitNormalizeError, restartInfo.ConvergedEigenvectors.Count, NRitz, tempHolder1, tempHolder2);
+				Span<T> tempHolder1 = stackalloc T[nIter + 1], tempHolder2 = stackalloc T[nIter + 1];
+				var tracker = new OrthogonalityTracker<T>(explicitNormalizeError, restartInfo.ConvergedEigenvectors.Count, NRitz, tempHolder1, tempHolder2);
 				LanczosInit(matrixFunction, explicitNormalizeError, out r, ref qs, ref αs, ref βs, ref restartInfo);
 				#endregion
 
@@ -951,27 +680,27 @@ namespace Althea.Backend.CSharp.Solver
 					#region re-orthogonalization
 					if (!robustOrth.HasValue)
 					{
-						string strInfo = tracker.Reorthonalize<TVec, T>(r, qs, restartInfo.ConvergedEigenvectors, thresholdSqrt, thresholdPow);
+						string strInfo = tracker.Reorthonalize(r, qs, restartInfo.ConvergedEigenvectors, thresholdSqrt, thresholdPow);
 						if (!string.IsNullOrWhiteSpace(strInfo))
 						{
 							Log.Write(strInfo, level: LogLevel.Trace);
-							double pre = βs[^1];
+							T pre = βs[^1];
 							βs[^1] = r.Norm();
 							Log.Write($"Re-orthogonalization of previous basis changes β from {pre} to {βs[^1]}.", level: LogLevel.Trace);
 						}
 					}
 					else
 					{
-						Common.RobustOrthogonalize<TVec, T>(r, qs, default, robustOrth.Value);
-						double pre = βs[^1];
+						Common.RobustOrthogonalize<T, TVec>(r, qs, default, robustOrth.Value);
+						T pre = βs[^1];
 						βs[^1] = r.Norm();
 						Log.Write($"Re-orthogonalization of previous basis changes β from {pre} to {βs[^1]}.", level: LogLevel.Trace);
 					}
 					#endregion
 
 					#region main calculation
-					LanczosMainCalc<TVec, T>(matrixFunction, qs, ref r, ref αs, ref βs);
-					if (βs[j] == 0)
+					LanczosMainCalc(matrixFunction, qs, ref r, ref αs, ref βs);
+					if (βs[j] == T.Zero)
 					{   // invariant subspace found
 						// construct tridiagonal matrix and calculate eigenvalue
 						LanczosTridiagSolve(αs, βs, eigvals, eigvecs, firstNResidual: NRitz);
@@ -986,10 +715,10 @@ namespace Althea.Backend.CSharp.Solver
 					{
 						// construct tridiagonal matrix and calculate eigenvalue
 						LanczosTridiagSolve(αs, βs, eigvals, eigvecs, firstNResidual: NRitz);
-						double phi = machinePrecision * 2 * Math.Sqrt(Math.Max(Math.Abs(eigvals[0]), Math.Abs(eigvals[^1])));
+						T phi = φ * T.Sqrt(T.Max(T.Abs(eigvals[0]), T.Abs(eigvals[^1])));
 						string message, trace;
 						// convergence check
-						(converge, message, trace) = LanczosConvergenceCheck(eigvals, eigvecs, beta: βs[^1], tolerance, nConverged: restartInfo.ConvergedEigenvectors.Count, useGap);
+						(converge, message, trace) = LanczosConvergenceCheck<T>(eigvals, eigvecs, beta: βs[^1], tol, nConverged: restartInfo.ConvergedEigenvectors.Count, useGap);
 						// log
 						Log.Write(trace, level: LogLevel.Trace);
 						if (message.Length > 0)
@@ -1028,9 +757,7 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region linear solve helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static (double relativeError, TVec solve)? CheckLinearSolve<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out double normB, out double realTolerance)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static TVec? CheckLinearSolve<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out T normB, out T realTolerance) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
 			if (initial is null)
@@ -1038,27 +765,27 @@ namespace Althea.Backend.CSharp.Solver
 			if (rightSide is null)
 				throw new ArgumentNullException(nameof(rightSide));
 			if (tolerance <= 0)
-				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.MustPositive);
 			if (checkFirst)
 			{
 				int iter = maxIter;
-				Common.CheckParas<TVec, T>(matrix, initial, smallestK: 1, ref iter, herm: true);
+				Common.CheckParas<T, TVec>(matrix, initial, smallestK: 1, ref iter, herm: true);
 				if (preconditioner is not null)
-					Common.CheckParas<TVec, T>(preconditioner, initial, smallestK: 1, ref iter, herm: true);
+					Common.CheckParas<T, TVec>(preconditioner, initial, smallestK: 1, ref iter, herm: true);
 				maxIter = Math.Max(maxIter, iter);
 			}
 			else if (maxIter <= 0)
-				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.Parameter.MustPositive);
+				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.ParameterError.MustPositive);
 			maxIter = Math.Min(maxIter, (int)initial.Length);
 			#endregion
 
 			#region shortcut
 			normB = rightSide.Norm();
-			realTolerance = tolerance * normB;
-			if (normB == 0)
+			realTolerance = T.Create(tolerance) * normB;
+			if (normB == T.Zero)
 			{   // all 0 solution
 				TVec solution = rightSide.Clone();
-				return (0, solution);
+				return solution;
 			}
 			else
 			{
@@ -1068,31 +795,26 @@ namespace Althea.Backend.CSharp.Solver
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static (double relativeError, TVec solve)? CheckLinearSolveInitial<TVec, T>(Func<TVec, TVec> matrix, TVec initial, TVec b, double normB, double realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out double minResidual)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static (double relativeError, TVec? solve) CheckLinearSolveInitial<T, TVec>(Func<TVec, TVec> matrix, TVec initial, TVec b, T normB, T realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out T minResidual) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region initial vector check
 			x = initial;
-			// Ignore Spelling: \mathbf
-#pragma warning disable CS8625
-			r = null;
-#pragma warning restore CS8625
+			r = TVec.Empty;
 			try
 			{
 				//tex: $\vec r = \vec b - \mathbf A \vec x_0$
-				r = Common.RSetToBSubAx<TVec, T>(matrix, initial, b);
+				r = Common.RSetToBSubAx<T, TVec>(matrix, initial, b);
 				minResidual = r.Norm();
 				if (minResidual <= realTolerance)
 				{
 					minResidualVec = x;
-					return (minResidual / normB, initial.Clone());
+					return ((minResidual / normB).As<T, double>(), initial.Clone());
 				}
 				else
 				{
 					x = initial.Clone();
 					minResidualVec = x;
-					return null;
+					return default;
 				}
 			}
 			catch (Exception)
@@ -1107,14 +829,12 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region preconditioned conjugate gradient
-		internal static (double relativeError, TVec solve) ConjugateGradient<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		internal static (TVec Solve, double RelativeError) ConjugateGradient<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
-			var simpleSolution = CheckLinearSolve<TVec, T>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out double normB, out double realTolerance);
-			if (simpleSolution.HasValue)
-				return simpleSolution.Value;
+			var simpleSolution = CheckLinearSolve<T, TVec>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out T normB, out T realTolerance);
+			if (simpleSolution is not null)
+				return (simpleSolution, 0);
 			#endregion
 
 			#region initialize
@@ -1122,11 +842,11 @@ namespace Althea.Backend.CSharp.Solver
 			Log.Write(string.Format(Resource.PCGStart, initial.Length, maxIter));
 			Stopwatch stopwatch = Stopwatch.StartNew();
 			// check initial guess
-			simpleSolution = CheckLinearSolveInitial<TVec, T>(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec solution, out double minResidual);
-			if (simpleSolution.HasValue)
-				return simpleSolution.Value;
+			var (relativeError, solve) = CheckLinearSolveInitial(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec solution, out T minResidual);
+			if (solve is not null)
+				return (solve, relativeError);
 			// otherwise
-			double ρ = 1;
+			T ρ = T.One;
 			TVec p = r;
 			int stagnations = 0;
 			#endregion
@@ -1151,9 +871,9 @@ namespace Althea.Backend.CSharp.Solver
 					TVec z = r;
 					if (preconditioner is not null)
 						z = preconditioner.Invoke(r);
-					double ρOld = ρ;
-					ρ = r.Dot(z).ToDoubleCheck();
-					if (ρ <= 0)
+					T ρOld = ρ;
+					ρ = r.Dot(z).ToRealCheck();
+					if (ρ <= T.Zero)
 						throw new ArgumentException(Resource.NotPositiveDefinite, nameof(preconditioner));
 					if (i == 0)
 					{
@@ -1163,8 +883,8 @@ namespace Althea.Backend.CSharp.Solver
 					{
 						// Ignore Spelling: \dfrac
 						//tex: $\beta_i = \dfrac {\vec r_i \cdot \vec z_i} {\vec r_{i - 1} \cdot \vec z_{i-1}}$
-						double β = ρ / ρOld;
-						if (β == 0)
+						T β = ρ / ρOld;
+						if (β == T.Zero)
 						{   // failed due to scalar error
 							success = false;
 							break;
@@ -1174,20 +894,20 @@ namespace Althea.Backend.CSharp.Solver
 						p = z;
 						if (p == r)
 							p = p.Clone();
-						p.AddBy(preP, β.FromDouble<T>());
+						p.AddBy(preP, β);
 						// now, p is certainly a new vector
 					}
 					//tex: $\vec q = \mathbf A \vec p_i$
 					TVec q = matrix.Invoke(p);
-					double pDotQ = p.Dot(q).ToDoubleCheck();
-					if (pDotQ <= 0)
+					T pDotQ = p.Dot(q).ToRealCheck();
+					if (pDotQ <= T.Zero)
 						throw new ArgumentException(Resource.NotPositiveDefinite, nameof(matrix));
 					//tex: $\alpha_i = \dfrac {\vec r_i \cdot \vec z_i} {\vec p_i \cdot \vec q}$
-					double α = ρ / pDotQ;
+					T α = ρ / pDotQ;
 					#endregion
 
 					#region check for stagnation
-					if (p.Norm() * α.NativeAbsolute() < Const<T>.MachinePrecision * x.Norm())
+					if (p.Norm() * T.Abs(α) < NumberType<T>.MachinePrecision.As<double, T>() * x.Norm())
 						stagnations++;
 					else
 						stagnations = 0;
@@ -1195,17 +915,17 @@ namespace Althea.Backend.CSharp.Solver
 
 					#region prepare next iteration
 					//tex: $\vec x = \vec x + \alpha \vec p_i$
-					x.AddBy(p, α.FromDouble<T>());
+					x.AddBy(p, α);
 					//tex: $\vec r = \vec r - \alpha \vec q$
-					r.AddBy(q, (-α).FromDouble<T>());
-					double normR = r.Norm();
+					r.AddBy(q, -α);
+					T normR = r.Norm();
 					#endregion
 
 					#region check for convergence
 					if (normR <= realTolerance)
 					{   // check residual vector again
-						Common.RSetToBSubAx<TVec, T>(matrix, ref r, x, rightSide);
-						double residual = r.Norm();
+						Common.RSetToBSubAx<T, TVec>(matrix, ref r, x, rightSide);
+						T residual = r.Norm();
 						if (residual <= realTolerance)
 						{
 							success = true;
@@ -1214,7 +934,7 @@ namespace Althea.Backend.CSharp.Solver
 						}
 					}
 					if (stagnations >= maxStagnation)
-					{	// failed due to stagnation
+					{   // failed due to stagnation
 						success = false;
 						break;
 					}
@@ -1237,8 +957,8 @@ namespace Althea.Backend.CSharp.Solver
 				}
 				else
 				{
-					Common.RSetToBSubAx<TVec, T>(matrix, ref r, solution, rightSide);
-					double normR = r.Norm();
+					Common.RSetToBSubAx<T, TVec>(matrix, ref r, solution, rightSide);
+					T normR = r.Norm();
 					if (normR <= minResidual)
 					{
 						minResidual = normR / normB;
@@ -1250,7 +970,7 @@ namespace Althea.Backend.CSharp.Solver
 					}
 				}
 				Log.Write(string.Format(Resource.PCGFinish, minResidual, tolerance));
-				return (minResidual, solution);
+				return (solution, minResidual.As<T, double>());
 				#endregion
 			}
 			#region dispose
@@ -1275,14 +995,12 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region preconditioned minimal residual
-		internal static (double relativeError, TVec solve) MinimalResidual<TVec, T>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		internal static (TVec Solve, double RelativeError) MinimalResidual<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
-			var simpleSolution = CheckLinearSolve<TVec, T>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out double normB, out double realTolerance);
-			if (simpleSolution.HasValue)
-				return simpleSolution.Value;
+			var simpleSolution = CheckLinearSolve<T, TVec>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out T normB, out T realTolerance);
+			if (simpleSolution is not null)
+				return (simpleSolution, 0);
 			#endregion
 
 			#region initialize
@@ -1291,9 +1009,9 @@ namespace Althea.Backend.CSharp.Solver
 			Stopwatch stopwatch = Stopwatch.StartNew();
 			// Ignore Spelling: \mathbf
 			// check initial guess
-			simpleSolution = CheckLinearSolveInitial<TVec, T>(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec solution, out double minResidual);
-			if (simpleSolution.HasValue)
-				return simpleSolution.Value;
+			var (relativeError, solve) = CheckLinearSolveInitial<T, TVec>(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec solution, out T minResidual);
+			if (solve is not null)
+				return (solve, relativeError);
 			// otherwise
 			#endregion
 
@@ -1305,63 +1023,63 @@ namespace Althea.Backend.CSharp.Solver
 				if (preconditioner is not null)
 					v = preconditioner.Invoke(r);
 				//tex: $\beta_1 = \vec r \cdot (\mathbf M^{-1} \vec r)$
-				double oldβ = oldV.Dot(v).ToDoubleCheck();
-				if (oldβ <= 0)
+				T oldβ = oldV.Dot(v).ToRealCheck();
+				if (oldβ <= T.Zero)
 					throw new ArgumentException(Resource.NotPositiveDefinite, nameof(preconditioner));
-				oldβ = Math.Sqrt(oldβ);
+				oldβ = T.Sqrt(oldβ);
 				//tex: preserve $\prod_i{s_i}$
-				double prodSi = oldβ;
+				T prodSi = oldβ;
 				//tex: $\vec v' = \vec v / \beta_1$
-				vv = v.Clone(); vv.Scale((1 / oldβ).FromDouble<T>());
+				vv = v.Clone(); vv.Scale(T.One / oldβ);
 				//tex: $\vec v = \mathbf A \vec v'$
 				if (v != r)
 					v.Dispose();
 				v = matrix.Invoke(vv);
 				Am = v.Clone();
-				double α = vv.Dot(v).ToDoubleCheck();
-				v.AddBy(oldV, (α / oldβ).FromDouble<T>());
+				T α = vv.Dot(v).ToRealCheck();
+				v.AddBy(oldV, α / oldβ);
 
 				#region local re-orthogonalization
 				//tex: $\vec v = \vec v - \dfrac {\vec v' \cdot \vec v} {\vec v' \cdot \vec v'} \vec v'$
-				v.AddBy(vv, vv.Dot(v).NativeDivide(vv.Dot(vv)).NativeNegate());
+				v.AddBy(vv, -vv.Dot(v) / vv.Dot(vv));
 				#endregion
 
 				olderV = oldV; oldV = v;
 				if (preconditioner is not null)
 					v = preconditioner.Invoke(oldV);
 				//tex: $\beta^2 = \vec v_{i-1} \cdot (\mathbf M^{-1} \vec v_i)$
-				double β = oldV.Dot(v).ToDoubleCheck();
-				if (β <= 0)
+				T β = oldV.Dot(v).ToRealCheck();
+				if (β <= T.Zero)
 					throw new ArgumentException(Resource.NotPositiveDefinite, nameof(preconditioner));
 				#endregion
 
 				#region first step
-				β = Math.Sqrt(β);
-				double γbar = α, ε = 0, δbar = β, γ = Math.Sqrt(γbar * γbar + β * β), δ = 0;
+				β = T.Sqrt(β);
+				T γbar = α, ε = T.Zero, δbar = β, γ = T.Sqrt(γbar * γbar + β * β), δ = T.Zero;
 				m = vv;
-				T γInv = (1 / γ).FromDouble<T>();
+				T γInv = (T.One / γ);
 				m.Scale(γInv); Am.Scale(γInv);
-				double cs = γbar / γ;
-				double Si = β / γ;
-				x.AddBy(m, (prodSi * cs).FromDouble<T>());
-				double oldProdSi = prodSi; prodSi *= Si;
+				T cs = γbar / γ;
+				T Si = β / γ;
+				x.AddBy(m, prodSi * cs);
+				T oldProdSi = prodSi; prodSi *= Si;
 
-				double normR;
+				T normR;
 				if (preconditioner is not null)
 				{
-					r.AddBy(Am, (-oldProdSi * cs).FromDouble<T>());
+					r.AddBy(Am, -oldProdSi * cs);
 					normR = r.Norm();
 				}
 				else
 				{
-					normR = Math.Abs(prodSi);
+					normR = T.Abs(prodSi);
 				}
 				// check for convergence after first step
 				if (normR <= realTolerance)
 				{
 					minResidual = normR / normB;
 					solution = x;
-					return (minResidual, solution);
+					return (solution, minResidual.As<T, double>());
 				}
 
 				int stagnations = 0;
@@ -1382,7 +1100,7 @@ namespace Althea.Backend.CSharp.Solver
 
 					#region calculation
 					//tex: $\vec v' = \vec v / \beta$
-					vv = v; v.Scale((1 / β).FromDouble<T>());
+					vv = v; v.Scale(T.One / β);
 					//tex: $\vec v = \mathbf A \vec v / \beta$
 					v = matrix.Invoke(vv);
 					// change Am
@@ -1392,9 +1110,9 @@ namespace Althea.Backend.CSharp.Solver
 					Am = v;
 					// orthogonalize v (the key component of Lanczos)
 					//tex: $\vec v_i = \vec v_i - t_{i,i-1}\vec v_{i-1} - t_{i,i-2}\vec v_{i-2}$
-					v.AddBy(olderV, (-β / oldβ).FromDouble<T>());
-					α = vv.Dot(v).ToDoubleCheck();
-					v.AddBy(oldV, (-α / β).FromDouble<T>());
+					v.AddBy(olderV, -β / oldβ);
+					α = vv.Dot(v).ToRealCheck();
+					v.AddBy(oldV, -α / β);
 					olderV?.Dispose();
 					olderV = oldV;
 					oldV = v;
@@ -1403,8 +1121,8 @@ namespace Althea.Backend.CSharp.Solver
 						v = preconditioner.Invoke(oldV);
 					// change scalars
 					oldβ = β;
-					β = oldV.Dot(v).ToDoubleCheck();
-					β = Math.Sqrt(β);
+					β = oldV.Dot(v).ToRealCheck();
+					β = T.Sqrt(β);
 					δ = cs * δbar + Si * α;
 					// change m
 					olderM?.Dispose();
@@ -1413,20 +1131,20 @@ namespace Althea.Backend.CSharp.Solver
 					// Ignore Spelling: \varepsilon
 					//tex: $\vec m_i = \vec v' - \delta \vec m_{i-1} - \varepsilon \vec m_{i-2}$
 					m = vv;
-					m.AddBy(oldM, (-δ).FromDouble<T>());
-					if (ε != 0 && olderM is not null)
-						m.AddBy(olderM, (-ε).FromDouble<T>());
+					m.AddBy(oldM, -δ);
+					if (ε != T.Zero && olderM is not null)
+						m.AddBy(olderM, -ε);
 					//tex: $(\vec {m_\mathbf A})_i = (\vec {m_\mathbf A})_i - \delta (\vec {m_\mathbf A})_{i-1} - \varepsilon (\vec {m_\mathbf A})_{i-2}$
-					Am.AddBy(oldAm, (-δ).FromDouble<T>());
-					if (ε != 0 && olderAm is not null)
-						Am.AddBy(olderAm, (-ε).FromDouble<T>());
+					Am.AddBy(oldAm, -δ);
+					if (ε != T.Zero && olderAm is not null)
+						Am.AddBy(olderAm, -ε);
 					// change other scalars
 					γbar = Si * δbar - cs * α;
 					ε = Si * β;
 					δbar = -cs * β;
-					γ = Math.Sqrt(γbar * γbar + β * β);
+					γ = T.Sqrt(γbar * γbar + β * β);
 					// scale m, Am, cs and Si
-					γInv = (1 / γ).FromDouble<T>();
+					γInv = T.One / γ;
 					m.Scale(γInv);
 					Am.Scale(γInv);
 					cs = γbar / γ;
@@ -1434,32 +1152,32 @@ namespace Althea.Backend.CSharp.Solver
 					#endregion
 
 					#region check stagnation
-					double prodSiCs = prodSi * cs;
-					if (prodSiCs == 0 || Math.Abs(prodSiCs) * m.Norm() < Const<T>.MachinePrecision * x.Norm())
+					T prodSiCs = prodSi * cs;
+					if (prodSiCs == T.Zero || T.Abs(prodSiCs) * m.Norm() < NumberType<T>.MachinePrecision.As<double, T>() * x.Norm())
 						stagnations++;
 					else
 						stagnations = 0;
 					#endregion
 
 					#region update solution x
-					x.AddBy(m, prodSiCs.FromDouble<T>());
+					x.AddBy(m, prodSiCs);
 					oldProdSi = prodSi;
 					prodSi *= Si;
 					if (preconditioner is not null)
 					{
-						r.AddBy(Am, (-prodSiCs).FromDouble<T>());
+						r.AddBy(Am, -prodSiCs);
 						normR = r.Norm();
 					}
 					else
 					{
-						normR = Math.Abs(prodSi);
+						normR = T.Abs(prodSi);
 					}
 					#endregion
 
 					#region check for convergence
 					if (normR <= realTolerance)
 					{
-						Common.RSetToBSubAx<TVec, T>(matrix, ref r, x, rightSide);
+						Common.RSetToBSubAx<T, TVec>(matrix, ref r, x, rightSide);
 						normR = r.Norm();
 						if (normR <= realTolerance)
 						{   // actually converges
@@ -1493,7 +1211,7 @@ namespace Althea.Backend.CSharp.Solver
 				}
 				else
 				{
-					Common.RSetToBSubAx<TVec, T>(matrix, ref r, solution, rightSide);
+					Common.RSetToBSubAx<T, TVec>(matrix, ref r, solution, rightSide);
 					normR = r.Norm();
 					if (normR <= minResidual)
 					{
@@ -1506,7 +1224,7 @@ namespace Althea.Backend.CSharp.Solver
 					}
 				}
 				Log.Write(string.Format(Resource.MinResFinish, minResidual, tolerance));
-				return (minResidual, solution);
+				return (solution, minResidual.As<T, double>());
 				#endregion
 			}
 			#region dispose
@@ -1543,7 +1261,7 @@ namespace Althea.Backend.CSharp.Solver
 					olderM?.Dispose();
 			}
 			#endregion
-			
+
 		}
 		#endregion
 	}

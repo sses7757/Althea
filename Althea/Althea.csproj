@@ -125,7 +125,7 @@
 
   <ItemGroup>
     <EmbeddedResource Update="Resources\ArithmeticError.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>ArithmeticError.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="Resources\OtherError.resx">

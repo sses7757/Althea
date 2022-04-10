@@ -594,18 +594,67 @@ namespace Althea.NativeTypes
 			return this.Equals(a);
 		}
 
-		static bool IComparisonOperators<Complex<T>, Complex<T>>.operator <(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
-		static bool IComparisonOperators<Complex<T>, Complex<T>>.operator <=(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
-		static bool IComparisonOperators<Complex<T>, Complex<T>>.operator >(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
-		static bool IComparisonOperators<Complex<T>, Complex<T>>.operator >=(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
+		/// <summary>
+		/// Less than operator
+		/// </summary>
+		public static bool operator <(Complex<T> left, Complex<T> right)
+		{
+			if (left.imag == T.Zero && right.imag == T.Zero)
+				return left.real < right.real;
+			throw new InvalidOperationException();
+		}
+
+		/// <summary>
+		/// Greater than operator
+		/// </summary>
+		public static bool operator >(Complex<T> left, Complex<T> right)
+		{
+			if (left.imag == T.Zero && right.imag == T.Zero)
+				return left.real > right.real;
+			throw new InvalidOperationException();
+		}
+
+		/// <summary>
+		/// Less than or equal operator
+		/// </summary>
+		public static bool operator <=(Complex<T> left, Complex<T> right)
+		{
+			if (left.imag == T.Zero && right.imag == T.Zero)
+				return left.real <= right.real;
+			throw new InvalidOperationException();
+		}
+
+		/// <summary>
+		/// Greater than or equal operator
+		/// </summary>
+		public static bool operator >=(Complex<T> left, Complex<T> right)
+		{
+			if (left.imag == T.Zero && right.imag == T.Zero)
+				return left.real >= right.real;
+			throw new InvalidOperationException();
+		}
 
 		static Complex<T> IModulusOperators<Complex<T>, Complex<T>, Complex<T>>.operator %(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
 
-		static Complex<T> INumber<Complex<T>>.Max(Complex<T> x, Complex<T> y) => throw new InvalidOperationException();
-		static Complex<T> INumber<Complex<T>>.Min(Complex<T> x, Complex<T> y) => throw new InvalidOperationException();
+		/// <summary>
+		/// Max operator
+		/// </summary>
+		public static Complex<T> Max(Complex<T> x, Complex<T> y) => x < y ? y : x;
 
-		int IComparable.CompareTo(object? obj) => throw new InvalidOperationException();
-		int IComparable<Complex<T>>.CompareTo(Complex<T> other) => throw new InvalidOperationException();
+		/// <summary>
+		/// Max operator
+		/// </summary>
+		public static Complex<T> Min(Complex<T> x, Complex<T> y) => x < y ? x : y;
+
+		int IComparable.CompareTo(object? obj) => obj is Complex<T> c ? this.CompareTo(c) : throw new InvalidOperationException();
+
+		/// <inheritdoc/>
+		public int CompareTo(Complex<T> other)
+		{
+			if (this.imag == T.Zero && other.imag == T.Zero)
+				return this.real.CompareTo(other.real);
+			throw new InvalidOperationException();
+		}
 		#endregion
 
 		#region arithmetic operators
@@ -1520,18 +1569,71 @@ namespace Althea.NativeTypes
 			return this.Equals(a);
 		}
 
-		static bool IComparisonOperators<ComplexInteger<T>, ComplexInteger<T>>.operator <(ComplexInteger<T> left, ComplexInteger<T> right) => throw new InvalidOperationException();
-		static bool IComparisonOperators<ComplexInteger<T>, ComplexInteger<T>>.operator <=(ComplexInteger<T> left, ComplexInteger<T> right) => throw new InvalidOperationException();
-		static bool IComparisonOperators<ComplexInteger<T>, ComplexInteger<T>>.operator >(ComplexInteger<T> left, ComplexInteger<T> right) => throw new InvalidOperationException();
-		static bool IComparisonOperators<ComplexInteger<T>, ComplexInteger<T>>.operator >=(ComplexInteger<T> left, ComplexInteger<T> right) => throw new InvalidOperationException();
 
-		static ComplexInteger<T> IModulusOperators<ComplexInteger<T>, ComplexInteger<T>, ComplexInteger<T>>.operator %(ComplexInteger<T> left, ComplexInteger<T> right) => throw new InvalidOperationException();
+		/// <summary>
+		/// Less than operator
+		/// </summary>
+		public static bool operator <(ComplexInteger<T> left, ComplexInteger<T> right)
+		{
+			if (left.imag == T.Zero && right.imag == T.Zero)
+				return left.real < right.real;
+			throw new InvalidOperationException();
+		}
 
-		static ComplexInteger<T> INumber<ComplexInteger<T>>.Max(ComplexInteger<T> x, ComplexInteger<T> y) => throw new InvalidOperationException();
-		static ComplexInteger<T> INumber<ComplexInteger<T>>.Min(ComplexInteger<T> x, ComplexInteger<T> y) => throw new InvalidOperationException();
+		/// <summary>
+		/// Greater than operator
+		/// </summary>
+		public static bool operator >(ComplexInteger<T> left, ComplexInteger<T> right)
+		{
+			if (left.imag == T.Zero && right.imag == T.Zero)
+				return left.real > right.real;
+			throw new InvalidOperationException();
+		}
 
-		int IComparable.CompareTo(object? obj) => throw new InvalidOperationException();
-		int IComparable<ComplexInteger<T>>.CompareTo(ComplexInteger<T> other) => throw new InvalidOperationException();
+		/// <summary>
+		/// Less than or equal operator
+		/// </summary>
+		public static bool operator <=(ComplexInteger<T> left, ComplexInteger<T> right)
+		{
+			if (left.imag == T.Zero && right.imag == T.Zero)
+				return left.real <= right.real;
+			throw new InvalidOperationException();
+		}
+
+		/// <summary>
+		/// Greater than or equal operator
+		/// </summary>
+		public static bool operator >=(ComplexInteger<T> left, ComplexInteger<T> right)
+		{
+			if (left.imag == T.Zero && right.imag == T.Zero)
+				return left.real >= right.real;
+			throw new InvalidOperationException();
+		}
+
+		/// <summary>
+		/// Modulus operator
+		/// </summary>
+		public static ComplexInteger<T> operator %(ComplexInteger<T> left, ComplexInteger<T> right) => new(left.real % right.real, left.imag % right.imag);
+
+		/// <summary>
+		/// Max operator
+		/// </summary>
+		public static ComplexInteger<T> Max(ComplexInteger<T> x, ComplexInteger<T> y) => x < y ? y : x;
+
+		/// <summary>
+		/// Max operator
+		/// </summary>
+		public static ComplexInteger<T> Min(ComplexInteger<T> x, ComplexInteger<T> y) => x < y ? x : y;
+
+		int IComparable.CompareTo(object? obj) => obj is ComplexInteger<T> c ? this.CompareTo(c) : throw new InvalidOperationException();
+
+		/// <inheritdoc/>
+		public int CompareTo(ComplexInteger<T> other)
+		{
+			if (this.imag == T.Zero && other.imag == T.Zero)
+				return this.real.CompareTo(other.real);
+			throw new InvalidOperationException();
+		}
 		#endregion
 
 		#region arithmetic operators

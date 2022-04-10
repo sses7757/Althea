@@ -22,7 +22,7 @@ namespace Althea.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ArithmeticError {
+    public class ArithmeticError {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Althea.Resources {
         ///   返回此类使用的缓存的 ResourceManager 实例。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Althea.Resources.ArithmeticError", typeof(ArithmeticError).Assembly);
@@ -51,7 +51,7 @@ namespace Althea.Resources {
         ///   使用此强类型资源类的所有资源查找执行重写。
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The float &apos;NaN&apos; or &apos;±Infinity&apos; occured during the calculations. 的本地化字符串。
         /// </summary>
-        internal static string AbnormalOccured {
+        public static string AbnormalOccured {
             get {
                 return ResourceManager.GetString("AbnormalOccured", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 There is not suitable addition operator for the given type. 的本地化字符串。
         /// </summary>
-        internal static string CannotAdd {
+        public static string CannotAdd {
             get {
                 return ResourceManager.GetString("CannotAdd", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given interger(s) cannot perform lossless integer division. 的本地化字符串。
         /// </summary>
-        internal static string CannotDivide {
+        public static string CannotDivide {
             get {
                 return ResourceManager.GetString("CannotDivide", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Cannot calculate the negate of an unsigned number. 的本地化字符串。
         /// </summary>
-        internal static string CannotNegate {
+        public static string CannotNegate {
             get {
                 return ResourceManager.GetString("CannotNegate", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Cannot parse &apos;{0}&apos; to a custom type {1}. 的本地化字符串。
         /// </summary>
-        internal static string CannotParse {
+        public static string CannotParse {
             get {
                 return ResourceManager.GetString("CannotParse", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 Cannot parse &apos;{0}&apos; to a complex number with real type {1}. 的本地化字符串。
         /// </summary>
-        internal static string CannotParseComplex {
+        public static string CannotParseComplex {
             get {
                 return ResourceManager.GetString("CannotParseComplex", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The give data type is not allowed. 的本地化字符串。
         /// </summary>
-        internal static string DataTypeNotAllow {
+        public static string DataTypeNotAllow {
             get {
                 return ResourceManager.GetString("DataTypeNotAllow", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace Althea.Resources {
         /// <summary>
         ///   查找类似 The given length is not a perfect square. 的本地化字符串。
         /// </summary>
-        internal static string PerfectSquare {
+        public static string PerfectSquare {
             get {
                 return ResourceManager.GetString("PerfectSquare", resourceCulture);
             }

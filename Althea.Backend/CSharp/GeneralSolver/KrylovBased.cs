@@ -10,9 +10,7 @@ using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.Solver;
-
-using LAD = Althea.LinearAlgebra.Dense.AbstractApi;
+using Althea.GeneralSolver;
 
 
 namespace Althea.Backend.CSharp.Solver
@@ -20,25 +18,25 @@ namespace Althea.Backend.CSharp.Solver
 	internal static class KrylovBased
 	{
 		#region get convergence of Krylov-Schur
-		private delegate bool SchurDelegate<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<ComplexDouble>? orderVal = null) where T : unmanaged, INumber<T>;
+		private delegate bool SchurDelegate<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<Complex<double>>? orderVal = null) where T : unmanaged, IFloatingPoint<T>;
 
 		private static readonly Dictionary<RuntimeTypeHandle, Delegate> SchurSolve = new();
 
-		private delegate bool EigenDelegate(SolveVectorMode mode, long n, Storage<ComplexDouble> valOut, Storage<ComplexDouble>? leftVec, long ldvl, Storage<ComplexDouble>? rightVec, long ldvr, Storage<ComplexDouble> A, long lda);
+		private delegate bool EigenDelegate(SolveVectorMode mode, long n, Storage<Complex<double>> valOut, Storage<Complex<double>>? leftVec, long ldvl, Storage<Complex<double>>? rightVec, long ldvr, Storage<Complex<double>> A, long lda);
 
 		private static EigenDelegate? EigenSolve = null;
 
-		private delegate bool MultiplyDelegate(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, ComplexDouble α, Storage<ComplexDouble> A, long lda, Storage<ComplexDouble> B, long ldb, ComplexDouble β, Storage<ComplexDouble> C, long ldc);
+		private delegate bool MultiplyDelegate(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Storage<Complex<double>> A, long lda, Storage<Complex<double>> B, long ldb, Complex<double> β, Storage<Complex<double>> C, long ldc);
 
 		private static MultiplyDelegate? MatrixMultiply = null;
 
 		// Ignore Spelling: \mathbf \overset \longrightarrow
-		private unsafe static Span<int> GetConverge<T>(SpanMatrix<T> H, double beta, double tol, WhichEigenvalues which, bool useGap, Span<ComplexDouble> orderedVals, SpanMatrix<ComplexDouble> orderedVecs, Span<int> converged, Span<double> errorBounds) where T : unmanaged, INumber<T>
+		private unsafe static Span<int> GetConverge<T>(SpanMatrix<T> H, double beta, double tol, WhichEigenvalues which, bool useGap, Span<Complex<double>> orderedVals, SpanMatrix<Complex<double>> orderedVecs, Span<int> converged, Span<double> errorBounds) where T : unmanaged, IFloatingPoint<T>
 		{
 			#region Schur decomposition first
 			int n = H.Rows;
-			Span<ComplexDouble> Hc = H.PresentingLength.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[H.PresentingLength];
-			Span<ComplexDouble> USchur = H.PresentingLength.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[H.PresentingLength];
+			Span<Complex<double>> Hc = H.PresentingLength.CheckStackLimit<Complex<double>>() ?? stackalloc Complex<double>[H.PresentingLength];
+			Span<Complex<double>> USchur = H.PresentingLength.CheckStackLimit<Complex<double>>() ?? stackalloc Complex<double>[H.PresentingLength];
 			Span<int> conjugatePairs = stackalloc int[n];
 			GetSchur(n, H, Hc, USchur, conjugatePairs);
 			#endregion
@@ -46,13 +44,13 @@ namespace Althea.Backend.CSharp.Solver
 			#region get eigenvalues and eigenvectors
 			//tex:$\mathbf H \overset{\text{Eigen}}{\longrightarrow} \mathbf V \mathrm{diag}(\vec a) \mathbf V^{-1}
 			//\text{ where }\mathbf V = \mathbf U \mathbf X, \mathbf H_c \overset{\text{Eigen}}{\longrightarrow} \mathbf X \mathrm{diag}(\vec a) \mathbf X^{-1}$
-			fixed (ComplexDouble* ptrHc = Hc, ptrUSchur = USchur)
-			fixed (ComplexDouble* ptrVals = orderedVals, ptrVecs = orderedVecs.UnderlyingSpan)
+			fixed (Complex<double>* ptrHc = Hc, ptrUSchur = USchur)
+			fixed (Complex<double>* ptrVals = orderedVals, ptrVecs = orderedVecs.UnderlyingSpan)
 			{
-				var matHc = new ManagedPureStorage<ComplexDouble>(ptrHc, H.PresentingLength);
-				var matU = new ManagedPureStorage<ComplexDouble>(ptrUSchur, H.PresentingLength);
-				var vecVal = new ManagedPureStorage<ComplexDouble>(ptrVals, n);
-				var matVec = new ManagedPureStorage<ComplexDouble>(ptrVecs, H.PresentingLength);
+				var matHc = new ManagedPureStorage<Complex<double>>(ptrHc, H.PresentingLength);
+				var matU = new ManagedPureStorage<Complex<double>>(ptrUSchur, H.PresentingLength);
+				var vecVal = new ManagedPureStorage<Complex<double>>(ptrVals, n);
+				var matVec = new ManagedPureStorage<Complex<double>>(ptrVecs, H.PresentingLength);
 				//tex:$\mathbf H_c \overset{\text{Eigen}}{\longrightarrow} \mathbf X \mathrm{diag}(\vec a) \mathbf X^{-1}$
 				if (EigenSolve is null)
 				{
@@ -91,7 +89,7 @@ namespace Althea.Backend.CSharp.Solver
 
 			#region get converged
 			double normA = orderedVals.Max(static v => v.Abs());
-			Span<ComplexDouble> lastRow = stackalloc ComplexDouble[n];
+			Span<Complex<double>> lastRow = stackalloc Complex<double>[n];
 			orderedVecs.CopyRowTo(n - 1, lastRow);
 			var convergedInd = new SpanList<int>(converged);
 			for (int i = 0; i < n; i++)
@@ -123,7 +121,7 @@ namespace Althea.Backend.CSharp.Solver
 			#endregion
 		}
 
-		private static unsafe void GetSchur<T>(int n, SpanMatrix<T> H, Span<ComplexDouble> outHc, Span<ComplexDouble> outUSchur, Span<int> outConjugatePairs) where T : unmanaged, INumber<T>
+		private static unsafe void GetSchur<T>(int n, SpanMatrix<T> H, Span<Complex<double>> outHc, Span<Complex<double>> outUSchur, Span<int> outConjugatePairs) where T : unmanaged, IFloatingPoint<T>
 		{
 			int lenH = H.PresentingLength;
 			Span<T> Hc = lenH.CheckStackLimit<T>() ?? stackalloc T[lenH];
@@ -150,14 +148,14 @@ namespace Althea.Backend.CSharp.Solver
 				}
 			}
 			if (Const<T>.IsComplex && Const<T>.DataTypeClass == DataTypeClassification.FloatPoint_IEEE754 && Const<T>.DataType.Bytes() == sizeof(double))
-			{   // T is ComplexDouble
-				Hc.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<ComplexDouble, T>(ref outHc[0]), lenH));
-				USchur.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<ComplexDouble, T>(ref outUSchur[0]), lenH));
+			{   // T is Complex<double>
+				Hc.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<Complex<double>, T>(ref outHc[0]), lenH));
+				USchur.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<Complex<double>, T>(ref outUSchur[0]), lenH));
 			}
 			else
 			{   // convert
-				Hc.CopyTo(outHc, ConstExtension.GetGenericConverter<T, ComplexDouble>());
-				USchur.CopyTo(outUSchur, ConstExtension.GetGenericConverter<T, ComplexDouble>());
+				Hc.CopyTo(outHc, ConstExtension.GetGenericConverter<T, Complex<double>>());
+				USchur.CopyTo(outUSchur, ConstExtension.GetGenericConverter<T, Complex<double>>());
 			}
 			// get conjugate pairs
 			if (!Const<T>.IsComplex)
@@ -176,7 +174,7 @@ namespace Althea.Backend.CSharp.Solver
 			}
 		}
 
-		private static unsafe void SortPairs(int n, WhichEigenvalues which, Span<ComplexDouble> orderedVals, SpanMatrix<ComplexDouble> orderedVecs, Span<int> conjugatePairs)
+		private static unsafe void SortPairs(int n, WhichEigenvalues which, Span<Complex<double>> orderedVals, SpanMatrix<Complex<double>> orderedVecs, Span<int> conjugatePairs)
 		{
 			Span<double> ordered = stackalloc double[n];
 			switch (which)
@@ -202,7 +200,7 @@ namespace Althea.Backend.CSharp.Solver
 				default:
 					throw new NotSupportedException();
 			}
-			fixed (ComplexDouble* p = orderedVecs.UnderlyingSpan)
+			fixed (Complex<double>* p = orderedVecs.UnderlyingSpan)
 			{
 				int ld = orderedVecs.LeadDim;
 				Span<IntPtr> columns = stackalloc IntPtr[n];
@@ -216,15 +214,15 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region preserve selection of Krylov-Schur
-		private static void ConvergenceTestAndRestart<TVec, T>(int nEig, Span<int> allConverged, Span<ComplexDouble> orderedVals, SpanMatrix<ComplexDouble> orderedVecs, ref SpanList<ComplexDouble> convergedEigvals, SpanMatrix<ComplexDouble> convergedEigvecs, IPreserveSelector selector, SpanMatrix<T> H, TVec r, ref SpanList<TVec> qs, Span<T> a, double beta)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void ConvergenceTestAndRestart<T, TVec>(int nEig, Span<int> allConverged, Span<Complex<double>> orderedVals, SpanMatrix<Complex<double>> orderedVecs, ref SpanList<Complex<double>> convergedEigvals, SpanMatrix<Complex<double>> convergedEigvecs, IPreserveSelector selector, SpanMatrix<T> H, TVec r, ref SpanList<TVec> qs, Span<T> a, double beta)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			#region get required converged and rest eigen-pairs
 			int n = orderedVals.Length, vecLen = orderedVecs.PresentingLength;
-			Span<ComplexDouble> vals = stackalloc ComplexDouble[n];
-			Span<ComplexDouble> vecSpan = vecLen.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[vecLen];
-			SpanMatrix<ComplexDouble> vecs = new(vecSpan, orderedVecs.Rows);
+			Span<Complex<double>> vals = stackalloc Complex<double>[n];
+			Span<Complex<double>> vecSpan = vecLen.CheckStackLimit<Complex<double>>() ?? stackalloc Complex<double>[vecLen];
+			SpanMatrix<Complex<double>> vecs = new(vecSpan, orderedVecs.Rows);
 			int convergedWithin = 0;
 			for (int i = 0; i < nEig; i++)
 			{
@@ -266,7 +264,7 @@ namespace Althea.Backend.CSharp.Solver
 			#endregion
 		}
 
-		private static Span<ComplexDouble> PreserveSelect(int nEig, int n, int convergedWithin, Span<int> allConverged, Span<ComplexDouble> vals, SpanMatrix<ComplexDouble> vecs, Span<ComplexDouble> orderedVals, IPreserveSelector selector)
+		private static Span<Complex<double>> PreserveSelect(int nEig, int n, int convergedWithin, Span<int> allConverged, Span<Complex<double>> vals, SpanMatrix<Complex<double>> vecs, Span<Complex<double>> orderedVals, IPreserveSelector selector)
 		{
 			var restVals = vals[convergedWithin..];
 			var restVecs = vecs[convergedWithin..];
@@ -296,9 +294,9 @@ namespace Althea.Backend.CSharp.Solver
 			return vals[..preserveCount];
 		}
 
-		private unsafe static long ReorderSchur<TVec, T>(ReadOnlySpan<ComplexDouble> preserveVals, SpanMatrix<T> H, TVec r, ref SpanList<TVec> qs, Span<T> a, double beta)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private unsafe static long ReorderSchur<T, TVec>(ReadOnlySpan<Complex<double>> preserveVals, SpanMatrix<T> H, TVec r, ref SpanList<TVec> qs, Span<T> a, double beta)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			// Ignore Spelling: \left \right
 			int n = H.Rows, lenH = H.PresentingLength;
@@ -306,11 +304,11 @@ namespace Althea.Backend.CSharp.Solver
 			//tex:$\mathbf H \overset{\text{Schur (order}=\vec v_\text{preserve}\text{)}}{\longrightarrow} \mathbf H \mathbf X$
 			Span<T> X = lenH.CheckStackLimit<T>() ?? stackalloc T[lenH];
 			fixed (T* ptrX = X, ptrH = H.UnderlyingSpan)
-			fixed (ComplexDouble* ptrVals = preserveVals)
+			fixed (Complex<double>* ptrVals = preserveVals)
 			{
 				var matH = new ManagedPureStorage<T>(ptrH, lenH);
 				var matX = new ManagedPureStorage<T>(ptrX, lenH);
-				var orderVal = new ManagedPureStorage<ComplexDouble>(ptrVals, preserveVals.Length);
+				var orderVal = new ManagedPureStorage<Complex<double>>(ptrVals, preserveVals.Length);
 				var type = typeof(T).TypeHandle;
 				if (SchurSolve.ContainsKey(type))
 				{
@@ -357,33 +355,33 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region get convergence of GMRES
-		private delegate bool LSDelegate<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged, INumber<T>;
+		private delegate bool LSDelegate<T>(long m, long n, long nrhs, Storage<T> A, long lda, Storage<T> B, long ldb) where T : unmanaged, IFloatingPoint<T>;
 
 		private static readonly Dictionary<RuntimeTypeHandle, Delegate> LSSolve = new();
 
-		private static unsafe bool LinearSolveConvergenceCheck<T>(int n, SpanMatrix<T> H, double β0, double β, double tol, Span<T> convergedVec, bool forceCalc = false) where T : unmanaged, INumber<T>
+		private static unsafe bool LinearSolveConvergenceCheck<T>(int n, SpanMatrix<T> H, double β0, double β, double tol, Span<T> convergedVec, bool forceCalc = false) where T : unmanaged, IFloatingPoint<T>
 		{
 			// Ignore Spelling: \varepsilon \mathbb
 			//tex:$\vec e = \mathrm{Eigen}(\mathbf H)$
-			Span<ComplexDouble> eigenvalues = stackalloc ComplexDouble[n];
+			Span<Complex<double>> eigenvalues = stackalloc Complex<double>[n];
 			H = H.SubMatrix(..n, ..n);
 			int n1 = n + 1;
-			int lenNewH = n1 * n * Math.Max(sizeof(T), sizeof(ComplexDouble));
+			int lenNewH = n1 * n * Math.Max(sizeof(T), sizeof(Complex<double>));
 			Span<byte> newH = lenNewH.CheckStackLimit<byte>() ?? stackalloc byte[lenNewH];
 			if (Const<T>.IsComplex && Const<T>.DataTypeClass == DataTypeClassification.FloatPoint_IEEE754 && Const<T>.DataType.Bytes() == sizeof(double))
-			{   // T is ComplexDouble
+			{   // T is Complex<double>
 				H.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<byte, T>(ref newH[0]), n * n));
 			}
 			else
 			{
-				H.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<byte, ComplexDouble>(ref newH[0]), n * n), ConstExtension.GetGenericConverter<T, ComplexDouble>());
+				H.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<byte, Complex<double>>(ref newH[0]), n * n), ConstExtension.GetGenericConverter<T, Complex<double>>());
 			}
 			double estimateNormA;
 			fixed (byte* ptrH = newH)
-			fixed (ComplexDouble* ptrVals = eigenvalues)
+			fixed (Complex<double>* ptrVals = eigenvalues)
 			{
-				var matH = new ManagedPureStorage<ComplexDouble>(ptrH, n * n);
-				var vecE = new ManagedPureStorage<ComplexDouble>(ptrVals, n);
+				var matH = new ManagedPureStorage<Complex<double>>(ptrH, n * n);
+				var vecE = new ManagedPureStorage<Complex<double>>(ptrVals, n);
 				if (EigenSolve is not null)
 				{
 					EigenSolve.Invoke(SolveVectorMode.NoVector, n, vecE, null, 0, null, 0, matH, n);
@@ -437,9 +435,9 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region final calculation
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void FinalCalcRealT<TVec, T>(TVec v, SpanMatrix<T> real, SpanMatrix<T> imag, ReadOnlySpan<TVec> Q, Span<TVec> vectorReal, Span<TVec> vectorImag)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void FinalCalcRealT<T, TVec>(TVec v, SpanMatrix<T> real, SpanMatrix<T> imag, ReadOnlySpan<TVec> Q, Span<TVec> vectorReal, Span<TVec> vectorImag)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			try
 			{
@@ -467,9 +465,9 @@ namespace Althea.Backend.CSharp.Solver
 			}
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void FinalCalcCompT<TVec, T>(TVec v, SpanMatrix<T> comp, ReadOnlySpan<TVec> Q, Span<TVec> vector)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void FinalCalcCompT<T, TVec>(TVec v, SpanMatrix<T> comp, ReadOnlySpan<TVec> Q, Span<TVec> vector)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			try
 			{
@@ -490,9 +488,9 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region Krylov-Schur
 		// null return for not support
-		internal static int? KrylovSchur<TVec, T>(Func<TVec, TVec> matrixFunction, TVec initial, WhichEigenvalues which, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, Span<ComplexDouble> outEigvals, Span<TVec> outEigvecs, Span<TVec> outEigvecsImag, TimeSpan interval)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		internal static int? KrylovSchur<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, WhichEigenvalues which, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, Span<Complex<double>> outEigvals, Span<TVec> outEigvecs, Span<TVec> outEigvecsImag, TimeSpan interval)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			#region basic
 			if (initial is null)
@@ -502,7 +500,7 @@ namespace Althea.Backend.CSharp.Solver
 			// check parameters
 			int smallestK = outEigvals.Length;
 			if (checkFirst)
-				Common.CheckParas<TVec, T>(matrixFunction, initial, smallestK, ref iterPerRestart, herm: false);
+				Common.CheckParas<T, TVec>(matrixFunction, initial, smallestK, ref iterPerRestart, herm: false);
 			else
 				iterPerRestart = Math.Min(iterPerRestart, Common.NON_HERM_MAX_ITER);
 			// check other
@@ -536,16 +534,16 @@ namespace Althea.Backend.CSharp.Solver
 			Span<T> HSpan = iterSquare.CheckStackLimit<T>() ?? stackalloc T[iterSquare];
 			SpanMatrix<T> H = new(HSpan, iterPerRestart);
 
-			Span<ComplexDouble> orderedVals = stackalloc ComplexDouble[iterPerRestart];
-			Span<ComplexDouble> orderedVecSpan = iterSquare.CheckStackLimit<ComplexDouble>() ?? stackalloc ComplexDouble[iterSquare];
-			SpanMatrix<ComplexDouble> orderedVecs = new(orderedVecSpan, iterPerRestart);
+			Span<Complex<double>> orderedVals = stackalloc Complex<double>[iterPerRestart];
+			Span<Complex<double>> orderedVecSpan = iterSquare.CheckStackLimit<Complex<double>>() ?? stackalloc Complex<double>[iterSquare];
+			SpanMatrix<Complex<double>> orderedVecs = new(orderedVecSpan, iterPerRestart);
 
 			Span<int> orgConvergedIndices = stackalloc int[iterPerRestart];
 			Span<double> errorBounds = stackalloc double[iterPerRestart];
 
-			SpanList<ComplexDouble> convergedEigvals = new(stackalloc ComplexDouble[nEig]);
-			Span<ComplexDouble> convergedEigvecSpan = stackalloc ComplexDouble[iterPerRestart * nEig];
-			SpanMatrix<ComplexDouble> convergedEigvecs = new(convergedEigvecSpan, iterPerRestart);
+			SpanList<Complex<double>> convergedEigvals = new(stackalloc Complex<double>[nEig]);
+			Span<Complex<double>> convergedEigvecSpan = stackalloc Complex<double>[iterPerRestart * nEig];
+			SpanMatrix<Complex<double>> convergedEigvecs = new(convergedEigvecSpan, iterPerRestart);
 
 			// preserve original initial vector
 			TVec r = initial.Clone();
@@ -598,23 +596,23 @@ namespace Althea.Backend.CSharp.Solver
 				int vecsLen = iterPerRestart * nEig;
 				if (Const<T>.IsComplex)
 				{
-					var real = MemoryMarshal.CreateSpan(ref Unsafe.As<ComplexDouble, T>(ref orderedVecSpan[0]), vecsLen);
-					var imag = MemoryMarshal.CreateSpan(ref Unsafe.Add(ref Unsafe.As<ComplexDouble, T>(ref orderedVecSpan[0]), vecsLen), vecsLen);
-					convergedEigvecs.CopyTo(real, ConstExtension.GetRealPartGetter<ComplexDouble, T>());
-					convergedEigvecs.CopyTo(imag, ConstExtension.GetImagPartGetter<ComplexDouble, T>());
-					FinalCalcRealT<TVec, T>(r, new(real, iterPerRestart), new(imag, iterPerRestart), qs, outEigvecs, outEigvecsImag);
+					var real = MemoryMarshal.CreateSpan(ref Unsafe.As<Complex<double>, T>(ref orderedVecSpan[0]), vecsLen);
+					var imag = MemoryMarshal.CreateSpan(ref Unsafe.Add(ref Unsafe.As<Complex<double>, T>(ref orderedVecSpan[0]), vecsLen), vecsLen);
+					convergedEigvecs.CopyTo(real, ConstExtension.GetRealPartGetter<Complex<double>, T>());
+					convergedEigvecs.CopyTo(imag, ConstExtension.GetImagPartGetter<Complex<double>, T>());
+					FinalCalcRealT<T, TVec>(r, new(real, iterPerRestart), new(imag, iterPerRestart), qs, outEigvecs, outEigvecsImag);
 				}
 				else
 				{
-					if (typeof(T) == typeof(ComplexDouble) || typeof(T) == typeof(Complex<double>))
+					if (typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(Complex<double>))
 					{
-						SpanMatrix<T> temp = new(MemoryMarshal.CreateSpan(ref Unsafe.As<ComplexDouble, T>(ref convergedEigvecs[0, 0]), vecsLen), iterPerRestart);
+						SpanMatrix<T> temp = new(MemoryMarshal.CreateSpan(ref Unsafe.As<Complex<double>, T>(ref convergedEigvecs[0, 0]), vecsLen), iterPerRestart);
 						FinalCalcCompT(r, temp, qs, outEigvecs);
 					}
 					else
 					{
 						SpanMatrix<T> temp = new(stackalloc T[vecsLen], iterPerRestart);
-						convergedEigvecs.CopyTo(temp.UnderlyingSpan, ConstExtension.GetGenericConverter<ComplexDouble, T>());
+						convergedEigvecs.CopyTo(temp.UnderlyingSpan, ConstExtension.GetGenericConverter<Complex<double>, T>());
 						FinalCalcCompT(r, temp, qs, outEigvecs);
 					}
 				}
@@ -630,9 +628,9 @@ namespace Althea.Backend.CSharp.Solver
 			#endregion
 		}
 
-		private static void KrylovSchurInner<TVec, T>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, ReadOnlySpan<T> a, ref double β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static void KrylovSchurInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, ReadOnlySpan<T> a, ref double β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			Span<T> w = stackalloc T[iters];
 			int nPreserve = qs.Count;
@@ -673,9 +671,9 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region Generalized Minimal Residual (GMRES)
-		internal static bool GeneralMinimalResidual<TVec, T>(Func<TVec, TVec> matrixFunction, TVec b, TVec initGuess, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool checkFirst, out TVec solution, out double relativeError, TimeSpan interval, int maxStagnations)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		internal static bool GeneralMinimalResidual<T, TVec>(Func<TVec, TVec> matrixFunction, TVec b, TVec initGuess, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool checkFirst, out TVec solution, out double relativeError, TimeSpan interval, int maxStagnations)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			#region basic
 			if (initGuess is null)
@@ -686,7 +684,7 @@ namespace Althea.Backend.CSharp.Solver
 				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.Parameter.MustPositive);
 			// check parameters
 			if (checkFirst)
-				Common.CheckParas<TVec, T>(matrixFunction, initGuess, 1, ref iterPerRestart, herm: false);
+				Common.CheckParas<T, TVec>(matrixFunction, initGuess, 1, ref iterPerRestart, herm: false);
 			else
 				iterPerRestart = Math.Min(iterPerRestart, Common.NON_HERM_MAX_ITER);
 			// check other
@@ -711,7 +709,7 @@ namespace Althea.Backend.CSharp.Solver
 			SpanMatrix<T> H = new(HSpan, iterPerRestart);
 			// calculate first r
 			//tex: $\vec r = \vec b - \mathbf A \vec x_0$
-			TVec r = Common.RSetToBSubAx<TVec, T>(matrixFunction,initGuess, b);
+			TVec r = Common.RSetToBSubAx<T, TVec>(matrixFunction,initGuess, b);
 			double residual = r.Norm(), oldResidual = residual;
 			TVec guess = initGuess.Clone();
 			double normB = b.Norm();
@@ -753,7 +751,7 @@ namespace Althea.Backend.CSharp.Solver
 
 					#region restart
 					converge = LinearSolveConvergenceCheck(qs.Count, H, oldResidual, residual, realTolerance, convergedVec, forceCalc: true);
-					residual = GetNewInitial<TVec, T>(matrixFunction, b, guess, ref r, qs, convergedVec[..qs.Count]);
+					residual = GetNewInitial<T, TVec>(matrixFunction, b, guess, ref r, qs, convergedVec[..qs.Count]);
 					// actually converges
 					if (residual < realTolerance)
 					{
@@ -805,9 +803,9 @@ namespace Althea.Backend.CSharp.Solver
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static double GetNewInitial<TVec, T>(Func<TVec, TVec> A, TVec b, TVec guess, ref TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<T> vec)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static double GetNewInitial<T, TVec>(Func<TVec, TVec> A, TVec b, TVec guess, ref TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<T> vec)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			TVec? temp = null;
 			try
@@ -817,7 +815,7 @@ namespace Althea.Backend.CSharp.Solver
 				guess.AddBy(temp, Const<T>.One);
 				temp.Dispose();
 				//tex:$\vec r_\text{new} = \vec b - \mathbf A \vec x_\text{new}$
-				Common.RSetToBSubAx<TVec, T>(A, ref r, guess, b);
+				Common.RSetToBSubAx<T, TVec>(A, ref r, guess, b);
 				return r.Norm();
 			}
 			finally
@@ -826,9 +824,9 @@ namespace Althea.Backend.CSharp.Solver
 			}
 		}
 
-		private static bool GMResInner<TVec, T>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, double tol, ref double β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs, Span<T> convergedVec)
-			where TVec : class, IKrylovVector<TVec, T>, new()
-			where T : unmanaged, INumber<T>
+		private static bool GMResInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, double tol, ref double β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs, Span<T> convergedVec)
+			where TVec : class, IKrylovVector<T, TVec>
+			where T : unmanaged, IFloatingPoint<T>
 		{
 			double orgBeta = β;
 			Span<T> w = stackalloc T[iters];

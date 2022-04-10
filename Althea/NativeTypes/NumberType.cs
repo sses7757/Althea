@@ -199,6 +199,15 @@ namespace Althea.NativeTypes
 				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			return ComplexConverter.Conjugater<T>.Default.Invoke(x);
 		}
+
+		/// <summary>
+		/// Get the real part of a number <paramref name="x"/> of any number type if it is a complex type, otherwise <paramref name="x"/> itself.
+		/// </summary>
+		/// <typeparam name="T">The number type</typeparam>
+		/// <param name="x">The number to get real part</param>
+		/// <returns>The real part of <paramref name="x"/> if it is a complex type, otherwise <paramref name="x"/> itself.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe static T ToReal<T>(this T x) where T : unmanaged, INumber<T> => (x + x.Conjugate()) / (T.One + T.One);
 	}
 
 	/// <summary>
