@@ -22,6 +22,52 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		abstract static void Swap(ref T a, ref T b);
 	}
+	
+	/// <summary>
+	/// The default swapper to swap two <typeparamref name="T"/> values in-place
+	/// </summary>
+	/// <typeparam name="T">The type of the values to be swapped</typeparam>
+	public readonly struct Swapper<T> : ISwapper<Swapper<T>> where T : struct
+	{
+		private readonly T value;
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		private Swapper(T value) => this.value = value;
+
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		static void ISwapper<Swapper<T>>.Swap(ref Swapper<T> a, ref Swapper<T> b)
+		{
+			(a, b) = (b, a);
+		}
+
+		/// <summary>
+		/// Implicit converter to <typeparamref name="T"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static implicit operator T(Swapper<T> swapper) => swapper.value;
+
+		/// <summary>
+		/// Implicit converter from <typeparamref name="T"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.InternalCall)]
+		public static implicit operator Swapper<T>(T value) => new(value);
+	}
+
+	/// <summary>
+	/// The extension class storing method for <see cref="Swapper{T}"/>.
+	/// </summary>
+	public static class SwapperExtension
+	{
+		/// <summary>
+		/// Convert a given <paramref name="span"/> of <typeparamref name="T"/> to a span of <see cref="Swapper{T}"/>.
+		/// </summary>
+		public static Span<Swapper<T>> AsSwappers<T>(this Span<T> span) where T : struct
+		{
+			if (span.IsEmpty)
+				return default;
+			return SpanHelper.CreateSpan(ref Unsafe.As<T, Swapper<T>>(ref span[0]), span.Length);
+		}
+	}
 
 	/// <summary>
 	/// The static class that provides the sort utilities for <see cref="Span{T}"/>
@@ -43,7 +89,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
 		/// </summary>
 		/// <typeparam name="TKey">The type of the keys</typeparam>
 		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
@@ -59,7 +105,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
 		/// </summary>
 		/// <typeparam name="TKey">The type of the keys</typeparam>
 		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
@@ -77,7 +123,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
 		/// </summary>
 		/// <typeparam name="TKey">The type of the keys</typeparam>
 		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
@@ -97,7 +143,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
 		/// </summary>
 		/// <typeparam name="TKey">The type of the keys</typeparam>
 		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
@@ -119,7 +165,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/><paramref name="values6"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>, <paramref name="values6"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
 		/// </summary>
 		/// <typeparam name="TKey">The type of the keys</typeparam>
 		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
@@ -143,7 +189,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/><paramref name="values6"/><paramref name="values7"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>, <paramref name="values6"/>, <paramref name="values7"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
 		/// </summary>
 		/// <typeparam name="TKey">The type of the keys</typeparam>
 		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
@@ -169,7 +215,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/><paramref name="values6"/><paramref name="values7"/><paramref name="values8"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>, <paramref name="values6"/>, <paramref name="values7"/>, <paramref name="values8"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
 		/// </summary>
 		/// <typeparam name="TKey">The type of the keys</typeparam>
 		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>
@@ -197,7 +243,7 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/><paramref name="values6"/><paramref name="values7"/><paramref name="values8"/><paramref name="values9"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+		/// Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>, <paramref name="values6"/>, <paramref name="values7"/>, <paramref name="values8"/>, <paramref name="values9"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
 		/// </summary>
 		/// <typeparam name="TKey">The type of the keys</typeparam>
 		/// <typeparam name="TValue1">The type of the first value array which must implement <see cref="ISwapper{T}"/></typeparam>

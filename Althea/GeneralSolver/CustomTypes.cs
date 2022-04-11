@@ -206,7 +206,7 @@ namespace Althea.GeneralSolver
 		//tex:$$k=\max{\left\{n_{\mathrm{eig}},\frac{3p+2n_c}{5}\right\}}$$
 		OneStepResidualImprove,
 		/// <summary>
-		/// Based on the improvement of residual of Ritz eigen-pairs of single iteration after the restart, preserve the smallest $k$ ones: <br/>
+		/// Based on the improvement of residual of Ritz eigen-pairs of all iterations after the restart, preserve the smallest $k$ ones: <br/>
 		/// $$k=\underset{k}{\max}{\left(p-k\right)\frac{\lambda_{k+1}-\lambda_1}{\lambda_m-\lambda_1}}$$
 		/// </summary>
 		//tex:$$k=\underset{k}{\max}{\left(p-k\right)\frac{\lambda_{k+1}-\lambda_1}{\lambda_m-\lambda_1}}$$
@@ -291,6 +291,7 @@ namespace Althea.GeneralSolver
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
 		/// <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
+		/// <param name="estimateEigvalsImag"><paramref name="estimateEigvals"/>'s imaginary part if the eigenvalues are complexes or empty otherwise</param>
 		/// <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
 		/// <param name="nConverged">THe number of converged eigen-pairs</param>
 		/// <param name="nTarget">The number of smallest eigen-pairs wanted</param>
@@ -299,7 +300,7 @@ namespace Althea.GeneralSolver
 		/// <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
 		/// <returns>The <paramref name="output"/> with correct size.</returns>
 		/// <remarks>This method will only be invoked internally.</remarks>
-		ReadOnlySpan<int> PreserveSelect<T>(Span<T> estimateEigvals, Span<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPoint<T>;
+		Span<int> PreserveSelect<T>(ReadOnlySpan<T> estimateEigvals, ReadOnlySpan<T> estimateEigvalsImag, ReadOnlySpan<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPoint<T>;
 	}
 
 	internal sealed class BuiltInPreserveSelector : IPreserveSelector
@@ -311,7 +312,7 @@ namespace Althea.GeneralSolver
 			this.Strategy = strategy;
 		}
 
-		public ReadOnlySpan<int> PreserveSelect<T>(Span<T> estimateEigvals, Span<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPoint<T>
+		public Span<int> PreserveSelect<T>(ReadOnlySpan<T> estimateEigvals, ReadOnlySpan<T> estimateEigvalsImag, ReadOnlySpan<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPoint<T>
 		{
 			int length = estimateEigvals.Length;
 			int indexMax = 0;
@@ -363,15 +364,33 @@ namespace Althea.GeneralSolver
 					break;
 				case RestartStrategy.WholeIterResidualImprove:
 					upperCount = Math.Max(nTarget, (int)(0.6 * maxIter + 0.4 * nConverged));
-					T abs0 = T.Abs(estimateEigvals[0]), gap = T.Abs(estimateEigvals[^1]) - abs0;
-					T maxVal = T.Zero;
-					for (int i = 0; i < upperCount; i++)
+					if (estimateEigvalsImag.IsEmpty)
 					{
-						T val = T.Create(maxIter - i - 1) * (T.Abs(estimateEigvals[i + 1]) - abs0) / gap;
-						if (val > maxVal)
+						T abs0 = T.Abs(estimateEigvals[0]), gap = T.Abs(estimateEigvals[^1]) - abs0;
+						T maxVal = T.Zero;
+						for (int i = 0; i < upperCount; i++)
 						{
-							maxVal = val;
-							indexMax = i;
+							T val = T.Create(maxIter - i - 1) * (T.Abs(estimateEigvals[i + 1]) - abs0) / gap;
+							if (val > maxVal)
+							{
+								maxVal = val;
+								indexMax = i;
+							}
+						}
+					}
+					else
+					{
+						T abs0 = new Complex<T>(estimateEigvals[0], estimateEigvalsImag[0]).Magnitude;
+						T gap = new Complex<T>(estimateEigvals[^1], estimateEigvalsImag[^1]).Magnitude - abs0;
+						T maxVal = T.Zero;
+						for (int i = 0; i < upperCount; i++)
+						{
+							T val = T.Create(maxIter - i - 1) * (new Complex<T>(estimateEigvals[i + 1], estimateEigvalsImag[i + 1]).Magnitude - abs0) / gap;
+							if (val > maxVal)
+							{
+								maxVal = val;
+								indexMax = i;
+							}
 						}
 					}
 					break;

@@ -12,29 +12,7 @@ namespace Althea.Linq
 	/// </summary>
 	public static class SpanLinq
 	{
-		#region to / from array
-		/// <summary>
-		/// Copy <paramref name="array"/> to <paramref name="span"/>.
-		/// </summary>
-		/// <typeparam name="TIn">The type of <paramref name="array"/></typeparam>
-		/// <typeparam name="TOut">The type of <paramref name="span"/></typeparam>
-		/// <param name="span">The <see cref="Span{T}"/> to be copied into</param>
-		/// <param name="array">The destination array to be copied</param>
-		/// <param name="selector">The converter to each element</param>
-		/// <returns>The <paramref name="span"/></returns>
-		public static Span<TOut> CopyTo<TIn, TOut>(this IReadOnlyList<TIn> array, Span<TOut> span, Converter<TIn, TOut> selector)
-		{
-			if (span.Length != array.Count)
-				throw new ArgumentException(ParameterError.NotSameSize);
-
-			int len = span.Length;
-			for (int i = 0; i < len; i++)
-			{
-				span[i] = selector(array[i]);
-			}
-			return span;
-		}
-
+		#region copy
 		/// <summary>
 		/// Copy <paramref name="span"/> to <paramref name="array"/>.
 		/// </summary>
@@ -58,13 +36,50 @@ namespace Althea.Linq
 		/// <param name="selector">The converter to each element</param>
 		public static void CopyTo<TIn, TOut>(this ReadOnlySpan<TIn> span, Span<TOut> array, Converter<TIn, TOut> selector)
 		{
-			if (span.Length != array.Length)
-				throw new ArgumentException(ParameterError.NotSameSize);
+			if (span.Length > array.Length)
+				throw new ArgumentException(ParameterError.WrongSize);
 
 			int len = span.Length;
 			for (int i = 0; i < len; i++)
 			{
 				array[i] = selector(span[i]);
+			}
+		}
+
+		/// <summary>
+		/// Zip convert the <paramref name="span1"/> and <paramref name="span2"/> to <paramref name="array"/>.
+		/// </summary>
+		/// <typeparam name="TIn1">The type of <paramref name="span1"/></typeparam>
+		/// <typeparam name="TIn2">The type of <paramref name="span2"/></typeparam>
+		/// <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+		/// <param name="span1">The <see cref="Span{T}"/> to be copied from</param>
+		/// <param name="span2">The <see cref="ReadOnlySpan{T}"/> to be copied from</param>
+		/// <param name="array">The destination <see cref="Span{T}"/> to be copied into</param>
+		/// <param name="selector">The converter to each element</param>
+		public static void Zip<TIn1, TIn2, TOut>(this Span<TIn1> span1, ReadOnlySpan<TIn2> span2, Span<TOut> array, Func<TIn1, TIn2, TOut> selector)
+		{
+			Zip((ReadOnlySpan<TIn1>)span1, span2, array, selector);
+		}
+
+		/// <summary>
+		/// Zip convert the <paramref name="span1"/> and <paramref name="span2"/> to <paramref name="array"/>.
+		/// </summary>
+		/// <typeparam name="TIn1">The type of <paramref name="span1"/></typeparam>
+		/// <typeparam name="TIn2">The type of <paramref name="span2"/></typeparam>
+		/// <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+		/// <param name="span1">The <see cref="ReadOnlySpan{T}"/> to be copied from</param>
+		/// <param name="span2">The <see cref="ReadOnlySpan{T}"/> to be copied from</param>
+		/// <param name="array">The destination <see cref="Span{T}"/> to be copied into</param>
+		/// <param name="selector">The converter to each element</param>
+		public static void Zip<TIn1, TIn2, TOut>(this ReadOnlySpan<TIn1> span1, ReadOnlySpan<TIn2> span2, Span<TOut> array, Func<TIn1, TIn2, TOut> selector)
+		{
+			if (span1.Length > array.Length || span2.Length > array.Length || span1.Length != span2.Length)
+				throw new ArgumentException(ParameterError.WrongSize);
+
+			int len = array.Length;
+			for (int i = 0; i < len; i++)
+			{
+				array[i] = selector(span1[i], span2[i]);
 			}
 		}
 		#endregion

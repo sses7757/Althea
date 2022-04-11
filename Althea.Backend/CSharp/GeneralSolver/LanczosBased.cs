@@ -9,6 +9,8 @@ using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 
+
+// Ignore Spelling: \dfrac \cdot \alpha \mathbf \varepsilon
 namespace Althea.Backend.CSharp.Solver
 {
 	internal static class LanczosBased
@@ -592,7 +594,7 @@ namespace Althea.Backend.CSharp.Solver
 					try
 					{
 						// select the Ritz pairs to preserve
-						var preserveIndices = selector.PreserveSelect(eigvalsNow, eigvecsNow.UnderlyingSpan, restartInfo.ConvergedEigenvectors.Count, smallestK, iterPerRestart, preserveIndicesSpan);
+						var preserveIndices = selector.PreserveSelect<T>(eigvalsNow, default, eigvecsNow.UnderlyingSpan, restartInfo.ConvergedEigenvectors.Count, smallestK, iterPerRestart, preserveIndicesSpan);
 						if (preserveIndices.Length == 1)
 							Log.Write($"Restarting with only one preserved Ritz pair may never improve the result.", level: LogLevel.Warning);
 						// cannot dispose old unconverged vectors and residual vector since they are in Q now
@@ -881,7 +883,7 @@ namespace Althea.Backend.CSharp.Solver
 					}
 					else
 					{
-						// Ignore Spelling: \dfrac
+						
 						//tex: $\beta_i = \dfrac {\vec r_i \cdot \vec z_i} {\vec r_{i - 1} \cdot \vec z_{i-1}}$
 						T β = ρ / ρOld;
 						if (β == T.Zero)
@@ -1007,7 +1009,6 @@ namespace Althea.Backend.CSharp.Solver
 			// log
 			Log.Write(string.Format(Resource.MinResStart, initial.Length, maxIter));
 			Stopwatch stopwatch = Stopwatch.StartNew();
-			// Ignore Spelling: \mathbf
 			// check initial guess
 			var (relativeError, solve) = CheckLinearSolveInitial<T, TVec>(matrix, initial, rightSide, normB, realTolerance, out TVec r, out TVec x, out TVec solution, out T minResidual);
 			if (solve is not null)
@@ -1128,7 +1129,6 @@ namespace Althea.Backend.CSharp.Solver
 					olderM?.Dispose();
 					olderM = oldM;
 					oldM = m;
-					// Ignore Spelling: \varepsilon
 					//tex: $\vec m_i = \vec v' - \delta \vec m_{i-1} - \varepsilon \vec m_{i-2}$
 					m = vv;
 					m.AddBy(oldM, -δ);

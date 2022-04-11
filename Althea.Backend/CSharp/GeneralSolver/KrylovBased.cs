@@ -1,103 +1,189 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Backend.Storage;
+using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.GeneralSolver;
 
 
+// Ignore Spelling: \mathbf \overset \longrightarrow \mathrm \cdot \left \right \varepsilon \mathbb \begin \times \le
 namespace Althea.Backend.CSharp.Solver
 {
 	internal static class KrylovBased
 	{
 		#region get convergence of Krylov-Schur
-		private delegate bool SchurDelegate<T>(SolveVectorMode jobu, long n, Storage<T> A, long lda, Storage<T>? U, long ldu, out long actualNumber, Storage<Complex<double>>? orderVal = null) where T : unmanaged, IFloatingPoint<T>;
+		private static unsafe void GetSchur<T>(int n, SpanMatrix<T> H, Span<T> outVals, Span<T> outValsImag, SpanMatrix<T> outSchurT, SpanMatrix<T> outSchurU, Span<int> outConjugatePairs) where T : unmanaged, IFloatingPoint<T>
+		{
+			H.CopyTo(outSchurT);
+			//tex:$\mathbf H \overset{\text{Schur (no ordering)}}{\longrightarrow} \mathbf H_c \cdot \mathbf U$
+			fixed (T* ptrVals = outVals, ptrSchurT = outSchurT.UnderlyingSpan, ptrSchurU = outSchurU.UnderlyingSpan, ptrValsIm = outValsImag.IsEmpty ? default : outValsImag)
+			{
+				Mkl.LinearAlgebra.Dense.DenseApi.HessenbergSchur(SolveVectorMode.Vector, n, ptrVals, ptrValsIm, ptrSchurT, outSchurT.LeadDim, ptrSchurU, outSchurU.LeadDim);
+			}
+			// get conjugate pairs
+			if (!NumberType<T>.IsComplex)
+			{
+				int countPair = 1;
+				for (int i = 0; i < n - 1; i++)
+				{
+					if (outSchurT[i + 1, i] == T.Zero)
+					{
+						outConjugatePairs[i] = countPair;
+						outConjugatePairs[i + 1] = countPair;
+						countPair++;
+						i++;
+					}
+				}
+			}
+		}
 
-		private static readonly Dictionary<RuntimeTypeHandle, Delegate> SchurSolve = new();
+		private static unsafe void ReorderSchur<T, TVec>(ReadOnlySpan<int> reorder, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		{
+			int rows = reorder.Length;
+			Span<int> identity = stackalloc int[reorder.Length].FillWithRange(0);
+			//tex:$\mathbf H \overset{\text{Schur (order}=\vec v_\text{preserve}\text{)}}{\longrightarrow} \mathbf H \cdot \mathbf X$
+			fixed (T* ptrT = schurT.UnderlyingSpan, ptrU = schurU.UnderlyingSpan)
+			fixed (int* ptrIdentity = identity, ptrOrder = reorder)
+			{
+				Mkl.LinearAlgebra.Dense.DenseApi.SchurReorder(rows, ptrT, schurT.LeadDim, ptrU, schurU.LeadDim, ptrIdentity, ptrOrder);
+			}
+			int n = preserveCount;
+			//tex:${\vec{a}}^\ast={\vec{a}}^\ast X^\prime$
+			var X1 = new SpanMatrix<T>(schurU.UnderlyingSpan, n, schurU.LeadDim);
+			X1.CopyRowTo(n - 1, a);
+			a.Scale(beta);
+			//tex:$H^{\left(n_r\right)}=T_1$ (clear all except the first $n\times n$)
+			for (int i = n; i < rows; i++)
+			{
+				schurT[i].Clear();
+				schurT.SetRowFrom(i, schurT[i]);
+			}
+			//tex:$Q^{\left(n_r\right)}=Q^{\left(k\right)}X_1$
+			Span<IntPtr> tempQ = stackalloc IntPtr[qs.Capacity];
+			SpanList<TVec> newQ = new(tempQ.AsClassType<TVec>());
+			try
+			{
+				for (int i = 0; i < n; i++)
+				{
+					var newq = IKrylovVector<T, TVec>.OperateOn(qs, X1[i]);
+					newq.Normalize();
+					newQ.Add(newq);
+				}
+				qs.ClearList();
+				qs.AddRange(SpanHelper.CreateReadOnlySpan(in newQ[0], newQ.Count));
+			}
+			catch (Exception)
+			{
+				newQ.ClearList();
+				throw;
+			}
+		}
+		private static unsafe void SortPairs<T>(int n, WhichEigenvalues which, Span<T> orderedVals, Span<T> orderedValsImag, SpanMatrix<T> orderedVecs, Span<int> conjugatePairs) where T : unmanaged, IFloatingPoint<T>
+		{
+			Span<T> reordered = stackalloc T[n];
+			if (NumberType<T>.IsComplex)
+			{
+				switch (which)
+				{
+					case WhichEigenvalues.LargestAbsolute:
+						orderedVals.CopyTo(reordered, static v => -T.Abs(v));
+						break;
+					case WhichEigenvalues.LargestReal:
+						orderedVals.CopyTo(reordered, static v => -v.ToReal());
+						break;
+					case WhichEigenvalues.LargestAbsoluteImaginary:
+						orderedVals.CopyTo(reordered, static v => -T.Abs(v.ToImag()));
+						break;
+					case WhichEigenvalues.SmallestAbsolute:
+						orderedVals.CopyTo(reordered, static v => T.Abs(v));
+						break;
+					case WhichEigenvalues.SmallestReal:
+						orderedVals.CopyTo(reordered, static v => v.ToImag());
+						break;
+					case WhichEigenvalues.SmallestAbsoluteImaginary:
+						orderedVals.CopyTo(reordered, static v => T.Abs(v.ToImag()));
+						break;
+					default:
+						throw new NotSupportedException();
+				}
+				fixed (T* p = orderedVecs.UnderlyingSpan)
+				{
+					Span<SpanMatrix<T>.ColumnSwapping> columns = stackalloc SpanMatrix<T>.ColumnSwapping[n];
+					columns = orderedVecs.AsColumnSwappings(new(p), columns);
+					reordered.Sort(columns, orderedVals.AsSwappers(), conjugatePairs.AsSwappers());
+				}
+			}
+			else
+			{
+				switch (which)
+				{
+					case WhichEigenvalues.LargestAbsolute:
+						orderedVals.Zip<T, T, T>(orderedValsImag, reordered, static (re, im) => -new Complex<T>(re, im).MagnitudeSquared);
+						break;
+					case WhichEigenvalues.LargestReal:
+						orderedVals.CopyTo(reordered, static v => -v);
+						break;
+					case WhichEigenvalues.LargestAbsoluteImaginary:
+						orderedValsImag.CopyTo(reordered, static v => -T.Abs(v));
+						break;
+					case WhichEigenvalues.SmallestAbsolute:
+						orderedVals.Zip<T, T, T>(orderedValsImag, reordered, static (re, im) => new Complex<T>(re, im).MagnitudeSquared);
+						break;
+					case WhichEigenvalues.SmallestReal:
+						orderedVals.CopyTo(reordered);
+						break;
+					case WhichEigenvalues.SmallestAbsoluteImaginary:
+						orderedValsImag.CopyTo(reordered, static v => T.Abs(v));
+						break;
+					default:
+						throw new NotSupportedException();
+				}
+				fixed (T* p = orderedVecs.UnderlyingSpan)
+				{
+					Span<SpanMatrix<T>.ColumnSwapping> columns = stackalloc SpanMatrix<T>.ColumnSwapping[n];
+					columns = orderedVecs.AsColumnSwappings(new(p), columns);
+					reordered.Sort(columns, orderedVals.AsSwappers(), orderedValsImag.AsSwappers(), conjugatePairs.AsSwappers());
+				}
+			}
+		}
 
-		private delegate bool EigenDelegate(SolveVectorMode mode, long n, Storage<Complex<double>> valOut, Storage<Complex<double>>? leftVec, long ldvl, Storage<Complex<double>>? rightVec, long ldvr, Storage<Complex<double>> A, long lda);
-
-		private static EigenDelegate? EigenSolve = null;
-
-		private delegate bool MultiplyDelegate(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Storage<Complex<double>> A, long lda, Storage<Complex<double>> B, long ldb, Complex<double> β, Storage<Complex<double>> C, long ldc);
-
-		private static MultiplyDelegate? MatrixMultiply = null;
-
-		// Ignore Spelling: \mathbf \overset \longrightarrow
-		private unsafe static Span<int> GetConverge<T>(SpanMatrix<T> H, double beta, double tol, WhichEigenvalues which, bool useGap, Span<Complex<double>> orderedVals, SpanMatrix<Complex<double>> orderedVecs, Span<int> converged, Span<double> errorBounds) where T : unmanaged, IFloatingPoint<T>
+		private static unsafe Span<int> GetConverge<T>(SpanMatrix<T> H, T beta, T tol, WhichEigenvalues which, bool useGap, Span<T> orderedVals, Span<T> orderedValsImag, SpanMatrix<T> orderedVecs, SpanMatrix<T> schurT, SpanMatrix<T> schurU, Span<int> converged, Span<T> errorBounds) where T : unmanaged, IFloatingPoint<T>
 		{
 			#region Schur decomposition first
 			int n = H.Rows;
-			Span<Complex<double>> Hc = H.PresentingLength.CheckStackLimit<Complex<double>>() ?? stackalloc Complex<double>[H.PresentingLength];
-			Span<Complex<double>> USchur = H.PresentingLength.CheckStackLimit<Complex<double>>() ?? stackalloc Complex<double>[H.PresentingLength];
 			Span<int> conjugatePairs = stackalloc int[n];
-			GetSchur(n, H, Hc, USchur, conjugatePairs);
+			GetSchur(n, H, orderedVals, orderedValsImag, schurT, schurU, conjugatePairs);
+			schurU.CopyTo(orderedVecs);
 			#endregion
 
-			#region get eigenvalues and eigenvectors
-			//tex:$\mathbf H \overset{\text{Eigen}}{\longrightarrow} \mathbf V \mathrm{diag}(\vec a) \mathbf V^{-1}
+			#region get eigenvectors from Schur form
+			//tex:$\mathbf H \overset{\text{Eigen}}{\longrightarrow} \mathbf V \cdot \mathrm{diag}(\vec a) \cdot \mathbf V^{-1}
 			//\text{ where }\mathbf V = \mathbf U \mathbf X, \mathbf H_c \overset{\text{Eigen}}{\longrightarrow} \mathbf X \mathrm{diag}(\vec a) \mathbf X^{-1}$
-			fixed (Complex<double>* ptrHc = Hc, ptrUSchur = USchur)
-			fixed (Complex<double>* ptrVals = orderedVals, ptrVecs = orderedVecs.UnderlyingSpan)
+			fixed (T* ptrSchurT = schurT.UnderlyingSpan, ptrVecs = orderedVecs.UnderlyingSpan)
 			{
-				var matHc = new ManagedPureStorage<Complex<double>>(ptrHc, H.PresentingLength);
-				var matU = new ManagedPureStorage<Complex<double>>(ptrUSchur, H.PresentingLength);
-				var vecVal = new ManagedPureStorage<Complex<double>>(ptrVals, n);
-				var matVec = new ManagedPureStorage<Complex<double>>(ptrVecs, H.PresentingLength);
-				//tex:$\mathbf H_c \overset{\text{Eigen}}{\longrightarrow} \mathbf X \mathrm{diag}(\vec a) \mathbf X^{-1}$
-				if (EigenSolve is null)
-				{
-					LAD? pre = LAD.Current;
-					LAD.EigenSpecialMatrixGeneral(SolveVectorMode.Right, n, vecVal, matVec, n, null, 0, matHc, n);
-					LAD? now = LAD.Current;
-					Delegate? d = null;
-					pre.SetDelegate<LAD, EigenDelegate>(now, nameof(LAD.EigenSpecialMatrixGeneral), ref d);
-					EigenSolve = (EigenDelegate?)d;
-				}
-				else
-				{
-					EigenSolve.Invoke(SolveVectorMode.Right, n, vecVal, matVec, n, null, 0, matHc, n);
-				}
-				//tex:$\mathbf V = \mathbf U \mathbf X$
-				if (MatrixMultiply is null)
-				{
-					LAD? pre = LAD.Current;
-					LAD.GeneralMatricesMultiply(MatrixOperation.None, MatrixOperation.None, n, n, n, 1, matU, n, matVec, n, default, matHc, n);
-					LAD? now = LAD.Current;
-					Delegate? d = null;
-					pre.SetDelegate<LAD, MultiplyDelegate>(now, nameof(LAD.GeneralMatricesMultiply), ref d);
-					MatrixMultiply = (MultiplyDelegate?)d;
-				}
-				else
-				{
-					MatrixMultiply.Invoke(MatrixOperation.None, MatrixOperation.None, n, n, n, 1, matU, n, matVec, n, default, matHc, n);
-				}
+				Mkl.LinearAlgebra.Dense.DenseApi.SchurEigenvector(SolveVectorMode.Right, n, ptrSchurT, null, 1, ptrVecs, orderedVecs.LeadDim);
 			}
 			#endregion
 
 			#region sort eigen-pairs
 			// use a method to reduce the stack allocation size
-			SortPairs(n, which, orderedVals, orderedVecs, conjugatePairs);
+			SortPairs(n, which, orderedVals, orderedValsImag, orderedVecs, conjugatePairs);
 			#endregion
 
 			#region get converged
-			double normA = orderedVals.Max(static v => v.Abs());
-			Span<Complex<double>> lastRow = stackalloc Complex<double>[n];
+			T normA = orderedVals.Max(static v => T.Abs(v));
+			Span<T> lastRow = stackalloc T[n];
 			orderedVecs.CopyRowTo(n - 1, lastRow);
 			var convergedInd = new SpanList<int>(converged);
 			for (int i = 0; i < n; i++)
 			{
-				double absLastVec = orderedVecs[i, n - 1].Abs();
+				T absLastVec = T.Abs(orderedVecs[i, n - 1]);
 				errorBounds[i] = beta * absLastVec / normA;
 				if (useGap && errorBounds[i] < tol)    // get more precise gap first
-					errorBounds[i] = beta * absLastVec / Common.GetGap(beta, tol, orderedVals, lastRow, target: i, conjugatePairs, normA);
+					errorBounds[i] = beta * absLastVec / Common.GetGap(beta, tol, orderedVals, lastRow, i, conjugatePairs, normA);
 				if (errorBounds[i] < tol)    // still converged
 					convergedInd.Add(i);
 			}
@@ -120,103 +206,32 @@ namespace Althea.Backend.CSharp.Solver
 			return convergedInd;
 			#endregion
 		}
-
-		private static unsafe void GetSchur<T>(int n, SpanMatrix<T> H, Span<Complex<double>> outHc, Span<Complex<double>> outUSchur, Span<int> outConjugatePairs) where T : unmanaged, IFloatingPoint<T>
-		{
-			int lenH = H.PresentingLength;
-			Span<T> Hc = lenH.CheckStackLimit<T>() ?? stackalloc T[lenH];
-			Span<T> USchur = lenH.CheckStackLimit<T>() ?? stackalloc T[lenH];
-			fixed (T* ptrHc = Hc, ptrUSchur = USchur)
-			{
-				var matHc = new ManagedPureStorage<T>(ptrHc, lenH);
-				var matUSchur = new ManagedPureStorage<T>(ptrUSchur, lenH);
-				//tex:$\mathbf H \overset{\text{Schur (no ordering)}}{\longrightarrow} \mathbf H_c \mathbf U$
-				var type = typeof(T).TypeHandle;
-				if (!SchurSolve.ContainsKey(type))
-				{
-					LAD? pre = LAD.Current;
-					LAD.SchurDecomposition(SolveVectorMode.Vector, n, matHc, n, matUSchur, n);
-					LAD? now = LAD.Current;
-					Delegate? d = null;
-					pre.SetDelegate<LAD, SchurDelegate<T>>(now, nameof(LAD.SchurDecomposition), ref d);
-					if (d is SchurDelegate<T> dd)
-						SchurSolve.Add(type, dd);
-				}
-				else
-				{
-					((SchurDelegate<T>)SchurSolve[type]).Invoke(SolveVectorMode.Vector, n, matHc, n, matUSchur, n, out _);
-				}
-			}
-			if (Const<T>.IsComplex && Const<T>.DataTypeClass == DataTypeClassification.FloatPoint_IEEE754 && Const<T>.DataType.Bytes() == sizeof(double))
-			{   // T is Complex<double>
-				Hc.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<Complex<double>, T>(ref outHc[0]), lenH));
-				USchur.CopyTo(MemoryMarshal.CreateSpan(ref Unsafe.As<Complex<double>, T>(ref outUSchur[0]), lenH));
-			}
-			else
-			{   // convert
-				Hc.CopyTo(outHc, ConstExtension.GetGenericConverter<T, Complex<double>>());
-				USchur.CopyTo(outUSchur, ConstExtension.GetGenericConverter<T, Complex<double>>());
-			}
-			// get conjugate pairs
-			if (!Const<T>.IsComplex)
-			{
-				int _countPair = 1;
-				for (int i = 0; i < n - 1; i++)
-				{
-					if (!Hc[(i + 1) + i * n].IsZero())
-					{   // "(i + 1) + i * n" for the sub-diagonal
-						outConjugatePairs[i] = _countPair;
-						outConjugatePairs[i + 1] = _countPair;
-						_countPair++;
-						i++;
-					}
-				}
-			}
-		}
-
-		private static unsafe void SortPairs(int n, WhichEigenvalues which, Span<Complex<double>> orderedVals, SpanMatrix<Complex<double>> orderedVecs, Span<int> conjugatePairs)
-		{
-			Span<double> ordered = stackalloc double[n];
-			switch (which)
-			{
-				case WhichEigenvalues.LargestAbsolute:
-					orderedVals.CopyTo(ordered, static v => -v.Abs());
-					break;
-				case WhichEigenvalues.LargestReal:
-					orderedVals.CopyTo(ordered, static v => -v.Real);
-					break;
-				case WhichEigenvalues.LargestAbsoluteImaginary:
-					orderedVals.CopyTo(ordered, static v => -Math.Abs(v.Imag));
-					break;
-				case WhichEigenvalues.SmallestAbsolute:
-					orderedVals.CopyTo(ordered, static v => v.Abs());
-					break;
-				case WhichEigenvalues.SmallestReal:
-					orderedVals.CopyTo(ordered, static v => v.Real);
-					break;
-				case WhichEigenvalues.SmallestAbsoluteImaginary:
-					orderedVals.CopyTo(ordered, static v => Math.Abs(v.Imag));
-					break;
-				default:
-					throw new NotSupportedException();
-			}
-			fixed (Complex<double>* p = orderedVecs.UnderlyingSpan)
-			{
-				int ld = orderedVecs.LeadDim;
-				Span<IntPtr> columns = stackalloc IntPtr[n];
-				for (int i = 0; i < n; i++)
-				{
-					columns[i] = (IntPtr)(p + n * ld);
-				}
-				ordered.Sort(columns, orderedVals, conjugatePairs);
-			}
-		}
 		#endregion
 
 		#region preserve selection of Krylov-Schur
-		private static void ConvergenceTestAndRestart<T, TVec>(int nEig, Span<int> allConverged, Span<Complex<double>> orderedVals, SpanMatrix<Complex<double>> orderedVecs, ref SpanList<Complex<double>> convergedEigvals, SpanMatrix<Complex<double>> convergedEigvecs, IPreserveSelector selector, SpanMatrix<T> H, TVec r, ref SpanList<TVec> qs, Span<T> a, double beta)
-			where TVec : class, IKrylovVector<T, TVec>
-			where T : unmanaged, IFloatingPoint<T>
+		private static void PreserveSelect<T>(int nEig, int n, int convergedWithin, SpanMatrix<T> vecs, ReadOnlySpan<T> orderedVals, ReadOnlySpan<T> orderedValsImag, IPreserveSelector selector, Span<int> valsReorder) where T : unmanaged, IFloatingPoint<T>
+		{
+			var restVals = orderedVals[convergedWithin..];
+			var restValsImag = orderedValsImag.IsEmpty ? default : orderedValsImag[convergedWithin..];
+			var restVecs = vecs[convergedWithin..];
+			Span<int> preserveIndices = stackalloc int[n];
+			preserveIndices = selector.PreserveSelect<T>(restVals, restValsImag, restVecs.UnderlyingSpan, convergedWithin, nEig, n, preserveIndices, false);
+			int count = preserveIndices.Length;
+			if (count == 1)
+				Log.Write(Resource.RestartWarn1, category: nameof(KrylovSchur));
+			if (count > n / 2)
+				Log.Write(Resource.RestartWarn2, category: nameof(KrylovSchur));
+			valsReorder[..convergedWithin].FillWithRange(0);
+			count += convergedWithin;
+			preserveIndices.CopyTo(valsReorder[convergedWithin..count]);
+			Span<int> identity = stackalloc int[orderedVals.Length].FillWithRange(0);
+			Span<int> diff = stackalloc int[orderedVals.Length - count];
+			identity.SetExept(valsReorder[..count], diff);
+			diff.CopyTo(valsReorder[count..]);
+		}
+
+		// TODO: inline
+		private static void ConvergenceTestAndRestart<T, TVec>(int nEig, Span<int> allConverged, Span<T> orderedVals, Span<T> orderedValsImag, SpanMatrix<T> orderedVecs, ref SpanList<T> convergedEigvals, ref SpanList<T> convergedEigvalsImag, SpanMatrix<T> convergedEigvecs, IPreserveSelector selector, SpanMatrix<T> H, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region get required converged and rest eigen-pairs
 			int n = orderedVals.Length, vecLen = orderedVecs.PresentingLength;
@@ -264,94 +279,6 @@ namespace Althea.Backend.CSharp.Solver
 			#endregion
 		}
 
-		private static Span<Complex<double>> PreserveSelect(int nEig, int n, int convergedWithin, Span<int> allConverged, Span<Complex<double>> vals, SpanMatrix<Complex<double>> vecs, Span<Complex<double>> orderedVals, IPreserveSelector selector)
-		{
-			var restVals = vals[convergedWithin..];
-			var restVecs = vecs[convergedWithin..];
-			Span<int> preserveIndices = stackalloc int[n];
-			int preserveCount = selector.PreserveSelect(restVals, restVecs.UnderlyingSpan, convergedWithin, nEig, n, output: preserveIndices, withConverged: false);
-			preserveIndices = preserveIndices[..preserveCount];
-			if (preserveCount == 1)
-				Log.Write(Resource.RestartWarn1, category: nameof(KrylovSchur));
-			if (preserveCount > n / 2)
-				Log.Write(Resource.RestartWarn2, category: nameof(KrylovSchur));
-			preserveCount = convergedWithin;
-			foreach (var item in preserveIndices)
-			{
-				vals[preserveCount++] = restVals[item];
-			}
-			// add all converged ones to prevent stagnation
-			if (convergedWithin < allConverged.Length)
-			{
-				for (int i = 0; i < nEig; i++)
-				{
-					if (allConverged.BinarySearch(i) >= 0 && !vals[..preserveCount].Contains(orderedVals[i]))
-					{
-						vals[preserveCount++] = orderedVals[i];
-					}
-				}
-			}
-			return vals[..preserveCount];
-		}
-
-		private unsafe static long ReorderSchur<T, TVec>(ReadOnlySpan<Complex<double>> preserveVals, SpanMatrix<T> H, TVec r, ref SpanList<TVec> qs, Span<T> a, double beta)
-			where TVec : class, IKrylovVector<T, TVec>
-			where T : unmanaged, IFloatingPoint<T>
-		{
-			// Ignore Spelling: \left \right
-			int n = H.Rows, lenH = H.PresentingLength;
-			long actualLen;
-			//tex:$\mathbf H \overset{\text{Schur (order}=\vec v_\text{preserve}\text{)}}{\longrightarrow} \mathbf H \mathbf X$
-			Span<T> X = lenH.CheckStackLimit<T>() ?? stackalloc T[lenH];
-			fixed (T* ptrX = X, ptrH = H.UnderlyingSpan)
-			fixed (Complex<double>* ptrVals = preserveVals)
-			{
-				var matH = new ManagedPureStorage<T>(ptrH, lenH);
-				var matX = new ManagedPureStorage<T>(ptrX, lenH);
-				var orderVal = new ManagedPureStorage<Complex<double>>(ptrVals, preserveVals.Length);
-				var type = typeof(T).TypeHandle;
-				if (SchurSolve.ContainsKey(type))
-				{
-					((SchurDelegate<T>)SchurSolve[type]).Invoke(SolveVectorMode.Vector, n, matH, n, matX, n, out actualLen, orderVal);
-				}
-				else
-				{
-					actualLen = LAD.SchurDecomposition(SolveVectorMode.Vector, n, matH, n, matX, n, orderVal);
-				}
-			}
-			n = (int)actualLen;
-			//tex:${\vec{a}}^\ast={\vec{a}}^\ast X^\prime$
-			var X1 = new SpanMatrix<T>(X, n)[..n];
-			T betaT = beta.FromDouble<T>();
-			X1.CopyRowTo(n - 1, a);
-			a.Scale(betaT);
-			//tex:$H^{\left(n_r\right)}=T_1$ (clear all except the first $n\times n$)
-			for (int i = n; i < H.Rows; i++)
-			{
-				H[i].Clear();
-				H.SetRowFrom(i, H[i]);
-			}
-			//tex:$Q^{\left(n_r\right)}=Q^{\left(k\right)}X_1$
-			Span<IntPtr> tempQ = stackalloc IntPtr[qs.Capacity];
-			SpanList<TVec> newQ = new(tempQ.AsClassType<TVec>());
-			try
-			{
-				for (int i = 0; i < n; i++)
-				{
-					var newq = r.OperateOn(qs, X1[i]);
-					newq.Normalize();
-					newQ.Add(newq);
-				}
-				qs.ClearList();
-				qs.AddRange(MemoryMarshal.CreateReadOnlySpan(ref newQ[0], newQ.Count));
-				return actualLen;
-			}
-			catch (Exception)
-			{
-				newQ.ClearList();
-				throw;
-			}
-		}
 		#endregion
 
 		#region get convergence of GMRES
@@ -361,7 +288,6 @@ namespace Althea.Backend.CSharp.Solver
 
 		private static unsafe bool LinearSolveConvergenceCheck<T>(int n, SpanMatrix<T> H, double β0, double β, double tol, Span<T> convergedVec, bool forceCalc = false) where T : unmanaged, IFloatingPoint<T>
 		{
-			// Ignore Spelling: \varepsilon \mathbb
 			//tex:$\vec e = \mathrm{Eigen}(\mathbf H)$
 			Span<Complex<double>> eigenvalues = stackalloc Complex<double>[n];
 			H = H.SubMatrix(..n, ..n);
@@ -644,7 +570,6 @@ namespace Althea.Backend.CSharp.Solver
 				r = matrixFunction.Invoke(r);
 				//tex:Schmidt orthogonalize, $\vec{r}$ is in-place altered
 				Common.RobustOrthogonalize(r, qs, w, robustOrth);
-				// Ignore Spelling: \begin
 				//tex: $H^{(j)} = \left[\begin{matrix}\begin{matrix}H^{\left(j-1\right)}\\{\vec{a}}^T\\\end{matrix}&\vec{w}\\\end{matrix}\right]$
 				if (j == 0)
 				{
