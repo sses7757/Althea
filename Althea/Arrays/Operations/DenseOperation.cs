@@ -43,10 +43,7 @@ namespace Althea.Array
 		IMatrixMultiplyOperations<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>>,
 
 		IMatrixLinearSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IMatrixLeastSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IMatrixQRSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixLinearSolve<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IMatrixQRSolve<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>,
 
 		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
 		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>
@@ -774,58 +771,6 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void LeastSquareSolve(DenseMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
-		{
-			IMatrixLeastSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckLeast(coefficients, rightHandSides, outSolves);
-			if (rightHandSides != outSolves)
-				rightHandSides.Storage.Copy2DTo<T, TS, TS>(rightHandSides.LeadDim, outSolves.Storage, outSolves.LeadDim, outSolves.NRows, outSolves.NCols);
-			using var coef = coefficients.ToCompact();
-			Lapack.LeastSquareSolve<T, TS, TS>(coefficients.NRows, coefficients.NCols, outSolves.NCols, coef, coefficients.NRows, outSolves.Storage, outSolves.LeadDim);
-		}
-
-		/// <inheritdoc/>
-		public static void QRDecomposition(DenseMatrix<T, TS> matrix, DenseMatrix<T, TS> outTriangular, DenseMatrix<T, TS>? outUnary, bool full = false)
-		{
-			IMatrixQRSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckQR(matrix, outTriangular, outUnary, full);
-			if (matrix.NRows <= matrix.NCols)
-			{
-				matrix.CopyTo(outTriangular);
-				Lapack.QRDecomposition<T, TS, TS>(true, matrix.NRows, matrix.NCols, outTriangular.Storage, outTriangular.LeadDim, outUnary?.Storage, outUnary?.LeadDim ?? 1);
-			}
-			else //if (matrix.NRows > matrix.NCols)
-			{
-				if (matrix.Storage == outTriangular.Storage)
-				{
-					Lapack.QRDecomposition<T, TS, TS>(full, matrix.NRows, matrix.NCols, matrix.Storage, matrix.NRows, outUnary?.Storage, outUnary?.LeadDim ?? 1);
-				}
-				else
-				{
-					using var temp = matrix.ToCompact();
-					Lapack.QRDecomposition<T, TS, TS>(full, matrix.NRows, matrix.NCols, temp, matrix.NRows, outUnary?.Storage, outUnary?.LeadDim ?? 1);
-					temp.Copy2DTo<T, TS, TS>(matrix.NRows, outTriangular.Storage, outTriangular.LeadDim, matrix.NCols, matrix.NCols);
-					HalfBlas.HalfMatrixClearPart<T, TS>(false, true, matrix.NRows, matrix.NCols, outTriangular.Storage, outTriangular.LeadDim);
-				}
-			}
-		}
-
-		/// <inheritdoc/>
-		public static void QRDecomposition(DenseMatrix<T, TS> matrix, TriangularMatrix<T, TS> outTriangular, DenseMatrix<T, TS>? outUnary, bool full = false)
-		{
-			IMatrixQRSolve<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>.CheckQR(matrix, outTriangular, outUnary, full);
-			if (matrix.Storage == outTriangular.Storage)
-			{
-				Lapack.QRDecomposition<T, TS, TS>(true, matrix.NRows, matrix.NCols, matrix.Storage, matrix.LeadDim, outUnary?.Storage, outUnary?.LeadDim ?? 1);
-			}
-			else
-			{
-				using var temp = matrix.ToCompact();
-				Lapack.QRDecomposition<T, TS, TS>(true, matrix.NRows, matrix.NCols, temp, matrix.NRows, outUnary?.Storage, outUnary?.LeadDim ?? 1);
-				using var tempTri = new TriangularMatrix<T, TS>(true, temp, matrix.NRows, matrix.NCols, matrix.NRows);
-				tempTri.CopyTo(outTriangular);
-			}
-		}
-
-		/// <inheritdoc/>
 		public static void LinearSolve(TriangularMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves, MatrixOperation opCoef = MatrixOperation.None)
 		{
 			if (coefficients.NRows != coefficients.NCols)
@@ -954,6 +899,76 @@ namespace Althea.Array
 			{
 				output.Dispose();
 				throw;
+			}
+		}
+		#endregion
+	}
+
+
+	/// <summary>
+	/// The static class for dense linear algebra and tensor algebra solving operations of same data type and storage type.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
+	public sealed class DenseSolvers<T, TS> :
+		IMatrixLeastSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
+		IMatrixQRSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
+		IMatrixQRSolve<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>,
+
+		where T : unmanaged, IFloatingPoint<T>
+		where TS : class, IStorage<T, TS>
+	{
+
+		#region matrix solve
+		/// <inheritdoc/>
+		public static void LeastSquareSolve(DenseMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
+		{
+			IMatrixLeastSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckLeast(coefficients, rightHandSides, outSolves);
+			if (rightHandSides != outSolves)
+				rightHandSides.Storage.Copy2DTo<T, TS, TS>(rightHandSides.LeadDim, outSolves.Storage, outSolves.LeadDim, outSolves.NRows, outSolves.NCols);
+			using var coef = coefficients.ToCompact();
+			Lapack.LeastSquareSolve<T, TS, TS>(coefficients.NRows, coefficients.NCols, outSolves.NCols, coef, coefficients.NRows, outSolves.Storage, outSolves.LeadDim);
+		}
+
+		/// <inheritdoc/>
+		public static void QRDecomposition(DenseMatrix<T, TS> matrix, DenseMatrix<T, TS> outTriangular, DenseMatrix<T, TS>? outUnary, bool full = false)
+		{
+			IMatrixQRSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckQR(matrix, outTriangular, outUnary, full);
+			if (matrix.NRows <= matrix.NCols)
+			{
+				matrix.CopyTo(outTriangular);
+				Lapack.QRDecomposition<T, TS, TS>(true, matrix.NRows, matrix.NCols, outTriangular.Storage, outTriangular.LeadDim, outUnary?.Storage, outUnary?.LeadDim ?? 1);
+			}
+			else //if (matrix.NRows > matrix.NCols)
+			{
+				if (matrix.Storage == outTriangular.Storage)
+				{
+					Lapack.QRDecomposition<T, TS, TS>(full, matrix.NRows, matrix.NCols, matrix.Storage, matrix.NRows, outUnary?.Storage, outUnary?.LeadDim ?? 1);
+				}
+				else
+				{
+					using var temp = matrix.ToCompact();
+					Lapack.QRDecomposition<T, TS, TS>(full, matrix.NRows, matrix.NCols, temp, matrix.NRows, outUnary?.Storage, outUnary?.LeadDim ?? 1);
+					temp.Copy2DTo<T, TS, TS>(matrix.NRows, outTriangular.Storage, outTriangular.LeadDim, matrix.NCols, matrix.NCols);
+					HalfBlas.HalfMatrixClearPart<T, TS>(false, true, matrix.NRows, matrix.NCols, outTriangular.Storage, outTriangular.LeadDim);
+				}
+			}
+		}
+
+		/// <inheritdoc/>
+		public static void QRDecomposition(DenseMatrix<T, TS> matrix, TriangularMatrix<T, TS> outTriangular, DenseMatrix<T, TS>? outUnary, bool full = false)
+		{
+			IMatrixQRSolve<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>.CheckQR(matrix, outTriangular, outUnary, full);
+			if (matrix.Storage == outTriangular.Storage)
+			{
+				Lapack.QRDecomposition<T, TS, TS>(true, matrix.NRows, matrix.NCols, matrix.Storage, matrix.LeadDim, outUnary?.Storage, outUnary?.LeadDim ?? 1);
+			}
+			else
+			{
+				using var temp = matrix.ToCompact();
+				Lapack.QRDecomposition<T, TS, TS>(true, matrix.NRows, matrix.NCols, temp, matrix.NRows, outUnary?.Storage, outUnary?.LeadDim ?? 1);
+				using var tempTri = new TriangularMatrix<T, TS>(true, temp, matrix.NRows, matrix.NCols, matrix.NRows);
+				tempTri.CopyTo(outTriangular);
 			}
 		}
 		#endregion

@@ -1287,17 +1287,8 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool Inner<T, TS1, TS2, Dot>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		internal static bool Inner<T, Dot>(bool conjX, T* px, T* py, int length, out T dot) where T : unmanaged, INumber<T>
 		{
-			dot = default;
-			if (!GetPointer(x, strideX, out T* px, out int lenx))
-				return false;
-			if (!GetPointer(y, strideY, out T* py, out int leny))
-				return false;
-			int length = Math.Min(lenx, leny);
-			if (length == 0)
-				return true;
-
 			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4) ||
 				(NumberType<T>.IsComplex && (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)))
 			{   // no SIMD or too short
@@ -1308,7 +1299,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			if (NumberType<T>.IsComplex)
 			{
-				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
+				if (typeof(T) == typeof(Complex<float>))
 				{
 					var xx = (Complex<float>*)px; var yy = (Complex<float>*)py;
 					Complex<float> temp;
@@ -1318,7 +1309,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						VectorInnerCompex<Dot, byte>(xx, yy, length);
 					dot = *(T*)&temp;
 				}
-				else // double
+				else if (typeof(T) == typeof(Complex<double>))
 				{
 					var xx = (Complex<double>*)px; var yy = (Complex<double>*)py;
 					Complex<double> temp;
@@ -1328,6 +1319,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						VectorInnerComplex<Dot, byte>(xx, yy, length);
 					dot = *(T*)&temp;
 				}
+				else
+				{
+					dot = default;
+					return false;
+				}
 			}
 			else
 			{
@@ -1336,10 +1332,24 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool Inner<T, TS1, TS2, Dot>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			dot = default;
+			if (!GetPointer(x, strideX, out T* px, out int lenx))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out int leny))
+				return false;
+			int length = Math.Min(lenx, leny);
+			if (length == 0)
+				return true;
+			return Inner<T, Dot>(conjX, px, py, length, out dot);
+		}
+
 		public virtual partial bool Norm<T, TS>(TS x, long strideX, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			norm = default;
-			if (!Inner<T, TS, TS, byte>(conjX: true, x, strideX, x, strideX, out T dot))
+			if (!Inner<T, TS, TS, byte>(true, x, strideX, x, strideX, out T dot))
 				return false;
 			norm = Math.Sqrt(dot.As<T, double>()).As<double, T>();
 			return true;

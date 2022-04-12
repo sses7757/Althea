@@ -714,12 +714,12 @@ namespace Althea.Array
 	/// <summary>
 	/// The interface for matrices' in-place least square solver.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
 	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	public interface IMatrixLeastSolve<T, TMat1, TMat2, TMat3>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IFloatingPoint<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
 		where TMat3 : class, IBaseMatrix<T, TMat3>
@@ -749,12 +749,12 @@ namespace Althea.Array
 	/// <summary>
 	/// The interface for matrices' in-place QR solvers.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
 	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
 	public interface IMatrixQRSolve<T, TMat1, TMat2, TMat3>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IFloatingPoint<T>
 		where TMat1 : class, IBaseMatrix<T, TMat1>
 		where TMat2 : class, IBaseMatrix<T, TMat2>
 		where TMat3 : class, IBaseMatrix<T, TMat3>

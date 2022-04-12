@@ -457,17 +457,14 @@ namespace Althea.GeneralSolver
 		/// <summary>
 		/// Another <see cref="Eigenvalues"/> if the matrix is not hermitian and <typeparamref name="T"/> is not a complex.
 		/// </summary>
+		/// <remarks>When <see cref="EigenvaluesImag"/>[i] is not, <see cref="EigenvaluesImag"/>[i + 1] shall be its negation.</remarks>
 		public readonly Span<T> EigenvaluesImag;
 
 		/// <summary>
-		/// The output converged eigenvectors (or its real parts if <typeparamref name="T"/> is not a complex type and <see cref="MatrixFunction"/> is not hermitian), sorted with <see cref="Eigenvalues"/> or <see cref="EigenvaluesImag"/>.
+		/// The output converged eigenvectors, sorted with <see cref="Eigenvalues"/> or <see cref="EigenvaluesImag"/>.
 		/// </summary>
+		/// <remarks>For real-typed <typeparamref name="T"/>, when <c><see cref="EigenvaluesImag"/>[i]</c> is not 0, <c><see cref="EigenvaluesImag"/>[i]</c> will contain the corresponding real parts of the actual <c>eigenvector[i]</c> and <c>eigenvector[i + 1]</c>, while <c><see cref="EigenvaluesImag"/>[i + 1]</c> will contain the imaginary parts for <c>eigenvector[i]</c> and <c>-eigenvector[i + 1]</c>.</remarks>
 		public readonly Span<TVec> Eigenvectors;
-
-		/// <summary>
-		/// The output converged eigenvectors' imaginary parts, sorted with <see cref="EigenvaluesImag"/>. The corresponding element may be null if the eigenvector has no imaginary parts.
-		/// </summary>
-		public readonly Span<TVec> EigenvectorsImag;
 
 		/// <summary>
 		/// Only the top <see cref="NumberEigenvaluesDesired"/> eigen-pairs of <see cref="WhichEigenvaluesDesired"/> are the targets. DO NOT set a large value since the Krylov subspace algorithms are not designed for it.
@@ -537,7 +534,6 @@ namespace Althea.GeneralSolver
 			this.Eigenvalues = default;
 			this.EigenvaluesImag = default;
 			this.Eigenvectors = default;
-			this.EigenvectorsImag = default;
 		}
 
 		/// <summary>
@@ -546,10 +542,10 @@ namespace Althea.GeneralSolver
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> or <paramref name="outputCompEigenvectors"/> is too short</exception>
+		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> is too short</exception>
 		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
 									   Span<T> outputEigenvalues, Span<T> outputEigenvaluesImag,
-									   Span<TVec> outputRealEigenvectors, Span<TVec> outputCompEigenvectors,
+									   Span<TVec> outputRealEigenvectors,
 									   int nEig = 1, WhichEigenvalues which = WhichEigenvalues.LargestAbsolute,
 									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
 									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull,
@@ -571,8 +567,6 @@ namespace Althea.GeneralSolver
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputEigenvalues));
 			if (outputRealEigenvectors.Length < nEig)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputRealEigenvectors));
-			if (outputCompEigenvectors.Length < nEig)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputCompEigenvectors));
 
 			this.MatrixFunction = matrixFunction;
 			this.PreconditionMatrixFunction = null;
@@ -592,7 +586,6 @@ namespace Althea.GeneralSolver
 			this.Eigenvalues = outputEigenvalues;
 			this.EigenvaluesImag = outputEigenvaluesImag;
 			this.Eigenvectors = outputRealEigenvectors;
-			this.EigenvectorsImag = outputCompEigenvectors;
 		}
 
 		/// <summary>
@@ -643,7 +636,6 @@ namespace Althea.GeneralSolver
 			this.Eigenvalues = outputEigenvalues;
 			this.EigenvaluesImag = default;
 			this.Eigenvectors = outputEigenvectors;
-			this.EigenvectorsImag = default;
 		}
 
 		/// <summary>
@@ -690,7 +682,6 @@ namespace Althea.GeneralSolver
 			this.Eigenvalues = default;
 			this.EigenvaluesImag = default;
 			this.Eigenvectors = default;
-			this.EigenvectorsImag = default;
 		}
 
 		/// <summary>
@@ -722,7 +713,6 @@ namespace Althea.GeneralSolver
 			this.Eigenvalues = old.Eigenvalues;
 			this.EigenvaluesImag = old.EigenvaluesImag;
 			this.Eigenvectors = old.Eigenvectors;
-			this.EigenvectorsImag = old.EigenvectorsImag;
 		}
 		#endregion
 	}

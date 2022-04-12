@@ -1,6 +1,4 @@
-﻿using Althea.Helpers;
-using Althea.NativeTypes;
-using Althea.SourceGenerator;
+﻿using Althea.SourceGenerator;
 using Althea.Storage;
 
 
@@ -18,94 +16,216 @@ namespace Althea.LinearAlgebra.Dense
 		/// </summary>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="SolveVectorMode.NoVector"/> will be regarded as <see cref="SolveVectorMode.Vector"/></param>
 		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-		/// <typeparam name="TReal">Any unmanaged number as the real corresponding type of <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TSReal">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TReal"/></typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/> of type <typeparamref name="T"/></param>
-		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
-		/// <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
+		/// <param name="A">The input hermitian matrix to calculate the special eigen-problem</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
+		/// <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/> if <paramref name="mode"/> is not <see cref="SolveVectorMode.NoVector"/></param>
+		/// <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenStandardMatrixHermitian<T, TReal, TS, TSReal>(SolveVectorMode mode, long n, TSReal valOut, TS A, long lda) where T : unmanaged, IFloatingPoint<T> where TReal : unmanaged, IFloatingPoint<TReal> where TS : class, IStorage<T, TS> where TSReal : class, IStorage<TReal, TSReal>;
+		public abstract bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(SolveVectorMode mode, long n, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given symmetric-definite / hermitian-definite matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-		/// <typeparam name="TReal">Any unmanaged floating point number as the real corresponding type of <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TSReal">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TReal"/></typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="SolveVectorMode.NoVector"/> will be regarded as <see cref="SolveVectorMode.Vector"/></param>
 		/// <param name="type">The <see cref="GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
-		/// <param name="A">The input/output symmetric/hermitian positive-definite matrix to calculate the general eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/>; or replaced by the eigenvectors otherwise.</param>
+		/// <param name="A">The input symmetric/hermitian positive-definite matrix to calculate the general eigen-problem</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="B">Another input/output symmetric/hermitian positive-definite matrix to calculate the general eigen-problem; may be destroyed during the calculation</param>
+		/// <param name="B">Another input symmetric/hermitian positive-definite matrix to calculate the general eigen-problem</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
+		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
+		/// <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/> if <paramref name="mode"/> is not <see cref="SolveVectorMode.NoVector"/></param>
+		/// <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenGeneralMatrixHermitian<T, TReal, TS, TSReal>(GeneralEigenType type, SolveVectorMode mode, long n, TSReal valOut, TS A, long lda, TS B, long ldb) where T : unmanaged, IFloatingPoint<T> where TReal : unmanaged, IFloatingPoint<TReal> where TS : class, IStorage<T, TS> where TSReal : class, IStorage<TReal, TSReal>;
+		public abstract bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3>(GeneralEigenType type, SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-		/// <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TSComp1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
-		/// <typeparam name="TSComp2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
-		/// <typeparam name="TSComp3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
+		/// <typeparam name="TS1">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS4">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/></param>
-		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-		/// <param name="leftVec">The preallocated output left eigenvectors of type <typeparamref name="TComp"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
-		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
-		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
-		/// <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="TComp"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
 		/// <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
 		/// <param name="lda">leading dimension of <paramref name="A"/></param>
+		/// <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+		/// <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+		/// <param name="leftVec">The preallocated output left eigenvectors of type <typeparamref name="T"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
+		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+		/// <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TComp"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
+		/// <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenStandardMatrixGeneral<T, TComp, TS, TSComp1, TSComp2, TSComp3>(SolveVectorMode mode, long n, TSComp1 valOut, TSComp2? leftVec, long ldvl, TSComp3? rightVec, long ldvr, TS A, long lda) where T : unmanaged, IFloatingPoint<T> where TComp : unmanaged, IComplexFloatNumber<TComp> where TS : class, IStorage<T, TS> where TSComp1 : class, IStorage<TComp, TSComp1> where TSComp2 : class, IStorage<TComp, TSComp2> where TSComp3 : class, IStorage<TComp, TSComp3>;
+		public abstract bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(SolveVectorMode mode, long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-		/// <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TSComp1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
-		/// <typeparam name="TSComp2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
-		/// <typeparam name="TSComp3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
+		/// <typeparam name="TS1">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS4">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="type">The <see cref="GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
 		/// <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
-		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
-		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
-		/// <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
 		/// <param name="A">The input general matrix to calculate eigensystem</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">Another input/output matrix to calculate the general eigen-problem; may be destroyed during the calculation</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
+		/// <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+		/// <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
+		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+		/// <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TComp"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
+		/// <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenGeneralMatrixGeneral<T, TComp, TS, TSComp1, TSComp2, TSComp3>(GeneralEigenType type, SolveVectorMode mode, long n, TSComp1 valOut, TSComp2? leftVec, long ldvl, TSComp3? rightVec, long ldvr, TS A, long lda, TS B, long ldb) where T : unmanaged, IFloatingPoint<T> where TComp : unmanaged, IComplexFloatNumber<TComp> where TS : class, IStorage<T, TS> where TSComp1 : class, IStorage<TComp, TSComp1> where TSComp2 : class, IStorage<TComp, TSComp2> where TSComp3 : class, IStorage<TComp, TSComp3>;
+		public abstract bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2 valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		#endregion
+
+		#region other decompositions
+		/// <summary>
+		/// When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/>></typeparam>
+		/// <typeparam name="TS4">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> for <paramref name="S"/></typeparam>
+		/// <param name="storeU">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="U"/></param>
+		/// <param name="storeV">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="Vct"/></param>
+		/// <param name="m">The number of rows of matrix</param>
+		/// <param name="n">The number of columns of matrix</param>
+		/// <param name="A">The input (and possible output) matrix of size <paramref name="m"/>×<paramref name="n"/> and leading dimension <paramref name="lda"/>. Will be overwritten by singular vectors if <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/>.</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <param name="S">The preallocated output singular values as a vector of size at least <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
+		/// <param name="U">The preallocated output left unitary matrix with size <paramref name="ldu"/>×<paramref name="m"/>, can be null if <paramref name="storeU"/> is <see cref="SVDStore.Overwrite"/> or <see cref="SVDStore.Overwrite"/>.</param>
+		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
+		/// <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/> or <see cref="SVDStore.Overwrite"/>.</param>
+		/// <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="SVDStore.Overwrite"/></exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		[AbstractApiMethod]
+		public abstract bool SingularValues<T, TS1, TS2, TS3, TS4>(SVDStore storeU, SVDStore storeV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+
+		/// <summary>
+		/// Compute the standard Schur decomposition of given matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> for <paramref name="valOut"/></typeparam>
+		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+		/// <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+		/// <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/>.</param>
+		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		[AbstractApiMethod]
+		public abstract bool StandardSchurDecomposition<T, TS1, TS2, TS3>(SolveVectorMode mode, long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <summary>
+		/// Reorder the standard Schur decomposition of given matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+		/// <typeparam name="TInd">Any unmanaged integer number as the input data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TSInd">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> for <paramref name="order"/></typeparam>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="A">The input/output Schur form matrix of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <param name="U">The input/output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
+		/// <param name="order">The permutation order of the Schur decomposition that the <c>i</c>-th Schur form is moved to <c><paramref name="order"/>[i]</c></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		[AbstractApiMethod]
+		public abstract bool StandardSchurReorder<T, TInd, TS1, TS2, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TSInd order) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
+
+		/// <summary>
+		/// Compute the general Schur decomposition of given matrices <paramref name="A"/> and <paramref name="B"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS4">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> for <paramref name="valOut"/></typeparam>
+		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <param name="B">The input/output matrix to be decomposed of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
+		/// <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+		/// <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+		/// <param name="Ul">The preallocated output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> has no <see cref="SolveVectorMode.Left"/>.</param>
+		/// <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
+		/// <param name="Ur">The preallocated output left Schur vectors of leading dimension <paramref name="ldur"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> has no <see cref="SolveVectorMode.Right"/>.</param>
+		/// <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralSchurDecomposition<T, TS1, TS2, TS3, TS4>(SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2? Ul, long ldul, TS4? Ur, long ldur, TS4 valOut, TS4? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+
+		/// <summary>
+		/// Reorder the general Schur decomposition of given matrix <paramref name="A"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+		/// <typeparam name="TInd">Any unmanaged integer number as the input data type</typeparam>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TSInd">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> for <paramref name="order"/></typeparam>
+		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+		/// <param name="A">The input/output Schur form matrix of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
+		/// <param name="B">The input/output Schur form matrix of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
+		/// <param name="Ul">The input/output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
+		/// <param name="Ur">The input/output right Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+		/// <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
+		/// <param name="order">The permutation order of the Schur decomposition that the <c>i</c>-th Schur form is moved to <c><paramref name="order"/>[i]</c></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralSchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS1 B, long ldb, TS2? Ul, long ldul, TS3? Ur, long ldur, TSInd order) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
 		#endregion
 
 		#region linear solve
@@ -149,7 +269,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
@@ -170,92 +290,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
-		#endregion
-
-		#region other decompositions
-		/// <summary>
-		/// When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-		/// <typeparam name="TReal">Any unmanaged floating point number as the real corresponding type of <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TSReal">The actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TReal"/></typeparam>
-		/// <param name="storeU">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="U"/></param>
-		/// <param name="storeV">The <see cref="SVDStore"/> to specify options for computing all or part of the matrix <paramref name="Vct"/></param>
-		/// <param name="m">The number of rows of matrix</param>
-		/// <param name="n">The number of columns of matrix</param>
-		/// <param name="A">The input (and possible output) matrix of size <paramref name="m"/>×<paramref name="n"/> and leading dimension <paramref name="lda"/>. Will be overwritten by singular vectors if <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/>.</param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="S">The preallocated output singular values as a vector of size at least <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
-		/// <param name="U">The preallocated output left unitary matrix with size <paramref name="ldu"/>×<paramref name="m"/>, can be null if <paramref name="storeU"/> is <see cref="SVDStore.Overwrite"/> or <see cref="SVDStore.Overwrite"/>.</param>
-		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
-		/// <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="SVDStore.Overwrite"/> or <see cref="SVDStore.Overwrite"/>.</param>
-		/// <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="SVDStore.Overwrite"/></exception>
-		/// <exception cref="TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		[AbstractApiMethod]
-		public abstract bool SingularValues<T, TReal, TS1, TS2, TS3, TSReal>(SVDStore storeU, SVDStore storeV, long m, long n, TS1 A, long lda, TSReal S, TS2? U, long ldu, TS3? Vct, long ldvct) where T : unmanaged, IFloatingPoint<T> where TReal : unmanaged, IFloatingPoint<TReal> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSReal : class, IStorage<TReal, TSReal>;
-
-		/// <summary>
-		/// Compute the standard Schur decomposition of given matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
-		/// <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TSComp1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
-		/// <typeparam name="TSComp2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
-		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
-		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular Schur matrix at exit</param>
-		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> is <see cref="SolveVectorMode.NoVector"/>.</param>
-		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
-		/// <param name="orderVal">The values in this array will be selected to the top left of Schur form <paramref name="A"/>. Default null means no particular order is preferred.</param>
-		/// <param name="actualNumber">Output the actual number of eigenvalues returned</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		[AbstractApiMethod]
-		public abstract bool StandardSchurDecomposition<T, TComp, TS1, TS2, TSComp1, TSComp2>(SolveVectorMode mode, long n, TS1 A, long lda, TSComp1 valOut, TS2? U, long ldu, out long actualNumber, TSComp2? orderVal = null) where T : unmanaged, IFloatingPoint<T> where TComp : unmanaged, IComplexFloatNumber<TComp> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSComp1 : class, IStorage<TComp, TSComp1> where TSComp2 : class, IStorage<TComp, TSComp2>;
-
-		/// <summary>
-		/// Compute the general Schur decomposition of given matrices <paramref name="A"/> and <paramref name="B"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
-		/// <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
-		/// <typeparam name="TSComp1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
-		/// <typeparam name="TSComp2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="TComp"/></typeparam>
-		/// <param name="mode">The <see cref="SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
-		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-		/// <param name="A">The first input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the first triangular Schur matrix at exit</param>
-		/// <param name="B">The second input/output matrix to be decomposed of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the second triangular Schur matrix at exit</param>
-		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
-		/// <param name="Ul">The preallocated output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> does not contains <see cref="SolveVectorMode.Left"/>.</param>
-		/// <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
-		/// <param name="Ur">The preallocated output right Schur vectors of leading dimension <paramref name="ldur"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> does not contains <see cref="SolveVectorMode.Right"/>.</param>
-		/// <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
-		/// <param name="orderVal">The values in this array will be selected to the top left of Schur form <paramref name="A"/>. Default null means no particular order is preferred.</param>
-		/// <param name="actualNumber">Output the actual number of eigenvalues returned</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		[AbstractApiMethod]
-		public abstract bool GeneralSchurDecomposition<T, TComp, TS1, TS2, TS3, TSComp1, TSComp2>(SolveVectorMode mode, long n, TS1 A, long lda, TS2 B, long ldb, TSComp1 valOut, TS2? Ul, long ldul, TS3? Ur, long ldur, out long actualNumber, TSComp2? orderVal = null) where T : unmanaged, IFloatingPoint<T> where TComp : unmanaged, IComplexFloatNumber<TComp> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSComp1 : class, IStorage<TComp, TSComp1> where TSComp2 : class, IStorage<TComp, TSComp2>;
+		public abstract bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 	}
 }

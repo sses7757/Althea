@@ -1,11 +1,11 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
+
 
 namespace Althea.Backend.CSharp.Solver
 {
@@ -96,8 +96,7 @@ namespace Althea.Backend.CSharp.Solver
 			int iter = info.IterationsPerRestart == 0 ? Common.HERM_MAX_ITER : info.IterationsPerRestart;
 			if (hermitian)
 			{
-				var eigvals = info.Eigenvalues[..info.NumberEigenvaluesDesired];
-				var ret = LanczosBased.RestartLanczos<T, TVec>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, iter, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, eigvals, info.Eigenvectors, this.InfoLogInterval);
+				var ret = LanczosBased.RestartLanczos(info.MatrixFunction, info.InitialVector, info.MaxRestarts, iter, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, this.InfoLogInterval, info.Eigenvalues, info.Eigenvectors);
 				if (!ret.HasValue)
 					return false;
 				else
@@ -105,9 +104,7 @@ namespace Althea.Backend.CSharp.Solver
 			}
 			else
 			{
-				var eigvals = info.Eigenvalues[..info.NumberEigenvaluesDesired];
-				var eigvalsImag = info.EigenvaluesImag[..info.NumberEigenvaluesDesired];
-				var ret = KrylovBased.KrylovSchur<T, TVec>(info.MatrixFunction, info.InitialVector, info.WhichEigenvaluesDesired, info.MaxRestarts, iter, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, eigvals, info.Eigenvectors, info.EigenvectorsImag, this.InfoLogInterval);
+				var ret = KrylovBased.KrylovSchur(info.MatrixFunction, info.InitialVector, info.WhichEigenvaluesDesired, info.MaxRestarts, iter, info.Tolerance, info.ReorthogonalizeMethod, info.UseGapEstimation, info.PreserveSelector, info.CheckMatrixFunction, this.InfoLogInterval, info.Eigenvalues, info.EigenvaluesImag, info.Eigenvectors);
 				if (!ret.HasValue)
 					return false;
 				else
@@ -126,7 +123,7 @@ namespace Althea.Backend.CSharp.Solver
 			solve = (TVec.Empty, 1);
 			if (!hermitianOrDefinite.HasValue)
 			{
-				var success = KrylovBased.GeneralMinimalResidual<T, TVec>(info.MatrixFunction, info.OtherVector, info.InitialVector, info.MaxRestarts, info.IterationsPerRestart, info.Tolerance, info.ReorthogonalizeMethod, info.CheckMatrixFunction, out solve.Vector, out solve.RelativeError, this.InfoLogInterval, this.MaxStagnationSteps);
+				var success = KrylovBased.GeneralMinimalResidual<T, TVec>(info.MatrixFunction, info.OtherVector, info.InitialVector, info.MaxRestarts, info.IterationsPerRestart, info.Tolerance, info.ReorthogonalizeMethod, info.CheckMatrixFunction, this.InfoLogInterval, this.MaxStagnationSteps, out solve.Vector, out solve.RelativeError);
 				return success;
 			}
 			else if (hermitianOrDefinite.Value)
@@ -189,7 +186,7 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region parameters check
-		internal const int HERM_MAX_ITER = 35, NON_HERM_MAX_ITER = 25;
+		internal const int HERM_MAX_ITER = 35, NON_HERM_MAX_ITER = 25, MAX_EIGS = 6;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static SpanList<T> ClearList<T>(this SpanList<T> list) where T : IDisposable
@@ -280,9 +277,7 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region orthogonalization
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void RobustOrthogonalize<T, TVec>(TVec r, ReadOnlySpan<TVec> qs, Span<T> weights, bool robust = true)
-			where TVec : class, IKrylovVector<T, TVec>
-			where T : unmanaged, IFloatingPoint<T>
+		internal static void RobustOrthogonalize<T, TVec>(TVec r, ReadOnlySpan<TVec> qs, Span<T> weights, bool robust = true) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			if (qs.IsEmpty)
 				return;

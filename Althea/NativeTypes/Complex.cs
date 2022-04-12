@@ -634,6 +634,15 @@ namespace Althea.NativeTypes
 			throw new InvalidOperationException();
 		}
 
+		/// <summary>
+		/// The comparer used to compare two complexes' real parts.
+		/// </summary>
+		public sealed class ComplexRealPartComparer : IComparer<Complex<T>>
+		{
+			/// <inheritdoc/>
+			public int Compare(Complex<T> x, Complex<T> y) => x.real.CompareTo(y.real);
+		}
+
 		static Complex<T> IModulusOperators<Complex<T>, Complex<T>, Complex<T>>.operator %(Complex<T> left, Complex<T> right) => throw new InvalidOperationException();
 
 		/// <summary>
@@ -1569,7 +1578,6 @@ namespace Althea.NativeTypes
 			return this.Equals(a);
 		}
 
-
 		/// <summary>
 		/// Less than operator
 		/// </summary>
@@ -1633,6 +1641,15 @@ namespace Althea.NativeTypes
 			if (this.imag == T.Zero && other.imag == T.Zero)
 				return this.real.CompareTo(other.real);
 			throw new InvalidOperationException();
+		}
+
+		/// <summary>
+		/// The comparer used to compare two complexes' real parts.
+		/// </summary>
+		public sealed class ComplexRealPartComparer : IComparer<ComplexInteger<T>>
+		{
+			/// <inheritdoc/>
+			public int Compare(ComplexInteger<T> x, ComplexInteger<T> y) => x.real.CompareTo(y.real);
 		}
 		#endregion
 
