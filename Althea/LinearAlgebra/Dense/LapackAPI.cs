@@ -96,6 +96,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
 		/// <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+		/// <param name="valDenomOut">The preallocated output eigenvalues's denominators</param>
 		/// <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
 		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
 		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
@@ -105,7 +106,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2 valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public abstract bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2? valImagOut, TS2 valDenomOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
 		#endregion
 
 		#region other decompositions
@@ -192,6 +193,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
 		/// <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+		/// <param name="valDenomOut">The preallocated output eigenvalues's denominators</param>
 		/// <param name="Ul">The preallocated output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> has no <see cref="SolveVectorMode.Left"/>.</param>
 		/// <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
 		/// <param name="Ur">The preallocated output left Schur vectors of leading dimension <paramref name="ldur"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> has no <see cref="SolveVectorMode.Right"/>.</param>
@@ -200,7 +202,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralSchurDecomposition<T, TS1, TS2, TS3, TS4>(SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2? Ul, long ldul, TS4? Ur, long ldur, TS4 valOut, TS4? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public abstract bool GeneralSchurDecomposition<T, TS1, TS2, TS3, TS4>(SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2? Ul, long ldul, TS4? Ur, long ldur, TS4 valOut, TS4? valImagOut, TS4 valDenomOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
 
 		/// <summary>
 		/// Reorder the general Schur decomposition of given matrix <paramref name="A"/>.

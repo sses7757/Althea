@@ -47,8 +47,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// When implemented by a derived class, perform the matrix-matrix multiplication:
 		/// <list type="table">
 		/// <listheader><term>Condition</term>  <description>Equation</description></listheader>
-		/// <item><term><paramref name="leftA"/> is true</term><description>  <paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
-		/// <item><term><paramref name="leftA"/> is false</term><description>  <paramref name="C"/> = <paramref name="α"/> * diag(<paramref name="x"/>) * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></description></item>
+		/// <item><term><paramref name="leftA"/></term><description>  <paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
+		/// <item><term>!<paramref name="leftA"/></term><description>  <paramref name="C"/> = <paramref name="α"/> * diag(<paramref name="x"/>) * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
 		/// </list>
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
@@ -56,8 +56,10 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="leftA">Whether to put <paramref name="A"/> in the left side or the right side</param>
-		/// <param name="m">The number of rows of matrix <paramref name="A"/> and <paramref name="C"/></param>
-		/// <param name="n">The number of columns of matrix <paramref name="A"/> and <paramref name="C"/></param>
+		/// <param name="opA">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+		/// <param name="conjX">Whether to conjugate <paramref name="x"/> during calculation</param>
+		/// <param name="m">The number of rows of matrix <paramref name="C"/></param>
+		/// <param name="n">The number of columns of matrix <paramref name="C"/></param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/></param>
 		/// <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
@@ -70,7 +72,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool DiagonalMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, long m, long n, T α, TS1 A, long lda, TS2 x, long strideX, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool DiagonalMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, MatrixOperation opA, bool conjX, long m, long n, T α, TS1 A, long lda, TS2 x, long strideX, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 		#endregion
 
 		#region vector math

@@ -58,7 +58,7 @@ namespace Althea.GeneralSolver
 		/// <param name="info">The <see cref="KrylovSubspaceSolveInfo{T, TVec}"/> used as input information and output container</param>
 		/// <param name="converged">Output the number of converged eigen-pairs</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{T, TVec}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{T, TVec}.EigenvaluesImag"/> and <see cref="KrylovSubspaceSolveInfo{T, TVec}.EigenvectorsImag"/> are not used</remarks>
+		/// <remarks><paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{T, TVec}.WhichEigenvaluesDesired"/>, <see cref="KrylovSubspaceSolveInfo{T, TVec}.EigenvaluesImag"/> are not used</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		[AbstractApiMethod]
 		public abstract bool RestartKrylovSubspaceEigen<T, TVec>(bool hermitian, ref KrylovSubspaceSolveInfo<T, TVec> info, out int converged) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>;

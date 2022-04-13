@@ -799,6 +799,147 @@ namespace Althea.Array
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		public abstract static void QRDecomposition(TMat1 matrix, TMat2 outTriangular, TMat3? outUnary, bool full = false);
 	}
+
+	/// <summary>
+	/// The interface for matrices' in-place eigen solvers.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IMatrixEigenSolve<T, TMat1, TMat2, TMat3, TVec>
+		where T : unmanaged, IFloatingPoint<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TVec : class, IBaseVector<T, TVec>
+	{
+		/// <summary>
+		/// When implemented by a derived class, solve the standard eigen-equation: <c><paramref name="matrix"/> * x = λ * x</c> and/or <c>y * <paramref name="matrix"/> = λ * y</c>. Where <c>x</c> and <c>y</c> are right and left eigenvectors and <c>λ</c> are eigenvalues, respectively.
+		/// </summary>
+		/// <param name="matrix">The input matrix to solve the standard eigen problem</param>
+		/// <param name="outValues">The output vector to store the <c>λ</c></param>
+		/// <param name="outValuesImag">The output vector to store the imaginary parts of <c>λ</c> when <typeparamref name="T"/> is a real type, not used when <typeparamref name="T"/> is a complex type</param>
+		/// <param name="outLeftVectors">The output matrix to store the <c>y</c></param>
+		/// <param name="outRightVectors">The output matrix to store the <c>x</c></param>
+		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void StandardEigenSolve(TMat1 matrix, TVec outValues, TVec? outValuesImag, TMat2? outLeftVectors, TMat3? outRightVectors);
+
+		/// <summary>
+		/// When implemented by a derived class, solve the general eigen-equation: for <see cref="GeneralEigenType.Type1"/>, it is <c><paramref name="matrix"/> * x = λ * <paramref name="otherMatrix"/> * x</c> and/or <c>y * <paramref name="matrix"/> = λ * y * <paramref name="otherMatrix"/></c>. Where <c>x</c> and <c>y</c> are right and left eigenvectors and <c>λ</c> are eigenvalues, respectively.
+		/// </summary>
+		/// <param name="type">The <see cref="GeneralEigenType"/> indicating the eigen-equation</param>
+		/// <param name="matrix">The input matrix to solve the general eigen problem</param>
+		/// <param name="otherMatrix">The other input matrix to solve the general eigen problem</param>
+		/// <param name="outValues">The output vector to store the <c>λ</c></param>
+		/// <param name="outValuesImag">The output vector to store the imaginary parts of <c>λ</c> when <typeparamref name="T"/> is a real type, not used otherwise</param>
+		/// <param name="outValuesDenominator">The output vector to store the denominators of <c>λ</c> when <paramref name="matrix"/> and <paramref name="otherMatrix"/> are not symmetric/Hermitian positive-definite, not used otherwise</param>
+		/// <param name="outLeftVectors">The output matrix to store the <c>y</c></param>
+		/// <param name="outRightVectors">The output matrix to store the <c>x</c></param>
+		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="type"/> is <see cref="GeneralEigenType.None"/></exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void GeneralEigenSolve(GeneralEigenType type, TMat1 matrix, TMat1 otherMatrix, TVec outValues, TVec? outValuesImag, TVec? outValuesDenominator, TMat2? outLeftVectors, TMat3? outRightVectors);
+	}
+
+	/// <summary>
+	/// The interface for matrices' in-place Schur decomposition solvers.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IMatrixSchurDecompose<T, TMat1, TMat2, TMat3, TVec>
+		where T : unmanaged, IFloatingPoint<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TVec : class, IBaseVector<T, TVec>
+	{
+		/// <summary>
+		/// When implemented by a derived class, compute the standard Schur decomposition of <paramref name="matrix"/>.
+		/// </summary>
+		/// <param name="matrix">The input matrix to solve the standard Schur problem</param>
+		/// <param name="outValues">The output vector to store the eigenvalues</param>
+		/// <param name="outValuesImag">The output vector to store the imaginary parts of eigenvalues when <typeparamref name="T"/> is a real type, not used when <typeparamref name="T"/> is a complex type</param>
+		/// <param name="outSchurForm">The output matrix to store the Schur form matrix</param>
+		/// <param name="outVectors">The output matrix to store the Schur vectors</param>
+		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void StandardSchurSolve(TMat1 matrix, TVec outValues, TVec? outValuesImag, TMat2 outSchurForm, TMat3? outVectors);
+
+		/// <summary>
+		/// When implemented by a derived class, compute the general Schur decomposition of <paramref name="matrix"/> and <paramref name="otherMatrix"/>.
+		/// </summary>
+		/// <param name="matrix">The input matrix to solve the general Schur problem</param>
+		/// <param name="otherMatrix">The other input matrix to solve the general Schur problem</param>
+		/// <param name="outValues">The output vector to store the numerators of the eigenvalues</param>
+		/// <param name="outValuesImag">The output vector to store the imaginary parts of the numerators of the eigenvalues when <typeparamref name="T"/> is a real type, not used otherwise</param>
+		/// <param name="outValuesDenominator">The output vector to store the denominators of eigenvalues</param>
+		/// <param name="outSchurForm">The output matrix to store the Schur form of <paramref name="matrix"/></param>
+		/// <param name="outSchurFormOther">The output matrix to store the Schur form of <paramref name="otherMatrix"/></param>
+		/// <param name="outLeftVectors">The output matrix to store the left Schur vectors</param>
+		/// <param name="outRightVectors">The output matrix to store the right Schur vectors</param>
+		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void GeneralSchurSolve(TMat1 matrix, TMat1 otherMatrix, TVec outValues, TVec? outValuesImag, TVec outValuesDenominator, TMat2 outSchurForm, TMat2 outSchurFormOther, TMat3? outLeftVectors, TMat3? outRightVectors);
+
+		/// <summary>
+		/// When implemented by a derived class, reorder the standard Schur decomposition result by <paramref name="order"/>.
+		/// </summary>
+		/// <param name="schurForm">The input/output matrix to store the Schur form matrix</param>
+		/// <param name="schurVectors">The input/output matrix to store the Schur vectors</param>
+		/// <param name="order">The new order of the Schur form and Schur vectors such that <c>eigenvalue[i]</c> is moved to <c>eigenvalue[<paramref name="order"/>[i]]</c></param>
+		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void StandardSchurReorder<TInd, TSInd>(TMat2 schurForm, TMat3? schurVectors, TSInd order) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
+
+		/// <summary>
+		/// When implemented by a derived class, reorder the general Schur decomposition result by <paramref name="order"/>.
+		/// </summary>
+		/// <param name="schurForm">The input/output matrix to store the first Schur form matrix</param>
+		/// <param name="schurFormOther">The input/output matrix to store the second Schur form matrix</param>
+		/// <param name="schurLeftVectors">The input/output matrix to store the left Schur vectors</param>
+		/// <param name="schurRightVectors">The input/output matrix to store the right Schur vectors</param>
+		/// <param name="order">The new order of the Schur form and Schur vectors such that <c>eigenvalue[i]</c> is moved to <c>eigenvalue[<paramref name="order"/>[i]]</c></param>
+		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void GeneralSchurReorder<TInd, TSInd>(TMat2 schurForm, TMat2 schurFormOther, TMat3? schurLeftVectors, TMat3? schurRightVectors, TSInd order) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
+	}
+
+	/// <summary>
+	/// The interface for matrices' in-place SVD solvers.
+	/// </summary>
+	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	public interface IMatrixSVD<T, TMat1, TMat2, TMat3, TVec>
+		where T : unmanaged, IFloatingPoint<T>
+		where TMat1 : class, IBaseMatrix<T, TMat1>
+		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TVec : class, IBaseVector<T, TVec>
+	{
+		/// <summary>
+		/// When implemented by a derived class, compute the singular value decomposition of the given <paramref name="matrix"/>.
+		/// </summary>
+		/// <param name="matrix">The input matrix to solve the standard eigen problem</param>
+		/// <param name="outValues">The output vector to store the singular values</param>
+		/// <param name="outLeftVectors">The output matrix to store the left singular vectors</param>
+		/// <param name="outRightVectors">The output matrix to store the conjugate transpose of right singular vectors</param>
+		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+		public abstract static void SingularValueSolve(TMat1 matrix, TVec outValues, TMat2? outLeftVectors, TMat3? outRightVectors);
+	}
 	#endregion
 
 	#region tensor

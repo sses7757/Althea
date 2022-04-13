@@ -43,6 +43,7 @@ namespace Althea.Array
 			this.values = TS.Empty;
 		}
 		static DenseVector<T, TS> IValueArray<T, DenseVector<T, TS>>.Empty => new();
+		static DenseVector<T, TS> IKrylovVector<T, DenseVector<T, TS>>.Empty => new();
 
 		/// <summary>
 		/// Get the stride between consecutive elements of this vector in <typeparamref name="T"/>.

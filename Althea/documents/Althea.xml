@@ -412,9 +412,7 @@
             </summary>
         </member>
         <member name="P:Althea.Array.AbstractDenseMatrix`2.Storage">
-            <summary>
-            Get the value storage of this matrix as a <typeparamref name="TS"/>.
-            </summary>
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Array.AbstractDenseMatrix`2.#ctor(`1,System.Int64,System.Int64,System.Int64)">
             <summary>
@@ -568,6 +566,189 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseMatrix`2.Print(System.Nullable{Althea.PrintSettings})">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Array.DiagonalMatrix`2">
+            <summary>
+            The base dense diagonal matrix class that only stores the diagonal elements whose type is <typeparamref name="TS"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TS">The storage type used by the value storage</typeparam>
+        </member>
+        <member name="P:Althea.Array.DiagonalMatrix`2.Stride">
+            <summary>
+            Get the stride between consecutive stored diagonal elements.
+            </summary>
+        </member>
+        <member name="P:Althea.Array.DiagonalMatrix`2.NRows">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Array.DiagonalMatrix`2.NCols">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Array.DiagonalMatrix`2.Storage">
+            <summary>
+            Get the value storage of this matrix as a <typeparamref name="TS"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.#ctor(`1,System.Int64,System.Int64)">
+            <summary>
+            Create a new <see cref="T:Althea.Array.DiagonalMatrix`2"/> with given <paramref name="storage"/> and size.
+            </summary>
+            <param name="storage">The storage of type <typeparamref name="TS"/> to create from</param>
+            <param name="n">The number of rows and columns of the matrix to create</param>
+            <param name="stride">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="n"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="stride"/> ≤ 0</exception>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Finalize">
+            <summary>
+            Deconstructor to be invoked by GC.
+            </summary>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.ToCompact">
+            <summary>
+            Copy the values from this <see cref="T:Althea.Array.DiagonalMatrix`2"/> to a new <typeparamref name="TS"/> with all values stored in compact mode that <see cref="P:Althea.Array.DiagonalMatrix`2.Stride"/> == 1.
+            </summary>
+            <returns>The created compact <see cref="T:Althea.Array.DiagonalMatrix`2"/>'s storage as a <typeparamref name="TS"/></returns>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Equals(Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Equality(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Inequality(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Equals(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.GetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.GetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64,Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.CopyTo(Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.SetSubmatrix(System.Int64,System.Int64,System.Int64,System.Int64,Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Array.DiagonalMatrix`2.Item(System.Int64,System.Int64)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.FillWith(`0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.AddScalar(`0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Scale(`0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Conjugate">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Power(`0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Truncate(System.Double)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Sum">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.AbsSum">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Norm">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.ValueWithMaxAbs">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.ValueWithMinAbs">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Multiply(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DenseVector{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Multiply(Althea.Array.DenseVector{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Multiply(Althea.Array.DiagonalMatrix{`0,`1},`0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_UnaryNegation(Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Multiply(`0,Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Division(Althea.Array.DiagonalMatrix{`0,`1},`0)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_ExclusiveOr(Althea.Array.DiagonalMatrix{`0,`1},Althea.LinearAlgebra.MatrixOperation)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Multiply(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Addition(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Subtraction(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Addition(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Subtraction(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Addition(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Subtraction(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Multiply(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.op_Multiply(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.CreateAlike">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.AsVector">
+            <summary>
+            Get a referenced <see cref="T:Althea.Array.DenseVector`2"/> from the underlying storage of this <see cref="T:Althea.Array.DiagonalMatrix`2"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.FromVector(Althea.Array.DenseVector{`0,`1})">
+            <summary>
+            Get a referenced <see cref="T:Althea.Array.DiagonalMatrix`2"/> from the underlying storage of this <see cref="T:Althea.Array.DenseVector`2"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.JsonSerialize">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.JsonDeserialize(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Print(System.Nullable{Althea.PrintSettings})">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.TriangularMatrix`2">
@@ -1384,6 +1565,12 @@
         <member name="M:Althea.Array.DenseOperation`2.MultiplyMatries(Althea.Array.SymmetricMatrix{`0,`1},Althea.Array.SymmetricMatrix{`0,`1},`0,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Array.DenseOperation`2.MultiplyMatries(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},`0,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseOperation`2.MultiplyMatries(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1},`0,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Array.DenseOperation`2.AddMatrices(Althea.Array.DenseMatrix{`0,`1},`0,Althea.Array.DenseMatrix{`0,`1},`0,Althea.Array.DenseMatrix{`0,`1},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
             <inheritdoc/>
         </member>
@@ -1426,6 +1613,12 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseOperation`2.MultiplyMatries(Althea.Array.SymmetricMatrix{`0,`1},Althea.Array.SymmetricMatrix{`0,`1},`0,`0,Althea.Array.DenseMatrix{`0,`1},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseOperation`2.MultiplyMatries(Althea.Array.DiagonalMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},`0,`0,Althea.Array.DenseMatrix{`0,`1},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseOperation`2.MultiplyMatries(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DiagonalMatrix{`0,`1},`0,`0,Althea.Array.DenseMatrix{`0,`1},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseOperation`2.RankOneUpdate(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},`0,`0,System.Boolean)">
@@ -1494,15 +1687,6 @@
         <member name="M:Althea.Array.DenseOperation`2.LinearSolve(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.LinearAlgebra.MatrixOperation)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.LeastSquareSolve(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.DenseOperation`2.QRDecomposition(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},System.Boolean)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.DenseOperation`2.QRDecomposition(Althea.Array.DenseMatrix{`0,`1},Althea.Array.TriangularMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},System.Boolean)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Array.DenseOperation`2.LinearSolve(Althea.Array.TriangularMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.LinearAlgebra.MatrixOperation)">
             <inheritdoc/>
         </member>
@@ -1528,6 +1712,49 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseOperation`2.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.TensorAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.TensorAlgebra.UnaryOperation,`0,Althea.TensorAlgebra.BinaryOperation)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Array.DenseSolvers`2">
+            <summary>
+            The static class for dense linear algebra and tensor algebra solving operations of same data type and storage type.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+            <typeparam name="TS">The storage type used by the value storage</typeparam>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.LeastSquareSolve(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.QRDecomposition(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.QRDecomposition(Althea.Array.DenseMatrix{`0,`1},Althea.Array.TriangularMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.StandardEigenSolve(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.StandardEigenSolve(Althea.Array.SymmetricMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.StandardSchurSolve(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.StandardSchurReorder``2(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},``1)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.SingularValueSolve(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.GeneralEigenSolve(Althea.LinearAlgebra.GeneralEigenType,Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.GeneralEigenSolve(Althea.LinearAlgebra.GeneralEigenType,Althea.Array.SymmetricMatrix{`0,`1},Althea.Array.SymmetricMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.GeneralSchurSolve(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseSolvers`2.GeneralSchurReorder``2(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1},``1)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.IVectorOperations`3">
@@ -2036,7 +2263,7 @@
             <summary>
             The interface for matrices' in-place least square solver.
             </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
             <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
             <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
             <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
@@ -2059,7 +2286,7 @@
             <summary>
             The interface for matrices' in-place QR solvers.
             </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
             <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
             <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
             <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
@@ -2077,6 +2304,129 @@
             <param name="outTriangular">The output triangular matrix, which can be <paramref name="matrix"/></param>
             <param name="outUnary">The output unary matrix, which can be <paramref name="matrix"/> if the dimension allows, null means do not calculate it</param>
             <param name="full">Whether to compute the full QR or partial QR</param>
+            <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="T:Althea.Array.IMatrixEigenSolve`5">
+            <summary>
+            The interface for matrices' in-place eigen solvers.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+        </member>
+        <member name="M:Althea.Array.IMatrixEigenSolve`5.StandardEigenSolve(`1,`4,`4,`2,`3)">
+            <summary>
+            When implemented by a derived class, solve the standard eigen-equation: <c><paramref name="matrix"/> * x = λ * x</c> and/or <c>y * <paramref name="matrix"/> = λ * y</c>. Where <c>x</c> and <c>y</c> are right and left eigenvectors and <c>λ</c> are eigenvalues, respectively.
+            </summary>
+            <param name="matrix">The input matrix to solve the standard eigen problem</param>
+            <param name="outValues">The output vector to store the <c>λ</c></param>
+            <param name="outValuesImag">The output vector to store the imaginary parts of <c>λ</c> when <typeparamref name="T"/> is a real type, not used when <typeparamref name="T"/> is a complex type</param>
+            <param name="outLeftVectors">The output matrix to store the <c>y</c></param>
+            <param name="outRightVectors">The output matrix to store the <c>x</c></param>
+            <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.Array.IMatrixEigenSolve`5.GeneralEigenSolve(Althea.LinearAlgebra.GeneralEigenType,`1,`1,`4,`4,`4,`2,`3)">
+            <summary>
+            When implemented by a derived class, solve the general eigen-equation: for <see cref="F:Althea.LinearAlgebra.GeneralEigenType.Type1"/>, it is <c><paramref name="matrix"/> * x = λ * <paramref name="otherMatrix"/> * x</c> and/or <c>y * <paramref name="matrix"/> = λ * y * <paramref name="otherMatrix"/></c>. Where <c>x</c> and <c>y</c> are right and left eigenvectors and <c>λ</c> are eigenvalues, respectively.
+            </summary>
+            <param name="type">The <see cref="T:Althea.LinearAlgebra.GeneralEigenType"/> indicating the eigen-equation</param>
+            <param name="matrix">The input matrix to solve the general eigen problem</param>
+            <param name="otherMatrix">The other input matrix to solve the general eigen problem</param>
+            <param name="outValues">The output vector to store the <c>λ</c></param>
+            <param name="outValuesImag">The output vector to store the imaginary parts of <c>λ</c> when <typeparamref name="T"/> is a real type, not used otherwise</param>
+            <param name="outValuesDenominator">The output vector to store the denominators of <c>λ</c> when <paramref name="matrix"/> and <paramref name="otherMatrix"/> are not symmetric/Hermitian positive-definite, not used otherwise</param>
+            <param name="outLeftVectors">The output matrix to store the <c>y</c></param>
+            <param name="outRightVectors">The output matrix to store the <c>x</c></param>
+            <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="type"/> is <see cref="F:Althea.LinearAlgebra.GeneralEigenType.None"/></exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="T:Althea.Array.IMatrixSchurDecompose`5">
+            <summary>
+            The interface for matrices' in-place Schur decomposition solvers.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+        </member>
+        <member name="M:Althea.Array.IMatrixSchurDecompose`5.StandardSchurSolve(`1,`4,`4,`2,`3)">
+            <summary>
+            When implemented by a derived class, compute the standard Schur decomposition of <paramref name="matrix"/>.
+            </summary>
+            <param name="matrix">The input matrix to solve the standard Schur problem</param>
+            <param name="outValues">The output vector to store the eigenvalues</param>
+            <param name="outValuesImag">The output vector to store the imaginary parts of eigenvalues when <typeparamref name="T"/> is a real type, not used when <typeparamref name="T"/> is a complex type</param>
+            <param name="outSchurForm">The output matrix to store the Schur form matrix</param>
+            <param name="outVectors">The output matrix to store the Schur vectors</param>
+            <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.Array.IMatrixSchurDecompose`5.GeneralSchurSolve(`1,`1,`4,`4,`4,`2,`2,`3,`3)">
+            <summary>
+            When implemented by a derived class, compute the general Schur decomposition of <paramref name="matrix"/> and <paramref name="otherMatrix"/>.
+            </summary>
+            <param name="matrix">The input matrix to solve the general Schur problem</param>
+            <param name="otherMatrix">The other input matrix to solve the general Schur problem</param>
+            <param name="outValues">The output vector to store the numerators of the eigenvalues</param>
+            <param name="outValuesImag">The output vector to store the imaginary parts of the numerators of the eigenvalues when <typeparamref name="T"/> is a real type, not used otherwise</param>
+            <param name="outValuesDenominator">The output vector to store the denominators of eigenvalues</param>
+            <param name="outSchurForm">The output matrix to store the Schur form of <paramref name="matrix"/></param>
+            <param name="outSchurFormOther">The output matrix to store the Schur form of <paramref name="otherMatrix"/></param>
+            <param name="outLeftVectors">The output matrix to store the left Schur vectors</param>
+            <param name="outRightVectors">The output matrix to store the right Schur vectors</param>
+            <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.Array.IMatrixSchurDecompose`5.StandardSchurReorder``2(`2,`3,``1)">
+            <summary>
+            When implemented by a derived class, reorder the standard Schur decomposition result by <paramref name="order"/>.
+            </summary>
+            <param name="schurForm">The input/output matrix to store the Schur form matrix</param>
+            <param name="schurVectors">The input/output matrix to store the Schur vectors</param>
+            <param name="order">The new order of the Schur form and Schur vectors such that <c>eigenvalue[i]</c> is moved to <c>eigenvalue[<paramref name="order"/>[i]]</c></param>
+            <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.Array.IMatrixSchurDecompose`5.GeneralSchurReorder``2(`2,`2,`3,`3,``1)">
+            <summary>
+            When implemented by a derived class, reorder the general Schur decomposition result by <paramref name="order"/>.
+            </summary>
+            <param name="schurForm">The input/output matrix to store the first Schur form matrix</param>
+            <param name="schurFormOther">The input/output matrix to store the second Schur form matrix</param>
+            <param name="schurLeftVectors">The input/output matrix to store the left Schur vectors</param>
+            <param name="schurRightVectors">The input/output matrix to store the right Schur vectors</param>
+            <param name="order">The new order of the Schur form and Schur vectors such that <c>eigenvalue[i]</c> is moved to <c>eigenvalue[<paramref name="order"/>[i]]</c></param>
+            <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="T:Althea.Array.IMatrixSVD`5">
+            <summary>
+            The interface for matrices' in-place SVD solvers.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+        </member>
+        <member name="M:Althea.Array.IMatrixSVD`5.SingularValueSolve(`1,`4,`2,`3)">
+            <summary>
+            When implemented by a derived class, compute the singular value decomposition of the given <paramref name="matrix"/>.
+            </summary>
+            <param name="matrix">The input matrix to solve the standard eigen problem</param>
+            <param name="outValues">The output vector to store the singular values</param>
+            <param name="outLeftVectors">The output matrix to store the left singular vectors</param>
+            <param name="outRightVectors">The output matrix to store the conjugate transpose of right singular vectors</param>
             <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
@@ -4718,7 +5068,7 @@
             <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
             <param name="converged">Output the number of converged eigen-pairs</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvectorsImag"/> are not used</remarks>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> and <see cref="!:KrylovSubspaceSolveInfo&lt;T, TVec&gt;.EigenvectorsImag"/> are not used</remarks>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.GeneralSolver.IAbstractApi.RestartKrylovSubspaceLinearSolve``2(System.Nullable{System.Boolean},Althea.GeneralSolver.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{``1,System.Double}@)">
@@ -4794,6 +5144,11 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
         </member>
+        <member name="P:Althea.GeneralSolver.IKrylovVector`2.Empty">
+            <summary>
+            When implemented by a derived class, statically get an empty <typeparamref name="TVec"/>.
+            </summary>
+        </member>
         <member name="M:Althea.GeneralSolver.IKrylovVector`2.OperateOn(System.ReadOnlySpan{`1},System.ReadOnlySpan{`0})">
             <summary>
             Statically multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="T:System.ReadOnlySpan`1"/> and obtain the result vector as a <typeparamref name="TVec"/>.
@@ -4865,7 +5220,7 @@
         </member>
         <member name="F:Althea.GeneralSolver.RestartStrategy.WholeIterResidualImprove">
             <summary>
-            Based on the improvement of residual of Ritz eigen-pairs of single iteration after the restart, preserve the smallest $k$ ones: <br/>
+            Based on the improvement of residual of Ritz eigen-pairs of all iterations after the restart, preserve the smallest $k$ ones: <br/>
             $$k=\underset{k}{\max}{\left(p-k\right)\frac{\lambda_{k+1}-\lambda_1}{\lambda_m-\lambda_1}}$$
             </summary>
         </member>
@@ -4946,18 +5301,20 @@
             When implemented by a derived class, get the <see cref="T:Althea.GeneralSolver.RestartStrategy"/> of this selector
             </summary>
         </member>
-        <member name="M:Althea.GeneralSolver.IPreserveSelector.PreserveSelect(System.Span{Althea.NativeTypes.Complex{System.Double}},System.Span{Althea.NativeTypes.Complex{System.Double}},System.Int32,System.Int32,System.Int32,System.Span{System.Int32},System.Boolean)">
+        <member name="M:Althea.GeneralSolver.IPreserveSelector.PreserveSelect``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Int32,System.Int32,System.Int32,System.Span{System.Int32},System.Boolean)">
             <summary>
             When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
             </summary>
+            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
             <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
+            <param name="estimateEigvalsImag"><paramref name="estimateEigvals"/>'s imaginary part if the eigenvalues are complexes or empty otherwise</param>
             <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
             <param name="nConverged">THe number of converged eigen-pairs</param>
             <param name="nTarget">The number of smallest eigen-pairs wanted</param>
             <param name="maxIter">The maximum number of iteration (per restart)</param>
             <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
             <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
-            <returns>The actual preserved count</returns>
+            <returns>The <paramref name="output"/> with correct size.</returns>
             <remarks>This method will only be invoked internally.</remarks>
         </member>
         <member name="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2">
@@ -4999,23 +5356,20 @@
         </member>
         <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvalues">
             <summary>
-            The output converged eigenvalues of <see cref="T:System.Double"/> if the matrix is hermitian, sorted by the given order of <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+            The output converged eigenvalues sorted by the given order of <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
             </summary>
         </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex">
+        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag">
             <summary>
-            The output converged eigenvalues of <see cref="T:Althea.NativeTypes.Complex`1"/> type if the matrix is not hermitian, sorted by the given order of <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+            Another <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> if the matrix is not hermitian and <typeparamref name="T"/> is not a complex.
             </summary>
+            <remarks>When <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i] is not, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i + 1] shall be its negation.</remarks>
         </member>
         <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvectors">
             <summary>
-            The output converged eigenvectors (or its real parts if <typeparamref name="T"/> is not a complex type and <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.MatrixFunction"/> is not hermitian), sorted with <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> or <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/>.
+            The output converged eigenvectors, sorted with <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> or <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>.
             </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvectorsImag">
-            <summary>
-            The output converged eigenvectors' imaginary parts, sorted with <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/>. The corresponding element may be null if the eigenvector has no imaginary parts.
-            </summary>
+            <remarks>For real-typed <typeparamref name="T"/>, when <c><see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i]</c> is not 0, <c><see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i]</c> will contain the corresponding real parts of the actual <c>eigenvector[i]</c> and <c>eigenvector[i + 1]</c>, while <c><see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i + 1]</c> will contain the imaginary parts for <c>eigenvector[i]</c> and <c>-eigenvector[i + 1]</c>.</remarks>
         </member>
         <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.NumberEigenvaluesDesired">
             <summary>
@@ -5060,16 +5414,16 @@
             <exception cref="T:System.ArgumentOutOfRangeException">I  <paramref name="maxIter"/> is out of range</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
         </member>
-        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Span{Althea.NativeTypes.Complex{System.Double}},System.Span{`1},System.Span{`1},System.Int32,Althea.GeneralSolver.WhichEigenvalues,System.Int32,System.Int32,System.Double,Althea.GeneralSolver.ReorthogonalizeMethod,Althea.GeneralSolver.IPreserveSelector,System.Boolean,System.Boolean)">
+        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Span{`0},System.Span{`0},System.Span{`1},System.Int32,Althea.GeneralSolver.WhichEigenvalues,System.Int32,System.Int32,System.Double,Althea.GeneralSolver.ReorthogonalizeMethod,Althea.GeneralSolver.IPreserveSelector,System.Boolean,System.Boolean)">
             <summary>
             Create a <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> of the given non-hermitian matrix eigen-solve problem
             </summary>
             <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-            <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> or <paramref name="outputCompEigenvectors"/> is too short</exception>
+            <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> is too short</exception>
         </member>
-        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Span{System.Double},System.Span{`1},System.Int32,System.Int32,System.Int32,System.Double,Althea.GeneralSolver.ReorthogonalizeMethod,Althea.GeneralSolver.IPreserveSelector,System.Boolean,System.Boolean)">
+        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Span{`0},System.Span{`1},System.Int32,System.Int32,System.Int32,System.Double,Althea.GeneralSolver.ReorthogonalizeMethod,Althea.GeneralSolver.IPreserveSelector,System.Boolean,System.Boolean)">
             <summary>
             Create a <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> of the given hermitian matrix eigen-solve problem
             </summary>
@@ -5140,7 +5494,7 @@
             <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
             <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
             <returns>Output the number of converged eigen-pairs.</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesComplex"/> and <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvectorsImag"/> are not used</remarks>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> and <see cref="!:KrylovSubspaceSolveInfo&lt;T, TVec&gt;.EigenvectorsImag"/> are not used</remarks>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
@@ -7878,6 +8232,32 @@
             <param name="a">The reference to first value to be swapped with <paramref name="b"/></param>
             <param name="b">The reference to second value to be swapped with <paramref name="a"/></param>
         </member>
+        <member name="T:Althea.Helpers.Swapper`1">
+            <summary>
+            The default swapper to swap two <typeparamref name="T"/> values in-place
+            </summary>
+            <typeparam name="T">The type of the values to be swapped</typeparam>
+        </member>
+        <member name="M:Althea.Helpers.Swapper`1.op_Implicit(Althea.Helpers.Swapper{`0})~`0">
+            <summary>
+            Implicit converter to <typeparamref name="T"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.Swapper`1.op_Implicit(`0)~Althea.Helpers.Swapper{`0}">
+            <summary>
+            Implicit converter from <typeparamref name="T"/>.
+            </summary>
+        </member>
+        <member name="T:Althea.Helpers.SwapperExtension">
+            <summary>
+            The extension class storing method for <see cref="T:Althea.Helpers.Swapper`1"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.SwapperExtension.AsSwappers``1(System.Span{``0})">
+            <summary>
+            Convert a given <paramref name="span"/> of <typeparamref name="T"/> to a span of <see cref="T:Althea.Helpers.Swapper`1"/>.
+            </summary>
+        </member>
         <member name="T:Althea.Helpers.SwapSort">
             <summary>
             The static class that provides the sort utilities for <see cref="T:System.Span`1"/>
@@ -7895,7 +8275,7 @@
         </member>
         <member name="M:Althea.Helpers.SwapSort.Sort``3(System.Span{``0},System.Span{``1},System.Span{``2},System.Collections.Generic.Comparer{``0})">
             <summary>
-            Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
             </summary>
             <typeparam name="TKey">The type of the keys</typeparam>
             <typeparam name="TValue1">The type of the first value array which must implement <see cref="T:Althea.Helpers.ISwapper`1"/></typeparam>
@@ -7907,7 +8287,7 @@
         </member>
         <member name="M:Althea.Helpers.SwapSort.Sort``4(System.Span{``0},System.Span{``1},System.Span{``2},System.Span{``3},System.Collections.Generic.Comparer{``0})">
             <summary>
-            Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
             </summary>
             <typeparam name="TKey">The type of the keys</typeparam>
             <typeparam name="TValue1">The type of the first value array which must implement <see cref="T:Althea.Helpers.ISwapper`1"/></typeparam>
@@ -7921,7 +8301,7 @@
         </member>
         <member name="M:Althea.Helpers.SwapSort.Sort``5(System.Span{``0},System.Span{``1},System.Span{``2},System.Span{``3},System.Span{``4},System.Collections.Generic.Comparer{``0})">
             <summary>
-            Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
             </summary>
             <typeparam name="TKey">The type of the keys</typeparam>
             <typeparam name="TValue1">The type of the first value array which must implement <see cref="T:Althea.Helpers.ISwapper`1"/></typeparam>
@@ -7937,7 +8317,7 @@
         </member>
         <member name="M:Althea.Helpers.SwapSort.Sort``6(System.Span{``0},System.Span{``1},System.Span{``2},System.Span{``3},System.Span{``4},System.Span{``5},System.Collections.Generic.Comparer{``0})">
             <summary>
-            Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
             </summary>
             <typeparam name="TKey">The type of the keys</typeparam>
             <typeparam name="TValue1">The type of the first value array which must implement <see cref="T:Althea.Helpers.ISwapper`1"/></typeparam>
@@ -7955,7 +8335,7 @@
         </member>
         <member name="M:Althea.Helpers.SwapSort.Sort``7(System.Span{``0},System.Span{``1},System.Span{``2},System.Span{``3},System.Span{``4},System.Span{``5},System.Span{``6},System.Collections.Generic.Comparer{``0})">
             <summary>
-            Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/><paramref name="values6"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>, <paramref name="values6"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
             </summary>
             <typeparam name="TKey">The type of the keys</typeparam>
             <typeparam name="TValue1">The type of the first value array which must implement <see cref="T:Althea.Helpers.ISwapper`1"/></typeparam>
@@ -7975,7 +8355,7 @@
         </member>
         <member name="M:Althea.Helpers.SwapSort.Sort``8(System.Span{``0},System.Span{``1},System.Span{``2},System.Span{``3},System.Span{``4},System.Span{``5},System.Span{``6},System.Span{``7},System.Collections.Generic.Comparer{``0})">
             <summary>
-            Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/><paramref name="values6"/><paramref name="values7"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>, <paramref name="values6"/>, <paramref name="values7"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
             </summary>
             <typeparam name="TKey">The type of the keys</typeparam>
             <typeparam name="TValue1">The type of the first value array which must implement <see cref="T:Althea.Helpers.ISwapper`1"/></typeparam>
@@ -7997,7 +8377,7 @@
         </member>
         <member name="M:Althea.Helpers.SwapSort.Sort``9(System.Span{``0},System.Span{``1},System.Span{``2},System.Span{``3},System.Span{``4},System.Span{``5},System.Span{``6},System.Span{``7},System.Span{``8},System.Collections.Generic.Comparer{``0})">
             <summary>
-            Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/><paramref name="values6"/><paramref name="values7"/><paramref name="values8"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>, <paramref name="values6"/>, <paramref name="values7"/>, <paramref name="values8"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
             </summary>
             <typeparam name="TKey">The type of the keys</typeparam>
             <typeparam name="TValue1">The type of the first value array which must implement <see cref="T:Althea.Helpers.ISwapper`1"/></typeparam>
@@ -8021,7 +8401,7 @@
         </member>
         <member name="M:Althea.Helpers.SwapSort.Sort``10(System.Span{``0},System.Span{``1},System.Span{``2},System.Span{``3},System.Span{``4},System.Span{``5},System.Span{``6},System.Span{``7},System.Span{``8},System.Span{``9},System.Collections.Generic.Comparer{``0})">
             <summary>
-            Sort the <paramref name="keys"/> with (<paramref name="values1"/><paramref name="values2"/><paramref name="values3"/><paramref name="values4"/><paramref name="values5"/><paramref name="values6"/><paramref name="values7"/><paramref name="values8"/><paramref name="values9"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
+            Sort the <paramref name="keys"/> with (<paramref name="values1"/>, <paramref name="values2"/>, <paramref name="values3"/>, <paramref name="values4"/>, <paramref name="values5"/>, <paramref name="values6"/>, <paramref name="values7"/>, <paramref name="values8"/>, <paramref name="values9"/>) using the given <typeparamref name="TKey"/> <paramref name="comparer"/>
             </summary>
             <typeparam name="TKey">The type of the keys</typeparam>
             <typeparam name="TValue1">The type of the first value array which must implement <see cref="T:Althea.Helpers.ISwapper`1"/></typeparam>
@@ -8948,13 +9328,13 @@
             <exception cref="T:System.ArgumentException">If the parameters do not fit any mode</exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.DiagonalMatrixMultiplyGeneral``4(System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.DiagonalMatrixMultiplyGeneral``4(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
             <summary>
             When implemented by a derived class, perform the matrix-matrix multiplication:
             <list type="table">
             <listheader><term>Condition</term>  <description>Equation</description></listheader>
-            <item><term><paramref name="leftA"/> is true</term><description>  <paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
-            <item><term><paramref name="leftA"/> is false</term><description>  <paramref name="C"/> = <paramref name="α"/> * diag(<paramref name="x"/>) * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></description></item>
+            <item><term><paramref name="leftA"/></term><description>  <paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
+            <item><term>!<paramref name="leftA"/></term><description>  <paramref name="C"/> = <paramref name="α"/> * diag(<paramref name="x"/>) * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
             </list>
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
@@ -8962,8 +9342,10 @@
             <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="leftA">Whether to put <paramref name="A"/> in the left side or the right side</param>
-            <param name="m">The number of rows of matrix <paramref name="A"/> and <paramref name="C"/></param>
-            <param name="n">The number of columns of matrix <paramref name="A"/> and <paramref name="C"/></param>
+            <param name="opA">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+            <param name="conjX">Whether to conjugate <paramref name="x"/> during calculation</param>
+            <param name="m">The number of rows of matrix <paramref name="C"/></param>
+            <param name="n">The number of columns of matrix <paramref name="C"/></param>
             <param name="α">The scalar to multiply to <paramref name="A"/></param>
             <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
@@ -9960,94 +10342,211 @@
             The abstract interface for dense linear algebra LAPACK API routines 
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenStandardMatrixHermitian``4(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``3,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenStandardMatrixHermitian``4(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``2,``3,System.Int64)">
             <summary>
             When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given hermitian matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> will be regarded as <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Vector"/></param>
             <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TReal">Any unmanaged number as the real corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSReal">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TReal"/></typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="n">The number of rows and columns of <paramref name="A"/> of type <typeparamref name="T"/></param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
-            <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
+            <param name="A">The input hermitian matrix to calculate the special eigen-problem</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
+            <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/> if <paramref name="mode"/> is not <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/></param>
+            <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenGeneralMatrixHermitian``4(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,``3,``2,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenGeneralMatrixHermitian``4(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``1,System.Int64,``2,``3,System.Int64)">
             <summary>
             When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given symmetric-definite / hermitian-definite matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TReal">Any unmanaged floating point number as the real corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSReal">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TReal"/></typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> will be regarded as <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Vector"/></param>
             <param name="type">The <see cref="T:Althea.LinearAlgebra.GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
             <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
-            <param name="A">The input/output symmetric/hermitian positive-definite matrix to calculate the general eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/>; or replaced by the eigenvectors otherwise.</param>
+            <param name="A">The input symmetric/hermitian positive-definite matrix to calculate the general eigen-problem</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="B">Another input/output symmetric/hermitian positive-definite matrix to calculate the general eigen-problem; may be destroyed during the calculation</param>
+            <param name="B">Another input symmetric/hermitian positive-definite matrix to calculate the general eigen-problem</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
+            <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/> if <paramref name="mode"/> is not <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/></param>
+            <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenStandardMatrixGeneral``6(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``3,``4,System.Int64,``5,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenStandardMatrixGeneral``5(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``2,``2,``3,System.Int64,``4,System.Int64)">
             <summary>
             When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSComp1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
+            <typeparam name="TS1">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS4">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
             <param name="n">The number of rows and columns of <paramref name="A"/></param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-            <param name="leftVec">The preallocated output left eigenvectors of type <typeparamref name="TComp"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
-            <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
-            <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
-            <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="TComp"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
             <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
             <param name="lda">leading dimension of <paramref name="A"/></param>
+            <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+            <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+            <param name="leftVec">The preallocated output left eigenvectors of type <typeparamref name="T"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
+            <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+            <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+            <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComp"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
+            <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenGeneralMatrixGeneral``6(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,``3,``4,System.Int64,``5,System.Int64,``2,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenGeneralMatrixGeneral``5(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``1,System.Int64,``2,``2,``2,``3,System.Int64,``4,System.Int64)">
             <summary>
             When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSComp1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
+            <typeparam name="TS1">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS4">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="type">The <see cref="T:Althea.LinearAlgebra.GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
             <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-            <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
-            <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
-            <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
-            <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
             <param name="A">The input general matrix to calculate eigensystem</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">Another input/output matrix to calculate the general eigen-problem; may be destroyed during the calculation</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+            <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+            <param name="valDenomOut">The preallocated output eigenvalues's denominators</param>
+            <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
+            <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+            <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+            <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComp"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
+            <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.SingularValues``5(Althea.LinearAlgebra.SVDStore,Althea.LinearAlgebra.SVDStore,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64,``4)">
+            <summary>
+            When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/>></typeparam>
+            <typeparam name="TS4">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="S"/></typeparam>
+            <param name="storeU">The <see cref="T:Althea.LinearAlgebra.SVDStore"/> to specify options for computing all or part of the matrix <paramref name="U"/></param>
+            <param name="storeV">The <see cref="T:Althea.LinearAlgebra.SVDStore"/> to specify options for computing all or part of the matrix <paramref name="Vct"/></param>
+            <param name="m">The number of rows of matrix</param>
+            <param name="n">The number of columns of matrix</param>
+            <param name="A">The input (and possible output) matrix of size <paramref name="m"/>×<paramref name="n"/> and leading dimension <paramref name="lda"/>. Will be overwritten by singular vectors if <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="S">The preallocated output singular values as a vector of size at least <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
+            <param name="U">The preallocated output left unitary matrix with size <paramref name="ldu"/>×<paramref name="m"/>, can be null if <paramref name="storeU"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
+            <param name="ldu">The leading dimension of <paramref name="U"/></param>
+            <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
+            <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/></exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.StandardSchurDecomposition``4(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``2,System.Int64,``3,``3)">
+            <summary>
+            Compute the standard Schur decomposition of given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="valOut"/></typeparam>
+            <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+            <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+            <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/>.</param>
+            <param name="ldu">The leading dimension of <paramref name="U"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.StandardSchurReorder``5(System.Int64,``2,System.Int64,``3,System.Int64,``4)">
+            <summary>
+            Reorder the standard Schur decomposition of given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+            <typeparam name="TInd">Any unmanaged integer number as the input data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TSInd">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="order"/></typeparam>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output Schur form matrix of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="U">The input/output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="ldu">The leading dimension of <paramref name="U"/></param>
+            <param name="order">The permutation order of the Schur decomposition that the <c>i</c>-th Schur form is moved to <c><paramref name="order"/>[i]</c></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.GeneralSchurDecomposition``5(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``1,System.Int64,``2,System.Int64,``4,System.Int64,``4,``4,``4)">
+            <summary>
+            Compute the general Schur decomposition of given matrices <paramref name="A"/> and <paramref name="B"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS4">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="valOut"/></typeparam>
+            <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="B">The input/output matrix to be decomposed of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+            <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+            <param name="valDenomOut">The preallocated output eigenvalues's denominators</param>
+            <param name="Ul">The preallocated output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> has no <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Left"/>.</param>
+            <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
+            <param name="Ur">The preallocated output left Schur vectors of leading dimension <paramref name="ldur"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> has no <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Right"/>.</param>
+            <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.GeneralSchurReorder``6(System.Int64,``2,System.Int64,``2,System.Int64,``3,System.Int64,``4,System.Int64,``5)">
+            <summary>
+            Reorder the general Schur decomposition of given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+            <typeparam name="TInd">Any unmanaged integer number as the input data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TSInd">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="order"/></typeparam>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output Schur form matrix of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="B">The input/output Schur form matrix of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="Ul">The input/output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
+            <param name="Ur">The input/output right Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
+            <param name="order">The permutation order of the Schur decomposition that the <c>i</c>-th Schur form is moved to <c><paramref name="order"/>[i]</c></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.LinearSolveGeneral``3(Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
@@ -10106,86 +10605,6 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.SingularValues``6(Althea.LinearAlgebra.SVDStore,Althea.LinearAlgebra.SVDStore,System.Int64,System.Int64,``2,System.Int64,``5,``3,System.Int64,``4,System.Int64)">
-            <summary>
-            When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TReal">Any unmanaged floating point number as the real corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSReal">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TReal"/></typeparam>
-            <param name="storeU">The <see cref="T:Althea.LinearAlgebra.SVDStore"/> to specify options for computing all or part of the matrix <paramref name="U"/></param>
-            <param name="storeV">The <see cref="T:Althea.LinearAlgebra.SVDStore"/> to specify options for computing all or part of the matrix <paramref name="Vct"/></param>
-            <param name="m">The number of rows of matrix</param>
-            <param name="n">The number of columns of matrix</param>
-            <param name="A">The input (and possible output) matrix of size <paramref name="m"/>×<paramref name="n"/> and leading dimension <paramref name="lda"/>. Will be overwritten by singular vectors if <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="S">The preallocated output singular values as a vector of size at least <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
-            <param name="U">The preallocated output left unitary matrix with size <paramref name="ldu"/>×<paramref name="m"/>, can be null if <paramref name="storeU"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
-            <param name="ldu">The leading dimension of <paramref name="U"/></param>
-            <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
-            <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/></exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.StandardSchurDecomposition``6(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``2,System.Int64,``4,``3,System.Int64,System.Int64@,``5)">
-            <summary>
-            Compute the standard Schur decomposition of given matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
-            <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSComp1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
-            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular Schur matrix at exit</param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/>.</param>
-            <param name="ldu">The leading dimension of <paramref name="U"/></param>
-            <param name="orderVal">The values in this array will be selected to the top left of Schur form <paramref name="A"/>. Default null means no particular order is preferred.</param>
-            <param name="actualNumber">Output the actual number of eigenvalues returned</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.GeneralSchurDecomposition``7(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``2,System.Int64,``3,System.Int64,``5,``3,System.Int64,``4,System.Int64,System.Int64@,``6)">
-            <summary>
-            Compute the general Schur decomposition of given matrices <paramref name="A"/> and <paramref name="B"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
-            <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSComp1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
-            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="A">The first input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the first triangular Schur matrix at exit</param>
-            <param name="B">The second input/output matrix to be decomposed of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the second triangular Schur matrix at exit</param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <param name="Ul">The preallocated output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> does not contains <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Left"/>.</param>
-            <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
-            <param name="Ur">The preallocated output right Schur vectors of leading dimension <paramref name="ldur"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> does not contains <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Right"/>.</param>
-            <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
-            <param name="orderVal">The values in this array will be selected to the top left of Schur form <paramref name="A"/>. Default null means no particular order is preferred.</param>
-            <param name="actualNumber">Output the actual number of eigenvalues returned</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
         <member name="T:Althea.LinearAlgebra.Dense.BlasApiSelector">
@@ -10723,13 +11142,13 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.DiagonalMatrixMultiplyGeneral``4(System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.DiagonalMatrixMultiplyGeneral``4(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
             <summary>
             Perform the matrix-matrix multiplication:
             <list type="table">
             <listheader><term>Condition</term>  <description>Equation</description></listheader>
-            <item><term><paramref name="leftA"/> is true</term><description>  <paramref name="C"/> = <paramref name="α"/> * <paramref name="A"/> * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
-            <item><term><paramref name="leftA"/> is false</term><description>  <paramref name="C"/> = <paramref name="α"/> * diag(<paramref name="x"/>) * <paramref name="A"/> + <paramref name="β"/> * <paramref name="C"/></description></item>
+            <item><term><paramref name="leftA"/></term><description>  <paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * diag(<paramref name="x"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
+            <item><term>!<paramref name="leftA"/></term><description>  <paramref name="C"/> = <paramref name="α"/> * diag(<paramref name="x"/>) * <paramref name="opA"/>(<paramref name="A"/>) + <paramref name="β"/> * <paramref name="C"/></description></item>
             </list>
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
@@ -10737,8 +11156,10 @@
             <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="leftA">Whether to put <paramref name="A"/> in the left side or the right side</param>
-            <param name="m">The number of rows of matrix <paramref name="A"/> and <paramref name="C"/></param>
-            <param name="n">The number of columns of matrix <paramref name="A"/> and <paramref name="C"/></param>
+            <param name="opA">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
+            <param name="conjX">Whether to conjugate <paramref name="x"/> during calculation</param>
+            <param name="m">The number of rows of matrix <paramref name="C"/></param>
+            <param name="n">The number of columns of matrix <paramref name="C"/></param>
             <param name="α">The scalar to multiply to <paramref name="A"/></param>
             <param name="A">The array of dimensions <c><paramref name="lda"/>×<paramref name="n"/></c> with <c><paramref name="lda"/> ≥ max(1, <paramref name="m"/>)</c></param>
             <param name="lda">The leading dimension of two-dimensional array used to store the matrix <paramref name="A"/></param>
@@ -11735,93 +12156,210 @@
             The selector class for dense linear algebra LAPACK API routines 
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenStandardMatrixHermitian``4(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``3,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenStandardMatrixHermitian``4(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``2,``3,System.Int64)">
             <summary>
             Calculate the eigenvalues (and eigenvectors) of given hermitian matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> will be regarded as <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Vector"/></param>
             <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TReal">Any unmanaged number as the real corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSReal">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TReal"/></typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="n">The number of rows and columns of <paramref name="A"/> of type <typeparamref name="T"/></param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
-            <param name="A">The input/output hermitian matrix to calculate the special eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> or replaced by the eigenvectors otherwise.</param>
+            <param name="A">The input hermitian matrix to calculate the special eigen-problem</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
+            <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/> if <paramref name="mode"/> is not <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/></param>
+            <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenGeneralMatrixHermitian``4(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,``3,``2,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenGeneralMatrixHermitian``4(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``1,System.Int64,``2,``3,System.Int64)">
             <summary>
             Calculate the eigenvalues (and eigenvectors) of given symmetric-definite / hermitian-definite matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TReal">Any unmanaged floating point number as the real corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSReal">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TReal"/></typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated, any value other than <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/> will be regarded as <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Vector"/></param>
             <param name="type">The <see cref="T:Althea.LinearAlgebra.GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
             <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TReal"/></param>
-            <param name="A">The input/output symmetric/hermitian positive-definite matrix to calculate the general eigen-problem; destroyed during the calculation if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/>; or replaced by the eigenvectors otherwise.</param>
+            <param name="A">The input symmetric/hermitian positive-definite matrix to calculate the general eigen-problem</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="B">Another input/output symmetric/hermitian positive-definite matrix to calculate the general eigen-problem; may be destroyed during the calculation</param>
+            <param name="B">Another input symmetric/hermitian positive-definite matrix to calculate the general eigen-problem</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
+            <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/> if <paramref name="mode"/> is not <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/></param>
+            <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenStandardMatrixGeneral``6(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``3,``4,System.Int64,``5,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenStandardMatrixGeneral``5(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``2,``2,``3,System.Int64,``4,System.Int64)">
             <summary>
             Calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSComp1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
+            <typeparam name="TS1">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS4">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
             <param name="n">The number of rows and columns of <paramref name="A"/></param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-            <param name="leftVec">The preallocated output left eigenvectors of type <typeparamref name="TComp"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
-            <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
-            <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
-            <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="TComp"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
             <param name="A">The input general matrix to calculate the special eigen-problem of a </param>
             <param name="lda">leading dimension of <paramref name="A"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComp"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
+            <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+            <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+            <param name="leftVec">The preallocated output left eigenvectors of type <typeparamref name="T"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
+            <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+            <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+            <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, can be null if <paramref name="mode"/> does not indicate the output of left eigenvectors.</param>
+            <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenGeneralMatrixGeneral``6(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,``3,``4,System.Int64,``5,System.Int64,``2,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenGeneralMatrixGeneral``5(Althea.LinearAlgebra.GeneralEigenType,Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``1,System.Int64,``2,``2,``2,``3,System.Int64,``4,System.Int64)">
             <summary>
             Calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSComp1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
+            <typeparam name="TS1">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS4">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="type">The <see cref="T:Althea.LinearAlgebra.GeneralEigenType"/> to indicate positions of <paramref name="A"/> and <paramref name="B"/></param>
             <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate which eigenvectors should be calculated</param>
             <param name="n">The number of rows and columns of <paramref name="A"/> and <paramref name="B"/></param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-            <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
-            <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
-            <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
-            <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
             <param name="A">The input general matrix to calculate eigensystem</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">Another input/output matrix to calculate the general eigen-problem; may be destroyed during the calculation</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TComp"/> is not a complex type correspondence of <typeparamref name="T"/></exception>
+            <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+            <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+            <param name="valDenomOut">The preallocated output eigenvalues's denominators</param>
+            <param name="leftVec">The output left eigenvectors, must be preallocated, of corresponding complex type</param>
+            <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
+            <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
+            <param name="rightVec">The output right eigenvectors, must be preallocated, of corresponding complex type</param>
+            <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.SingularValues``5(Althea.LinearAlgebra.SVDStore,Althea.LinearAlgebra.SVDStore,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64,``4)">
+            <summary>
+            Compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/>></typeparam>
+            <typeparam name="TS4">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="S"/></typeparam>
+            <param name="storeU">The <see cref="T:Althea.LinearAlgebra.SVDStore"/> to specify options for computing all or part of the matrix <paramref name="U"/></param>
+            <param name="storeV">The <see cref="T:Althea.LinearAlgebra.SVDStore"/> to specify options for computing all or part of the matrix <paramref name="Vct"/></param>
+            <param name="m">The number of rows of matrix</param>
+            <param name="n">The number of columns of matrix</param>
+            <param name="A">The input (and possible output) matrix of size <paramref name="m"/>×<paramref name="n"/> and leading dimension <paramref name="lda"/>. Will be overwritten by singular vectors if <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="S">The preallocated output singular values as a vector of size at least <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
+            <param name="U">The preallocated output left unitary matrix with size <paramref name="ldu"/>×<paramref name="m"/>, can be null if <paramref name="storeU"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
+            <param name="ldu">The leading dimension of <paramref name="U"/></param>
+            <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
+            <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/></exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.StandardSchurDecomposition``4(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``2,System.Int64,``3,``3)">
+            <summary>
+            Compute the standard Schur decomposition of given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="valOut"/></typeparam>
+            <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+            <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+            <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/>.</param>
+            <param name="ldu">The leading dimension of <paramref name="U"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.StandardSchurReorder``5(System.Int64,``2,System.Int64,``3,System.Int64,``4)">
+            <summary>
+            Reorder the standard Schur decomposition of given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+            <typeparam name="TInd">Any unmanaged integer number as the input data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TSInd">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="order"/></typeparam>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output Schur form matrix of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="U">The input/output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="ldu">The leading dimension of <paramref name="U"/></param>
+            <param name="order">The permutation order of the Schur decomposition that the <c>i</c>-th Schur form is moved to <c><paramref name="order"/>[i]</c></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.GeneralSchurDecomposition``5(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``1,System.Int64,``1,System.Int64,``2,System.Int64,``4,System.Int64,``4,``4,``4)">
+            <summary>
+            Compute the general Schur decomposition of given matrices <paramref name="A"/> and <paramref name="B"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS4">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="valOut"/></typeparam>
+            <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="B">The input/output matrix to be decomposed of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the Schur form matrix at exit</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="valOut">The preallocated output eigenvalues('s real parts) of type <typeparamref name="T"/></param>
+            <param name="valImagOut">The preallocated output eigenvalues's imaginary parts of type <typeparamref name="T"/> which shall be null if <typeparamref name="T"/> is a complex type</param>
+            <param name="valDenomOut">The preallocated output eigenvalues's denominators</param>
+            <param name="Ul">The preallocated output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> has no <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Left"/>.</param>
+            <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
+            <param name="Ur">The preallocated output left Schur vectors of leading dimension <paramref name="ldur"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> has no <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Right"/>.</param>
+            <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.GeneralSchurReorder``6(System.Int64,``2,System.Int64,``2,System.Int64,``3,System.Int64,``4,System.Int64,``5)">
+            <summary>
+            Reorder the general Schur decomposition of given matrix <paramref name="A"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
+            <typeparam name="TInd">Any unmanaged integer number as the input data type</typeparam>
+            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TSInd">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> for <paramref name="order"/></typeparam>
+            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
+            <param name="A">The input/output Schur form matrix of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="lda">The leading dimension of <paramref name="A"/></param>
+            <param name="B">The input/output Schur form matrix of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="Ul">The input/output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
+            <param name="Ur">The input/output right Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/></param>
+            <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
+            <param name="order">The permutation order of the Schur decomposition that the <c>i</c>-th Schur form is moved to <c><paramref name="order"/>[i]</c></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
@@ -11880,86 +12418,6 @@
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.SingularValues``6(Althea.LinearAlgebra.SVDStore,Althea.LinearAlgebra.SVDStore,System.Int64,System.Int64,``2,System.Int64,``5,``3,System.Int64,``4,System.Int64)">
-            <summary>
-            Compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged floating point number as the input data type</typeparam>
-            <typeparam name="TReal">Any unmanaged floating point number as the real corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSReal">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TReal"/></typeparam>
-            <param name="storeU">The <see cref="T:Althea.LinearAlgebra.SVDStore"/> to specify options for computing all or part of the matrix <paramref name="U"/></param>
-            <param name="storeV">The <see cref="T:Althea.LinearAlgebra.SVDStore"/> to specify options for computing all or part of the matrix <paramref name="Vct"/></param>
-            <param name="m">The number of rows of matrix</param>
-            <param name="n">The number of columns of matrix</param>
-            <param name="A">The input (and possible output) matrix of size <paramref name="m"/>×<paramref name="n"/> and leading dimension <paramref name="lda"/>. Will be overwritten by singular vectors if <paramref name="storeU"/> or <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="S">The preallocated output singular values as a vector of size at least <c>min(<paramref name="m"/>, <paramref name="n"/>)</c></param>
-            <param name="U">The preallocated output left unitary matrix with size <paramref name="ldu"/>×<paramref name="m"/>, can be null if <paramref name="storeU"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
-            <param name="ldu">The leading dimension of <paramref name="U"/></param>
-            <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, can be null if <paramref name="storeV"/> is <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/> or <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/>.</param>
-            <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="storeU"/> and <paramref name="storeV"/> are both <see cref="F:Althea.LinearAlgebra.SVDStore.Overwrite"/></exception>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="TReal"/> is not a real type correspondence of <typeparamref name="T"/></exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.StandardSchurDecomposition``6(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``2,System.Int64,``4,``3,System.Int64,``5)">
-            <summary>
-            Compute the standard Schur decomposition of given matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
-            <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSComp1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
-            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="A">The input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the triangular Schur matrix at exit</param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="U">The preallocated output Schur vectors of leading dimension <paramref name="ldu"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> is <see cref="F:Althea.LinearAlgebra.SolveVectorMode.NoVector"/>.</param>
-            <param name="ldu">The leading dimension of <paramref name="U"/></param>
-            <param name="orderVal">The values in this array will be selected to the top left of Schur form <paramref name="A"/>. Default null means no particular order is preferred.</param>
-            <returns>Output the actual number of eigenvalues returned.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
-            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.GeneralSchurDecomposition``7(Althea.LinearAlgebra.SolveVectorMode,System.Int64,``2,System.Int64,``3,System.Int64,``5,``3,System.Int64,``4,System.Int64,``6)">
-            <summary>
-            Compute the general Schur decomposition of given matrices <paramref name="A"/> and <paramref name="B"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged floating point number as the input/output data type</typeparam>
-            <typeparam name="TComp">Any unmanaged floating point number as the complex corresponding type of <typeparamref name="T"/></typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TS3">The third actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
-            <typeparam name="TSComp1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <typeparam name="TSComp2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="TComp"/></typeparam>
-            <param name="mode">The <see cref="T:Althea.LinearAlgebra.SolveVectorMode"/> to indicate whether to calculate Schur vectors or not</param>
-            <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
-            <param name="A">The first input/output matrix to be decomposed of leading dimension <paramref name="lda"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the first triangular Schur matrix at exit</param>
-            <param name="B">The second input/output matrix to be decomposed of leading dimension <paramref name="ldb"/> and size <paramref name="n"/>×<paramref name="n"/>, overwritten by the second triangular Schur matrix at exit</param>
-            <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="TComp"/></param>
-            <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <param name="Ul">The preallocated output left Schur vectors of leading dimension <paramref name="ldul"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> does not contains <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Left"/>.</param>
-            <param name="ldul">The leading dimension of <paramref name="Ul"/></param>
-            <param name="Ur">The preallocated output right Schur vectors of leading dimension <paramref name="ldur"/> and size <paramref name="n"/>×<paramref name="n"/>, can be null if <paramref name="mode"/> does not contains <see cref="F:Althea.LinearAlgebra.SolveVectorMode.Right"/>.</param>
-            <param name="ldur">The leading dimension of <paramref name="Ur"/></param>
-            <param name="orderVal">The values in this array will be selected to the top left of Schur form <paramref name="A"/>. Default null means no particular order is preferred.</param>
-            <returns>Output the actual number of eigenvalues returned.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="orderVal"/> has duplicate values or its length is larger than <paramref name="n"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
@@ -13334,17 +13792,6 @@
             A replacement of <see cref="T:System.Linq.Enumerable"/> based on <see cref="T:System.Span`1"/> and <see cref="T:System.ReadOnlySpan`1"/>
             </summary>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.CopyTo``2(System.Collections.Generic.IReadOnlyList{``0},System.Span{``1},System.Converter{``0,``1})">
-            <summary>
-            Copy <paramref name="array"/> to <paramref name="span"/>.
-            </summary>
-            <typeparam name="TIn">The type of <paramref name="array"/></typeparam>
-            <typeparam name="TOut">The type of <paramref name="span"/></typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to be copied into</param>
-            <param name="array">The destination array to be copied</param>
-            <param name="selector">The converter to each element</param>
-            <returns>The <paramref name="span"/></returns>
-        </member>
         <member name="M:Althea.Linq.SpanLinq.CopyTo``2(System.Span{``0},System.Span{``1},System.Converter{``0,``1})">
             <summary>
             Copy <paramref name="span"/> to <paramref name="array"/>.
@@ -13362,6 +13809,30 @@
             <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
             <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
             <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
+            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
+            <param name="selector">The converter to each element</param>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.Zip``3(System.Span{``0},System.ReadOnlySpan{``1},System.Span{``2},System.Func{``0,``1,``2})">
+            <summary>
+            Zip convert the <paramref name="span1"/> and <paramref name="span2"/> to <paramref name="array"/>.
+            </summary>
+            <typeparam name="TIn1">The type of <paramref name="span1"/></typeparam>
+            <typeparam name="TIn2">The type of <paramref name="span2"/></typeparam>
+            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+            <param name="span1">The <see cref="T:System.Span`1"/> to be copied from</param>
+            <param name="span2">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
+            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
+            <param name="selector">The converter to each element</param>
+        </member>
+        <member name="M:Althea.Linq.SpanLinq.Zip``3(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.Span{``2},System.Func{``0,``1,``2})">
+            <summary>
+            Zip convert the <paramref name="span1"/> and <paramref name="span2"/> to <paramref name="array"/>.
+            </summary>
+            <typeparam name="TIn1">The type of <paramref name="span1"/></typeparam>
+            <typeparam name="TIn2">The type of <paramref name="span2"/></typeparam>
+            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+            <param name="span1">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
+            <param name="span2">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
             <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
             <param name="selector">The converter to each element</param>
         </member>
@@ -14633,6 +15104,47 @@
             Override <see cref="M:System.Object.Equals(System.Object)"/>
             </summary>
         </member>
+        <member name="M:Althea.NativeTypes.Complex`1.op_LessThan(Althea.NativeTypes.Complex{`0},Althea.NativeTypes.Complex{`0})">
+            <summary>
+            Less than operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.op_GreaterThan(Althea.NativeTypes.Complex{`0},Althea.NativeTypes.Complex{`0})">
+            <summary>
+            Greater than operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.op_LessThanOrEqual(Althea.NativeTypes.Complex{`0},Althea.NativeTypes.Complex{`0})">
+            <summary>
+            Less than or equal operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.op_GreaterThanOrEqual(Althea.NativeTypes.Complex{`0},Althea.NativeTypes.Complex{`0})">
+            <summary>
+            Greater than or equal operator
+            </summary>
+        </member>
+        <member name="T:Althea.NativeTypes.Complex`1.ComplexRealPartComparer">
+            <summary>
+            The comparer used to compare two complexes' real parts.
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.ComplexRealPartComparer.Compare(Althea.NativeTypes.Complex{`0},Althea.NativeTypes.Complex{`0})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.Max(Althea.NativeTypes.Complex{`0},Althea.NativeTypes.Complex{`0})">
+            <summary>
+            Max operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.Min(Althea.NativeTypes.Complex{`0},Althea.NativeTypes.Complex{`0})">
+            <summary>
+            Max operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.Complex`1.CompareTo(Althea.NativeTypes.Complex{`0})">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.NativeTypes.Complex`1.op_UnaryNegation(Althea.NativeTypes.Complex{`0})">
             <summary>
             Complex negate
@@ -15149,6 +15661,52 @@
             <summary>
             Override <see cref="M:System.Object.Equals(System.Object)"/>
             </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.op_LessThan(Althea.NativeTypes.ComplexInteger{`0},Althea.NativeTypes.ComplexInteger{`0})">
+            <summary>
+            Less than operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.op_GreaterThan(Althea.NativeTypes.ComplexInteger{`0},Althea.NativeTypes.ComplexInteger{`0})">
+            <summary>
+            Greater than operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.op_LessThanOrEqual(Althea.NativeTypes.ComplexInteger{`0},Althea.NativeTypes.ComplexInteger{`0})">
+            <summary>
+            Less than or equal operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.op_GreaterThanOrEqual(Althea.NativeTypes.ComplexInteger{`0},Althea.NativeTypes.ComplexInteger{`0})">
+            <summary>
+            Greater than or equal operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.op_Modulus(Althea.NativeTypes.ComplexInteger{`0},Althea.NativeTypes.ComplexInteger{`0})">
+            <summary>
+            Modulus operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.Max(Althea.NativeTypes.ComplexInteger{`0},Althea.NativeTypes.ComplexInteger{`0})">
+            <summary>
+            Max operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.Min(Althea.NativeTypes.ComplexInteger{`0},Althea.NativeTypes.ComplexInteger{`0})">
+            <summary>
+            Max operator
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.CompareTo(Althea.NativeTypes.ComplexInteger{`0})">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.NativeTypes.ComplexInteger`1.ComplexRealPartComparer">
+            <summary>
+            The comparer used to compare two complexes' real parts.
+            </summary>
+        </member>
+        <member name="M:Althea.NativeTypes.ComplexInteger`1.ComplexRealPartComparer.Compare(Althea.NativeTypes.ComplexInteger{`0},Althea.NativeTypes.ComplexInteger{`0})">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.NativeTypes.ComplexInteger`1.op_UnaryNegation(Althea.NativeTypes.ComplexInteger{`0})">
             <summary>
@@ -15709,6 +16267,22 @@
             <typeparam name="T">The number type</typeparam>
             <param name="x">The number to get conjugate</param>
             <returns>The conjugate of <paramref name="x"/> if it is a complex type, otherwise <paramref name="x"/> itself.</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NumberConvert.ToReal``1(``0)">
+            <summary>
+            Get the real part of a number <paramref name="x"/> of any number type if it is a complex type, otherwise <paramref name="x"/> itself.
+            </summary>
+            <typeparam name="T">The number type</typeparam>
+            <param name="x">The number to get real part</param>
+            <returns>The real part of <paramref name="x"/> if it is a complex type, otherwise <paramref name="x"/> itself.</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.NumberConvert.ToImag``1(``0)">
+            <summary>
+            Get the real part of a number <paramref name="x"/> of any number type if it is a complex type, otherwise <paramref name="x"/> itself.
+            </summary>
+            <typeparam name="T">The number type</typeparam>
+            <param name="x">The number to get real part</param>
+            <returns>The real part of <paramref name="x"/> if it is a complex type, otherwise <paramref name="x"/> itself.</returns>
         </member>
         <member name="T:Althea.NativeTypes.Unmanaged`1">
             <summary>
