@@ -10,9 +10,30 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RootNamespace>Althea.Backend</RootNamespace>
+    <AssemblyName>Althea.Backend</AssemblyName>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+
   <ItemGroup>
-    <Folder Include="documents\" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
+    <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
@@ -41,6 +62,10 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
   </ItemGroup>
 
   <ItemGroup>

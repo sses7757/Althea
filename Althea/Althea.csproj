@@ -7,25 +7,20 @@
     <LangVersion>preview</LangVersion>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="documents\" />
-  </ItemGroup>
-
   <PropertyGroup>
-    <DocumentationMarkdown>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).md</DocumentationMarkdown>
-    <Win32Resource />
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
     <RootNamespace>Althea</RootNamespace>
     <AssemblyName>Althea</AssemblyName>
     <AnalysisLevel>latest</AnalysisLevel>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Runtime.Experimental" Version="6.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
+    <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -71,6 +66,19 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>API.tt</DependentUpon>
     </Compile>
+    <Compile Update="Storage\MixedStorage.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>MixedStorage.tt</DependentUpon>
+    </Compile>
+    <Compile Update="TensorAlgebra\TensorOrderCreate.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TensorOrderCreate.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Resources\ArithmeticError.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -111,18 +119,8 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>StorageError.resx</DependentUpon>
     </Compile>
-    <Compile Update="Storage\MixedStorage.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>MixedStorage.tt</DependentUpon>
-    </Compile>
-    <Compile Update="TensorAlgebra\TensorOrderCreate.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TensorOrderCreate.tt</DependentUpon>
-    </Compile>
   </ItemGroup>
-
+  
   <ItemGroup>
     <EmbeddedResource Update="Resources\ArithmeticError.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
@@ -185,14 +183,6 @@
     <None Update="TensorAlgebra\TensorOrderCreate.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>TensorOrderCreate.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Random\API.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>API.tt</DependentUpon>
     </None>
   </ItemGroup>
 

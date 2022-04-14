@@ -5,9 +5,9 @@ namespace Althea.Backend.Mkl
 {
 	// Ignore Spelling: Xeon
 	/// <summary>
-	/// The enum for instruction sets of MKL
+	/// The enum for instruction sets of MKL.
 	/// </summary>
-	public enum MklInstruction
+	public enum Instruction
 	{
 		/// <summary>
 		/// Intel® Streaming SIMD Extensions 4.2 (Intel® SSE4.2).
@@ -40,9 +40,9 @@ namespace Althea.Backend.Mkl
 	}
 
 	/// <summary>
-	/// The static class for static global methods and properties of 
+	/// The static class for static global methods and properties of MKL runtime.
 	/// </summary>
-	public static class MklRuntime
+	public static class Runtime
 	{
 		/// <summary>
 		/// Get the MKL version
@@ -50,9 +50,9 @@ namespace Althea.Backend.Mkl
 		/// <returns>The MKL's major and minor version</returns>
 		public static (int major, int minor) GetDriverVersion()
 		{
-			const int StringLength = 198;
-			StringBuilder sb = new(StringLength);
-			Storage.NativeMethods.MKL_Get_Version_String(sb, StringLength);
+			const int STR_LEN = 198;
+			StringBuilder sb = new(STR_LEN);
+			NativeMethods.MKL_Get_Version_String(sb, STR_LEN);
 			string s = sb.ToString();
 			int versionStart = s.IndexOf("Version") + "Version".Length + 1;
 			s = s[versionStart..s.IndexOf("Product")];
@@ -64,10 +64,10 @@ namespace Althea.Backend.Mkl
 		/// Get or set the maximum number of threads used by the MKL
 		/// </summary>
 		public static int NumberOfThreads {
-			get => Storage.NativeMethods.MKL_Get_Max_Threads();
+			get => NativeMethods.MKL_Get_Max_Threads();
 			set {
 				if (value > 0 && value <= Environment.ProcessorCount)
-					Storage.NativeMethods.MKL_Set_Num_Threads(value);
+					NativeMethods.MKL_Set_Num_Threads(value);
 				else
 					throw new ArgumentOutOfRangeException(nameof(value), value, Resources.ParameterError.InvalidValue);
 			}
@@ -83,54 +83,54 @@ namespace Althea.Backend.Mkl
 			get {
 				if (_verbose.HasValue)
 					return _verbose.Value;
-				_ = Storage.NativeMethods.MKL_Verbose(0);
+				_ = NativeMethods.MKL_Verbose(0);
 				_verbose = false;
 				return false;
 			}
 			set {
-				_ = Storage.NativeMethods.MKL_Verbose(value ? 1 : 0);
+				_ = NativeMethods.MKL_Verbose(value ? 1 : 0);
 				_verbose = value;
 			}
 		}
 
 
-		private static MklInstruction? _instrction = null;
+		private static Instruction? _instrction = null;
 		
 		/// <summary>
 		/// Get or set the instruction set(s) used by the MKL
 		/// </summary>
-		public static MklInstruction Instruction {
+		public static Instruction Instruction {
 			get {
 				if (_instrction.HasValue)
 					return _instrction.Value;
-				int err = Storage.NativeMethods.MKL_Enable_Instructions(MklInstruction.AVX512);
+				int err = NativeMethods.MKL_Enable_Instructions(Instruction.AVX512);
 				if (err != 0)
 				{
-					_instrction = MklInstruction.AVX512;
+					_instrction = Instruction.AVX512;
 					return _instrction.Value;
 				}
-				err = Storage.NativeMethods.MKL_Enable_Instructions(MklInstruction.AVX2);
+				err = NativeMethods.MKL_Enable_Instructions(Instruction.AVX2);
 				if (err != 0)
 				{
-					_instrction = MklInstruction.AVX2;
+					_instrction = Instruction.AVX2;
 					return _instrction.Value;
 				}
-				err = Storage.NativeMethods.MKL_Enable_Instructions(MklInstruction.AVX);
+				err = NativeMethods.MKL_Enable_Instructions(Instruction.AVX);
 				if (err != 0)
 				{
-					_instrction = MklInstruction.AVX;
+					_instrction = Instruction.AVX;
 					return _instrction.Value;
 				}
-				err = Storage.NativeMethods.MKL_Enable_Instructions(MklInstruction.SSE_42);
+				err = NativeMethods.MKL_Enable_Instructions(Instruction.SSE_42);
 				if (err != 0)
 				{
-					_instrction = MklInstruction.SSE_42;
+					_instrction = Instruction.SSE_42;
 					return _instrction.Value;
 				}
 				throw new InvalidOperationException();
 			}
 			set {
-				int err = Storage.NativeMethods.MKL_Enable_Instructions(value);
+				int err = NativeMethods.MKL_Enable_Instructions(value);
 				if (err == 0)
 					throw new NotSupportedException();
 				_instrction = value;

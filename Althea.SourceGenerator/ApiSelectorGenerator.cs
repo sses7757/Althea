@@ -61,7 +61,7 @@ namespace Althea.SourceGenerator
 		public void Initialize(GeneratorInitializationContext context)
 		{
 #if DEBUG
-			Debugger.Launch();
+			////Debugger.Launch();
 #endif
 			// Register a factory that can create our custom syntax receiver
 			context.RegisterForSyntaxNotifications(() => new ApiIntefaceSyntaxReceiver());
@@ -237,6 +237,8 @@ namespace {ns.Name}
 
 		public void AddSettings(GeneratorExecutionContext context, List<InterfaceDeclarationSyntax> apiClasses)
 		{
+			if (apiClasses.Count == 0)
+				return;
 			// Ignore Spelling: bool impls
 			string backendInterface = @"namespace Althea
 {
@@ -381,8 +383,19 @@ namespace Althea
 		}
 	}
 
-	static class Extensions
+	internal static class Extensions
 	{
+		public static bool HasAttribute(this ClassDeclarationSyntax cds, string attributeName)
+		{
+			attributeName = attributeName.Replace("Attribute", "");
+			foreach (var attrList in cds.AttributeLists)
+			{
+				foreach (var attr in attrList.Attributes)
+					if (attr.Name.ToString() == attributeName)
+						return true;
+			}
+			return false;
+		}
 		public static bool HasAttribute(this InterfaceDeclarationSyntax cds, string attributeName)
 		{
 			attributeName = attributeName.Replace("Attribute", "");
@@ -416,6 +429,27 @@ namespace Althea
 			}
 			return null;
 		}
+		public static AttributeSyntax[] GetAttributes(this MethodDeclarationSyntax mds, string attributeName)
+		{
+			List<AttributeSyntax> attrs = new List<AttributeSyntax>();
+			attributeName = attributeName.Replace("Attribute", "");
+			foreach (var attrList in mds.AttributeLists)
+			{
+				foreach (var attr in attrList.Attributes)
+					if (attr.Name.ToString() == attributeName)
+						attrs.Add(attr);
+			}
+			return attrs.ToArray();
+		}
+		public static bool HasToken(this SyntaxTokenList list, string target)
+		{
+			foreach (var token in list)
+			{
+				if (token.ToString().Contains(target))
+					return true;
+			}
+			return false;
+		}
 		public static SyntaxList<AttributeListSyntax> RemoveAttribute(this MethodDeclarationSyntax mds, string attributeName)
 		{
 			attributeName = attributeName.Replace("Attribute", "");
@@ -442,6 +476,7 @@ namespace Althea
 			return false;
 		}
 
+		// Ignore Spelling: params
 		public static string InvokeRepr(this ParameterSyntax param)
 		{
 			var modifiers = param.Modifiers;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -106,29 +105,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (info.status > 0)
 				throw new MatrixSolveAlgorithmException(kind, info.status);
 			if (info.status < 0)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, (-info.status).ToOrdinal());
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, (-info.status).ToOrdinal());
 		}
 	}
 
-#pragma warning disable CS0649
 	internal readonly struct MklLapackInfo
 	{
 		internal readonly int status;
 	}
-#pragma warning restore CS0649
 
-	/// <summary>
-	/// The matrix layout enum in MKL BLAS
-	/// </summary>
 	internal enum MklMatrixLayout
 	{
-		/// <summary>
-		/// Row major storage layout
-		/// </summary>
 		RowMajor = 101,
-		/// <summary>
-		/// Column major storage layout
-		/// </summary>
 		ColMajor = 102
 	}
 
@@ -137,66 +125,28 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	/// </summary>
 	internal enum MklOperation
 	{
-		/// <summary>
-		/// Do not perform any transpositions 
-		/// </summary>
 		NoneTranspose = 111,
-		/// <summary>
-		/// Perform transposition
-		/// </summary>
 		Transpose = 112,
-		/// <summary>
-		/// Perform conjugate transposition
-		/// </summary>
 		ConjugateTranspose = 113,
-		/// <summary>
-		/// Perform conjugate alone, not supported by MKL BLAS
-		/// </summary>
+		// NOT supported
 		ConjugateAlone = 114,
 	}
 
-	/// <summary>
-	/// The symmetric/Hermitian matrix's storage mode in MKL BLAS
-	/// </summary>
 	internal enum MklFillMode
 	{
-		/// <summary>
-		/// The upper part is filled
-		/// </summary>
 		Upper = 121,
-		/// <summary>
-		/// The lower part is filled
-		/// </summary>
 		Lower = 122
 	}
 
-	/// <summary>
-	/// The triangular matrix's diagonal element type in MKL BLAS
-	/// </summary>
 	internal enum MklBlasDiagType
 	{
-		/// <summary>
-		/// The diagonal elements are not unit and stored explicitly
-		/// </summary>
 		NonUnit = 131,
-		/// <summary>
-		/// The diagonal elements are unit and may not be stored
-		/// </summary>
 		Unit = 132
 	}
 
-	/// <summary>
-	/// The side mode in MKL BLAS
-	/// </summary>
 	internal enum MklBlasSideMode
 	{
-		/// <summary>
-		/// Left
-		/// </summary>
 		Left = 141,
-		/// <summary>
-		/// Right
-		/// </summary>
 		Right = 142
 	}
 

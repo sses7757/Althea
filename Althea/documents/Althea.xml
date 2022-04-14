@@ -5068,7 +5068,7 @@
             <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
             <param name="converged">Output the number of converged eigen-pairs</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> and <see cref="!:KrylovSubspaceSolveInfo&lt;T, TVec&gt;.EigenvectorsImag"/> are not used</remarks>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> are not used</remarks>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
         </member>
         <member name="M:Althea.GeneralSolver.IAbstractApi.RestartKrylovSubspaceLinearSolve``2(System.Nullable{System.Boolean},Althea.GeneralSolver.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{``1,System.Double}@)">
@@ -5494,7 +5494,7 @@
             <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
             <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
             <returns>Output the number of converged eigen-pairs.</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> and <see cref="!:KrylovSubspaceSolveInfo&lt;T, TVec&gt;.EigenvectorsImag"/> are not used</remarks>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> are not used</remarks>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>

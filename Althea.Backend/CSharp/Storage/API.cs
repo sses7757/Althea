@@ -103,7 +103,7 @@ namespace Althea.Backend.CSharp.Storage
 		}
 
 		/// <inheritdoc/>
-		public bool MemoryCopy2D<TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth)
+		public virtual bool MemoryCopy2D<TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth)
 			where TP1 : IPointer<TP1>
 			where TP2 : IPointer<TP2>
 		{
@@ -129,7 +129,7 @@ namespace Althea.Backend.CSharp.Storage
 		}
 
 		/// <inheritdoc/>
-		public bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, long strideSource, PointerSegment<TP2> destination, long strideDestination, out long actualCopied)
+		public virtual bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, long strideSource, PointerSegment<TP2> destination, long strideDestination, out long actualCopied)
 			where T : unmanaged, INumber<T>
 			where TP1 : IPointer<TP1>
 			where TP2 : IPointer<TP2>

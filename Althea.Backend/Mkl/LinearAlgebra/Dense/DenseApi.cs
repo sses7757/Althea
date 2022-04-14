@@ -1037,12 +1037,12 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 			{
 				if ((A is null || α.IsZero()) && opB == MatrixOperation.None && β.IsOne())
 				{   // copy B to C
-					Storage.StorageApi.PointerMemoryCopy2D(pC, ldc * sizeof(T), pB, ldb * sizeof(T), m * sizeof(T), n);
+					Storage.API.PointerMemoryCopy2D(pC, ldc * sizeof(T), pB, ldb * sizeof(T), m * sizeof(T), n);
 					return true;
 				}
 				if ((B is null || β.IsZero()) && opA == MatrixOperation.None && α.IsOne())
 				{   // copy A to C
-					Storage.StorageApi.PointerMemoryCopy2D(pC, ldc * sizeof(T), pA, lda * sizeof(T), m * sizeof(T), n);
+					Storage.API.PointerMemoryCopy2D(pC, ldc * sizeof(T), pA, lda * sizeof(T), m * sizeof(T), n);
 					return true;
 				}
 				// matrix copy
@@ -1385,7 +1385,7 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 				var info = qrfunc(MklMatrixLayout.ColMajor, mm, nn, pA, llda, tau);
 				SolveMethodKind.QR.CheckLapackInfo(info);
 				// copy A to Q
-				Storage.StorageApi.PointerMemoryCopy2D(pA, lda, pQ, ldq,  m, Math.Min(colsQ, n));
+				Storage.API.PointerMemoryCopy2D(pA, lda, pQ, ldq,  m, Math.Min(colsQ, n));
 				// form Q
 				info = gqfunc(MklMatrixLayout.ColMajor, mm, nnQ, kk, pQ, lldq, tau);
 				SolveMethodKind.QR.CheckLapackInfo(info);
@@ -1466,8 +1466,8 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 		private unsafe bool CopyEigenToComplex<T, TComplex>(MklVectorModeChar modeL, MklVectorModeChar modeR, long n, int nn, IntPtr pV, T* valR, T* valI, Storage<TComplex>? leftVec, IntPtr pVl, long ldvl, T* vecL, Storage<TComplex>? rightVec, IntPtr pVr, long ldvr, T* vecR) where T : unmanaged, INumber<T> where TComplex : unmanaged
 		{
 			// copy eigenvalues
-			Storage.StorageApi.PointerStridedCopy(valR, 1, (T*)pV, 2, nn);
-			Storage.StorageApi.PointerStridedCopy(valI, 1, 1 + (T*)pV, 2, nn);
+			Storage.API.PointerStridedCopy(valR, 1, (T*)pV, 2, nn);
+			Storage.API.PointerStridedCopy(valI, 1, 1 + (T*)pV, 2, nn);
 			// expand cases for better performance
 			float* floatValI = (float*)valI; double* doubleValI = (double*)valI;
 			if (leftVec is not null && rightVec is not null)
@@ -1482,23 +1482,23 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 				for (int i = 0; i < nn; i++)
 				{
 					// copy real parts in both cases
-					Storage.StorageApi.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
-					Storage.StorageApi.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
+					Storage.API.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
+					Storage.API.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
 					// check real or complex eigen-pair
 					if ((typeof(T) == typeof(float) && floatValI[i] != 0) || (typeof(T) == typeof(double) && doubleValI[i] != 0))
 					{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
 						// left
 						T* ptr = (T*)pVl + (i * ldvl + 1), ptr2 = ptr + ldvl;
-						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
-						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
+						Storage.API.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
+						Storage.API.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
 						if (typeof(T) == typeof(float))
 							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
 						else
 							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
 						// right
 						ptr = (T*)pVr + (i * ldvr + 1); ptr2 = ptr + ldvr;
-						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
-						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
+						Storage.API.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
+						Storage.API.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
 						if (typeof(T) == typeof(float))
 							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
 						else
@@ -1516,13 +1516,13 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 				for (int i = 0; i < nn; i++)
 				{
 					// copy real parts in both cases
-					Storage.StorageApi.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
+					Storage.API.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
 					// check real or complex eigen-pair
 					if ((typeof(T) == typeof(float) && floatValI[i] != 0) || (typeof(T) == typeof(double) && doubleValI[i] != 0))
 					{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
 						T* ptr = (T*)pVl + (i * ldvl + 1), ptr2 = ptr + ldvl;
-						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
-						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
+						Storage.API.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
+						Storage.API.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
 						if (typeof(T) == typeof(float))
 							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
 						else
@@ -1540,13 +1540,13 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 				for (int i = 0; i < nn; i++)
 				{
 					// copy real parts in both cases
-					Storage.StorageApi.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
+					Storage.API.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
 					// check real or complex eigen-pair
 					if ((typeof(T) == typeof(float) && floatValI[i] != 0) || (typeof(T) == typeof(double) && doubleValI[i] != 0))
 					{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
 						T* ptr = (T*)pVr + (i * ldvr + 1), ptr2 = ptr + ldvr;
-						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
-						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
+						Storage.API.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
+						Storage.API.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
 						if (typeof(T) == typeof(float))
 							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
 						else
