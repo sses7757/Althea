@@ -7194,6 +7194,14 @@
             <returns>The ordinal representation string</returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
         </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToOrdinal(System.Int64)">
+            <summary>
+            Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
+            </summary>
+            <param name="a">The input number</param>
+            <returns>The ordinal representation string</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
+        </member>
         <member name="M:Althea.Helpers.ExtensionHelper.ReverseBits(System.Int32)">
             <summary>
             Reverse the bits of <paramref name="a"/>
@@ -8455,7 +8463,7 @@
             The exception to be thrown when a matrix solving method of a LAPACK or LAPACK-like library failed due to several reasons
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.MatrixSolveAlgorithmException.#ctor(Althea.LinearAlgebra.SolveMethodKind,System.Int32)">
+        <member name="M:Althea.LinearAlgebra.MatrixSolveAlgorithmException.#ctor(Althea.LinearAlgebra.SolveMethodKind,System.Int64)">
             <summary>
             Constructor of <see cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException"/>
             </summary>

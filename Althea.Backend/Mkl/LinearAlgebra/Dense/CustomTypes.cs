@@ -111,7 +111,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 	internal readonly struct MklLapackInfo
 	{
-		internal readonly int status;
+		internal readonly long status;
 	}
 
 	internal enum MklMatrixLayout
@@ -173,7 +173,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	internal enum MklVectorModeChar : byte
 	{
 		NoVector = (byte)'N',
-		Vector = (byte)'V'
+		Vector = (byte)'V',
+		Immediate = (byte)'I'
 	}
 
 	internal enum MklSortModeChar : byte
@@ -188,5 +189,25 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		All = (byte)'A',
 		Store = (byte)'S',
 		Overwrite = (byte)'O',
+	}
+
+	internal enum MklSchurModeChar : byte
+	{
+		OnlyEigenvalues = (byte)'E',
+		SchurForm = (byte)'S'
+	}
+
+	internal enum MklSchurEigenvectorModeChar : byte
+	{
+		Right = (byte)'R',
+		Left = (byte)'L',
+		Both = (byte)'B'
+	}
+
+	internal enum MklSchurEigenSelectModeChar : byte
+	{
+		All = (byte)'A',
+		BackTransform = (byte)'B',
+		Selected = (byte)'S'
 	}
 }

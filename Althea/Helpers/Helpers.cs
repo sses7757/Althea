@@ -24,13 +24,20 @@ namespace Althea.Helpers
 		/// <param name="a">The input number</param>
 		/// <returns>The ordinal representation string</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static string ToOrdinal(this int a)
+		public static string ToOrdinal(this int a) => ToOrdinal((long)a);
+
+		/// <summary>
+		/// Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
+		/// </summary>
+		/// <param name="a">The input number</param>
+		/// <returns>The ordinal representation string</returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
+		public static string ToOrdinal(this long a)
 		{
 			if (a < 0)
 				throw new ArgumentOutOfRangeException(nameof(a), a, ParameterError.CannotNegative);
 			a++;
-			int c = a % 10;
+			long c = a % 10;
 			return c switch
 			{
 				1 => $"{a}-st",

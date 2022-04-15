@@ -23,7 +23,7 @@ namespace Althea.SourceGenerator
 	/// <summary>
 	/// Tells the source generator that the marked method is a native method to be extended.
 	/// </summary>
-	[System.AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 	public sealed class NativeMethodAttribute : Attribute
 	{
 		/// <summary>
@@ -33,8 +33,9 @@ namespace Althea.SourceGenerator
 		/// <param name="typeCharUpper">Whether the type character in <paramref name="typeCharPosition"/> shall be of upper case or lower case</param>
 		/// <param name="refComplexType">Whether the complex scalar input parameters shall have <c>in</c> modifiers or not</param>
 		/// <param name="returnRealType">Whether to return real scalar type instead of complex scalar type</param>
+		/// <param name="onlyReal">Whether to include only real types (true) or only complex types (false) or both (leave empty)</param>
 		/// <remarks>This means that the types are <c>float, double, Complex&lt;float&gt;, Complex&lt;double&gt;</c> with type character <c>s, d, c, z</c>, respectively.</remarks>
-		public NativeMethodAttribute(int typeCharPosition, bool typeCharUpper = false, bool refComplexType = false, bool returnRealType = false)
+		public NativeMethodAttribute(int typeCharPosition, bool typeCharUpper = false, bool refComplexType = false, bool returnRealType = false, bool onlyReal = false)
 		{
 		}
 	}
@@ -202,7 +203,7 @@ namespace {ns.Name}
 							typeRefReturn = method.ReturnType.ToString().Contains("void") ? typeRefReturn : new[] { false, false, true, true };
 						}
 					}
-					if (attr.ArgumentList.Arguments.Count == 4)
+					if (attr.ArgumentList.Arguments.Count >= 4)
 					{
 						if (!bool.TryParse(attr.ArgumentList.Arguments[3].ToString(), out bool retReal))
 						{
@@ -215,7 +216,24 @@ namespace {ns.Name}
 							typeChars = upper ? new[] { "S", "D", "SC", "DZ" } : new[] { "s", "d", "sc", "dz" };
 						}
 					}
-					if (attr.ArgumentList.Arguments.Count > 4)
+					if (attr.ArgumentList.Arguments.Count == 5)
+					{
+						bool? onlyReal = null;
+						if (bool.TryParse(attr.ArgumentList.Arguments[4].ToString(), out bool or))
+						{
+							onlyReal = or;
+						}
+						if (onlyReal.HasValue)
+						{
+							int start = onlyReal.Value ? 0 : 2;
+							typeNames = typeNames.AsSpan(start, 2).ToArray();
+							typeChars = typeChars.AsSpan(start, 2).ToArray();
+							typeInputModifer = typeInputModifer.AsSpan(start, 2).ToArray();
+							typeReturn = typeReturn.AsSpan(start, 2).ToArray();
+							typeRefReturn = typeRefReturn.AsSpan(start, 2).ToArray();
+						}
+					}
+					if (attr.ArgumentList.Arguments.Count > 5)
 					{
 						errLoc = attr.ArgumentList.GetLocation();
 						goto ERROR;
@@ -282,6 +300,10 @@ namespace {ns.Name}
 								goto ERROR;
 							}
 							typeInputModifer[i] = str.Substring(1, str.Length - 2).Trim();
+							if (string.IsNullOrWhiteSpace(typeInputModifer[i]))
+								typeInputModifer[i] = "";
+							else
+								typeInputModifer[i] += " ";
 						}
 						if (attr.ArgumentList.Arguments.Count >= 5)
 						{

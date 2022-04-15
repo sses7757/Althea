@@ -43,7 +43,7 @@ namespace Althea.LinearAlgebra
 	[Serializable]
 	public class MatrixSolveAlgorithmException : Exception
 	{
-		private static string GetDescription(SolveMethodKind kind, int info)
+		private static string GetDescription(SolveMethodKind kind, long info)
 		{
 			if (info == 0)
 				return string.Empty; // no error
@@ -77,7 +77,7 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		/// <param name="kind">which kind of LAPACK-like solver is used (in <see cref="SolveMethodKind"/>)</param>
 		/// <param name="i">The returned LAPACK-like solver information</param>
-		public MatrixSolveAlgorithmException(SolveMethodKind kind, int i) : base(GetDescription(kind, i)) { }
+		public MatrixSolveAlgorithmException(SolveMethodKind kind, long i) : base(GetDescription(kind, i)) { }
 
 		/// <summary>
 		/// Empty <see cref="MatrixSolveAlgorithmException"/>

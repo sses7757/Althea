@@ -50,7 +50,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		internal static extern float cblas_sdot(long n, void* x, long incx, void* y, long incy);
 		#endregion
 
-
 		#region level 2
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -62,7 +61,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		[NativeMethod(6)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_strmv(MklMatrixLayout Layout, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long N, void* A, long lda, void* x, long incx);
+		internal static extern void cblas_strmv(MklMatrixLayout Layout, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long n, void* A, long lda, void* x, long incx);
 
 		// Ignore Spelling: sger dger cgerc cgeru zgerc zgeru
 		[CustomNativeMethod(6, "float", "sger")]
@@ -83,22 +82,20 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		internal static extern void cblas_ssyr2(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, void* x, long incx, void* y, long incy, void* A, long lda);
 		#endregion
 
-
 		#region level 3
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_strsm(MklMatrixLayout Layout, MklBlasSideMode Side, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long M, long N, float alpha, void* A, long lda, void* B, long ldb);
+		internal static extern void cblas_strsm(MklMatrixLayout Layout, MklBlasSideMode Side, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long m, long n, float alpha, void* A, long lda, void* B, long ldb);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_strmm(MklMatrixLayout Layout, MklBlasSideMode Side, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long M, long N, float alpha, void* A, long lda, void* B, long ldb);
+		internal static extern void cblas_strmm(MklMatrixLayout Layout, MklBlasSideMode Side, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long m, long n, float alpha, void* A, long lda, void* B, long ldb);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_sgemm(MklMatrixLayout Layout, MklOperation TransA, MklOperation TransB, long m, long n, long k, float alpha, void* A, long lda, void* B, long ldb, float beta, void* C, long ldc);
 
-		[CustomNativeMethod(6, "Complex<float>", "c", "in", "Complex<float>")]
-		[CustomNativeMethod(6, "Complex<double>", "z", "in", "Complex<double>")]
+		[NativeMethod(6, false, true, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_cgemm3m(MklMatrixLayout Layout, MklOperation TransA, MklOperation TransB, long m, long n, long k, Complex<float> alpha, void* A, long lda, void* B, long ldb, Complex<float> beta, void* C, long ldc);
 
@@ -106,8 +103,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_ssymm(MklMatrixLayout Layout, MklBlasSideMode side, MklFillMode uplo, long m, long n, float alpha, void* A, long lda, void* B, long ldb, float beta, void* C, long ldc);
 
-		[CustomNativeMethod(6, "Complex<float>", "c", "in", "Complex<float>")]
-		[CustomNativeMethod(6, "Complex<double>", "z", "in", "Complex<double>")]
+		[NativeMethod(6, false, true, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_chemm(MklMatrixLayout Layout, MklBlasSideMode side, MklFillMode uplo, long m, long n, Complex<float> alpha, void* A, long lda, void* B, long ldb, Complex<float> beta, void* C, long ldc);
 
@@ -115,8 +111,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_ssyrk(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, float alpha, void* A, long lda, float beta, void* C, long ldc);
 
-		[CustomNativeMethod(6, "Complex<float>", "c", "in", "Complex<float>")]
-		[CustomNativeMethod(6, "Complex<double>", "z", "in", "Complex<double>")]
+		[NativeMethod(6, false, true, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_cherk(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, Complex<float> alpha, void* A, long lda, Complex<float> beta, void* C, long ldc);
 
@@ -124,12 +119,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_ssyr2k(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, float alpha, void* A, long lda, void* B, long ldb, float beta, void* C, long ldc);
 
-		[CustomNativeMethod(6, "Complex<float>", "c", "in", "Complex<float>")]
-		[CustomNativeMethod(6, "Complex<double>", "z", "in", "Complex<double>")]
+		[NativeMethod(6, false, true, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_cher2k(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, Complex<float> alpha, void* A, long lda, void* B, long ldb, Complex<float> beta, void* C, long ldc);
 		#endregion
-
 
 		#region BLAS like
 		[NativeMethod(6)]
@@ -149,474 +142,237 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		internal static extern void MKL_Simatcopy(MklMatrixLayoutChar ordering, MklOperationChar trans, long rows, long cols, float alpha, void* A, long lda);
 		#endregion
 
+		#region MKL vector math
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAdd(long n, void* a, void* b, void* y);
 
-		#region custom
-		/// <summary>
-		/// Multiply or divide the vector <paramref name="a"/> by <paramref name="b"/> in-place
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
-		/// <param name="a">The vector to be in-place multiplied or divided of <paramref name="type"/></param>
-		/// <param name="b">The vector to multiply or divide <paramref name="a"/> of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		/// <param name="multiply">Perform multiply or divide</param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecsMulDiv(DataType type, void* a, void* b, long N, long strideA, long strideB, bool multiply);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAddI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		/// <summary>
-		/// Add the vector <paramref name="a"/> scaled by <paramref name="scalar"/> to <paramref name="b"/> in-place
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
-		/// <param name="scalar">The scalar to multiply of <paramref name="type"/></param>
-		/// <param name="a">The vector to add of <paramref name="type"/></param>
-		/// <param name="b">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecsAdd(DataType type, void* scalar, void* a, void* b, long N, long strideA, long strideB);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsSub(long n, void* a, void* b, void* y);
 
-		/// <summary>
-		/// Check whether the two vectors <paramref name="a"/> and <paramref name="b"/> are element-wise equal
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
-		/// <param name="a">The first vector to compare of <paramref name="type"/></param>
-		/// <param name="b">The second vector to compare of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		/// <returns>The two vectors are element-wise equal</returns>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern bool vecsEq(DataType type, void* a, void* b, long N, long strideA, long strideB);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsSubI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		/// <summary>
-		/// In-place exponentiate the vector <paramref name="a"/> by a scalar exponent <paramref name="p"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="p">The pointer to the scalar exponent of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecPowSameType(DataType type, void* a, void* p, long N, long stride);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsMul(long n, void* a, void* b, void* y);
 
-		/// <summary>
-		/// In-place exponentiate the vector <paramref name="a"/> by a scalar exponent <paramref name="p"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> (must be a complex type)</param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="p">The pointer to the scalar exponent of <paramref name="type"/>'s real corresponding type</param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecPowRealType(DataType type, void* a, void* p, long N, long stride);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsMulI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		/// <summary>
-		/// In-place conjugate the vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecConj(DataType type, void* a, long N, long stride);
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vcConj(long n, void* a, void* y);
 
-		/// <summary>
-		/// Convert the <paramref name="src"/> vector of <paramref name="srcType"/> to the <paramref name="dst"/> vector of <paramref name="dstType"/>
-		/// </summary>
-		/// <param name="srcType">The <see cref="DataType"/> of <paramref name="src"/></param>
-		/// <param name="dstType">The <see cref="DataType"/> of <paramref name="dst"/></param>
-		/// <param name="src">The source vector of <paramref name="srcType"/></param>
-		/// <param name="dst">The destination vector of <paramref name="dstType"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
-		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		/// <param name="toRealByAbs">If the conversion converts a complex type to a real type, whether the down grade elements be of the complexes's absolute values or their real parts.</param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecDataConvert(DataType srcType, DataType dstType, void* src, void* dst, long N, long strideSrc, long strideDst, bool toRealByAbs);
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vcConjI(long n, void* a, long inca, void* y, long incy);
 
-		/// <summary>
-		/// In-place set the values in <paramref name="a"/> whose absolute values are less than or equal to the absolute value of <paramref name="threshold"/> to 0
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="threshold">The pointer to the threshold used to clip the vector <paramref name="a"/> of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecClip(DataType type, void* a, void* threshold, long N, long stride);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAbs(long n, void* a, void* y);
 
-		/// <summary>
-		/// In-place add all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="scalar">The pointer to the scalar to add of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecAddScalar(DataType type, void* a, void* scalar, long N, long stride);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAbsI(long n, void* a, long inca, void* y, long incy);
 
-		/// <summary>
-		/// In-place multiplies all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="scalar">The pointer to the scalar to multiply of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecMulScalar(DataType type, void* a, void* scalar, long N, long stride);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsDiv(long n, void* a, void* b, void* y);
 
-		/// <summary>
-		/// Sums all the elements in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="outSum">The output sum as a pointer of <paramref name="type"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecSum(DataType type, void* a, long N, long stride, void* outSum);
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsDivI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		/// <summary>
-		/// Get the index of the element with minimum absolute value in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <returns>The index of the element</returns>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern long vecArgAbsMin(DataType type, void* a, long N, long stride);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsSqrt(long n, void* a, void* y);
 
-		/// <summary>
-		/// Get the index of the element with maximum absolute value in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <returns>The index of the element</returns>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern long vecArgAbsMax(DataType type, void* a, long N, long stride);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsSqrtI(long n, void* a, long inca, void* y, long incy);
 
-		/// <summary>
-		/// Sums all the elements's absolute values in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <returns>The sum as a <see cref="double"/></returns>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern double vecAbsSum(DataType type, void* a, long N, long stride);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsInvSqrt(long n, void* a, void* y);
 
-		/// <summary>
-		/// Compute the 2-norm of the given vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <returns>The 2-norm as a <see cref="double"/></returns>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern double vecNorm(DataType type, void* a, long N, long stride);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsInvSqrtI(long n, void* a, long inca, void* y, long incy);
 
-		/// <summary>
-		/// Calculate the inner product of vector <paramref name="a"/> and <paramref name="b"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The left vector to be inner product of <paramref name="type"/></param>
-		/// <param name="b">The right vector to be inner product of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		/// <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecDot(DataType type, void* a, void* b, long N, long strideA, long strideB, void* outProd);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsCbrt(long n, void* a, void* y);
 
-		/// <summary>
-		/// Calculate the inner product of the conjugate of vector <paramref name="a"/> and <paramref name="b"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/>, must be a complex type</param>
-		/// <param name="a">The left vector to be inner product of <paramref name="type"/></param>
-		/// <param name="b">The right vector to be inner product of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		/// <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecDotc(DataType type, void* a, void* b, long N, long strideA, long strideB, void* outProd);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsCbrtI(long n, void* a, long inca, void* y, long incy);
 
-		/// <summary>
-		/// Multiplies all the elements in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be multiplied of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="outProd">The output product as a pointer of <paramref name="type"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecProd(DataType type, void* a, long N, long stride, void* outProd);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsInvCbrt(long n, void* a, void* y);
 
-		/// <summary>
-		/// Performs the partial sum from vector <paramref name="src"/> to vector <paramref name="dst"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="src"/> and <paramref name="dst"/></param>
-		/// <param name="src">The source vector of <paramref name="type"/></param>
-		/// <param name="dst">The destination vector of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="inclusive">Perform inclusive (the first element is <paramref name="src"/>[0]) or exclusive (the first element is 0)</param>
-		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
-		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecParSum(DataType type, void* src, void* dst, long N, bool inclusive, long strideSrc, long strideDst);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsInvCbrtI(long n, void* a, long inca, void* y, long incy);
 
-		/// <summary>
-		/// Performs the partial sum from vector <paramref name="src"/> to vector <paramref name="dst"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="src"/> and <paramref name="dst"/></param>
-		/// <param name="src">The source vector of <paramref name="type"/></param>
-		/// <param name="dst">The destination vector of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="inclusive">Perform inclusive (the first element is <paramref name="src"/>[0]) or exclusive (the first element is 1)</param>
-		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
-		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void vecParProd(DataType type, void* src, void* dst, long N, bool inclusive, long strideSrc, long strideDst);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsPow2o3(long n, void* a, void* y);
 
-		/// <summary>
-		/// Performs the Kronecker product of matrix <paramref name="A"/> and <paramref name="B"/> and add the result to <paramref name="dest"/> in-place
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="A"/>, <paramref name="B"/> and <paramref name="dest"/></param>
-		/// <param name="A">The input left matrix of <paramref name="type"/></param>
-		/// <param name="ldA">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rowsA"/></param>
-		/// <param name="rowsA">The number of rows of <paramref name="A"/></param>
-		/// <param name="colsA">The number of columns of <paramref name="A"/></param>
-		/// <param name="B">The input right matrix of <paramref name="type"/></param>
-		/// <param name="ldB">The leading dimension of <paramref name="B"/>, must be at least <paramref name="rowsB"/></param>
-		/// <param name="rowsB">The number of rows of <paramref name="B"/></param>
-		/// <param name="colsB">The number of columns of <paramref name="B"/></param>
-		/// <param name="dest">The destination matrix of <paramref name="type"/></param>
-		/// <param name="ldD">The leading dimension of <paramref name="dest"/></param>
-		/// <param name="alpha">The pointer to the scalar of <paramref name="type"/> to multiply to <paramref name="A"/>'s elements during the computation</param>
-		/// <param name="beta">The pointer to the scalar of <paramref name="type"/> to multiply to <paramref name="dest"/>'s elements during the computation</param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void matKron(DataType type,
-											void* A, long ldA, long rowsA, long colsA,
-											void* B, long ldB, long rowsB, long colsB,
-											void* dest, long ldD, void* alpha, void* beta);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsPow2o3I(long n, void* a, long inca, void* y, long incy);
 
-		/// <summary>
-		/// Makes the matrix <paramref name="A"/> hermitian or symmetric by copying its upper part to/from its lower part
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="A"/></param>
-		/// <param name="A">The matrix to be modified of <paramref name="type"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rows"/></param>
-		/// <param name="rows">The number of rows of <paramref name="A"/></param>
-		/// <param name="upperStored">Whether <paramref name="A"/>'s upper part or its lower part is stored</param>
-		/// <param name="hermA">If <paramref name="type"/> is a complex type, make <paramref name="A"/> hermitian or symmetric</param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void matMakeHerm(DataType type, void* A, long ld, long rows, bool upperStored, bool hermA);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsPow3o2(long n, void* a, void* y);
 
-		/// <summary>
-		/// Clear (set to 0) the matrix <paramref name="A"/>'s upper part or its lower part
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="A"/></param>
-		/// <param name="A">The matrix to be modified of <paramref name="type"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rows"/></param>
-		/// <param name="rows">The number of rows of <paramref name="A"/></param>
-		/// <param name="clearLower">Whether <paramref name="A"/>'s upper part or its lower part shall be preserved</param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void matTriClear(DataType type, void* A, long ld, long rows, bool clearLower);
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsPow3o2I(long n, void* a, long inca, void* y, long incy);
 
-		/// <summary>
-		/// Fill the <paramref name="array"/> with given <paramref name="value"/> of <paramref name="type"/>
-		/// </summary>
-		/// <param name="type">The data type of the array and value</param>
-		/// <param name="array">The array to be filled</param>
-		/// <param name="value">The pointer to the value of <paramref name="type"/> to be filled</param>
-		/// <param name="N">The number of elements of <paramref name="array"/>, in <paramref name="type"/></param>
-		/// <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
-		/// <remarks>Strided filling reduce the performance greatly.</remarks>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static unsafe extern void vecFillVal(DataType type, void* array, void* value, long N, long stride);
-		#endregion
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsPow(long n, void* a, void* b, void* y);
 
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsPowI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsPowx(long n, void* a, float b, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsPowxI(long n, void* a, long inca, float b, void* y, long incy);
+		#endregion;
 
 		#region solver
-		#region LU factorization
+		// LU factorize A
+		[NativeMethod(8)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_sgetrf(MklMatrixLayout matrix_layout, long m, long n, void* A, long lda, void* ipiv);
+		internal static extern MklLapackInfo LAPACKE_sgetrf(MklMatrixLayout matrix_layout, long m, long n, void* A, long lda, long* ipiv);
 
+		// solve A*X=B with LU factorized A
+		[NativeMethod(8)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dgetrf(MklMatrixLayout matrix_layout, long m, long n, void* A, long lda, void* ipiv);
+		internal static extern MklLapackInfo LAPACKE_sgetrs(MklMatrixLayout matrix_layout, MklOperationChar trans, long n, long nrhs, void* A, long lda, long* ipiv, void* B, long ldb);
 
+		// direct solve A*X=B and LU factorize A
+		[NativeMethod(8)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_cgetrf(MklMatrixLayout matrix_layout, long m, long n, void* A, long lda, void* ipiv);
+		internal static extern MklLapackInfo LAPACKE_sgesv(MklMatrixLayout matrix_layout, long n, long nrhs, void* a, long lda, long* ipiv, void* b, long ldb);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zgetrf(MklMatrixLayout matrix_layout, long m, long n, void* A, long lda, void* ipiv);
-		#endregion
-
-		#region LU solve
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_sgetrs(MklMatrixLayout matrix_layout, MklOperationChar trans, long n, long nrhs, void* A, long lda, void* ipiv, void* B, long ldb);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dgetrs(MklMatrixLayout matrix_layout, MklOperationChar trans, long n, long nrhs, void* A, long lda, void* ipiv, void* b, long ldb);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_cgetrs(MklMatrixLayout matrix_layout, MklOperationChar trans, long n, long nrhs, void* A, long lda, void* ipiv, void* b, long ldb);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zgetrs(MklMatrixLayout matrix_layout, MklOperationChar trans, long n, long nrhs, void* A, long lda, void* ipiv, void* b, long ldb);
-		#endregion
-
-		#region direct matrix solve
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_sgesv(MklMatrixLayout matrix_layout, long n, long nrhs, void* a, long lda, void* ipiv, void* b, long ldb);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dgesv(MklMatrixLayout matrix_layout, long n, long nrhs, void* a, long lda, void* ipiv, void* b, long ldb);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_cgesv(MklMatrixLayout matrix_layout, long n, long nrhs, void* a, long lda, void* ipiv, void* b, long ldb);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zgesv(MklMatrixLayout matrix_layout, long n, long nrhs, void* a, long lda, void* ipiv, void* b, long ldb);
-		#endregion
-
-		#region QR factorization
+		// QR factorize
+		[NativeMethod(8)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_sgeqrf(MklMatrixLayout matrix_layout, long m, long n, void* a, long lda, void* tau);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dgeqrf(MklMatrixLayout matrix_layout, long m, long n, void* a, long lda, void* tau);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_cgeqrf(MklMatrixLayout matrix_layout, long m, long n, void* a, long lda, void* tau);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zgeqrf(MklMatrixLayout matrix_layout, long m, long n, void* a, long lda, void* tau);
-		#endregion
-
-		#region QR generate Q
+		// QR generate Q
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_sorgqr(MklMatrixLayout matrix_layout, long m, long n, long k, void* a, long lda, void* tau);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dorgqr(MklMatrixLayout matrix_layout, long m, long n, long k, void* a, long lda, void* tau);
-
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_cungqr(MklMatrixLayout matrix_layout, long m, long n, long k, void* a, long lda, void* tau);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zungqr(MklMatrixLayout matrix_layout, long m, long n, long k, void* a, long lda, void* tau);
-		#endregion
-
-		#region least square solve
+		// least square solve
+		[NativeMethod(8)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_sgels(MklMatrixLayout matrix_layout, MklOperationChar trans, long m, long n, long nrhs, void* a, long lda, void* b, long ldb);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dgels(MklMatrixLayout matrix_layout, MklOperationChar trans, long m, long n, long nrhs, void* a, long lda, void* b, long ldb);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_cgels(MklMatrixLayout matrix_layout, MklOperationChar trans, long m, long n, long nrhs, void* a, long lda, void* b, long ldb);
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zgels(MklMatrixLayout matrix_layout, MklOperationChar trans, long m, long n, long nrhs, void* a, long lda, void* b, long ldb);
-		#endregion
-
-		#region symmetric/Hermitian eigen
+		// symmetric/Hermitian eigen
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_ssyev(MklMatrixLayout matrix_layout, MklVectorModeChar jobz, MklFillModeChar uplo, long n, void* A, long lda, void* w);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dsyev(MklMatrixLayout matrix_layout, MklVectorModeChar jobz, MklFillModeChar uplo, long n, void* A, long lda, void* w);
-
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_cheev(MklMatrixLayout matrix_layout, MklVectorModeChar jobz, MklFillModeChar uplo, long n, void* A, long lda, void* w);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zheev(MklMatrixLayout matrix_layout, MklVectorModeChar jobz, MklFillModeChar uplo, long n, void* A, long lda, void* w);
-		#endregion
-
-		#region general symmetric/hermitian definite eigen
+		// general symmetric/hermitian positive-definite eigen
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_ssygv(MklMatrixLayout matrix_layout, GeneralEigenType itype, MklVectorModeChar jobz, MklFillModeChar uplo, long n, void* a, long lda, void* b, long ldb, void* w);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dsygv(MklMatrixLayout matrix_layout, GeneralEigenType itype, MklVectorModeChar jobz, MklFillModeChar uplo, long n, void* a, long lda, void* b, long ldb, void* w);
-
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_chegv(MklMatrixLayout matrix_layout, GeneralEigenType itype, MklVectorModeChar jobz, MklFillModeChar uplo, long n, void* a, long lda, void* b, long ldb, void* w);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zhegv(MklMatrixLayout matrix_layout, GeneralEigenType itype, MklVectorModeChar jobz, MklFillModeChar uplo, long n, void* a, long lda, void* b, long ldb, void* w);
-		#endregion
-
-		#region non-symmetric eigen
+		// non-symmetric eigen
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_sgeev(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, long n, void* A, long lda, void* wr, void* wi, void* Vl, long ldvl, void* Vr, long ldvr);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dgeev(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, long n, void* A, long lda, void* wr, void* wi, void* Vl, long ldvl, void* Vr, long ldvr);
-
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_cgeev(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, long n, void* A, long lda, void* w, void* Vl, long ldvl, void* Vr, long ldvr);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zgeev(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, long n, void* A, long lda, void* w, void* Vl, long ldvl, void* Vr, long ldvr);
-		#endregion
-
-		#region non-symmetric general eigen
+		// general non-symmetric eigen
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_sggev(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, long n, void* a, long lda, void* b, long ldb, void* alphar, void* alphai, void* beta, void* vl, long ldvl, void* vr, long ldvr);
 
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dggev(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, long n, void* a, long lda, void* b, long ldb, void* alphar, void* alphai, void* beta, void* vl, long ldvl, void* vr, long ldvr);
-
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_cggev(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, long n, void* a, long lda, void* b, long ldb, void* alpha, void* beta, void* vl, long ldvl, void* vr, long ldvr);
 
+		// SVD
+		[NativeMethod(8)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zggev(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, long n, void* a, long lda, void* b, long ldb, void* alpha, void* beta, void* vl, long ldvl, void* vr, long ldvr);
-		#endregion
+		internal static extern MklLapackInfo LAPACKE_sgesvd(MklMatrixLayout matrix_layout, MklSvdModeChar jobu, MklSvdModeChar jobvt, long m, long n, void* A, long lda, void* S, void* U, long ldu, void* Vt, long ldvt, void* superb);
 
-		#region SVD
+		// direct Schur
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_sgesvd(MklMatrixLayout matrix_layout, MklSvdModeChar jobu, MklSvdModeChar jobvt, long m, long n, void* A, long lda, void* S, void* U, long ldu, void* Vt, long ldvt, byte[] superb);
+		internal static extern MklLapackInfo LAPACKE_sgees(MklMatrixLayout matrix_layout, MklVectorModeChar jobv, MklSortModeChar sort, delegate* unmanaged<void*, void*, long> selectFunc, long n, void* A, long lda, out long selected, void* wr, void* wi, void* V, long ldv);
 
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dgesvd(MklMatrixLayout matrix_layout, MklSvdModeChar jobu, MklSvdModeChar jobvt, long m, long n, void* A, long lda, void* S, void* U, long ldu, void* Vt, long ldvt, byte[] superb);
+		internal static extern MklLapackInfo LAPACKE_cgees(MklMatrixLayout matrix_layout, MklVectorModeChar jobv, MklSortModeChar sort, delegate* unmanaged<void*, long> selectFunc, long n, void* A, long lda, out long selected, void* w, void* V, long ldv);
 
+		// direct general Schur
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_cgesvd(MklMatrixLayout matrix_layout, MklSvdModeChar jobu, MklSvdModeChar jobvt, long m, long n, void* A, long lda, void* S, void* U, long ldu, void* Vt, long ldvt, byte[] superb);
+		internal static extern MklLapackInfo LAPACKE_sgges(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, MklSortModeChar sort, delegate* unmanaged<void*, void*, void*, long> selectFunc, long n, void* A, long lda, void* B, long ldb, out long selected, void* alphar, void* alphai, void* beta, void* Vl, long ldvl, void* vr, long ldvr);
 
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zgesvd(MklMatrixLayout matrix_layout, MklSvdModeChar jobu, MklSvdModeChar jobvt, long m, long n, void* A, long lda, void* S, void* U, long ldu, void* Vt, long ldvt, byte[] superb);
-		#endregion
+		internal static extern MklLapackInfo LAPACKE_cgges(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, MklSortModeChar sort, delegate* unmanaged<void*, void*, long> selectFunc, long n, void* A, long lda, void* B, long ldb, out long selected, void* alphar, void* alphai, void* beta, void* Vl, long ldvl, void* vr, long ldvr);
 
-		#region Schur
-		internal delegate long SchurSelect1(void* v);
-		internal delegate long SchurSelect2(void* v1, void* v2);
-
+		// Hessenberg form Schur, iLow == 1 && iHigh == n
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_sgees(MklMatrixLayout matrix_layout, MklVectorModeChar jobv, MklSortModeChar sort, [MarshalAs(UnmanagedType.FunctionPtr)] SchurSelect2? selectFunc, long n, void* A, long lda, out long selected, void* wr, void* wi, void* V, long ldv);
+		internal static extern MklLapackInfo LAPACKE_shseqr(MklMatrixLayout matrix_layout, MklSchurModeChar job, MklVectorModeChar compz, long n, long ilo, long ihi, void* H, long ldh, void* wr, void* wi, void* Z, long ldz);
 
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_dgees(MklMatrixLayout matrix_layout, MklVectorModeChar jobv, MklSortModeChar sort, [MarshalAs(UnmanagedType.FunctionPtr)] SchurSelect2? selectFunc, long n, void* A, long lda, out long selected, void* wr, void* wi, void* V, long ldv);
+		internal static extern MklLapackInfo LAPACKE_chseqr(MklMatrixLayout matrix_layout, MklSchurModeChar job, MklVectorModeChar compz, long n, long ilo, long ihi, void* H, long ldh, void* w, void* Z, long ldz);
 
+		// eigenvectors from Schur, mm == n
+		[NativeMethod(8)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_cgees(MklMatrixLayout matrix_layout, MklVectorModeChar jobv, MklSortModeChar sort, [MarshalAs(UnmanagedType.FunctionPtr)] SchurSelect1? selectFunc, long n, void* A, long lda, out long selected, void* w, void* V, long ldv);
+		internal static extern MklLapackInfo LAPACKE_strevc(MklMatrixLayout matrix_layout, MklSchurEigenvectorModeChar side, MklSchurEigenSelectModeChar howmny, long* select, long n, void* T, long ldt, void* Vl, long ldvl, void* Vr, long ldvr, long mm, out long selected);
 
+		// reorder Schur
+		[NativeMethod(8)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_zgees(MklMatrixLayout matrix_layout, MklVectorModeChar jobv, MklSortModeChar sort, [MarshalAs(UnmanagedType.FunctionPtr)] SchurSelect1? selectFunc, long n, void* A, long lda, out long selected, void* w, void* V, long ldv);
-		#endregion
+		internal static extern MklLapackInfo LAPACKE_strexc(MklMatrixLayout matrix_layout, MklVectorModeChar jobq, long n, void* T, long ldt, void* Q, long ldq, long* rowIndexFrom, long* rowIndexTo);
+
+		// reorder general Schur
+		[NativeMethod(8)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern MklLapackInfo LAPACKE_stgexc(MklMatrixLayout matrix_layout, long wantq, long wantz, long n, void* A, long lda, void* B, long ldb, void* Q, long ldq, void* Z, long ldz, long* rowIndexFrom, long* rowIndexTo);
 		#endregion
 	}
 }
