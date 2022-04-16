@@ -98,12 +98,12 @@ namespace Althea.Backend.CSharp.Random
 			switch (type)
 			{
 				case DataType.RealSingle:
-					LAD.PointWiseCast((uint*)p, (float*)p, len);
-					LAD.VectorModify<float, float, LAD.U_MultiplyScalar>((float*)p, len, *(float*)&scale);
+					LAD.PointWiseCast((uint*)p, 1, (float*)p, 1, len);
+					LAD.VectorModify<float, float, LAD.U_MultiplyScalar>((float*)p, 1, len, *(float*)&scale);
 					break;
 				case DataType.RealDouble:
-					LAD.PointWiseCast((ulong*)p, (double*)p, len);
-					LAD.VectorModify<double, double, LAD.U_MultiplyScalar>((double*)p, len, *(double*)&scale);
+					LAD.PointWiseCast((ulong*)p, 1, (double*)p, 1, len);
+					LAD.VectorModify<double, double, LAD.U_MultiplyScalar>((double*)p, 1, len, *(double*)&scale);
 					break;
 				case DataType.RealInt8:
 				case DataType.RealInt16:
@@ -113,10 +113,10 @@ namespace Althea.Backend.CSharp.Random
 				case DataType.RealUInt16:
 				case DataType.RealUInt32:
 				case DataType.RealUInt64:
-					LAD.VectorModify<T, T, LAD.U_Modulo>((T*)p, len, scale);
+					LAD.VectorModify<T, T, LAD.U_Modulo>((T*)p, 1, len, scale);
 					break;
 			}
-			LAD.VectorModify<T, T, LAD.U_AddScalar>((T*)p, len, offset);
+			LAD.VectorModify<T, T, LAD.U_AddScalar>((T*)p, 1, len, offset);
 		}
 
 		/// <inheritdoc/>

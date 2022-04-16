@@ -40,15 +40,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		#region helpers
 		#region load and simple op
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out int length) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
-			pointer = default; length = 0;
+			pointer = default; length = inc = 0;
 			if (s is null || !s.IsValid())
 				throw new ArgumentNullException(nameof(s));
 			if (stride <= 0)
 				throw new ArgumentOutOfRangeException(nameof(stride), stride, Resources.ParameterError.MustPositive);
-			if (stride != 1)
-				return false;
 			if (!NumberType<T>.IsPrimitive && typeof(T) != typeof(Complex<float>) && typeof(T) != typeof(Complex<double>))
 				return false; // not support
 			if (s is not PureStorage<T, CpuMemoryPointer> ps)
@@ -57,6 +55,8 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (pointer == default)
 				return false; // not support
 			length = (int)ps.Length;
+			inc = (int)stride;
+			length = (length - 1) / inc + 1;
 			return true;
 		}
 
@@ -787,7 +787,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		bool IExtendBlasAbstractApi.GeneralMatricesAdd<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, T β, TS2 B, long ldb, TS3 C, long ldc) => false;
 #pragma warning restore CS8769
 
-		bool IExtendBlasAbstractApi.DiagonalMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, long m, long n, T α, TS1 A, long lda, TS2 x, long strideX, T β, TS3 C, long ldc) => false;
+		bool IExtendBlasAbstractApi.DiagonalMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, MatrixOperation opA, bool conjX, long m, long n, T α, TS1 A, long lda, TS2 x, long strideX, T β, TS3 C, long ldc) => false;
 
 		bool IExtendBlasAbstractApi.MatrixKronecker<T, TS1, TS2, TS3>(long ma, long na, long mb, long nb, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) => false;
 

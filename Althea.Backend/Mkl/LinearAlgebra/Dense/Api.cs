@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Backend.Storage;
@@ -7,195 +6,412 @@ using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
+using Althea.Storage;
 
 
-#pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 {
 	/// <summary>
-	/// The MKL back-end of <see cref="AbstractApi"/> that supports storage locations of CPU.
+	/// The MKL back-end of <see cref="IBlasAbstractApi"/>, <see cref="IExtendBlasAbstractApi"/>, <see cref="IHalfMatrixBlasAbstractApi"/>, <see cref="ILapackAbstractApi"/> that supports storage locations of CPU memory.
 	/// </summary>
-	public class DenseApi : AbstractApi
+	public unsafe class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IHalfMatrixBlasAbstractApi, ILapackAbstractApi
 	{
 		#region basic
-		public DenseApi()
+		void IDisposable.Dispose()
 		{
-			// do nothing
+			this.Disposed = true;
+			GC.SuppressFinalize(this);
 		}
 
-		protected override void Dispose(bool disposeManaged)
+		/// <inheritdoc/>
+		public bool Disposed { get; set; } = false;
+
+		/// <summary>
+		/// Get the default <see cref="Api"/>.
+		/// </summary>
+		internal protected static readonly Api Default = new();
+
+		/// <summary>
+		/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").
+		/// </summary>
+		public bool ComplexGemmUseGemm3M { get; set; } = true;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out long length) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
-			// do nothing
+			pointer = default; length = 0;
+			if (s is null || !s.IsValid())
+				throw new ArgumentNullException(nameof(s));
+			if (stride <= 0)
+				throw new ArgumentOutOfRangeException(nameof(stride), stride, Resources.ParameterError.MustPositive);
+			if (!NumberType<T>.IsPrimitive && typeof(T) != typeof(Complex<float>) && typeof(T) != typeof(Complex<double>))
+				return false; // not support
+			if (s is not PureStorage<T, CpuMemoryPointer> ps)
+				return false; // not support
+			pointer = (T*)ps.Pointer.Pointer.Pointer.ToPointer();
+			if (pointer == default)
+				return false; // not support
+			length = ps.Length;
+			length = (length - 1) / stride + 1;
+			return true;
+		}
+		#endregion
+
+		#region BLAS level 1
+		/// <summary>
+		/// Get the index of the element with horizontal maximum/minimum absolute value (<c>abs(x[i].real) + abs(x[i].imag)</c>) in <paramref name="x"/>
+		/// </summary>
+		/// <typeparam name="T">Any complex data type</typeparam>
+		/// <typeparam name="TS">The storage type</typeparam>
+		/// <param name="max">Whether to get the maximum or minimum</param>
+		/// <param name="x">The vector to get maximum absolute value's index</param>
+		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
+		/// <param name="index">The output real index in <paramref name="x"/></param>
+		/// <returns>Support or not</returns>
+		internal protected static bool HorizontalAbsoluteValueArgMinMax<T, TS>(bool max, TS x, int strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			index = -1;
+			if (!NumberType<T>.IsComplex)
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotComplex);
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			delegate*<long, T*, long, long> func;
+			func = Unmanaged<T>.DataType switch
+			{
+				DataType.ComplexSingle => max ? &NativeMethods.cblas_icamax : &NativeMethods.cblas_icamin,
+				DataType.ComplexDouble => max ? &NativeMethods.cblas_izamax : &NativeMethods.cblas_izamin,
+				_ => null,
+			};
+			if (func is null)
+				return false;
+			index = func(n, px, strideX) - 1;
+			return true;
 		}
 
 		/// <summary>
-		/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM")
+		/// Sum the absolute values (<c>abs(x[i].real) + abs(x[i].imag)</c>) of vector <paramref name="x"/>'s all elements
 		/// </summary>
-		public bool ComplexGemmUseGemm3m {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get;
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			set;
+		/// <typeparam name="T">Any complex data type</typeparam>
+		/// <typeparam name="TS">The storage type</typeparam>
+		/// <param name="x">The vector to be summed</param>
+		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
+		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
+		/// <returns>Support or not</returns>
+		internal protected static bool HorizontalAbsoluteSum<T, TS>(TS x, int strideX, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			sum = T.Zero;
+			T result = T.Zero;
+			if (!NumberType<T>.IsComplex)
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotComplex);
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			if (Unmanaged<T>.DataType == DataType.ComplexSingle)
+				*(float*)&result = NativeMethods.cblas_scasum(n, px, strideX);
+			else if (Unmanaged<T>.DataType == DataType.ComplexDouble)
+				*(double*)&result = NativeMethods.cblas_dzasum(n, px, strideX);
+			else
+				return false;
+			sum = result;
+			return true;
 		}
+
+		/// <inheritdoc/>
+		public virtual bool AbsoluteValueArgMax<T, TS>(TS x, long strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool AbsoluteValueArgMin<T, TS>(TS x, long strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool AbsoluteValueSum<T, TS>(TS x, long strideX, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool Norm<T, TS>(TS x, long strideX, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool Scale<T, TS>(TS x, long strideX, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool Add<T, TS1, TS2>(T α, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool Dot<T, TS1, TS2>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 
+		#region BLAS level 2
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixMultiplyVector<T, TSM, TSV1, TSV2>(MatrixOperation op, long m, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 
-		#region support
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckPointer<T>(Storage<T>? s, out IntPtr ptr, out int length, int stride = 1) where T : unmanaged, INumber<T>
-		{
-			ptr = default; length = 0;
-			if (s is null)
-				return true;
-			var p = s[0];
-			if (s.Count != 1 || p.Pointer is not IMemoryPointer mp || !Supported(mp.Location))
-				return false;
-			long len = p.LengthInBytes / Unmanaged<T>.Size;
-			len = (len - 1) / stride + 1;
-			if (len > int.MaxValue)
-				return false;
-			length = (int)len;
-			ptr = mp.OffsetPointer(p.OffsetInBytes);
-			return true;
-		}
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool hermA, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckPointerLong<T>(Storage<T> s, out IntPtr ptr, out long length, int stride = 1) where T : unmanaged, INumber<T>
-		{
-			ptr = default; length = 0;
-			var p = s[0];
-			if (s.Count != 1 || p.Pointer is not IMemoryPointer mp || !Supported(mp.Location))
-				return false;
-			length = p.LengthInBytes / Unmanaged<T>.Size;
-			length = (length - 1) / stride + 1;
-			ptr = mp.OffsetPointer(p.OffsetInBytes);
-			return true;
-		}
+		/// <inheritdoc/>
+		public virtual bool TriangularMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, TSM A, long lda, T α, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged, INumber<T>
-		{
-			ptr = default; r = c = l = 1;
-			if (A is null) // specific null input
-				return true;
-			var p = A[0];
-			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !Supported(mp.Location))
-				return false;
-			long len = p.LengthInBytes / Unmanaged<T>.Size;
-			if (ld < rows)
-				throw new ArgumentOutOfRangeException(nameof(ld), ld, Resources.Parameter.InvalidValue);
-			if (cols * ld > len)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
-			if (rows > int.MaxValue || cols > int.MaxValue || ld > int.MaxValue)
-				return false;
-			r = (int)rows; c = (int)cols; l = (int)ld;
-			ptr = mp.OffsetPointer(p.OffsetInBytes);
-			return true;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckPointer<T>(Storage<T>? A, MatrixOperation op, long rowsAfterOp, long colsAfterOp, long ld, out MklOperation opMkl, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged, INumber<T>
-		{
-			ptr = default; r = c = l = 1; opMkl = op.Simplify<T>().ToMkl();
-			if (A is null) // specific null input
-				return true;
-			if (opMkl == MklOperation.ConjugateAlone)
-				return false;
-			var p = A[0];
-			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !Supported(mp.Location))
-				return false;
-			long len = p.LengthInBytes / Unmanaged<T>.Size;
-			long cols = op.CanInPlace() ? colsAfterOp : rowsAfterOp;
-			long rows = op.CanInPlace() ? rowsAfterOp : colsAfterOp;
-			if (ld < rows)
-				throw new ArgumentOutOfRangeException(nameof(ld), ld, Resources.Parameter.InvalidValue);
-			if (cols * ld > len)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
-			if (rowsAfterOp > int.MaxValue || colsAfterOp > int.MaxValue || ld > int.MaxValue)
-				return false;
-			r = (int)rowsAfterOp; c = (int)colsAfterOp; l = (int)ld;
-			ptr = mp.OffsetPointer(p.OffsetInBytes);
-			return true;
-		}
+		/// <inheritdoc/>
+		public virtual bool GeneralRankOneUpdate<T, TSM, TSV1, TSV2>(bool conjY, long m, long n, T α, TSV1 x, long strideX, TSV2 y, long strideY, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool CheckPointerLong<T>(Storage<T>? A, long cols, long ld, out IntPtr ptr) where T : unmanaged, INumber<T>
-		{
-			ptr = default;
-			if (A is null) // specific null input
-				return true;
-			var p = A[0];
-			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !Supported(mp.Location))
-				return false;
-			long len = p.LengthInBytes / Unmanaged<T>.Size;
-			if (cols * ld > len)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
-			ptr = mp.OffsetPointer(p.OffsetInBytes);
-			return true;
-		}
+		/// <inheritdoc/>
+		public virtual bool SymmetricRankOneUpdate<T, TSM, TSV>(bool fillUpper, bool conjX, long n, T α, TSV x, long strideX, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV : class, IStorage<T, TSV>;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Supported(StorageLocation location) => location.Type == LocationType.CpuRam;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Supported(CombinationOfLocations location) => location.Count == 1 && Supported(location[0]);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedMatrixBinary(CombinationOfLocations location1, CombinationOfLocations location2)
-			=> Supported(location1) && Supported(location2);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedMatrixTrinary(CombinationOfLocations location1, CombinationOfLocations location2, CombinationOfLocations location3)
-			=> Supported(location1) && Supported(location2) && Supported(location3);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedMatrixUnary(CombinationOfLocations location)
-			=> Supported(location);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedNormalTypeComplexType(Span<CombinationOfLocations> normals, Span<CombinationOfLocations> complexes) => false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedNormalTypeRealType(Span<CombinationOfLocations> normals, Span<CombinationOfLocations> reals)
-		{
-			if (normals.IsEmpty || reals.IsEmpty)
-				return false;
-			for (int i = 0; i < normals.Length; i++)
-			{
-				if (!Supported(normals[i]))
-					return false;
-			}
-			for (int i = 0; i < reals.Length; i++)
-			{
-				if (!Supported(reals[i]))
-					return false;
-			}
-			return true;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedVectorBinary(CombinationOfLocations location1, CombinationOfLocations location2)
-			=> Supported(location1) && Supported(location2);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedVectorBinaryMatrixUnary(CombinationOfLocations vector1, CombinationOfLocations vector2, CombinationOfLocations matrix)
-			=> Supported(vector1) && Supported(vector2) && Supported(matrix);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedVectorUnary(CombinationOfLocations location)
-			=> Supported(location);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedVectorUnaryMatrixBinary(CombinationOfLocations vector, CombinationOfLocations matrix1, CombinationOfLocations matrix2) => Supported(matrix1) && Supported(matrix2) && Supported(vector);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedVectorUnaryMatrixUnary(CombinationOfLocations vector, CombinationOfLocations matrix) => Supported(vector) && Supported(matrix);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedMatrixUnaryIndexUnary(CombinationOfLocations matrix, CombinationOfLocations index, DataType indexType) => Supported(matrix) && (index == default || Supported(index)) && (indexType == DataType.RealInt32 || indexType == DataType.RealUInt32);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedMatrixBinaryIndexUnary(CombinationOfLocations matrix1, CombinationOfLocations matrix2, CombinationOfLocations index, DataType indexType) => Supported(matrix1) && Supported(matrix2) && (index == default || Supported(index)) && (indexType == DataType.RealInt32 || indexType == DataType.RealUInt32);
+		/// <inheritdoc/>
+		public virtual bool SymmetricRankTwoUpdate<T, TSM, TSV1, TSV2>(bool fillUpper, bool conjugate, long n, T α, TSV1 x, long strideX, TSV2 y, long strideY, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
 		#endregion
+
+		#region BLAS level 3
+		/// <inheritdoc/>
+		public virtual bool GeneralMatricesMultiply<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool fillUpper, bool leftA, bool hermA, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool TriangularMatrixSolve<T, TS1, TS2>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool TriangularMatrixMultiply<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricRankKUpdate<T, TS1, TS2>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, TS1 A, long lda, T β, TS2 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricRankTwoKUpdate<T, TS1, TS2, TS3>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralRankKUpdate<T, TS1, TS2, TS3>(MatrixOperation op, bool conjB, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		#endregion
+
+		#region BLAS like
+		/// <inheritdoc/>
+		public virtual bool GeneralMatricesAdd<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool DiagonalMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, MatrixOperation opA, bool conjX, long m, long n, T α, TS1 A, long lda, TS2 x, long strideX, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		#endregion
+
+		#region vector math
+		/// <inheritdoc/>
+		public virtual bool FillWithValue<T, TS>(TS x, long strideX, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool PointWiseEquals<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool PointWiseMultiply<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool PointWiseDivide<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool PointWisePower<T, TS>(TS x, long stride, T p) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool PointWiseConjugate<T, TS>(TS x, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool PointWiseAddScalar<T, TS>(TS x, long stride, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+
+		/// <inheritdoc/>
+		public virtual bool PointWiseTruncate<T, TS>(TS x, long stride, double threshold) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool AggregateSum<T, TS>(TS x, long stride, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool AggregateProduct<T, TS>(TS x, long stride, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool PartialSum<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool PartialProduct<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		#endregion
+
+		#region matrix math
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixFill<T, TS>(TS A, long ld, T value, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatricesEquals<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatricesMultiply<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatricesDivide<T, TS1, TS2>(TS1 A, long lda, TS2 B, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixPower<T, TS>(TS A, long ld, T p, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixAddScalar<T, TS>(TS A, long ld, T scalar, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixCast<TIn, TOut, TSIn, TSOut>(TSIn source, long lds, TSOut destination, long ldd, long rows, long cols) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixTruncate<T, TS>(TS A, long ld, double threshold, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixSum<T, TS>(TS A, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixAbsSum<T, TS>(TS A, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixNorm<T, TS>(TS A, long ld, long rows, long cols, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixProduct<T, TS>(TS A, long ld, long rows, long cols, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixAbsArgMax<T, TS>(TS A, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixAbsArgMin<T, TS>(TS A, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixSumColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralMatrixProductColumns<T, TS1, TS2>(TS1 A, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		#endregion
+
+		#region matrix extended
+		/// <inheritdoc/>
+		public virtual bool MatrixKronecker<T, TS1, TS2, TS3>(long ma, long na, long mb, long nb, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		#endregion
+
+		#region half matrix basic
+		/// <inheritdoc/>
+		public virtual bool TriangularMatricesAdd<T, TS1, TS2, TS3>(bool unitDiag, bool upper, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatricesAdd<T, TS1, TS2, TS3>(bool upperA, bool upperB, bool upperC, MatrixOperation opA, MatrixOperation opB, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool TriangularMatricesMultiply<T, TS1, TS2, TS3>(bool unitDiag, bool upper, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatricesMultiply<T, TS1, TS2, TS3>(bool upperA, bool upperB, bool hermA, bool hermB, MatrixOperation opA, MatrixOperation opB, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixToNormal<T, TS>(bool upper, bool hermitian, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatrixClearPart<T, TS>(bool clearDiag, bool clearLower, long m, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatrixCopy<T, TS1, TS2>(bool upper, bool copyDiag, MatrixOperation opA, long m, long n, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		#endregion
+
+		#region half matrix math
+		/// <inheritdoc/>
+		public virtual bool HalfMatrixFill<T, TS>(bool unitDiag, TS A, bool upperA, long ld, T value, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatricesEquals<T, TS1, TS2>(bool unitDiag, TS1 A, bool upperA, long lda, TS2 B, bool upperB, long ldb, long rows, long cols, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatricesMultiply<T, TS1, TS2>(bool unitDiag, TS1 A, bool upperA, long lda, TS2 B, bool upperB, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatricesDivide<T, TS1, TS2>(bool unitDiag, TS1 A, bool upperA, long lda, TS2 B, bool upperB, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatrixPower<T, TS>(bool unitDiag, TS A, bool upperA, long ld, T p, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatrixAddScalar<T, TS>(bool unitDiag, TS A, bool upperA, long ld, T scalar, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatrixCast<TIn, TOut, TSIn, TSOut>(bool unitDiag, TSIn source, bool upperSrc, long lds, TSOut destination, bool upperDst, long ldd, long rows, long cols) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatrixTruncate<T, TS>(bool unitDiag, TS A, bool upperA, long ld, double threshold, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool TriangularMatrixSum<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool TriangularMatrixAbsSum<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixSum<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixAbsSum<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool TriangularMatrixNorm<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixNorm<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixProduct<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool TriangularMatrixAbsArgMax<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixAbsArgMax<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixAbsArgMin<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <inheritdoc/>
+		public virtual bool HalfMatrixSumColumns<T, TS1, TS2>(bool? herm, bool unitDiag, TS1 A, bool upperA, long ld, long rows, long cols, TS2 x, long stride) where T : 
+		/// <inheritdoc/>
+		public virtual bool SymmetricMatrixProductColumns<T, TS1, TS2>(bool herm, TS1 A, bool upperA, long ld, long n, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1>;
+		#endregion
+
+		#region eigen-problems
+		/// <inheritdoc/>
+		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(SolveVectorMode mode, long n, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3>(GeneralEigenType type, SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(SolveVectorMode mode, long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+
+		/// <inheritdoc/>
+		public virtual bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2? valImagOut, TS2 valDenomOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		#endregion
+
+		#region other decompositions
+		/// <inheritdoc/>
+		public virtual bool SingularValues<T, TS1, TS2, TS3, TS4>(SVDStore storeU, SVDStore storeV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+
+		/// <inheritdoc/>
+		public virtual bool StandardSchurDecomposition<T, TS1, TS2, TS3>(SolveVectorMode mode, long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <inheritdoc/>
+		public virtual bool StandardSchurReorder<T, TInd, TS1, TS2, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TSInd order) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralSchurDecomposition<T, TS1, TS2, TS3, TS4>(SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2? Ul, long ldul, TS4? Ur, long ldur, TS4 valOut, TS4? valImagOut, TS4 valDenomOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+
+		/// <inheritdoc/>
+		public virtual bool GeneralSchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS1 B, long ldb, TS2? Ul, long ldul, TS3? Ur, long ldur, TSInd order) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
+		#endregion
+
+		#region linear solve
+		/// <inheritdoc/>
+		public virtual bool LinearSolveGeneral<T, TS1, TS2>(MatrixOperation op, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		#endregion
+
+		#region QR solve
+		/// <inheritdoc/>
+		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <inheritdoc/>
+		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		#endregion
+
 
 
 		#region BLAS level 1
@@ -207,7 +423,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">The output real index in <paramref name="x"/></param>
 		/// <returns>Support or not</returns>
-		internal protected static unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>
+		internal protected static bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>
 		{
 			index = -1;
 			if (!Const<T>.IsComplex)
@@ -235,7 +451,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">The output real index in <paramref name="x"/></param>
 		/// <returns>Support or not</returns>
-		internal protected static unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>
+		internal protected static bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>
 		{
 			index = -1;
 			if (!Const<T>.IsComplex)
@@ -264,7 +480,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="sum">Output the sum as a <see cref="double"/></param>
 		/// <returns>Support or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>
+		internal protected static bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>
 		{
 			sum = 0;
 			if (!Const<T>.IsComplex)
@@ -321,7 +537,7 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>
+		private static bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>
 		{
 			bool doSum = typeof(Sum) == typeof(bool);
 			sum = 0;
@@ -1785,7 +2001,7 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe int ApproxIndexOfSingle(ComplexSingle* array, int len, ComplexSingle value)
+		internal static int ApproxIndexOfSingle(ComplexSingle* array, int len, ComplexSingle value)
 		{
 			for (int i = 0; i < len; i++)
 			{
@@ -1799,7 +2015,7 @@ internal 		protected static unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, i
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe int ApproxIndexOfDouble(ComplexDouble* array, int len, ComplexDouble value)
+		internal static int ApproxIndexOfDouble(ComplexDouble* array, int len, ComplexDouble value)
 		{
 			for (int i = 0; i < len; i++)
 			{

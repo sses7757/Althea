@@ -103,7 +103,8 @@ namespace Althea.Backend.CSharp.Storage
 		}
 
 		/// <inheritdoc/>
-		public virtual bool MemoryCopy2D<TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth)
+		public virtual bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth)
+			where T : unmanaged, INumber<T>
 			where TP1 : IPointer<TP1>
 			where TP2 : IPointer<TP2>
 		{

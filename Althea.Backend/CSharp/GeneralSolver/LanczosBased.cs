@@ -188,7 +188,7 @@ namespace Althea.Backend.CSharp.Solver
 						T val = βs[i];
 						Unsafe.CopyBlockUnaligned(offDiag + i * size, &val, (uint)size);
 					}
-					Mkl.LinearAlgebra.Dense.DenseApi.TridiagEigen(SolveVectorMode.Vector, N, diag, offDiag, matPtr, eigvec.LeadDim);
+					Mkl.LinearAlgebra.Dense.Api.TridiagEigen(SolveVectorMode.Vector, N, diag, offDiag, matPtr, eigvec.LeadDim);
 					for (int i = 0; i < N; i++)
 					{
 						Unsafe.CopyBlockUnaligned(valPtr + i, diag + i * size, (uint)size);
@@ -199,7 +199,7 @@ namespace Althea.Backend.CSharp.Solver
 					αs.CopyTo(eigval);
 					T* offDiag = stackalloc T[N];
 					βs.CopyTo(new(offDiag, N));
-					Mkl.LinearAlgebra.Dense.DenseApi.TridiagEigen(SolveVectorMode.Vector, N, eigval, offDiag, matPtr, eigvec.LeadDim);
+					Mkl.LinearAlgebra.Dense.Api.TridiagEigen(SolveVectorMode.Vector, N, eigval, offDiag, matPtr, eigvec.LeadDim);
 				}
 			}
 		}

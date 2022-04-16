@@ -39,6 +39,10 @@ namespace Althea.Helpers
 			/// The given type is not a real type
 			/// </summary>
 			NotReal,
+			/// <summary>
+			/// The given type is not a complex type
+			/// </summary>
+			NotComplex,
 		}
 
 		/// <summary>
@@ -112,6 +116,7 @@ namespace Althea.Helpers
 				MismatchReason.NotInteger => Resources.OtherError.MismatchNotInteger,
 				MismatchReason.NotFloat => Resources.OtherError.MismatchNotFloat,
 				MismatchReason.NotReal => Resources.OtherError.MismatchNotReal,
+				MismatchReason.NotComplex => Resources.OtherError.MismatchNotComplex,
 				_ => Resources.OtherError.MismatchOtherReason
 			};
 			string? fromString = from.GetGenericString(), toString = to?.GetGenericString();

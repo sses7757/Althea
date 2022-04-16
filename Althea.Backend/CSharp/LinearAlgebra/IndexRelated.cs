@@ -15,21 +15,23 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 	{
 		#region check
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointerIndexType<T, TS>(TS s, long stride, out T* pointer, out int length) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointerIndexType<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!Unmanaged<T>.DataType.IsInteger())
 			{
 				pointer = default; length = 0;
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);
 			}
-			return GetPointer(s, stride, out pointer, out length);
+			return GetPointer(s, stride, out pointer, out length, out inc);
 		}
 		#endregion
 
 		#region find
 		public virtual partial bool Sort<T, TS>(TS array, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
-			if (!GetPointer(array, stride, out T* ptr, out int length))
+			if (!GetPointer(array, stride, out T* ptr, out int length, out int inc))
+				return false;
+			if (inc != 1)
 				return false;
 			new Span<T>(ptr, length).Sort();
 			return true;
@@ -37,12 +39,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		public virtual partial bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, INumber<TOther> where TS2 : class, IStorage<TOther, TS2>
 		{
-			if (!GetPointer(keys, strideKeys, out T* k, out int length))
+			if (!GetPointer(keys, strideKeys, out T* k, out int length, out int incK))
 				return false;
-			if (!GetPointer(values, strideValues, out TOther* v, out int length2))
+			if (!GetPointer(values, strideValues, out TOther* v, out int length2, out int incV))
 				return false;
 			if (length != length2)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
+			if (incK != 1 || incV != 1)
+				return false;
 			new Span<T>(k, length).Sort(new Span<TOther>(v, length));
 			return true;
 		}
@@ -50,22 +54,76 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		public virtual partial bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			minmax = default;
-			if (!GetPointer(array, stride, out T* ptr, out int length))
+			if (!GetPointer(array, stride, out T* ptr, out int length, out int inc))
 				return false;
-			minmax.Min = VectorMinMaxReal<T, ulong>(ptr, length);
-			minmax.Max = VectorMinMaxReal<T, long>(ptr, length);
+			if (inc == 1)
+			{
+				minmax.Min = VectorMinMaxReal<T, ulong>(ptr, length);
+				minmax.Max = VectorMinMaxReal<T, long>(ptr, length);
+			}
+			else
+			{
+				if (!VectorMinMaxManaged<T, ulong>(ptr, inc, length, out minmax.Min))
+					return false;
+				if (!VectorMinMaxManaged<T, long>(ptr, inc, length, out minmax.Max))
+					return false;
+			}
 			return true;
+		}
+
+		private static int BinarySearch<T>(T* x, int incx, int length, T value) where T : unmanaged, INumber<T>
+		{
+			int left = 0;
+			int right = (length - 1) * incx;
+			while (left <= right)
+			{
+				int mid = (int)((uint)(right + left) >> 1);
+				int compare = value.CompareTo(x[mid]);
+				if (compare == 0)
+				{
+					return mid;
+				}
+				if (compare > 0)
+				{
+					left = mid + incx;
+				}
+				else
+				{
+					right = mid - incx;
+				}
+			}
+			return ~left;
 		}
 
 		public virtual partial bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			find = -1;
-			if (!GetPointer(array, stride, out T* ptr, out int length))
+			if (!GetPointer(array, stride, out T* ptr, out int length, out int inc))
 				return false;
-			if (sorted)
-				find = new ReadOnlySpan<T>(ptr, length).BinarySearch(value);
+			if (inc == 1)
+			{
+				if (sorted)
+					find = new ReadOnlySpan<T>(ptr, length).BinarySearch(value);
+				else
+					find = new ReadOnlySpan<T>(ptr, length).IndexOf(value);
+			}
 			else
-				find = new ReadOnlySpan<T>(ptr, length).IndexOf(value);
+			{
+				if (sorted)
+					find = BinarySearch(ptr, inc, length, value);
+				else
+				{
+					find = -1;
+					for (int i = 0, ix = 0; i < length; i++, ix += inc)
+					{
+						if (ptr[ix] == value)
+						{
+							find = i;
+							break;
+						}	
+					}
+				}
+			}
 			return true;
 		}
 		#endregion
@@ -93,7 +151,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (found || lengthLeft > 0)
 			{
 				int len = found ? Vector<T>.Count : lengthLeft;
-				int find = VectorBoundManaged<T, Lower>(x + offset, len, value);
+				int find = VectorBoundManaged<T, Lower>(x + offset, 1, len, value);
 				if (found)
 				{
 					return find + offset;
@@ -111,12 +169,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int VectorBoundManaged<T, Lower>(T* x, int length, T value) where T : unmanaged, INumber<T>
+		private static int VectorBoundManaged<T, Lower>(T* x, int incx, int length, T value) where T : unmanaged, INumber<T>
 		{
 			bool lower = typeof(Lower) == typeof(bool);
-			for (int i = 0; i < length; i++)
+			for (int i = 0, ix = 0; i < length; i++, ix += incx)
 			{
-				T current = x[i];
+				T current = x[ix];
 				if ((lower && current >= value) || (!lower && current > value))
 				{
 					return i;
@@ -129,12 +187,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		public virtual partial bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			index = -1;
-			if (!GetPointer(array, stride, out T* x, out int length))
+			if (!GetPointer(array, stride, out T* x, out int length, out int inc))
 				return false;
 			if (length == 0)
 				return true;
 
-			if (Vector.IsHardwareAccelerated && length > Vector<T>.Count * 4)
+			if (inc == 1 && Vector.IsHardwareAccelerated && length > Vector<T>.Count * 4)
 			{
 				if (lowerBound)
 					index = VectorBound<T, bool>(x, length, value);
@@ -144,9 +202,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			else
 			{
 				if (lowerBound)
-					index = VectorBoundManaged<T, bool>(x, length, value);
+					index = VectorBoundManaged<T, bool>(x, inc, length, value);
 				else
-					index = VectorBoundManaged<T, byte>(x, length, value);
+					index = VectorBoundManaged<T, byte>(x, inc, length, value);
 			}
 			return true;
 		}
@@ -174,9 +232,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInteger<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, IBinaryInteger<TOut> where TSOut : class, IStorage<TOut, TSOut>
 		{
-			if (!GetPointerIndexType(array, 1, out T* x, out int lenx))
+			if (!GetPointerIndexType(array, 1, out T* x, out int lenx, out _))
 				return false;
-			if (!GetPointerIndexType(target, 1, out TOut* y, out int leny))
+			if (!GetPointerIndexType(target, 1, out TOut* y, out int leny, out _))
 				return false;
 			if (T.Create(leny) < end - start)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(target));
@@ -195,9 +253,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) where T : unmanaged, IBinaryInteger<T> where TOut : unmanaged, IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>
 		{
-			if (!GetPointerIndexType(bounds, 1, out T* x, out int lenx))
+			if (!GetPointerIndexType(bounds, 1, out T* x, out int lenx, out _))
 				return false;
-			if (!GetPointerIndexType(target, 1, out TOut* y, out int leny))
+			if (!GetPointerIndexType(target, 1, out TOut* y, out int leny, out _))
 				return false;
 			if (lowerBound)
 			{	// the 'lower' bound array has to contain the length information as well
@@ -232,9 +290,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		#region sparse vector
 		public virtual partial bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			if (!GetPointer(x, 1, out T* px, out int length))
+			if (!GetPointer(x, 1, out T* px, out int length, out _))
 				return false;
-			if (!GetPointerIndexType(positions, 1, out TInd* pp, out int lengthPos))
+			if (!GetPointerIndexType(positions, 1, out TInd* pp, out int lengthPos, out _))
 				return false;
 			if (length < lengthPos)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(positions));
@@ -275,11 +333,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		public virtual partial bool VectorSetValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			if (!GetPointer(x, 1, out T* px, out int length))
+			if (!GetPointer(x, 1, out T* px, out int length, out _))
 				return false;
-			if (!GetPointer(values, 1, out T* py, out int length2))
+			if (!GetPointer(values, 1, out T* py, out int length2, out _))
 				return false;
-			if (!GetPointerIndexType(positions, 1, out TInd* pp, out int lengthPos))
+			if (!GetPointerIndexType(positions, 1, out TInd* pp, out int lengthPos, out _))
 				return false;
 			if (length < lengthPos || length2 != lengthPos)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(positions));
@@ -320,11 +378,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		public virtual partial bool VectorGatherValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			if (!GetPointer(x, 1, out T* px, out int length))
+			if (!GetPointer(x, 1, out T* px, out int length, out _))
 				return false;
-			if (!GetPointer(values, 1, out T* py, out int length2))
+			if (!GetPointer(values, 1, out T* py, out int length2, out _))
 				return false;
-			if (!GetPointerIndexType(positions, 1, out TInd* pp, out int lengthPos))
+			if (!GetPointerIndexType(positions, 1, out TInd* pp, out int lengthPos, out _))
 				return false;
 			if (length < lengthPos || length2 != lengthPos)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(positions));
@@ -386,9 +444,8 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(y));
 			if (!y.IndexStorages.IsEmpty && y.IndexStorages[0].Length != y.ValueStorages[0].Length)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(y));
-			if (!GetPointer(x, strideX, out T* px, out int length))
+			if (!GetPointer(x, strideX, out T* px, out int length, out int inc))
 				return false;
-			int inc = (int)strideX;
 			if (y.Size.IsEmpty)
 			{
 				long len = length;
@@ -397,9 +454,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			T thre = Math.Abs(threshold).As<double, T>();
 			int nnz = 0;
-			for (int i = 0; i < length; i++)
+			for (int i = 0, ix = 0; i < length; i++, ix += inc)
 			{
-				if (T.Abs(px[i * inc]) <= thre)
+				if (T.Abs(px[ix]) <= thre)
 					nnz++;
 			}
 			T* py;
@@ -411,11 +468,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else
 			{
-				if (!GetPointer(y.ValueStorages[0], 1, out py, out int len))
+				if (!GetPointer(y.ValueStorages[0], 1, out py, out int len, out _))
 					return false;
 				if (len != nnz)
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(y));
-				if (!GetPointerIndexType(y.IndexStorages[0], 1, out pp, out len))
+				if (!GetPointerIndexType(y.IndexStorages[0], 1, out pp, out len, out _))
 					return false;
 				if (len != nnz)
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(y));
@@ -423,9 +480,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			nnz = 0;
 			if (sizeof(TInd) == 4)
 			{
-				for (int i = 0; i < length; i++)
+				for (int i = 0, ix = 0; i < length; i++, ix += inc)
 				{
-					var vx = px[i * inc];
+					var vx = px[ix];
 					if (T.Abs(vx) <= thre)
 					{
 						py[nnz] = vx;
@@ -435,9 +492,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else
 			{
-				for (long i = 0; i < length; i++)
+				for (long i = 0, ix = 0; i < length; i++, ix += strideX)
 				{
-					var vx = px[i * strideX];
+					var vx = px[ix];
 					if (T.Abs(vx) <= thre)
 					{
 						py[nnz] = vx;

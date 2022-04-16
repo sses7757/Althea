@@ -20,11 +20,6 @@ namespace Althea
 		/// </summary>
 		public bool Disposed { get; protected set; }
 
-		/// <summary>
-		/// When implemented by a derived class, get the <see cref="JsonConverter{T}"/> used to serialize it (deserialization is done via default of <see cref="JsonSerializer"/> or <see cref="JsonConstructorAttribute"/>). The default implementation simply returns null.
-		/// </summary>
-		protected internal virtual JsonConverter<TApi>? CurrentConverter => null;
-
 		private delegate TApi CreateDelegate();
 
 		private static readonly Dictionary<Type, CreateDelegate> CreateDelegates = new();

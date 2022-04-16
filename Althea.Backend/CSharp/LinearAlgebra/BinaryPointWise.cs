@@ -18,9 +18,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			equals = false;
 			if (x.Length != y.Length)
 				return true;
-			if (!GetPointer(x, strideX, out T* px, out int length))
+			if (!GetPointer(x, strideX, out T* px, out int length, out int incx))
 				return false;
-			if (!GetPointer(y, strideY, out T* py, out int length2))
+			if (!GetPointer(y, strideY, out T* py, out int length2, out int incy))
 				return false;
 			if (px == py)
 			{
@@ -28,19 +28,36 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			length = Math.Min(length, length2);
 
-			if (Unmanaged<T>.DataType.IsInteger())
+			if (incx == 1 && incy == 1)
 			{
-				length *= sizeof(T);
-				equals = new ReadOnlySpan<byte>(px, length).SequenceEqual(new(py, length));
+				if (Unmanaged<T>.DataType.IsInteger())
+				{
+					length *= sizeof(T);
+					equals = new ReadOnlySpan<byte>(px, length).SequenceEqual(new(py, length));
+				}
+				else
+				{
+					if (typeof(T) == typeof(float) || typeof(T) == typeof(double))
+						equals = new ReadOnlySpan<T>(px, length).SequenceEqual(new(py, length));
+					else if (typeof(T) == typeof(Complex<float>))
+						equals = new ReadOnlySpan<float>(px, length * 2).SequenceEqual(new(py, length * 2));
+					else if (typeof(T) == typeof(Complex<double>))
+						equals = new ReadOnlySpan<double>(px, length * 2).SequenceEqual(new(py, length * 2));
+					else
+						return false;
+				}
 			}
 			else
 			{
-				if (typeof(T) == typeof(float) || typeof(T) == typeof(double))
-					equals = new ReadOnlySpan<T>(px, length).SequenceEqual(new(py, length));
-				else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<double>))
-					equals = new ReadOnlySpan<T>(px, length * 2).SequenceEqual(new(py, length * 2));
-				else
-					return false;
+				equals = true;
+				for (int i = 0, ix = 0, iy = 0; i < length; i++, ix += incx, iy += incy)
+				{
+					if (px[ix] != py[iy])
+					{
+						equals = false;
+						break;
+					}
+				}
 			}
 			return true;
 		}
@@ -61,7 +78,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorsBinaryManaged<T, Op>(T* x, T* y, int length, T scalar) where T : unmanaged, INumber<T>
+		private static void VectorsBinaryManaged<T, Op>(T* x, int incx, T* y, int incy, int length, T scalar) where T : unmanaged, INumber<T>
 		{
 			BinaryModify op;
 			if (typeof(Op) == typeof(B_Multiply))
@@ -73,9 +90,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			else
 				op = BinaryModify.AddScaled;
 
-			for (int i = 0; i < length; i++)
+			for (int i = 0, ix = 0, iy = 0; i < length; i++, ix += incx, iy += incy)
 			{
-				T a = x[i], b = y[i];
+				T a = x[ix], b = y[iy];
 				T v;
 				// floating point FMA accelerate
 				if (typeof(T) == typeof(float) && op == BinaryModify.AddScaled)
@@ -185,7 +202,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorsBinaryManaged<T, Op>(x + offset, y + offset, lengthLeft, scalar);
+				VectorsBinaryManaged<T, Op>(x + offset, 1, y + offset, 1, lengthLeft, scalar);
 			}
 		}
 
@@ -239,7 +256,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorsBinaryManaged<Complex<float>, Op>(x + offset, y + offset, lengthLeft, scalar);
+				VectorsBinaryManaged<Complex<float>, Op>(x + offset, 1, y + offset, 1, lengthLeft, scalar);
 			}
 		}
 
@@ -293,16 +310,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorsBinaryManaged<Complex<double>, Op>(x + offset, y + offset, lengthLeft, scalar);
+				VectorsBinaryManaged<Complex<double>, Op>(x + offset, 1, y + offset, 1, lengthLeft, scalar);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static bool VectorsBinary<T, TS1, TS2, Op>(TS1 x, long strideX, TS2 y, long strideY, T scalar) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
-			if (!GetPointer(x, strideX, out T* px, out int lenx))
+			if (!GetPointer(x, strideX, out T* px, out int lenx, out int incx))
 				return false;
-			if (!GetPointer(y, strideY, out T* py, out int leny))
+			if (!GetPointer(y, strideY, out T* py, out int leny, out int incy))
 				return false;
 			// shortcuts
 			int length = Math.Min(lenx, leny);
@@ -322,15 +339,15 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				return Default.Scale(x, 1, scalar + T.One);
 			}
 			// normal case
-			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
+			if (incx != 1 || incy != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
 			{   // no SIMD or too short
-				VectorsBinaryManaged<T, Op>(px, py, length, scalar);
+				VectorsBinaryManaged<T, Op>(px, incx, py, incy, length, scalar);
 			}
 			else if (NumberType<T>.IsComplex)
 			{
 				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)
 				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
-					VectorsBinaryManaged<T, Op>(px, py, length, scalar);
+					VectorsBinaryManaged<T, Op>(px, 1, py, 1, length, scalar);
 				}
 				else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
 				{
@@ -828,11 +845,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		#endregion
 		
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorCastManaged<T, U>(T* src, U* dst, int length) where T : unmanaged, INumber<T> where U : unmanaged, INumber<U>
+		private static void VectorCastManaged<T, U>(T* x, int incx, U* y, int incy, int length) where T : unmanaged, INumber<T> where U : unmanaged, INumber<U>
 		{
-			for (int i = 0; i < length; i++)
+			for (int i = 0, ix = 0, iy = 0; i < length; i++, ix += incx, iy += incy)
 			{
-				dst[i] = src[i].As<T, U>();
+				y[i] = x[i].As<T, U>();
 			}
 		}
 
@@ -941,7 +958,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorCastManaged(src + offset, dst + offset, lengthLeft);
+				VectorCastManaged(src + offset, 1, dst + offset, 1, lengthLeft);
 			}
 		}
 
@@ -1007,7 +1024,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorCastManaged(src + offset, dst + offset, lengthLeft);
+				VectorCastManaged(src + offset, 1, dst + offset, 1, lengthLeft);
 			}
 		}
 
@@ -1070,12 +1087,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorCastManaged(src + offset, dst + offset, lengthLeft);
+				VectorCastManaged(src + offset, 1, dst + offset, 1, lengthLeft);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool PointWiseCast<TIn, TOut>(TIn* px, TOut* py, int length) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut>
+		internal static bool PointWiseCast<TIn, TOut>(TIn* px, int incx, TOut* py, int incy, int length) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut>
 		{
 			// shortcuts
 			if (typeof(TIn) == typeof(TOut) && px == py)
@@ -1088,9 +1105,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				return true;
 			}
 			// normal case
-			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / Math.Max(sizeof(TIn), sizeof(TOut)) * 4))
+			if (incx != 1 || incy != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / Math.Max(sizeof(TIn), sizeof(TOut)) * 4))
 			{   // no SIMD or too short
-				VectorCastManaged(px, py, length);
+				VectorCastManaged(px, incx, py, incy, length);
 			}
 			else if (!NumberType<TIn>.IsComplex && !NumberType<TOut>.IsComplex)
 			{
@@ -1100,7 +1117,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{   // need complex abs
 				if (Unmanaged<TIn>.DataType.IsInteger() || !Avx.IsSupported)
 				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
-					VectorCastManaged(px, py, length);
+					VectorCastManaged(px, 1, py, 1, length);
 				}
 				else if (typeof(TIn) == typeof(Complex<float>) || typeof(TIn) == typeof(Complex<float>))
 				{
@@ -1115,7 +1132,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				if (!Avx2.IsSupported)
 				{   // no AVX2's Permute4x64 and Unpack (Vector<T> has not corresponding implementation yet)
-					VectorCastManaged(px, py, length);
+					VectorCastManaged(px, 1, py, 1, length);
 				}
 				if (typeof(TOut) == typeof(ComplexInteger<byte>))
 					VectorCastReal2Comp(px, (byte*)py, length);
@@ -1147,11 +1164,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		public virtual partial bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>
 		{
-			if (!GetPointer(source, strideSource, out TIn* px, out int lenx))
+			if (!GetPointer(source, strideSource, out TIn* px, out int lenx, out int incx))
 				return false;
-			if (!GetPointer(destination, strideDestination, out TOut* py, out int leny))
+			if (!GetPointer(destination, strideDestination, out TOut* py, out int leny, out int incy))
 				return false;
-			return PointWiseCast(px, py, Math.Min(lenx, leny));
+			return PointWiseCast(px, incx, py, incy, Math.Min(lenx, leny));
 		}
 		#endregion
 	}

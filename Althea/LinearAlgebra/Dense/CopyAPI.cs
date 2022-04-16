@@ -21,12 +21,13 @@ namespace Althea.LinearAlgebra.Dense
 		/// <summary>
 		/// When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
 		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TP1">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
 		/// <typeparam name="TP2">A pointer type that implements <see cref="IPointer{TSelf}"/></typeparam>
 		/// <param name="source">The source pointer</param>
-		/// <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
+		/// <param name="sourceLD">The source array actual height (actual leading dimension) in <typeparamref name="T"/></param>
 		/// <param name="destination">The destination pointer</param>
-		/// <param name="destinationLD">The destination array actual height (actual leading dimension) in bytes</param>
+		/// <param name="destinationLD">The destination array actual height (actual leading dimension) in <typeparamref name="T"/></param>
 		/// <param name="height">The height to copy in bytes</param>
 		/// <param name="width">The width to copy in the real type, if it is 0, 2D block as large as possible shall be copied</param>
 		/// <param name="copyWidth">Output the width that actually copied</param>
@@ -39,8 +40,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// or <c><paramref name="sourceLD"/> and <paramref name="width"/> indicate size larger than <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
 		/// or <c><paramref name="destinationLD"/> and <paramref name="width"/> indicate size larger than <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
-		[AbstractApiMethod(true)]
-		public abstract bool MemoryCopy2D<TP1, TP2>(PointerSegment<TP1> source, [DuplicateTParameter] long sourceLD, PointerSegment<TP2> destination, [DuplicateTParameter] long destinationLD, [DuplicateTParameter] long height, long width, out long copyWidth) where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
+		[AbstractApiMethod]
+		public abstract bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
 
 		/// <summary>
 		/// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
@@ -73,7 +74,7 @@ namespace Althea.LinearAlgebra.Dense
 #pragma warning disable CS8601
 		internal static readonly MethodInfo SizeOfPointerMethod = typeof(IStorage).GetMethod(nameof(IStorage.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null);
 #pragma warning restore CS8601
-		private static Action<TS1, TS2, long, long, long, long> GetCopy2DMethod<TS1, TS2>() where TS1 : class, IStorage where TS2 : class, IStorage
+		private static Action<TS1, TS2, long, long, long, long> GetCopy2DMethod<T, TS1, TS2>() where T : unmanaged, INumber<T> where TS1 : class, IStorage where TS2 : class, IStorage
 		{
 			Type type1 = typeof(TS1), type2 = typeof(TS2);
 			MethodInfo[] pointerGetters1 = TS2.PointerGetters, pointerGetters2 = TS2.PointerGetters;
@@ -112,7 +113,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				for (int j = 0; j < pointerGetters2.Length; j++)
 				{
-					var copyMethod = typeof(ApiSelector).GetMethod(nameof(CopyApiSelector.MemoryCopy2D), 2, BindingFlags.Public | BindingFlags.Static, null, new[] { pointerGetters1[i].ReturnType, typeof(long), pointerGetters2[j].ReturnType, typeof(long), typeof(long), typeof(long) }, null)?.MakeGenericMethod(pointerGetters1[i].ReturnType.GenericTypeArguments[0], pointerGetters2[j].ReturnType.GenericTypeArguments[0]);
+					var copyMethod = typeof(ApiSelector).GetMethod(nameof(CopyApiSelector.MemoryCopy2D), 3, BindingFlags.Public | BindingFlags.Static, null, new[] { pointerGetters1[i].ReturnType, typeof(long), pointerGetters2[j].ReturnType, typeof(long), typeof(long), typeof(long) }, null)?.MakeGenericMethod(typeof(T), pointerGetters1[i].ReturnType.GenericTypeArguments[0], pointerGetters2[j].ReturnType.GenericTypeArguments[0]);
 					if (copyMethod is null)
 						throw new InvalidOperationException(StorageError.InvalidPointerGetter);
 					pointerCopy2D[i, j] = copyMethod;
@@ -514,12 +515,14 @@ namespace Althea.LinearAlgebra.Dense
 
 			method.DefineParameter(1, ParameterAttributes.In, "source");
 			method.DefineParameter(2, ParameterAttributes.In, "destination");
-			method.DefineParameter(3, ParameterAttributes.In, "sourceLeadDim");
-			method.DefineParameter(4, ParameterAttributes.In, "destinationLeadDim");
+			method.DefineParameter(3, ParameterAttributes.In, "sourceLeadDimBytes");
+			method.DefineParameter(4, ParameterAttributes.In, "destinationLeadDimBytes");
 			method.DefineParameter(5, ParameterAttributes.In, "height");
 			method.DefineParameter(6, ParameterAttributes.In, "width");
 			return method.CreateDelegate<Action<TS1, TS2, long, long, long, long>>();
 		}
+
+
 		private static Action<TS1, TS2, long, long> GetCopyStridedMethod<T, TS1, TS2>() where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			Type type1 = typeof(TS1), type2 = typeof(TS2);
@@ -999,10 +1002,10 @@ namespace Althea.LinearAlgebra.Dense
 			RuntimeTypeHandle handle1 = typeof(TS1).TypeHandle, handle2 = typeof(TS2).TypeHandle;
 			if (copy2DFunc.TryGetValue((handle1, handle2), out var copier))
 				goto FINAL;
-			copier = GetCopy2DMethod<TS1, TS2>();
+			copier = GetCopy2DMethod<T, TS1, TS2>();
 			copy2DFunc[(handle1, handle2)] = copier;
 		FINAL:
-			((Action<TS1, TS2, long, long, long, long>)copier).Invoke(source, destination, sourceLD * Unmanaged<T>.Size, destinationLD * Unmanaged<T>.Size, height * Unmanaged<T>.Size, width);
+			((Action<TS1, TS2, long, long, long, long>)copier).Invoke(source, destination, sourceLD * Unmanaged<T>.Size, destinationLD * Unmanaged<T>.Size, height, width);
 		}
 
 		/// <summary>

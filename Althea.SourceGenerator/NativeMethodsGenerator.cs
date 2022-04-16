@@ -113,29 +113,31 @@ namespace {ns.Name}
 							break;
 						}
 					}
+					bool removeReturn = false;
+					string methodMain = null, identifier = null;
 					for (int i = 0; i < typeNames.Length; i++)
 					{
 						// change identifier
-						string identifier = method.Identifier.ToString();
+						identifier = method.Identifier.ToString();
 						identifier = identifier.Substring(0, typeCharPos) + typeChars[i] + identifier.Substring(typeCharPos + typeChars[orgInd].Length);
 						// add method declaration
 						var newAttrs = method.RemoveAttribute(attributeName);
 						var newMethod = method.WithAttributeLists(newAttrs);
-						string methodMain = newMethod.ToString();
+						methodMain = newMethod.ToString();
 						methodMain = methodMain.Replace(method.Identifier.ToString() + "(", identifier + "(")
 											   .Replace(", " + typeNames[orgInd], ", " + typeNames[i])
 											   .Replace("," + typeNames[orgInd], ", " + typeNames[i])
 											   .Replace("(" + typeNames[orgInd], "(" + typeNames[i]);
 						if (typeInputModifer[i] != "")
 						{
-							methodMain = methodMain.Replace(", " + typeNames[i], ", " + typeInputModifer[i] + typeNames[i])
-												   .Replace("," + typeNames[i], ", " + typeInputModifer[i] + typeNames[i])
-												   .Replace("(" + typeNames[i], "(" + typeInputModifer[i] + typeNames[i]);
+							methodMain = Regex.Replace(methodMain, @", ?" + typeNames[i] + @"([^\*])", ", " + typeInputModifer[i] + typeNames[i] + @"$1");
+							methodMain = Regex.Replace(methodMain, @"\(" + typeNames[i] + @"([^\*])", "(" + typeInputModifer[i] + typeNames[i] + @"$1");
 						}
 						if (typeRefReturn[i])
 						{
 							methodMain = methodMain.Replace(");", $", out {typeReturn[i]} result);")
 												   .Replace(typeReturn[orgInd] + " " + identifier, "void " + identifier);
+							removeReturn = true;
 						}
 						else
 						{
@@ -144,6 +146,28 @@ namespace {ns.Name}
 						methodMain = Regex.Replace(methodMain, @"\[\]\r?\n", "");
 						methodMain = Regex.Replace(methodMain, @"\t{3,}", "\t\t");
 						generated += methodMain + Environment.NewLine + Environment.NewLine;
+					}
+					if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains(", " + typeNames[typeNames.Length - 1]))
+					{
+						string newIdentifier = method.Identifier.ToString();
+						newIdentifier = newIdentifier.Substring(0, typeCharPos) + newIdentifier.Substring(typeCharPos + typeChars[orgInd].Length);
+						string newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
+						newParams = newParams.Substring(0, newParams.Length - 1)
+											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
+											 .Replace("in " + typeNames[typeNames.Length - 1], "T");
+						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, INumber<T>;";
+						generated += Environment.NewLine + Environment.NewLine;
+					}
+					if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains("in " + typeNames[typeNames.Length - 1]))
+					{
+						string newIdentifier = method.Identifier.ToString();
+						newIdentifier = newIdentifier.Substring(0, typeCharPos) + newIdentifier.Substring(typeCharPos + typeChars[orgInd].Length);
+						string newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
+						newParams = newParams.Substring(0, newParams.Length - 1)
+											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
+											 .Replace("in " + typeNames[typeNames.Length - 1], "in T");
+						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}_comp<T>{newParams} where T : unmanaged, INumber<T>;";
+						generated += Environment.NewLine + Environment.NewLine;
 					}
 				}
 

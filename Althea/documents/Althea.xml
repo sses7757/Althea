@@ -9157,16 +9157,17 @@
             The abstract interface for dense linear algebra copy API routines 
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ICopyAbstractApi.MemoryCopy2D``2(Althea.Storage.PointerSegment{``0},System.Int64,Althea.Storage.PointerSegment{``1},System.Int64,System.Int64,System.Int64,System.Int64@)">
+        <member name="M:Althea.LinearAlgebra.Dense.ICopyAbstractApi.MemoryCopy2D``3(Althea.Storage.PointerSegment{``1},System.Int64,Althea.Storage.PointerSegment{``2},System.Int64,System.Int64,System.Int64,System.Int64@)">
             <summary>
             When implemented by a derived class, copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
             </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TP1">A pointer type that implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">A pointer type that implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <param name="source">The source pointer</param>
-            <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
+            <param name="sourceLD">The source array actual height (actual leading dimension) in <typeparamref name="T"/></param>
             <param name="destination">The destination pointer</param>
-            <param name="destinationLD">The destination array actual height (actual leading dimension) in bytes</param>
+            <param name="destinationLD">The destination array actual height (actual leading dimension) in <typeparamref name="T"/></param>
             <param name="height">The height to copy in bytes</param>
             <param name="width">The width to copy in the real type, if it is 0, 2D block as large as possible shall be copied</param>
             <param name="copyWidth">Output the width that actually copied</param>
@@ -11060,29 +11061,6 @@
             <param name="sourceLD">The source array actual height (actual leading dimension) in <typeparamref name="T"/></param>
             <param name="destination">The destination pointer</param>
             <param name="destinationLD">The destination array actual height (actual leading dimension) in <typeparamref name="T"/></param>
-            <param name="height">The height to copy in <typeparamref name="T"/></param>
-            <param name="width">The width to copy in the real type, if it is 0, 2D block as large as possible shall be copied</param>
-            <returns>Output the width that actually copied.</returns>
-            <remarks>The lengths of <paramref name="source"/> and <paramref name="destination"/> are ignored</remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">If any of the parameters is zero</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-            <exception cref="T:System.ArgumentException">
-            If <paramref name="height"/> is larger than <paramref name="sourceLD"/> or <paramref name="destinationLD"/>,
-            or <c><paramref name="sourceLD"/> and <paramref name="width"/> indicate size larger than <paramref name="source"/>.<see cref="P:Althea.Storage.IStorage.LengthInBytes">Length</see></c>, 
-            or <c><paramref name="destinationLD"/> and <paramref name="width"/> indicate size larger than <paramref name="destination"/>.<see cref="P:Althea.Storage.IStorage.LengthInBytes">Length</see></c>
-            </exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.CopyApiSelector.MemoryCopy2D``2(Althea.Storage.PointerSegment{``0},System.Int64,Althea.Storage.PointerSegment{``1},System.Int64,System.Int64,System.Int64)">
-            <summary>
-            Copy 2D data from <paramref name="source"/> to <paramref name="destination"/>.
-            </summary>
-            <typeparam name="TP1">A pointer type that implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
-            <typeparam name="TP2">A pointer type that implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
-            <param name="source">The source pointer</param>
-            <param name="sourceLD">The source array actual height (actual leading dimension) in bytes</param>
-            <param name="destination">The destination pointer</param>
-            <param name="destinationLD">The destination array actual height (actual leading dimension) in bytes</param>
             <param name="height">The height to copy in bytes</param>
             <param name="width">The width to copy in the real type, if it is 0, 2D block as large as possible shall be copied</param>
             <returns>Output the width that actually copied.</returns>

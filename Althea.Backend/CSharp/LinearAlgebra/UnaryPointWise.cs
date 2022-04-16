@@ -97,7 +97,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorModifyFloatManaged<T, U, Op>(T* x, int length, U scalar) where T : unmanaged, IFloatingPoint<T> where U : unmanaged, IFloatingPoint<U>
+		private static void VectorModifyFloatManaged<T, U, Op>(T* x, int incx, int length, U scalar) where T : unmanaged, IFloatingPoint<T> where U : unmanaged, IFloatingPoint<U>
 		{
 			Modify op;
 			if (typeof(Op) == typeof(U_PowerT))
@@ -119,13 +119,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			// JIT shall in-line / eliminate all switches and type conditions as if they do not exist
 			T scalarT = scalar.As<U, T>();
-			for (int i = 0; i < length; i++)
+			for (int i = 0, ix = 0; i < length; i++, ix += incx)
 			{
-				x[i] = op switch
+				x[ix] = op switch
 				{
-					Modify.PowerT or Modify.PowerDouble => T.Pow(x[i], scalarT),
-					Modify.Conjugate => Conj(x[i]),
-					Modify.Sqrt => T.Sqrt(x[i]),
+					Modify.PowerT or Modify.PowerDouble => T.Pow(x[ix], scalarT),
+					Modify.Conjugate => Conj(x[ix]),
+					Modify.Sqrt => T.Sqrt(x[ix]),
 					_ => default,
 				};
 			}
@@ -134,7 +134,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		private delegate void VectorModifyFloatDelegate<T, U>(T* x, int length, U scalar) where T : unmanaged, INumber<T> where U : unmanaged, INumber<U>;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorModifyManaged<T, U, Op>(T* x, int length, U scalar) where T : unmanaged, INumber<T> where U : unmanaged, INumber<U>
+		private static void VectorModifyManaged<T, U, Op>(T* x, int incx, int length, U scalar) where T : unmanaged, INumber<T> where U : unmanaged, INumber<U>
 		{
 			Modify op;
 			if (typeof(Op) == typeof(U_AddScalar))
@@ -170,54 +170,54 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			// JIT shall in-line / eliminate all switches and type conditions as if they do not exist
 			T scalarT = typeof(T) == typeof(U) ? *(T*)&scalar : default;
-			for (int i = 0; i < length; i++)
+			for (int i = 0, ix = 0; i < length; i++, ix += incx)
 			{
 				if (op == Modify.Modulo)
 				{
-					T a = x[i];
+					T a = x[ix];
 					if (typeof(T) == typeof(uint))
-					{ uint v = (*(uint*)&a) % (*(uint*)&scalar); x[i] = *(T*)&v; }
+					{ uint v = (*(uint*)&a) % (*(uint*)&scalar); x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(ulong))
-					{ ulong v = (*(ulong*)&a) % (*(ulong*)&scalar); x[i] = *(T*)&v; }
+					{ ulong v = (*(ulong*)&a) % (*(ulong*)&scalar); x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(int))
-					{ int v = (*(int*)&a) % (*(int*)&scalar); x[i] = *(T*)&v; }
+					{ int v = (*(int*)&a) % (*(int*)&scalar); x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(long))
-					{ long v = (*(long*)&a) % (*(long*)&scalar); x[i] = *(T*)&v; }
+					{ long v = (*(long*)&a) % (*(long*)&scalar); x[ix] = *(T*)&v; }
 					else
-						x[i] = mod(a, scalarT);
+						x[ix] = mod(a, scalarT);
 				}
 				else if (op == Modify.Truncate)
 				{
-					T a = x[i];
+					T a = x[ix];
 					double scalarD = *(double*)&scalar, scalarDS = scalarD * scalarD;
 					if (typeof(T) == typeof(uint))
-					{ uint v = (*(uint*)&a) > scalarD ? (*(uint*)&a) : 0; x[i] = *(T*)&v; }
+					{ uint v = (*(uint*)&a) > scalarD ? (*(uint*)&a) : 0; x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(ulong))
-					{ ulong v = (*(ulong*)&a) > scalarD ? (*(ulong*)&a) : 0; x[i] = *(T*)&v; }
+					{ ulong v = (*(ulong*)&a) > scalarD ? (*(ulong*)&a) : 0; x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(double))
-					{ int v = (*(int*)&a) > scalarD ? (*(int*)&a) : 0; x[i] = *(T*)&v; }
+					{ int v = (*(int*)&a) > scalarD ? (*(int*)&a) : 0; x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(long))
-					{ long v = (*(long*)&a) > scalarD ? (*(long*)&a) : 0; x[i] = *(T*)&v; }
+					{ long v = (*(long*)&a) > scalarD ? (*(long*)&a) : 0; x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(float))
-					{ float v = (*(float*)&a) > scalarD ? (*(float*)&a) : 0; x[i] = *(T*)&v; }
+					{ float v = (*(float*)&a) > scalarD ? (*(float*)&a) : 0; x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(double))
-					{ double v = (*(double*)&a) > scalarD ? (*(double*)&a) : 0; x[i] = *(T*)&v; }
+					{ double v = (*(double*)&a) > scalarD ? (*(double*)&a) : 0; x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
-					{ Complex<float> v = (*(Complex<float>*)&a).MagnitudeSquared > scalarDS ? (*(Complex<float>*)&a) : 0; x[i] = *(T*)&v; }
+					{ Complex<float> v = (*(Complex<float>*)&a).MagnitudeSquared > scalarDS ? (*(Complex<float>*)&a) : 0; x[ix] = *(T*)&v; }
 					else if (typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(Complex<double>))
-					{ Complex<double> v = (*(Complex<double>*)&a).MagnitudeSquared > scalarDS ? (*(Complex<double>*)&a) : 0; x[i] = *(T*)&v; }
+					{ Complex<double> v = (*(Complex<double>*)&a).MagnitudeSquared > scalarDS ? (*(Complex<double>*)&a) : 0; x[ix] = *(T*)&v; }
 					else
-						x[i] = trunc(a, scalarD);
+						x[ix] = trunc(a, scalarD);
 				}
 				else
 				{
-					x[i] = op switch
+					x[ix] = op switch
 					{
-						Modify.AddScalar => x[i] + scalarT,
-						Modify.MultiplyScalar => x[i] * scalarT,
-						Modify.Conjugate => x[i].Conjugate(),
-						Modify.Square => x[i] * x[i],
-						Modify.Reciprocal => T.One / x[i],
+						Modify.AddScalar => x[ix] + scalarT,
+						Modify.MultiplyScalar => x[ix] * scalarT,
+						Modify.Conjugate => x[ix].Conjugate(),
+						Modify.Square => x[ix] * x[ix],
+						Modify.Reciprocal => T.One / x[ix],
 						_ => default,
 					};
 				}
@@ -289,7 +289,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorModifyManaged<T, U, Op>(x + offset, lengthLeft, scalar);
+				VectorModifyManaged<T, U, Op>(x + offset, 1, lengthLeft, scalar);
 			}
 		}
 
@@ -388,7 +388,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorModifyManaged<Complex<float>, U, Op>(x, length, scalar);
+				VectorModifyManaged<Complex<float>, U, Op>(x, 1, length, scalar);
 			}
 		}
 
@@ -486,16 +486,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorModifyManaged<Complex<double>, U, Op>(x, length, scalar);
+				VectorModifyManaged<Complex<double>, U, Op>(x, 1, length, scalar);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool VectorModify<T, U, Op>(T* px, int length, U scalar) where T : unmanaged, INumber<T> where U : unmanaged, INumber<U>
+		internal static bool VectorModify<T, U, Op>(T* px, int incx, int length, U scalar) where T : unmanaged, INumber<T> where U : unmanaged, INumber<U>
 		{
-			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
+			if (incx != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
 			{   // no SIMD or too short
-				VectorModifyManaged<T, U, Op>(px, length, scalar);
+				VectorModifyManaged<T, U, Op>(px, incx, length, scalar);
 				return true;
 			}
 
@@ -503,7 +503,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)
 				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
-					VectorModifyManaged<T, U, Op>(px, length, scalar);
+					VectorModifyManaged<T, U, Op>(px, 1, length, scalar);
 				}
 				else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
 				{
@@ -524,20 +524,26 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static bool VectorModify<T, TS, U, Op>(TS x, long strideX, U scalar) where T : unmanaged, INumber<T> where U : unmanaged, INumber<U> where TS : class, IStorage<T, TS>
 		{
-			if (!GetPointer(x, strideX, out T* px, out int length))
+			if (!GetPointer(x, strideX, out T* px, out int length, out int inc))
 				return false;
 			if (length == 0)
 				return true;
-			return VectorModify<T, U, Op>(px, length, scalar);
+			return VectorModify<T, U, Op>(px, inc, length, scalar);
 		}
 		
 		public virtual partial bool Scale<T, TS>(TS x, long strideX, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => VectorModify<T, TS, T, U_MultiplyScalar>(x, strideX, scalar);
 
 		public virtual partial bool FillWithValue<T, TS>(TS x, long strideX, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
-			if (!GetPointer<T, TS>(x, strideX, out _, out _) || x is not PureStorage<T, CpuMemoryPointer> ps)
+			if (!GetPointer(x, strideX, out T* px, out int length, out int inc) || x is not PureStorage<T, CpuMemoryPointer> ps)
 				return false;
-			return Storage.Api.Default.FillWithValue(ps.Pointer, value);
+			if (inc == 1)
+				return Storage.Api.Default.FillWithValue(ps.Pointer, value);
+			for (int i = 0, ix = 0; i < length; i++, ix += inc)
+			{
+				px[ix] = value;
+			}
+			return true;
 		}
 
 		public virtual partial bool PointWiseConjugate<T, TS>(TS x, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => VectorModify<T, TS, T, U_Conjugate>(x, stride, default);

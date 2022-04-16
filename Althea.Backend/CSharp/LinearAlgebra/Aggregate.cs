@@ -17,7 +17,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		// Ignore spelling: uint ulong
 		//// Test == int, uint, long, ulong   for   AbsSum, AbsProd, Sum, Prod
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool VectorAbsSumProdManaged<T, Test>(T* x, int length, out T aggregate) where T : unmanaged, INumber<T>
+		private static bool VectorAbsSumProdManaged<T, Test>(T* x, int inc, int length, out T aggregate) where T : unmanaged, INumber<T>
 		{
 			aggregate = T.Zero;
 			bool doSum = typeof(Test) == typeof(int) || typeof(Test) == typeof(long);
@@ -25,22 +25,18 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (doAbs)
 			{
 				aggregate = doSum ? T.Zero : T.One;
-				for (int i = 0; i < length; i++)
+				for (int i = 0, ix = 0; i < length; i++, ix += inc)
 				{
-					T v = T.Abs(x[i]);
-					if (doSum)
-						aggregate += v;
-					else
-						aggregate *= v;
+					T v = T.Abs(x[ix]);
+					aggregate = doSum ? aggregate + v : aggregate * v;
 				}
 			}
 			else
 			{
 				aggregate = doSum ? T.Zero : T.One;
-				for (int i = 0; i < length; i++)
+				for (int i = 0, ix = 0; i < length; i++, ix += inc)
 				{
-					T v = x[i];
-					// some frequent type speedups
+					T v = x[ix];
 					aggregate = doSum ? aggregate + v : aggregate * v;
 				}
 			}
@@ -74,7 +70,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			// reduce left
 			if (lengthLeft > 0)
 			{
-				VectorAbsSumProdManaged<T, Test>(x + offset, lengthLeft, out aggregation);
+				VectorAbsSumProdManaged<T, Test>(x + offset, 1, lengthLeft, out aggregation);
 			}
 			else if (!doSum)
 			{
@@ -358,7 +354,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		internal static bool AbsSumProd<T, TS, Test>(TS x, long stride, out T aggregate) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			aggregate = T.Zero;
-			if (!GetPointer(x, stride, out T* px, out int length))
+			if (!GetPointer(x, stride, out T* px, out int length, out int inc))
 				return false;
 			if (length == 0)
 			{
@@ -373,13 +369,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				aggregate = px[0]; aggregate = T.Abs(aggregate);
 				return true;
 			}
-			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4)) // no SIMD or too short
-				return VectorAbsSumProdManaged<T, Test>(px, length, out aggregate);
+			if (inc != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4)) // no SIMD or too short
+				return VectorAbsSumProdManaged<T, Test>(px, inc, length, out aggregate);
 
 			if (NumberType<T>.IsComplex)
 			{
 				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported) // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
-					return VectorAbsSumProdManaged<T, Test>(px, length, out aggregate);
+					return VectorAbsSumProdManaged<T, Test>(px, inc, length, out aggregate);
 				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
 				{
 					VectorAbsSumProdCompexSingle<Test>((Complex<float>*)px, length, out var temp);
@@ -484,12 +480,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				offset += Vector<T>.Count;
 			}
 			// reduce main
-			VectorArgMinMaxManaged<T, Test>((T*)&extremes, Vector<T>.Count, out long extremeIndex);
+			VectorArgMinMaxManaged<T, Test>((T*)&extremes, 1, Vector<T>.Count, out long extremeIndex);
 			int index = (int)extremeIndex;
 			// reduce left
 			if (lengthLeft > 0)
 			{
-				VectorArgMinMaxManaged<T, Test>(x + offset, lengthLeft, out long restExtreme);
+				VectorArgMinMaxManaged<T, Test>(x + offset, 1, lengthLeft, out long restExtreme);
 				int newIndex = (int)(offset + restExtreme);
 				if (doMax && x[newIndex] > extremes[index])
 					index = newIndex;
@@ -629,7 +625,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		//// Test == int, uint, long, ulong   for   AbsMax, AbsMin, Max, Min
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool VectorArgMinMaxManaged<T, Test>(T* x, int length, out long index) where T : unmanaged, INumber<T>
+		private static bool VectorArgMinMaxManaged<T, Test>(T* x, int inc, int length, out long index) where T : unmanaged, INumber<T>
 		{
 			index = -1;
 			bool doMax = typeof(Test) == typeof(int) || typeof(Test) == typeof(long);
@@ -637,9 +633,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (doAbs)
 			{
 				T extreme = T.Abs(x[0]); int extremeIndex = 0;
-				for (int i = 1; i < length; i++)
+				for (int i = 0, ix = 0; i < length; i++, ix += inc)
 				{
-					T v = T.Abs(x[i]);
+					T v = T.Abs(x[ix]);
 					if ((doMax && v > extreme) || (!doMax && v < extreme))
 					{
 						extreme = v; extremeIndex = i;
@@ -650,9 +646,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			else
 			{
 				T extreme = x[0]; int extremeIndex = 0;
-				for (int i = 1; i < length; i++)
+				for (int i = 0, ix = 0; i < length; i++, ix += inc)
 				{
-					T v = x[i];
+					T v = x[ix];
 					// some frequent type speedups, complex is not possible here
 					if (doMax)
 					{
@@ -680,7 +676,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			index = -1;
 			if ((typeof(Test) == typeof(long) || typeof(Test) == typeof(ulong)) && NumberType<T>.IsComplex)
 				throw new InvalidOperationException(string.Format(Resource.CompareComplex, typeof(T).GetGenericString()));
-			if (!GetPointer(x, strideX, out T* px, out int length))
+			if (!GetPointer(x, strideX, out T* px, out int length, out int inc))
 				return false;
 			if (length == 0)
 				return true;
@@ -688,15 +684,15 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				index = 0; return true;
 			}
-			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
-				return VectorArgMinMaxManaged<T, Test>(px, length, out index); // no SIMD or too short
+			if (inc != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
+				return VectorArgMinMaxManaged<T, Test>(px, inc, length, out index); // no SIMD or too short
 			if ((sizeof(T) <= sizeof(byte) && length > sbyte.MaxValue) || (sizeof(T) <= sizeof(short) && length > short.MaxValue))
-				return VectorArgMinMaxManaged<T, Test>(px, length, out index);
+				return VectorArgMinMaxManaged<T, Test>(px, inc, length, out index);
 
 			if (NumberType<T>.IsComplex)
 			{
 				if (Unmanaged<T>.DataType.IsInteger() || !Avx2.IsSupported)
-					return VectorArgMinMaxManaged<T, Test>(px, length, out index);
+					return VectorArgMinMaxManaged<T, Test>(px, inc, length, out index);
 				index = typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>)
 					? VectorArgMinMaxCompexSingle<Test>((Complex<float>*)px, length)
 					: VectorArgMinMaxCompexDouble<Test>((Complex<double>*)px, length);
@@ -772,11 +768,11 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				offset += Vector<T>.Count;
 			}
 			// reduce main
-			VectorMinMaxManaged<T, Test>((T*)&extremes, Vector<T>.Count, out T extreme);
+			VectorMinMaxManaged<T, Test>((T*)&extremes, 1, Vector<T>.Count, out T extreme);
 			// reduce left
 			if (lengthLeft > 0)
 			{
-				VectorMinMaxManaged<T, Test>(x + offset, lengthLeft, out T restExtreme);
+				VectorMinMaxManaged<T, Test>(x + offset, 1, lengthLeft, out T restExtreme);
 				if (doMax && restExtreme > extreme)
 					extreme = restExtreme;
 				if (!doMax && restExtreme < extreme)
@@ -882,16 +878,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool VectorMinMaxManaged<T, Test>(T* x, int length, out T extreme) where T : unmanaged, INumber<T>
+		private static bool VectorMinMaxManaged<T, Test>(T* x, int inc, int length, out T extreme) where T : unmanaged, INumber<T>
 		{
 			bool doMax = typeof(Test) == typeof(int) || typeof(Test) == typeof(long);
 			bool doAbs = typeof(Test) == typeof(int) || typeof(Test) == typeof(uint);
 			if (doAbs)
 			{
 				extreme = x[0];
-				for (int i = 1; i < length; i++)
+				for (int i = 0, ix = 0; i < length; i++, ix += inc)
 				{
-					T v = T.Abs(x[i]);
+					T v = T.Abs(x[ix]);
 					if ((doMax && v > extreme) || (!doMax && v < extreme))
 					{
 						extreme = v;
@@ -901,9 +897,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			else
 			{
 				extreme = x[0];
-				for (int i = 1; i < length; i++)
+				for (int i = 0, ix = 0; i < length; i++, ix += inc)
 				{
-					T v = x[i];
+					T v = x[ix];
 					// some frequent type speedups, complex is not possible here
 					if (doMax)
 					{
@@ -930,7 +926,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			extreme = default;
 			if ((typeof(Test) == typeof(long) || typeof(Test) == typeof(ulong)) && NumberType<T>.IsComplex)
 				throw new InvalidOperationException(string.Format(Resource.CompareComplex, typeof(T).GetGenericString()));
-			if (!GetPointer(x, strideX, out T* px, out int length))
+			if (!GetPointer(x, strideX, out T* px, out int length, out int inc))
 				return false;
 			if (length == 0)
 				return true;
@@ -938,15 +934,15 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				extreme = px[0]; return true;
 			}
-			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
-				return VectorMinMaxManaged<T, Test>(px, length, out extreme); // no SIMD or too short
+			if (inc != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
+				return VectorMinMaxManaged<T, Test>(px, inc, length, out extreme); // no SIMD or too short
 			if ((sizeof(T) <= sizeof(byte) && length > sbyte.MaxValue) || (sizeof(T) <= sizeof(short) && length > short.MaxValue))
-				return VectorMinMaxManaged<T, Test>(px, length, out extreme);
+				return VectorMinMaxManaged<T, Test>(px, inc, length, out extreme);
 
 			if (NumberType<T>.IsComplex)
 			{
 				if (Unmanaged<T>.DataType.IsInteger() || !Avx2.IsSupported)
-					return VectorMinMaxManaged<T, Test>(px, length, out extreme);
+					return VectorMinMaxManaged<T, Test>(px, inc, length, out extreme);
 				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
 				{
 					var temp = VectorAbsMinMaxCompexSingle<Test>((Complex<float>*)px, length);
@@ -1021,15 +1017,15 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		#region inner
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static T VectorInnerManaged<T, Dot, Conj>(T* x, T* y, int length) where T : unmanaged, INumber<T>
+		private static T VectorInnerManaged<T, Dot, Conj>(T* x, int incx, T* y, int incy, int length) where T : unmanaged, INumber<T>
 		{
 			T result = default;
 			bool doDot = typeof(Dot) == typeof(bool);
 			bool doCon = typeof(Conj) == typeof(bool);
 
-			for (int i = 0; i < length; i++)
+			for (int i = 0, ix = 0, iy = 0; i < length; i++, ix += incx, iy += incy)
 			{
-				T a = x[i], b;
+				T a = x[ix], b;
 				// float type FMA acceleration
 				if (typeof(T) == typeof(float))
 				{
@@ -1070,7 +1066,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				// normal case
 				if (doDot)
 				{
-					b = y[i];
+					b = y[iy];
 					result = doCon ? result + a.Conjugate() * b : result + a * b;
 				}
 				else
@@ -1287,13 +1283,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool Inner<T, Dot>(bool conjX, T* px, T* py, int length, out T dot) where T : unmanaged, INumber<T>
+		internal static bool Inner<T, Dot>(bool conjX, T* px, int incx, T* py, int incy, int length, out T dot) where T : unmanaged, INumber<T>
 		{
-			if (!Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4) ||
+			if (incx != 1 || incy != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4) ||
 				(NumberType<T>.IsComplex && (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)))
 			{   // no SIMD or too short
 				// no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
-				dot = conjX ? VectorInnerManaged<T, Dot, bool>(px, py, length) : VectorInnerManaged<T, Dot, byte>(px, py, length);
+				dot = conjX ? VectorInnerManaged<T, Dot, bool>(px, incx, py, incy, length) : VectorInnerManaged<T, Dot, byte>(px, incx, py, incy, length);
 				return true;
 			}
 
@@ -1336,14 +1332,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		private static bool Inner<T, TS1, TS2, Dot>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			dot = default;
-			if (!GetPointer(x, strideX, out T* px, out int lenx))
+			if (!GetPointer(x, strideX, out T* px, out int lenx, out int incx))
 				return false;
-			if (!GetPointer(y, strideY, out T* py, out int leny))
+			if (!GetPointer(y, strideY, out T* py, out int leny, out int incy))
 				return false;
 			int length = Math.Min(lenx, leny);
 			if (length == 0)
 				return true;
-			return Inner<T, Dot>(conjX, px, py, length, out dot);
+			return Inner<T, Dot>(conjX, px, incx, py, incy, length, out dot);
 		}
 
 		public virtual partial bool Norm<T, TS>(TS x, long strideX, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
@@ -1361,25 +1357,25 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		#region partial sum product
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorParSumProdManaged<T, Sum, HasPre>(T* x, T* y, int length) where T : unmanaged, INumber<T>
+		private static void VectorParSumProdManaged<T, Sum, HasPre>(T* x, int incx, T* y, int incy, int length) where T : unmanaged, INumber<T>
 		{
 			bool doSum = typeof(Sum) == typeof(bool);
 			bool hasPre = typeof(HasPre) == typeof(bool);
 
-			T result = hasPre ? y[-1] : doSum ? default : T.One;
-			for (int i = 0; i < length; i++)
+			T result = hasPre ? y[-incy] : doSum ? default : T.One;
+			for (int i = 0, ix = 0, iy = 0; i < length; i++, ix += incx, iy += incy)
 			{
-				T v = x[i];
-				y[i] = doSum ? result + v : result * v;
+				T v = x[ix];
+				y[iy] = doSum ? result + v : result * v;
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static bool ParSumProd<T, TS1, TS2, Sum>(TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
-			if (!GetPointer(x, strideX, out T* px, out int lenx))
+			if (!GetPointer(x, strideX, out T* px, out int lenx, out int incx))
 				return false;
-			if (!GetPointer(y, strideY, out T* py, out int leny))
+			if (!GetPointer(y, strideY, out T* py, out int leny, out int incy))
 				return false;
 			int length = Math.Min(lenx, leny);
 			// shortcuts
@@ -1393,7 +1389,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				py++; length--;
 			}
-			VectorParSumProdManaged<T, Sum, byte>(px, py, length);
+			VectorParSumProdManaged<T, Sum, byte>(px, incx, py, incy, length);
 			return true;
 		}
 

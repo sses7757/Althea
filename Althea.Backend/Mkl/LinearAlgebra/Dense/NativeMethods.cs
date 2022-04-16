@@ -29,11 +29,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_saxpy(long n, float alpha, void* x, long incx, void* y, long incy);
+		internal static extern void cblas_saxpy(long n, float alpha, float* x, long incx, float* y, long incy);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_sscal(long n, float alpha, void* x, long incx);
+		internal static extern void cblas_sscal(long n, float alpha, float* x, long incx);
 
 		[NativeMethod(6)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -53,11 +53,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#region level 2
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_sgemv(MklMatrixLayout Layout, MklOperation trans, long m, long n, float alpha, void* A, long lda, void* x, long incx, float beta, void* y, long incy);
+		internal static extern void cblas_sgemv(MklMatrixLayout Layout, MklOperation trans, long m, long n, float alpha, float* A, long lda, float* x, long incx, float beta, float* y, long incy);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_ssymv(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, void* A, long lda, void* x, long incx, float beta, void* y, long incy);
+		internal static extern void cblas_ssymv(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, float* A, long lda, float* x, long incx, float beta, float* y, long incy);
 
 		[NativeMethod(6)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -71,57 +71,57 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[CustomNativeMethod(6, "Complex<double>", "zdotu_sub", "in", "Complex<double>")]
 		[CustomNativeMethod(6, "Complex<double>", "zdotc_sub", "in", "Complex<double>")]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_sger(MklMatrixLayout Layout, long m, long n, float alpha, void* x, long incx, void* y, long incy, void* A, long lda);
+		internal static extern void cblas_sger(MklMatrixLayout Layout, long m, long n, float alpha, float* x, long incx, float* y, long incy, float* A, long lda);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_ssyr(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, void* x, long incx, void* A, long lda);
+		internal static extern void cblas_ssyr(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, float* x, long incx, float* A, long lda);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_ssyr2(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, void* x, long incx, void* y, long incy, void* A, long lda);
+		internal static extern void cblas_ssyr2(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, float* x, long incx, float* y, long incy, float* A, long lda);
 		#endregion
 
 		#region level 3
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_strsm(MklMatrixLayout Layout, MklBlasSideMode Side, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long m, long n, float alpha, void* A, long lda, void* B, long ldb);
+		internal static extern void cblas_strsm(MklMatrixLayout Layout, MklBlasSideMode Side, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long m, long n, float alpha, float* A, long lda, float* B, long ldb);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_strmm(MklMatrixLayout Layout, MklBlasSideMode Side, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long m, long n, float alpha, void* A, long lda, void* B, long ldb);
+		internal static extern void cblas_strmm(MklMatrixLayout Layout, MklBlasSideMode Side, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long m, long n, float alpha, float* A, long lda, float* B, long ldb);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_sgemm(MklMatrixLayout Layout, MklOperation TransA, MklOperation TransB, long m, long n, long k, float alpha, void* A, long lda, void* B, long ldb, float beta, void* C, long ldc);
+		internal static extern void cblas_sgemm(MklMatrixLayout Layout, MklOperation TransA, MklOperation TransB, long m, long n, long k, float alpha, float* A, long lda, float* B, long ldb, float beta, float* C, long ldc);
 
 		[NativeMethod(6, false, true, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_cgemm3m(MklMatrixLayout Layout, MklOperation TransA, MklOperation TransB, long m, long n, long k, Complex<float> alpha, void* A, long lda, void* B, long ldb, Complex<float> beta, void* C, long ldc);
+		internal static extern void cblas_cgemm3m(MklMatrixLayout Layout, MklOperation TransA, MklOperation TransB, long m, long n, long k, Complex<float> alpha, Complex<float>* A, long lda, Complex<float>* B, long ldb, Complex<float> beta, Complex<float>* C, long ldc);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_ssymm(MklMatrixLayout Layout, MklBlasSideMode side, MklFillMode uplo, long m, long n, float alpha, void* A, long lda, void* B, long ldb, float beta, void* C, long ldc);
+		internal static extern void cblas_ssymm(MklMatrixLayout Layout, MklBlasSideMode side, MklFillMode uplo, long m, long n, float alpha, float* A, long lda, float* B, long ldb, float beta, float* C, long ldc);
 
 		[NativeMethod(6, false, true, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_chemm(MklMatrixLayout Layout, MklBlasSideMode side, MklFillMode uplo, long m, long n, Complex<float> alpha, void* A, long lda, void* B, long ldb, Complex<float> beta, void* C, long ldc);
+		internal static extern void cblas_chemm(MklMatrixLayout Layout, MklBlasSideMode side, MklFillMode uplo, long m, long n, Complex<float> alpha, Complex<float>* A, long lda, Complex<float>* B, long ldb, Complex<float> beta, Complex<float>* C, long ldc);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_ssyrk(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, float alpha, void* A, long lda, float beta, void* C, long ldc);
+		internal static extern void cblas_ssyrk(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, float alpha, float* A, long lda, float beta, float* C, long ldc);
 
 		[NativeMethod(6, false, true, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_cherk(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, Complex<float> alpha, void* A, long lda, Complex<float> beta, void* C, long ldc);
+		internal static extern void cblas_cherk(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, Complex<float> alpha, Complex<float>* A, long lda, Complex<float> beta, Complex<float>* C, long ldc);
 
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_ssyr2k(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, float alpha, void* A, long lda, void* B, long ldb, float beta, void* C, long ldc);
+		internal static extern void cblas_ssyr2k(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, float alpha, float* A, long lda, float* B, long ldb, float beta, float* C, long ldc);
 
 		[NativeMethod(6, false, true, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_cher2k(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, Complex<float> alpha, void* A, long lda, void* B, long ldb, Complex<float> beta, void* C, long ldc);
+		internal static extern void cblas_cher2k(MklMatrixLayout Layout, MklFillMode uplo, MklOperation trans, long n, long k, Complex<float> alpha, Complex<float>* A, long lda, Complex<float>* B, long ldb, Complex<float> beta, Complex<float>* C, long ldc);
 		#endregion
 
 		#region BLAS like
@@ -131,18 +131,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		[NativeMethod(4, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void MKL_Somatadd(MklMatrixLayoutChar ordering, MklOperationChar transa, MklOperationChar transb, long rows, long cols, float alpha, void* A, long lda, float beta, void* B, long ldb, void* C, long ldc);
+		internal static extern void MKL_Somatadd(MklMatrixLayoutChar ordering, MklOperationChar transa, MklOperationChar transb, long rows, long cols, float alpha, float* A, long lda, float beta, float* B, long ldb, float* C, long ldc);
 
 		[NativeMethod(4, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void MKL_Somatcopy(MklMatrixLayoutChar ordering, MklOperationChar trans, long rows, long cols, float alpha, void* A, long lda, void* B, long ldb);
+		internal static extern void MKL_Somatcopy(MklMatrixLayoutChar ordering, MklOperationChar trans, long rows, long cols, float alpha, float* A, long lda, float* B, long ldb);
 
 		[NativeMethod(4, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void MKL_Simatcopy(MklMatrixLayoutChar ordering, MklOperationChar trans, long rows, long cols, float alpha, void* A, long lda);
+		internal static extern void MKL_Simatcopy(MklMatrixLayoutChar ordering, MklOperationChar trans, long rows, long cols, float alpha, float* A, long lda);
 		#endregion
 
-		#region MKL vector math
+		#region vector math
 		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsAdd(long n, void* a, void* b, void* y);
@@ -249,11 +249,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void vsPowx(long n, void* a, float b, void* y);
+		internal static extern void vsPowx(long n, float* a, float b, float* y);
 
 		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void vsPowxI(long n, void* a, long inca, float b, void* y, long incy);
+		internal static extern void vsPowxI(long n, float* a, long inca, float b, float* y, long incy);
 		#endregion;
 
 		#region solver

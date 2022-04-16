@@ -87,7 +87,7 @@ namespace Althea.Backend.CSharp.Solver
 			//tex:$\mathbf H \overset{\text{Schur (no ordering)}}{\longrightarrow} \mathbf H_c \cdot \mathbf U$
 			fixed (T* ptrVals = outVals, ptrSchurT = outSchurT.UnderlyingSpan, ptrSchurU = outSchurU.UnderlyingSpan, ptrValsIm = outValsImag.IsEmpty ? default : outValsImag)
 			{
-				Mkl.LinearAlgebra.Dense.DenseApi.HessenbergSchur(SolveVectorMode.Vector, n, ptrVals, ptrValsIm, ptrSchurT, outSchurT.LeadDim, ptrSchurU, outSchurU.LeadDim);
+				Mkl.LinearAlgebra.Dense.Api.HessenbergSchur(SolveVectorMode.Vector, n, ptrVals, ptrValsIm, ptrSchurT, outSchurT.LeadDim, ptrSchurU, outSchurU.LeadDim);
 			}
 			// get conjugate pairs
 			if (!NumberType<T>.IsComplex)
@@ -114,7 +114,7 @@ namespace Althea.Backend.CSharp.Solver
 			fixed (T* ptrT = schurT.UnderlyingSpan, ptrU = schurU.UnderlyingSpan)
 			fixed (int* ptrIdentity = identity, ptrOrder = reorder)
 			{
-				Mkl.LinearAlgebra.Dense.DenseApi.SchurReorder(rows, ptrT, schurT.LeadDim, ptrU, schurU.LeadDim, ptrIdentity, ptrOrder);
+				Mkl.LinearAlgebra.Dense.Api.SchurReorder(rows, ptrT, schurT.LeadDim, ptrU, schurU.LeadDim, ptrIdentity, ptrOrder);
 			}
 			int n = preserveCount;
 			//tex:${\vec{a}}^\ast={\vec{a}}^\ast X^\prime$
@@ -231,7 +231,7 @@ namespace Althea.Backend.CSharp.Solver
 			//\text{ where }\mathbf V = \mathbf U \mathbf X, \mathbf H_c \overset{\text{Eigen}}{\longrightarrow} \mathbf X \mathrm{diag}(\vec a) \mathbf X^{-1}$
 			fixed (T* ptrSchurT = schurT.UnderlyingSpan, ptrVecs = orderedVecs.UnderlyingSpan)
 			{
-				Mkl.LinearAlgebra.Dense.DenseApi.SchurEigenvector(SolveVectorMode.Right, n, ptrSchurT, null, 1, ptrVecs, orderedVecs.LeadDim);
+				Mkl.LinearAlgebra.Dense.Api.SchurEigenvector(SolveVectorMode.Right, n, ptrSchurT, null, 1, ptrVecs, orderedVecs.LeadDim);
 			}
 			#endregion
 
@@ -456,7 +456,7 @@ namespace Althea.Backend.CSharp.Solver
 			// get norm of H
 			fixed (T* ptrH = Hprime.UnderlyingSpan, ptrVals = stackalloc T[n], ptrValsIm = NumberType<T>.IsComplex ? default : stackalloc T[n])
 			{
-				Mkl.LinearAlgebra.Dense.DenseApi.HessenbergSchur(SolveVectorMode.Vector, n, ptrVals, ptrValsIm, ptrH, Hprime.LeadDim, null, 1);
+				Mkl.LinearAlgebra.Dense.Api.HessenbergSchur(SolveVectorMode.Vector, n, ptrVals, ptrValsIm, ptrH, Hprime.LeadDim, null, 1);
 			}
 			if (NumberType<T>.IsComplex)
 			{
@@ -497,7 +497,7 @@ namespace Althea.Backend.CSharp.Solver
 			T normY;
 			fixed (T* ptrY = y, ptrR = Hprime.UnderlyingSpan)
 			{
-				Mkl.LinearAlgebra.Dense.DenseApi.LeastSquareSolve(n1, n, 1, ptrR, n1, ptrY, n1);
+				Mkl.LinearAlgebra.Dense.Api.LeastSquareSolve(n1, n, 1, ptrR, n1, ptrY, n1);
 				LinearAlgebra.Api.Inner<T, bool>(true, ptrY, ptrY, n1, out normY);
 			}
 			//tex:converge when: $\|\vec r^{(n)}\| = \|\vec y^{(n)}\| \le \|\mathbf A\| \|\vec{b}\| \varepsilon$
