@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 using Althea.Backend.Storage;
 using Althea.Helpers;
@@ -8,9 +7,84 @@ using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
 using Althea.Storage;
 
+using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
+using NMC = Althea.Backend.Mkl.LinearAlgebra.Dense.CustomNativeMethods;
+using NMT = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethodsTemplate;
+
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 {
+	#region conjugate helper
+	internal readonly unsafe ref struct Conjugater1<T> where T : unmanaged, INumber<T>
+	{
+		private readonly T* ptr;
+		private readonly long n, inc;
+		private readonly delegate*<long, T*, long, T*, long, void> conj;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal Conjugater1(T* ptr, long n, long inc, ref MatrixOperation op)
+		{
+			this.ptr = ptr; this.n = n; this.inc = inc;
+			this.conj = null;
+			if (op == MatrixOperation.Conjugate)
+			{
+				op = MatrixOperation.None;
+				this.conj = typeof(T) == typeof(Complex<float>) ? &NM.vcConjI : typeof(T) == typeof(Complex<double>) ? &NM.vzConjI : null;
+				if (this.conj is not null)
+					this.conj(n, ptr, inc, ptr, inc);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.conj is not null)
+				this.conj(this.n, this.ptr, this.inc, this.ptr, this.inc);
+		}
+	}
+
+	internal readonly unsafe ref struct Conjugater2<T> where T : unmanaged, INumber<T>
+	{
+		private readonly T* ptr1, ptr2;
+		private readonly long len1, len2, inc1, inc2;
+		private readonly delegate*<long, T*, long, T*, long, void> conj;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal Conjugater2(T* ptr1, long len1, long inc1, T* ptr2, long len2, long inc2, ref MatrixOperation op)
+		{
+			this.ptr1 = ptr1; this.ptr2 = ptr2; this.len1 = len1; this.len2 = len2; this.inc1 = inc1; this.inc2 = inc2;
+			this.conj = null;
+			if (op == MatrixOperation.Conjugate)
+			{
+				op = MatrixOperation.None;
+				this.conj = typeof(T) == typeof(Complex<float>) ? &NM.vcConjI : typeof(T) == typeof(Complex<double>) ? &NM.vzConjI : null;
+				if (this.conj is not null)
+					this.conj(len1, ptr1, inc1, ptr1, inc1);
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.conj is not null)
+			{
+				this.conj(this.len1, this.ptr1, this.inc1, this.ptr1, this.inc1);
+				this.conj(this.len2, this.ptr2, this.inc2, this.ptr2, this.inc2);
+			}
+		}
+	}
+
+	internal static class Conjugater
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe static Conjugater1<T> Create<T>(T* ptr, long n, long inc, ref MatrixOperation op) where T : unmanaged, INumber<T> => new(ptr, n, inc, ref op);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe static Conjugater2<T> Create<T>(T* ptr1, long len1, long inc1, T* ptr2, long len2, long inc2, ref MatrixOperation op) where T : unmanaged, INumber<T> => new(ptr1, len1, inc1, ptr2, len2, inc2, ref op);
+	}
+	#endregion
+
+
 	/// <summary>
 	/// The MKL back-end of <see cref="IBlasAbstractApi"/>, <see cref="IExtendBlasAbstractApi"/>, <see cref="IHalfMatrixBlasAbstractApi"/>, <see cref="ILapackAbstractApi"/> that supports storage locations of CPU memory.
 	/// </summary>
@@ -44,15 +118,35 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentNullException(nameof(s));
 			if (stride <= 0)
 				throw new ArgumentOutOfRangeException(nameof(stride), stride, Resources.ParameterError.MustPositive);
-			if (!NumberType<T>.IsPrimitive && typeof(T) != typeof(Complex<float>) && typeof(T) != typeof(Complex<double>))
-				return false; // not support
 			if (s is not PureStorage<T, CpuMemoryPointer> ps)
 				return false; // not support
-			pointer = (T*)ps.Pointer.Pointer.Pointer.ToPointer();
+			ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
 			if (pointer == default)
-				return false; // not support
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(s));
 			length = ps.Length;
 			length = (length - 1) / stride + 1;
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			pointer = default;
+			if (s is null || !s.IsValid())
+				return true;
+			if (m <= 0)
+				throw new ArgumentOutOfRangeException(nameof(m), m, Resources.ParameterError.MustPositive);
+			if (n <= 0)
+				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.ParameterError.MustPositive);
+			if (ld < m)
+				throw new ArgumentOutOfRangeException(nameof(ld), ld, Resources.ParameterError.InvalidValue);
+			if (s is not PureStorage<T, CpuMemoryPointer> ps)
+				return false; // not support
+			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
+			if (pointer == default)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(s));
+			if ((ps.Length + (ld - m)) / ld < n)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue);
 			return true;
 		}
 		#endregion
@@ -78,8 +172,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<long, T*, long, long> func;
 			func = Unmanaged<T>.DataType switch
 			{
-				DataType.ComplexSingle => max ? &NativeMethods.cblas_icamax : &NativeMethods.cblas_icamin,
-				DataType.ComplexDouble => max ? &NativeMethods.cblas_izamax : &NativeMethods.cblas_izamin,
+				DataType.ComplexSingle => max ? &NM.cblas_icamax : &NM.cblas_icamin,
+				DataType.ComplexDouble => max ? &NM.cblas_izamax : &NM.cblas_izamin,
 				_ => null,
 			};
 			if (func is null)
@@ -106,9 +200,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
 			if (Unmanaged<T>.DataType == DataType.ComplexSingle)
-				*(float*)&result = NativeMethods.cblas_scasum(n, px, strideX);
+				*(float*)&result = NM.cblas_scasum(n, px, strideX);
 			else if (Unmanaged<T>.DataType == DataType.ComplexDouble)
-				*(double*)&result = NativeMethods.cblas_dzasum(n, px, strideX);
+				*(double*)&result = NM.cblas_dzasum(n, px, strideX);
 			else
 				return false;
 			sum = result;
@@ -116,45 +210,342 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool AbsoluteValueArgMax<T, TS>(TS x, long strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual bool AbsoluteValueArgMax<T, TS>(TS x, long strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			index = -1;
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			delegate*<long, T*, long, long> func = null;
+			if (typeof(T) == typeof(float))
+				func = &NM.cblas_isamax;
+			if (typeof(T) == typeof(double))
+				func = &NM.cblas_idamax;
+			if (func != null)
+			{
+				index = func(n, px, strideX);
+				return true;
+			}
+			return NMC.vecArgAbsMax(Unmanaged<T>.DataType, n, px, strideX, out index) == CustomStatus.Success;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool AbsoluteValueArgMin<T, TS>(TS x, long strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual bool AbsoluteValueArgMin<T, TS>(TS x, long strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			index = -1;
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			delegate*<long, T*, long, long> func = null;
+			if (typeof(T) == typeof(float))
+				func = &NM.cblas_isamin;
+			if (typeof(T) == typeof(double))
+				func = &NM.cblas_idamin;
+			if (func != null)
+			{
+				index = func(n, px, strideX);
+				return true;
+			}
+			return NMC.vecArgAbsMin(Unmanaged<T>.DataType, n, px, strideX, out index) == CustomStatus.Success;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool AbsoluteValueSum<T, TS>(TS x, long strideX, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual bool AbsoluteValueSum<T, TS>(TS x, long strideX, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			sum = default; T result = T.Zero;
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			if (typeof(T) == typeof(float))
+			{
+				*(float*)&result = NM.cblas_sasum(n, px, strideX);
+				sum = result;
+				return true;
+			}
+			if (typeof(T) == typeof(double))
+			{
+				*(double*)&result = NM.cblas_dasum(n, px, strideX);
+				sum = result;
+				return true;
+			}
+			if (NMC.vecAbsSum(Unmanaged<T>.DataType, n, px, strideX, &result) != CustomStatus.Success)
+				return false;
+			sum = result;
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool Norm<T, TS>(TS x, long strideX, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual bool Norm<T, TS>(TS x, long strideX, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			norm = default; T result = T.Zero;
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			if (typeof(T) == typeof(float))
+				*(float*)&result = NM.cblas_snrm2(n, px, strideX);
+			else if (typeof(T) == typeof(double))
+				*(double*)&result = NM.cblas_dnrm2(n, px, strideX);
+			else if (typeof(T) == typeof(Complex<float>))
+				*(float*)&result = NM.cblas_scnrm2(n, px, strideX);
+			else if (typeof(T) == typeof(Complex<double>))
+				*(double*)&result = NM.cblas_dznrm2(n, px, strideX);
+			else
+				return false;
+			norm = result;
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool Scale<T, TS>(TS x, long strideX, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual bool Scale<T, TS>(TS x, long strideX, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			NM.cblas_scal<T>? funcRe = null;
+			NM.cblas_scal_comp<T>? funcCm = null;
+			if (typeof(T) == typeof(float))
+				funcRe = new NM.cblas_scal<float>(NM.cblas_sscal) as NM.cblas_scal<T>;
+			if (typeof(T) == typeof(double))
+				funcRe = new NM.cblas_scal<double>(NM.cblas_dscal) as NM.cblas_scal<T>;
+			if (typeof(T) == typeof(Complex<float>))
+				funcCm = new NM.cblas_scal_comp<Complex<float>>(NM.cblas_cscal) as NM.cblas_scal_comp<T>;
+			if (typeof(T) == typeof(Complex<double>))
+				funcCm = new NM.cblas_scal_comp<Complex<double>>(NM.cblas_zscal) as NM.cblas_scal_comp<T>;
+			funcRe?.Invoke(n, scalar, px, strideX);
+			funcCm?.Invoke(n, scalar, px, strideX);
+			return funcRe != null || funcCm != null;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool Add<T, TS1, TS2>(T α, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool Add<T, TS1, TS2>(T α, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out long n2))
+				return false;
+			if (n != n2)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
+			NM.cblas_axpy<T>? funcRe = null;
+			NM.cblas_axpy_comp<T>? funcCm = null;
+			if (typeof(T) == typeof(float))
+				funcRe = new NM.cblas_axpy<float>(NM.cblas_saxpy) as NM.cblas_axpy<T>;
+			if (typeof(T) == typeof(double))
+				funcRe = new NM.cblas_axpy<double>(NM.cblas_daxpy) as NM.cblas_axpy<T>;
+			if (typeof(T) == typeof(Complex<float>))
+				funcCm = new NM.cblas_axpy_comp<Complex<float>>(NM.cblas_caxpy) as NM.cblas_axpy_comp<T>;
+			if (typeof(T) == typeof(Complex<double>))
+				funcCm = new NM.cblas_axpy_comp<Complex<double>>(NM.cblas_zaxpy) as NM.cblas_axpy_comp<T>;
+			funcRe?.Invoke(n, α, px, strideX, py, strideY);
+			funcCm?.Invoke(n, α, px, strideX, py, strideY);
+			return funcRe != null || funcCm != null;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool Dot<T, TS1, TS2>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool Dot<T, TS1, TS2>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			dot = default;
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out long n2))
+				return false;
+			if (n != n2)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
+			NMT.cblas_dot<T>? funcRe = null;
+			NMT.cblas_dot_comp<T>? funcCm = null;
+			if (typeof(T) == typeof(float))
+				funcRe = new NMT.cblas_dot<float>(NM.cblas_sdot) as NMT.cblas_dot<T>;
+			if (typeof(T) == typeof(double))
+				funcRe = new NMT.cblas_dot<double>(NM.cblas_ddot) as NMT.cblas_dot<T>;
+			if (typeof(T) == typeof(Complex<float>))
+				funcCm = (conjX ? new NMT.cblas_dot_comp<Complex<float>>(NM.cblas_cdotc_sub) : new NMT.cblas_dot_comp<Complex<float>>(NM.cblas_cdotu_sub)) as NMT.cblas_dot_comp<T>;
+			if (typeof(T) == typeof(Complex<double>))
+				funcCm = (conjX ? new NMT.cblas_dot_comp<Complex<double>>(NM.cblas_zdotc_sub) : new NMT.cblas_dot_comp<Complex<double>>(NM.cblas_zdotu_sub)) as NMT.cblas_dot_comp<T>;
+			dot = funcRe?.Invoke(n, px, strideX, py, strideY) ?? dot;
+			funcCm?.Invoke(n, px, strideX, py, strideY, out dot);
+			return funcRe != null || funcCm != null;
+		}
 		#endregion
 
 		#region BLAS level 2
 		/// <inheritdoc/>
-		public virtual bool GeneralMatrixMultiplyVector<T, TSM, TSV1, TSV2>(MatrixOperation op, long m, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
+		public virtual bool GeneralMatrixMultiplyVector<T, TSM, TSV1, TSV2>(MatrixOperation op, long m, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>
+		{
+			if (!GetPointer(x, strideX, out T* px, out _))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out _))
+				return false;
+			if (!GetPointer(A, m, n, lda, out T* pA))
+				return false;
+			if (px == py && strideX != strideY)
+				return false;
+			op = op.Simplify<T>();
+			NM.cblas_gemv<T>? funcRe = null;
+			NM.cblas_gemv_comp<T>? funcCm = null;
+			if (typeof(T) == typeof(float))
+				funcRe = new NM.cblas_gemv<float>(NM.cblas_sgemv) as NM.cblas_gemv<T>;
+			if (typeof(T) == typeof(double))
+				funcRe = new NM.cblas_gemv<double>(NM.cblas_dgemv) as NM.cblas_gemv<T>;
+			if (typeof(T) == typeof(Complex<float>))
+				funcCm = new NM.cblas_gemv_comp<Complex<float>>(NM.cblas_cgemv) as NM.cblas_gemv_comp<T>;
+			if (typeof(T) == typeof(Complex<double>))
+				funcCm = new NM.cblas_gemv_comp<Complex<double>>(NM.cblas_zgemv) as NM.cblas_gemv_comp<T>;
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, op.ToMkl(), m, n, α, pA, lda, px, strideX, β, py, strideY);
+			if (funcCm != null)
+			{
+				using var conj = Conjugater.Create(px, op.CanInPlace() ? n : m, strideX, py, op.CanInPlace() ? m : n, strideY, ref op);
+				funcCm(MklMatrixLayout.ColMajor, op.ToMkl(), m, n, α, pA, lda, px, strideX, β, py, strideY);
+			}
+			return funcRe != null || funcCm != null;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool SymmetricMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool hermA, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
+		public virtual bool SymmetricMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool hermA, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>
+		{
+			if (!GetPointer(x, strideX, out T* px, out _))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out _))
+				return false;
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (px == py && strideX != strideY)
+				return false;
+			NM.cblas_symv<T>? funcRe = null;
+			NM.cblas_symv_comp<T>? funcCm = null;
+			if (typeof(T) == typeof(float))
+				funcRe = new NM.cblas_symv<float>(NM.cblas_ssymv) as NM.cblas_symv<T>;
+			if (typeof(T) == typeof(double))
+				funcRe = new NM.cblas_symv<double>(NM.cblas_dsymv) as NM.cblas_symv<T>;
+			if (typeof(T) == typeof(Complex<float>))
+				funcCm = (hermA ? new NM.cblas_symv_comp<Complex<float>>(NM.cblas_chemv) : new NM.cblas_symv_comp<Complex<float>>(NM.cblas_csymv)) as NM.cblas_symv_comp<T>;
+			if (typeof(T) == typeof(Complex<double>))
+				funcCm = (hermA ? new NM.cblas_symv_comp<Complex<double>>(NM.cblas_zhemv) : new NM.cblas_symv_comp<Complex<double>>(NM.cblas_zsymv)) as NM.cblas_symv_comp<T>;
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, pA, lda, px, strideX, β, py, strideY);
+			funcCm?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, pA, lda, px, strideX, β, py, strideY);
+			return funcRe != null || funcCm != null;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool TriangularMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, TSM A, long lda, T α, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
+		public virtual bool TriangularMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, TSM A, long lda, T α, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>
+		{
+			if (!GetPointer(x, strideX, out T* px, out _))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out _))
+				return false;
+			if (!GetPointer(A, m, n, lda, out T* pA))
+				return false;
+			if (β != T.Zero || (px == py && (strideX != strideY || m != n)))
+				return false;
+			op = op.Simplify<T>();
+			delegate*<MklMatrixLayout, MklFillMode, MklOperation, MklBlasDiagType, long, T*, long, T*, long, void> func = null;
+			if (typeof(T) == typeof(float))
+				func = &NM.cblas_strmv;
+			if (typeof(T) == typeof(double))
+				func = &NM.cblas_dtrmv;
+			if (typeof(T) == typeof(Complex<float>))
+				func = &NM.cblas_ctrmv;
+			if (typeof(T) == typeof(Complex<double>))
+				func = &NM.cblas_ztrmv;
+			if (func == null)
+				return false;
+			var fu = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			var ud = unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit;
+			if (px == py)
+			{   // x = alpha * op(A) * x
+				using var conj = Conjugater.Create(px, n, strideX, ref op);
+				func(MklMatrixLayout.ColMajor, fu, op.ToMkl(), ud, n, pA, lda, px, strideX);
+				if (α != T.One)
+					this.Scale(x, strideX, α);
+			}
+			else
+			{
+				Storage.Api.PointerStridedCopy(px, strideX, py, strideY, Math.Min(m, n));
+				bool actualSquare = (m > n) == (fillUpper == op.CanInPlace());
+				using var conj = Conjugater.Create(py, actualSquare ? Math.Min(m, n) : m, strideY, ref op);
+				func(MklMatrixLayout.ColMajor, fu, op.ToMkl(), ud, Math.Min(m, n), pA, lda, py, strideY);
+				if (!actualSquare)
+				{
+					
+					if (m > n)
+						this.GeneralMatrixMultiplyVector(op, m - n, n, T.One, A + n, lda, y + n * strideY, strideY, T.Zero, y + n * strideY, strideY);
+					else
+						this.GeneralMatrixMultiplyVector(op, m, n - m, T.One, A + m * lda, lda, x + m * strideX, strideX, T.One, y, strideY);
+				}
+				if (α != T.One)
+					this.Scale(y, strideY, α);
+			}
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool GeneralRankOneUpdate<T, TSM, TSV1, TSV2>(bool conjY, long m, long n, T α, TSV1 x, long strideX, TSV2 y, long strideY, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
+		public virtual bool GeneralRankOneUpdate<T, TSM, TSV1, TSV2>(bool conjY, long m, long n, T α, TSV1 x, long strideX, TSV2 y, long strideY, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>
+		{
+			if (!GetPointer(x, strideX, out T* px, out _))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out _))
+				return false;
+			if (!GetPointer(A, m, n, lda, out T* pA))
+				return false;
+			if (β != T.One)
+				return false;
+			NMT.cblas_ger<T>? funcRe = null;
+			NMT.cblas_ger_comp<T>? funcCm = null;
+			if (typeof(T) == typeof(float))
+				funcRe = new NMT.cblas_ger<float>(NM.cblas_sger) as NMT.cblas_ger<T>;
+			if (typeof(T) == typeof(double))
+				funcRe = new NMT.cblas_ger<double>(NM.cblas_dger) as NMT.cblas_ger<T>;
+			if (typeof(T) == typeof(Complex<float>))
+				funcCm = (conjY ? new NMT.cblas_ger_comp<Complex<float>>(NM.cblas_cgerc) : new NMT.cblas_ger_comp<Complex<float>>(NM.cblas_cgeru)) as NMT.cblas_ger_comp<T>;
+			if (typeof(T) == typeof(Complex<double>))
+				funcCm = (conjY ? new NMT.cblas_ger_comp<Complex<double>>(NM.cblas_zgerc) : new NMT.cblas_ger_comp<Complex<double>>(NM.cblas_zgeru)) as NMT.cblas_ger_comp<T>;
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, m, n, α, px, strideX, py, strideY, pA, lda);
+			funcCm?.Invoke(MklMatrixLayout.ColMajor, m, n, α, px, strideX, py, strideY, pA, lda);
+			return funcRe != null || funcCm != null;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool SymmetricRankOneUpdate<T, TSM, TSV>(bool fillUpper, bool conjX, long n, T α, TSV x, long strideX, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV : class, IStorage<T, TSV>;
+		public virtual bool SymmetricRankOneUpdate<T, TSM, TSV>(bool fillUpper, bool conjX, long n, T α, TSV x, long strideX, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV : class, IStorage<T, TSV>
+		{
+			if (!GetPointer(x, strideX, out T* px, out _))
+				return false;
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (NumberType<T>.IsComplex && !conjX)
+				return false;
+			NM.cblas_syr<T>? funcRe = null;
+			NM.cblas_her_comp<T>? funcCm = null;
+			if (typeof(T) == typeof(float))
+				funcRe = new NM.cblas_syr<float>(NM.cblas_ssyr) as NM.cblas_syr<T>;
+			if (typeof(T) == typeof(double))
+				funcRe = new NM.cblas_syr<double>(NM.cblas_dsyr) as NM.cblas_syr<T>;
+			if (typeof(T) == typeof(Complex<float>))
+				funcCm = new NM.cblas_her_comp<Complex<float>>(NM.cblas_cher) as NM.cblas_her_comp<T>;
+			if (typeof(T) == typeof(Complex<double>))
+				funcCm = new NM.cblas_her_comp<Complex<double>>(NM.cblas_zher) as NM.cblas_her_comp<T>;
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, px, strideX, pA, lda);
+			funcCm?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, px, strideX, pA, lda);
+			return funcRe != null || funcCm != null;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool SymmetricRankTwoUpdate<T, TSM, TSV1, TSV2>(bool fillUpper, bool conjugate, long n, T α, TSV1 x, long strideX, TSV2 y, long strideY, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>;
+		public virtual bool SymmetricRankTwoUpdate<T, TSM, TSV1, TSV2>(bool fillUpper, bool conjugate, long n, T α, TSV1 x, long strideX, TSV2 y, long strideY, T β, TSM A, long lda) where T : unmanaged, INumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>
+		{
+			if (!GetPointer(x, strideX, out T* px, out _))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out _))
+				return false;
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (NumberType<T>.IsComplex && !conjugate)
+				return false;
+			NM.cblas_syr2<T>? funcRe = null;
+			NM.cblas_her2_comp<T>? funcCm = null;
+			if (typeof(T) == typeof(float))
+				funcRe = new NM.cblas_syr2<float>(NM.cblas_ssyr2) as NM.cblas_syr2<T>;
+			if (typeof(T) == typeof(double))
+				funcRe = new NM.cblas_syr2<double>(NM.cblas_dsyr2) as NM.cblas_syr2<T>;
+			if (typeof(T) == typeof(Complex<float>))
+				funcCm = new NM.cblas_her2_comp<Complex<float>>(NM.cblas_cher2) as NM.cblas_her2_comp<T>;
+			if (typeof(T) == typeof(Complex<double>))
+				funcCm = new NM.cblas_her2_comp<Complex<double>>(NM.cblas_zher2) as NM.cblas_her2_comp<T>;
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, px, strideX, py, strideY, pA, lda);
+			funcCm?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, px, strideX, py, strideY, pA, lda);
+			return funcRe != null || funcCm != null;
+		}
 		#endregion
 
 		#region BLAS level 3
@@ -413,7 +804,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#endregion
 
 
-
+		/*
 		#region BLAS level 1
 		/// <summary>
 		/// Get the index of the element with horizontal maximum absolute value (<c>abs(x[i].real) + abs(x[i].imag)</c>) in <paramref name="x"/>
@@ -433,8 +824,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<int, IntPtr, int, long> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.ComplexSingle => &NativeMethods.cblas_icamax,
-				DataType.ComplexDouble => &NativeMethods.cblas_izamax,
+				DataType.ComplexSingle => &NM.cblas_icamax,
+				DataType.ComplexDouble => &NM.cblas_izamax,
 				_ => null,
 			};
 			if (func is null)
@@ -461,8 +852,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<int, IntPtr, int, long> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.ComplexSingle => &NativeMethods.cblas_icamin,
-				DataType.ComplexDouble => &NativeMethods.cblas_izamin,
+				DataType.ComplexSingle => &NM.cblas_icamin,
+				DataType.ComplexDouble => &NM.cblas_izamin,
 				_ => null,
 			};
 			if (func is null)
@@ -489,11 +880,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (Const<T>.DataType == DataType.ComplexSingle)
 			{
-				sum = NativeMethods.cblas_scasum(n, px, strideX);
+				sum = NM.cblas_scasum(n, px, strideX);
 			}
 			else if (Const<T>.DataType == DataType.ComplexDouble)
 			{
-				sum = NativeMethods.cblas_dzasum(n, px, strideX);
+				sum = NM.cblas_dzasum(n, px, strideX);
 			}
 			else
 				return false;
@@ -508,8 +899,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<int, IntPtr, int, long> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cblas_isamax,
-				DataType.RealDouble => &NativeMethods.cblas_idamax,
+				DataType.RealSingle => &NM.cblas_isamax,
+				DataType.RealDouble => &NM.cblas_idamax,
 				_ => null,
 			};
 			if (func is null)
@@ -526,8 +917,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<int, IntPtr, int, long> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cblas_isamin,
-				DataType.RealDouble => &NativeMethods.cblas_idamin,
+				DataType.RealSingle => &NM.cblas_isamin,
+				DataType.RealDouble => &NM.cblas_idamin,
 				_ => null,
 			};
 			if (func is null)
@@ -547,14 +938,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<int, IntPtr, int, double> funcD;
 			funcS = Const<T>.DataType switch
 			{
-				DataType.RealSingle => doSum ? &NativeMethods.cblas_sasum : &NativeMethods.cblas_snrm2,
-				DataType.ComplexSingle => doSum ? null : &NativeMethods.cblas_scnrm2,
+				DataType.RealSingle => doSum ? &NM.cblas_sasum : &NM.cblas_snrm2,
+				DataType.ComplexSingle => doSum ? null : &NM.cblas_scnrm2,
 				_ => null,
 			};
 			funcD = Const<T>.DataType switch
 			{
-				DataType.RealDouble => doSum ? &NativeMethods.cblas_dasum : &NativeMethods.cblas_dnrm2,
-				DataType.ComplexSingle => doSum ? null : &NativeMethods.cblas_dznrm2,
+				DataType.RealDouble => doSum ? &NM.cblas_dasum : &NM.cblas_dnrm2,
+				DataType.ComplexSingle => doSum ? null : &NM.cblas_dznrm2,
 				_ => null,
 			};
 			if (funcS is not null)
@@ -592,18 +983,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					float dotS = NativeMethods.cblas_sdot(n, px, strideX, py, strideY);
+					float dotS = NM.cblas_sdot(n, px, strideX, py, strideY);
 					dot = *(T*)&dotS;
 					return true;
 				case DataType.RealDouble:
-					double dotD = NativeMethods.cblas_ddot(n, px, strideX, py, strideY);
+					double dotD = NM.cblas_ddot(n, px, strideX, py, strideY);
 					dot = *(T*)&dotD;
 					return true;
 				case DataType.ComplexSingle:
-					func = conjX ? &NativeMethods.cblas_cdotc_sub : &NativeMethods.cblas_cdotu_sub;
+					func = conjX ? &NM.cblas_cdotc_sub : &NM.cblas_cdotu_sub;
 					break;
 				case DataType.ComplexDouble:
-					func = conjX ? &NativeMethods.cblas_zdotc_sub : &NativeMethods.cblas_zdotu_sub;
+					func = conjX ? &NM.cblas_zdotc_sub : &NM.cblas_zdotu_sub;
 					break;
 				default:
 					return false;
@@ -622,16 +1013,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_sscal(n, *(float*)&scalar, px, strideX);
+					NM.cblas_sscal(n, *(float*)&scalar, px, strideX);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dscal(n, *(double*)&scalar, px, strideX);
+					NM.cblas_dscal(n, *(double*)&scalar, px, strideX);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_cscal;
+					func = &NM.cblas_cscal;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_zscal;
+					func = &NM.cblas_zscal;
 					break;
 				default:
 					return false;
@@ -651,16 +1042,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_saxpy(n, *(float*)&α, px, strideX, py, strideY);
+					NM.cblas_saxpy(n, *(float*)&α, px, strideX, py, strideY);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_daxpy(n, *(double*)&α, px, strideX, py, strideY);
+					NM.cblas_daxpy(n, *(double*)&α, px, strideX, py, strideY);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_caxpy;
+					func = &NM.cblas_caxpy;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_zaxpy;
+					func = &NM.cblas_zaxpy;
 					break;
 				default:
 					return false;
@@ -680,7 +1071,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			T result;
-			NativeMethods.vecProd(Const<T>.DataType, px, n, stride, &result);
+			NM.vecProd(Const<T>.DataType, px, n, stride, &result);
 			product = result;
 			return true;
 		}
@@ -693,7 +1084,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			T result;
-			NativeMethods.vecSum(Const<T>.DataType, px, n, stride, &result);
+			NM.vecSum(Const<T>.DataType, px, n, stride, &result);
 			sum = result;
 			return true;
 		}
@@ -707,7 +1098,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
 			long n = Math.Min(nx, ny);
-			NativeMethods.vecParProd(Const<T>.DataType, px, py, n, inclusive, strideX, strideY);
+			NM.vecParProd(Const<T>.DataType, px, py, n, inclusive, strideX, strideY);
 			return true;
 		}
 
@@ -720,7 +1111,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
 			long n = Math.Min(nx, ny);
-			NativeMethods.vecParSum(Const<T>.DataType, px, py, n, inclusive, strideX, strideY);
+			NM.vecParSum(Const<T>.DataType, px, py, n, inclusive, strideX, strideY);
 			return true;
 		}
 
@@ -732,7 +1123,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
-			NativeMethods.vecAddScalar(Const<T>.DataType, px, &scalr, n, stride);
+			NM.vecAddScalar(Const<T>.DataType, px, &scalr, n, stride);
 			return true;
 		}
 
@@ -745,7 +1136,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(destination, out var py, out var ny, incDst))
 				return false;
 			long n = Math.Min(nx, ny);
-			NativeMethods.vecDataConvert(Const<T>.DataType, Const<TOut>.DataType, px, py, n, incSrc, incDst, true);
+			NM.vecDataConvert(Const<T>.DataType, Const<TOut>.DataType, px, py, n, incSrc, incDst, true);
 			return true;
 		}
 
@@ -755,7 +1146,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
-			NativeMethods.vecConj(Const<T>.DataType, px, n, stride);
+			NM.vecConj(Const<T>.DataType, px, n, stride);
 			return true;
 		}
 
@@ -768,7 +1159,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
 			long n = Math.Min(nx, ny);
-			NativeMethods.vecsMulDiv(Const<T>.DataType, px, py, n, strideX, strideY, false);
+			NM.vecsMulDiv(Const<T>.DataType, px, py, n, strideX, strideY, false);
 			return true;
 		}
 
@@ -782,7 +1173,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
 			long n = Math.Min(nx, ny);
-			equals = NativeMethods.vecsEq(Const<T>.DataType, px, py, n, strideX, strideY);
+			equals = NM.vecsEq(Const<T>.DataType, px, py, n, strideX, strideY);
 			return true;
 		}
 
@@ -795,7 +1186,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(y, out var py, out var ny, strideY))
 				return false;
 			long n = Math.Min(nx, ny);
-			NativeMethods.vecsMulDiv(Const<T>.DataType, px, py, n, strideX, strideY, true);
+			NM.vecsMulDiv(Const<T>.DataType, px, py, n, strideX, strideY, true);
 			return true;
 		}
 
@@ -810,16 +1201,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (p == 0)
 			{
 				T one = Const<T>.One;
-				NativeMethods.vecFillVal(Const<T>.DataType, px, &one, n, stride);
+				NM.vecFillVal(Const<T>.DataType, px, &one, n, stride);
 				return true;
 			}
 			if (p == 2)
 			{
-				NativeMethods.vecsMulDiv(Const<T>.DataType, px, px, n, stride, stride, true);
+				NM.vecsMulDiv(Const<T>.DataType, px, px, n, stride, stride, true);
 				return true;
 			}
 			T pp = p.FromDouble<T>(); // for complex type, (&pp)[0..sizeof(T)/2] == (T::value_type)p
-			NativeMethods.vecPowSameType(Const<T>.DataType, px, &pp, n, stride);
+			NM.vecPowSameType(Const<T>.DataType, px, &pp, n, stride);
 			return true;
 		}
 
@@ -834,15 +1225,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (p.IsZero())
 			{
 				T one = Const<T>.One;
-				NativeMethods.vecFillVal(Const<T>.DataType, px, &one, n, stride);
+				NM.vecFillVal(Const<T>.DataType, px, &one, n, stride);
 				return true;
 			}
 			if (p.IsEqual(Const<T>.Two))
 			{
-				NativeMethods.vecsMulDiv(Const<T>.DataType, px, px, n, stride, stride, true);
+				NM.vecsMulDiv(Const<T>.DataType, px, px, n, stride, stride, true);
 				return true;
 			}
-			NativeMethods.vecPowSameType(Const<T>.DataType, px, &p, n, stride);
+			NM.vecPowSameType(Const<T>.DataType, px, &p, n, stride);
 			return true;
 		}
 
@@ -855,7 +1246,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!CheckPointerLong(x, out var px, out var n, stride))
 				return false;
 			T pp = threshold.FromDouble<T>();
-			NativeMethods.vecClip(Const<T>.DataType, px, &pp, n, stride);
+			NM.vecClip(Const<T>.DataType, px, &pp, n, stride);
 			return true;
 		}
 		#endregion
@@ -883,16 +1274,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_sgemv(MklMatrixLayout.ColMajor, opMkl, mm,nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
+					NM.cblas_sgemv(MklMatrixLayout.ColMajor, opMkl, mm,nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dgemv(MklMatrixLayout.ColMajor, opMkl, mm, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
+					NM.cblas_dgemv(MklMatrixLayout.ColMajor, opMkl, mm, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_cgemv;
+					func = &NM.cblas_cgemv;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_zgemv;
+					func = &NM.cblas_zgemv;
 					break;
 				default:
 					return false;
@@ -919,16 +1310,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssymv(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
+					NM.cblas_ssymv(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, pA, llda, px, strideX, *(float*)&β, py, strideY);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsymv(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
+					NM.cblas_dsymv(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, pA, llda, px, strideX, *(double*)&β, py, strideY);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_chemv;
+					func = &NM.cblas_chemv;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_zhemv;
+					func = &NM.cblas_zhemv;
 					break;
 				default:
 					return false;
@@ -956,16 +1347,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_sger(MklMatrixLayout.ColMajor, mm, nn, *(float*)&α,  px, strideX, py, strideY, pA, llda);
+					NM.cblas_sger(MklMatrixLayout.ColMajor, mm, nn, *(float*)&α,  px, strideX, py, strideY, pA, llda);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dger(MklMatrixLayout.ColMajor, mm, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
+					NM.cblas_dger(MklMatrixLayout.ColMajor, mm, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
 					return true;
 				case DataType.ComplexSingle:
-					func = conjY ? &NativeMethods.cblas_cgerc : &NativeMethods.cblas_cgerc;
+					func = conjY ? &NM.cblas_cgerc : &NM.cblas_cgerc;
 					break;
 				case DataType.ComplexDouble:
-					func = conjY ? &NativeMethods.cblas_zgerc : &NativeMethods.cblas_zgerc;
+					func = conjY ? &NM.cblas_zgerc : &NM.cblas_zgerc;
 					break;
 				default:
 					return false;
@@ -995,16 +1386,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssyr(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, pA, llda);
+					NM.cblas_ssyr(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, pA, llda);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsyr(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, pA, llda);
+					NM.cblas_dsyr(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, pA, llda);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_cher;
+					func = &NM.cblas_cher;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_zher;
+					func = &NM.cblas_zher;
 					break;
 				default:
 					return false;
@@ -1038,16 +1429,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssyr2(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, py, strideY, pA, llda);
+					NM.cblas_ssyr2(MklMatrixLayout.ColMajor, fill, nn, *(float*)&α, px, strideX, py, strideY, pA, llda);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsyr2(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
+					NM.cblas_dsyr2(MklMatrixLayout.ColMajor, fill, nn, *(double*)&α, px, strideX, py, strideY, pA, llda);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_cher2;
+					func = &NM.cblas_cher2;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_zher2;
+					func = &NM.cblas_zher2;
 					break;
 				default:
 					return false;
@@ -1079,16 +1470,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_strmv(MklMatrixLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
+					NM.cblas_strmv(MklMatrixLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dtrmv(MklMatrixLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
+					NM.cblas_dtrmv(MklMatrixLayout.ColMajor, fill, opMkl, diag, nn, px, strideX, pA, llda);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_ctrmv;
+					func = &NM.cblas_ctrmv;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_ztrmv;
+					func = &NM.cblas_ztrmv;
 					break;
 				default:
 					return false;
@@ -1116,10 +1507,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, in MklBlasSideMode, in int, in int, in IntPtr, in int, in IntPtr, in int, ref IntPtr, in int, int, in int, void> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cblas_sdgmm_batch,
-				DataType.RealDouble => &NativeMethods.cblas_ddgmm_batch,
-				DataType.ComplexSingle => &NativeMethods.cblas_cdgmm_batch,
-				DataType.ComplexDouble => &NativeMethods.cblas_zdgmm_batch,
+				DataType.RealSingle => &NM.cblas_sdgmm_batch,
+				DataType.RealDouble => &NM.cblas_ddgmm_batch,
+				DataType.ComplexSingle => &NM.cblas_cdgmm_batch,
+				DataType.ComplexDouble => &NM.cblas_zdgmm_batch,
 				_ => null,
 			};
 			IntPtr cacheC = default;
@@ -1175,16 +1566,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_strsm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(float*)&α, pA, llda, pB, lldb);
+					NM.cblas_strsm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(float*)&α, pA, llda, pB, lldb);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dtrsm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(double*)&α, pA, llda, pB, lldb);
+					NM.cblas_dtrsm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(double*)&α, pA, llda, pB, lldb);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_ctrsm;
+					func = &NM.cblas_ctrsm;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_ztrsm;
+					func = &NM.cblas_ztrsm;
 					break;
 				default:
 					return false;
@@ -1222,16 +1613,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_strmm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(float*)&α, pA, llda, pB, lldb);
+					NM.cblas_strmm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(float*)&α, pA, llda, pB, lldb);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dtrmm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(double*)&α, pA, llda, pB, lldb);
+					NM.cblas_dtrmm(MklMatrixLayout.ColMajor, side, fill, opMkl, diag, mm, nn, *(double*)&α, pA, llda, pB, lldb);
 					return true;
 				case DataType.ComplexSingle:
-					func = &NativeMethods.cblas_ctrmm;
+					func = &NM.cblas_ctrmm;
 					break;
 				case DataType.ComplexDouble:
-					func = &NativeMethods.cblas_ztrmm;
+					func = &NM.cblas_ztrmm;
 					break;
 				default:
 					return false;
@@ -1270,10 +1661,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				{
 					var cpyFunc = Const<T>.DataType switch
 					{
-						DataType.RealSingle => new NativeMethods.omatcopy<float>(NativeMethods.MKL_Somatcopy) as NativeMethods.omatcopy<T>,
-						DataType.RealDouble => new NativeMethods.omatcopy<double>(NativeMethods.MKL_Domatcopy) as NativeMethods.omatcopy<T>,
-						DataType.ComplexSingle => new NativeMethods.omatcopy<ComplexSingle>(NativeMethods.MKL_Comatcopy) as NativeMethods.omatcopy<T>,
-						DataType.ComplexDouble => new NativeMethods.omatcopy<ComplexDouble>(NativeMethods.MKL_Zomatcopy) as NativeMethods.omatcopy<T>,
+						DataType.RealSingle => new NM.omatcopy<float>(NM.MKL_Somatcopy) as NM.omatcopy<T>,
+						DataType.RealDouble => new NM.omatcopy<double>(NM.MKL_Domatcopy) as NM.omatcopy<T>,
+						DataType.ComplexSingle => new NM.omatcopy<ComplexSingle>(NM.MKL_Comatcopy) as NM.omatcopy<T>,
+						DataType.ComplexDouble => new NM.omatcopy<ComplexDouble>(NM.MKL_Zomatcopy) as NM.omatcopy<T>,
 						_ => null,
 					};
 					if (cpyFunc is null)
@@ -1286,10 +1677,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 						throw new ArgumentException(Resources.Parameter.NotSameSize, nameof(lda));
 					var cpyFunc = Const<T>.DataType switch
 					{
-						DataType.RealSingle => new NativeMethods.imatcopy<float>(NativeMethods.MKL_Simatcopy) as NativeMethods.imatcopy<T>,
-						DataType.RealDouble => new NativeMethods.imatcopy<double>(NativeMethods.MKL_Dimatcopy) as NativeMethods.imatcopy<T>,
-						DataType.ComplexSingle => new NativeMethods.imatcopy<ComplexSingle>(NativeMethods.MKL_Cimatcopy) as NativeMethods.imatcopy<T>,
-						DataType.ComplexDouble => new NativeMethods.imatcopy<ComplexDouble>(NativeMethods.MKL_Zimatcopy) as NativeMethods.imatcopy<T>,
+						DataType.RealSingle => new NM.imatcopy<float>(NM.MKL_Simatcopy) as NM.imatcopy<T>,
+						DataType.RealDouble => new NM.imatcopy<double>(NM.MKL_Dimatcopy) as NM.imatcopy<T>,
+						DataType.ComplexSingle => new NM.imatcopy<ComplexSingle>(NM.MKL_Cimatcopy) as NM.imatcopy<T>,
+						DataType.ComplexDouble => new NM.imatcopy<ComplexDouble>(NM.MKL_Zimatcopy) as NM.imatcopy<T>,
 						_ => null,
 					};
 					if (cpyFunc is null)
@@ -1300,10 +1691,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			// both matrices are not null
 			var func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => new NativeMethods.omatadd<float>(NativeMethods.MKL_Somatadd) as NativeMethods.omatadd<T>,
-				DataType.RealDouble => new NativeMethods.omatadd<double>(NativeMethods.MKL_Domatadd) as NativeMethods.omatadd<T>,
-				DataType.ComplexSingle => new NativeMethods.omatadd<ComplexSingle>(NativeMethods.MKL_Comatadd) as NativeMethods.omatadd<T>,
-				DataType.ComplexDouble => new NativeMethods.omatadd<ComplexDouble>(NativeMethods.MKL_Zomatadd) as NativeMethods.omatadd<T>,
+				DataType.RealSingle => new NM.omatadd<float>(NM.MKL_Somatadd) as NM.omatadd<T>,
+				DataType.RealDouble => new NM.omatadd<double>(NM.MKL_Domatadd) as NM.omatadd<T>,
+				DataType.ComplexSingle => new NM.omatadd<ComplexSingle>(NM.MKL_Comatadd) as NM.omatadd<T>,
+				DataType.ComplexDouble => new NM.omatadd<ComplexDouble>(NM.MKL_Zomatadd) as NM.omatadd<T>,
 				_ => null,
 			};
 			if (func is null)
@@ -1325,16 +1716,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_sgemm(MklMatrixLayout.ColMajor, opcA, opcB, mm, nn, kk, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
+					NM.cblas_sgemm(MklMatrixLayout.ColMajor, opcA, opcB, mm, nn, kk, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dgemm(MklMatrixLayout.ColMajor, opcA, opcB, mm, nn, kk, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
+					NM.cblas_dgemm(MklMatrixLayout.ColMajor, opcA, opcB, mm, nn, kk, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
 					return true;
 				case DataType.ComplexSingle:
-					func = this.ComplexGemmUseGemm3m ? &NativeMethods.cblas_cgemm3m : &NativeMethods.cblas_cgemm;
+					func = this.ComplexGemmUseGemm3m ? &NM.cblas_cgemm3m : &NM.cblas_cgemm;
 					break;
 				case DataType.ComplexDouble:
-					func = this.ComplexGemmUseGemm3m ? &NativeMethods.cblas_zgemm3m : &NativeMethods.cblas_zgemm;
+					func = this.ComplexGemmUseGemm3m ? &NM.cblas_zgemm3m : &NM.cblas_zgemm;
 					break;
 				default:
 					return false;
@@ -1358,16 +1749,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssymm(MklMatrixLayout.ColMajor, side, fill, mm, nn, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
+					NM.cblas_ssymm(MklMatrixLayout.ColMajor, side, fill, mm, nn, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsymm(MklMatrixLayout.ColMajor, side, fill, mm, nn, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
+					NM.cblas_dsymm(MklMatrixLayout.ColMajor, side, fill, mm, nn, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
 					return true;
 				case DataType.ComplexSingle:
-					func = hermA ? &NativeMethods.cblas_csymm : &NativeMethods.cblas_chemm;
+					func = hermA ? &NM.cblas_csymm : &NM.cblas_chemm;
 					break;
 				case DataType.ComplexDouble:
-					func = hermA ? &NativeMethods.cblas_zsymm : &NativeMethods.cblas_zhemm;
+					func = hermA ? &NM.cblas_zsymm : &NM.cblas_zhemm;
 					break;
 				default:
 					return false;
@@ -1388,16 +1779,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssyrk(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(float*)&α, pA, llda, *(float*)&β, pC, lldc);
+					NM.cblas_ssyrk(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(float*)&α, pA, llda, *(float*)&β, pC, lldc);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsyrk(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(double*)&α, pA, llda,  *(double*)&β, pC, lldc);
+					NM.cblas_dsyrk(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(double*)&α, pA, llda,  *(double*)&β, pC, lldc);
 					return true;
 				case DataType.ComplexSingle:
-					func = conjA ? &NativeMethods.cblas_cherk : &NativeMethods.cblas_csyrk;
+					func = conjA ? &NM.cblas_cherk : &NM.cblas_csyrk;
 					break;
 				case DataType.ComplexDouble:
-					func = conjA ? &NativeMethods.cblas_zherk : &NativeMethods.cblas_zsyrk;
+					func = conjA ? &NM.cblas_zherk : &NM.cblas_zsyrk;
 					break;
 				default:
 					return false;
@@ -1420,16 +1811,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			switch (Const<T>.DataType)
 			{
 				case DataType.RealSingle:
-					NativeMethods.cblas_ssyr2k(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
+					NM.cblas_ssyr2k(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(float*)&α, pA, llda, pB, lldb, *(float*)&β, pC, lldc);
 					return true;
 				case DataType.RealDouble:
-					NativeMethods.cblas_dsyr2k(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
+					NM.cblas_dsyr2k(MklMatrixLayout.ColMajor, fill, opMkl, nn, kk, *(double*)&α, pA, llda, pB, lldb, *(double*)&β, pC, lldc);
 					return true;
 				case DataType.ComplexSingle:
-					func = conjugate ? &NativeMethods.cblas_cher2k : &NativeMethods.cblas_csyr2k;
+					func = conjugate ? &NM.cblas_cher2k : &NM.cblas_csyr2k;
 					break;
 				case DataType.ComplexDouble:
-					func = conjugate ? &NativeMethods.cblas_zher2k : &NativeMethods.cblas_zsyr2k;
+					func = conjugate ? &NM.cblas_zher2k : &NM.cblas_zsyr2k;
 					break;
 				default:
 					return false;
@@ -1452,7 +1843,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointerLong(A, n, lda, out var pA))
 				return false;
-			NativeMethods.matMakeHerm(Const<T>.DataType, pA, lda, n, storedUpper, hermitian);
+			NM.matMakeHerm(Const<T>.DataType, pA, lda, n, storedUpper, hermitian);
 			return true;
 		}
 
@@ -1462,7 +1853,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!CheckPointerLong(A, n, lda, out var pA))
 				return false;
-			NativeMethods.matTriClear(Const<T>.DataType, pA, lda, n, clearLower);
+			NM.matTriClear(Const<T>.DataType, pA, lda, n, clearLower);
 			return true;
 		}
 
@@ -1480,7 +1871,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 			if (!CheckPointerLong(C, na * nb, ldc, out var pC))
 				return false;
-			NativeMethods.matKron(Const<T>.DataType, pA, lda, ma, na, pB, ldb, mb, nb, pC, ldc, &α, &β);
+			NM.matKron(Const<T>.DataType, pA, lda, ma, na, pB, ldb, mb, nb, pC, ldc, &α, &β);
 			return true;
 		}
 		#endregion
@@ -1502,10 +1893,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, int, int, IntPtr, int, IntPtr, IntPtr, int, MklLapackInfo> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.LAPACKE_sgesv,
-				DataType.RealDouble => &NativeMethods.LAPACKE_dgesv,
-				DataType.ComplexSingle => &NativeMethods.LAPACKE_cgesv,
-				DataType.ComplexDouble => &NativeMethods.LAPACKE_zgesv,
+				DataType.RealSingle => &NM.LAPACKE_sgesv,
+				DataType.RealDouble => &NM.LAPACKE_dgesv,
+				DataType.ComplexSingle => &NM.LAPACKE_cgesv,
+				DataType.ComplexDouble => &NM.LAPACKE_zgesv,
 				_ => null,
 			};
 			if (func is null)
@@ -1542,10 +1933,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, MklOperationChar, int, int, int, IntPtr, int, IntPtr, int, MklLapackInfo> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.LAPACKE_sgels,
-				DataType.RealDouble => &NativeMethods.LAPACKE_dgels,
-				DataType.ComplexSingle => &NativeMethods.LAPACKE_cgels,
-				DataType.ComplexDouble => &NativeMethods.LAPACKE_zgels,
+				DataType.RealSingle => &NM.LAPACKE_sgels,
+				DataType.RealDouble => &NM.LAPACKE_dgels,
+				DataType.ComplexSingle => &NM.LAPACKE_cgels,
+				DataType.ComplexDouble => &NM.LAPACKE_zgels,
 				_ => null,
 			};
 			if (func is null)
@@ -1572,10 +1963,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, int, int, IntPtr, int, IntPtr, MklLapackInfo> qrfunc;
 			qrfunc = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.LAPACKE_sgeqrf,
-				DataType.RealDouble => &NativeMethods.LAPACKE_dgeqrf,
-				DataType.ComplexSingle => &NativeMethods.LAPACKE_cgeqrf,
-				DataType.ComplexDouble => &NativeMethods.LAPACKE_zgeqrf,
+				DataType.RealSingle => &NM.LAPACKE_sgeqrf,
+				DataType.RealDouble => &NM.LAPACKE_dgeqrf,
+				DataType.ComplexSingle => &NM.LAPACKE_cgeqrf,
+				DataType.ComplexDouble => &NM.LAPACKE_zgeqrf,
 				_ => null,
 			};
 			if (qrfunc is null)
@@ -1583,10 +1974,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, int, int, int, IntPtr, int, IntPtr, MklLapackInfo> gqfunc;
 			gqfunc = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.LAPACKE_sorgqr,
-				DataType.RealDouble => &NativeMethods.LAPACKE_dorgqr,
-				DataType.ComplexSingle => &NativeMethods.LAPACKE_cungqr,
-				DataType.ComplexDouble => &NativeMethods.LAPACKE_zungqr,
+				DataType.RealSingle => &NM.LAPACKE_sorgqr,
+				DataType.RealDouble => &NM.LAPACKE_dorgqr,
+				DataType.ComplexSingle => &NM.LAPACKE_cungqr,
+				DataType.ComplexDouble => &NM.LAPACKE_zungqr,
 				_ => null,
 			};
 			// calculate
@@ -1632,10 +2023,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklFillModeChar, int, IntPtr, int, IntPtr, MklLapackInfo> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.LAPACKE_ssyev,
-				DataType.RealDouble => &NativeMethods.LAPACKE_dsyev,
-				DataType.ComplexSingle => &NativeMethods.LAPACKE_cheev,
-				DataType.ComplexDouble => &NativeMethods.LAPACKE_zheev,
+				DataType.RealSingle => &NM.LAPACKE_ssyev,
+				DataType.RealDouble => &NM.LAPACKE_dsyev,
+				DataType.ComplexSingle => &NM.LAPACKE_cheev,
+				DataType.ComplexDouble => &NM.LAPACKE_zheev,
 				_ => null,
 			};
 			if (func is null)
@@ -1663,10 +2054,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, GeneralEigenType, MklVectorModeChar, MklFillModeChar, int, IntPtr, int, IntPtr, int, IntPtr, MklLapackInfo> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.LAPACKE_ssygv,
-				DataType.RealDouble => &NativeMethods.LAPACKE_dsygv,
-				DataType.ComplexSingle => &NativeMethods.LAPACKE_chegv,
-				DataType.ComplexDouble => &NativeMethods.LAPACKE_zhegv,
+				DataType.RealSingle => &NM.LAPACKE_ssygv,
+				DataType.RealDouble => &NM.LAPACKE_dsygv,
+				DataType.ComplexSingle => &NM.LAPACKE_chegv,
+				DataType.ComplexDouble => &NM.LAPACKE_zhegv,
 				_ => null,
 			};
 			if (func is null)
@@ -1708,17 +2099,17 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 						Storage.API.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
 						Storage.API.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
 						if (typeof(T) == typeof(float))
-							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+							NM.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
 						else
-							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+							NM.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
 						// right
 						ptr = (T*)pVr + (i * ldvr + 1); ptr2 = ptr + ldvr;
 						Storage.API.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
 						Storage.API.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
 						if (typeof(T) == typeof(float))
-							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+							NM.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
 						else
-							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+							NM.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
 					}
 				}
 			}
@@ -1740,9 +2131,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 						Storage.API.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
 						Storage.API.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
 						if (typeof(T) == typeof(float))
-							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+							NM.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
 						else
-							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+							NM.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
 					}
 				}
 			}
@@ -1764,9 +2155,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 						Storage.API.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
 						Storage.API.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
 						if (typeof(T) == typeof(float))
-							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+							NM.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
 						else
-							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+							NM.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
 					}
 				}
 			}
@@ -1775,61 +2166,61 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				// no copy
 			}
 			return true;
-			/*
-			// set eigenvectors to zeros
-			if (leftVec is not null)
-			{
-				if (!this.GeneralMatricesAdd_(default, default, n, n, default, leftVec, ldvl, default, default, default, leftVec, ldvl))
-					return false;
-			}
-			if (rightVec is not null)
-			{
-				if (!this.GeneralMatricesAdd_(default, default, n, n, default, rightVec, ldvr, default, default, default, rightVec, ldvr))
-					return false;
-			}
-			ldvl *= 2; ldvr *= 2;
-			// copy eigenvectors
-			for (int i = 0; i < nn; i++)
-			{
-				// copy real parts in both cases
-				if (leftVec is not null)
-				{
-					Storage.StorageApi.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
-				}
-				if (rightVec is not null)
-				{
-					Storage.StorageApi.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
-				}
-				// check real or complex eigen-pair
-				if (valI[i].IsZero())
-				{   // the i-th eigen-pair is real
-					// do nothing
-				}
-				else
-				{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
-					if (leftVec is not null)
-					{
-						T* ptr = (T*)pVl + (i * ldvl + 1), ptr2 = ptr + ldvl;
-						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
-						Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
-						if (typeof(T) == typeof(float))
-							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
-						else
-							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
-					}
-					if (rightVec is not null)
-					{
-						T* ptr = (T*)pVr + (i * ldvr + 1), ptr2 = ptr + ldvr;
-						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
-						Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
-						if (typeof(T) == typeof(float))
-							NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
-						else
-							NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
-					}
-				}
-			}
-			*/
+			
+			////// set eigenvectors to zeros
+			////if (leftVec is not null)
+			////{
+			////	if (!this.GeneralMatricesAdd_(default, default, n, n, default, leftVec, ldvl, default, default, default, leftVec, ldvl))
+			////		return false;
+			////}
+			////if (rightVec is not null)
+			////{
+			////	if (!this.GeneralMatricesAdd_(default, default, n, n, default, rightVec, ldvr, default, default, default, rightVec, ldvr))
+			////		return false;
+			////}
+			////ldvl *= 2; ldvr *= 2;
+			////// copy eigenvectors
+			////for (int i = 0; i < nn; i++)
+			////{
+			////	// copy real parts in both cases
+			////	if (leftVec is not null)
+			////	{
+			////		Storage.StorageApi.PointerStridedCopy(vecL + n * i, 1, (T*)pVl + i * ldvl, 2, nn);
+			////	}
+			////	if (rightVec is not null)
+			////	{
+			////		Storage.StorageApi.PointerStridedCopy(vecR + n * i, 1, (T*)pVr + i * ldvr, 2, nn);
+			////	}
+			////	// check real or complex eigen-pair
+			////	if (valI[i].IsZero())
+			////	{   // the i-th eigen-pair is real
+			////		// do nothing
+			////	}
+			////	else
+			////	{   // the i-th and (i+1)-th eigen-pairs are complex conjugate pairs
+			////		if (leftVec is not null)
+			////		{
+			////			T* ptr = (T*)pVl + (i * ldvl + 1), ptr2 = ptr + ldvl;
+			////			Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr, 2, nn);
+			////			Storage.StorageApi.PointerStridedCopy(vecL + n * (i + 1), 1, ptr2, 2, nn);
+			////			if (typeof(T) == typeof(float))
+			////				NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+			////			else
+			////				NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+			////		}
+			////		if (rightVec is not null)
+			////		{
+			////			T* ptr = (T*)pVr + (i * ldvr + 1), ptr2 = ptr + ldvr;
+			////			Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr, 2, nn);
+			////			Storage.StorageApi.PointerStridedCopy(vecR + n * (i + 1), 1, ptr2, 2, nn);
+			////			if (typeof(T) == typeof(float))
+			////				NativeMethods.cblas_sscal(nn, -1, (IntPtr)ptr2, 2);
+			////			else
+			////				NativeMethods.cblas_dscal(nn, -1, (IntPtr)ptr2, 2);
+			////		}
+			////	}
+			////}
+			
 		}
 
 		protected override unsafe bool EigenSpecialMatrixGeneral_<T, TComplex>(SolveVectorMode mode, long n, Storage<TComplex> valOut, Storage<TComplex>? leftVec, long ldvl, Storage<TComplex>? rightVec, long ldvr, Storage<T> A, long lda)
@@ -1853,21 +2244,21 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, MklLapackInfo> funcC = null;
 			if (typeof(T) == typeof(float))
 			{
-				funcR = &NativeMethods.LAPACKE_sgeev;
+				funcR = &NM.LAPACKE_sgeev;
 			}
 			else if (typeof(T) == typeof(double))
 			{
-				funcR = &NativeMethods.LAPACKE_dgeev;
+				funcR = &NM.LAPACKE_dgeev;
 			}
 			else
 			{
 				switch (Const<T>.DataType)
 				{
 					case DataType.ComplexSingle:
-						funcC = &NativeMethods.LAPACKE_cgeev;
+						funcC = &NM.LAPACKE_cgeev;
 						break;
 					case DataType.ComplexDouble:
-						funcC = &NativeMethods.LAPACKE_zgeev;
+						funcC = &NM.LAPACKE_zgeev;
 						break;
 					default:
 						break;
@@ -1925,18 +2316,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, IntPtr, int, IntPtr, int, MklLapackInfo> funcC = null;
 			if (typeof(T) == typeof(float))
 			{
-				funcR = &NativeMethods.LAPACKE_sggev;
+				funcR = &NM.LAPACKE_sggev;
 			}
 			else if (typeof(T) == typeof(double))
 			{
-				funcR = &NativeMethods.LAPACKE_dggev;
+				funcR = &NM.LAPACKE_dggev;
 			}
 			else
 			{
 				if (Const<T>.DataType == DataType.ComplexSingle)
-					funcC = &NativeMethods.LAPACKE_cggev;
+					funcC = &NM.LAPACKE_cggev;
 				else if (Const<T>.DataType == DataType.ComplexDouble)
-					funcC = &NativeMethods.LAPACKE_zggev;
+					funcC = &NM.LAPACKE_zggev;
 			}
 			if (funcR is null && funcC is null)
 				return false;
@@ -1986,10 +2377,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			delegate*<MklMatrixLayout, MklSvdModeChar, MklSvdModeChar, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, byte[], MklLapackInfo> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.LAPACKE_sgesvd,
-				DataType.RealDouble => &NativeMethods.LAPACKE_dgesvd,
-				DataType.ComplexSingle => &NativeMethods.LAPACKE_cgesvd,
-				DataType.ComplexDouble => &NativeMethods.LAPACKE_zgesvd,
+				DataType.RealSingle => &NM.LAPACKE_sgesvd,
+				DataType.RealDouble => &NM.LAPACKE_dgesvd,
+				DataType.ComplexSingle => &NM.LAPACKE_cgesvd,
+				DataType.ComplexDouble => &NM.LAPACKE_zgesvd,
 				_ => null,
 			};
 			if (func is null)
@@ -2040,22 +2431,22 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (orderLen >= n)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(orderVal));
 
-			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, NativeMethods.SchurSelect2?, int, IntPtr, int, out int, T*, T*, IntPtr, int, MklLapackInfo> funcR = null;
-			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, NativeMethods.SchurSelect1?, int, IntPtr, int, out int, T*, IntPtr, int, MklLapackInfo> funcC = null;
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, NM.SchurSelect2?, int, IntPtr, int, out int, T*, T*, IntPtr, int, MklLapackInfo> funcR = null;
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, NM.SchurSelect1?, int, IntPtr, int, out int, T*, IntPtr, int, MklLapackInfo> funcC = null;
 			if (typeof(T) == typeof(float))
 			{
-				funcR = &NativeMethods.LAPACKE_sgees;
+				funcR = &NM.LAPACKE_sgees;
 			}
 			else if (typeof(T) == typeof(double))
 			{
-				funcR = &NativeMethods.LAPACKE_dgees;
+				funcR = &NM.LAPACKE_dgees;
 			}
 			else
 			{
 				if (Const<T>.DataType == DataType.ComplexSingle)
-					funcC = &NativeMethods.LAPACKE_cgees;
+					funcC = &NM.LAPACKE_cgees;
 				else if (Const<T>.DataType == DataType.ComplexDouble)
-					funcC = &NativeMethods.LAPACKE_zgees;
+					funcC = &NM.LAPACKE_zgees;
 			}
 			if (funcR is null && funcC is null)
 				return false;
@@ -2070,7 +2461,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				if (funcC is not null)
 				{
 					// calculate
-					NativeMethods.SchurSelect1? selector;
+					NM.SchurSelect1? selector;
 					if (orderVal is null)
 					{
 						selector = null;
@@ -2105,7 +2496,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				}
 				else
 				{
-					NativeMethods.SchurSelect2? selector;
+					NM.SchurSelect2? selector;
 					if (orderVal is null)
 					{
 						selector = null;
@@ -2145,5 +2536,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 		#endregion
 		#endregion
+		*/
 	}
 }

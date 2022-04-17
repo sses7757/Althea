@@ -47,11 +47,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				throw new ArgumentNullException(nameof(s));
 			if (stride <= 0)
 				throw new ArgumentOutOfRangeException(nameof(stride), stride, Resources.ParameterError.MustPositive);
-			if (!NumberType<T>.IsPrimitive && typeof(T) != typeof(Complex<float>) && typeof(T) != typeof(Complex<double>))
-				return false; // not support
 			if (s is not PureStorage<T, CpuMemoryPointer> ps)
 				return false; // not support
-			pointer = (T*)ps.Pointer.Pointer.Pointer.ToPointer();
+			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
 			if (pointer == default)
 				return false; // not support
 			length = (int)ps.Length;

@@ -39,6 +39,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_scopy(long n, void* x, long incx, void* y, long incy);
 
+		[NativeMethod(6)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void cblas_sswap(long n, void* x, long incx, void* y, long incy);
+
 		// Ignore Spelling: sdot ddot
 		[CustomNativeMethod(6, "float", "sdot")]
 		[CustomNativeMethod(6, "double", "ddot")]
@@ -47,7 +51,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[CustomNativeMethod(6, "Complex<double>", "zdotu_sub", "", "Complex<double>", true)]
 		[CustomNativeMethod(6, "Complex<double>", "zdotc_sub", "", "Complex<double>", true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern float cblas_sdot(long n, void* x, long incx, void* y, long incy);
+		internal static extern float cblas_sdot(long n, float* x, long incx, float* y, long incy);
+
+		internal delegate T cblas_dot<T>(long n, T* x, long incx, T* y, long incy) where T : unmanaged;
+		internal delegate void cblas_dot_comp<T>(long n, T* x, long incx, T* y, long incy, out T dot) where T : unmanaged;
 		#endregion
 
 		#region level 2
@@ -59,6 +66,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_ssymv(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, float* A, long lda, float* x, long incx, float beta, float* y, long incy);
 
+		[NativeMethod(6, false, true, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void cblas_chemv(MklMatrixLayout Layout, MklFillMode uplo, long n, Complex<float> alpha, Complex<float>* A, long lda, Complex<float>* x, long incx, Complex<float> beta, Complex<float>* y, long incy);
+
 		[NativeMethod(6)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_strmv(MklMatrixLayout Layout, MklFillMode Uplo, MklOperation TransA, MklBlasDiagType Diag, long n, void* A, long lda, void* x, long incx);
@@ -67,19 +78,31 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[CustomNativeMethod(6, "float", "sger")]
 		[CustomNativeMethod(6, "double", "dger")]
 		[CustomNativeMethod(6, "Complex<float>", "cgerc", "in", "Complex<float>")]
-		[CustomNativeMethod(6, "Complex<float>", "cdotc_sub", "in", "Complex<float>")]
-		[CustomNativeMethod(6, "Complex<double>", "zdotu_sub", "in", "Complex<double>")]
-		[CustomNativeMethod(6, "Complex<double>", "zdotc_sub", "in", "Complex<double>")]
+		[CustomNativeMethod(6, "Complex<float>", "cgeru", "in", "Complex<float>")]
+		[CustomNativeMethod(6, "Complex<double>", "zgeru", "in", "Complex<double>")]
+		[CustomNativeMethod(6, "Complex<double>", "zgerc", "in", "Complex<double>")]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_sger(MklMatrixLayout Layout, long m, long n, float alpha, float* x, long incx, float* y, long incy, float* A, long lda);
 
-		[NativeMethod(6, false, true)]
+		internal delegate void cblas_ger<T>(MklMatrixLayout Layout, long m, long n, T alpha, T* x, long incx, T* y, long incy, T* A, long lda) where T : unmanaged;
+		internal delegate void cblas_ger_comp<T>(MklMatrixLayout Layout, long m, long n, in T alpha, T* x, long incx, T* y, long incy, T* A, long lda) where T : unmanaged;
+
+		[NativeMethod(6, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_ssyr(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, float* x, long incx, float* A, long lda);
 
-		[NativeMethod(6, false, true)]
+		[NativeMethod(6, false, true, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void cblas_cher(MklMatrixLayout Layout, MklFillMode uplo, long n, Complex<float> alpha, Complex<float>* x, long incx, Complex<float>* A, long lda);
+
+		[NativeMethod(6, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_ssyr2(MklMatrixLayout Layout, MklFillMode uplo, long n, float alpha, float* x, long incx, float* y, long incy, float* A, long lda);
+
+		[NativeMethod(6, false, true, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void cblas_cher2(MklMatrixLayout Layout, MklFillMode uplo, long n, Complex<float> alpha, Complex<float>* x, long incx, Complex<float>* y, long incy, Complex<float>* A, long lda);
+
 		#endregion
 
 		#region level 3

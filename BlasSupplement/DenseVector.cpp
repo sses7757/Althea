@@ -75,7 +75,7 @@ struct foreachMulDiv_functor
 };
 
 template<typename T>
-inline void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const size_t N, const unsigned int sa, const unsigned int sb, bool multiply)
+inline int vectorsElementWiseMultiplyDivide(void* av, const void* bv, const size_t N, const unsigned int sa, const unsigned int sb, bool multiply)
 {
 	if (sa == 1 && sb == 1)
 	{
@@ -105,12 +105,13 @@ inline void vectorsElementWiseMultiplyDivide(void* av, const void* bv, const siz
 		else
 			thrust::for_each_n(THRUST_PAR, counting0, N, foreachMulDiv_functor<T, false, true, true>(av, bv, sa, sb));
 	}
+	return 0;
 }
 
 DLLEXP
-void vecsMulDiv(const Datatype::DataType type, void* a, const void* b, const size_t N, const unsigned int strideA, const unsigned int strideB, bool multiply)
+int vecsMulDiv(const Datatype::DataType type, void* a, const void* b, const size_t N, const unsigned int strideA, const unsigned int strideB, bool multiply)
 {
-	AUTO_ALLTYPE_FUNC(vectorsElementWiseMultiplyDivide, type, void, a, b, N, strideA, strideB, multiply);
+	AUTO_ALLTYPE_FUNC(vectorsElementWiseMultiplyDivide, type, int, a, b, N, strideA, strideB, multiply);
 }
 #pragma endregion
 
@@ -166,7 +167,7 @@ struct foreachAddTwo_functor
 };
 
 template<typename T>
-inline void vectorsGeneralAdd(const void* scalar, const void* av, void* bv, const size_t N, const unsigned int sa, const unsigned int sb)
+inline int vectorsGeneralAdd(const void* scalar, const void* av, void* bv, const size_t N, const unsigned int sa, const unsigned int sb)
 {
 	bool scalarNotOne = T(1) != *(const T*)scalar;
 	if (sa == 1 && sb == 1)
@@ -197,12 +198,13 @@ inline void vectorsGeneralAdd(const void* scalar, const void* av, void* bv, cons
 		else
 			thrust::for_each_n(THRUST_PAR, counting0, N, foreachAddTwo_functor<T, true, true, false>(av, bv, scalar, sa, sb));
 	}
+	return 0;
 }
 
 DLLEXP
-void vecsAdd(const Datatype::DataType type, const void* scalar, const void* a, void* b, const size_t N, const unsigned int strideA, const unsigned int strideB)
+int vecsAdd(const Datatype::DataType type, const void* scalar, const void* a, void* b, const size_t N, const unsigned int strideA, const unsigned int strideB)
 {
-	AUTO_ALLTYPE_FUNC(vectorsGeneralAdd, type, void, scalar, a, b, N, strideA, strideB);
+	AUTO_ALLTYPE_FUNC(vectorsGeneralAdd, type, int, scalar, a, b, N, strideA, strideB);
 }
 #pragma endregion
 
@@ -278,7 +280,7 @@ struct foreachPower_strided_functor
 };
 
 template<typename T>
-inline void vectorElementWisePowerSameType(void* av, const void* pv, const size_t N, const unsigned int stride)
+inline int vectorElementWisePowerSameType(void* av, const void* pv, const size_t N, const unsigned int stride)
 {
 	if (stride == 1)
 	{
@@ -288,10 +290,11 @@ inline void vectorElementWisePowerSameType(void* av, const void* pv, const size_
 	{
 		thrust::for_each_n(THRUST_PAR, counting0, N, foreachPower_strided_functor<T, T>(av, pv, stride));
 	}
+	return 0;
 }
 
 template<typename T>
-inline void vectorElementWiseRealPower(void* av, const void* pv, const size_t N, const unsigned int stride)
+inline int vectorElementWiseRealPower(void* av, const void* pv, const size_t N, const unsigned int stride)
 {
 	using realT = typename T::value_type;
 	if (stride == 1)
@@ -302,18 +305,19 @@ inline void vectorElementWiseRealPower(void* av, const void* pv, const size_t N,
 	{
 		thrust::for_each_n(THRUST_PAR, counting0, N, foreachPower_strided_functor<T, realT>(av, pv, stride));
 	}
+	return 0;
 }
 
 DLLEXP
-void vecPowSameType(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
+int vecPowSameType(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
 {
-	AUTO_ALLTYPE_FUNC(vectorElementWisePowerSameType, type, void, a, p, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorElementWisePowerSameType, type, int, a, p, N, stride);
 }
 
 DLLEXP
-void vecPowRealType(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
+int vecPowRealType(const Datatype::DataType type, void* a, const void* p, const size_t N, const unsigned int stride)
 {
-	AUTO_COMPLEX_TYPE_FUNC(vectorElementWiseRealPower, type, void, a, p, N, stride);
+	AUTO_COMPLEX_TYPE_FUNC(vectorElementWiseRealPower, type, int, a, p, N, stride);
 }
 #pragma endregion
 
@@ -348,7 +352,7 @@ struct foreachFill_functor
 };
 
 template<typename T>
-inline void vectorFillWith(void* av, const void* valv, const size_t N, const unsigned int stride)
+inline int vectorFillWith(void* av, const void* valv, const size_t N, const unsigned int stride)
 {
 	if (stride == 1)
 	{
@@ -358,12 +362,13 @@ inline void vectorFillWith(void* av, const void* valv, const size_t N, const uns
 	{
 		thrust::for_each_n(THRUST_PAR, counting0, N, foreachFill_strided_functor<T>(av, valv, stride));
 	}
+	return 0;
 }
 
 DLLEXP
-void vecFillVal(const Datatype::DataType type, void* a, const void* val, const size_t N, const unsigned int stride)
+int vecFillVal(const Datatype::DataType type, void* a, const void* val, const size_t N, const unsigned int stride)
 {
-	AUTO_ALLTYPE_FUNC(vectorFillWith, type, void, a, val, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorFillWith, type, int, a, val, N, stride);
 }
 #pragma endregion
 
@@ -397,7 +402,7 @@ struct foreachConj_functor
 };
 
 template<typename T>
-inline void vecConjugate(void* av, const size_t N, const unsigned int stride)
+inline int vecConjugate(void* av, const size_t N, const unsigned int stride)
 {
 	if constexpr (std::is_scalar<T>::value)
 		return;
@@ -409,12 +414,13 @@ inline void vecConjugate(void* av, const size_t N, const unsigned int stride)
 	{
 		thrust::for_each_n(THRUST_PAR, counting0, N, foreachConj_strided_functor<T>(av, stride));
 	}
+	return 0;
 }
 
 DLLEXP
-void vecConj(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
+int vecConj(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride)
 {
-	AUTO_SIGNED_TYPE_FUNC(vecConjugate, type, void, a, N, stride);
+	AUTO_SIGNED_TYPE_FUNC(vecConjugate, type, int, a, N, stride);
 }
 #pragma endregion
 
@@ -930,7 +936,7 @@ struct foreachClip_functor
 };
 
 template<typename T>
-inline void vectorClip(void* av, const void* threshold, const size_t N, const unsigned int stride)
+inline int vectorClip(void* av, const void* threshold, const size_t N, const unsigned int stride)
 {
 	if constexpr (std::is_scalar<T>::value)
 	{
@@ -955,12 +961,13 @@ inline void vectorClip(void* av, const void* threshold, const size_t N, const un
 			thrust::for_each_n(THRUST_PAR, counting0, N, foreachClip_strided_functor<T, U>(av, threshold, stride));
 		}
 	}
+	return 0;
 }
 
 DLLEXP
-void vecClip(const Datatype::DataType type, void* a, const void* threshold, const size_t N, const unsigned int stride)
+int vecClip(const Datatype::DataType type, void* a, const void* threshold, const size_t N, const unsigned int stride)
 {
-	AUTO_ALLTYPE_FUNC(vectorClip, type, void, a, threshold, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorClip, type, int, a, threshold, N, stride);
 }
 #pragma endregion
 
@@ -996,7 +1003,7 @@ struct foreachAdd_functor
 };
 
 template<typename T>
-inline void vectorAddedByScalar(void* av, const void* scalar, const size_t N, const unsigned int stride)
+inline int vectorAddedByScalar(void* av, const void* scalar, const size_t N, const unsigned int stride)
 {
 	if (stride == 1)
 	{
@@ -1006,12 +1013,13 @@ inline void vectorAddedByScalar(void* av, const void* scalar, const size_t N, co
 	{
 		thrust::for_each_n(THRUST_PAR, counting0, N, foreachAdd_strided_functor<T>(av, scalar, stride));
 	}
+	return 0;
 }
 
 DLLEXP
-void vecAddScalar(const Datatype::DataType type, void* a, const void* scalar, const size_t N, const unsigned int stride)
+int vecAddScalar(const Datatype::DataType type, void* a, const void* scalar, const size_t N, const unsigned int stride)
 {
-	AUTO_ALLTYPE_FUNC(vectorAddedByScalar, type, void, a, scalar, N, stride);
+	AUTO_ALLTYPE_FUNC(vectorAddedByScalar, type, int, a, scalar, N, stride);
 }
 #pragma endregion
 
@@ -1139,7 +1147,7 @@ double vecNorm(const Datatype::DataType type, const void* a, const size_t N, con
 
 #pragma region vector dot
 template<typename T>
-inline void vectorsInner(const void* av, const void* bv, const size_t N, const unsigned int sa, const unsigned int sb, void* result)
+inline int vectorsInner(const void* av, const void* bv, const size_t N, const unsigned int sa, const unsigned int sb, void* result)
 {
 	const T* a = (const T*)av;
 	const T* b = (const T*)bv;
@@ -1163,6 +1171,7 @@ inline void vectorsInner(const void* av, const void* bv, const size_t N, const u
 		auto strideB = make_strided_range(b, N, sb);
 		*((T*)result) = thrust::inner_product(THRUST_PAR, strideA.begin(), strideA.end(), strideB.begin(), T());
 	}
+	return 0;
 }
 
 template <typename T>
@@ -1175,7 +1184,7 @@ struct conjMultiply_functor
 };
 
 template<typename T>
-inline void vectorsInnerConjugateA(const void* av, const void* bv, const size_t N, const unsigned int sa, const unsigned int sb, void* result)
+inline int vectorsInnerConjugateA(const void* av, const void* bv, const size_t N, const unsigned int sa, const unsigned int sb, void* result)
 {
 	const T* a = (const T*)av;
 	const T* b = (const T*)bv;
@@ -1199,18 +1208,19 @@ inline void vectorsInnerConjugateA(const void* av, const void* bv, const size_t 
 		auto strideB = make_strided_range(b, N, sb);
 		*((T*)result) = thrust::inner_product(THRUST_PAR, strideA.begin(), strideA.end(), strideB.begin(), T(), plus_functor<T>(), conjMultiply_functor<T>());
 	}
+	return 0;
 }
 
 DLLEXP
-void vecDot(const Datatype::DataType type, const void* a, const void* b, const size_t N, const unsigned int strideA, const unsigned int strideB, void* result)
+int vecDot(const Datatype::DataType type, const void* a, const void* b, const size_t N, const unsigned int strideA, const unsigned int strideB, void* result)
 {
-	AUTO_ALLTYPE_FUNC(vectorsInner, type, void, a, b, N, strideA, strideB, result);
+	AUTO_ALLTYPE_FUNC(vectorsInner, type, int, a, b, N, strideA, strideB, result);
 }
 
 DLLEXP
-void vecDotc(const Datatype::DataType type, const void* a, const void* b, const size_t N, const unsigned int strideA, const unsigned int strideB, void* result)
+int vecDotc(const Datatype::DataType type, const void* a, const void* b, const size_t N, const unsigned int strideA, const unsigned int strideB, void* result)
 {
-	AUTO_COMPLEX_TYPE_FUNC(vectorsInnerConjugateA, type, void, a, b, N, strideA, strideB, result);
+	AUTO_COMPLEX_TYPE_FUNC(vectorsInnerConjugateA, type, int, a, b, N, strideA, strideB, result);
 }
 #pragma endregion
 
@@ -1279,7 +1289,7 @@ size_t vecArgAbsMax(const Datatype::DataType type, void* a, const size_t N, cons
 
 #pragma region vector aggregate -- sum
 template<typename T>
-inline void vectorSum(const void* av, const size_t N, const unsigned int stride, void* outv)
+inline int vectorSum(const void* av, const size_t N, const unsigned int stride, void* outv)
 {
 	const T* a = (const T*)av;
 	T* outSum = (T*)outv;
@@ -1292,19 +1302,20 @@ inline void vectorSum(const void* av, const size_t N, const unsigned int stride,
 		auto strideA = make_strided_range(a, N, stride);
 		*outSum = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(), plus_functor<T>());
 	}
+	return 0;
 }
 
 DLLEXP
-void vecSum(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride, void* outSum)
+int vecSum(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride, void* outSum)
 {
-	AUTO_ALLTYPE_FUNC(vectorSum, type, void, a, N, stride, outSum);
+	AUTO_ALLTYPE_FUNC(vectorSum, type, int, a, N, stride, outSum);
 }
 #pragma endregion
 
 
 #pragma region vector aggregate -- product
 template<typename T>
-inline void vectorAccumulateProduct(const void* av, const size_t N, const unsigned int stride, void* outv)
+inline int vectorAccumulateProduct(const void* av, const size_t N, const unsigned int stride, void* outv)
 {
 	const T* a = (const T*)av;
 	T* outProd = (T*)outv;
@@ -1317,19 +1328,20 @@ inline void vectorAccumulateProduct(const void* av, const size_t N, const unsign
 		auto strideA = make_strided_range(a, N, stride);
 		*outProd = thrust::reduce(THRUST_PAR, strideA.begin(), strideA.end(), T(1), thrust::multiplies<T>());
 	}
+	return 0;
 }
 
 DLLEXP
-void vecProd(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride, void* outProd)
+int vecProd(const Datatype::DataType type, void* a, const size_t N, const unsigned int stride, void* outProd)
 {
-	AUTO_ALLTYPE_FUNC(vectorAccumulateProduct, type, void, a, N, stride, outProd);
+	AUTO_ALLTYPE_FUNC(vectorAccumulateProduct, type, int, a, N, stride, outProd);
 }
 #pragma endregion
 
 
 #pragma region vector aggregate -- partial sum
 template<typename T>
-inline void vectorPartialSum(const void* srcv, void* dstv, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
+inline int vectorPartialSum(const void* srcv, void* dstv, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
 {
 	const T* src = (const T*)srcv;
 	T* dst = (T*)dstv;
@@ -1365,19 +1377,20 @@ inline void vectorPartialSum(const void* srcv, void* dstv, const size_t N, const
 		else
 			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), T(), plus_functor<T>());
 	}
+	return 0;
 }
 
 DLLEXP
-void vecParSum(const Datatype::DataType type, const void* src, void* dst, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
+int vecParSum(const Datatype::DataType type, const void* src, void* dst, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
 {
-	AUTO_ALLTYPE_FUNC(vectorPartialSum, type, void, src, dst, N, inclusive, strideSrc, strideDst);
+	AUTO_ALLTYPE_FUNC(vectorPartialSum, type, int, src, dst, N, inclusive, strideSrc, strideDst);
 }
 #pragma endregion
 
 
 #pragma region vector aggregate -- partial product
 template<typename T>
-inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
+inline int vectorPartialProduct(const void* srcv, void* dstv, const size_t N, const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
 {
 	const T* src = (const T*)srcv;
 	T* dst = (T*)dstv;
@@ -1413,12 +1426,13 @@ inline void vectorPartialProduct(const void* srcv, void* dstv, const size_t N, c
 		else
 			thrust::exclusive_scan(THRUST_PAR, stridedSrc.begin(), stridedSrc.end(), stridedDst.begin(), T(1), thrust::multiplies<T>());
 	}
+	return 0;
 }
 
 DLLEXP
-void vecParProd(const Datatype::DataType type, const void* src, void* dst, const size_t N,const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
+int vecParProd(const Datatype::DataType type, const void* src, void* dst, const size_t N,const bool inclusive, const unsigned int strideSrc, const unsigned int strideDst)
 {
-	AUTO_ALLTYPE_FUNC(vectorPartialProduct, type, void, src, dst, N, inclusive, strideSrc, strideDst);
+	AUTO_ALLTYPE_FUNC(vectorPartialProduct, type, int, src, dst, N, inclusive, strideSrc, strideDst);
 }
 #pragma endregion
 
@@ -1470,7 +1484,7 @@ int intFind(const int* v, const size_t N, const int toFind)
 }
 
 DLLEXP
-void intFillRange(int* v, const size_t N, const int start, const int step)
+int intFillRange(int* v, const size_t N, const int start, const int step)
 {
 	thrust::sequence(THRUST_PAR, v, v + N, start, step);
 }

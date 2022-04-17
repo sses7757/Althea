@@ -246,7 +246,7 @@ namespace Datatype
 		} \
 		else \
 		{ \
-			return returnType(1); \
+			return returnType(-1); \
 		} \
 	} while(0)
 

@@ -5,13 +5,13 @@ VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea", "Althea\Althea.csproj", "{09ECD0E5-2229-496D-9558-1E5F617A081D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BlasSupplement", "BlasSupplement\BlasSupplement.vcxproj", "{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTest", "UnitTest\UnitTest.csproj", "{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.Backend", "Althea.Backend\Althea.Backend.csproj", "{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.SourceGenerator", "Althea.SourceGenerator\Althea.SourceGenerator.csproj", "{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BlasSupplement", "BlasSupplement\BlasSupplement.vcxproj", "{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,9 +23,6 @@ Global
 		{09ECD0E5-2229-496D-9558-1E5F617A081D}.Debug|x64.Build.0 = Debug|x64
 		{09ECD0E5-2229-496D-9558-1E5F617A081D}.Release|x64.ActiveCfg = Release|x64
 		{09ECD0E5-2229-496D-9558-1E5F617A081D}.Release|x64.Build.0 = Release|x64
-		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Debug|x64.ActiveCfg = Debug|x64
-		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x64.ActiveCfg = Release|x64
-		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x64.Build.0 = Release|x64
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Debug|x64.ActiveCfg = Debug|x64
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Debug|x64.Build.0 = Debug|x64
 		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Release|x64.ActiveCfg = Release|x64
@@ -36,6 +33,10 @@ Global
 		{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}.Debug|x64.ActiveCfg = Release|x64
 		{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}.Debug|x64.Build.0 = Release|x64
 		{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}.Release|x64.ActiveCfg = Release|x64
+		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Debug|x64.ActiveCfg = Debug|x64
+		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Debug|x64.Build.0 = Debug|x64
+		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x64.ActiveCfg = Release|x64
+		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
