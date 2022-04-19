@@ -28,15 +28,14 @@ namespace Althea.Backend.Mkl.Storage
 				Unsafe.CopyBlockUnaligned(destination, source, (uint)count);
 				return true;
 			}
-			delegate*<long, T*, long, T*, long, void> func = null;
-			if (typeof(T) == typeof(float))
-				func = &MklDn.cblas_scopy;
-			if (typeof(T) == typeof(double))
-				func = &MklDn.cblas_dcopy;
-			if (typeof(T) == typeof(Complex<float>))
-				func = &MklDn.cblas_ccopy;
-			if (typeof(T) == typeof(Complex<double>))
-				func = &MklDn.cblas_zcopy;
+			delegate*<long, T*, long, T*, long, void> func = default(T) switch
+			{
+				float => &MklDn.cblas_scopy,
+				double => &MklDn.cblas_dcopy,
+				Complex<float> => &MklDn.cblas_ccopy,
+				Complex<double> => &MklDn.cblas_zcopy,
+				_ => null
+			};
 			if (func == null)
 				return false;
 			func(count, source, strideSource, destination, strideDestination);
@@ -64,19 +63,16 @@ namespace Althea.Backend.Mkl.Storage
 				Unsafe.CopyBlockUnaligned(destination, source, (uint)(height * width));
 				return true;
 			}
-			MklDn.MKL_omatcopy<T>? func = null;
-			if (typeof(T) == typeof(float))
-				func = new MklDn.MKL_omatcopy<float>(MklDn.MKL_Somatcopy) as MklDn.MKL_omatcopy<T>;
-			if (typeof(T) == typeof(double))
-				func = new MklDn.MKL_omatcopy<double>(MklDn.MKL_Domatcopy) as MklDn.MKL_omatcopy<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				func = new MklDn.MKL_omatcopy<Complex<float>>(MklDn.MKL_Comatcopy) as MklDn.MKL_omatcopy<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				func = new MklDn.MKL_omatcopy<Complex<double>>(MklDn.MKL_Zomatcopy) as MklDn.MKL_omatcopy<T>;
-			if (func == null)
-				return false;
-			func(LinearAlgebra.Dense.MklMatrixLayoutChar.ColMajor, LinearAlgebra.Dense.MklOperationChar.NoneTranspose, height, width, T.One, source, sourceLD, destination, destinationLD);
-			return true;
+			MklDn.MKL_omatcopy<T>? func = default(T) switch
+			{
+				float => new MklDn.MKL_omatcopy<float>(MklDn.MKL_Somatcopy) as MklDn.MKL_omatcopy<T>,
+				double => new MklDn.MKL_omatcopy<double>(MklDn.MKL_Domatcopy) as MklDn.MKL_omatcopy<T>,
+				Complex<float> => new MklDn.MKL_omatcopy<Complex<float>>(MklDn.MKL_Comatcopy) as MklDn.MKL_omatcopy<T>,
+				Complex<double> => new MklDn.MKL_omatcopy<Complex<double>>(MklDn.MKL_Zomatcopy) as MklDn.MKL_omatcopy<T>,
+				_ => null
+			};
+			func?.Invoke(LinearAlgebra.Dense.MklMatrixLayoutChar.ColMajor, LinearAlgebra.Dense.MklOperationChar.NoneTranspose, height, width, T.One, source, sourceLD, destination, destinationLD);
+			return func != null;
 		}
 
 		/// <inheritdoc/>

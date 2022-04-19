@@ -17,7 +17,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				MatrixOperation.None => MklOperation.NoneTranspose,
 				MatrixOperation.Transpose => MklOperation.Transpose,
 				MatrixOperation.ConjugateTranspose => MklOperation.ConjugateTranspose,
-				MatrixOperation.Conjugate => MklOperation.ConjugateAlone,
 				_ => default,
 			};
 		}
@@ -128,8 +127,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		NoneTranspose = 111,
 		Transpose = 112,
 		ConjugateTranspose = 113,
-		// NOT supported
-		ConjugateAlone = 114,
 	}
 
 	internal enum MklFillMode
@@ -162,12 +159,20 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		NoneTranspose = (byte)'N',
 		Transpose = (byte)'T',
 		ConjugateTranspose = (byte)'C',
+		Conjugate = (byte)'R',
 	}
 
 	internal enum MklFillModeChar : byte
 	{
 		Upper = (byte)'U',
 		Lower = (byte)'L'
+	}
+
+	internal enum MklJitStatus : int
+	{
+		Success = 0,
+		NoJit = 1,
+		JitError = 2
 	}
 
 	internal enum MklVectorModeChar : byte

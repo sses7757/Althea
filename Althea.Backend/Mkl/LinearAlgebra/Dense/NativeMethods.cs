@@ -122,6 +122,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_cgemm3m(MklMatrixLayout Layout, MklOperation TransA, MklOperation TransB, long m, long n, long k, Complex<float> alpha, Complex<float>* A, long lda, Complex<float>* B, long ldb, Complex<float> beta, Complex<float>* C, long ldc);
 
+		[NativeMethod(15, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void mkl_jit_create_sgemm(out IntPtr jitter, MklMatrixLayout Layout, MklOperation TransA, MklOperation TransB, long m, long n, long k, float alpha, long lda, long ldb, float beta, long ldc);
+
+		[NativeMethod(12)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern delegate* unmanaged<IntPtr, void*, void*, void*, void> mkl_jit_get_sgemm_ptr(IntPtr jitter);
+
+		[CustomNativeMethod(0, "float", "m")]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern MklJitStatus mkl_jit_destroy(IntPtr jitter);
+
 		[NativeMethod(6, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_ssymm(MklMatrixLayout Layout, MklBlasSideMode side, MklFillMode uplo, long m, long n, float alpha, float* A, long lda, float* B, long ldb, float beta, float* C, long ldc);

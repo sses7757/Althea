@@ -169,7 +169,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#endregion
 
 		#region matrix
-		
+
 		#endregion
 
 		#region matrix supplement

@@ -147,7 +147,7 @@ namespace {ns.Name}
 						methodMain = Regex.Replace(methodMain, @"\t{3,}", "\t\t");
 						generated += methodMain + Environment.NewLine + Environment.NewLine;
 					}
-					if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains(", " + typeNames[typeNames.Length - 1]))
+					if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains("in " + typeNames[typeNames.Length - 1]))
 					{
 						string newIdentifier = method.Identifier.ToString();
 						newIdentifier = newIdentifier.Substring(0, typeCharPos) + newIdentifier.Substring(typeCharPos + typeChars[orgInd].Length);
@@ -157,16 +157,22 @@ namespace {ns.Name}
 											 .Replace("in " + typeNames[typeNames.Length - 1], "T");
 						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, INumber<T>;";
 						generated += Environment.NewLine + Environment.NewLine;
+						newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
+						newParams = newParams.Substring(0, newParams.Length - 1)
+											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
+											 .Replace("in " + typeNames[typeNames.Length - 1], "in T");
+						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}_comp<T>{newParams} where T : unmanaged, INumber<T>;";
+						generated += Environment.NewLine + Environment.NewLine;
 					}
-					if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains("in " + typeNames[typeNames.Length - 1]))
+					else if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains(", " + typeNames[typeNames.Length - 1]))
 					{
 						string newIdentifier = method.Identifier.ToString();
 						newIdentifier = newIdentifier.Substring(0, typeCharPos) + newIdentifier.Substring(typeCharPos + typeChars[orgInd].Length);
 						string newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
 						newParams = newParams.Substring(0, newParams.Length - 1)
 											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
-											 .Replace("in " + typeNames[typeNames.Length - 1], "in T");
-						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}_comp<T>{newParams} where T : unmanaged, INumber<T>;";
+											 .Replace("in " + typeNames[typeNames.Length - 1], "T");
+						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, INumber<T>;";
 						generated += Environment.NewLine + Environment.NewLine;
 					}
 				}

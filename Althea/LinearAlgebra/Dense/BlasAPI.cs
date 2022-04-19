@@ -365,21 +365,21 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="unitDiag">Whether the matrix <paramref name="A"/>'s diagonal elements are all 1 or not</param>
 		/// <param name="opA">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/></param>
 		/// <param name="opB">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="B"/></param>
-		/// <param name="m">The number of rows of matrix <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="C"/></param>
-		/// <param name="n">The number of columns of matrix <paramref name="opB"/>(<paramref name="B"/>) and <paramref name="C"/></param>
+		/// <param name="m">The number of rows of matrix <c><paramref name="leftA"/> ? <paramref name="opA"/>(<paramref name="A"/>) : <paramref name="opB"/>(<paramref name="B"/>)</c> and <paramref name="C"/></param>
+		/// <param name="n">The number of columns of matrix <c><paramref name="leftA"/> ? <paramref name="opB"/>(<paramref name="B"/>) : <paramref name="opA"/>(<paramref name="A"/>)</c> and <paramref name="C"/></param>
 		/// <param name="k">If <paramref name="leftA"/>, the number of columns of <paramref name="opA"/>(<paramref name="A"/>) and rows of <paramref name="opB"/>(<paramref name="B"/>); otherwise, the number of rows of <paramref name="opA"/>(<paramref name="A"/>) and columns of <paramref name="opB"/>(<paramref name="B"/>)</param>
 		/// <param name="α">The scalar to multiply to <paramref name="A"/> or <paramref name="B"/></param>
-		/// <param name="A">The input triangular matrix <paramref name="A"/> of dimension <c><paramref name="lda"/>×<paramref name="m"/></c> if <paramref name="leftA"/>, or <c><paramref name="lda"/>×<paramref name="n"/></c> otherwise</param>
+		/// <param name="A">The input triangular matrix</param>
 		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/></param>
-		/// <param name="B">The input general matrix of dimension <c><paramref name="ldb"/>×<paramref name="n"/></c></param>
+		/// <param name="B">The input general matrix</param>
 		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/></param>
 		/// <param name="β">The scalar to multiply to <paramref name="C"/></param>
-		/// <param name="C">The output matrix to be overwritten by the result at exit, can be <paramref name="B"/> when <paramref name="ldc"/> == <paramref name="ldb"/>.</param>
+		/// <param name="C">The output matrix of size <c><paramref name="ldc"/>x<paramref name="n"/></c> to be overwritten by the result at exit, can be <paramref name="B"/> when <paramref name="ldc"/> == <paramref name="ldb"/>.</param>
 		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/>, must be <paramref name="ldb"/> when <paramref name="B"/> == <paramref name="C"/>.</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool TriangularMatrixMultiply<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool TriangularMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the symmetric/hermitian rank-k update:<br/>

@@ -74,6 +74,42 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 	}
 
+	internal readonly unsafe ref struct ConjugaterMat1<T> where T : unmanaged, INumber<T>
+	{
+		private readonly T* ptr;
+		private readonly long m, n, ld;
+		private readonly NM.MKL_imatcopy<T>? func;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal ConjugaterMat1(T* ptr, long m, long n, long ld, ref MatrixOperation op)
+		{
+			this.ptr = ptr; this.m = m; this.n = n; this.ld = ld;
+			if (op == MatrixOperation.Conjugate)
+			{
+				op = MatrixOperation.None;
+				this.func = default(T) switch
+				{
+					float => new NM.MKL_imatcopy<float>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
+					double => new NM.MKL_imatcopy<double>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
+					Complex<float> => new NM.MKL_imatcopy<Complex<float>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
+					Complex<double> => new NM.MKL_imatcopy<Complex<double>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
+					_ => null
+				};
+				this.func?.Invoke(MklMatrixLayoutChar.ColMajor, MklOperationChar.Conjugate, this.m, this.n, T.One, this.ptr, this.ld);
+			}
+			else
+			{
+				this.ptr = default; this.func = null;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			this.func?.Invoke(MklMatrixLayoutChar.ColMajor, MklOperationChar.Conjugate, this.m, this.n, T.One, this.ptr, this.ld);
+		}
+	}
+
 	internal static class Conjugater
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,6 +117,40 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal unsafe static Conjugater2<T> Create<T>(T* ptr1, long len1, long inc1, T* ptr2, long len2, long inc2, ref MatrixOperation op) where T : unmanaged, INumber<T> => new(ptr1, len1, inc1, ptr2, len2, inc2, ref op);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe static ConjugaterMat1<T> Create<T>(T* ptr, long m, long n, long ld, ref MatrixOperation op) where T : unmanaged, INumber<T> => new(ptr, m, n, ld, ref op);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe static void Conjugate<T>(T* ptr, long m, long n, long ld) where T : unmanaged, INumber<T>
+		{
+			var func = default(T) switch
+			{
+				float => new NM.MKL_imatcopy<float>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
+				double => new NM.MKL_imatcopy<double>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<float> => new NM.MKL_imatcopy<Complex<float>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<double> => new NM.MKL_imatcopy<Complex<double>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
+				_ => null
+			};
+			func?.Invoke(MklMatrixLayoutChar.ColMajor, MklOperationChar.Conjugate, m, n, T.One, ptr, ld);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe static bool Transpose<T>(T* ptr, long m, long n, long ld, MatrixOperation op) where T : unmanaged, INumber<T>
+		{
+			if (m > ld || n > ld)
+				return false;
+			var func = default(T) switch
+			{
+				float => new NM.MKL_imatcopy<float>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
+				double => new NM.MKL_imatcopy<double>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<float> => new NM.MKL_imatcopy<Complex<float>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<double> => new NM.MKL_imatcopy<Complex<double>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
+				_ => null
+			};
+			func?.Invoke(MklMatrixLayoutChar.ColMajor, op.ToMklChar(), m, n, T.One, ptr, ld);
+			return func != null;
+		}
 	}
 	#endregion
 
@@ -93,6 +163,19 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#region basic
 		void IDisposable.Dispose()
 		{
+			foreach (var kv in this.compiled)
+			{
+				kv.Value.locker.EnterWriteLock();
+				try
+				{
+					NM.mkl_jit_destroy(kv.Value.jitter);
+				}
+				finally
+				{
+					kv.Value.locker.ExitWriteLock();
+					kv.Value.locker.Dispose();
+				}
+			}
 			this.Disposed = true;
 			GC.SuppressFinalize(this);
 		}
@@ -109,6 +192,41 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").
 		/// </summary>
 		public bool ComplexGemmUseGemm3M { get; set; } = true;
+
+		/// <summary>
+		/// Whether this implementation shall MKL GEMM JIT compiler to cache the frequently used GEMMs or not. If it is enabled, <see cref="ComplexGemmUseGemm3M"/> will be ignored. Default false.
+		/// </summary>
+		/// <remarks>It will only be better than the traditional ones when the GEMMs with same parameters are invoked more than several hundred of times.</remarks>
+		public bool GemmJitCache { get; set; } = false;
+
+		/// <summary>
+		/// Get or set the maximum queue size of the MKL GEMM JIT candidates of the GEMMs with different parameter setup.
+		/// </summary>
+		public int GemmJitCandidateSize
+		{
+			get => this.candidates.EnsureCapacity(1);
+			set => this.candidates.EnsureCapacity(value);
+		}
+
+		/// <summary>
+		/// Get or set the maximum number of the MKL GEMM JIT compiled parameter setups.
+		/// </summary>
+		public int GemmJitSize
+		{
+			get => this.compiled.EnsureCapacity(1);
+			set => this.compiled.EnsureCapacity(value);
+		}
+
+		/// <summary>
+		/// Get or set the threshold of number of invocations before start MKL GEMM JIT compile the GEMM with certain parameters.
+		/// </summary>
+		public int GemmJitThreshold { get; set; } = 100;
+
+		private readonly Dictionary<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc), int> candidates = new(128);
+		private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc)> candidatesQueue = new(128);
+
+		private readonly Dictionary<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc), (IntPtr jitter, ReaderWriterLockSlim locker)> compiled = new(16);
+		private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc)> compiledQueue = new(16);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out long length) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
@@ -169,11 +287,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotComplex);
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
-			delegate*<long, T*, long, long> func;
-			func = Unmanaged<T>.DataType switch
+			delegate*<long, T*, long, long> func = default(T) switch
 			{
-				DataType.ComplexSingle => max ? &NM.cblas_icamax : &NM.cblas_icamin,
-				DataType.ComplexDouble => max ? &NM.cblas_izamax : &NM.cblas_izamin,
+				Complex<float> => max ? &NM.cblas_icamax : &NM.cblas_icamin,
+				Complex<double> => max ? &NM.cblas_izamax : &NM.cblas_izamin,
 				_ => null,
 			};
 			if (func is null)
@@ -234,11 +351,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			index = -1;
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
-			delegate*<long, T*, long, long> func = null;
-			if (typeof(T) == typeof(float))
-				func = &NM.cblas_isamin;
-			if (typeof(T) == typeof(double))
-				func = &NM.cblas_idamin;
+			delegate*<long, T*, long, long> func = default(T) switch
+			{
+				float => &NM.cblas_isamin,
+				double => &NM.cblas_idamin,
+				_ => null,
+			};
 			if (func != null)
 			{
 				index = func(n, px, strideX);
@@ -256,16 +374,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (typeof(T) == typeof(float))
 			{
 				*(float*)&result = NM.cblas_sasum(n, px, strideX);
-				sum = result;
-				return true;
 			}
-			if (typeof(T) == typeof(double))
+			else if (typeof(T) == typeof(double))
 			{
 				*(double*)&result = NM.cblas_dasum(n, px, strideX);
-				sum = result;
-				return true;
 			}
-			if (NMC.vecAbsSum(Unmanaged<T>.DataType, n, px, strideX, &result) != CustomStatus.Success)
+			else if (NMC.vecAbsSum(Unmanaged<T>.DataType, n, px, strideX, &result) != CustomStatus.Success)
 				return false;
 			sum = result;
 			return true;
@@ -296,16 +410,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
-			NM.cblas_scal<T>? funcRe = null;
-			NM.cblas_scal_comp<T>? funcCm = null;
-			if (typeof(T) == typeof(float))
-				funcRe = new NM.cblas_scal<float>(NM.cblas_sscal) as NM.cblas_scal<T>;
-			if (typeof(T) == typeof(double))
-				funcRe = new NM.cblas_scal<double>(NM.cblas_dscal) as NM.cblas_scal<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				funcCm = new NM.cblas_scal_comp<Complex<float>>(NM.cblas_cscal) as NM.cblas_scal_comp<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				funcCm = new NM.cblas_scal_comp<Complex<double>>(NM.cblas_zscal) as NM.cblas_scal_comp<T>;
+			NM.cblas_scal<T>? funcRe = default(T) switch
+			{
+				float => new NM.cblas_scal<float>(NM.cblas_sscal) as NM.cblas_scal<T>,
+				double => new NM.cblas_scal<double>(NM.cblas_dscal) as NM.cblas_scal<T>,
+				_ => null,
+			};
+			NM.cblas_scal_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => new NM.cblas_scal_comp<Complex<float>>(NM.cblas_cscal) as NM.cblas_scal_comp<T>,
+				Complex<double> => new NM.cblas_scal_comp<Complex<double>>(NM.cblas_zscal) as NM.cblas_scal_comp<T>,
+				_ => null,
+			};
 			funcRe?.Invoke(n, scalar, px, strideX);
 			funcCm?.Invoke(n, scalar, px, strideX);
 			return funcRe != null || funcCm != null;
@@ -320,16 +436,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (n != n2)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			NM.cblas_axpy<T>? funcRe = null;
-			NM.cblas_axpy_comp<T>? funcCm = null;
-			if (typeof(T) == typeof(float))
-				funcRe = new NM.cblas_axpy<float>(NM.cblas_saxpy) as NM.cblas_axpy<T>;
-			if (typeof(T) == typeof(double))
-				funcRe = new NM.cblas_axpy<double>(NM.cblas_daxpy) as NM.cblas_axpy<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				funcCm = new NM.cblas_axpy_comp<Complex<float>>(NM.cblas_caxpy) as NM.cblas_axpy_comp<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				funcCm = new NM.cblas_axpy_comp<Complex<double>>(NM.cblas_zaxpy) as NM.cblas_axpy_comp<T>;
+			NM.cblas_axpy<T>? funcRe = default(T) switch
+			{
+				float => new NM.cblas_axpy<float>(NM.cblas_saxpy) as NM.cblas_axpy<T>,
+				double => new NM.cblas_axpy<double>(NM.cblas_daxpy) as NM.cblas_axpy<T>,
+				_ => null,
+			};
+			NM.cblas_axpy_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => new NM.cblas_axpy_comp<Complex<float>>(NM.cblas_caxpy) as NM.cblas_axpy_comp<T>,
+				Complex<double> => new NM.cblas_axpy_comp<Complex<double>>(NM.cblas_zaxpy) as NM.cblas_axpy_comp<T>,
+				_ => null,
+			};
 			funcRe?.Invoke(n, α, px, strideX, py, strideY);
 			funcCm?.Invoke(n, α, px, strideX, py, strideY);
 			return funcRe != null || funcCm != null;
@@ -345,16 +463,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (n != n2)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			NMT.cblas_dot<T>? funcRe = null;
-			NMT.cblas_dot_comp<T>? funcCm = null;
-			if (typeof(T) == typeof(float))
-				funcRe = new NMT.cblas_dot<float>(NM.cblas_sdot) as NMT.cblas_dot<T>;
-			if (typeof(T) == typeof(double))
-				funcRe = new NMT.cblas_dot<double>(NM.cblas_ddot) as NMT.cblas_dot<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				funcCm = (conjX ? new NMT.cblas_dot_comp<Complex<float>>(NM.cblas_cdotc_sub) : new NMT.cblas_dot_comp<Complex<float>>(NM.cblas_cdotu_sub)) as NMT.cblas_dot_comp<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				funcCm = (conjX ? new NMT.cblas_dot_comp<Complex<double>>(NM.cblas_zdotc_sub) : new NMT.cblas_dot_comp<Complex<double>>(NM.cblas_zdotu_sub)) as NMT.cblas_dot_comp<T>;
+			NMT.cblas_dot<T>? funcRe = default(T) switch
+			{
+				float => new NMT.cblas_dot<float>(NM.cblas_sdot) as NMT.cblas_dot<T>,
+				double => new NMT.cblas_dot<double>(NM.cblas_ddot) as NMT.cblas_dot<T>,
+				_ => null,
+			};
+			NMT.cblas_dot_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => (conjX ? new NMT.cblas_dot_comp<Complex<float>>(NM.cblas_cdotc_sub) : new NMT.cblas_dot_comp<Complex<float>>(NM.cblas_cdotu_sub)) as NMT.cblas_dot_comp<T>,
+				Complex<double> => (conjX ? new NMT.cblas_dot_comp<Complex<double>>(NM.cblas_zdotc_sub) : new NMT.cblas_dot_comp<Complex<double>>(NM.cblas_zdotu_sub)) as NMT.cblas_dot_comp<T>,
+				_ => null,
+			};
 			dot = funcRe?.Invoke(n, px, strideX, py, strideY) ?? dot;
 			funcCm?.Invoke(n, px, strideX, py, strideY, out dot);
 			return funcRe != null || funcCm != null;
@@ -374,22 +494,21 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (px == py && strideX != strideY)
 				return false;
 			op = op.Simplify<T>();
-			NM.cblas_gemv<T>? funcRe = null;
-			NM.cblas_gemv_comp<T>? funcCm = null;
-			if (typeof(T) == typeof(float))
-				funcRe = new NM.cblas_gemv<float>(NM.cblas_sgemv) as NM.cblas_gemv<T>;
-			if (typeof(T) == typeof(double))
-				funcRe = new NM.cblas_gemv<double>(NM.cblas_dgemv) as NM.cblas_gemv<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				funcCm = new NM.cblas_gemv_comp<Complex<float>>(NM.cblas_cgemv) as NM.cblas_gemv_comp<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				funcCm = new NM.cblas_gemv_comp<Complex<double>>(NM.cblas_zgemv) as NM.cblas_gemv_comp<T>;
-			funcRe?.Invoke(MklMatrixLayout.ColMajor, op.ToMkl(), m, n, α, pA, lda, px, strideX, β, py, strideY);
-			if (funcCm != null)
+			NM.cblas_gemv<T>? funcRe = default(T) switch
 			{
-				using var conj = Conjugater.Create(px, op.CanInPlace() ? n : m, strideX, py, op.CanInPlace() ? m : n, strideY, ref op);
-				funcCm(MklMatrixLayout.ColMajor, op.ToMkl(), m, n, α, pA, lda, px, strideX, β, py, strideY);
-			}
+				float => new NM.cblas_gemv<float>(NM.cblas_sgemv) as NM.cblas_gemv<T>,
+				double => new NM.cblas_gemv<double>(NM.cblas_dgemv) as NM.cblas_gemv<T>,
+				_ => null,
+			};
+			NM.cblas_gemv_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => new NM.cblas_gemv_comp<Complex<float>>(NM.cblas_cgemv) as NM.cblas_gemv_comp<T>,
+				Complex<double> => new NM.cblas_gemv_comp<Complex<double>>(NM.cblas_zgemv) as NM.cblas_gemv_comp<T>,
+				_ => null,
+			};
+			using var conj = Conjugater.Create(px, op.CanInPlace() ? n : m, strideX, py, op.CanInPlace() ? m : n, strideY, ref op);
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, op.ToMkl(), m, n, α, pA, lda, px, strideX, β, py, strideY);
+			funcCm?.Invoke(MklMatrixLayout.ColMajor, op.ToMkl(), m, n, α, pA, lda, px, strideX, β, py, strideY);
 			return funcRe != null || funcCm != null;
 		}
 
@@ -404,18 +523,21 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (px == py && strideX != strideY)
 				return false;
-			NM.cblas_symv<T>? funcRe = null;
-			NM.cblas_symv_comp<T>? funcCm = null;
-			if (typeof(T) == typeof(float))
-				funcRe = new NM.cblas_symv<float>(NM.cblas_ssymv) as NM.cblas_symv<T>;
-			if (typeof(T) == typeof(double))
-				funcRe = new NM.cblas_symv<double>(NM.cblas_dsymv) as NM.cblas_symv<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				funcCm = (hermA ? new NM.cblas_symv_comp<Complex<float>>(NM.cblas_chemv) : new NM.cblas_symv_comp<Complex<float>>(NM.cblas_csymv)) as NM.cblas_symv_comp<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				funcCm = (hermA ? new NM.cblas_symv_comp<Complex<double>>(NM.cblas_zhemv) : new NM.cblas_symv_comp<Complex<double>>(NM.cblas_zsymv)) as NM.cblas_symv_comp<T>;
-			funcRe?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, pA, lda, px, strideX, β, py, strideY);
-			funcCm?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, pA, lda, px, strideX, β, py, strideY);
+			NM.cblas_symv<T>? funcRe = default(T) switch
+			{
+				float => new NM.cblas_symv<float>(NM.cblas_ssymv) as NM.cblas_symv<T>,
+				double => new NM.cblas_symv<double>(NM.cblas_dsymv) as NM.cblas_symv<T>,
+				_ => null,
+			};
+			NM.cblas_symv_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => (hermA ? new NM.cblas_symv_comp<Complex<float>>(NM.cblas_chemv) : new NM.cblas_symv_comp<Complex<float>>(NM.cblas_csymv)) as NM.cblas_symv_comp<T>,
+				Complex<double> => (hermA ? new NM.cblas_symv_comp<Complex<double>>(NM.cblas_zhemv) : new NM.cblas_symv_comp<Complex<double>>(NM.cblas_zsymv)) as NM.cblas_symv_comp<T>,
+				_ => null,
+			};
+			var fu = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, fu, n, α, pA, lda, px, strideX, β, py, strideY);
+			funcCm?.Invoke(MklMatrixLayout.ColMajor, fu, n, α, pA, lda, px, strideX, β, py, strideY);
 			return funcRe != null || funcCm != null;
 		}
 
@@ -431,15 +553,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (β != T.Zero || (px == py && (strideX != strideY || m != n)))
 				return false;
 			op = op.Simplify<T>();
-			delegate*<MklMatrixLayout, MklFillMode, MklOperation, MklBlasDiagType, long, T*, long, T*, long, void> func = null;
-			if (typeof(T) == typeof(float))
-				func = &NM.cblas_strmv;
-			if (typeof(T) == typeof(double))
-				func = &NM.cblas_dtrmv;
-			if (typeof(T) == typeof(Complex<float>))
-				func = &NM.cblas_ctrmv;
-			if (typeof(T) == typeof(Complex<double>))
-				func = &NM.cblas_ztrmv;
+			delegate*<MklMatrixLayout, MklFillMode, MklOperation, MklBlasDiagType, long, T*, long, T*, long, void> func = default(T) switch
+			{
+				float => &NM.cblas_strmv,
+				double => &NM.cblas_dtrmv,
+				Complex<float> => &NM.cblas_ctrmv,
+				Complex<double> => &NM.cblas_ztrmv,
+				_ => null,
+			};
 			if (func == null)
 				return false;
 			var fu = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
@@ -459,7 +580,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				func(MklMatrixLayout.ColMajor, fu, op.ToMkl(), ud, Math.Min(m, n), pA, lda, py, strideY);
 				if (!actualSquare)
 				{
-					
 					if (m > n)
 						this.GeneralMatrixMultiplyVector(op, m - n, n, T.One, A + n, lda, y + n * strideY, strideY, T.Zero, y + n * strideY, strideY);
 					else
@@ -482,16 +602,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (β != T.One)
 				return false;
-			NMT.cblas_ger<T>? funcRe = null;
-			NMT.cblas_ger_comp<T>? funcCm = null;
-			if (typeof(T) == typeof(float))
-				funcRe = new NMT.cblas_ger<float>(NM.cblas_sger) as NMT.cblas_ger<T>;
-			if (typeof(T) == typeof(double))
-				funcRe = new NMT.cblas_ger<double>(NM.cblas_dger) as NMT.cblas_ger<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				funcCm = (conjY ? new NMT.cblas_ger_comp<Complex<float>>(NM.cblas_cgerc) : new NMT.cblas_ger_comp<Complex<float>>(NM.cblas_cgeru)) as NMT.cblas_ger_comp<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				funcCm = (conjY ? new NMT.cblas_ger_comp<Complex<double>>(NM.cblas_zgerc) : new NMT.cblas_ger_comp<Complex<double>>(NM.cblas_zgeru)) as NMT.cblas_ger_comp<T>;
+			NMT.cblas_ger<T>? funcRe = default(T) switch
+			{
+				float => new NMT.cblas_ger<float>(NM.cblas_sger) as NMT.cblas_ger<T>,
+				double => new NMT.cblas_ger<double>(NM.cblas_dger) as NMT.cblas_ger<T>,
+				_ => null,
+			};
+			NMT.cblas_ger_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => (conjY ? new NMT.cblas_ger_comp<Complex<float>>(NM.cblas_cgerc) : new NMT.cblas_ger_comp<Complex<float>>(NM.cblas_cgeru)) as NMT.cblas_ger_comp<T>,
+				Complex<double> => (conjY ? new NMT.cblas_ger_comp<Complex<double>>(NM.cblas_zgerc) : new NMT.cblas_ger_comp<Complex<double>>(NM.cblas_zgeru)) as NMT.cblas_ger_comp<T>,
+				_ => null,
+			};
 			funcRe?.Invoke(MklMatrixLayout.ColMajor, m, n, α, px, strideX, py, strideY, pA, lda);
 			funcCm?.Invoke(MklMatrixLayout.ColMajor, m, n, α, px, strideX, py, strideY, pA, lda);
 			return funcRe != null || funcCm != null;
@@ -506,16 +628,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (NumberType<T>.IsComplex && !conjX)
 				return false;
-			NM.cblas_syr<T>? funcRe = null;
-			NM.cblas_her_comp<T>? funcCm = null;
-			if (typeof(T) == typeof(float))
-				funcRe = new NM.cblas_syr<float>(NM.cblas_ssyr) as NM.cblas_syr<T>;
-			if (typeof(T) == typeof(double))
-				funcRe = new NM.cblas_syr<double>(NM.cblas_dsyr) as NM.cblas_syr<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				funcCm = new NM.cblas_her_comp<Complex<float>>(NM.cblas_cher) as NM.cblas_her_comp<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				funcCm = new NM.cblas_her_comp<Complex<double>>(NM.cblas_zher) as NM.cblas_her_comp<T>;
+			NM.cblas_syr<T>? funcRe = default(T) switch
+			{
+				float => new NM.cblas_syr<float> (NM.cblas_ssyr) as NM.cblas_syr<T>,
+				double => new NM.cblas_syr<double>(NM.cblas_dsyr) as NM.cblas_syr<T>,
+				_ => null,
+			};
+			NM.cblas_her_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => new NM.cblas_her_comp<Complex<float>>(NM.cblas_cher) as NM.cblas_her_comp<T>,
+				Complex<double> => new NM.cblas_her_comp<Complex<double>>(NM.cblas_zher) as NM.cblas_her_comp<T>,
+				_ => null,
+			};
 			funcRe?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, px, strideX, pA, lda);
 			funcCm?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, px, strideX, pA, lda);
 			return funcRe != null || funcCm != null;
@@ -532,34 +656,319 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (NumberType<T>.IsComplex && !conjugate)
 				return false;
-			NM.cblas_syr2<T>? funcRe = null;
-			NM.cblas_her2_comp<T>? funcCm = null;
-			if (typeof(T) == typeof(float))
-				funcRe = new NM.cblas_syr2<float>(NM.cblas_ssyr2) as NM.cblas_syr2<T>;
-			if (typeof(T) == typeof(double))
-				funcRe = new NM.cblas_syr2<double>(NM.cblas_dsyr2) as NM.cblas_syr2<T>;
-			if (typeof(T) == typeof(Complex<float>))
-				funcCm = new NM.cblas_her2_comp<Complex<float>>(NM.cblas_cher2) as NM.cblas_her2_comp<T>;
-			if (typeof(T) == typeof(Complex<double>))
-				funcCm = new NM.cblas_her2_comp<Complex<double>>(NM.cblas_zher2) as NM.cblas_her2_comp<T>;
-			funcRe?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, px, strideX, py, strideY, pA, lda);
-			funcCm?.Invoke(MklMatrixLayout.ColMajor, fillUpper ? MklFillMode.Upper : MklFillMode.Lower, n, α, px, strideX, py, strideY, pA, lda);
+			NM.cblas_syr2<T>? funcRe = default(T) switch
+			{
+				float => new NM.cblas_syr2<float>(NM.cblas_ssyr2) as NM.cblas_syr2<T>,
+				double => new NM.cblas_syr2<double>(NM.cblas_dsyr2) as NM.cblas_syr2<T>,
+				_ => null,
+			};
+			NM.cblas_her2_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => new NM.cblas_her2_comp<Complex<float>>(NM.cblas_cher2) as NM.cblas_her2_comp<T>,
+				Complex<double> => new NM.cblas_her2_comp<Complex<double>>(NM.cblas_zher2) as NM.cblas_her2_comp<T>,
+				_ => null,
+			};
+			var fu = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, fu, n, α, px, strideX, py, strideY, pA, lda);
+			funcCm?.Invoke(MklMatrixLayout.ColMajor, fu, n, α, px, strideX, py, strideY, pA, lda);
 			return funcRe != null || funcCm != null;
 		}
 		#endregion
 
 		#region BLAS level 3
 		/// <inheritdoc/>
-		public virtual bool GeneralMatricesMultiply<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool GeneralMatricesMultiply<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
+			opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
+			if (!GetPointer(A, opA.CanInPlace() ? m : k, opA.CanInPlace() ? k : m, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, opB.CanInPlace() ? k : n, opB.CanInPlace() ? n : k, ldb, out T* pB))
+				return false;
+			if (!GetPointer(C, m, n, ldc, out T* pC))
+				return false;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			bool NoJitGemm()
+			{
+				NM.cblas_gemm<T>? funcRe = default(T) switch
+				{
+					float => new NM.cblas_gemm<float>(NM.cblas_sgemm) as NM.cblas_gemm<T>,
+					double => new NM.cblas_gemm<double>(NM.cblas_dgemm) as NM.cblas_gemm<T>,
+					_ => null,
+				};
+				NM.cblas_gemm_comp<T>? funcCm = default(T) switch
+				{
+					Complex<float> when !this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<float>>(NM.cblas_cgemm) as NM.cblas_gemm_comp<T>,
+					Complex<float> when this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<float>>(NM.cblas_cgemm3m) as NM.cblas_gemm_comp<T>,
+					Complex<double> when !this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<double>>(NM.cblas_zgemm) as NM.cblas_gemm_comp<T>,
+					Complex<double> when this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<double>>(NM.cblas_zgemm3m) as NM.cblas_gemm_comp<T>,
+					_ => null,
+				};
+				if (opA == MatrixOperation.Conjugate && opB == MatrixOperation.Conjugate)
+				{
+					funcRe?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
+					funcCm?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
+					Conjugater.Conjugate(pC, m, n, ldc);
+				}
+				else
+				{
+					using var conjA = Conjugater.Create(pA, opA.CanInPlace() ? m : k, opA.CanInPlace() ? k : m, lda, ref opA);
+					using var conjB = Conjugater.Create(pB, opB.CanInPlace() ? k : n, opB.CanInPlace() ? n : k, ldb, ref opB);
+					funcRe?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
+					funcCm?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
+				}
+				return funcRe != null || funcCm != null;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			bool JitGemm((MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc) key, (IntPtr jitter, ReaderWriterLockSlim locker) jit)
+			{
+				// compute
+				jit.locker.EnterReadLock();
+				try
+				{
+					delegate*<IntPtr, delegate* unmanaged<IntPtr, T*, T*, T*, void>> getGemmFunc = default(T) switch
+					{
+						float => &NM.mkl_jit_get_sgemm_ptr,
+						double => &NM.mkl_jit_get_dgemm_ptr,
+						Complex<float> => &NM.mkl_jit_get_cgemm_ptr,
+						Complex<double> => &NM.mkl_jit_get_zgemm_ptr,
+						_ => null,
+					};
+					if (getGemmFunc is null)
+						return false;
+					var func = getGemmFunc(jit.jitter);
+					func(jit.jitter, pA, pB, pC);
+				}
+				finally
+				{
+					jit.locker.ExitReadLock();
+				}
+				// dispose old if necessary
+				lock (this)
+				{
+					this.compiledQueue.Enqueue(key);
+					if (this.compiledQueue.Count >= this.GemmJitSize)
+					{
+						key = this.compiledQueue.Dequeue();
+						this.compiled.Remove(key, out jit);
+						jit.locker.EnterWriteLock();
+						try
+						{
+							var err = NM.mkl_jit_destroy(jit.jitter);
+							if (err != MklJitStatus.Success)
+								throw new StatusException(err);
+						}
+						finally
+						{
+							jit.locker.ExitWriteLock();
+							jit.locker.Dispose();
+						}
+					}
+				}
+				return true;
+			}
+
+			if (!this.GemmJitCache || opA == MatrixOperation.Conjugate || opB == MatrixOperation.Conjugate)
+			{
+				return NoJitGemm();
+			}
+			else
+			{
+				var key = (opA, opB, m, n, k, α.As<T, Complex<double>>(), β.As<T, Complex<double>>(), lda, ldb, ldc);
+				if (this.candidates.TryGetValue(key, out int hitCount))
+					this.candidates[key] = ++hitCount;
+				else if (!this.compiled.TryGetValue(key, out var jit))
+				{
+					this.candidatesQueue.Enqueue(key);
+					this.candidates[key] = hitCount = 1;
+					if (this.candidatesQueue.Count >= this.GemmJitCandidateSize)
+					{
+						var keyNew = this.candidatesQueue.Dequeue();
+						this.candidates.Remove(keyNew);
+					}
+				}
+				else
+					return JitGemm(key, jit);
+				if (hitCount < this.GemmJitThreshold)
+					return NoJitGemm();
+				// compile
+				NM.mkl_jit_create_gemm<T>? funcRe = default(T) switch
+				{
+					float => new NM.mkl_jit_create_gemm<float>(NM.mkl_jit_create_sgemm) as NM.mkl_jit_create_gemm<T>,
+					double => new NM.mkl_jit_create_gemm<double>(NM.mkl_jit_create_dgemm) as NM.mkl_jit_create_gemm<T>,
+					_ => null,
+				};
+				NM.mkl_jit_create_gemm_comp<T>? funcCm = default(T) switch
+				{
+					Complex<float> => new NM.mkl_jit_create_gemm_comp<Complex<float>>(NM.mkl_jit_create_cgemm) as NM.mkl_jit_create_gemm_comp<T>,
+					Complex<double> => new NM.mkl_jit_create_gemm_comp<Complex<double>>(NM.mkl_jit_create_zgemm) as NM.mkl_jit_create_gemm_comp<T>,
+					_ => null,
+				};
+				if (funcRe == null && funcCm == null)
+					return false;
+				IntPtr jitter = default;
+				funcRe?.Invoke(out jitter, MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, lda, ldb, β, ldc);
+				funcCm?.Invoke(out jitter, MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, lda, ldb, β, ldc);
+				this.candidates.Remove(key);
+				var jitNew = (jitter, new ReaderWriterLockSlim());
+				return JitGemm(key, jitNew);
+			}
+		}
 
 		/// <inheritdoc/>
-		public virtual bool SymmetricMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool fillUpper, bool leftA, bool hermA, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool SymmetricMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool fillUpper, bool leftA, bool hermA, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
+			opA = opA.Simplify<T>(hermA); opB = opB.Simplify<T>();
+			if (!GetPointer(A, leftA ? m : n, leftA ? m : n, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, opB.CanInPlace() ? m : n, opB.CanInPlace() ? n : m, ldb, out T* pB))
+				return false;
+			if (!GetPointer(C, m, n, ldc, out T* pC))
+				return false;
+			NM.cblas_symm<T>? funcRe = default(T) switch
+			{
+				float => new NM.cblas_symm<float>(NM.cblas_ssymm) as NM.cblas_symm<T>,
+				double => new NM.cblas_symm<double>(NM.cblas_dsymm) as NM.cblas_symm<T>,
+				_ => null,
+			};
+			NM.cblas_symm_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> when hermA => new NM.cblas_symm_comp<Complex<float>>(NM.cblas_chemm) as NM.cblas_symm_comp<T>,
+				Complex<float> when !hermA => new NM.cblas_symm_comp<Complex<float>>(NM.cblas_csymm) as NM.cblas_symm_comp<T>,
+				Complex<double> when hermA => new NM.cblas_symm_comp<Complex<double>>(NM.cblas_zhemm) as NM.cblas_symm_comp<T>,
+				Complex<double> when !hermA => new NM.cblas_symm_comp<Complex<double>>(NM.cblas_zsymm) as NM.cblas_symm_comp<T>,
+				_ => null,
+			};
+			if (funcRe == null && funcCm == null)
+				return false;
+			var side = leftA ? MklBlasSideMode.Left : MklBlasSideMode.Right;
+			var uplo = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			if (!opB.CanInPlace())
+			{
+				if (m > ldc || n > ldc)
+					return false;
+				// pre
+				opA = (opB == MatrixOperation.Transpose ? opA.Transpose() : opA.Conjugate().Transpose()).Simplify<T>(hermA);
+				using var conjA = Conjugater.Create(pA, leftA ? m : n, leftA ? m : n, lda, ref opA);
+				// multiply
+				funcRe?.Invoke(MklMatrixLayout.ColMajor, side, uplo, m, n, α, pA, lda, pB, ldb, β, pC, ldc);
+				funcCm?.Invoke(MklMatrixLayout.ColMajor, side, uplo, m, n, α, pA, lda, pB, ldb, β, pC, ldc);
+				// post
+				Conjugater.Transpose(pC, m, n, ldc, opB);
+			}
+			else if (opA == MatrixOperation.Conjugate)
+			{   // T is complex
+				// pre
+				if (opB == MatrixOperation.None)
+					Conjugater.Conjugate(pA, leftA ? m : n, leftA ? m : n, lda);
+				// multiply
+				funcCm?.Invoke(MklMatrixLayout.ColMajor, side, uplo, m, n, α, pA, lda, pB, ldb, β, pC, ldc);
+				// post
+				if (opB == MatrixOperation.None)
+					Conjugater.Conjugate(pA, leftA ? m : n, leftA ? m : n, lda);
+				else
+					Conjugater.Conjugate(pC, m, n, ldc);
+			}
+			else
+			{
+				using var conjB = Conjugater.Create(pA, opB.CanInPlace() ? m : n, opB.CanInPlace() ? n : m, ldb, ref opB);
+				funcRe?.Invoke(MklMatrixLayout.ColMajor, side, uplo, m, n, α, pA, lda, pB, ldb, β, pC, ldc);
+				funcCm?.Invoke(MklMatrixLayout.ColMajor, side, uplo, m, n, α, pA, lda, pB, ldb, β, pC, ldc);
+			}
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool TriangularMatrixSolve<T, TS1, TS2>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool TriangularMatrixSolve<T, TS1, TS2>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
+			op = op.Simplify<T>();
+			if (!GetPointer(A, m ,m, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, m, n, ldb, out T* pB))
+				return false;
+			NM.cblas_trsm<T>? funcRe = default(T) switch
+			{
+				float => new NM.cblas_trsm<float>(NM.cblas_strsm) as NM.cblas_trsm<T>,
+				double => new NM.cblas_trsm<double>(NM.cblas_dtrsm) as NM.cblas_trsm<T>,
+				_ => null,
+			};
+			NM.cblas_trsm_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => new NM.cblas_trsm_comp<Complex<float>>(NM.cblas_ctrsm) as NM.cblas_trsm_comp<T>,
+				Complex<double> => new NM.cblas_trsm_comp<Complex<double>>(NM.cblas_ztrsm) as NM.cblas_trsm_comp<T>,
+				_ => null,
+			};
+			var lr = leftA ? MklBlasSideMode.Left : MklBlasSideMode.Right;
+			var fu = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			var ud = unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit;
+			using var conjA = Conjugater.Create(pA, m, m, lda, ref op);
+			funcRe?.Invoke(MklMatrixLayout.ColMajor, lr, fu, op.ToMkl(), ud, m, n, α, pA, lda, pB, ldb);
+			funcCm?.Invoke(MklMatrixLayout.ColMajor, lr, fu, op.ToMkl(), ud, m, n, α, pA, lda, pB, ldb);
+			return funcRe != null || funcCm != null;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool TriangularMatrixMultiply<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool TriangularMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			long rowA, colA, rowB, colB;
+			(rowA, colA) = opA.CanInPlace() ? (m, k) : (k, m);
+			(rowB, colB) = opB.CanInPlace() ? (k, n) : (n, k);
+			if (!leftA)
+			{
+				((rowA, colA), (rowB, colB)) = ((rowB, colB), (rowA, colA));
+			}
+			if (!GetPointer(A, rowA, colA, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, rowB, colB, ldb, out T* pB))
+				return false;
+			if (!GetPointer(C, m, n, ldc, out T* pC))
+				return false;
+			if (β != T.Zero || (pB == pC && (!opB.CanInPlace() || rowB != m || colB != n || ldb != ldc)))
+				return false;
+			opA = opA.Simplify<T>();
+			NM.cblas_trmm<T>? funcRe = default(T) switch
+			{
+				float => new NM.cblas_trmm<float>(NM.cblas_strmm) as NM.cblas_trmm<T>,
+				double => new NM.cblas_trmm<double>(NM.cblas_dtrmm) as NM.cblas_trmm<T>,
+				_ => null,
+			};
+			NM.cblas_trmm_comp<T>? funcCm = default(T) switch
+			{
+				Complex<float> => new NM.cblas_trmm_comp<Complex<float>>(NM.cblas_ctrmm) as NM.cblas_trmm_comp<T>,
+				Complex<double> => new NM.cblas_trmm_comp<Complex<double>>(NM.cblas_ztrmm) as NM.cblas_trmm_comp<T>,
+				_ => null,
+			};
+			var fu = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
+			var ud = unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit;
+			if (pB == pC)
+			{   // B = alpha * opA(A) * opB(B)  or  B = alpha * opB(B) * opA(A)
+				
+			}
+			else
+			{
+				Storage.Api.PointerStridedCopy(px, strideX, py, strideY, Math.Min(m, n));
+				bool actualSquare = (m > n) == (fillUpper == op.CanInPlace());
+				using var conj = Conjugater.Create(py, actualSquare ? Math.Min(m, n) : m, strideY, ref op);
+				func(MklMatrixLayout.ColMajor, fu, op.ToMkl(), ud, Math.Min(m, n), pA, lda, py, strideY);
+				if (!actualSquare)
+				{
+					if (m > n)
+						this.GeneralMatrixMultiplyVector(op, m - n, n, T.One, A + n, lda, y + n * strideY, strideY, T.Zero, y + n * strideY, strideY);
+					else
+						this.GeneralMatrixMultiplyVector(op, m, n - m, T.One, A + m * lda, lda, x + m * strideX, strideX, T.One, y, strideY);
+				}
+				if (α != T.One)
+					this.Scale(y, strideY, α);
+			}
+			return true;
+		}
 
 		/// <inheritdoc/>
 		public virtual bool SymmetricRankKUpdate<T, TS1, TS2>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, TS1 A, long lda, T β, TS2 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
