@@ -1,4 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿global using System;
+global using System.Collections.Generic;
+global using System.Linq;
+
+using System.Runtime.CompilerServices;
 using System.Text;
 
 [assembly: CLSCompliant(true)]

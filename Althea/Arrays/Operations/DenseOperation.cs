@@ -308,7 +308,7 @@ namespace Althea.Array
 			var output = IMatrixOperations<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, opA, opB, B.Storage, out long m, out long n, out long k);
 			try
 			{
-				Blas.TriangularMatrixMultiply(true, A.Upper, A.UnitDiagonal, opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, T.Zero, output, m);
+				Blas.TriangularMatrixMultiplyGeneral(true, A.Upper, A.UnitDiagonal, opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, T.Zero, output, m);
 				return new(output, m, n);
 			}
 			catch (Exception)
@@ -324,7 +324,7 @@ namespace Althea.Array
 			var output = IMatrixOperations<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, opA, opB, A.Storage, out long m, out long n, out long k);
 			try
 			{
-				Blas.TriangularMatrixMultiply(false, B.Upper, B.UnitDiagonal, opB, opA, m, n, k, α, B.Storage, B.LeadDim, A.Storage, A.LeadDim, T.Zero, output, m);
+				Blas.TriangularMatrixMultiplyGeneral(false, B.Upper, B.UnitDiagonal, opB, opA, m, n, k, α, B.Storage, B.LeadDim, A.Storage, A.LeadDim, T.Zero, output, m);
 				return new(output, m, n);
 			}
 			catch (Exception)
@@ -582,7 +582,7 @@ namespace Althea.Array
 		public static void MultiplyMatries(TriangularMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (m, n, k) = IMatrixOperations<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
-			Blas.TriangularMatrixMultiply(true, A.Upper, A.UnitDiagonal, opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
+			Blas.TriangularMatrixMultiplyGeneral(true, A.Upper, A.UnitDiagonal, opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
 		}
 
 		/// <inheritdoc/>
@@ -592,7 +592,7 @@ namespace Althea.Array
 		public static void MultiplyMatries(DenseMatrix<T, TS> A, TriangularMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (m, n, k) = IMatrixOperations<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
-			Blas.TriangularMatrixMultiply(false, B.Upper, B.UnitDiagonal, opB, opA, m, n, k, α, B.Storage, B.LeadDim, A.Storage, A.LeadDim, β, C.Storage, C.LeadDim);
+			Blas.TriangularMatrixMultiplyGeneral(false, B.Upper, B.UnitDiagonal, opB, opA, m, n, k, α, B.Storage, B.LeadDim, A.Storage, A.LeadDim, β, C.Storage, C.LeadDim);
 		}
 
 		/// <inheritdoc/>

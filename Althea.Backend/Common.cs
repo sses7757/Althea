@@ -1,4 +1,10 @@
-﻿using System.Diagnostics;
+﻿global using System;
+global using System.Linq;
+global using System.Collections.Generic;
+
+global using Althea.Storage;
+
+using System.Diagnostics;
 
 using Althea.Helpers;
 

@@ -55,7 +55,7 @@ namespace Althea.Backend.Mkl.Storage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool PointerMemoryCopy2D<T>(T* source, long sourceLD, T* destination, long destinationLD, long height, long width) where T : unmanaged, INumber<T>
+		internal static bool PointerMemoryCopy2D<T>(T* source, long sourceLD, T* destination, long destinationLD, long height, long width, Althea.LinearAlgebra.MatrixOperation op = Althea.LinearAlgebra.MatrixOperation.None) where T : unmanaged, INumber<T>
 		{
 			// shortcut
 			if (sourceLD == destinationLD && sourceLD == height && height * width <= uint.MaxValue)
@@ -71,7 +71,9 @@ namespace Althea.Backend.Mkl.Storage
 				Complex<double> => new MklDn.MKL_omatcopy<Complex<double>>(MklDn.MKL_Zomatcopy) as MklDn.MKL_omatcopy<T>,
 				_ => null
 			};
-			func?.Invoke(LinearAlgebra.Dense.MklMatrixLayoutChar.ColMajor, LinearAlgebra.Dense.MklOperationChar.NoneTranspose, height, width, T.One, source, sourceLD, destination, destinationLD);
+			if (!Althea.LinearAlgebra.MatrixOperationExtension.CanInPlace(op))
+				(height, width) = (width, height);
+			func?.Invoke(LinearAlgebra.Dense.MklMatrixLayoutChar.ColMajor, LinearAlgebra.Dense.MklBlasExtension.ToMklChar(op), height, width, T.One, source, sourceLD, destination, destinationLD);
 			return func != null;
 		}
 

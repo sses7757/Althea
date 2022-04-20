@@ -1,14 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 
 namespace Althea
 {
 	/// <summary>
-	/// The base abstract interface for all runtime API classes defined in and out of this assembly. Any concrete runtime API class shall inherit the sub-classes of this class.<br/>
-	/// The derived concrete class(es) shall be able to serialized and deserialized by <see cref="JsonSerializer"/> (typically through indicating <see cref="JsonConstructorAttribute"/> and implementing <see cref="CurrentConverter"/>).
+	/// The base abstract interface for all runtime API classes defined in and out of this assembly. Any concrete runtime API class shall inherit the sub-classes of this class.
 	/// </summary>
 	/// <typeparam name="TApi">Any runtime API abstract class which inherits <see cref="IAbstractRuntimeApi{TApi}"/></typeparam>
 	/// <remarks>Typically, the <b>callers</b> are responsible for checking the input parameters of all the defined API methods.</remarks>
