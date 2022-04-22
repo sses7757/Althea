@@ -264,12 +264,20 @@ namespace Althea.LinearAlgebra
 	public static class MatrixOperationExtension
 	{
 		/// <summary>
-		/// Check whether the given <paramref name="operation"/> can be performed in-place, i.e., no transposition involved
+		/// Check whether the given <paramref name="operation"/> can be performed in-place, i.e., no transposition involved.
 		/// </summary>
 		/// <param name="operation">The <see cref="MatrixOperation"/> to check</param>
-		/// <returns>Whether <paramref name="operation"/> can be performed in-place</returns>
+		/// <returns>Whether <paramref name="operation"/> can be performed in-place.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool CanInPlace(this MatrixOperation operation) => operation == MatrixOperation.None || operation == MatrixOperation.Conjugate;
+
+		/// <summary>
+		/// Check whether the given <paramref name="operation"/> has conjugate operation.
+		/// </summary>
+		/// <param name="operation">The <see cref="MatrixOperation"/> to check</param>
+		/// <returns>Whether <paramref name="operation"/> has conjugate operation or not.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasConjugate(this MatrixOperation operation) => operation == MatrixOperation.ConjugateTranspose || operation == MatrixOperation.Conjugate;
 
 		/// <summary>
 		/// Transpose the given <paramref name="operation"/>

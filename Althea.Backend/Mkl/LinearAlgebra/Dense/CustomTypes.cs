@@ -15,6 +15,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			return op switch
 			{
 				MatrixOperation.None => MklOperation.NoneTranspose,
+				MatrixOperation.Conjugate => MklOperation.NoneTranspose,
 				MatrixOperation.Transpose => MklOperation.Transpose,
 				MatrixOperation.ConjugateTranspose => MklOperation.ConjugateTranspose,
 				_ => default,

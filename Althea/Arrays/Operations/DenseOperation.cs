@@ -783,32 +783,6 @@ namespace Althea.Array
 				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
 			Blas.SymmetricRankTwoKUpdate(A.Upper, op, A.Hermitian, n, k, α, B.Storage, B.LeadDim, C.Storage, C.LeadDim, β, A.Storage, A.LeadDim);
 		}
-
-		/// <summary>
-		/// Update the square matrix <paramref name="A"/> by adding the product of matrices <paramref name="left"/> and <paramref name="right"/>.
-		/// </summary>
-		/// <param name="A">The matrix to be updated</param>
-		/// <param name="left">The left matrix to product</param>
-		/// <param name="right">The right matrix to product</param>
-		/// <param name="α">The scalar to multiply to <paramref name="left"/> or <paramref name="right"/></param>
-		/// <param name="β">The scalar to multiply to <paramref name="A"/></param>
-		/// <param name="op">The operation to be applied to both <paramref name="left"/> and <paramref name="right"/></param>
-		/// <param name="conjugateRight">Whether to use the conjugate transpose of <paramref name="right"/> or simply transpose.</param>
-		public static void RankKUpdate(DenseMatrix<T, TS> A!!, DenseMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!, T α, T β = default, MatrixOperation op = MatrixOperation.None, bool conjugateRight = true)
-		{
-			if (!NumberType<T>.IsComplex)
-				conjugateRight = false;
-			var (n, k) = (left.NRows, left.NCols);
-			if (!op.CanInPlace())
-				(n, k) = (k, n);
-			if (A.NRows != n || A.NCols != n)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
-			if (right.NRows != left.NRows || right.NCols != left.NCols)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(right));
-			if (α == T.Zero)
-				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
-			Blas.GeneralRankKUpdate(op, conjugateRight, n, k, α, left.Storage, left.LeadDim, right.Storage, right.LeadDim, β, A.Storage, A.LeadDim);
-		}
 		#endregion
 
 		#region matrix solve

@@ -431,33 +431,6 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
 		[AbstractApiMethod]
 		public abstract bool SymmetricRankTwoKUpdate<T, TS1, TS2, TS3>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
-
-		/// <summary>
-		/// When implemented by a derived class, perform the variant symmetric/hermitian rank-k update:<br/>
-		/// <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c>, <c>pow = <paramref name="conjB"/> ? H : T</c>.<br/>
-		/// Where <paramref name="α"/> and <paramref name="β"/> are scalars, <paramref name="C"/> is a symmetric/hermitian matrix stored in lower or upper mode, and <paramref name="A"/> and <paramref name="B"/> are matrices with dimensions <c><paramref name="op"/>(<paramref name="A"/>) == <paramref name="op"/>(<paramref name="B"/>) == <paramref name="n"/>×<paramref name="k"/></c>.<br/>
-		/// This routine can be used when the matrix <paramref name="B"/> is in such way that the result is guaranteed to be hermitian. For example, <paramref name="B"/> is a column-wise scaling of <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS3">The third actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="op">The <see cref="MatrixOperation"/> indicates the simple operation to <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="conjB">Conjugate transpose <paramref name="B"/> or just transpose <paramref name="B"/></param>
-		/// <param name="n">The number of rows of matrix <paramref name="op"/>(<paramref name="A"/>), <paramref name="op"/>(<paramref name="B"/>) and <paramref name="C"/></param>
-		/// <param name="k">The number of columns of matrix <paramref name="op"/>(<paramref name="A"/>) and <paramref name="op"/>(<paramref name="B"/>)</param>
-		/// <param name="α">The scalar to be multiplied to <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="A"/>)^pow</param>
-		/// <param name="A">The array of column major with leading dimension = <paramref name="lda"/></param>
-		/// <param name="lda">The leading dimension of two-dimensional array used to store matrix <paramref name="A"/>, must be of at least its number of rows</param>
-		/// <param name="B">The array of column major with leading dimension = <paramref name="ldb"/></param>
-		/// <param name="ldb">The leading dimension of two-dimensional array used to store matrix <paramref name="B"/>, must be of at least its number of rows</param>
-		/// <param name="β">The scalar to be multiplied by <paramref name="C"/>. If it is 0, the original values of <paramref name="C"/> will be ignored.</param>
-		/// <param name="C">The general matrix of dimension <c><paramref name="ldc"/>×<paramref name="n"/></c> with <c><paramref name="ldc"/> ≥ max(1, <paramref name="n"/>)</c></param>
-		/// <param name="ldc">The leading dimension of two-dimensional array used to store matrix <paramref name="C"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="C"/> is null or invalid</exception>
-		[AbstractApiMethod]
-		public abstract bool GeneralRankKUpdate<T, TS1, TS2, TS3>(MatrixOperation op, bool conjB, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 		#endregion
 	}
 }

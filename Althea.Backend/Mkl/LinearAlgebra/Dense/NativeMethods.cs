@@ -162,7 +162,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#region BLAS like
 		[NativeMethod(6)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_sdgmm_batch(MklMatrixLayout layout, in MklBlasSideMode side, in long m, in long n, in void* a, in long lda, in void* x, in long incx, in void* c, in long ldc, long group_count, in long group_size);
+		internal static extern void cblas_sdgmm_batch_strided(MklMatrixLayout layout, MklBlasSideMode side, long m, long n, void* A, long lda, long strideA, void* x, long incx, long strideX, void* C, long ldc, long strideC, long batch_size);
 
 		[NativeMethod(4, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
