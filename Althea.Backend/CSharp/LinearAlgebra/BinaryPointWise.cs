@@ -5,7 +5,6 @@ using System.Runtime.Intrinsics.X86;
 
 using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.Storage;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra
@@ -13,7 +12,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 	public unsafe partial class Api
 	{
 		#region equals
-		public virtual partial bool PointWiseEquals<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual partial bool GeneralVectorsEqual<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			equals = false;
 			if (x.Length != y.Length)
@@ -332,7 +331,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			if (typeof(Op) == typeof(B_Multiply) && px == py)
 			{
-				return Default.PointWisePower(x, 1, T.One + T.One);
+				return PointWisePower(x, 1, T.One + T.One);
 			}
 			if ((typeof(Op) == typeof(B_Add) || typeof(Op) == typeof(B_AddScaled)) && px == py)
 			{
@@ -365,9 +364,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool PointWiseMultiply<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => VectorsBinary<T, TS1, TS2, B_Multiply>(x, strideX, y, strideY, default);
-
-		public virtual partial bool PointWiseDivide<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => VectorsBinary<T, TS1, TS2, B_Divide>(x, strideX, y, strideY, default);
+		public virtual partial bool GeneralVectorsBinary<T, TS1, TS2>(Althea.LinearAlgebra.BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			return op switch
+			{
+				Althea.LinearAlgebra.BinaryOperation.Add => VectorsBinary<T, TS2, TS1, B_Add>(y, strideY, x, strideX, default),
+				Althea.LinearAlgebra.BinaryOperation.Multiply => VectorsBinary<T, TS1, TS2, B_Multiply>(x, strideX, y, strideY, default),
+				Althea.LinearAlgebra.BinaryOperation.Divide => VectorsBinary<T, TS1, TS2, B_Divide>(x, strideX, y, strideY, default),
+				_ => false,
+			};
+		}
 
 		public virtual partial bool Add<T, TS1, TS2>(T α, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
@@ -1162,7 +1168,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>
+		public virtual partial bool GeneralVectorsCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>
 		{
 			if (!GetPointer(source, strideSource, out TIn* px, out int lenx, out int incx))
 				return false;

@@ -1,4 +1,5 @@
 ﻿using Althea.Array;
+using Althea.LinearAlgebra;
 using Althea.SourceGenerator;
 using Althea.Storage;
 
@@ -18,51 +19,65 @@ namespace Althea.TensorAlgebra.Dense
 		/// <typeparam name="TS">The storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="tensor">The dense tensor as a <see cref="DenseArrayWrapper{T, TS}"/> to be in-place modified</param>
 		/// <param name="value">The value as the second input in <paramref name="op"/> of type <typeparamref name="T"/>.</param>
-		/// <param name="op">The <see cref="BinaryOperation"/> to use</param>
+		/// <param name="op">The <see cref="BinaryScalarOperation"/> to use</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseBinary<T, TS>(DenseArrayWrapper<T, TS> tensor, T value, BinaryOperation op) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool OperationBinaryScalar<T, TS>(BinaryScalarOperation op, DenseArrayWrapper<T, TS> tensor, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
-		/// When implemented by a derived class, calculate the 2-norm of all elements in <paramref name="tensor"/>.
+		/// When implemented by a derived class, fully reduce <paramref name="tensor"/> according to <paramref name="op"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS">The storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="ReduceOperation"/> to use</param>
+		/// <param name="tensor">The dense tensor as a <see cref="DenseArrayWrapper{T, TS}"/> to be in-place modified</param>
+		/// <param name="result">Output the reduction result</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
+		[AbstractApiMethod]
+		public abstract bool FullReduce<T, TS>(ReduceOperation op, DenseArrayWrapper<T, TS> tensor, out T result) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, fully reduce <paramref name="tensor"/> according to <paramref name="op"/> and return the index of reduction result.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS">The storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="tensor">The dense tensor as a <see cref="DenseArrayWrapper{T, TS}"/></param>
-		/// <param name="result">Output the 2-norm result as a <typeparamref name="T"/></param>
+		/// <param name="op">The <see cref="ReduceOperation"/> to use</param>
+		/// <param name="index">Output the reduction result's index compared to <paramref name="tensor"/>'s <see cref="DenseArrayWrapper{T, TS}.ValueStorage"/> in <typeparamref name="T"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
+		/// <exception cref="ArgumentException">If <paramref name="op"/> is not aggregation operation like <see cref="ReduceOperation.Maximum"/></exception>
 		[AbstractApiMethod]
-		public abstract bool Norm<T, TS>(DenseArrayWrapper<T, TS> tensor, out T result) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool ArgFullReduce<T, TS>(ReduceOperation op, DenseArrayWrapper<T, TS> tensor, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
-		/// When implemented by a derived class, perform unary operation <paramref name="op"/> to each element in <paramref name="tensor"/> and aggregate by <paramref name="reduce"/>.
+		/// When implemented by a derived class, check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i] == <paramref name="B"/>[i]</c> for all <c>i</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS">The storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="tensor">The dense tensor as a <see cref="DenseArrayWrapper{T, TS}"/></param>
-		/// <param name="op">The <see cref="UnaryOperation"/> to apply to each element in <paramref name="tensor"/></param>
-		/// <param name="reduce">The <see cref="BinaryOperation"/> to use</param>
-		/// <param name="result">Output the reduction result as a <typeparamref name="T"/></param>
+		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="A">The first tensor to be checked</param>
+		/// <param name="B">The second tensor to be checked</param>
+		/// <param name="equals">Output <see cref="bool"/> indicating whether all elements in <paramref name="A"/> and <paramref name="B"/> are equal</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseAggregation<T, TS>(DenseArrayWrapper<T, TS> tensor, UnaryOperation op, BinaryOperation reduce, out T result) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool PointWiseEqual<T, TS1, TS2>(DenseArrayWrapper<T, TS1> A, DenseArrayWrapper<T, TS2> B, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
-		/// When implemented by a derived class, perform unary operation <paramref name="op"/> to each element in <paramref name="tensor"/> and return the index of aggregation operation <paramref name="reduce"/>.
+		/// When implemented by a derived class, cast the given tensor from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS">The storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="tensor">The dense tensor as a <see cref="DenseArrayWrapper{T, TS}"/></param>
-		/// <param name="op">The <see cref="UnaryOperation"/> to apply to each element in <paramref name="tensor"/></param>
-		/// <param name="reduce">The <see cref="BinaryOperation"/> to use</param>
-		/// <param name="index">Output the reduction index result as a <typeparamref name="T"/></param>
+		/// <typeparam name="TIn">Any unmanaged number as the input data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number as the output data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="source">The source tensor</param>
+		/// <param name="destination">The destination tensor</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="reduce"/> is not aggregation operation like <see cref="BinaryOperation.Maximum"/></exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseArgAggregation<T, TS>(DenseArrayWrapper<T, TS> tensor, UnaryOperation op, BinaryOperation reduce, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool PointWiseCast<TIn, TOut, TSIn, TSOut>(DenseArrayWrapper<TIn, TSIn> source, DenseArrayWrapper<TOut, TSOut> destination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
 	}
 }

@@ -6,8 +6,8 @@ using System.Runtime.Intrinsics.X86;
 
 using Althea.Backend.Storage;
 using Althea.Linq;
+using Althea.LinearAlgebra;
 using Althea.NativeTypes;
-using Althea.Storage;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra
@@ -533,7 +533,34 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		
 		public virtual partial bool Scale<T, TS>(TS x, long strideX, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => VectorModify<T, TS, T, U_MultiplyScalar>(x, strideX, scalar);
 
-		public virtual partial bool FillWithValue<T, TS>(TS x, long strideX, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public virtual partial bool GeneralVectorUnary<T, TS>(UnaryOperation op, TS x, long strideX) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			return op switch
+			{
+				UnaryOperation.Identity => true,
+				UnaryOperation.Conjugate => !NumberType<T>.IsComplex || VectorModify<T, TS, T, U_Conjugate>(x, strideX, default),
+				UnaryOperation.Negate => VectorModify<T, TS, T, U_MultiplyScalar>(x, strideX, -T.One),
+				UnaryOperation.AbsoluteValue => false,
+				_ => false,
+			};
+		}
+
+		public virtual partial bool GeneralVectorBinaryScalar<T, TS>(BinaryScalarOperation op, T scalar, TS x, long strideX) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			return op switch
+			{
+				BinaryScalarOperation.Add => VectorModify<T, TS, T, U_AddScalar>(x, strideX, scalar),
+				BinaryScalarOperation.Multiply => VectorModify<T, TS, T, U_MultiplyScalar>(x, strideX, scalar),
+				BinaryScalarOperation.Power => PointWisePower(x, strideX, scalar),
+				BinaryScalarOperation.Maximum => false,
+				BinaryScalarOperation.Mininum => false,
+				BinaryScalarOperation.Fill => FillWithValue(x, strideX, scalar),
+				BinaryScalarOperation.Truncate => VectorModify<T, TS, double, U_Truncate>(x, strideX, scalar.As<T, double>()),
+				_ => false,
+			};
+		}
+
+		private static bool FillWithValue<T, TS>(TS x, long strideX, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!GetPointer(x, strideX, out T* px, out int length, out int inc) || x is not PureStorage<T, CpuMemoryPointer> ps)
 				return false;
@@ -546,17 +573,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool PointWiseConjugate<T, TS>(TS x, long stride) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => VectorModify<T, TS, T, U_Conjugate>(x, stride, default);
-
-		/// <inheritdoc/>
-		public virtual partial bool PointWiseAddScalar<T, TS>(TS x, long stride, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => VectorModify<T, TS, T, U_AddScalar>(x, stride, scalar);
-
-		public virtual partial bool PointWiseTruncate<T, TS>(TS x, long stride, double threshold) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> => VectorModify<T, TS, double, U_Truncate>(x, stride, threshold);
-
-		public virtual partial bool PointWisePower<T, TS>(TS x, long stride, T p) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static bool PointWisePower<T, TS>(TS x, long stride, T p) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (p == T.Zero)
-				return this.FillWithValue(x, stride, T.One);
+				return FillWithValue(x, stride, T.One);
 			if (p == T.One)
 				return true;
 			if (p == -T.One)

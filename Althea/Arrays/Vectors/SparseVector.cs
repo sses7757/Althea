@@ -260,28 +260,10 @@ namespace Althea.Array
 			if (NumberType<T>.IsComplex)
 			{
 				if (NumberType<T>.IsRealValue(this.defaultValue))
-					ExtBlas.PointWiseConjugate<T, TS>(this.values, 1);
+					ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, this.values, 1);
 				else
 					throw new InvalidOperationException(Resources.SparseError.CannotSetSparse);
 			}
-		}
-
-		/// <inheritdoc/>
-		public void Power(T power)
-		{
-			if (this.defaultValue == T.Zero || this.defaultValue == T.One)
-				ExtBlas.PointWisePower(this.values, 1, power);
-			else
-				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(power));
-		}
-
-		/// <inheritdoc/>
-		public void Truncate(double threshold)
-		{
-			if (this.defaultValue != T.Zero && T.Abs(this.defaultValue) < T.Create(threshold))
-				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(threshold));
-			else
-				ExtBlas.PointWiseTruncate<T, TS>(this.values, 1, threshold);
 		}
 		#endregion
 
@@ -290,7 +272,7 @@ namespace Althea.Array
 		public T Sum()
 		{
 			T defaultSum = this.defaultValue * T.Create(this.length - this.NStored);
-			return defaultSum + ExtBlas.AggregateSum<T, TS>(this.values, 1);
+			return defaultSum + ExtBlas.GeneralVectorReduce<T, TS>(ReduceOperation.Add, this.values, 1);
 		}
 
 		/// <inheritdoc/>

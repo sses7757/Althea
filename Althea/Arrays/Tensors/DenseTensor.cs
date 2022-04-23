@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 
 using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
@@ -280,39 +281,33 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtTen.PointWiseBinary<T, TS>(new(this), value, BinaryOperation.GetSecond);
+		public void FillWith(T value) => ExtTen.OperationBinaryScalar<T, TS>(BinaryScalarOperation.Fill, new(this), value);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtTen.PointWiseBinary<T, TS>(new(this), value, BinaryOperation.Addition);
+		public void AddScalar(T value) => ExtTen.OperationBinaryScalar<T, TS>(BinaryScalarOperation.Add, new(this), value);
 
 		/// <inheritdoc/>
-		public void Scale(T value) => Ten.Permute<T, TS, TS>(new(this, default, value), new(this), stackalloc int[this.rank].FillWithRange(0));
+		public void Scale(T value) => ExtTen.OperationBinaryScalar<T, TS>(BinaryScalarOperation.Multiply, new(this), value);
 
 		/// <inheritdoc/>
 		public void Conjugate() => Ten.Permute<T, TS, TS>(new(this, UnaryOperation.Conjugate), new(this), stackalloc int[this.rank].FillWithRange(0));
-
-		/// <inheritdoc/>
-		public void Power(T power) => ExtTen.PointWiseBinary<T, TS>(new(this), power, BinaryOperation.Power);
-
-		/// <inheritdoc/>
-		public void Truncate(double threshold) => ExtTen.PointWiseBinary<T, TS>(new(this), T.Create(threshold), BinaryOperation.ClipFirstBySecond);
 		#endregion
 
 		#region simple aggregation operations
 		/// <inheritdoc/>
-		public T Sum() => ExtTen.PointWiseAggregation<T, TS>(new(this), UnaryOperation.Identity, BinaryOperation.Addition);
+		public T Sum() => ExtTen.FullReduce<T, TS>(ReduceOperation.Add, new(this));
 
 		/// <inheritdoc/>
-		public T AbsSum() => ExtTen.PointWiseAggregation<T, TS>(new(this), UnaryOperation.AbsoluteValue, BinaryOperation.Addition);
+		public T AbsSum() => ExtTen.FullReduce<T, TS>(ReduceOperation.AddAbsolute, new(this));
 
 		/// <inheritdoc/>
-		public T Norm() => ExtTen.Norm<T, TS>(new(this));
+		public T Norm() => ExtTen.FullReduce<T, TS>(ReduceOperation.Norm, new(this));
 
 		/// <inheritdoc/>
-		public T ValueWithMaxAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this), UnaryOperation.AbsoluteValue, BinaryOperation.Maximum);
+		public T ValueWithMaxAbs() => ExtTen.FullReduce<T, TS>(ReduceOperation.AbsoluteMaximum, new(this));
 
 		/// <inheritdoc/>
-		public T ValueWithMinAbs() => ExtTen.PointWiseAggregation<T, TS>(new(this), UnaryOperation.AbsoluteValue, BinaryOperation.Mininum);
+		public T ValueWithMinAbs() => ExtTen.FullReduce<T, TS>(ReduceOperation.AbsoluteMininum, new(this));
 		#endregion
 
 		#region operators
@@ -335,10 +330,10 @@ namespace Althea.Array
 		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => DenseOperation<T, TS>.Contract(left, UnaryOperation.Identity, right, UnaryOperation.Identity, T.One);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator +(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => DenseOperation<T, TS>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Addition);
+		public static DenseTensor<T, TS> operator +(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => DenseOperation<T, TS>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Add);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => DenseOperation<T, TS>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Addition);
+		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left, DenseTensor<T, TS> right) => DenseOperation<T, TS>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Add);
 		#endregion
 
 		#region conversion and clone

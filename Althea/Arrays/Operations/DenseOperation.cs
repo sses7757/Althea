@@ -146,7 +146,7 @@ namespace Althea.Array
 				var output = vec.ToCompact();
 				try
 				{
-					ExtBlas.PointWiseConjugate<T, TS>(output, 1);
+					ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, output, 1);
 					return new(output, output.Length);
 				}
 				catch (Exception)
@@ -382,7 +382,7 @@ namespace Althea.Array
 			if (operation == MatrixOperation.None)
 				return matrix.ApplyToClone(m => m.Scale(scalar));
 			if (operation == MatrixOperation.Conjugate)
-				return matrix.ApplyToClone(m => { ExtBlas.PointWiseConjugate<T, TS>(m.Storage, 1); m.Scale(scalar); });
+				return matrix.ApplyToClone(m => { ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, m.Storage, 1); m.Scale(scalar); });
 			var output = matrix.Storage.ResizeAlike(matrix.NRows * matrix.NCols);
 			try
 			{
@@ -574,7 +574,7 @@ namespace Althea.Array
 			}
 			HalfBlas.HalfMatrixClearPart<T, TS>(A.UnitDiagonal, A.Upper, m, n, C.Storage, C.LeadDim);
 			if (A.UnitDiagonal)
-				ExtBlas.FillWithValue(C.Storage, C.LeadDim + 1, T.One);
+				ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Fill, T.One, C.Storage, C.LeadDim + 1);
 			AddMatrices(C, scalarA, B, scalarB, C, opA, opB);
 		}
 
@@ -809,7 +809,7 @@ namespace Althea.Array
 
 		#region tensor
 		/// <inheritdoc/>
-		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T α, DenseTensor<T, TS> B!!, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T α, DenseTensor<T, TS> B!!, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add)
 		{
 			Span<int> reduceInd = stackalloc int[A.Rank];
 			reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, α, B, reduceInd);
@@ -825,7 +825,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> Reduce(DenseTensor<T, TS> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static DenseTensor<T, TS> Reduce(DenseTensor<T, TS> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add)
 		{
 			Span<int> reduceInd = stackalloc int[A.Rank];
 			Span<long> sizeB = stackalloc long[A.Rank];

@@ -356,7 +356,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T α,  UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static DenseTensor<T, TS> Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T α,  UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add)
 		{
 			Span<int> reduceInds = stackalloc int[A.Rank];
 			Span<long> sizeB = stackalloc long[A.Rank];
@@ -473,7 +473,7 @@ namespace Althea.Array
 
 		#region tensor out-of-place operations
 		/// <inheritdoc/>
-		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, SparseTensor<T, TInd, TS, TSInd> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, SparseTensor<T, TInd, TS, TSInd> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add)
 		{
 			Span<int> reduceInds = stackalloc int[A.Rank];
 			reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckReduce(A, order, α, B, reduceInds);
@@ -491,7 +491,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, DenseTensor<T, TS> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition)
+		public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, DenseTensor<T, TS> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add)
 		{
 			Span<int> reduceInds = stackalloc int[A.Rank];
 			reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckReduce(A, order, α, B, reduceInds);

@@ -2,6 +2,7 @@
 
 using Althea.Array;
 using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.Storage;
 

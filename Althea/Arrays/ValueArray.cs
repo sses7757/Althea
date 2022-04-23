@@ -160,18 +160,6 @@ namespace Althea.Array
 		/// When implemented by a derived class, point-wisely in-place conjugate this array.
 		/// </summary>
 		void Conjugate();
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place exponent this array with given <paramref name="power"/>.
-		/// </summary>
-		/// <param name="power">The power as a <typeparamref name="T"/></param>
-		void Power(T power);
-
-		/// <summary>
-		/// When implemented by a derived class, point-wisely in-place truncate this array by comparing with given <paramref name="threshold"/>.
-		/// </summary>
-		/// <param name="threshold">The threshold as a <see cref="double"/>. Any element in this array whose absolute value ≤ <paramref name="threshold"/> will be set to 0.</param>
-		void Truncate(double threshold);
 		#endregion
 
 		#region simple aggregation operations
@@ -188,7 +176,7 @@ namespace Althea.Array
 		T AbsSum();
 
 		/// <summary>
-		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array.
+		/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this array as if this is a vector.
 		/// </summary>
 		/// <returns>The 2-norm of this array.</returns>
 		T Norm();

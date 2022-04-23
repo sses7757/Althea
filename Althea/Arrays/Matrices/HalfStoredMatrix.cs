@@ -246,7 +246,7 @@ namespace Althea.Array
 				this.Storage.Copy2DTo<T, TS, TS>(this.LeadDim, compact, this.NRows, this.NRows, this.NCols);
 				HalfBlas.HalfMatrixClearPart<T, TS>(false, this.upper, this.NRows, this.NCols, compact, this.NRows);
 				if (this.unitDiag)
-					ExtBlas.FillWithValue(compact, this.NRows + 1, T.One);
+					ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Fill, T.One, compact, this.NRows + 1);
 				return compact;
 			}
 			catch (Exception)

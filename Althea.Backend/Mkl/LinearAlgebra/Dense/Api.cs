@@ -644,7 +644,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			var funcRe = default(T) switch
 			{
-				float => new NM.cblas_syr<float> (NM.cblas_ssyr) as NM.cblas_syr<T>,
+				float => new NM.cblas_syr<float>(NM.cblas_ssyr) as NM.cblas_syr<T>,
 				double => new NM.cblas_syr<double>(NM.cblas_dsyr) as NM.cblas_syr<T>,
 				_ => null,
 			};
@@ -903,7 +903,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
 			op = op.Simplify<T>();
-			if (!GetPointer(A, m ,m, lda, out T* pA))
+			if (!GetPointer(A, m, m, lda, out T* pA))
 				return false;
 			if (!GetPointer(B, m, n, ldb, out T* pB))
 				return false;
@@ -1183,7 +1183,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool PointWiseEquals<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool GeneralVectorsEqual<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			equals = false;
 			if (!GetPointer(x, strideX, out T* px, out long n))
@@ -1196,10 +1196,84 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool PointWiseMultiply<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool PointWiseMultiply<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out long ny))
+				return false;
+			n = Math.Min(n, ny);
+			if (strideX == 1 && strideY == 1)
+			{
+				delegate*<long, T*, T*, T*, void> func = default(T) switch
+				{
+					float => &NM.vsMul,
+					double => &NM.vdMul,
+					Complex<float> => &NM.vcMul ,
+					Complex<double> => &NM.vzMul,
+					_ => null,
+				};
+				if (func == null)
+					return false;
+				func(n, px, py, px);
+				return true;
+			}
+			else
+			{
+				delegate*<long, T*, long, T*, long, T*, long, void> func = default(T) switch
+				{
+					float => &NM.vsMulI,
+					double => &NM.vdMulI,
+					Complex<float> => &NM.vcMulI,
+					Complex<double> => &NM.vzMulI,
+					_ => null,
+				};
+				if (func == null)
+					return false;
+				func(n, px, strideX, py, strideY, px, strideX);
+				return true;
+			}
+		}
 
 		/// <inheritdoc/>
-		public virtual bool PointWiseDivide<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool PointWiseDivide<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(x, strideX, out T* px, out long n))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out long ny))
+				return false;
+			n = Math.Min(n, ny);
+			if (strideX == 1 && strideY == 1)
+			{
+				delegate*<long, T*, T*, T*, void> func = default(T) switch
+				{
+					float => &NM.vsDiv,
+					double => &NM.vdDiv,
+					Complex<float> => &NM.vcDiv,
+					Complex<double> => &NM.vzDiv,
+					_ => null,
+				};
+				if (func == null)
+					return false;
+				func(n, px, py, px);
+				return true;
+			}
+			else
+			{
+				delegate*<long, T*, long, T*, long, T*, long, void> func = default(T) switch
+				{
+					float => &NM.vsDivI,
+					double => &NM.vdDivI,
+					Complex<float> => &NM.vcDivI,
+					Complex<double> => &NM.vzDivI,
+					_ => null,
+				};
+				if (func == null)
+					return false;
+				func(n, px, strideX, py, strideY, px, strideX);
+				return true;
+			}
+		}
 
 		/// <inheritdoc/>
 		public virtual bool PointWisePower<T, TS>(TS x, long stride, T p) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
@@ -1211,7 +1285,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		public virtual bool PointWiseAddScalar<T, TS>(TS x, long stride, T scalar) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual bool PointWiseCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+		public virtual bool GeneralVectorsCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <inheritdoc/>
 		public virtual bool PointWiseTruncate<T, TS>(TS x, long stride, double threshold) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
@@ -1223,10 +1297,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		public virtual bool AggregateProduct<T, TS>(TS x, long stride, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <inheritdoc/>
-		public virtual bool PartialSum<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool GeneralVectorsPartialSum<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <inheritdoc/>
-		public virtual bool PartialProduct<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool GeneralVectorsPartialProduct<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 
 		#region matrix math

@@ -1000,7 +1000,7 @@ namespace Althea.Array
 		/// <param name="reduce">The <see cref="BinaryOperation"/> used to reduce elements</param>
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
-		public abstract static void Reduce(TTen1 A, TensorOrder order, T α, TTen2 B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition);
+		public abstract static void Reduce(TTen1 A, TensorOrder order, T α, TTen2 B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add);
 
 		/// <summary>
 		/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, TTen2, UnaryOperation)"/>.
@@ -1070,7 +1070,7 @@ namespace Althea.Array
 		/// <returns>The created new <typeparamref name="TTen2"/> as the result.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-		public abstract static TTen2 Reduce(TTen1 A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Addition);
+		public abstract static TTen2 Reduce(TTen1 A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add);
 
 		/// <summary>
 		/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, UnaryOperation)"/>.

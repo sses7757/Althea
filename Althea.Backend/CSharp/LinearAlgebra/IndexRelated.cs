@@ -6,7 +6,6 @@ using Althea.Array;
 using Althea.Helpers;
 using Althea.Linq;
 using Althea.NativeTypes;
-using Althea.Storage;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra

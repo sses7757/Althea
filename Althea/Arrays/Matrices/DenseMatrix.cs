@@ -213,39 +213,33 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtBlas.GeneralMatrixFill(this.Storage, this.LeadDim, value, this.NRows, this.NCols);
+		public void FillWith(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, this.NRows, this.NCols, value, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtBlas.GeneralMatrixAddScalar(this.Storage, this.LeadDim, value, this.NRows, this.NCols);
+		public void AddScalar(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Add, this.NRows, this.NCols, value, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public void Scale(T value) => ExtBlas.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, this.NRows, this.NCols, value, this.Storage, this.LeadDim, T.Zero, (TS?)null, 1, this.Storage, this.LeadDim);
+		public void Scale(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Multiply, this.NRows, this.NCols, value, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public void Conjugate() => ExtBlas.GeneralMatricesAdd(MatrixOperation.Conjugate, MatrixOperation.None, this.NRows, this.NCols, T.One, this.Storage, this.LeadDim, T.Zero, (TS?)null, 1, this.Storage, this.LeadDim);
-
-		/// <inheritdoc/>
-		public void Power(T power) => ExtBlas.GeneralMatrixPower(this.Storage, this.LeadDim, power, this.NRows, this.NCols);
-
-		/// <inheritdoc/>
-		public void Truncate(double threshold) => ExtBlas.GeneralMatrixTruncate<T, TS>(this.Storage, this.LeadDim, threshold, this.NRows, this.NCols);
+		public void Conjugate() => ExtBlas.GeneralMatrixUnary<T, TS>(UnaryOperation.Conjugate, this.NRows, this.NCols, this.Storage, this.LeadDim);
 		#endregion
 
 		#region simple aggregation operations
 		/// <inheritdoc/>
-		public T Sum() => ExtBlas.GeneralMatrixSum<T, TS>(this.Storage, this.LeadDim, this.NRows, this.NCols);
+		public T Sum() => ExtBlas.GeneralMatrixReduce<T, TS>(ReduceOperation.Add, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T AbsSum() => ExtBlas.GeneralMatrixAbsSum<T, TS>(this.Storage, this.LeadDim, this.NRows, this.NCols);
+		public T AbsSum() => ExtBlas.GeneralMatrixReduce<T, TS>(ReduceOperation.AddAbsolute, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T Norm() => ExtBlas.GeneralMatrixNorm<T, TS>(this.Storage, this.LeadDim, this.NRows, this.NCols);
+		public T Norm() => ExtBlas.GeneralMatrixReduce<T, TS>(ReduceOperation.Norm, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T ValueWithMaxAbs() => (this.Storage + ExtBlas.GeneralMatrixAbsArgMax<T, TS>(this.Storage, this.LeadDim, this.NRows, this.NCols)).ToManaged<T, TS>();
+		public T ValueWithMaxAbs() => ExtBlas.GeneralMatrixReduce<T, TS>(ReduceOperation.AbsoluteMaximum, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T ValueWithMinAbs() => (this.Storage + ExtBlas.GeneralMatrixAbsArgMin<T, TS>(this.Storage, this.LeadDim, this.NRows, this.NCols)).ToManaged<T, TS>();
+		public T ValueWithMinAbs() => ExtBlas.GeneralMatrixReduce<T, TS>(ReduceOperation.AbsoluteMininum, this.NRows, this.NCols, this.Storage, this.LeadDim);
 		#endregion
 
 		#region operators
@@ -551,27 +545,21 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtBlas.FillWithValue(this.values, this.stride, value);
+		public void FillWith(T value) => ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Fill, value, this.values, this.stride);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtBlas.PointWiseAddScalar(this.values, this.stride, value);
+		public void AddScalar(T value) => ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Add, value, this.values, this.stride);
 
 		/// <inheritdoc/>
 		public void Scale(T value) => Blas.Scale(this.values, this.stride, value);
 
 		/// <inheritdoc/>
-		public void Conjugate() => ExtBlas.PointWiseConjugate<T, TS>(this.values, this.stride);
-
-		/// <inheritdoc/>
-		public void Power(T power) => ExtBlas.PointWisePower(this.values, this.stride, power);
-
-		/// <inheritdoc/>
-		public void Truncate(double threshold) => ExtBlas.PointWiseTruncate<T, TS>(this.values, this.stride, threshold);
+		public void Conjugate() => ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, this.values, this.stride);
 		#endregion
 
 		#region simple aggregation operations
 		/// <inheritdoc/>
-		public T Sum() => ExtBlas.AggregateSum<T, TS>(this.values, this.stride);
+		public T Sum() => ExtBlas.GeneralVectorReduce<T, TS>(ReduceOperation.Add, this.values, this.stride);
 
 		/// <inheritdoc/>
 		public T AbsSum() => Blas.AbsoluteValueSum<T, TS>(this.values, this.stride);
@@ -592,7 +580,7 @@ namespace Althea.Array
 		{
 			if (vector.Length != matrix.n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			return vector.ApplyToClone(v => ExtBlas.PointWiseMultiply<T, TS, TS>(v.Storage, v.Stride, matrix.values, matrix.stride));
+			return vector.ApplyToClone(v => ExtBlas.GeneralVectorsBinary<T, TS, TS>(BinaryOperation.Multiply, v.Storage, v.Stride, matrix.values, matrix.stride));
 		}
 
 		/// <inheritdoc/>
@@ -615,7 +603,7 @@ namespace Althea.Array
 		{
 			if (!NumberType<T>.IsComplex || (operation & MatrixOperation.Conjugate) != 0)
 				return ((ICloneable<DiagonalMatrix<T, TS>>)matrix).Clone();
-			return matrix.ApplyToClone(static m => ExtBlas.PointWiseConjugate<T, TS>(m.values, m.stride));
+			return matrix.ApplyToClone(static m => ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, m.values, m.stride));
 		}
 
 		/// <inheritdoc/>
@@ -623,7 +611,7 @@ namespace Althea.Array
 		{
 			if (left.n != right.n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			return left.ApplyToClone(m => ExtBlas.PointWiseMultiply<T, TS, TS>(m.values, m.stride, right.values, right.stride));
+			return left.ApplyToClone(m => ExtBlas.GeneralVectorsBinary<T, TS, TS>(BinaryOperation.Multiply, m.values, m.stride, right.values, right.stride));
 		}
 
 		/// <inheritdoc/>

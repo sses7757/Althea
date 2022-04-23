@@ -176,27 +176,21 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtBlas.FillWithValue(this.values, this.stride, value);
+		public void FillWith(T value) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Fill, value, this.values, this.stride);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtBlas.PointWiseAddScalar(this.values, this.stride, value);
+		public void AddScalar(T value) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, value, this.values, this.stride);
 
 		/// <inheritdoc/>
 		public void Scale(T value) => Blas.Scale(this.values, this.stride, value);
 
 		/// <inheritdoc/>
-		public void Conjugate() => ExtBlas.PointWiseConjugate<T, TS>(this.values, this.stride);
-
-		/// <inheritdoc/>
-		public void Power(T power) => ExtBlas.PointWisePower(this.values, this.stride, power);
-
-		/// <inheritdoc/>
-		public void Truncate(double threshold) => ExtBlas.PointWiseTruncate<T, TS>(this.values, this.stride, threshold);
+		public void Conjugate() => ExtBlas.GeneralVectorUnary<T, TS>(LinearAlgebra.UnaryOperation.Conjugate, this.values, this.stride);
 		#endregion
 
 		#region simple aggregation operations
 		/// <inheritdoc/>
-		public T Sum() => ExtBlas.AggregateSum<T, TS>(this.values, this.stride);
+		public T Sum() => ExtBlas.GeneralVectorReduce<T, TS>(LinearAlgebra.ReduceOperation.Add, this.values, this.stride);
 
 		/// <inheritdoc/>
 		public T AbsSum() => Blas.AbsoluteValueSum<T, TS>(this.values, this.stride);

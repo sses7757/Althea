@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 
 using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Storage;
@@ -352,28 +353,10 @@ namespace Althea.Array
 			if (NumberType<T>.IsComplex)
 			{
 				if (NumberType<T>.IsRealValue(this.defaultValue))
-					ExtBlas.PointWiseConjugate<T, TS>(this.values, 1);
+					ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, this.values, 1);
 				else
 					throw new InvalidOperationException(Resources.SparseError.CannotSetSparse);
 			}
-		}
-
-		/// <inheritdoc/>
-		public void Power(T power)
-		{
-			if (this.defaultValue == T.Zero || this.defaultValue == T.One)
-				ExtBlas.PointWisePower(this.values, 1, power);
-			else
-				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(power));
-		}
-
-		/// <inheritdoc/>
-		public void Truncate(double threshold)
-		{
-			if (this.defaultValue != T.Zero && T.Abs(this.defaultValue) < T.Create(threshold))
-				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(threshold));
-			else
-				ExtBlas.PointWiseTruncate<T, TS>(this.values, 1, threshold);
 		}
 		#endregion
 
@@ -382,7 +365,7 @@ namespace Althea.Array
 		public T Sum()
 		{
 			T defaultSum = this.defaultValue * T.Create(this.length - this.values.Length);
-			return defaultSum + ExtBlas.AggregateSum<T, TS>(this.values, 1);
+			return defaultSum + ExtBlas.GeneralVectorReduce<T, TS>(ReduceOperation.Add, this.values, 1);
 		}
 
 		/// <inheritdoc/>
@@ -445,10 +428,10 @@ namespace Althea.Array
 		public static DenseTensor<T, TS> operator *(SparseTensor<T, TInd, TS, TSInd> left, DenseTensor<T, TS> right) => SparseOperation<T, TInd, TS, TSInd>.Contract(left, UnaryOperation.Identity, right, UnaryOperation.Identity, T.One);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator +(SparseTensor<T, TInd, TS, TSInd> left, DenseTensor<T, TS> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Addition);
+		public static DenseTensor<T, TS> operator +(SparseTensor<T, TInd, TS, TSInd> left, DenseTensor<T, TS> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Add);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator -(SparseTensor<T, TInd, TS, TSInd> left, DenseTensor<T, TS> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Addition);
+		public static DenseTensor<T, TS> operator -(SparseTensor<T, TInd, TS, TSInd> left, DenseTensor<T, TS> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Add);
 
 		/// <inheritdoc/>
 		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> left, SparseTensor<T, TInd, TS, TSInd> right) => right * left;
@@ -457,16 +440,16 @@ namespace Althea.Array
 		public static DenseTensor<T, TS> operator +(DenseTensor<T, TS> left, SparseTensor<T, TInd, TS, TSInd> right) => right + left;
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Addition);
+		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Add);
 
 		/// <inheritdoc/>
 		public static SparseTensor<T, TInd, TS, TSInd> operator *(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.Contract(left, UnaryOperation.Identity, right, UnaryOperation.Identity, T.One);
 
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> operator +(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Addition);
+		public static SparseTensor<T, TInd, TS, TSInd> operator +(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Identity, T.One, BinaryOperation.Add);
 
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> operator -(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Addition);
+		public static SparseTensor<T, TInd, TS, TSInd> operator -(SparseTensor<T, TInd, TS, TSInd> left, SparseTensor<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.TensorsBinaryOperation(left, TensorOrder.Identity, UnaryOperation.Identity, T.One, right, TensorOrder.Identity, UnaryOperation.Negate, T.One, BinaryOperation.Add);
 		#endregion
 
 		#region conversion and clone

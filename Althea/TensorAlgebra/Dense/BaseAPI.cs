@@ -1,6 +1,7 @@
 ﻿using Althea.Storage;
 using Althea.SourceGenerator;
 using Althea.Array;
+using Althea.LinearAlgebra;
 
 
 namespace Althea.TensorAlgebra.Dense

@@ -292,12 +292,12 @@ namespace Althea.Array
 			if (this.rowMajor)
 			{
 				this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { TInd.Create(col) });
-				ExtBlas.PointWiseAddScalar(this.rowIndices + (row + 1), 1, TInd.One);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.rowIndices + (row + 1), 1);
 			}
 			else
 			{
 				this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { TInd.Create(row) });
-				ExtBlas.PointWiseAddScalar(this.colIndices + (col + 1), 1, TInd.One);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.colIndices + (col + 1), 1);
 			}
 			this.NStored = nnz + 1;
 			return true;
@@ -789,12 +789,12 @@ namespace Althea.Array
 			if (this.rowMajor)
 			{
 				this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { TInd.Create(col / this.BC) });
-				ExtBlas.PointWiseAddScalar(this.rowIndices + (row + 1), 1, TInd.One);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.rowIndices + (row + 1), 1);
 			}
 			else
 			{
 				this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { TInd.Create(row / this.BR) });
-				ExtBlas.PointWiseAddScalar(this.colIndices + (col + 1), 1, TInd.One);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.colIndices + (col + 1), 1);
 			}
 			this.NStored = nnz + this.BS;
 			return true;
