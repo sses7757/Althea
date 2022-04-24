@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
+using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 
@@ -77,7 +78,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorsBinaryManaged<T, Op>(T* x, int incx, T* y, int incy, int length, T scalar) where T : unmanaged, INumber<T>
+		private static void VectorsBinaryManaged<T, Op>(T* x, int incx, T* y, int incy, T* z, int incz, int length, T scalar) where T : unmanaged, INumber<T>
 		{
 			BinaryModify op;
 			if (typeof(Op) == typeof(B_Multiply))
@@ -89,7 +90,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			else
 				op = BinaryModify.AddScaled;
 
-			for (int i = 0, ix = 0, iy = 0; i < length; i++, ix += incx, iy += incy)
+			for (int i = 0, ix = 0, iy = 0, iz = 0; i < length; i++, ix += incx, iy += incy, iz += incz)
 			{
 				T a = x[ix], b = y[iy];
 				T v;
@@ -126,12 +127,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						_ => default,
 					};
 				}
-				x[i] = v;
+				z[iz] = v;
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorsBinaryReal<T, Op>(T* x, T* y, int length, T scalar) where T : unmanaged, INumber<T>
+		private static void VectorsBinaryReal<T, Op>(T* x, T* y, T* z, int length, T scalar) where T : unmanaged, INumber<T>
 		{
 			BinaryModify op;
 			if (typeof(Op) == typeof(B_Multiply))
@@ -194,19 +195,19 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					default:
 						break;
 				}
-				StoreVector(currentX, x + offset);
+				StoreVector(currentX, z + offset);
 				lengthLeft -= Vector<T>.Count;
 				offset += Vector<T>.Count;
 			}
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorsBinaryManaged<T, Op>(x + offset, 1, y + offset, 1, lengthLeft, scalar);
+				VectorsBinaryManaged<T, Op>(x + offset, 1, y + offset, 1, z + offset, 1, lengthLeft, scalar);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorsBinaryComplex<Op>(Complex<float>* x, Complex<float>* y, int length, Complex<float> scalar)
+		private static void VectorsBinaryComplex<Op>(Complex<float>* x, Complex<float>* y, Complex<float>* z, int length, Complex<float> scalar)
 		{
 			BinaryModify op;
 			if (typeof(Op) == typeof(B_Multiply))
@@ -247,20 +248,20 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					default:
 						break;
 				}
-				StoreVector256(currentX1, x + offset);
-				StoreVector256(currentX2, x + offset + Vector256<float>.Count / 2);
+				StoreVector256(currentX1, z + offset);
+				StoreVector256(currentX2, z + offset + Vector256<float>.Count / 2);
 				lengthLeft -= Vector256<float>.Count;
 				offset += Vector256<float>.Count;
 			}
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorsBinaryManaged<Complex<float>, Op>(x + offset, 1, y + offset, 1, lengthLeft, scalar);
+				VectorsBinaryManaged<Complex<float>, Op>(x + offset, 1, y + offset, 1, z + offset, 1, lengthLeft, scalar);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorsBinaryComplex<Op>(Complex<double>* x, Complex<double>* y, int length, Complex<double> scalar)
+		private static void VectorsBinaryComplex<Op>(Complex<double>* x, Complex<double>* y, Complex<double>* z, int length, Complex<double> scalar)
 		{
 			BinaryModify op;
 			if (typeof(Op) == typeof(B_Multiply))
@@ -301,27 +302,29 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					default:
 						break;
 				}
-				StoreVector256(currentX1, x + offset);
-				StoreVector256(currentX2, x + offset + Vector256<double>.Count / 2);
+				StoreVector256(currentX1, z + offset);
+				StoreVector256(currentX2, z + offset + Vector256<double>.Count / 2);
 				lengthLeft -= Vector256<double>.Count;
 				offset += Vector256<double>.Count;
 			}
 			// modify left
 			if (lengthLeft > 0)
 			{
-				VectorsBinaryManaged<Complex<double>, Op>(x + offset, 1, y + offset, 1, lengthLeft, scalar);
+				VectorsBinaryManaged<Complex<double>, Op>(x + offset, 1, y + offset, 1, z + offset, 1, lengthLeft, scalar);
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool VectorsBinary<T, TS1, TS2, Op>(TS1 x, long strideX, TS2 y, long strideY, T scalar) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		internal static bool VectorsBinary<T, TS1, TS2, TS3, Op>(TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ, T scalar) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!GetPointer(x, strideX, out T* px, out int lenx, out int incx))
 				return false;
 			if (!GetPointer(y, strideY, out T* py, out int leny, out int incy))
 				return false;
+			if (!GetPointer(z, strideZ, out T* pz, out int lenz, out int incz))
+				return false;
 			// shortcuts
-			int length = Math.Min(lenx, leny);
+			int length = Math.Min(Math.Min(lenx, leny), lenz);
 			if (length == 0)
 				return true;
 			if (typeof(Op) == typeof(B_Divide) && px == py)
@@ -331,46 +334,46 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			if (typeof(Op) == typeof(B_Multiply) && px == py)
 			{
-				return PointWisePower(x, 1, T.One + T.One);
+				return PointWisePower(x, strideX, z, strideZ, T.One + T.One);
 			}
 			if ((typeof(Op) == typeof(B_Add) || typeof(Op) == typeof(B_AddScaled)) && px == py)
 			{
-				return Default.Scale(x, 1, scalar + T.One);
+				return Default.Scale(x, strideX, scalar + T.One);
 			}
 			// normal case
-			if (incx != 1 || incy != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
+			if (incx != 1 || incy != 1 || incz != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
 			{   // no SIMD or too short
-				VectorsBinaryManaged<T, Op>(px, incx, py, incy, length, scalar);
+				VectorsBinaryManaged<T, Op>(px, incx, py, incy, pz, incz, length, scalar);
 			}
 			else if (NumberType<T>.IsComplex)
 			{
 				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)
 				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
-					VectorsBinaryManaged<T, Op>(px, 1, py, 1, length, scalar);
+					VectorsBinaryManaged<T, Op>(px, 1, py, 1, pz, 1, length, scalar);
 				}
 				else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
 				{
-					VectorsBinaryComplex<Op>((Complex<float>*)px, (Complex<float>*)py, length, *(Complex<float>*)&scalar);
+					VectorsBinaryComplex<Op>((Complex<float>*)px, (Complex<float>*)py, (Complex<float>*)pz, length, *(Complex<float>*)&scalar);
 				}
 				else // double
 				{
-					VectorsBinaryComplex<Op>((Complex<double>*)px, (Complex<double>*)py, length, *(Complex<double>*)&scalar);
+					VectorsBinaryComplex<Op>((Complex<double>*)px, (Complex<double>*)py, (Complex<double>*)pz, length, *(Complex<double>*)&scalar);
 				}
 			}
 			else
 			{
-				VectorsBinaryReal<T, Op>(px, py, length, scalar);
+				VectorsBinaryReal<T, Op>(px, py, pz, length, scalar);
 			}
 			return true;
 		}
 
-		public virtual partial bool GeneralVectorsBinary<T, TS1, TS2>(Althea.LinearAlgebra.BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual partial bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			return op switch
 			{
-				Althea.LinearAlgebra.BinaryOperation.Add => VectorsBinary<T, TS2, TS1, B_Add>(y, strideY, x, strideX, default),
-				Althea.LinearAlgebra.BinaryOperation.Multiply => VectorsBinary<T, TS1, TS2, B_Multiply>(x, strideX, y, strideY, default),
-				Althea.LinearAlgebra.BinaryOperation.Divide => VectorsBinary<T, TS1, TS2, B_Divide>(x, strideX, y, strideY, default),
+				BinaryOperation.Add => VectorsBinary<T, TS1, TS2, TS3, B_Add>(x, strideX, y, strideY, z, strideZ, default),
+				BinaryOperation.Multiply => VectorsBinary<T, TS1, TS2, TS3, B_Multiply>(x, strideX, y, strideY, z, strideZ, default),
+				BinaryOperation.Divide => VectorsBinary<T, TS1, TS2, TS3, B_Divide>(x, strideX, y, strideY, z, strideZ, default),
 				_ => false,
 			};
 		}
@@ -380,9 +383,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (α == T.Zero)
 				return true;
 			if (α == T.One)
-				return VectorsBinary<T, TS1, TS2, B_Add>(x, strideX, y, strideY, default);
+				return VectorsBinary<T, TS1, TS2, TS2, B_Add>(x, strideX, y, strideY, y, strideY, default);
 			else
-				return VectorsBinary<T, TS1, TS2, B_AddScaled>(x, strideX, y, strideY, α);
+				return VectorsBinary<T, TS1, TS2, TS2, B_AddScaled>(x, strideX, y, strideY, y, strideY, α);
 		}
 		#endregion
 

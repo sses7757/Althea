@@ -145,7 +145,7 @@ namespace Althea.LinearAlgebra.Dense
 		public abstract bool SymmetricMatrixToNormal<T, TS>(bool upper, bool hermitian, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
-		/// When implemented by a derived class, clear the matrix <paramref name="A"/>'s upper or lower part (not including the diagonal elements) to 0.
+		/// When implemented by a derived class, clear the matrix <paramref name="A"/>'s upper or lower part (along with or without the diagonal elements) to 0.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>

@@ -77,18 +77,21 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region vector math
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i])</c>.
+		/// When implemented by a derived class, compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i])</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="x">The vector to be in-place modified</param>
+		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="x">The input vector to apply <paramref name="op"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The output vector to store the results</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <param name="op">The <see cref="UnaryOperation"/> to apply to each element of <paramref name="x"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorUnary<T, TS>(UnaryOperation op, TS x, long strideX) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="x"/>[i], result)</c> for all <c>i</c>.
@@ -124,40 +127,46 @@ namespace Althea.LinearAlgebra.Dense
 		/// When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="x">The vector to be in-place modified</param>
+		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="x">The input vector to apply <paramref name="op"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <param name="y">The output vector to store the results</param>
+		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <param name="scalar">The scalar as the second input of <paramref name="op"/></param>
 		/// <param name="op">The <see cref="BinaryScalarOperation"/> to apply to each element of <paramref name="x"/> and <paramref name="scalar"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorBinaryScalar<T, TS>(BinaryScalarOperation op, T scalar, TS x, long strideX) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralVectorBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="x">The vector to be in-place modified</param>
+		/// <typeparam name="TS1">The first input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="x">The input vector as the first parameters of <paramref name="op"/></param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <param name="y">The vector act as the second inputs</param>
+		/// <param name="y">The input vector as the second parameters of <paramref name="op"/></param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+		/// <param name="z">The output vector to store the results of <paramref name="op"/></param>
+		/// <param name="strideZ">The stride between consecutive elements of <paramref name="z"/></param>
 		/// <param name="op">The <see cref="BinaryOperation"/> to apply to each element of <paramref name="x"/> and <paramref name="y"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="x"/>, <paramref name="y"/> or <paramref name="z"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/>, <paramref name="strideY"/> or <paramref name="strideZ"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorsBinary<T, TS1, TS2>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="x">The vector to be scanned</param>
 		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
 		/// <param name="y">The vector to store the scan result</param>

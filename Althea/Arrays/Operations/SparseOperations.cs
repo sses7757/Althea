@@ -112,7 +112,7 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public static void SetDiag(SymmetricMatrix<T, TS> matrix, long k, SparseVector<T, TInd, TS, TSInd> value)
 		{
-			var diag = DenseOperation<T, TS>.GetDiagRaw(matrix, k);
+			using var diag = DenseOperation<T, TS>.GetDiagRaw(matrix, k);
 			diag.FillWith(T.Zero);
 			AddBy(diag, value, T.One);
 			if (!matrix.Hermitian || !((matrix.Upper && k < 0) || (!matrix.Upper && k > 0)))

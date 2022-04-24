@@ -545,16 +545,16 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Fill, value, this.values, this.stride);
+		public void FillWith(T value) => ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Fill, value, this.values, this.stride, this.values, this.stride);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Add, value, this.values, this.stride);
+		public void AddScalar(T value) => ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Add, value, this.values, this.stride, this.values, this.stride);
 
 		/// <inheritdoc/>
 		public void Scale(T value) => Blas.Scale(this.values, this.stride, value);
 
 		/// <inheritdoc/>
-		public void Conjugate() => ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, this.values, this.stride);
+		public void Conjugate() => ExtBlas.GeneralVectorUnary<T, TS, TS>(UnaryOperation.Conjugate, this.values, this.stride, this.values, this.stride);
 		#endregion
 
 		#region simple aggregation operations
@@ -580,7 +580,7 @@ namespace Althea.Array
 		{
 			if (vector.Length != matrix.n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			return vector.ApplyToClone(v => ExtBlas.GeneralVectorsBinary<T, TS, TS>(BinaryOperation.Multiply, v.Storage, v.Stride, matrix.values, matrix.stride));
+			return vector.ApplyToAlike(v => ExtBlas.GeneralVectorsBinary<T, TS, TS, TS>(BinaryOperation.Multiply, vector.Storage, vector.Stride, matrix.values, matrix.stride, v.Storage, v.Stride));
 		}
 
 		/// <inheritdoc/>
@@ -603,7 +603,7 @@ namespace Althea.Array
 		{
 			if (!NumberType<T>.IsComplex || (operation & MatrixOperation.Conjugate) != 0)
 				return ((ICloneable<DiagonalMatrix<T, TS>>)matrix).Clone();
-			return matrix.ApplyToClone(static m => ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, m.values, m.stride));
+			return matrix.ApplyToClone(static m => ExtBlas.GeneralVectorUnary<T, TS, TS>(UnaryOperation.Conjugate, m.values, m.stride, m.values, m.stride));
 		}
 
 		/// <inheritdoc/>
@@ -611,7 +611,7 @@ namespace Althea.Array
 		{
 			if (left.n != right.n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			return left.ApplyToClone(m => ExtBlas.GeneralVectorsBinary<T, TS, TS>(BinaryOperation.Multiply, m.values, m.stride, right.values, right.stride));
+			return left.ApplyToAlike(m => ExtBlas.GeneralVectorsBinary<T, TS, TS, TS>(BinaryOperation.Multiply, left.values, left.stride, right.values, right.stride, m.values, m.stride));
 		}
 
 		/// <inheritdoc/>

@@ -371,6 +371,14 @@ namespace Althea.LinearAlgebra
 		/// Operation that returns the minimum of two input parameters
 		/// </summary>
 		Mininum,
+		/// <summary>
+		/// Operation that returns the maximum of the absolute values two input parameters
+		/// </summary>
+		AbsoluteMaximum,
+		/// <summary>
+		/// Operation that returns the minimum of the absolute values two input parameters
+		/// </summary>
+		AbsoluteMininum,
 	}
 
 	/// <summary>
@@ -392,6 +400,14 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		Power,
 		/// <summary>
+		/// Operation that simply returns the second input parameter
+		/// </summary>
+		Fill,
+		/// <summary>
+		/// Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
+		/// </summary>
+		Truncate,
+		/// <summary>
 		/// Operation that returns the maximum of two input parameters
 		/// </summary>
 		Maximum,
@@ -400,13 +416,13 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		Mininum,
 		/// <summary>
-		/// Operation that simply returns the second input parameter
+		/// Operation that returns the maximum of the absolute values two input parameters
 		/// </summary>
-		Fill,
+		AbsoluteMaximum,
 		/// <summary>
-		/// Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
+		/// Operation that returns the minimum of the absolute values two input parameters
 		/// </summary>
-		Truncate
+		AbsoluteMininum,
 	}
 
 	/// <summary>

@@ -108,7 +108,7 @@ namespace Althea.Array
 			var newVals = this.Storage.MakeReference(indexStart, indexCount);
 			var newInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			if (start != 0)
-				newInds = newInds.ApplyToClone(ind => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-start), ind, 1));
+				newInds = newInds.ApplyToClone((org, ind) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-start), org, 1, ind, 1));
 			return new(count, newVals, newInds, this.DefaultValue);
 		}
 
@@ -126,7 +126,7 @@ namespace Althea.Array
 			var refInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			refInds.CopyTo<TInd, TSInd, TSInd>(overwrite.IndexStorage);
 			if (start != 0)
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-start), overwrite.IndexStorage, 1);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-start), overwrite.IndexStorage, 1, overwrite.IndexStorage, 1);
 		}
 
 		/// <inheritdoc/>
@@ -154,7 +154,7 @@ namespace Althea.Array
 			var refInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			value.IndexStorage.CopyTo<TInd, TSInd, TSInd>(refInds);
 			if (start != 0)
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(start), refInds, 1);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(start), refInds, 1, refInds, 1);
 		}
 		#endregion
 
@@ -358,7 +358,7 @@ namespace Althea.Array
 			var newVals = this.Storage.MakeReference(indexStart * this.BS, indexCount * this.BS);
 			var newInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			if (start == 0)
-				newInds = newInds.ApplyToClone(ind => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-start / this.BS), ind, 1));
+				newInds = newInds.ApplyToClone((org, ind) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-start / this.BS), org, 1, ind, 1));
 			return new(count, newVals, newInds, this.blockSize, this.DefaultValue);
 		}
 
@@ -376,7 +376,7 @@ namespace Althea.Array
 			var refInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			refInds.CopyTo<TInd, TSInd, TSInd>(overwrite.IndexStorage);
 			if (start != 0)
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-start / this.BS), overwrite.IndexStorage, 1);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-start / this.BS), overwrite.IndexStorage, 1, overwrite.IndexStorage, 1);
 		}
 
 		/// <inheritdoc/>
@@ -402,7 +402,7 @@ namespace Althea.Array
 			var refInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			value.IndexStorage.CopyTo<TInd, TSInd, TSInd>(refInds);
 			if (start != 0)
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(start / this.BS), refInds, 1);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(start / this.BS), refInds, 1, refInds, 1);
 		}
 		#endregion
 

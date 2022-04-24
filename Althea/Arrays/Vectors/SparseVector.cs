@@ -44,7 +44,7 @@ namespace Althea.Array
 
 		private readonly TS values;
 
-		private readonly T defaultValue;
+		private T defaultValue;
 
 		ReadOnlySpan<long> IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.Size => SpanHelper.CreateReadOnlySpan(in this.length, 1);
 
@@ -259,10 +259,8 @@ namespace Althea.Array
 		{
 			if (NumberType<T>.IsComplex)
 			{
-				if (NumberType<T>.IsRealValue(this.defaultValue))
-					ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, this.values, 1);
-				else
-					throw new InvalidOperationException(Resources.SparseError.CannotSetSparse);
+				ExtBlas.GeneralVectorUnary<T, TS, TS>(UnaryOperation.Conjugate, this.values, 1, this.values, 1);
+				this.defaultValue = this.defaultValue.Conjugate();
 			}
 		}
 		#endregion

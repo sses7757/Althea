@@ -204,6 +204,38 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		[NativeMethod(1, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsFmax(long n, void* a, void* b, void* y);
+
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsFmaxI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsFmin(long n, void* a, void* b, void* y);
+
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsFminI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsMaxMag(long n, void* a, void* b, void* y);
+
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsMaxMagI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsMinMag(long n, void* a, void* b, void* y);
+
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsMinMagI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, false)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vcConj(long n, void* a, void* y);
 
 		[NativeMethod(1, false, false, false, false)]
@@ -226,13 +258,21 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsDivI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		[NativeMethod(1, false, false, false, true)]
+		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsSqrt(long n, void* a, void* y);
 
-		[NativeMethod(1, false, false, false, true)]
+		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsSqrtI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsInv(long n, void* a, void* y);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsInvI(long n, void* a, long inca, void* y, long incy);
 
 		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -289,6 +329,174 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsPowxI(long n, float* a, long inca, float b, float* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsExp(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsExpI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsExp2(long n, void* a, void* y);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsExp2I(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsExp10(long n, void* a, void* y);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsExp10I(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsExpm1(long n, void* a, void* y);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsExpm1I(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLn(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLnI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLog10(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLog10I(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLog2(long n, void* a, void* y);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLog2I(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLog1p(long n, void* a, void* y);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLog1pI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLogb(long n, void* a, void* y);
+
+		[NativeMethod(1, false, false, false, true)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsLogbI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsCos(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsCosI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsSin(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsSinI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsTan(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsTanI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAcos(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAcosI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAsin(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAsinI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAtan(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAtanI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsCosh(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsCoshI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsSinh(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsSinhI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsTanh(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsTanhI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAcosh(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAcoshI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAsinh(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAsinhI(long n, void* a, long inca, void* y, long incy);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAtanh(long n, void* a, void* y);
+
+		[NativeMethod(1)]
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern void vsAtanhI(long n, void* a, long inca, void* y, long incy);
 		#endregion;
 
 		#region solver

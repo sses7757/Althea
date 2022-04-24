@@ -8643,6 +8643,11 @@
             Operation that returns the multiplication of two input parameters
             </summary>
         </member>
+        <member name="F:Althea.LinearAlgebra.BinaryOperation.Divide">
+            <summary>
+            Operation that returns the division of two input parameters
+            </summary>
+        </member>
         <member name="F:Althea.LinearAlgebra.BinaryOperation.Power">
             <summary>
             Operation that returns the power of the first input parameter to the second one
@@ -8718,6 +8723,11 @@
         <member name="F:Althea.LinearAlgebra.ReduceOperation.Multiply">
             <summary>
             Operation that returns the multiplication of two input parameters
+            </summary>
+        </member>
+        <member name="F:Althea.LinearAlgebra.ReduceOperation.MultiplyAbsolute">
+            <summary>
+            Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
             </summary>
         </member>
         <member name="F:Althea.LinearAlgebra.ReduceOperation.Norm">
@@ -9425,18 +9435,21 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorUnary``2(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorUnary``3(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64,``2,System.Int64)">
             <summary>
-            When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i])</c>.
+            When implemented by a derived class, compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i])</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="x">The vector to be in-place modified</param>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="x">The input vector to apply <paramref name="op"/></param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="y">The output vector to store the results</param>
+            <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <param name="op">The <see cref="T:Althea.LinearAlgebra.UnaryOperation"/> to apply to each element of <paramref name="x"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``0@)">
             <summary>
@@ -9466,43 +9479,49 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorBinaryScalar``2(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="x">The vector to be in-place modified</param>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="x">The input vector to apply <paramref name="op"/></param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="y">The output vector to store the results</param>
+            <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <param name="scalar">The scalar as the second input of <paramref name="op"/></param>
             <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryScalarOperation"/> to apply to each element of <paramref name="x"/> and <paramref name="scalar"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsBinary``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="x">The vector to be in-place modified</param>
+            <typeparam name="TS1">The first input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="x">The input vector as the first parameters of <paramref name="op"/></param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-            <param name="y">The vector act as the second inputs</param>
+            <param name="y">The input vector as the second parameters of <paramref name="op"/></param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+            <param name="z">The output vector to store the results of <paramref name="op"/></param>
+            <param name="strideZ">The stride between consecutive elements of <paramref name="z"/></param>
             <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to each element of <paramref name="x"/> and <paramref name="y"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/>, <paramref name="y"/> or <paramref name="z"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/>, <paramref name="strideY"/> or <paramref name="strideZ"/> ≤ 0</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsScan``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
             <summary>
             When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="x">The vector to be scanned</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="y">The vector to store the scan result</param>
@@ -9857,7 +9876,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixClearPart``2(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
             <summary>
-            When implemented by a derived class, clear the matrix <paramref name="A"/>'s upper or lower part (not including the diagonal elements) to 0.
+            When implemented by a derived class, clear the matrix <paramref name="A"/>'s upper or lower part (along with or without the diagonal elements) to 0.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -11027,17 +11046,20 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorUnary``2(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorUnary``3(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64,``2,System.Int64)">
             <summary>
-            Compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i])</c>.
+            Compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i])</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="x">The vector to be in-place modified</param>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="x">The input vector to apply <paramref name="op"/></param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="y">The output vector to store the results</param>
+            <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <param name="op">The <see cref="T:Althea.LinearAlgebra.UnaryOperation"/> to apply to each element of <paramref name="x"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64)">
@@ -11068,34 +11090,40 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorBinaryScalar``2(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="x">The vector to be in-place modified</param>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="x">The input vector to apply <paramref name="op"/></param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <param name="y">The output vector to store the results</param>
+            <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <param name="scalar">The scalar as the second input of <paramref name="op"/></param>
             <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryScalarOperation"/> to apply to each element of <paramref name="x"/> and <paramref name="scalar"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsBinary``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             Compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="x">The vector to be in-place modified</param>
+            <typeparam name="TS1">The first input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="x">The input vector as the first parameters of <paramref name="op"/></param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
-            <param name="y">The vector act as the second inputs</param>
+            <param name="y">The input vector as the second parameters of <paramref name="op"/></param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
+            <param name="z">The output vector to store the results of <paramref name="op"/></param>
+            <param name="strideZ">The stride between consecutive elements of <paramref name="z"/></param>
             <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to each element of <paramref name="x"/> and <paramref name="y"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="x"/>, <paramref name="y"/> or <paramref name="z"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/>, <paramref name="strideY"/> or <paramref name="strideZ"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsScan``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
@@ -11103,8 +11131,8 @@
             Perform partial aggregate (scan) <paramref name="op"/> of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="x">The vector to be scanned</param>
             <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
             <param name="y">The vector to store the scan result</param>
@@ -11459,7 +11487,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixClearPart``2(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
             <summary>
-            Clear the matrix <paramref name="A"/>'s upper or lower part (not including the diagonal elements) to 0.
+            Clear the matrix <paramref name="A"/>'s upper or lower part (along with or without the diagonal elements) to 0.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>

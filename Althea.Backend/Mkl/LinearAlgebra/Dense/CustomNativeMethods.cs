@@ -15,6 +15,20 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	{
 		#region vector
 		/// <summary>
+		/// Convert the <paramref name="src"/> vector of <paramref name="srcType"/> to the <paramref name="dst"/> vector of <paramref name="dstType"/>
+		/// </summary>
+		/// <param name="srcType">The <see cref="DataType"/> of <paramref name="src"/></param>
+		/// <param name="dstType">The <see cref="DataType"/> of <paramref name="dst"/></param>
+		/// <param name="toRealByAbs">If the conversion converts a complex type to a real type, whether the down grade elements be of the complexes's absolute values or their real parts</param>
+		/// <param name="src">The source vector of <paramref name="srcType"/></param>
+		/// <param name="dst">The destination vector of <paramref name="dstType"/></param>
+		/// <param name="n">The number of elements to be operated</param>
+		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
+		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern CustomStatus vecDataConvert(DataType srcType, DataType dstType, bool toRealByAbs, long n, void* src, long strideSrc, void* dst,  long strideDst);
+
+		/// <summary>
 		/// Fill the <paramref name="array"/> with given <paramref name="value"/> of <paramref name="type"/>
 		/// </summary>
 		/// <param name="type">The data type of the array and value</param>
@@ -24,54 +38,46 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
 		/// <remarks>Strided filling reduce the performance greatly.</remarks>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus vecFillVal(DataType type, long n, void* array, void* value, long stride);
+		internal static extern CustomStatus vecFillVal(DataType type, long n, void* value, void* array, long stride);
 
 		/// <summary>
-		/// Convert the <paramref name="src"/> vector of <paramref name="srcType"/> to the <paramref name="dst"/> vector of <paramref name="dstType"/>
-		/// </summary>
-		/// <param name="srcType">The <see cref="DataType"/> of <paramref name="src"/></param>
-		/// <param name="dstType">The <see cref="DataType"/> of <paramref name="dst"/></param>
-		/// <param name="src">The source vector of <paramref name="srcType"/></param>
-		/// <param name="dst">The destination vector of <paramref name="dstType"/></param>
-		/// <param name="n">The number of elements to be operated</param>
-		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
-		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		/// <param name="toRealByAbs">If the conversion converts a complex type to a real type, whether the down grade elements be of the complexes's absolute values or their real parts.</param>
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus vecDataConvert(DataType srcType, DataType dstType, long n, void* src, void* dst, long strideSrc, long strideDst, bool toRealByAbs);
-
-		/// <summary>
-		/// In-place set the values in <paramref name="a"/> whose absolute values are less than or equal to the absolute value of <paramref name="threshold"/> to 0
+		/// Set the values in <paramref name="a"/> whose absolute values are less than or equal to the absolute value of <paramref name="threshold"/> to 0 and write the result to <paramref name="b"/>.
 		/// </summary>
 		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="threshold">The pointer to the threshold used to clip the vector <paramref name="a"/> of <paramref name="type"/></param>
 		/// <param name="n">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="threshold">The pointer to the threshold used to clip the vector <paramref name="a"/></param>
+		/// <param name="a">The vector to operate of <paramref name="type"/></param>
+		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="b">The vector to be overwritten of <paramref name="type"/></param>
+		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus vecClip(DataType type, long n, void* a, void* threshold, long stride);
+		internal static extern CustomStatus vecClip(DataType type, long n, void* threshold, void* a, long strideA, void* b, long strideB);
 
 		/// <summary>
-		/// In-place add all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
+		/// Add all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/> and write the result to <paramref name="b"/>.
 		/// </summary>
 		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
+		/// <param name="n">The number of elements to be operated</param>
 		/// <param name="scalar">The pointer to the scalar to add of <paramref name="type"/></param>
-		/// <param name="n">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="a">The vector to operate of <paramref name="type"/></param>
+		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="b">The vector to be overwritten of <paramref name="type"/></param>
+		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus vecAddScalar(DataType type, long n, void* a, void* scalar, long stride);
+		internal static extern CustomStatus vecAddScalar(DataType type, long n, void* scalar, void* a, long strideA, void* b, long strideB);
 
 		/// <summary>
-		/// In-place multiplies all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
+		/// Multiplies all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/> and write the result to <paramref name="b"/>.
 		/// </summary>
 		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="scalar">The pointer to the scalar to multiply of <paramref name="type"/></param>
 		/// <param name="n">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="scalar">The pointer to the scalar to add of <paramref name="type"/></param>
+		/// <param name="a">The vector to operate of <paramref name="type"/></param>
+		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="b">The vector to be overwritten of <paramref name="type"/></param>
+		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus vecMulScalar(DataType type, long n, void* a, void* scalar, long stride);
+		internal static extern CustomStatus vecMulScalar(DataType type, long n, void* scalar, void* a, long strideA, void* b, long strideB);
 
 		/// <summary>
 		/// Check whether the two vectors <paramref name="a"/> and <paramref name="b"/> are element-wise equal
@@ -84,7 +90,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
 		/// <param name="equals">Output the two vectors are element-wise equal or not</param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus vecsEq(DataType type, long n, void* a, void* b, long strideA, long strideB, out bool equals);
+		internal static extern CustomStatus vecsEq(DataType type, long n, void* a, long strideA, void* b, long strideB, out bool equals);
 
 		/// <summary>
 		/// Get the index of the element with minimum absolute value in vector <paramref name="a"/>
@@ -152,7 +158,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
 		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus vecParSum(DataType type, long n, void* src, long strideSrc, void* dst, long strideDst, bool inclusive);
+		internal static extern CustomStatus vecParSum(DataType type, bool inclusive, long n, void* src, long strideSrc, void* dst, long strideDst);
 
 		/// <summary>
 		/// Performs the partial sum from vector <paramref name="src"/> to vector <paramref name="dst"/>
@@ -165,7 +171,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
 		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus vecParProd(DataType type, long n, void* src, long strideSrc, void* dst, long strideDst, bool inclusive);
+		internal static extern CustomStatus vecParProd(DataType type, bool inclusive, long n, void* src, long strideSrc, void* dst, long strideDst);
 		#endregion
 
 		#region matrix

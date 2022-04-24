@@ -57,7 +57,7 @@ namespace Althea.Array
 		private long nnz;
 
 		[FieldOffset(128 * 2 + 56)]
-		private readonly T defaultValue;
+		private T defaultValue;
 
 		private const byte MAX_RANK = 15;
 
@@ -352,10 +352,8 @@ namespace Althea.Array
 		{
 			if (NumberType<T>.IsComplex)
 			{
-				if (NumberType<T>.IsRealValue(this.defaultValue))
-					ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, this.values, 1);
-				else
-					throw new InvalidOperationException(Resources.SparseError.CannotSetSparse);
+				ExtBlas.GeneralVectorUnary<T, TS, TS>(UnaryOperation.Conjugate, this.values, 1, this.values, 1);
+				this.defaultValue = this.defaultValue.Conjugate();
 			}
 		}
 		#endregion

@@ -140,13 +140,13 @@ namespace Althea.Array
 		{
 			if ((matrix.Upper && k < 0) || (!matrix.Upper && k > 0))
 			{
-				var vec = GetDiagRaw(matrix, -k);
+				using var vec = GetDiagRaw(matrix, -k);
 				if (!matrix.Hermitian)
 					return vec;
-				var output = vec.ToCompact();
+				var output = vec.Storage.ResizeAlike(vec.Length);
 				try
 				{
-					ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, output, 1);
+					ExtBlas.GeneralVectorUnary<T, TS, TS>(UnaryOperation.Conjugate, vec.Storage, vec.Stride, output, 1);
 					return new(output, output.Length);
 				}
 				catch (Exception)
@@ -161,7 +161,8 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public static void GetDiag(SymmetricMatrix<T, TS> matrix, long k, DenseVector<T, TS> overwrite)
 		{
-			GetDiagRaw(matrix, k).CopyTo(overwrite);
+			using var vec = GetDiagRaw(matrix, k);
+			vec.CopyTo(overwrite);
 			if (!matrix.Hermitian || !((matrix.Upper && k < 0) || (!matrix.Upper && k > 0)))
 				return;
 			overwrite.Conjugate();
@@ -170,7 +171,7 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public static void SetDiag(SymmetricMatrix<T, TS> matrix, long k, DenseVector<T, TS> value)
 		{
-			var vec = GetDiagRaw(matrix, k);
+			using var vec = GetDiagRaw(matrix, k);
 			value.CopyTo(vec);
 			if (!matrix.Hermitian || !((matrix.Upper && k < 0) || (!matrix.Upper && k > 0)))
 				return;
@@ -382,7 +383,12 @@ namespace Althea.Array
 			if (operation == MatrixOperation.None)
 				return matrix.ApplyToClone(m => m.Scale(scalar));
 			if (operation == MatrixOperation.Conjugate)
-				return matrix.ApplyToClone(m => { ExtBlas.GeneralVectorUnary<T, TS>(UnaryOperation.Conjugate, m.Storage, 1); m.Scale(scalar); });
+				return matrix.ApplyToAlike((org, m) =>
+				{
+					ExtBlas.GeneralVectorUnary<T, TS, TS>(UnaryOperation.Conjugate, org.Storage, 1, m.Storage, 1);
+					HalfBlas.HalfMatrixClearPart<T, TS>(matrix.UnitDiagonal, matrix.Upper, matrix.NRows, matrix.NCols, m.Storage, m.LeadDim);
+					m.Scale(scalar);
+				});
 			var output = matrix.Storage.ResizeAlike(matrix.NRows * matrix.NCols);
 			try
 			{
@@ -574,7 +580,7 @@ namespace Althea.Array
 			}
 			HalfBlas.HalfMatrixClearPart<T, TS>(A.UnitDiagonal, A.Upper, m, n, C.Storage, C.LeadDim);
 			if (A.UnitDiagonal)
-				ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Fill, T.One, C.Storage, C.LeadDim + 1);
+				ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Fill, T.One, C.Storage, C.LeadDim + 1, C.Storage, C.LeadDim + 1);
 			AddMatrices(C, scalarA, B, scalarB, C, opA, opB);
 		}
 

@@ -176,16 +176,16 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Fill, value, this.values, this.stride);
+		public void FillWith(T value) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Fill, value, this.values, this.stride, this.values, this.stride);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, value, this.values, this.stride);
+		public void AddScalar(T value) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, value, this.values, this.stride, this.values, this.stride);
 
 		/// <inheritdoc/>
 		public void Scale(T value) => Blas.Scale(this.values, this.stride, value);
 
 		/// <inheritdoc/>
-		public void Conjugate() => ExtBlas.GeneralVectorUnary<T, TS>(LinearAlgebra.UnaryOperation.Conjugate, this.values, this.stride);
+		public void Conjugate() => ExtBlas.GeneralVectorUnary<T, TS, TS>(LinearAlgebra.UnaryOperation.Conjugate, this.values, this.stride, this.values, this.stride);
 		#endregion
 
 		#region simple aggregation operations
