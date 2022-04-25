@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CudaCompile Include="DenseVector.cpp">
+    <CudaCompile Include="DenseVector.cu">
       <Filter>源文件</Filter>
     </CudaCompile>
-    <CudaCompile Include="Matrix.cpp">
+    <CudaCompile Include="Matrix.cu">
       <Filter>源文件</Filter>
     </CudaCompile>
-    <CudaCompile Include="SparseVector.cpp">
+    <CudaCompile Include="SparseVector.cu">
       <Filter>源文件</Filter>
     </CudaCompile>
   </ItemGroup>

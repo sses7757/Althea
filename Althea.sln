@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.Backend", "Althea.Ba
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.SourceGenerator", "Althea.SourceGenerator\Althea.SourceGenerator.csproj", "{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BlasSupplement", "BlasSupplement\BlasSupplement.vcxproj", "{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExtendBlas", "ExtendBlas\ExtendBlas.vcxproj", "{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
