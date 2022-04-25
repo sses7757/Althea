@@ -213,16 +213,16 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, this.NRows, this.NCols, value, this.Storage, this.LeadDim);
+		public void FillWith(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Add, this.NRows, this.NCols, value, this.Storage, this.LeadDim);
+		public void AddScalar(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Add, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public void Scale(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Multiply, this.NRows, this.NCols, value, this.Storage, this.LeadDim);
+		public void Scale(T value) => ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Multiply, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public void Conjugate() => ExtBlas.GeneralMatrixUnary<T, TS>(UnaryOperation.Conjugate, this.NRows, this.NCols, this.Storage, this.LeadDim);
+		public void Conjugate() => ExtBlas.GeneralMatrixUnary<T, TS, TS>(UnaryOperation.Conjugate, this.NRows, this.NCols, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 		#endregion
 
 		#region simple aggregation operations

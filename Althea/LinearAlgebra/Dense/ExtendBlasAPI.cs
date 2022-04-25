@@ -216,20 +216,23 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region matrix math
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
+		/// When implemented by a derived class, compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
-		/// <param name="A">The matrix to be in-place modified</param>
+		/// <param name="A">The matrix to be operated</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The matrix to be overwritten</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
 		/// <param name="op">The <see cref="UnaryOperation"/> to apply to each element of <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixUnary<T, TS>(UnaryOperation op, long rows, long cols, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralMatrixUnary<T, TS1, TS2>(UnaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
@@ -288,37 +291,43 @@ namespace Althea.LinearAlgebra.Dense
 		/// When implemented by a derived class, compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
-		/// <param name="A">The vector to be in-place modified</param>
+		/// <param name="A">The matrix as the first inputs of <paramref name="op"/></param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The matrix to be overwritten</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
 		/// <param name="scalar">The scalar as the second input of <paramref name="op"/></param>
 		/// <param name="op">The <see cref="BinaryScalarOperation"/> to apply to each element of <paramref name="A"/> and <paramref name="scalar"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixBinaryScalar<T, TS>(BinaryScalarOperation op, long rows, long cols, T scalar, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="A"/>[i] = <paramref name="op"/>(<paramref name="A"/>[i], <paramref name="B"/>[i])</c>.
+		/// When implemented by a derived class, compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS1">The first input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
 		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
-		/// <param name="A">The matrix to be in-place modified</param>
+		/// <param name="A">The matrix act as the first inputs</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="B">The matrix act as the second inputs</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+		/// <param name="C">The matrix to be overwritten</param>
+		/// <param name="ldc">The leading dimension of <paramref name="C"/> in <typeparamref name="T"/></param>
 		/// <param name="op">The <see cref="BinaryOperation"/> to apply to each element of <paramref name="A"/> and <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatricesBinary<T, TS1, TS2>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.

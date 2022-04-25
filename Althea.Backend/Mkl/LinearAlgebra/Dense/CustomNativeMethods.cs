@@ -93,13 +93,35 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		internal static extern CustomStatus vecsEq(DataType type, long n, void* a, long strideA, void* b, long strideB, out bool equals);
 
 		/// <summary>
+		/// Get the index of the element with minimum value in vector <paramref name="a"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
+		/// <param name="n">The number of elements to be operated</param>
+		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="index">Output the index of the element in <paramref name="type"/> compared to <paramref name="a"/></param>
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern CustomStatus vecArgMin(DataType type, long n, void* a, long stride, out long index);
+
+		/// <summary>
+		/// Get the index of the element with maximum value in vector <paramref name="a"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
+		/// <param name="n">The number of elements to be operated</param>
+		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="index">Output the index of the element in <paramref name="type"/> compared to <paramref name="a"/></param>
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern CustomStatus vecArgMax(DataType type, long n, void* a, long stride, out long index);
+
+		/// <summary>
 		/// Get the index of the element with minimum absolute value in vector <paramref name="a"/>
 		/// </summary>
 		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
 		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
 		/// <param name="n">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="index">Output the index of the element</param>
+		/// <param name="index">Output the index of the element in <paramref name="type"/> compared to <paramref name="a"/></param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern CustomStatus vecArgAbsMin(DataType type, long n, void* a, long stride, out long index);
 
@@ -110,7 +132,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
 		/// <param name="n">The number of elements to be operated</param>
 		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="index">Output the index of the element</param>
+		/// <param name="index">Output the index of the element in <paramref name="type"/> compared to <paramref name="a"/></param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern CustomStatus vecArgAbsMax(DataType type, long n, void* a, long stride, out long index);
 
@@ -146,6 +168,17 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="outProd">The output product as a pointer of <paramref name="type"/></param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern CustomStatus vecProd(DataType type, long n, void* a, long stride, void* outProd);
+
+		/// <summary>
+		/// Multiplies all the absolute values of elements in vector <paramref name="a"/>
+		/// </summary>
+		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
+		/// <param name="a">The vector to be multiplied of <paramref name="type"/></param>
+		/// <param name="n">The number of elements to be operated</param>
+		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
+		/// <param name="outProd">The output product as a pointer of <paramref name="type"/></param>
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern CustomStatus vecAbsProd(DataType type, long n, void* a, long stride, void* outProd);
 
 		/// <summary>
 		/// Performs the partial sum from vector <paramref name="src"/> to vector <paramref name="dst"/>
@@ -196,7 +229,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <param name="alpha">The scalar to multiply to <paramref name="A"/> or <paramref name="B"/>'s elements during the computation</param>
 		/// <param name="beta">The scalar to multiply to <paramref name="C"/>'s elements during the computation</param>
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern CustomStatus matKronS(DataType type, void* alpha, void* A, long ldA, long rowsA, long colsA, void* B, long ldB, long rowsB, long colsB, void* beta, void* C, long ldC);
+		internal static extern CustomStatus matKron(DataType type, void* alpha, void* A, long ldA, long rowsA, long colsA, void* B, long ldB, long rowsB, long colsB, void* beta, void* C, long ldC);
 
 		/// <summary>
 		/// Makes the matrix <paramref name="A"/> hermitian or symmetric by copying its upper part to/from its lower part

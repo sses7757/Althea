@@ -179,7 +179,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <typeparam name="TS1">The concrete storage type for input value array</typeparam>
 		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
 		/// <typeparam name="TSInd">The concrete storage type of input index array</typeparam>
-		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="BinaryOperation"/></param>
+		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="ReduceOperation"/></param>
 		/// <param name="source">The source sparse tensor as a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to be reduced</param>
 		/// <param name="α">The scalar to multiply during computation</param>
 		/// <param name="op">The <see cref="UnaryOperation"/> to be applied to <paramref name="source"/> during computation</param>
@@ -189,7 +189,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Reduce<T, TInd, TS1, TS2, TSInd>(BinaryOperation reduce, ISparseArray<T, TInd, TS1, TSInd> source, T α, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, Dense.DenseTensorWrapper<T, TS2> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Reduce<T, TInd, TS1, TS2, TSInd>(ReduceOperation reduce, ISparseArray<T, TInd, TS1, TSInd> source, T α, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, Dense.DenseTensorWrapper<T, TS2> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>:<br/>
@@ -202,7 +202,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <typeparam name="TS2">The concrete storage type for output value array</typeparam>
 		/// <typeparam name="TSInd1">The concrete storage type of input index array</typeparam>
 		/// <typeparam name="TSInd2">The concrete storage type of output index array</typeparam>
-		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="BinaryOperation"/></param>
+		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="ReduceOperation"/></param>
 		/// <param name="source">The source sparse tensor as a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> to be reduced</param>
 		/// <param name="scalar">The scalar to multiply during computation</param>
 		/// <param name="op">The <see cref="UnaryOperation"/> to be applied to <paramref name="source"/> during computation</param>
@@ -212,7 +212,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Reduce<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(BinaryOperation reduce, ISparseArray<T, TInd1, TS1, TSInd1> source, T scalar, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> destination) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+		public abstract bool Reduce<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ReduceOperation reduce, ISparseArray<T, TInd1, TS1, TSInd1> source, T scalar, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> destination) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>

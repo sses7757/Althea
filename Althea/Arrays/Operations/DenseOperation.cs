@@ -815,7 +815,7 @@ namespace Althea.Array
 
 		#region tensor
 		/// <inheritdoc/>
-		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T α, DenseTensor<T, TS> B!!, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add)
+		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T α, DenseTensor<T, TS> B!!, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
 		{
 			Span<int> reduceInd = stackalloc int[A.Rank];
 			reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, α, B, reduceInd);
@@ -831,7 +831,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> Reduce(DenseTensor<T, TS> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, BinaryOperation reduce = BinaryOperation.Add)
+		public static DenseTensor<T, TS> Reduce(DenseTensor<T, TS> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
 		{
 			Span<int> reduceInd = stackalloc int[A.Rank];
 			Span<long> sizeB = stackalloc long[A.Rank];

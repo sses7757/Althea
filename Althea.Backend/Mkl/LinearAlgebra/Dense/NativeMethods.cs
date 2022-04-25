@@ -178,6 +178,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#endregion
 
 		#region vector math
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern VmlErrorCallbackDelegate vmlGetErrorCallBack();
+
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern VmlErrorCallbackDelegate vmlClearErrorCallBack();
+
+		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static extern VmlErrorCallbackDelegate vmlSetErrorCallBack([MarshalAs(UnmanagedType.FunctionPtr)] VmlErrorCallbackDelegate newCallback);
+
 		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsAdd(long n, void* a, void* b, void* y);
@@ -202,35 +211,35 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsMulI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		[NativeMethod(1, false, false, false, false)]
+		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsFmax(long n, void* a, void* b, void* y);
 
-		[NativeMethod(1, false, false, false, false)]
+		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsFmaxI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		[NativeMethod(1, false, false, false, false)]
+		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsFmin(long n, void* a, void* b, void* y);
 
-		[NativeMethod(1, false, false, false, false)]
+		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsFminI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		[NativeMethod(1, false, false, false, false)]
+		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsMaxMag(long n, void* a, void* b, void* y);
 
-		[NativeMethod(1, false, false, false, false)]
+		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsMaxMagI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 
-		[NativeMethod(1, false, false, false, false)]
+		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsMinMag(long n, void* a, void* b, void* y);
 
-		[NativeMethod(1, false, false, false, false)]
+		[NativeMethod(1, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsMinMagI(long n, void* a, long inca, void* b, long incb, void* y, long incy);
 

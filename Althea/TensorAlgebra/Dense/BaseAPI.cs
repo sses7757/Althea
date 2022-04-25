@@ -54,7 +54,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS1">The input storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The output storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="BinaryOperation"/></param>
+		/// <param name="reduce">The (symmetric) reduction operation as a <see cref="ReduceOperation"/></param>
 		/// <param name="source">The source dense tensor as a <see cref="DenseTensorWrapper{T, TS}"/> to be reduced</param>
 		/// <param name="destination">The destination dense tensor as a <see cref="DenseTensorWrapper{T, TS}"/></param>
 		/// <param name="reduceDimensions">The values in this <b>set</b> (as a <see cref="ReadOnlySpan{T}"/> of <see cref="int"/>) are the dimensions of which <paramref name="source"/> tensor are reduced</param>
@@ -62,7 +62,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Reduce<T, TS1, TS2>(BinaryOperation reduce, DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Reduce<T, TS1, TS2>(ReduceOperation reduce, DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and store the result to the <paramref name="destination"/> tensor:<br/>
