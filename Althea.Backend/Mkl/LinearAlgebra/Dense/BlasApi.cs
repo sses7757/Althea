@@ -87,7 +87,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				index = func(n, px, strideX);
 				return true;
 			}
-			return NMC.vecArgAbsMax(Unmanaged<T>.DataType, n, px, strideX, out index) == CustomStatus.Success;
+			return NMC.vecArgAbsMax(Unmanaged<T>.DataType, n, px, strideX, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -107,7 +107,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				index = func(n, px, strideX);
 				return true;
 			}
-			return NMC.vecArgAbsMin(Unmanaged<T>.DataType, n, px, strideX, out index) == CustomStatus.Success;
+			return NMC.vecArgAbsMin(Unmanaged<T>.DataType, n, px, strideX, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -907,25 +907,81 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region half matrix basic
 		/// <inheritdoc/>
-		public virtual bool TriangularMatricesAdd<T, TS1, TS2, TS3>(bool unitDiag, bool upper, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool TriangularMatricesAdd<T, TS1, TS2, TS3>(bool unitDiag, bool upper, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			if (!GetPointer(A, opA.CanInPlace() ? m : n, opA.CanInPlace() ? n : m, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, opB.CanInPlace() ? m : n, opB.CanInPlace() ? n : m, ldb, out T* pB))
+				return false;
+			if (!GetPointer(C, m, n, ldc, out T* pC))
+				return false;
+			return NMC.triMatAdd(Unmanaged<T>.DataType, unitDiag, upper, opA, opB, m, n, &α, pA, lda, &β, pB, ldb, pC, ldc).Check();
+		}
 
 		/// <inheritdoc/>
-		public virtual bool SymmetricMatricesAdd<T, TS1, TS2, TS3>(bool upperA, bool upperB, bool upperC, MatrixOperation opA, MatrixOperation opB, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool SymmetricMatricesAdd<T, TS1, TS2, TS3>(bool upperA, bool upperB, bool upperC, MatrixOperation opA, MatrixOperation opB, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, n, n, ldb, out T* pB))
+				return false;
+			if (!GetPointer(C, n, n, ldc, out T* pC))
+				return false;
+			return NMC.symmMatAdd(Unmanaged<T>.DataType, upperA, upperB, upperC, opA, opB, n, &α, pA, lda, &β, pB, ldb, pC, ldc).Check();
+		}
 
 		/// <inheritdoc/>
-		public virtual bool TriangularMatricesMultiply<T, TS1, TS2, TS3>(bool unitDiag, bool upper, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool TriangularMatricesMultiply<T, TS1, TS2, TS3>(bool unitDiag, bool upper, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
+			opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
+			if (!GetPointer(A, opA.CanInPlace() ? m : k, opA.CanInPlace() ? k : m, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, opB.CanInPlace() ? k : n, opB.CanInPlace() ? n : k, ldb, out T* pB))
+				return false;
+			if (!GetPointer(C, m, n, ldc, out T* pC))
+				return false;
+			return NMC.triMatMul(Unmanaged<T>.DataType, unitDiag, upper, opA, opB, m, n, k, &α, pA, lda, pB, ldb, &β, pC, ldc).Check();
+		}
 
 		/// <inheritdoc/>
-		public virtual bool SymmetricMatricesMultiply<T, TS1, TS2, TS3>(bool upperA, bool upperB, bool hermA, bool hermB, MatrixOperation opA, MatrixOperation opB, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool SymmetricMatricesMultiply<T, TS1, TS2, TS3>(bool upperA, bool upperB, bool hermA, bool hermB, MatrixOperation opA, MatrixOperation opB, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, n, n, ldb, out T* pB))
+				return false;
+			if (!GetPointer(C, n, n, ldc, out T* pC))
+				return false;
+			return NMC.symmMatMul(Unmanaged<T>.DataType, upperA, upperB, hermA, hermB, opA, opB, n, &α, pA, lda, pB, ldb, &β, pC, ldc).Check();
+		}
 
 		/// <inheritdoc/>
-		public virtual bool SymmetricMatrixToNormal<T, TS>(bool upper, bool hermitian, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual bool SymmetricMatrixToNormal<T, TS>(bool upper, bool hermitian, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			return NMC.matMakeHerm(Unmanaged<T>.DataType, upper, hermitian, n, pA, lda).Check();
+		}
 
 		/// <inheritdoc/>
-		public virtual bool HalfMatrixClearPart<T, TS>(bool clearDiag, bool clearLower, long m, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public virtual bool HalfMatrixClearPart<T, TS>(bool clearDiag, bool clearLower, long m, long n, TS A, long lda) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			if (!GetPointer(A, m, n, lda, out T* pA))
+				return false;
+			return NMC.matTriClear(Unmanaged<T>.DataType, clearLower, clearDiag, m, n, pA, lda).Check();
+		}
 
 		/// <inheritdoc/>
-		public virtual bool HalfMatrixCopy<T, TS1, TS2>(bool upper, bool copyDiag, MatrixOperation opA, long m, long n, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool HalfMatrixCopy<T, TS1, TS2>(bool upper, bool copyDiag, MatrixOperation opA, long m, long n, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(A, opA.CanInPlace() ? m : n, opA.CanInPlace() ? n : m, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, m, n, ldb, out T* pB))
+				return false;
+			return NMC.matTriCopy(Unmanaged<T>.DataType, upper, copyDiag, opA, m, n, pA, lda, pB, ldb).Check();
+		}
 		#endregion
 	}
 }

@@ -55,8 +55,8 @@ namespace Althea.Backend
 			}
 			this.stackTrace = trace ?? new(1);
 			string? type = error.GetType().FullName;
-			string descr = error.ToString();
-			this.error = (type, code, descr);
+			string? descr = typeof(EnumHelper).GetMethod(nameof(EnumHelper.GetName))?.MakeGenericMethod(error.GetType())?.Invoke(null, new object[] { error }) as string;
+			this.error = (type, code, descr ?? error.ToString());
 		}
 
 		/// <summary>
@@ -81,11 +81,11 @@ namespace Althea.Backend
 			}
 			this.stackTrace = trace ?? new(1);
 			string? type1 = error1.GetType().FullName;
-			string descr1 = error1.ToString();
-			this.error = (type1, code1, descr1);
+			string? descr1 = typeof(EnumHelper).GetMethod(nameof(EnumHelper.GetName))?.MakeGenericMethod(error1.GetType())?.Invoke(null, new object[] { error1 }) as string;
+			this.error = (type1, code1, descr1 ?? error1.ToString());
 			string? type2 = error2.GetType().FullName;
-			string descr2 = error2.ToString();
-			this.error2 = (type2, code2, descr2);
+			string? descr2 = typeof(EnumHelper).GetMethod(nameof(EnumHelper.GetName))?.MakeGenericMethod(error2.GetType())?.Invoke(null, new object[] { error2 }) as string;
+			this.error2 = (type2, code2, descr2 ?? error2.ToString());
 		}
 
 		private readonly bool overwriteMessage = true;

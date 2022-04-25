@@ -806,20 +806,16 @@
         </member>
         <member name="M:Althea.Array.TriangularMatrix`2.FillWith(`0)">
             <inheritdoc/>
+            <exception cref="T:System.InvalidOperationException">If <paramref name="value"/> != 0</exception>
         </member>
         <member name="M:Althea.Array.TriangularMatrix`2.AddScalar(`0)">
             <inheritdoc/>
+            <exception cref="T:System.InvalidOperationException">If <paramref name="value"/> != 0</exception>
         </member>
         <member name="M:Althea.Array.TriangularMatrix`2.Scale(`0)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.TriangularMatrix`2.Conjugate">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.TriangularMatrix`2.Power(`0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.TriangularMatrix`2.Truncate(System.Double)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.TriangularMatrix`2.Sum">
@@ -978,12 +974,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SymmetricMatrix`2.Conjugate">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.SymmetricMatrix`2.Power(`0)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.SymmetricMatrix`2.Truncate(System.Double)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SymmetricMatrix`2.Sum">
@@ -9928,8 +9918,8 @@
             <param name="copyDiag">Whether to copy the diagonal of <paramref name="A"/> or not</param>
             <param name="upper">Whether the upper triangular part of <paramref name="A"/> is stored or its lower part</param>
             <param name="opA">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
-            <param name="m">The number of rows of <paramref name="A"/> and <paramref name="B"/></param>
-            <param name="n">The number of columns of <paramref name="A"/> and <paramref name="B"/></param>
+            <param name="m">The number of rows of <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="B"/></param>
+            <param name="n">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="B"/></param>
             <param name="A">The input matrix with size <paramref name="m"/>×<paramref name="n"/></param>
             <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="m"/></param>
             <param name="B">The output matrix with size <paramref name="n"/>×<paramref name="n"/></param>
@@ -9937,119 +9927,172 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixFill``2(System.Boolean,``1,System.Boolean,System.Int64,``0,System.Int64,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
-            When implemented by a derived class, fill the matrix <paramref name="A"/>'s values by same <paramref name="value"/>.
+            When implemented by a derived class, compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix to be operated</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="B">The matrix to be overwritten</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.UnaryOperation"/> to apply to each element of <paramref name="A"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``0@)">
+            <summary>
+            When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be filled</param>
-            <param name="value">The value to set as a <typeparamref name="T"/></param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+            <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix to be reduced</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to elements of <paramref name="A"/></param>
+            <param name="result">Output the reduction result of <paramref name="A"/> under <paramref name="op"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatricesEquals``3(System.Boolean,``1,System.Boolean,System.Int64,``2,System.Boolean,System.Int64,System.Int64,System.Int64,System.Boolean@)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
             <summary>
-            When implemented by a derived class, check if all elements in matrices <paramref name="A"/> and <paramref name="B"/> are equal.
+            When implemented by a derived class, compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+            <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix to be reduced</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to elements of <paramref name="A"/>, must be ones like <see cref="F:Althea.LinearAlgebra.ReduceOperation.Maximum"/></param>
+            <param name="index">Output the reduction result's index of <paramref name="A"/> under <paramref name="op"/> compared to <paramref name="A"/> in <typeparamref name="T"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+            <summary>
+            When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS1">The actual matrix storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The actual vector storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+            <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix whose columns will be reduced</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to elements of <paramref name="A"/></param>
+            <param name="x">The vector to store the reduction results of <paramref name="A"/>'s columns under <paramref name="op"/></param>
+            <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
+            <summary>
+            When implemented by a derived class, compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix as the first inputs of <paramref name="op"/></param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="B">The matrix to be overwritten</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+            <param name="scalar">The scalar as the second input of <paramref name="op"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryScalarOperation"/> to apply to each element of <paramref name="A"/> and <paramref name="scalar"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.GeneralMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+            <summary>
+            When implemented by a derived class, compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS1">The first input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> and <paramref name="B"/> are all ones (thus not stored) or not</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix act as the first inputs</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="B">The matrix act as the second inputs</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+            <param name="C">The matrix to be overwritten</param>
+            <param name="ldc">The leading dimension of <paramref name="C"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to each element of <paramref name="A"/> and <paramref name="B"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
+            <summary>
+            When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+            <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix whose columns will be scanned</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="B">The matrix whose columns will be overwritten by the scan results of <paramref name="A"/>'s column s</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+            <param name="inclusive">Whether to scan <paramref name="A"/> inclusively (the first elements are the first elements of columns <paramref name="A"/>) or exclusively (the first elements are the identity element of <paramref name="op"/>)</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatricesEqual``3(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean@)">
+            <summary>
+            When implemented by a derived class, check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i, j] == <paramref name="B"/>[i, j]</c> for all <c>i, j</c>.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="ignoreDiag">Whether to ignore the diagonal elements of <paramref name="A"/> and <paramref name="B"/> or not</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
             <param name="A">The matrix to be checked</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
             <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="B">The other matrix to be checked</param>
+            <param name="B">The matrix to be checked</param>
             <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
             <param name="equals">Output <see cref="T:System.Boolean"/> indicating whether all elements in <paramref name="A"/> and <paramref name="B"/> are equal</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatricesMultiply``3(System.Boolean,``1,System.Boolean,System.Int64,``2,System.Boolean,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, compute <c><paramref name="A"/> = <paramref name="A"/>.*<paramref name="B"/></c> (point-wise multiplication).
-            </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be multiplied in-place</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="B">The other matrix to multiply</param>
-            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatricesDivide``3(System.Boolean,``1,System.Boolean,System.Int64,``2,System.Boolean,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, compute <c><paramref name="A"/> = <paramref name="A"/>./<paramref name="B"/></c> (point-wise division).
-            </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be divided in-place</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="B">The other matrix to divide</param>
-            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixPower``2(System.Boolean,``1,System.Boolean,System.Int64,``0,System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, <c><paramref name="A"/> = <paramref name="A"/>.^<paramref name="p"/></c> (point-wise power).
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be powered in-place</param>
-            <param name="p">The exponent as a <typeparamref name="T"/></param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixAddScalar``2(System.Boolean,``1,System.Boolean,System.Int64,``0,System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, <c><paramref name="A"/> = <paramref name="A"/> + <paramref name="scalar"/></c> (point-wise addition).
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be added in-place</param>
-            <param name="scalar">The scalar to add</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixCast``4(System.Boolean,``2,System.Boolean,System.Int64,``3,System.Boolean,System.Int64,System.Int64,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixCast``4(System.Boolean,System.Boolean,System.Int64,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             When implemented by a derived class, cast the given matrix from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
             </summary>
@@ -10057,9 +10100,8 @@
             <typeparam name="TOut">Any unmanaged number as the output data type</typeparam>
             <typeparam name="TSIn">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TSOut">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperSrc">Whether <paramref name="source"/>'s upper half or lower half is stored</param>
-            <param name="upperDst">Whether <paramref name="destination"/>'s upper half or lower half is stored</param>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="ignoreDiag">Whether to ignore the diagonal elements of <paramref name="source"/> and <paramref name="destination"/> or not</param>
             <param name="source">The source matrix</param>
             <param name="rows">The number of rows</param>
             <param name="cols">The number of columns</param>
@@ -10069,225 +10111,6 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lds"/> or <paramref name="ldd"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixTruncate``2(System.Boolean,``1,System.Boolean,System.Int64,System.Double,System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, truncate the matrix by comparing each element's absolute value in <paramref name="A"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be truncated in-place</param>
-            <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.TriangularMatrixSum``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64,``0@)">
-            <summary>
-            When implemented by a derived class, aggregately sum the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="sum">Output the sum as a <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.TriangularMatrixAbsSum``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64,``0@)">
-            <summary>
-            When implemented by a derived class, aggregately sum the absolute values of the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="sum">Output the sum as a <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.SymmetricMatrixSum``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,``0@)">
-            <summary>
-            When implemented by a derived class, aggregately sum the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="sum">Output the sum as a <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.SymmetricMatrixAbsSum``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,``0@)">
-            <summary>
-            When implemented by a derived class, aggregately sum the absolute values of the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="sum">Output the sum as a <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.TriangularMatrixNorm``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64,``0@)">
-            <summary>
-            When implemented by a derived class, compute the norm of the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="norm">Output the norm as a <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.SymmetricMatrixNorm``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,``0@)">
-            <summary>
-            When implemented by a derived class, compute the norm of the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="norm">Output the norm as a <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.SymmetricMatrixProduct``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,``0@)">
-            <summary>
-            When implemented by a derived class, aggregately product the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to product</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="product">Output the product as a <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.TriangularMatrixAbsArgMax``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64,System.Int64@)">
-            <summary>
-            When implemented by a derived class, get the index of the index of the element with largest absolute value in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.SymmetricMatrixAbsArgMax``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64@)">
-            <summary>
-            When implemented by a derived class, get the index of the element with largest absolute value in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.SymmetricMatrixAbsArgMin``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64@)">
-            <summary>
-            When implemented by a derived class, get the index of the element with smallest absolute value in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixSumColumns``3(System.Nullable{System.Boolean},System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64,``2,System.Int64)">
-            <summary>
-            When implemented by a derived class, aggregately sum the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric (true or false) or triangular (null)</param>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="x">The output vector to store the sums</param>
-            <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.SymmetricMatrixProductColumns``3(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,``2,System.Int64)">
-            <summary>
-            When implemented by a derived class, aggregately product the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to product</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="x">The output vector to store the products</param>
-            <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
         </member>
         <member name="T:Althea.LinearAlgebra.Dense.ILapackAbstractApi">
             <summary>
@@ -11548,8 +11371,8 @@
             <param name="copyDiag">Whether to copy the diagonal of <paramref name="A"/> or not</param>
             <param name="upper">Whether the upper triangular part of <paramref name="A"/> is stored or its lower part</param>
             <param name="opA">The <see cref="T:Althea.LinearAlgebra.MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
-            <param name="m">The number of rows of <paramref name="A"/> and <paramref name="B"/></param>
-            <param name="n">The number of columns of <paramref name="A"/> and <paramref name="B"/></param>
+            <param name="m">The number of rows of <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="B"/></param>
+            <param name="n">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="B"/></param>
             <param name="A">The input matrix with size <paramref name="m"/>×<paramref name="n"/></param>
             <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="m"/></param>
             <param name="B">The output matrix with size <paramref name="n"/>×<paramref name="n"/></param>
@@ -11557,119 +11380,172 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixFill``2(System.Boolean,``1,System.Boolean,System.Int64,``0,System.Int64,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
-            Fill the matrix <paramref name="A"/>'s values by same <paramref name="value"/>.
+            Compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix to be operated</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="B">The matrix to be overwritten</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.UnaryOperation"/> to apply to each element of <paramref name="A"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
+            <summary>
+            Compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be filled</param>
-            <param name="value">The value to set as a <typeparamref name="T"/></param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+            <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix to be reduced</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to elements of <paramref name="A"/></param>
+            <returns>Output the reduction result of <paramref name="A"/> under <paramref name="op"/>.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatricesEquals``3(System.Boolean,``1,System.Boolean,System.Int64,``2,System.Boolean,System.Int64,System.Int64,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
             <summary>
-            Check if all elements in matrices <paramref name="A"/> and <paramref name="B"/> are equal.
+            Compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+            <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix to be reduced</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to elements of <paramref name="A"/>, must be ones like <see cref="F:Althea.LinearAlgebra.ReduceOperation.Maximum"/></param>
+            <returns>Output the reduction result's index of <paramref name="A"/> under <paramref name="op"/> compared to <paramref name="A"/> in <typeparamref name="T"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+            <summary>
+            Compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS1">The actual matrix storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The actual vector storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+            <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix whose columns will be reduced</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to elements of <paramref name="A"/></param>
+            <param name="x">The vector to store the reduction results of <paramref name="A"/>'s columns under <paramref name="op"/></param>
+            <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
+            <summary>
+            Compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix as the first inputs of <paramref name="op"/></param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="B">The matrix to be overwritten</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+            <param name="scalar">The scalar as the second input of <paramref name="op"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryScalarOperation"/> to apply to each element of <paramref name="A"/> and <paramref name="scalar"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.GeneralMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+            <summary>
+            Compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+            <typeparam name="TS1">The first input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The second input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS3">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> and <paramref name="B"/> are all ones (thus not stored) or not</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix act as the first inputs</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="B">The matrix act as the second inputs</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+            <param name="C">The matrix to be overwritten</param>
+            <param name="ldc">The leading dimension of <paramref name="C"/> in <typeparamref name="T"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to each element of <paramref name="A"/> and <paramref name="B"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
+            <summary>
+            Perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TS2">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+            <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
+            <param name="A">The matrix whose columns will be scanned</param>
+            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+            <param name="B">The matrix whose columns will be overwritten by the scan results of <paramref name="A"/>'s column s</param>
+            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+            <param name="inclusive">Whether to scan <paramref name="A"/> inclusively (the first elements are the first elements of columns <paramref name="A"/>) or exclusively (the first elements are the identity element of <paramref name="op"/>)</param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatricesEqual``3(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+            <summary>
+            Check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i, j] == <paramref name="B"/>[i, j]</c> for all <c>i, j</c>.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="ignoreDiag">Whether to ignore the diagonal elements of <paramref name="A"/> and <paramref name="B"/> or not</param>
+            <param name="rows">The number of rows in <typeparamref name="T"/></param>
+            <param name="cols">The number of columns in <typeparamref name="T"/></param>
             <param name="A">The matrix to be checked</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
             <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="B">The other matrix to be checked</param>
+            <param name="B">The matrix to be checked</param>
             <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
             <returns>Output <see cref="T:System.Boolean"/> indicating whether all elements in <paramref name="A"/> and <paramref name="B"/> are equal.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatricesMultiply``3(System.Boolean,``1,System.Boolean,System.Int64,``2,System.Boolean,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            Compute <c><paramref name="A"/> = <paramref name="A"/>.*<paramref name="B"/></c> (point-wise multiplication).
-            </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be multiplied in-place</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="B">The other matrix to multiply</param>
-            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatricesDivide``3(System.Boolean,``1,System.Boolean,System.Int64,``2,System.Boolean,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            Compute <c><paramref name="A"/> = <paramref name="A"/>./<paramref name="B"/></c> (point-wise division).
-            </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be divided in-place</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="B">The other matrix to divide</param>
-            <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixPower``2(System.Boolean,``1,System.Boolean,System.Int64,``0,System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, <c><paramref name="A"/> = <paramref name="A"/>.^<paramref name="p"/></c> (point-wise power).
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be powered in-place</param>
-            <param name="p">The exponent as a <typeparamref name="T"/></param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixAddScalar``2(System.Boolean,``1,System.Boolean,System.Int64,``0,System.Int64,System.Int64)">
-            <summary>
-            When implemented by a derived class, <c><paramref name="A"/> = <paramref name="A"/> + <paramref name="scalar"/></c> (point-wise addition).
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be added in-place</param>
-            <param name="scalar">The scalar to add</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixCast``4(System.Boolean,``2,System.Boolean,System.Int64,``3,System.Boolean,System.Int64,System.Int64,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixCast``4(System.Boolean,System.Boolean,System.Int64,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             Cast the given matrix from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
             </summary>
@@ -11677,9 +11553,8 @@
             <typeparam name="TOut">Any unmanaged number as the output data type</typeparam>
             <typeparam name="TSIn">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TSOut">The output actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperSrc">Whether <paramref name="source"/>'s upper half or lower half is stored</param>
-            <param name="upperDst">Whether <paramref name="destination"/>'s upper half or lower half is stored</param>
+            <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+            <param name="ignoreDiag">Whether to ignore the diagonal elements of <paramref name="source"/> and <paramref name="destination"/> or not</param>
             <param name="source">The source matrix</param>
             <param name="rows">The number of rows</param>
             <param name="cols">The number of columns</param>
@@ -11688,225 +11563,6 @@
             <param name="ldd">The leading dimension of <paramref name="destination"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lds"/> or <paramref name="ldd"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixTruncate``2(System.Boolean,``1,System.Boolean,System.Int64,System.Double,System.Int64,System.Int64)">
-            <summary>
-            Truncate the matrix by comparing each element's absolute value in <paramref name="A"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to be truncated in-place</param>
-            <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.TriangularMatrixSum``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            Aggregately sum the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the sum as a <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.TriangularMatrixAbsSum``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            Aggregately sum the absolute values of the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the sum as a <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.SymmetricMatrixSum``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64)">
-            <summary>
-            Aggregately sum the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the sum as a <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.SymmetricMatrixAbsSum``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64)">
-            <summary>
-            Aggregately sum the absolute values of the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the sum as a <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.TriangularMatrixNorm``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            Compute the norm of the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the norm as a <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.SymmetricMatrixNorm``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64)">
-            <summary>
-            Compute the norm of the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the norm as a <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.SymmetricMatrixProduct``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64)">
-            <summary>
-            Aggregately product the elements in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to product</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the product as a <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.TriangularMatrixAbsArgMax``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64)">
-            <summary>
-            Get the index of the index of the element with largest absolute value in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the index compared to <paramref name="A"/> in <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.SymmetricMatrixAbsArgMax``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64)">
-            <summary>
-            Get the index of the element with largest absolute value in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the index compared to <paramref name="A"/> in <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.SymmetricMatrixAbsArgMin``2(System.Boolean,``1,System.Boolean,System.Int64,System.Int64)">
-            <summary>
-            Get the index of the element with smallest absolute value in matrix <paramref name="A"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <returns>Output the index compared to <paramref name="A"/> in <typeparamref name="T"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixSumColumns``3(System.Nullable{System.Boolean},System.Boolean,``1,System.Boolean,System.Int64,System.Int64,System.Int64,``2,System.Int64)">
-            <summary>
-            Aggregately sum the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric (true or false) or triangular (null)</param>
-            <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to sum</param>
-            <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="x">The output vector to store the sums</param>
-            <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.SymmetricMatrixProductColumns``3(System.Boolean,``1,System.Boolean,System.Int64,System.Int64,``2,System.Int64)">
-            <summary>
-            Aggregately product the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-            <typeparam name="TS1">The first actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-            <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-            <param name="A">The matrix to product</param>
-            <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-            <param name="x">The output vector to store the products</param>
-            <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="T:Althea.LinearAlgebra.Dense.LapackApiSelector">

@@ -149,36 +149,42 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => HalfBlas.HalfMatrixFill(this.unitDiag, this.Storage, this.upper, this.LeadDim, value, this.NRows, this.NCols);
+		/// <exception cref="InvalidOperationException">If <paramref name="value"/> != 0</exception>
+		public void FillWith(T value)
+		{
+			if (value == T.Zero)
+				ExtBlas.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, this.NRows, this.NCols, T.Zero, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
+			else
+				throw new InvalidOperationException();
+		}
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => HalfBlas.HalfMatrixAddScalar(this.unitDiag, this.Storage, this.upper, this.LeadDim, value, this.NRows, this.NCols);
+		/// <exception cref="InvalidOperationException">If <paramref name="value"/> != 0</exception>
+		public void AddScalar(T value)
+		{
+			if (value != T.Zero)
+				throw new InvalidOperationException();
+		}
 
 		/// <inheritdoc/>
-		public void Scale(T value) => HalfBlas.TriangularMatricesAdd(this.unitDiag, this.upper, MatrixOperation.None, default, this.NRows, this.NCols, value, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
+		public void Scale(T value) => HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Multiply, this.upper, this.unitDiag, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public void Conjugate() => HalfBlas.TriangularMatricesAdd(this.unitDiag, this.upper, MatrixOperation.Conjugate, default, this.NRows, this.NCols, T.One, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
-
-		/// <inheritdoc/>
-		public void Power(T power) => HalfBlas.HalfMatrixPower(this.unitDiag, this.Storage, this.upper, this.LeadDim, power, this.NRows, this.NCols);
-
-		/// <inheritdoc/>
-		public void Truncate(double threshold) => HalfBlas.HalfMatrixTruncate<T, TS>(this.unitDiag, this.Storage, this.upper, this.LeadDim, threshold, this.NRows, this.NCols);
+		public void Conjugate() => HalfBlas.HalfMatrixUnary<T, TS, TS>(UnaryOperation.Conjugate, this.upper, this.unitDiag, this.NRows, this.NCols, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 		#endregion
 
 		#region simple aggregation operations
 		/// <inheritdoc/>
-		public T Sum() => HalfBlas.TriangularMatrixSum<T, TS>(this.unitDiag, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols);
+		public T Sum() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.Add, this.upper, true, this.unitDiag, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T AbsSum() => HalfBlas.TriangularMatrixAbsSum<T, TS>(this.unitDiag, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols);
+		public T AbsSum() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.AddAbsolute, this.upper, true, this.unitDiag, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T Norm() => HalfBlas.TriangularMatrixNorm<T, TS>(this.unitDiag, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols);
+		public T Norm() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.Norm, this.upper, true, this.unitDiag, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T ValueWithMaxAbs() => (this.Storage + HalfBlas.TriangularMatrixAbsArgMax<T, TS>(this.unitDiag, this.Storage, this.upper, this.LeadDim, this.NRows, this.NCols)).ToManaged<T, TS>();
+		public T ValueWithMaxAbs() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.AbsoluteMaximum, this.upper, true, this.unitDiag, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
 		public T ValueWithMinAbs() => T.Zero;
@@ -460,8 +466,8 @@ namespace Althea.Array
 		/// <exception cref="InvalidOperationException">If this is a Hermitian matrix and <paramref name="value"/> is not a real number</exception>
 		public void FillWith(T value)
 		{
-			if (this.herm || value.Conjugate() == value)
-				HalfBlas.HalfMatrixFill(false, this.Storage, this.upper, this.LeadDim, value, this.NRows, this.NCols);
+			if (!this.herm || NumberType<T>.IsRealValue(value))
+				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 			else
 				throw new InvalidOperationException();
 		}
@@ -469,52 +475,39 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void AddScalar(T value)
 		{
-			if (this.herm || value.Conjugate() == value)
-				HalfBlas.HalfMatrixAddScalar(false, this.Storage, this.upper, this.LeadDim, value, this.NRows, this.NCols);
-			else
-				throw new InvalidOperationException();
+			if (!this.herm || NumberType<T>.IsRealValue(value))
+				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
+			throw new InvalidOperationException();
 		}
 
 		/// <inheritdoc/>
 		public void Scale(T value)
 		{
-			if (this.herm || value.Conjugate() == value)
-				HalfBlas.SymmetricMatricesAdd(this.upper, false, this.upper, default, default, this.NRows, value, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
+			if (!this.herm || NumberType<T>.IsRealValue(value))
+				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 			else
 				throw new InvalidOperationException();
 		}
 
 		/// <inheritdoc/>
-		public void Conjugate() => HalfBlas.SymmetricMatricesAdd(this.upper, false, this.upper, MatrixOperation.Conjugate, default, this.NRows, T.One, this.Storage, this.LeadDim, default, (TS?)null, 1, this.Storage, this.LeadDim);
-
-		/// <inheritdoc/>
-		public void Power(T power)
-		{
-			if (this.herm || power.Conjugate() == power)
-				HalfBlas.HalfMatrixPower(false, this.Storage, this.upper, this.LeadDim, power, this.NRows, this.NCols);
-			else
-				throw new InvalidOperationException();
-		}
-
-		/// <inheritdoc/>
-		public void Truncate(double threshold) => HalfBlas.HalfMatrixTruncate<T, TS>(false, this.Storage, this.upper, this.LeadDim, threshold, this.NRows, this.NCols);
+		public void Conjugate() => HalfBlas.HalfMatrixUnary<T, TS, TS>(UnaryOperation.Conjugate, this.upper, false, this.NRows, this.NCols, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 		#endregion
 
 		#region simple aggregation operations
 		/// <inheritdoc/>
-		public T Sum() => HalfBlas.SymmetricMatrixSum<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows);
+		public T Sum() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.Add, this.upper, false, this.herm, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T AbsSum() => HalfBlas.SymmetricMatrixAbsSum<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows);
+		public T AbsSum() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.AddAbsolute, this.upper, false, this.herm, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T Norm() => HalfBlas.SymmetricMatrixNorm<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows);
+		public T Norm() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.Norm, this.upper, false, this.herm, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T ValueWithMaxAbs() => (this.Storage + HalfBlas.SymmetricMatrixAbsArgMax<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows)).ToManaged<T, TS>();
+		public T ValueWithMaxAbs() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.AbsoluteMaximum, this.upper, false, this.herm, this.NRows, this.NCols, this.Storage, this.LeadDim);
 
 		/// <inheritdoc/>
-		public T ValueWithMinAbs() => (this.Storage + HalfBlas.SymmetricMatrixAbsArgMin<T, TS>(this.herm, this.Storage, this.upper, this.LeadDim, this.NRows)).ToManaged<T, TS>();
+		public T ValueWithMinAbs() => HalfBlas.HalfMatrixReduce<T, TS>(ReduceOperation.AbsoluteMininum, this.upper, false, this.herm, this.NRows, this.NCols, this.Storage, this.LeadDim);
 		#endregion
 
 		#region operators

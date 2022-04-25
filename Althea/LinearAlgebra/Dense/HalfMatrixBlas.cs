@@ -169,8 +169,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="copyDiag">Whether to copy the diagonal of <paramref name="A"/> or not</param>
 		/// <param name="upper">Whether the upper triangular part of <paramref name="A"/> is stored or its lower part</param>
 		/// <param name="opA">The <see cref="MatrixOperation"/> to indicate the simple operation of <paramref name="A"/></param>
-		/// <param name="m">The number of rows of <paramref name="A"/> and <paramref name="B"/></param>
-		/// <param name="n">The number of columns of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <param name="m">The number of rows of <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="B"/></param>
+		/// <param name="n">The number of columns of <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="B"/></param>
 		/// <param name="A">The input matrix with size <paramref name="m"/>×<paramref name="n"/></param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/>, must be at least <paramref name="m"/></param>
 		/// <param name="B">The output matrix with size <paramref name="n"/>×<paramref name="n"/></param>
@@ -183,122 +183,177 @@ namespace Althea.LinearAlgebra.Dense
 
 		#region matrix math
 		/// <summary>
-		/// When implemented by a derived class, fill the matrix <paramref name="A"/>'s values by same <paramref name="value"/>.
+		/// When implemented by a derived class, compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not</param>
+		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
+		/// <param name="A">The matrix to be operated</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The matrix to be overwritten</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+		/// <param name="op">The <see cref="UnaryOperation"/> to apply to each element of <paramref name="A"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+		[AbstractApiMethod]
+		public abstract bool HalfMatrixUnary<T, TS1, TS2>(UnaryOperation op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to be filled</param>
-		/// <param name="value">The value to set as a <typeparamref name="T"/></param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+		/// <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
+		/// <param name="A">The matrix to be reduced</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="op">The <see cref="ReduceOperation"/> to apply to elements of <paramref name="A"/></param>
+		/// <param name="result">Output the reduction result of <paramref name="A"/> under <paramref name="op"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixFill<T, TS>(bool unitDiag, TS A, bool upperA, long ld, T value, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool HalfMatrixReduce<T, TS>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
-		/// When implemented by a derived class, check if all elements in matrices <paramref name="A"/> and <paramref name="B"/> are equal.
+		/// When implemented by a derived class, compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+		/// <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
+		/// <param name="A">The matrix to be reduced</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="op">The <see cref="ReduceOperation"/> to apply to elements of <paramref name="A"/>, must be ones like <see cref="ReduceOperation.Maximum"/></param>
+		/// <param name="index">Output the reduction result's index of <paramref name="A"/> under <paramref name="op"/> compared to <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+		[AbstractApiMethod]
+		public abstract bool HalfMatrixArgReduce<T, TS>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS1">The actual matrix storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The actual vector storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+		/// <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
+		/// <param name="A">The matrix whose columns will be reduced</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="op">The <see cref="ReduceOperation"/> to apply to elements of <paramref name="A"/></param>
+		/// <param name="x">The vector to store the reduction results of <paramref name="A"/>'s columns under <paramref name="op"/></param>
+		/// <param name="strideX">The stride between consecutive elements of <paramref name="x"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
+		[AbstractApiMethod]
+		public abstract bool HalfMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not</param>
+		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
+		/// <param name="A">The matrix as the first inputs of <paramref name="op"/></param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The matrix to be overwritten</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+		/// <param name="scalar">The scalar as the second input of <paramref name="op"/></param>
+		/// <param name="op">The <see cref="BinaryScalarOperation"/> to apply to each element of <paramref name="A"/> and <paramref name="scalar"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
+		[AbstractApiMethod]
+		public abstract bool HalfMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, bool upper, bool unitDiag, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <summary>
+		/// When implemented by a derived class, compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TS1">The first input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The second input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS3">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="unitDiag">Whether the diagonal elements of <paramref name="A"/> and <paramref name="B"/> are all ones (thus not stored) or not</param>
+		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
+		/// <param name="A">The matrix act as the first inputs</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The matrix act as the second inputs</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+		/// <param name="C">The matrix to be overwritten</param>
+		/// <param name="ldc">The leading dimension of <paramref name="C"/> in <typeparamref name="T"/></param>
+		/// <param name="op">The <see cref="BinaryOperation"/> to apply to each element of <paramref name="A"/> and <paramref name="B"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
+		[AbstractApiMethod]
+		public abstract bool GeneralMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+
+		/// <summary>
+		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="triangular">Whether <paramref name="A"/> is triangular matrix or a symmetric/Hermitian matrix</param>
+		/// <param name="unitDiagOrHerm">If <paramref name="triangular"/>, indicates whether the diagonal elements of <paramref name="A"/> are all ones (thus not stored) or not; or whether <paramref name="A"/> is Hermitian or simply symmetric otherwise</param>
+		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
+		/// <param name="A">The matrix whose columns will be scanned</param>
+		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
+		/// <param name="B">The matrix whose columns will be overwritten by the scan results of <paramref name="A"/>'s column s</param>
+		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
+		/// <param name="inclusive">Whether to scan <paramref name="A"/> inclusively (the first elements are the first elements of columns <paramref name="A"/>) or exclusively (the first elements are the identity element of <paramref name="op"/>)</param>
+		/// <param name="op">The <see cref="BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
+		[AbstractApiMethod]
+		public abstract bool HalfMatrixColumnScan<T, TS1, TS2>(BinaryOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, bool inclusive) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+
+		/// <summary>
+		/// When implemented by a derived class, check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i, j] == <paramref name="B"/>[i, j]</c> for all <c>i, j</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="ignoreDiag">Whether to ignore the diagonal elements of <paramref name="A"/> and <paramref name="B"/> or not</param>
+		/// <param name="rows">The number of rows in <typeparamref name="T"/></param>
+		/// <param name="cols">The number of columns in <typeparamref name="T"/></param>
 		/// <param name="A">The matrix to be checked</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="B">The other matrix to be checked</param>
+		/// <param name="B">The matrix to be checked</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
 		/// <param name="equals">Output <see cref="bool"/> indicating whether all elements in <paramref name="A"/> and <paramref name="B"/> are equal</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatricesEquals<T, TS1, TS2>(bool unitDiag, TS1 A, bool upperA, long lda, TS2 B, bool upperB, long ldb, long rows, long cols, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
-
-		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="A"/> = <paramref name="A"/>.*<paramref name="B"/></c> (point-wise multiplication).
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to be multiplied in-place</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="B">The other matrix to multiply</param>
-		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool HalfMatricesMultiply<T, TS1, TS2>(bool unitDiag, TS1 A, bool upperA, long lda, TS2 B, bool upperB, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
-
-		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="A"/> = <paramref name="A"/>./<paramref name="B"/></c> (point-wise division).
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="upperB">Whether <paramref name="B"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to be divided in-place</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="lda">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="B">The other matrix to divide</param>
-		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lda"/> or <paramref name="ldb"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool HalfMatricesDivide<T, TS1, TS2>(bool unitDiag, TS1 A, bool upperA, long lda, TS2 B, bool upperB, long ldb, long rows, long cols) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
-
-		/// <summary>
-		/// When implemented by a derived class, <c><paramref name="A"/> = <paramref name="A"/>.^<paramref name="p"/></c> (point-wise power).
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to be powered in-place</param>
-		/// <param name="p">The exponent as a <typeparamref name="T"/></param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool HalfMatrixPower<T, TS>(bool unitDiag, TS A, bool upperA, long ld, T p, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, <c><paramref name="A"/> = <paramref name="A"/> + <paramref name="scalar"/></c> (point-wise addition).
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to be added in-place</param>
-		/// <param name="scalar">The scalar to add</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool HalfMatrixAddScalar<T, TS>(bool unitDiag, TS A, bool upperA, long ld, T scalar, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool HalfMatricesEqual<T, TS1, TS2>(bool upper, bool ignoreDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, cast the given matrix from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
@@ -307,9 +362,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TOut">Any unmanaged number as the output data type</typeparam>
 		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperSrc">Whether <paramref name="source"/>'s upper half or lower half is stored</param>
-		/// <param name="upperDst">Whether <paramref name="destination"/>'s upper half or lower half is stored</param>
+		/// <param name="upper">Whether all matrices' upper or lower parts are stored</param>
+		/// <param name="ignoreDiag">Whether to ignore the diagonal elements of <paramref name="source"/> and <paramref name="destination"/> or not</param>
 		/// <param name="source">The source matrix</param>
 		/// <param name="rows">The number of rows</param>
 		/// <param name="cols">The number of columns</param>
@@ -320,239 +374,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="lds"/> or <paramref name="ldd"/> is out of range</exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixCast<TIn, TOut, TSIn, TSOut>(bool unitDiag, TSIn source, bool upperSrc, long lds, TSOut destination, bool upperDst, long ldd, long rows, long cols) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
-
-		/// <summary>
-		/// When implemented by a derived class, truncate the matrix by comparing each element's absolute value in <paramref name="A"/> to the given <paramref name="threshold"/>, if it is smaller than <paramref name="threshold"/>, it will be set to 0.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to be truncated in-place</param>
-		/// <param name="threshold">If any element's absolute value is smaller than <paramref name="threshold"/>, it will be set to 0</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool HalfMatrixTruncate<T, TS>(bool unitDiag, TS A, bool upperA, long ld, double threshold, long rows, long cols) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool TriangularMatrixSum<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the absolute values of the elements in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool TriangularMatrixAbsSum<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool SymmetricMatrixSum<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the absolute values of the elements in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="sum">Output the sum as a <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool SymmetricMatrixAbsSum<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out T sum) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, compute the norm of the elements in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="norm">Output the norm as a <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool TriangularMatrixNorm<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, compute the norm of the elements in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="norm">Output the norm as a <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool SymmetricMatrixNorm<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out T norm) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately product the elements in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to product</param>
-		/// <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="product">Output the product as a <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool SymmetricMatrixProduct<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out T product) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, get the index of the index of the element with largest absolute value in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool TriangularMatrixAbsArgMax<T, TS>(bool unitDiag, TS A, bool upperA, long ld, long rows, long cols, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, get the index of the element with largest absolute value in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool SymmetricMatrixAbsArgMax<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, get the index of the element with smallest absolute value in matrix <paramref name="A"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="index">Output the index compared to <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="ld"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool SymmetricMatrixAbsArgMin<T, TS>(bool herm, TS A, bool upperA, long ld, long n, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately sum the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="herm">Whether all matrices are Hermitian or simply symmetric (true or false) or triangular (null)</param>
-		/// <param name="unitDiag">Whether all matrices are of unit diagonal or not</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to sum</param>
-		/// <param name="rows">The number of rows of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="cols">The number of columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="x">The output vector to store the sums</param>
-		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/>, <paramref name="cols"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool HalfMatrixSumColumns<T, TS1, TS2>(bool? herm, bool unitDiag, TS1 A, bool upperA, long ld, long rows, long cols, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1>;
-
-		/// <summary>
-		/// When implemented by a derived class, aggregately product the elements in each columns of matrix <paramref name="A"/> to vector <paramref name="x"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS1">The first actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="herm">Whether all matrices are Hermitian or simply symmetric</param>
-		/// <param name="upperA">Whether <paramref name="A"/>'s upper half or lower half is stored</param>
-		/// <param name="A">The matrix to product</param>
-		/// <param name="n">The number of rows and columns of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/> in <typeparamref name="T"/></param>
-		/// <param name="x">The output vector to store the products</param>
-		/// <param name="stride">The stride between consecutive elements of <paramref name="x"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/>, <paramref name="ld"/> or <paramref name="stride"/> is out of range</exception>
-		[AbstractApiMethod]
-		public abstract bool SymmetricMatrixProductColumns<T, TS1, TS2>(bool herm, TS1 A, bool upperA, long ld, long n, TS2 x, long stride) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1>;
+		public abstract bool HalfMatrixCast<TIn, TOut, TSIn, TSOut>(bool upper, bool ignoreDiag, long rows, long cols, TSIn source, long lds, TSOut destination, long ldd) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
 		#endregion
 	}
 }
