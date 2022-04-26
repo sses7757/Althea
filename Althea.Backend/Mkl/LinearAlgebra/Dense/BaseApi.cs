@@ -128,7 +128,22 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static void Conjugate<T>(T* ptr, long m, long n, long ld) where T : unmanaged, INumber<T>
+		internal unsafe static bool Scale<T>(T* ptr, long m, long n, long ld, T scalar) where T : unmanaged, INumber<T>
+		{
+			var func = default(T) switch
+			{
+				float => new NM.MKL_imatcopy<float>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
+				double => new NM.MKL_imatcopy<double>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<float> => new NM.MKL_imatcopy<Complex<float>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<double> => new NM.MKL_imatcopy<Complex<double>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
+				_ => null
+			};
+			func?.Invoke(MklMatrixLayoutChar.ColMajor, MklOperationChar.NoneTranspose, m, n, scalar, ptr, ld);
+			return func != null;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal unsafe static bool Conjugate<T>(T* ptr, long m, long n, long ld) where T : unmanaged, INumber<T>
 		{
 			var func = default(T) switch
 			{
@@ -139,6 +154,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				_ => null
 			};
 			func?.Invoke(MklMatrixLayoutChar.ColMajor, MklOperationChar.Conjugate, m, n, T.One, ptr, ld);
+			return func != null;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -248,42 +264,43 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc)> compiledQueue = new(16);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out long length) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			pointer = default; length = 0;
 			if (s is null || !s.IsValid())
-				throw new ArgumentNullException(nameof(s));
+				throw new ArgumentNullException(sName);
 			if (stride <= 0)
-				throw new ArgumentOutOfRangeException(nameof(stride), stride, Resources.ParameterError.MustPositive);
+				throw new ArgumentOutOfRangeException(strideName, stride, Resources.ParameterError.MustPositive);
 			if (s is not PureStorage<T, CpuMemoryPointer> ps)
 				return false; // not support
 			ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
 			if (pointer == default)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(s));
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
 			length = ps.Length;
 			length = (length - 1) / stride + 1;
 			return true;
 		}
 
+		// Ignore Spelling: ld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression("ld")] string? ldName = null) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			pointer = default;
 			if (s is null || !s.IsValid())
 				return true;
 			if (m <= 0)
-				throw new ArgumentOutOfRangeException(nameof(m), m, Resources.ParameterError.MustPositive);
+				throw new ArgumentOutOfRangeException(mName, m, Resources.ParameterError.MustPositive);
 			if (n <= 0)
-				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.ParameterError.MustPositive);
+				throw new ArgumentOutOfRangeException(nName, n, Resources.ParameterError.MustPositive);
 			if (ld < m)
-				throw new ArgumentOutOfRangeException(nameof(ld), ld, Resources.ParameterError.InvalidValue);
+				throw new ArgumentOutOfRangeException(ldName, ld, Resources.ParameterError.InvalidValue);
 			if (s is not PureStorage<T, CpuMemoryPointer> ps)
 				return false; // not support
 			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
 			if (pointer == default)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(s));
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
 			if ((ps.Length + (ld - m)) / ld < n)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue);
+				throw new ArgumentException(Resources.ParameterError.WrongSize);
 			return true;
 		}
 		#endregion

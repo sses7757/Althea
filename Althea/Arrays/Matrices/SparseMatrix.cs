@@ -259,25 +259,26 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void FillWith(T value)
 		{
-			if (value != this.defaultValue)
-				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
 			this.values.FillWith(value);
+			this.defaultValue = value;
 		}
 
 		/// <inheritdoc/>
 		public void AddScalar(T value)
 		{
-			if (value != T.Zero)
-				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
+			if (value == T.Zero)
+				return;
+			ExtBlas.GeneralVectorBinaryScalar(BinaryScalarOperation.Add, value, this.values, 1, this.values, 1);
+			this.defaultValue += value;
 		}
 
 		/// <inheritdoc/>
 		public void Scale(T value)
 		{
-			if (this.defaultValue == T.Zero)
-				Blas.Scale(this.values, 1, value);
-			else if (value != T.One)
-				throw new ArgumentException(Resources.SparseError.CannotSetSparse, nameof(value));
+			if (value == T.One)
+				return;
+			Blas.Scale(this.values, 1, value);
+			this.defaultValue *= value;
 		}
 
 		/// <inheritdoc/>

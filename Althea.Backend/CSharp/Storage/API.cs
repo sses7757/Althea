@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 
 using Althea.Backend.Storage;
-using Althea.Storage;
 
 
 namespace Althea.Backend.CSharp.Storage
@@ -31,23 +30,16 @@ namespace Althea.Backend.CSharp.Storage
 		#region operations
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool CheckType<TP>() where TP : IPointer<TP> => typeof(TP) == typeof(CpuMemoryPointer);
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Check(long length, out int len)
-		{
-			len = 0;
-			if (length > int.MaxValue || length <= 0)
-				return false;
-			len = (int)length;
-			return true;
-		}
 
 		/// <inheritdoc/>
 		public unsafe bool Allocate<TP>(long length, out TP result) where TP : IPointer<TP>
 		{
+			if (length < 0)
+				throw new ArgumentOutOfRangeException(nameof(length), length, Resources.ParameterError.CannotNegative);
 			result = TP.Default;
-			if (!CheckType<TP>() || !Check(length, out int len))
+			if (!CheckType<TP>())
 				return false;
-			var ptr = Marshal.AllocHGlobal(len);
+			var ptr = Marshal.AllocHGlobal((IntPtr)length);
 			result = new CpuMemoryPointer(ptr, length).AsGeneric<TP>();
 			return true;
 		}

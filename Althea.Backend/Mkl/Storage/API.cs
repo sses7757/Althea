@@ -55,10 +55,12 @@ namespace Althea.Backend.Mkl.Storage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool PointerMemoryCopy2D<T>(T* source, long sourceLD, T* destination, long destinationLD, long height, long width, Althea.LinearAlgebra.MatrixOperation op = Althea.LinearAlgebra.MatrixOperation.None) where T : unmanaged, INumber<T>
+		internal static bool PointerMemoryCopy2D<T>(T* source, long sourceLD, T* destination, long destinationLD, long height, long width, Althea.LinearAlgebra.MatrixOperation op = Althea.LinearAlgebra.MatrixOperation.None, T scale = default) where T : unmanaged, INumber<T>
 		{
+			if (scale == default)
+				scale = T.One;
 			// shortcut
-			if (sourceLD == destinationLD && sourceLD == height && height * width <= uint.MaxValue)
+			if (scale == T.One && op == Althea.LinearAlgebra.MatrixOperation.None && sourceLD == destinationLD && sourceLD == height && height * width <= uint.MaxValue)
 			{
 				Unsafe.CopyBlockUnaligned(destination, source, (uint)(height * width));
 				return true;
@@ -73,7 +75,7 @@ namespace Althea.Backend.Mkl.Storage
 			};
 			if (!Althea.LinearAlgebra.MatrixOperationExtension.CanInPlace(op))
 				(height, width) = (width, height);
-			func?.Invoke(LinearAlgebra.Dense.MklMatrixLayoutChar.ColMajor, LinearAlgebra.Dense.MklBlasExtension.ToMklChar(op), height, width, T.One, source, sourceLD, destination, destinationLD);
+			func?.Invoke(LinearAlgebra.Dense.MklMatrixLayoutChar.ColMajor, LinearAlgebra.Dense.MklBlasExtension.ToMklChar(op), height, width, scale, source, sourceLD, destination, destinationLD);
 			return func != null;
 		}
 

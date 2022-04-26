@@ -9491,7 +9491,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
-            When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
+            When implemented by a derived class, compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -9508,7 +9508,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
-            When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
+            When implemented by a derived class, compute <c><paramref name="z"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS1">The first input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -9626,7 +9626,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
-            When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
+            When implemented by a derived class, compute reduction <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS1">The actual matrix storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -9644,7 +9644,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
-            When implemented by a derived class, compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
+            When implemented by a derived class, compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -10027,7 +10027,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.GeneralMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
             </summary>
@@ -10944,7 +10944,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
-            Compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
+            Compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -10961,7 +10961,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
-            Compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
+            Compute <c><paramref name="z"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS1">The first input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -11079,7 +11079,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
-            Compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
+            Compute reduction <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS1">The actual matrix storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -11097,7 +11097,7 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
-            Compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
+            Compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
             </summary>
             <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
             <typeparam name="TS1">The input actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -11480,7 +11480,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.GeneralMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             Compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
             </summary>

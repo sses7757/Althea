@@ -263,7 +263,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void CheckLapackInfo(this SolveMethodKind kind, MklLapackInfo info)
+		internal static void Check(this MklLapackInfo info, SolveMethodKind kind)
 		{
 			if (info.status > 0)
 				throw new MatrixSolveAlgorithmException(kind, info.status);

@@ -970,7 +970,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			if (!GetPointer(A, m, n, lda, out T* pA))
 				return false;
-			return NMC.matTriClear(Unmanaged<T>.DataType, clearLower, clearDiag, m, n, pA, lda).Check();
+			return NMC.triMatClear(Unmanaged<T>.DataType, clearLower, clearDiag, m, n, pA, lda).Check();
 		}
 
 		/// <inheritdoc/>
@@ -980,7 +980,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(B, m, n, ldb, out T* pB))
 				return false;
-			return NMC.matTriCopy(Unmanaged<T>.DataType, upper, copyDiag, opA, m, n, pA, lda, pB, ldb).Check();
+			T one = T.One;
+			return NMC.triMatMulCopy(Unmanaged<T>.DataType, upper, copyDiag, opA, m, n, &one, pA, lda, pB, ldb).Check();
 		}
 		#endregion
 	}
