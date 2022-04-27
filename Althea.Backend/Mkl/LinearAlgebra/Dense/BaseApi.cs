@@ -181,6 +181,24 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IHalfMatrixBlasAbstractApi, ILapackAbstractApi
 	{
 		#region basic
+		static Api()
+		{
+			try
+			{
+				NativeMethodsTemplate.vmlClearErrorCallBack();
+				Valid = true;
+			}
+			catch (Exception)
+			{
+				Valid = false;
+			}
+		}
+
+		/// <summary>
+		/// Statically get whether the MKL back-end is valid or not.
+		/// </summary>
+		public static bool Valid { get; }
+
 		void IDisposable.Dispose()
 		{
 			foreach (var kv in this.compiled)

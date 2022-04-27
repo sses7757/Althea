@@ -1,10 +1,7 @@
-﻿using System.Numerics;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
-using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
 
 using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
@@ -12,18 +9,19 @@ using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 {
-	internal readonly unsafe ref struct Buffer<T> where T : unmanaged
+	#region buffer
+	internal readonly unsafe ref struct MatBuffer<T> where T : unmanaged
 	{
 		internal readonly long ld;
-		private readonly T* ptr;
+		internal readonly T* ptr;
 		private readonly bool alloc;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Buffer(T* org, long ld, long n)
+		internal MatBuffer(T* org, long ld, long n)
 		{
 			if (org == null)
 			{
-				this.ptr = (T*)Marshal.AllocHGlobal((IntPtr)(n * n));
+				this.ptr = (T*)Marshal.AllocHGlobal((IntPtr)(n * n * sizeof(T)));
 				this.ld = n;
 				this.alloc = true;
 			}
@@ -43,14 +41,77 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator T*(Buffer<T> buffer) => buffer.ptr;
+		public static implicit operator T*(MatBuffer<T> buffer) => buffer.ptr;
+	}
+	internal readonly unsafe ref struct VecBuffer<T> where T : unmanaged
+	{
+		internal readonly T* ptr;
+		private readonly bool alloc;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal VecBuffer(T* ptr)
+		{
+			this.ptr = ptr;
+			this.alloc = false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal VecBuffer(long bytes)
+		{
+			this.ptr = (T*)Marshal.AllocHGlobal((IntPtr)bytes);
+			this.alloc = true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.alloc)
+				Marshal.FreeHGlobal((IntPtr)this.ptr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator T*(VecBuffer<T> buffer) => buffer.ptr;
 	}
 
+	internal static unsafe class Buffers
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static MatBuffer<T> Create<T>(T* ptr, long ld, long n) where T : unmanaged => new(ptr, ld, n);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static VecBuffer<T> Create<T>(long bytes) where T : unmanaged => new(bytes);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static VecBuffer<T> Create<T>(T* ptr) where T : unmanaged => new(ptr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void RealToComp<TComp>(TComp* real, TComp* comp, long n) where TComp : unmanaged, INumber<TComp>
+		{
+			if (!NumberType<TComp>.IsComplex)
+				return;
+			Unsafe.InitBlockUnaligned(comp, 0, (uint)(n * sizeof(TComp)));
+			if (typeof(TComp) == typeof(Complex<float>))
+				Storage.Api.PointerStridedCopy((float*)real, 1, (float*)comp, 2, n);
+			else
+				Storage.Api.PointerStridedCopy((double*)real, 1, (double*)comp, 2, n);
+		}
+	}
+	#endregion
+
+
+	/// <remarks>The general SVD and general Schur decompositions are not supported, but can be added simply.</remarks>
 	public unsafe partial class Api
 	{
+		#region basic
+		/// <summary>
+		/// Get or set a <see cref="bool"/> indicating whether this implementation shall allow the original matrices in solvers to be destroyed during calculation or not. Default false.
+		/// </summary>
+		public bool AllowDestroy { get; set; } = false;
+		#endregion
+
 		#region eigen-problems
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(SolveVectorMode mode, long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -70,50 +131,390 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppV = new Buffer<T>(pV, ldvec, n);
+			using var ppV = Buffers.Create(pV, ldvec, n);
+			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
-			func(MklMatrixLayout.ColMajor, mode.ToChar(), upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ldvec, px).Check(SolveMethodKind.Eigenvalue);
+			func(MklMatrixLayout.ColMajor, vecOut is null ? MklVectorModeChar.Vector : MklVectorModeChar.NoVector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppx).Check(SolveMethodKind.Eigenvalue);
+			Buffers.RealToComp(ppx, px, n);
 			return true;
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3>(GeneralEigenType type, SolveVectorMode mode, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec, TS4? LUOut, long ldLU) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, n, n, ldb, out T* pB))
+				return false;
+			if (!GetPointer(vecOut, n, n, ldvec, out T* pV))
+				return false;
+			if (!GetPointer(LUOut, n, n, ldLU, out T* pLU))
+				return false;
+			if (!GetPointer(valOut, 1, out T* px, out long nx))
+				return false;
+			if (nx < n)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
+			delegate*<MklMatrixLayout, GeneralEigenType, MklVectorModeChar, MklFillModeChar, long, T*, long, T*, long, T*, MklLapackInfo> func = default(T) switch
+			{
+				float => &NM.LAPACKE_ssygv,
+				double => &NM.LAPACKE_dsygv,
+				Complex<float> => &NM.LAPACKE_chegv,
+				Complex<double> => &NM.LAPACKE_zhegv,
+				_ => null
+			};
+			if (func == null)
+				return false;
+			using var ppV = Buffers.Create(pV, ldvec, n);
+			using var ppLU = Buffers.Create(pLU, ldLU, n);
+			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
+			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
+			Storage.Api.PointerMemoryCopy2D(pB, ldb, ppLU, ppLU.ld, n, n);
+			func(MklMatrixLayout.ColMajor, type, vecOut is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppLU, ppLU.ld, ppx).Check(SolveMethodKind.GeneralEigen);
+			Buffers.RealToComp(ppx, px, n);
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(SolveVectorMode mode, long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(leftVec, n, n, ldvl, out T* pVl))
+				return false;
+			if (!GetPointer(rightVec, n, n, ldvr, out T* pVr))
+				return false;
+			if (!GetPointer(valOut, 1, out T* px, out long nx))
+				return false;
+			if (!NumberType<T>.IsComplex && valImagOut is null)
+				throw new ArgumentNullException(nameof(valImagOut));
+			T* pxx = null;
+			if (valImagOut is not null && !GetPointer(valImagOut, 1, out pxx, out long nx2))
+			{
+				if (nx2 != nx)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valImagOut));
+				return false;
+			}
+			if (nx < n)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, T*, T*, long, T*, long, MklLapackInfo> funcRe = default(T) switch
+			{
+				float => &NM.LAPACKE_sgeev,
+				double => &NM.LAPACKE_dgeev,
+				_ => null
+			};
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, T*, long, T*, long, MklLapackInfo> funcIm = default(T) switch
+			{
+				Complex<float> => &NM.LAPACKE_cgeev,
+				Complex<double> => &NM.LAPACKE_zgeev,
+				_ => null
+			};
+			if (funcRe == null && funcIm == null)
+				return false;
+			using var ppA = this.AllowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, n, n);
+			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, n, n);
+			MklLapackInfo info;
+			if (funcRe != null)
+			{
+				info = funcRe(MklMatrixLayout.ColMajor, leftVec is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, rightVec is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, n, ppA, ppA.ld, px, pxx, pVl, ldvl, pVr, ldvr);
+			}
+			else
+			{
+				info = funcIm(MklMatrixLayout.ColMajor, leftVec is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, rightVec is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, n, ppA, ppA.ld, px, pVl, ldvl, pVr, ldvr);
+			}
+			info.Check(SolveMethodKind.NonSymmetricEigenvalue);
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2? valImagOut, TS2 valDenomOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public virtual bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2? valImagOut, TS2 valDenomOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, n, n, ldb, out T* pB))
+				return false;
+			if (!GetPointer(leftVec, n, n, ldvl, out T* pVl))
+				return false;
+			if (!GetPointer(rightVec, n, n, ldvr, out T* pVr))
+				return false;
+			if (!GetPointer(valOut, 1, out T* px, out long nx))
+				return false;
+			if (!GetPointer(valDenomOut, 1, out T* pxd, out long nxd))
+				return false;
+			if (nxd != nx)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valDenomOut));
+			if (!NumberType<T>.IsComplex && valImagOut is null)
+				throw new ArgumentNullException(nameof(valImagOut));
+			T* pxx = null;
+			if (valImagOut is not null && !GetPointer(valImagOut, 1, out pxx, out long nx2))
+			{
+				if (nx2 != nx)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valImagOut));
+				return false;
+			}
+			if (nx < n)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, long, T*, T*, T*, T*, long, T*, long, MklLapackInfo> funcRe = default(T) switch
+			{
+				float => &NM.LAPACKE_sggev,
+				double => &NM.LAPACKE_dggev,
+				_ => null
+			};
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, long, T*, T*, T*, long, T*, long, MklLapackInfo> funcIm = default(T) switch
+			{
+				Complex<float> => &NM.LAPACKE_cggev,
+				Complex<double> => &NM.LAPACKE_zggev,
+				_ => null
+			};
+			if (funcRe == null && funcIm == null)
+				return false;
+			using var ppA = this.AllowDestroy ? Buffers.Create<T>(pA, lda, n) : Buffers.Create<T>(null, n, n);
+			using var ppB = this.AllowDestroy ? Buffers.Create<T>(pB, ldb, n) : Buffers.Create<T>(null, n, n);
+			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, n, n);
+			Storage.Api.PointerMemoryCopy2D(pB, ldb, ppB, ppB.ld, n, n);
+			MklLapackInfo info;
+			if (funcRe != null)
+			{
+				info = funcRe(MklMatrixLayout.ColMajor, leftVec is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, rightVec is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, n, ppA, ppA.ld, ppB, ppB.ld, px, pxx, pxd, pVl, ldvl, pVr, ldvr);
+			}
+			else
+			{
+				info = funcIm(MklMatrixLayout.ColMajor, leftVec is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, rightVec is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, n, ppA, ppA.ld, ppB, ppB.ld, px, pxd, pVl, ldvl, pVr, ldvr);
+			}
+			info.Check(SolveMethodKind.NonSymmetricGeneralEigenvalue);
+			return true;
+		}
 		#endregion
 
 		#region other decompositions
 		/// <inheritdoc/>
-		public virtual bool SingularValues<T, TS1, TS2, TS3, TS4>(SVDStore storeU, SVDStore storeV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public virtual bool SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		{
+			long mn = Math.Min(m, n);
+			if (!GetPointer(A, m, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(U, m, fullU ? m : mn, ldu, out T* pU))
+				return false;
+			if (!GetPointer(Vct, fullV ? n : mn, n, ldvct, out T* pV))
+				return false;
+			if (!GetPointer(S, 1, out T* px, out long nx))
+				return false;
+			if (nx < mn)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(S));
+			if (pU == pA && pV == pA)
+				throw new ArgumentException(Resources.ParameterError.DuplicateValue);
+			if (pU == pA && fullU && m > mn)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(fullU));
+			if (pV == pA && fullV && n > mn)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(fullV));
+			delegate*<MklMatrixLayout, MklSvdModeChar, MklSvdModeChar, long, long, T*, long, T*, T*, long, T*, long, T*, MklLapackInfo> func = default(T) switch
+			{
+				float => &NM.LAPACKE_sgesvd,
+				double => &NM.LAPACKE_dgesvd,
+				Complex<float> => &NM.LAPACKE_cgesvd,
+				Complex<double> => &NM.LAPACKE_zgesvd,
+				_ => null
+			};
+			if (func == null)
+				return false;
+			using var ppA = this.AllowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
+			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, m, n);
+			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
+			using var pSurperb = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create<T>(n * sizeof(T));
+			func(MklMatrixLayout.ColMajor,
+				pU == pA ? MklSvdModeChar.Overwrite : fullU ? MklSvdModeChar.All : pU == null ? MklSvdModeChar.None : MklSvdModeChar.Store,
+				pV == pA ? MklSvdModeChar.Overwrite : fullV ? MklSvdModeChar.All : pV == null ? MklSvdModeChar.None : MklSvdModeChar.Store,
+				m, n, ppA, ppA.ld, ppx, pU, ldu, pV, ldvct, pSurperb).Check(SolveMethodKind.SVD);
+			Buffers.RealToComp(ppx, px, n);
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool StandardSchurDecomposition<T, TS1, TS2, TS3>(SolveVectorMode mode, long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(U, n, n, ldu, out T* pU))
+				return false;
+			if (!GetPointer(valOut, 1, out T* px, out long nx))
+				return false;
+			if (!NumberType<T>.IsComplex && valImagOut is null)
+				throw new ArgumentNullException(nameof(valImagOut));
+			T* pxx = null;
+			if (valImagOut is not null && !GetPointer(valImagOut, 1, out pxx, out long nx2))
+			{
+				if (nx2 != nx)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valImagOut));
+				return false;
+			}
+			if (nx < n)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, delegate* unmanaged<void*, void*, long>, long, T*, long, out long, T*, T*, T*, long, MklLapackInfo> funcRe = default(T) switch
+			{
+				float => &NM.LAPACKE_sgees,
+				double => &NM.LAPACKE_dgees,
+				_ => null
+			};
+			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, delegate* unmanaged<void*, long>, long, T*, long, out long, T*, T*, long, MklLapackInfo> funcIm = default(T) switch
+			{
+				Complex<float> => &NM.LAPACKE_cgees,
+				Complex<double> => &NM.LAPACKE_zgees,
+				_ => null
+			};
+			if (funcRe == null && funcIm == null)
+				return false;
+			MklLapackInfo info;
+			if (funcRe != null)
+			{
+				info = funcRe(MklMatrixLayout.ColMajor, pU == null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, MklSortModeChar.NoSort, null, n, pA, lda, out _, px, pxx, pU, ldu);
+			}
+			else
+			{
+				info = funcIm(MklMatrixLayout.ColMajor, pU == null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, MklSortModeChar.NoSort, null, n, pA, lda, out _, px, pU, ldu);
+			}
+			info.Check(SolveMethodKind.Schur);
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool StandardSchurReorder<T, TInd, TS1, TS2, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TSInd order) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
-
-		/// <inheritdoc/>
-		public virtual bool GeneralSchurDecomposition<T, TS1, TS2, TS3, TS4>(SolveVectorMode mode, long n, TS1 A, long lda, TS1 B, long ldb, TS2? Ul, long ldul, TS4? Ur, long ldur, TS4 valOut, TS4? valImagOut, TS4 valDenomOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
-
-		/// <inheritdoc/>
-		public virtual bool GeneralSchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS1 B, long ldb, TS2? Ul, long ldul, TS3? Ur, long ldur, TSInd order) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
+		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			if (typeof(TInd) != typeof(long))
+				return false;
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(U, n, n, ldu, out T* pU))
+				return false;
+			if (!GetPointer(select, 1, out TInd* pSelect, out long nn))
+				return false;
+			long* ps = (long*)pSelect;
+			if (nn != n)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(select));
+			if (!GetPointer(vals, 1, out T* px, out long nx))
+				return false;
+			if (!NumberType<T>.IsComplex && valsImag is null)
+				throw new ArgumentNullException(nameof(valsImag));
+			T* pxx = null;
+			if (valsImag is not null && !GetPointer(valsImag, 1, out pxx, out long nx2))
+			{
+				if (nx2 != nx)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valsImag));
+				return false;
+			}
+			delegate*<MklMatrixLayout, MklSchurReorderConditionNumberModeChar, MklVectorModeChar, long*, long, T*, long, T*, long, T*, T*, out long, void*, void*, MklLapackInfo> funcRe = default(T) switch
+			{
+				float => &NM.LAPACKE_strsen,
+				double => &NM.LAPACKE_dtrsen,
+				_ => null
+			};
+			delegate*<MklMatrixLayout, MklSchurReorderConditionNumberModeChar, MklVectorModeChar, long*, long, T*, long, T*, long, T*, out long, void*, void*, MklLapackInfo> funcIm = default(T) switch
+			{
+				Complex<float> => &NM.LAPACKE_ctrsen,
+				Complex<double> => &NM.LAPACKE_ztrsen,
+				_ => null
+			};
+			if (funcRe == null && funcIm == null)
+				return false;
+			MklLapackInfo info;
+			if (funcRe != null)
+			{
+				info = funcRe(MklMatrixLayout.ColMajor, MklSchurReorderConditionNumberModeChar.None, pU == null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, ps, n, pA, lda, pU, ldu, px, pxx, out _, null, null);
+			}
+			else
+			{
+				info = funcIm(MklMatrixLayout.ColMajor, MklSchurReorderConditionNumberModeChar.None, pU == null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, ps, n, pA, lda, pU, ldu, px, out _, null, null);
+			}
+			info.Check(SolveMethodKind.SchurReorder);
+			return true;
+		}
 		#endregion
 
 		#region linear solve
 		/// <inheritdoc/>
-		public virtual bool LinearSolveGeneral<T, TS1, TS2>(MatrixOperation op, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, n, nrhs, ldb, out T* pB))
+				return false;
+			delegate*<MklMatrixLayout, long, long, T*, long, long*, T*, long, MklLapackInfo> func = default(T) switch
+			{
+				float => &NM.LAPACKE_sgesv,
+				double => &NM.LAPACKE_dgesv,
+				Complex<float> => &NM.LAPACKE_cgesv,
+				Complex<double> => &NM.LAPACKE_zgesv,
+				_ => null
+			};
+			if (func == null)
+				return false;
+			using var ipiv = Buffers.Create<long>(n * sizeof(long));
+			func(MklMatrixLayout.ColMajor, n, nrhs, pA, lda, ipiv, pB, ldb).Check(SolveMethodKind.LU);
+			return true;
+		}
 		#endregion
 
 		#region QR solve
 		/// <inheritdoc/>
-		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(A, m, n, lda, out T* pA))
+				return false;
+			var (rowQ, colQ) = (m, n);
+			if (m > n && full)
+				colQ = m;
+			if (m < n)
+			{
+				colQ = m; full = false;
+			}
+			long mn = Math.Min(m, n);
+			if (!GetPointer(Q, rowQ, colQ, ldq, out T* pQ))
+				return false;
+			delegate*<MklMatrixLayout, long, long, T*, long, T*, MklLapackInfo> facFunc = default(T) switch
+			{
+				float => &NM.LAPACKE_sgeqrf,
+				double => &NM.LAPACKE_dgeqrf,
+				Complex<float> => &NM.LAPACKE_cgeqrf,
+				Complex<double> => &NM.LAPACKE_zgeqrf,
+				_ => null
+			};
+			delegate*<MklMatrixLayout, long, long, long, T*, long, T*, MklLapackInfo> getQFunc = default(T) switch
+			{
+				float => &NM.LAPACKE_sorgqr,
+				double => &NM.LAPACKE_dorgqr,
+				Complex<float> => &NM.LAPACKE_cungqr,
+				Complex<double> => &NM.LAPACKE_zungqr,
+				_ => null
+			};
+			if (facFunc == null)
+				return false;
+			using var tau = Buffers.Create<T>(mn * sizeof(T));
+			facFunc(MklMatrixLayout.ColMajor, m, n, pA, lda, tau).Check(SolveMethodKind.QR);
+			Storage.Api.PointerMemoryCopy2D(pA, lda, pQ, ldq, m, mn);
+			getQFunc(MklMatrixLayout.ColMajor, m, full ? m : mn, mn, pQ, ldq, tau).Check(SolveMethodKind.QR);
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(A, m, n, lda, out T* pA))
+				return false;
+			if (!GetPointer(B, n, nrhs, ldb, out T* pB))
+				return false;
+			delegate*<MklMatrixLayout, MklOperationChar, long, long, long, T*, long, T*, long, MklLapackInfo> func = default(T) switch
+			{
+				float => &NM.LAPACKE_sgels,
+				double => &NM.LAPACKE_dgels,
+				Complex<float> => &NM.LAPACKE_cgels,
+				Complex<double> => &NM.LAPACKE_zgels,
+				_ => null
+			};
+			if (func == null)
+				return false;
+			using var ppA = this.AllowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
+			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, m, n);
+			func(MklMatrixLayout.ColMajor, MklOperationChar.NoneTranspose, m, n, nrhs, ppA, ppA.ld, pB, ldb).Check(SolveMethodKind.QR);
+			return true;
+		}
 		#endregion
 	}
 }

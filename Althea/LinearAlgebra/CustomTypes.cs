@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Althea.Helpers;
 using Althea.NativeTypes;
 
 
@@ -45,10 +44,8 @@ namespace Althea.LinearAlgebra
 	{
 		private static string GetDescription(SolveMethodKind kind, long info)
 		{
-			if (info == 0)
-				return string.Empty; // no error
-			if (info < 0)
-				return $"The {(-info).ToOrdinal()} input parameter of method '{kind}' is invalid.";
+			if (info <= 0)
+				return string.Empty; // not this error
 			string? message = kind switch
 			{
 				SolveMethodKind.Cholesky => Resources.OtherError.MatrixSolveCholesky,
@@ -64,20 +61,22 @@ namespace Althea.LinearAlgebra
 			{
 				SolveMethodKind.QR => Resources.OtherError.MatrixSolveQR,
 				SolveMethodKind.Schur => Resources.OtherError.MatrixSolveSchur,
+				SolveMethodKind.SchurReorder => Resources.OtherError.MatrixSolveSchurReorder,
 				SolveMethodKind.GeneralEigen => Resources.OtherError.MatrixSolveGeneralEigen,
-				SolveMethodKind.Jacobi => Resources.OtherError.MatrixSolveJacobi,
 				SolveMethodKind.NonSymmetricEigenvalue => Resources.OtherError.MatrixSolveNonSymmEigen,
-				SolveMethodKind.NonSymmetricGenearlEigenvalue => Resources.OtherError.MatrixSolveNonSymmGeneralEigen,
-				_ => $"Unknown method with error info = {info}",
+				SolveMethodKind.NonSymmetricGeneralEigenvalue => Resources.OtherError.MatrixSolveNonSymmGeneralEigen,
+				////SolveMethodKind.GeneralSchur => throw new NotImplementedException(),
+				////SolveMethodKind.GeneralSVD => throw new NotImplementedException(),
+				_ => string.Format(Resources.OtherError.MatrixSolveOther, info),
 			};
 		}
 
 		/// <summary>
-		/// Constructor of <see cref="MatrixSolveAlgorithmException"/>
+		/// Create a new <see cref="MatrixSolveAlgorithmException"/> by given <see cref="SolveMethodKind"/> and <see cref="long"/> info.
 		/// </summary>
-		/// <param name="kind">which kind of LAPACK-like solver is used (in <see cref="SolveMethodKind"/>)</param>
-		/// <param name="i">The returned LAPACK-like solver information</param>
-		public MatrixSolveAlgorithmException(SolveMethodKind kind, long i) : base(GetDescription(kind, i)) { }
+		/// <param name="kind">Which kind of LAPACK-like solver is used (in <see cref="SolveMethodKind"/>)</param>
+		/// <param name="info">The returned LAPACK-like solver information</param>
+		public MatrixSolveAlgorithmException(SolveMethodKind kind, long info) : base(GetDescription(kind, info)) { }
 
 		/// <summary>
 		/// Empty <see cref="MatrixSolveAlgorithmException"/>
@@ -103,7 +102,7 @@ namespace Althea.LinearAlgebra
 	/// </summary>
 	public enum SolveMethodKind
 	{
-		// Ignore Spelling: potr getrf geqrf sytrf gesvd sygv syev syevj sygvj gesvdj geev
+		// Ignore Spelling: potr getrf geqrf sytrf gesvd sygv syev syevj sygvj gesvdj geev ggev gges ggsvd trsen
 		/// <summary>
 		/// Cholesky factorization, [S|D|C|Z]potr[f|i]
 		/// </summary>
@@ -121,6 +120,14 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		Schur,
 		/// <summary>
+		/// Reorder Schur decomposition, [S|D|C|Z]trsen
+		/// </summary>
+		SchurReorder,
+		/// <summary>
+		/// General Schur decomposition, [S|D|C|Z]gges
+		/// </summary>
+		GeneralSchur,
+		/// <summary>
 		/// Bunch Kaufman factorization, [S|D|C|Z]sytrf
 		/// </summary>
 		BunchKaufman,
@@ -128,6 +135,10 @@ namespace Althea.LinearAlgebra
 		/// Singular value decomposition, [S|D|C|Z]gesvd
 		/// </summary>
 		SVD,
+		/// <summary>
+		/// General singular value decomposition, [S|D|C|Z]ggsvd
+		/// </summary>
+		GeneralSVD,
 		/// <summary>
 		/// Eigenvalue decomposition (for symmetric matrices), [S|D|C|Z]syev[x]
 		/// </summary>
@@ -141,13 +152,9 @@ namespace Althea.LinearAlgebra
 		/// </summary>
 		GeneralEigen,
 		/// <summary>
-		/// Non-symmetric eigenvalue decomposition, [S|D|C|Z]geev[x]
+		/// Non-symmetric eigenvalue decomposition, [S|D|C|Z]ggev[x]
 		/// </summary>
-		NonSymmetricGenearlEigenvalue,
-		/// <summary>
-		/// Singular value decomposition via Jacobi method, [S|D|C|Z]syevj, [S|D|C|Z]sygvj, [S|D|C|Z]gesvdj
-		/// </summary>
-		Jacobi
+		NonSymmetricGeneralEigenvalue,
 	}
 
 	/// <summary>
@@ -179,53 +186,6 @@ namespace Althea.LinearAlgebra
 		/// B*A*x = λ*x
 		/// </summary>
 		Type3 = 3
-	}
-
-	/// <summary>
-	/// The <see cref="SolveVectorMode"/> enum indicates which eigenvector matrices obtained from standard or general eigenvalue solvers or other solvers shall be stored
-	/// </summary>
-	[Flags]
-	public enum SolveVectorMode
-	{
-		/// <summary>
-		/// Do not compute the eigenvectors
-		/// </summary>
-		NoVector = 0,
-		/// <summary>
-		/// Compute the eigenvectors (both left and right)
-		/// </summary>
-		Vector = Left | Right,
-		/// <summary>
-		/// Compute the left eigenvectors
-		/// </summary>
-		Left = 1,
-		/// <summary>
-		/// Compute the right eigenvectors
-		/// </summary>
-		Right = 2
-	}
-
-	/// <summary>
-	/// The <see cref="SVDStore"/> enum indicates which of the vectors of a singular value decomposition shall be stored and where it shall be stored
-	/// </summary>
-	public enum SVDStore
-	{
-		/// <summary>
-		/// All the columns / rows are stored even if some of them are not necessary
-		/// </summary>
-		All = 0,
-		/// <summary>
-		/// Economical storage -- only the columns / rows which are necessary are stored
-		/// </summary>
-		Economic = 1,
-		/// <summary>
-		/// Economical overwrite storage -- only the columns / rows which are necessary are stored into the original matrix
-		/// </summary>
-		Overwrite = 2,
-		/// <summary>
-		/// None of the columns / rows are stored
-		/// </summary>
-		None = 3
 	}
 
 	/// <summary>

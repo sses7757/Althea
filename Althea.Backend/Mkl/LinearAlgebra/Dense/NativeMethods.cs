@@ -179,13 +179,13 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region vector math
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern VmlErrorCallbackDelegate vmlGetErrorCallBack();
+		internal static extern VmlErrorCallbackDelegate? vmlGetErrorCallBack();
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern VmlErrorCallbackDelegate vmlClearErrorCallBack();
+		internal static extern VmlErrorCallbackDelegate? vmlClearErrorCallBack();
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern VmlErrorCallbackDelegate vmlSetErrorCallBack([MarshalAs(UnmanagedType.FunctionPtr)] VmlErrorCallbackDelegate newCallback);
+		internal static extern VmlErrorCallbackDelegate? vmlSetErrorCallBack([MarshalAs(UnmanagedType.FunctionPtr)] VmlErrorCallbackDelegate newCallback);
 
 		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -593,15 +593,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_cgees(MklMatrixLayout matrix_layout, MklVectorModeChar jobv, MklSortModeChar sort, delegate* unmanaged<void*, long> selectFunc, long n, void* A, long lda, out long selected, void* w, void* V, long ldv);
 
-		// direct general Schur
-		[NativeMethod(8, false, false, false, true)]
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_sgges(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, MklSortModeChar sort, delegate* unmanaged<void*, void*, void*, long> selectFunc, long n, void* A, long lda, void* B, long ldb, out long selected, void* alphar, void* alphai, void* beta, void* Vl, long ldvl, void* vr, long ldvr);
-
-		[NativeMethod(8, false, false, false, false)]
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_cgges(MklMatrixLayout matrix_layout, MklVectorModeChar jobvl, MklVectorModeChar jobvr, MklSortModeChar sort, delegate* unmanaged<void*, void*, long> selectFunc, long n, void* A, long lda, void* B, long ldb, out long selected, void* alphar, void* alphai, void* beta, void* Vl, long ldvl, void* vr, long ldvr);
-
 		// Hessenberg form Schur, iLow == 1 && iHigh == n
 		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -617,14 +608,13 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		internal static extern MklLapackInfo LAPACKE_strevc(MklMatrixLayout matrix_layout, MklSchurEigenvectorModeChar side, MklSchurEigenSelectModeChar howmny, long* select, long n, void* T, long ldt, void* Vl, long ldvl, void* Vr, long ldvr, long mm, out long selected);
 
 		// reorder Schur
-		[NativeMethod(8)]
+		[NativeMethod(8, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_strexc(MklMatrixLayout matrix_layout, MklVectorModeChar jobq, long n, void* T, long ldt, void* Q, long ldq, long* rowIndexFrom, long* rowIndexTo);
+		internal static extern MklLapackInfo LAPACKE_strsen(MklMatrixLayout matrix_layout, MklSchurReorderConditionNumberModeChar job, MklVectorModeChar compq, long* select, long n, void* T, long ldt, void* Q, long ldq, void* wr, void* wi, out long selected, void* s = null, void* sep = null);
 
-		// reorder general Schur
-		[NativeMethod(8)]
+		[NativeMethod(8, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklLapackInfo LAPACKE_stgexc(MklMatrixLayout matrix_layout, long wantq, long wantz, long n, void* A, long lda, void* B, long ldb, void* Q, long ldq, void* Z, long ldz, long* rowIndexFrom, long* rowIndexTo);
+		internal static extern MklLapackInfo LAPACKE_ctrsen(MklMatrixLayout matrix_layout, MklSchurReorderConditionNumberModeChar job, MklVectorModeChar compq, long* select, long n, void* T, long ldt, void* Q, long ldq, void* w, out long selected, void* s = null, void* sep = null);
 		#endregion
 	}
 }

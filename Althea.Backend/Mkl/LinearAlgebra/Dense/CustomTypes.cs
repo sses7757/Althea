@@ -221,45 +221,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static MklVectorModeChar ToChar(this SolveVectorMode mode)
-		{
-			return mode switch
-			{
-				SolveVectorMode.NoVector => MklVectorModeChar.NoVector,
-				_ => MklVectorModeChar.Vector,
-			};
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static (MklVectorModeChar l, MklVectorModeChar r) ToLRChar(this SolveVectorMode mode)
-		{
-			return mode switch
-			{
-				SolveVectorMode.NoVector => (MklVectorModeChar.NoVector, MklVectorModeChar.NoVector),
-				SolveVectorMode.Vector => (MklVectorModeChar.Vector, MklVectorModeChar.Vector),
-				SolveVectorMode.Left => (MklVectorModeChar.Vector, MklVectorModeChar.NoVector),
-				SolveVectorMode.Right => (MklVectorModeChar.NoVector, MklVectorModeChar.Vector),
-				_ => default,
-			};
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static MklFillModeChar ToChar(this bool fillUpper)
 		{
 			return fillUpper ? MklFillModeChar.Upper : MklFillModeChar.Lower;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static MklSvdModeChar ToChar(this SVDStore store)
-		{
-			return store switch
-			{
-				SVDStore.All => MklSvdModeChar.All,
-				SVDStore.Economic => MklSvdModeChar.Store,
-				SVDStore.Overwrite => MklSvdModeChar.Overwrite,
-				SVDStore.None => MklSvdModeChar.None,
-				_ => default,
-			};
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -378,5 +342,13 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		All = (byte)'A',
 		BackTransform = (byte)'B',
 		Selected = (byte)'S'
+	}
+
+	internal enum MklSchurReorderConditionNumberModeChar : byte
+	{
+		None = (byte)'N',
+		Eigenvalues = (byte)'E',
+		InvariantSubspace = (byte)'V',
+		Both = (byte)'B'
 	}
 }

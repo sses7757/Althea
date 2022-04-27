@@ -498,7 +498,7 @@ namespace Althea.Backend.CSharp.Solver
 			fixed (T* ptrY = y, ptrR = Hprime.UnderlyingSpan)
 			{
 				Mkl.LinearAlgebra.Dense.Api.LeastSquareSolve(n1, n, 1, ptrR, n1, ptrY, n1);
-				LinearAlgebra.Api.Inner<T, bool>(true, ptrY, ptrY, n1, out normY);
+				LinearAlgebra.Api.Inner<T, bool>(true, ptrY, 1, ptrY, 1, n1, out normY);
 			}
 			//tex:converge when: $\|\vec r^{(n)}\| = \|\vec y^{(n)}\| \le \|\mathbf A\| \|\vec{b}\| \varepsilon$
 			bool converge = normY <= normH * tol; // tolerance includes norm of b

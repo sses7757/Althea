@@ -141,11 +141,17 @@
   <data name="MatrixSolveNonSymmGeneralEigen" xml:space="preserve">
     <value>General eigenvalue decomposition for non-symmetric matrices failed since the internal QZ iteration failed to compute all the eigenvalues.</value>
   </data>
+  <data name="MatrixSolveOther" xml:space="preserve">
+    <value>Unknown method with error info = {0}.</value>
+  </data>
   <data name="MatrixSolveQR" xml:space="preserve">
     <value>QR factorization failed for unknown reasons.</value>
   </data>
   <data name="MatrixSolveSchur" xml:space="preserve">
     <value>Schur decomposition failed to compute all the eigenvalues, or the eigenvalues could not be reordered because some eigenvalues were too close to separate, or after reordering, round-off changed values of some complex eigenvalues so that leading eigenvalues in the Schur form no longer satisfy the input.</value>
+  </data>
+  <data name="MatrixSolveSchurReorder" xml:space="preserve">
+    <value>The Schur reordering failed since there are eigenvalues too close to separate.</value>
   </data>
   <data name="MatrixSolveSVD" xml:space="preserve">
     <value>SVD failed to converge, {0}-th super-diagonal elements of an upper bidiagonal matrix not converged.</value>

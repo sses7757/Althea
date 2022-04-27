@@ -133,6 +133,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Unknown method with error info = {0}. 的本地化字符串。
+        /// </summary>
+        internal static string MatrixSolveOther {
+            get {
+                return ResourceManager.GetString("MatrixSolveOther", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 QR factorization failed for unknown reasons. 的本地化字符串。
         /// </summary>
         internal static string MatrixSolveQR {
@@ -147,6 +156,15 @@ namespace Althea.Resources {
         internal static string MatrixSolveSchur {
             get {
                 return ResourceManager.GetString("MatrixSolveSchur", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The Schur reordering failed since there are eigenvalues too close to separate. 的本地化字符串。
+        /// </summary>
+        internal static string MatrixSolveSchurReorder {
+            get {
+                return ResourceManager.GetString("MatrixSolveSchurReorder", resourceCulture);
             }
         }
         

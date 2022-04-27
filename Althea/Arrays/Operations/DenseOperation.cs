@@ -793,23 +793,23 @@ namespace Althea.Array
 
 		#region matrix solve
 		/// <inheritdoc/>
-		public static void LinearSolve(DenseMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves, MatrixOperation opCoef = MatrixOperation.None)
+		public static void LinearSolve(DenseMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
 		{
 			IMatrixLinearSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckLinear(coefficients, rightHandSides, outSolves);
 			if (rightHandSides != outSolves)
 				rightHandSides.Storage.Copy2DTo<T, TS, TS>(rightHandSides.LeadDim, outSolves.Storage, outSolves.LeadDim, outSolves.NRows, outSolves.NCols);
 			using var coef = coefficients.ToCompact();
-			Lapack.LinearSolveGeneral<T, TS, TS>(opCoef, coefficients.NRows, outSolves.NCols, coef, coefficients.NRows, outSolves.Storage, outSolves.LeadDim);
+			Lapack.LinearSolveGeneral<T, TS, TS>(coefficients.NRows, outSolves.NCols, coef, coefficients.NRows, outSolves.Storage, outSolves.LeadDim);
 		}
 
 		/// <inheritdoc/>
-		public static void LinearSolve(TriangularMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves, MatrixOperation opCoef = MatrixOperation.None)
+		public static void LinearSolve(TriangularMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
 		{
 			if (coefficients.NRows != coefficients.NCols)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
 			if (coefficients.NRows != outSolves.NRows)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outSolves));
-			Blas.TriangularMatrixSolve(true, coefficients.Upper, coefficients.UnitDiagonal, opCoef, coefficients.NRows, outSolves.NCols, T.One, coefficients.Storage, coefficients.LeadDim, outSolves.Storage, outSolves.LeadDim);
+			Blas.TriangularMatrixSolve(true, coefficients.Upper, coefficients.UnitDiagonal, MatrixOperation.None, coefficients.NRows, outSolves.NCols, T.One, coefficients.Storage, coefficients.LeadDim, outSolves.Storage, outSolves.LeadDim);
 		}
 		#endregion
 
@@ -1009,7 +1009,7 @@ namespace Althea.Array
 
 
 		#region matrix eigen solve
-		private static SolveVectorMode CheckStandardEigen(AbstractDenseMatrix<T, TS> matrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
+		private static void CheckStandardEigen(AbstractDenseMatrix<T, TS> matrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 		{
 			if (matrix.NRows != matrix.NCols)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(matrix));
@@ -1026,12 +1026,10 @@ namespace Althea.Array
 				if (outValuesImag.Stride != 1)
 					throw new NotSupportedException();
 			}
-			SolveVectorMode mode = SolveVectorMode.NoVector;
 			if (outLeftVectors is not null)
 			{
 				if (matrix.NRows != outLeftVectors.NRows || matrix.NCols != outLeftVectors.NCols)
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outLeftVectors));
-				mode |= SolveVectorMode.Left;
 			}
 			if (outRightVectors is not null)
 			{
@@ -1039,12 +1037,10 @@ namespace Althea.Array
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outRightVectors));
 				if (outLeftVectors is not null && outLeftVectors.Storage == outRightVectors.Storage)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(outRightVectors));
-				mode |= SolveVectorMode.Right;
 			}
-			return mode;
 		}
 
-		private static SolveVectorMode CheckGeneralEigen(AbstractDenseMatrix<T, TS> matrix!!, AbstractDenseMatrix<T, TS> otherMatrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseVector<T, TS>? outValuesDenominator, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
+		private static void CheckGeneralEigen(AbstractDenseMatrix<T, TS> matrix!!, AbstractDenseMatrix<T, TS> otherMatrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseVector<T, TS>? outValuesDenominator, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 		{
 			if (matrix.NRows != matrix.NCols)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(matrix));
@@ -1071,12 +1067,10 @@ namespace Althea.Array
 				if (outValuesDenominator.Stride != 1)
 					throw new NotSupportedException();
 			}
-			SolveVectorMode mode = SolveVectorMode.NoVector;
 			if (outLeftVectors is not null)
 			{
 				if (matrix.NRows != outLeftVectors.NRows || matrix.NCols != outLeftVectors.NCols)
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outLeftVectors));
-				mode |= SolveVectorMode.Left;
 			}
 			if (outRightVectors is not null)
 			{
@@ -1084,12 +1078,10 @@ namespace Althea.Array
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outRightVectors));
 				if (outLeftVectors is not null && outLeftVectors.Storage == outRightVectors.Storage)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(outRightVectors));
-				mode |= SolveVectorMode.Right;
 			}
-			return mode;
 		}
 
-		private static void CheckStandardSchur(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS> outSchurForm!!, DenseMatrix<T, TS>? outVectors)
+		private static void CheckSchur(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS> outSchurForm!!, DenseMatrix<T, TS>? outVectors, bool copy = true)
 		{
 			if (matrix.NRows != matrix.NCols)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(matrix));
@@ -1110,87 +1102,38 @@ namespace Althea.Array
 				if (outValuesImag.Stride != 1)
 					throw new NotSupportedException();
 			}
-			matrix.CopyTo(outSchurForm);
-		}
-
-		private static SolveVectorMode CheckGeneralSchur(DenseMatrix<T, TS> matrix!!, DenseMatrix<T, TS> otherMatrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseVector<T, TS> outValuesDenominator!!, DenseMatrix<T, TS> outSchurForm!!, DenseMatrix<T, TS> outSchurFormOther!!, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
-		{
-			if (matrix.NRows != matrix.NCols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(matrix));
-			if (otherMatrix.NRows != matrix.NRows || otherMatrix.NCols != matrix.NCols)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(otherMatrix));
-			if (outSchurForm.NRows != matrix.NRows || outSchurForm.NCols != matrix.NCols)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outSchurForm));
-			if (outSchurFormOther.NRows != matrix.NRows || outSchurFormOther.NCols != matrix.NCols)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outSchurFormOther));
-			if (matrix.NRows != outValues.Length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outValues));
-			if (outValues.Stride != 1)
-				throw new NotSupportedException();
-			if (outValuesDenominator.Length != outValues.Length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outValuesDenominator));
-			if (outValuesDenominator.Stride != 1)
-				throw new NotSupportedException();
-			if (!NumberType<T>.IsComplex)
-			{
-				if (outValuesImag is null)
-					throw new ArgumentNullException(nameof(outValuesImag));
-				if (outValuesImag.Length != outValues.Length)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outValuesImag));
-				if (outValuesImag.Stride != 1)
-					throw new NotSupportedException();
-			}
-			SolveVectorMode mode = SolveVectorMode.NoVector;
-			if (outLeftVectors is not null)
-			{
-				if (outLeftVectors.NRows != matrix.NRows || outLeftVectors.NCols != matrix.NCols)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outLeftVectors));
-				mode |= SolveVectorMode.Left;
-			}
-			if (outRightVectors is not null)
-			{
-				if (outRightVectors.NRows != matrix.NRows || outRightVectors.NCols != matrix.NCols)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outRightVectors));
-				if (outLeftVectors is not null && outLeftVectors.Storage == outRightVectors.Storage)
-					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(outRightVectors));
-				mode |= SolveVectorMode.Right;
-			}
-			matrix.CopyTo(outSchurForm);
-			otherMatrix.CopyTo(outSchurFormOther);
-			return mode;
+			if (copy)
+				matrix.CopyTo(outSchurForm);
 		}
 
 		/// <inheritdoc/>
 		public static void StandardEigenSolve(DenseMatrix<T, TS> matrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 		{
-			var mode = CheckStandardEigen(matrix, outValues, outValuesImag, outLeftVectors, outRightVectors);
-			Lapack.EigenStandardMatrixGeneral<T, TS, TS, TS, TS>(mode, matrix.NRows, matrix.Storage, matrix.LeadDim, outValues.Storage, outValuesImag?.Storage, outLeftVectors?.Storage, outLeftVectors?.LeadDim ?? 1, outRightVectors?.Storage, outRightVectors?.LeadDim ?? 1);
+			CheckStandardEigen(matrix, outValues, outValuesImag, outLeftVectors, outRightVectors);
+			Lapack.EigenStandardMatrixGeneral<T, TS, TS, TS, TS>(matrix.NRows, matrix.Storage, matrix.LeadDim, outValues.Storage, outValuesImag?.Storage, outLeftVectors?.Storage, outLeftVectors?.LeadDim ?? 1, outRightVectors?.Storage, outRightVectors?.LeadDim ?? 1);
 		}
 
 		/// <inheritdoc/>
 		public static void StandardEigenSolve(SymmetricMatrix<T, TS> matrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 		{
-			var mode = CheckStandardEigen(matrix, outValues, outValuesImag, outLeftVectors, outRightVectors);
-			Lapack.EigenStandardMatrixHermitian<T, TS, TS, TS>(mode, matrix.NRows, matrix.Storage, matrix.LeadDim, outValues.Storage, outLeftVectors?.Storage ?? outRightVectors?.Storage, outLeftVectors?.LeadDim ?? outRightVectors?.LeadDim ?? 1);
+			CheckStandardEigen(matrix, outValues, outValuesImag, outLeftVectors, outRightVectors);
+			Lapack.EigenStandardMatrixHermitian<T, TS, TS, TS>(matrix.NRows, matrix.Upper, matrix.Storage, matrix.LeadDim, outValues.Storage, outLeftVectors?.Storage ?? outRightVectors?.Storage, outLeftVectors?.LeadDim ?? outRightVectors?.LeadDim ?? 1);
 		}
 
 		/// <inheritdoc/>
-		public static void StandardSchurSolve(DenseMatrix<T, TS> matrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS> outSchurForm, DenseMatrix<T, TS>? outVectors)
+		public static void SchurSolve(DenseMatrix<T, TS> matrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS> outSchurForm, DenseMatrix<T, TS>? outVectors)
 		{
-			CheckStandardSchur(matrix, outValues, outValuesImag, outSchurForm, outVectors);
-			Lapack.StandardSchurDecomposition<T, TS, TS, TS>(outVectors is null ? SolveVectorMode.NoVector : SolveVectorMode.Vector, matrix.NRows, outSchurForm.Storage, outSchurForm.LeadDim, outVectors?.Storage, outVectors?.LeadDim ?? 1, outValues.Storage, outValuesImag?.Storage);
+			CheckSchur(matrix, outValues, outValuesImag, outSchurForm, outVectors);
+			Lapack.SchurDecomposition<T, TS, TS, TS>(matrix.NRows, outSchurForm.Storage, outSchurForm.LeadDim, outVectors?.Storage, outVectors?.LeadDim ?? 1, outValues.Storage, outValuesImag?.Storage);
 		}
 
 		/// <inheritdoc/>
-		public static void StandardSchurReorder<TInd, TSInd>(DenseMatrix<T, TS> schurForm!!, DenseMatrix<T, TS>? schurVectors, TSInd order!!) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		public static void SchurReorder<TInd, TSInd>(DenseMatrix<T, TS> schurForm!!, DenseMatrix<T, TS>? schurVectors, DenseVector<T, TS> values!!, DenseVector<T, TS>? valuesImag, TSInd select!!) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			if (schurForm.NRows != schurForm.NCols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(schurForm));
-			if (schurVectors is not null && (schurVectors.NRows != schurForm.NRows || schurVectors.NCols != schurForm.NCols))
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(schurVectors));
-			if (schurForm.NRows != order.Length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(order));
-			Lapack.StandardSchurReorder<T, TInd, TS, TS, TSInd>(schurForm.NRows, schurForm.Storage, schurForm.LeadDim, schurVectors?.Storage, schurVectors?.LeadDim ?? 1, order);
+			CheckSchur(schurForm, values, valuesImag, schurForm, schurVectors, false);
+			if (select.Length != schurForm.NRows)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(select));
+			Lapack.SchurReorder<T, TInd, TS, TS, TS, TSInd>(schurForm.NRows, schurForm.Storage, schurForm.LeadDim, schurVectors?.Storage, schurVectors?.LeadDim ?? 1, values.Storage, valuesImag?.Storage, select);
 		}
 
 		/// <inheritdoc/>
@@ -1200,22 +1143,22 @@ namespace Althea.Array
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outValues));
 			if (outValues.Stride != 1)
 				throw new NotSupportedException();
-			SVDStore left = SVDStore.None, right = SVDStore.None;
+			bool fullU = false, fullV = false;
 			if (matrix.NRows >= matrix.NCols)
 			{
 				if (outLeftVectors is not null)
 				{
 					if (matrix.NRows == outLeftVectors.NRows && matrix.NCols == outLeftVectors.NCols)
-						left = matrix.Storage == outLeftVectors.Storage ? SVDStore.Overwrite : SVDStore.Economic;
+						fullU = false;
 					else if (matrix.NRows == outLeftVectors.NRows && matrix.NRows == outLeftVectors.NCols)
-						left = SVDStore.All;
+						fullU = true;
 					else
 						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outLeftVectors));
 				}
 				if (outRightVectors is not null)
 				{
 					if (matrix.NCols == outRightVectors.NRows && matrix.NCols == outRightVectors.NCols)
-						left = matrix.Storage == outRightVectors.Storage ? SVDStore.Overwrite : SVDStore.All;
+						fullV = false;
 					else
 						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outRightVectors));
 				}
@@ -1225,21 +1168,21 @@ namespace Althea.Array
 				if (outLeftVectors is not null)
 				{
 					if (matrix.NRows == outLeftVectors.NRows && matrix.NRows == outLeftVectors.NCols)
-						left = matrix.Storage == outLeftVectors.Storage ? SVDStore.Overwrite : SVDStore.All;
+						fullU = false;
 					else
 						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outLeftVectors));
 				}
 				if (outRightVectors is not null)
 				{
 					if (matrix.NRows == outRightVectors.NRows && matrix.NCols == outRightVectors.NCols)
-						left = matrix.Storage == outRightVectors.Storage ? SVDStore.Overwrite : SVDStore.Economic;
+						fullV = false;
 					else if (matrix.NRows == outRightVectors.NRows && matrix.NRows == outRightVectors.NCols)
-						left = SVDStore.All;
+						fullV = true;
 					else
 						throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outRightVectors));
 				}
 			}
-			Lapack.SingularValues<T, TS, TS, TS, TS>(left, right, matrix.NRows, matrix.NCols, matrix.Storage, matrix.LeadDim, outLeftVectors?.Storage, outLeftVectors?.LeadDim ?? 1, outRightVectors?.Storage, outRightVectors?.LeadDim ?? 1, outValues.Storage);
+			Lapack.SingularValues<T, TS, TS, TS, TS>(fullU, fullV, matrix.NRows, matrix.NCols, matrix.Storage, matrix.LeadDim, outLeftVectors?.Storage, outLeftVectors?.LeadDim ?? 1, outRightVectors?.Storage, outRightVectors?.LeadDim ?? 1, outValues.Storage);
 		}
 
 		/// <inheritdoc/>
@@ -1247,8 +1190,8 @@ namespace Althea.Array
 		{
 			if (type == GeneralEigenType.None)
 				throw new ArgumentOutOfRangeException(nameof(type));
-			var mode = CheckGeneralEigen(matrix, otherMatrix, outValues, outValuesImag, outValuesDenominator, outLeftVectors, outRightVectors);
-			Lapack.EigenGeneralMatrixGeneral<T, TS, TS, TS, TS>(type, mode, matrix.NRows, matrix.Storage, matrix.LeadDim, otherMatrix.Storage, otherMatrix.LeadDim, outValues.Storage, outValuesImag?.Storage, outValuesDenominator?.Storage ?? TS.Empty, outLeftVectors?.Storage, outLeftVectors?.LeadDim ?? 1, outRightVectors?.Storage, outRightVectors?.LeadDim ?? 1);
+			CheckGeneralEigen(matrix, otherMatrix, outValues, outValuesImag, outValuesDenominator, outLeftVectors, outRightVectors);
+			Lapack.EigenGeneralMatrixGeneral<T, TS, TS, TS, TS>(type, matrix.NRows, matrix.Storage, matrix.LeadDim, otherMatrix.Storage, otherMatrix.LeadDim, outValues.Storage, outValuesImag?.Storage, outValuesDenominator?.Storage ?? TS.Empty, outLeftVectors?.Storage, outLeftVectors?.LeadDim ?? 1, outRightVectors?.Storage, outRightVectors?.LeadDim ?? 1);
 		}
 
 		/// <inheritdoc/>
@@ -1256,33 +1199,8 @@ namespace Althea.Array
 		{
 			if (type == GeneralEigenType.None)
 				throw new ArgumentOutOfRangeException(nameof(type));
-			var mode = CheckGeneralEigen(matrix, otherMatrix, outValues, outValuesImag, outValuesDenominator, outLeftVectors, outRightVectors);
-			Lapack.EigenGeneralMatrixHermitian<T, TS, TS, TS>(type, mode, matrix.NRows, matrix.Storage, matrix.LeadDim, otherMatrix.Storage, otherMatrix.LeadDim, outValues.Storage, outLeftVectors?.Storage ?? outRightVectors?.Storage, outLeftVectors?.LeadDim ?? outRightVectors?.LeadDim ?? 1);
-		}
-
-		/// <inheritdoc/>
-		public static void GeneralSchurSolve(DenseMatrix<T, TS> matrix, DenseMatrix<T, TS> otherMatrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseVector<T, TS> outValuesDenominator, DenseMatrix<T, TS> outSchurForm, DenseMatrix<T, TS> outSchurFormOther, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
-		{
-			var mode = CheckGeneralSchur(matrix, otherMatrix, outValues, outValuesImag, outValuesDenominator, outSchurForm, outSchurFormOther, outLeftVectors, outRightVectors);
-			Lapack.GeneralSchurDecomposition<T, TS, TS, TS, TS>(mode, matrix.NRows, outSchurForm.Storage, outSchurForm.LeadDim, outSchurFormOther.Storage, outSchurFormOther.LeadDim, outLeftVectors?.Storage, outLeftVectors?.LeadDim ?? 1, outRightVectors?.Storage, outRightVectors?.LeadDim ?? 1, outValues.Storage, outValuesImag?.Storage, outValuesDenominator.Storage);
-		}
-
-		/// <inheritdoc/>
-		public static void GeneralSchurReorder<TInd, TSInd>(DenseMatrix<T, TS> schurForm!!, DenseMatrix<T, TS> schurFormOther!!, DenseMatrix<T, TS>? schurLeftVectors, DenseMatrix<T, TS>? schurRightVectors, TSInd order!!) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>
-		{
-			if (schurForm.NRows != schurForm.NCols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(schurForm));
-			if (schurFormOther.NRows != schurFormOther.NCols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(schurFormOther));
-			if (schurFormOther.NRows != schurForm.NRows || schurFormOther.NCols != schurForm.NCols)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(schurFormOther));
-			if (schurLeftVectors is not null && (schurLeftVectors.NRows != schurForm.NRows || schurLeftVectors.NCols != schurForm.NCols))
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(schurLeftVectors));
-			if (schurRightVectors is not null && (schurRightVectors.NRows != schurForm.NRows || schurRightVectors.NCols != schurForm.NCols))
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(schurRightVectors));
-			if (schurForm.NRows != order.Length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(order));
-			Lapack.GeneralSchurReorder<T, TInd, TS, TS, TS, TSInd>(schurForm.NRows, schurForm.Storage, schurForm.LeadDim, schurFormOther.Storage, schurFormOther.LeadDim, schurLeftVectors?.Storage, schurLeftVectors?.LeadDim ?? 1, schurRightVectors?.Storage, schurRightVectors?.LeadDim ?? 1, order);
+			CheckGeneralEigen(matrix, otherMatrix, outValues, outValuesImag, outValuesDenominator, outLeftVectors, outRightVectors);
+			Lapack.EigenGeneralMatrixHermitian<T, TS, TS, TS, TS>(type, matrix.NRows, matrix.Upper, matrix.Storage, matrix.LeadDim, otherMatrix.Storage, otherMatrix.LeadDim, outValues.Storage, outLeftVectors?.Storage ?? outRightVectors?.Storage, outLeftVectors?.LeadDim ?? outRightVectors?.LeadDim ?? 1, null, 1);
 		}
 		#endregion
 	}

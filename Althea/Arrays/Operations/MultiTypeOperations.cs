@@ -689,7 +689,7 @@ namespace Althea.Array
 		where TMat3 : class, IBaseMatrix<T, TMat3>
 	{
 		/// <summary>
-		/// Check the input parameters of <see cref="LinearSolve(TMat1, TMat2, TMat3, MatrixOperation)"/>.
+		/// Check the input parameters of <see cref="LinearSolve(TMat1, TMat2, TMat3)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static void CheckLinear(TMat1 coefficients!!, TMat2 rightHandSides!!, TMat3 outSolves!!)
@@ -701,14 +701,13 @@ namespace Althea.Array
 		}
 
 		/// <summary>
-		/// When implemented by a derived class, compute solves of the linear systems: <c><paramref name="opCoef"/>(<paramref name="coefficients"/>) * <paramref name="outSolves"/> == <paramref name="rightHandSides"/></c>.
+		/// When implemented by a derived class, compute solves of the linear systems: <c><paramref name="coefficients"/> * <paramref name="outSolves"/> == <paramref name="rightHandSides"/></c>.
 		/// </summary>
 		/// <param name="coefficients">The input coefficient matrix to be solved</param>
 		/// <param name="rightHandSides">The input right-hand-side matrix to be solved</param>
 		/// <param name="outSolves">The output solve matrix</param>
-		/// <param name="opCoef">The operation to apply to <paramref name="coefficients"/> during calculation</param>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void LinearSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves, MatrixOperation opCoef = MatrixOperation.None);
+		public abstract static void LinearSolve(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves);
 	}
 
 	/// <summary>
@@ -872,46 +871,20 @@ namespace Althea.Array
 		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void StandardSchurSolve(TMat1 matrix, TVec outValues, TVec? outValuesImag, TMat2 outSchurForm, TMat3? outVectors);
+		public abstract static void SchurSolve(TMat1 matrix, TVec outValues, TVec? outValuesImag, TMat2 outSchurForm, TMat3? outVectors);
 
 		/// <summary>
-		/// When implemented by a derived class, compute the general Schur decomposition of <paramref name="matrix"/> and <paramref name="otherMatrix"/>.
-		/// </summary>
-		/// <param name="matrix">The input matrix to solve the general Schur problem</param>
-		/// <param name="otherMatrix">The other input matrix to solve the general Schur problem</param>
-		/// <param name="outValues">The output vector to store the numerators of the eigenvalues</param>
-		/// <param name="outValuesImag">The output vector to store the imaginary parts of the numerators of the eigenvalues when <typeparamref name="T"/> is a real type, not used otherwise</param>
-		/// <param name="outValuesDenominator">The output vector to store the denominators of eigenvalues</param>
-		/// <param name="outSchurForm">The output matrix to store the Schur form of <paramref name="matrix"/></param>
-		/// <param name="outSchurFormOther">The output matrix to store the Schur form of <paramref name="otherMatrix"/></param>
-		/// <param name="outLeftVectors">The output matrix to store the left Schur vectors</param>
-		/// <param name="outRightVectors">The output matrix to store the right Schur vectors</param>
-		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
-		/// <exception cref="ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void GeneralSchurSolve(TMat1 matrix, TMat1 otherMatrix, TVec outValues, TVec? outValuesImag, TVec outValuesDenominator, TMat2 outSchurForm, TMat2 outSchurFormOther, TMat3? outLeftVectors, TMat3? outRightVectors);
-
-		/// <summary>
-		/// When implemented by a derived class, reorder the standard Schur decomposition result by <paramref name="order"/>.
+		/// When implemented by a derived class, reorder the standard Schur decomposition result by <paramref name="select"/>.
 		/// </summary>
 		/// <param name="schurForm">The input/output matrix to store the Schur form matrix</param>
 		/// <param name="schurVectors">The input/output matrix to store the Schur vectors</param>
-		/// <param name="order">The new order of the Schur form and Schur vectors such that <c>eigenvalue[i]</c> is moved to <c>eigenvalue[<paramref name="order"/>[i]]</c></param>
+		/// <param name="values">The vector to store the eigenvalues which will be reordered as well</param>
+		/// <param name="valuesImag">The vector to store the imaginary parts of eigenvalues when <typeparamref name="T"/> is a real type which will be reordered as well, not used when <typeparamref name="T"/> is a complex type</param>
+		/// <param name="select">The boolean array that indicates which eigenvalues shall be selected to the top-left of Schur form</param>
 		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+		/// <exception cref="ArgumentNullException">If <paramref name="valuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void StandardSchurReorder<TInd, TSInd>(TMat2 schurForm, TMat3? schurVectors, TSInd order) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
-
-		/// <summary>
-		/// When implemented by a derived class, reorder the general Schur decomposition result by <paramref name="order"/>.
-		/// </summary>
-		/// <param name="schurForm">The input/output matrix to store the first Schur form matrix</param>
-		/// <param name="schurFormOther">The input/output matrix to store the second Schur form matrix</param>
-		/// <param name="schurLeftVectors">The input/output matrix to store the left Schur vectors</param>
-		/// <param name="schurRightVectors">The input/output matrix to store the right Schur vectors</param>
-		/// <param name="order">The new order of the Schur form and Schur vectors such that <c>eigenvalue[i]</c> is moved to <c>eigenvalue[<paramref name="order"/>[i]]</c></param>
-		/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
-		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
-		public abstract static void GeneralSchurReorder<TInd, TSInd>(TMat2 schurForm, TMat2 schurFormOther, TMat3? schurLeftVectors, TMat3? schurRightVectors, TSInd order) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract static void SchurReorder<TInd, TSInd>(TMat2 schurForm, TMat3? schurVectors, TVec values, TVec? valuesImag, TSInd select) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
 	}
 
 	/// <summary>

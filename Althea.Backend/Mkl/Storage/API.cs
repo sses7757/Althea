@@ -2,7 +2,6 @@
 
 using Althea.Backend.Storage;
 using Althea.NativeTypes;
-using Althea.Storage;
 
 using MklDn = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 
@@ -59,6 +58,25 @@ namespace Althea.Backend.Mkl.Storage
 		{
 			if (scale == default)
 				scale = T.One;
+			if (!Althea.LinearAlgebra.MatrixOperationExtension.CanInPlace(op))
+				(height, width) = (width, height);
+			if (source == destination)
+			{
+				if (sourceLD != destinationLD)
+					return false;
+				if (op == Althea.LinearAlgebra.MatrixOperation.None && scale == T.One)
+					return true;
+				MklDn.MKL_imatcopy<T>? funcI = default(T) switch
+				{
+					float => new MklDn.MKL_imatcopy<float>(MklDn.MKL_Simatcopy) as MklDn.MKL_imatcopy<T>,
+					double => new MklDn.MKL_imatcopy<double>(MklDn.MKL_Dimatcopy) as MklDn.MKL_imatcopy<T>,
+					Complex<float> => new MklDn.MKL_imatcopy<Complex<float>>(MklDn.MKL_Cimatcopy) as MklDn.MKL_imatcopy<T>,
+					Complex<double> => new MklDn.MKL_imatcopy<Complex<double>>(MklDn.MKL_Zimatcopy) as MklDn.MKL_imatcopy<T>,
+					_ => null
+				};
+				funcI?.Invoke(LinearAlgebra.Dense.MklMatrixLayoutChar.ColMajor, LinearAlgebra.Dense.MklBlasExtension.ToMklChar(op), height, width, scale, source, sourceLD);
+				return funcI != null;
+			}
 			// shortcut
 			if (scale == T.One && op == Althea.LinearAlgebra.MatrixOperation.None && sourceLD == destinationLD && sourceLD == height && height * width <= uint.MaxValue)
 			{
@@ -73,8 +91,6 @@ namespace Althea.Backend.Mkl.Storage
 				Complex<double> => new MklDn.MKL_omatcopy<Complex<double>>(MklDn.MKL_Zomatcopy) as MklDn.MKL_omatcopy<T>,
 				_ => null
 			};
-			if (!Althea.LinearAlgebra.MatrixOperationExtension.CanInPlace(op))
-				(height, width) = (width, height);
 			func?.Invoke(LinearAlgebra.Dense.MklMatrixLayoutChar.ColMajor, LinearAlgebra.Dense.MklBlasExtension.ToMklChar(op), height, width, scale, source, sourceLD, destination, destinationLD);
 			return func != null;
 		}
