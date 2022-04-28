@@ -10,7 +10,7 @@ using Althea.Linq;
 using Althea.NativeTypes;
 
 
-// Ignore Spelling: \dfrac \cdot \alpha \mathbf \varepsilon
+// Ignore Spelling: \dfrac \cdot \alpha \mathbf \varepsilon \begin \ddots \cdots
 namespace Althea.Backend.CSharp.Solver
 {
 	internal static class LanczosBased
@@ -152,6 +152,7 @@ namespace Althea.Backend.CSharp.Solver
 			if (αs.AsSpan().Any(static a => !T.IsFinite(a)) || βs.AsSpan().Any(static b => !T.IsFinite(b)))
 				throw new ArithmeticException(Resources.ArithmeticError.AbnormalOccured);
 			// fill matrix
+			//tex: $$\left[\begin{matrix}\vartheta_1&&&\sigma_1&&&\\&\ddots&&\vdots&&&\\&&\vartheta_n&\sigma_n&&&\\\sigma_1&\cdots&\sigma_n&\alpha_1&\beta_1&&\\&&&\beta_1&\alpha_2&\ddots&\\&&&&\ddots&\ddots&\beta_{p-1}\\&&&&&\beta_{p-1}&\alpha_p\\\end{matrix}\right]$$
 			int N = αs.Count;
 			if (firstNResidual > 0)
 			{
@@ -170,37 +171,26 @@ namespace Althea.Backend.CSharp.Solver
 					eigvec[i, i + 1] = eigvec[i + 1, i] = βs[i];
 				}
 			}
-			// tridiagonal solve
-			fixed (T* matPtr = eigvec.UnderlyingSpan, valPtr = eigval)
+			// reduce to tridiagonal
+			if (firstNResidual == 0)
 			{
-				if (NumberType<T>.IsComplex)
+				for (int i = 0; i < N; i++)
 				{
-					int size = sizeof(T) / 2;
-					byte* diag = stackalloc byte[N * size];
-					byte* offDiag = stackalloc byte[(N - 1) * size];
-					for (int i = 0; i < N; i++)
-					{
-						T val = αs[i];
-						Unsafe.CopyBlockUnaligned(diag + i * size, &val, (uint)size);
-					}
-					for (int i = 0; i < N - 1; i++)
-					{
-						T val = βs[i];
-						Unsafe.CopyBlockUnaligned(offDiag + i * size, &val, (uint)size);
-					}
-					Mkl.LinearAlgebra.Dense.Api.TridiagEigen(SolveVectorMode.Vector, N, diag, offDiag, matPtr, eigvec.LeadDim);
-					for (int i = 0; i < N; i++)
-					{
-						Unsafe.CopyBlockUnaligned(valPtr + i, diag + i * size, (uint)size);
-					}
+					eigvec[i].Fill(T.Zero);
+					eigvec[i, i] = T.One;
 				}
-				else
-				{
-					αs.CopyTo(eigval);
-					T* offDiag = stackalloc T[N];
-					βs.CopyTo(new(offDiag, N));
-					Mkl.LinearAlgebra.Dense.Api.TridiagEigen(SolveVectorMode.Vector, N, eigval, offDiag, matPtr, eigvec.LeadDim);
-				}
+			}
+			else
+			{
+				
+			}
+			// tridiagonal solve
+			αs.CopyTo(eigval);
+			Span<T> offDiag = stackalloc T[N];
+			βs.CopyTo(offDiag);
+			fixed (T* eigvecPtr = eigvec[0], eigvalPtr = eigval, offDiagPtr = offDiag)
+			{
+				LinearAlgebra.MatrixSolvers.SymmetricTridiagonalMatrixEigensolve(N, eigvalPtr, offDiagPtr, eigvecPtr, eigvec.LeadDim);
 			}
 		}
 		#endregion
@@ -883,7 +873,7 @@ namespace Althea.Backend.CSharp.Solver
 					}
 					else
 					{
-						
+
 						//tex: $\beta_i = \dfrac {\vec r_i \cdot \vec z_i} {\vec r_{i - 1} \cdot \vec z_{i-1}}$
 						T β = ρ / ρOld;
 						if (β == T.Zero)

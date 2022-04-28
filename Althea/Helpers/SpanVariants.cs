@@ -473,28 +473,32 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Get the presenting number of rows of this <see cref="SpanMatrix{T}"/>
 		/// </summary>
-		public readonly int Rows {
+		public readonly int Rows
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this._rows;
 		}
 		/// <summary>
 		/// Get the presenting number of columns of this <see cref="SpanMatrix{T}"/>
 		/// </summary>
-		public readonly int Cols {
+		public readonly int Cols
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this._cols;
 		}
 		/// <summary>
 		/// Get the leading dimension (the actual number of rows) of this <see cref="SpanMatrix{T}"/>
 		/// </summary>
-		public readonly int LeadDim {
+		public readonly int LeadDim
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this._rows;
 		}
 		/// <summary>
 		/// Get the presenting length of this <see cref="SpanMatrix{T}"/>
 		/// </summary>
-		public readonly int PresentingLength {
+		public readonly int PresentingLength
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this._rows * this._cols;
 		}
@@ -502,7 +506,8 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Check whether this <see cref="SpanMatrix{T}"/> is empty or not
 		/// </summary>
-		public readonly bool IsEmpty {
+		public readonly bool IsEmpty
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this._leadDim > 0;
 		}
@@ -510,7 +515,8 @@ namespace Althea.Helpers
 		/// <summary>
 		/// Get the underlying <see cref="Span{T}"/> of this <see cref="SpanMatrix{T}"/>
 		/// </summary>
-		public readonly Span<T> UnderlyingSpan {
+		public readonly Span<T> UnderlyingSpan
+		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this._span;
 		}
@@ -557,7 +563,8 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
 		public readonly ref T this[int row, int col] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
+			get
+			{
 				if (row < 0 || row >= this._rows)
 					throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
 				if (col < 0 || col >= this._cols)
@@ -575,7 +582,8 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
 		public readonly ref T this[Index row, Index col] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
+			get
+			{
 				return ref this[row.GetOffset(this._rows), col.GetOffset(this._cols)];
 			}
 		}
@@ -587,7 +595,8 @@ namespace Althea.Helpers
 		/// <returns>The column at <paramref name="columnIndex"/> as a <see cref="Span{T}"/></returns>
 		public readonly Span<T> this[int columnIndex] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
+			get
+			{
 				if (columnIndex < 0 || columnIndex >= this._cols)
 					throw new ArgumentOutOfRangeException(nameof(columnIndex), columnIndex, Resources.ParameterError.InvalidValue);
 				return this._span[(columnIndex * this._leadDim)..(columnIndex * this._leadDim + this._rows)];
