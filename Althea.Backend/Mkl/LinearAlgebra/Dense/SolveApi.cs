@@ -102,13 +102,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	/// <remarks>The general SVD and general Schur decompositions are not supported, but can be added simply.</remarks>
 	public unsafe partial class Api
 	{
-		#region basic
-		/// <summary>
-		/// Get or set a <see cref="bool"/> indicating whether this implementation shall allow the original matrices in solvers to be destroyed during calculation or not. Default false.
-		/// </summary>
-		public bool AllowDestroy { get; set; } = false;
-		#endregion
-
 		#region eigen-problems
 		/// <inheritdoc/>
 		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>

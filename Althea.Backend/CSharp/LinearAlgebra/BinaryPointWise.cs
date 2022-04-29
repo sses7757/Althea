@@ -1110,7 +1110,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				throw new InvalidOperationException();
 			else if (typeof(TIn) == typeof(TOut) && px != py)
 			{
-				Unsafe.CopyBlock(px, py, (uint)(length * sizeof(TIn)));
+				Unsafe.CopyBlockUnaligned(py, px, (uint)(length * sizeof(TIn)));
 				return true;
 			}
 			// normal case

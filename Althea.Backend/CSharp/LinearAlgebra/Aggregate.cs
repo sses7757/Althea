@@ -647,8 +647,8 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				Vector<T> leftA = Vector<T>.Zero, leftB = Vector<T>.Zero;
 				// the following two lines shall be unrolled by JIT at runtime
-				Unsafe.CopyBlock(&leftA, x + offset, (uint)(lengthLeft * sizeof(T)));
-				Unsafe.CopyBlock(&leftB, y + offset, (uint)(lengthLeft * sizeof(T)));
+				Unsafe.CopyBlockUnaligned(&leftA, x + offset, (uint)(lengthLeft * sizeof(T)));
+				Unsafe.CopyBlockUnaligned(&leftB, y + offset, (uint)(lengthLeft * sizeof(T)));
 				dotLeft = Vector.Dot(leftA, leftB);
 				// this implementation has some performance loss compare to the direct dot
 				// but it is suitable for all generic type T that Vector<T> supports

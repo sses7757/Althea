@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 
 using Althea.GeneralSolver;
 using Althea.Helpers;
-using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.NativeTypes;
 

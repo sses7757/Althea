@@ -154,6 +154,11 @@ namespace Althea.Backend.CSharp.Solver
 			// fill matrix
 			//tex: $$\left[\begin{matrix}\vartheta_1&&&\sigma_1&&&\\&\ddots&&\vdots&&&\\&&\vartheta_n&\sigma_n&&&\\\sigma_1&\cdots&\sigma_n&\alpha_1&\beta_1&&\\&&&\beta_1&\alpha_2&\ddots&\\&&&&\ddots&\ddots&\beta_{p-1}\\&&&&&\beta_{p-1}&\alpha_p\\\end{matrix}\right]$$
 			int N = αs.Count;
+			for (int i = 0; i < N; i++)
+			{
+				eigvec[i].Fill(T.Zero);
+				eigvec[i, i] = T.One;
+			}
 			if (firstNResidual > 0)
 			{
 				// fill the non-tridiagonal part
@@ -162,35 +167,21 @@ namespace Althea.Backend.CSharp.Solver
 					eigvec[i, i] = αs[i];
 					eigvec[firstNResidual, i] = eigvec[i, firstNResidual] = βs[i];
 				}
+				eigvec[firstNResidual, firstNResidual] = αs[firstNResidual];
 			}
-			for (int i = firstNResidual; i < N; i++)
-			{
-				eigvec[i, i] = αs[i];
-				if (i < N - 1)
-				{
-					eigvec[i, i + 1] = eigvec[i + 1, i] = βs[i];
-				}
-			}
-			// reduce to tridiagonal
-			if (firstNResidual == 0)
-			{
-				for (int i = 0; i < N; i++)
-				{
-					eigvec[i].Fill(T.Zero);
-					eigvec[i, i] = T.One;
-				}
-			}
-			else
-			{
-				
-			}
-			// tridiagonal solve
-			αs.CopyTo(eigval);
 			Span<T> offDiag = stackalloc T[N];
-			βs.CopyTo(offDiag);
 			fixed (T* eigvecPtr = eigvec[0], eigvalPtr = eigval, offDiagPtr = offDiag)
 			{
-				LinearAlgebra.MatrixSolvers.SymmetricTridiagonalMatrixEigensolve(N, eigvalPtr, offDiagPtr, eigvecPtr, eigvec.LeadDim);
+				// reduce top-left part to tridiagonal
+				if (firstNResidual != 0)
+				{
+					LinearAlgebra.MatrixSolvers.SymmetricMatrixToTridiagonal(firstNResidual + 1, eigvecPtr, eigvec.LeadDim, eigvalPtr, offDiagPtr);
+				}
+				αs[firstNResidual..].CopyTo(eigval[firstNResidual..]);
+				βs[firstNResidual..].CopyTo(offDiag[firstNResidual..]);
+				// tridiagonal solve
+				if (!LinearAlgebra.MatrixSolvers.SymmetricTridiagonalMatrixEigensolve(N, eigvalPtr, offDiagPtr, eigvecPtr, eigvec.LeadDim))
+					throw new MatrixSolveAlgorithmException(SolveMethodKind.QR, 1);
 			}
 		}
 		#endregion

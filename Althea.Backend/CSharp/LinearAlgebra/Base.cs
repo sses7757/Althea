@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Buffers;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -17,7 +18,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 	/// The C# back-end of <see cref="IBlasAbstractApi"/> that utilizes <see cref="System.Runtime.Intrinsics"/> and <see cref="Vector{T}"/>.<br/>
 	/// Only supports storages on CPU memory of primitive and pre-defined types and single-threaded vector operations.
 	/// </summary>
-	public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IConversionAbstractApi
+	public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IConversionAbstractApi, ILapackAbstractApi
 	{
 		#region basic
 		void IDisposable.Dispose()
@@ -41,7 +42,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
-			pointer = default; length = inc = 0;
+			pointer = null; length = inc = 0;
 			if (s is null || !s.IsValid())
 				throw new ArgumentNullException(nameof(s));
 			if (stride <= 0)
@@ -54,6 +55,28 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			length = (int)ps.Length;
 			inc = (int)stride;
 			length = (length - 1) / inc + 1;
+			return true;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int ldd) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		{
+			pointer = null; mm = nn = ldd = 0;
+			if (s is null || !s.IsValid())
+				return true;
+			if (m <= 0)
+				throw new ArgumentOutOfRangeException(nameof(m), m, Resources.ParameterError.MustPositive);
+			if (n <= 0)
+				throw new ArgumentOutOfRangeException(nameof(n), n, Resources.ParameterError.MustPositive);
+			if (ld < m)
+				throw new ArgumentOutOfRangeException(nameof(ld), ld, Resources.ParameterError.InvalidValue);
+			if (s is not PureStorage<T, CpuMemoryPointer> ps)
+				return false; // not support
+			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
+			if (pointer == default)
+				return false; // not support
+			if (ps.Length < (n - 1) * ld + m)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(s));
+			mm = (int)m; nn = (int)n; ldd = (int)ld;
 			return true;
 		}
 
@@ -662,37 +685,130 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		#endregion
 
 
-		#region not supported
-		bool IExtendBlasAbstractApi.GeneralMatrixUnary<T, TS>(UnaryOperation op, long rows, long cols, TS A, long lda) => false;
+		#region matrix compact operations
+		bool IExtendBlasAbstractApi.GeneralMatrixUnary<T, TS1, TS2>(UnaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)
+		{
+			if (rows == lda && rows == ldb)
+				return this.GeneralVectorUnary<T, TS1, TS2>(op, A.MakeReference(0, rows * cols), 1, B, 1);
+			return false;
+		}
 
 		bool IExtendBlasAbstractApi.GeneralMatrixReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out T result)
 		{
 			result = default;
+			if (rows == lda)
+				return this.GeneralVectorReduce(op, A.MakeReference(0, rows * cols), 1, out result);
 			return false;
 		}
 
 		bool IExtendBlasAbstractApi.GeneralMatrixArgReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out long index)
 		{
 			index = -1;
+			if (rows == lda)
+				return this.GeneralVectorArgReduce<T, TS>(op, A.MakeReference(0, rows * cols), 1, out index);
 			return false;
 		}
 
 		bool IExtendBlasAbstractApi.GeneralMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) => false;
 
-		bool IExtendBlasAbstractApi.GeneralMatrixBinaryScalar<T, TS>(BinaryScalarOperation op, long rows, long cols, T scalar, TS A, long lda) => false;
-
-		bool IExtendBlasAbstractApi.GeneralMatricesBinary<T, TS1, TS2>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) => false;
-
-		bool IExtendBlasAbstractApi.GeneralMatrixColumnScan<T, TS1, TS2>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, bool inclusive) => false;
-
-		bool IExtendBlasAbstractApi.GeneralMatricesEqual<T, TS1, TS2>(long rows, long cols, TS1 A, long lda, TS2 B, long ldb, out bool equals)
+		bool IExtendBlasAbstractApi.GeneralMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb)
 		{
-			equals = default;
+			if (rows == lda && rows == ldb)
+				return this.GeneralVectorBinaryScalar(op, scalar, A.MakeReference(0, rows * cols), 1, B, 1);
 			return false;
 		}
 
-		bool IExtendBlasAbstractApi.GeneralMatrixCast<TIn, TOut, TSIn, TSOut>(long rows, long cols, TSIn source, long lds, TSOut destination, long ldd) => false;
+		bool IExtendBlasAbstractApi.GeneralMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc)
+		{
+			if (rows == lda && rows == ldb && rows == ldc)
+				return this.GeneralVectorsBinary<T, TS1, TS2, TS3>(op, A.MakeReference(0, rows * cols), 1, B, 1, C, 1);
+			return false;
+		}
 
+		bool IExtendBlasAbstractApi.GeneralMatrixColumnScan<T, TS1, TS2>(BinaryOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) => false;
+
+		bool IExtendBlasAbstractApi.GeneralMatricesEqual<T, TS1, TS2>(long rows, long cols, TS1 A, long lda, TS2 B, long ldb, out bool equals)
+		{
+			equals = false;
+			if (rows == lda && rows == ldb)
+				return this.GeneralVectorsEqual<T, TS1, TS2>(A.MakeReference(0, rows * cols), 1, B, 1, out equals);
+			return false;
+		}
+
+		bool IExtendBlasAbstractApi.GeneralMatrixCast<TIn, TOut, TSIn, TSOut>(long rows, long cols, TSIn source, long lds, TSOut destination, long ldd)
+		{
+			if (rows == lds && rows == ldd)
+				return this.GeneralVectorsCast<TIn, TOut, TSIn, TSOut>(source.MakeReference(0, rows * cols), 1, destination, 1);
+			return false;
+		}
+		#endregion
+
+
+		#region eigen
+		/// <inheritdoc/>
+		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			if (NumberType<T>.IsComplex)
+				return false;
+			if (!GetPointer(A, n, n, lda, out T* pA, out int nn, out _, out int ld))
+				return false;
+			if (!GetPointer(vecOut, n, n, ldvec, out T* pV, out _, out _, out int ldv) || pV == null)
+				return false;
+			if (!GetPointer(valOut, 1, out T* px, out int nx, out _))
+				return false;
+			if (nx < nn)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
+			if (n == lda && n == ldvec)
+			{
+				Unsafe.CopyBlockUnaligned(pV, pA, (uint)(nn * nn * sizeof(T)));
+			}
+			else
+			{
+				for (int i = 0; i < nn; i++)
+				{
+					Unsafe.CopyBlockUnaligned(pV + i * ldv, pA + i * ld, (uint)(nn * sizeof(T)));
+				}
+			}
+			var buffer = ArrayPool<byte>.Shared.Rent(nn * sizeof(T));
+			try
+			{
+				fixed (byte* offDiag = buffer)
+				{
+					MatrixSolvers.SymmetricMatrixToTridiagonal(nn, pV, ldv, px, (T*)offDiag);
+					if (!MatrixSolvers.SymmetricTridiagonalMatrixEigensolve(nn, px, (T*)offDiag, pV, ldv))
+						throw new MatrixSolveAlgorithmException(SolveMethodKind.QR, 1);
+				}
+				return true;
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(buffer);
+			}
+		}
+
+#pragma warning disable CS8769
+		bool ILapackAbstractApi.EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3 vecOut, long ldvec, TS4 LUOut, long ldLU) => false;
+
+		bool ILapackAbstractApi.EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2 valImagOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr) => false;
+
+		bool ILapackAbstractApi.EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2 valImagOut, TS2 valDenomOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr) => false;
+
+		bool ILapackAbstractApi.SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2 U, long ldu, TS3 Vct, long ldvct, TS4 S) => false;
+
+		bool ILapackAbstractApi.SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2 U, long ldu, TS3 valOut, TS3 valImagOut) => false;
+
+		bool ILapackAbstractApi.SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2 U, long ldu, TS3 vals, TS3 valsImag, TSInd select) => false;
+
+		bool ILapackAbstractApi.LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) => false;
+
+		bool ILapackAbstractApi.QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2 Q, long ldq) => false;
+
+		bool ILapackAbstractApi.LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) => false;
+#pragma warning restore CS8769
+		#endregion
+
+
+		#region not supported
 		bool IBlasAbstractApi.GeneralMatrixMultiplyVector<T, TSM, TSV1, TSV2>(MatrixOperation op, long m, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) => false;
 
 		bool IBlasAbstractApi.SymmetricMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool hermA, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) => false;
