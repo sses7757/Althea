@@ -746,64 +746,81 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		#region eigen
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestory) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (NumberType<T>.IsComplex)
 				return false;
 			if (!GetPointer(A, n, n, lda, out T* pA, out int nn, out _, out int ld))
 				return false;
-			if (!GetPointer(vecOut, n, n, ldvec, out T* pV, out _, out _, out int ldv) || pV == null)
+			if (!GetPointer(vecOut, n, n, ldvec, out T* pV, out _, out _, out int ldv))
 				return false;
 			if (!GetPointer(valOut, 1, out T* px, out int nx, out _))
 				return false;
 			if (nx < nn)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
-			if (n == lda && n == ldvec)
+			if (pV == null && allowDestory)
 			{
-				Unsafe.CopyBlockUnaligned(pV, pA, (uint)(nn * nn * sizeof(T)));
+				pV = pA; ldv = ld;
 			}
-			else
+			var buffer = ArrayPool<byte>.Shared.Rent((nn + (pV == null ? nn * nn : 0)) * sizeof(T));
+			fixed (byte* offDiag = buffer)
 			{
-				for (int i = 0; i < nn; i++)
+				if (pV == null)
 				{
-					Unsafe.CopyBlockUnaligned(pV + i * ldv, pA + i * ld, (uint)(nn * sizeof(T)));
+					pV = (T*)offDiag + nn;
+					ldv = nn;
 				}
-			}
-			var buffer = ArrayPool<byte>.Shared.Rent(nn * sizeof(T));
-			try
-			{
-				fixed (byte* offDiag = buffer)
+				if (pA != pV)
+				{
+					if (nn == ld && nn == ldv)
+					{
+						Unsafe.CopyBlockUnaligned(pV, pA, (uint)(nn * nn * sizeof(T)));
+					}
+					else
+					{
+						for (int i = 0; i < nn; i++)
+						{
+							Unsafe.CopyBlockUnaligned(pV + i * ldv, pA + i * ld, (uint)(nn * sizeof(T)));
+						}
+					}
+				}
+				try
 				{
 					MatrixSolvers.SymmetricMatrixToTridiagonal(nn, pV, ldv, px, (T*)offDiag);
-					if (!MatrixSolvers.SymmetricTridiagonalMatrixEigensolve(nn, px, (T*)offDiag, pV, ldv))
+					if (!MatrixSolvers.SymmetricTridiagonalMatrixEigensolve(nn, px, (T*)offDiag, vecOut is null ? null : pV, ldv))
 						throw new MatrixSolveAlgorithmException(SolveMethodKind.QR, 1);
+					return true;
 				}
-				return true;
-			}
-			finally
-			{
-				ArrayPool<byte>.Shared.Return(buffer);
+				finally
+				{
+					ArrayPool<byte>.Shared.Return(buffer);
+				}
 			}
 		}
 
+		/// <inheritdoc/>
+		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> => false;
+
+		/// <inheritdoc/>
+		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd> => false;
+
+		/// <inheritdoc/>
+		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+
+		/// <inheritdoc/>
+		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+
+		/// <inheritdoc/>
+		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestory) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+
 #pragma warning disable CS8769
-		bool ILapackAbstractApi.EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3 vecOut, long ldvec, TS4 LUOut, long ldLU) => false;
+		bool ILapackAbstractApi.EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3 vecOut, long ldvec, TS4 LUOut, long ldLU, bool allowDestory) => false;
 
-		bool ILapackAbstractApi.EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2 valImagOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr) => false;
+		bool ILapackAbstractApi.EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2 valImagOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr, bool allowDestory) => false;
 
-		bool ILapackAbstractApi.EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2 valImagOut, TS2 valDenomOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr) => false;
+		bool ILapackAbstractApi.EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2 valImagOut, TS2 valDenomOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr, bool allowDestory) => false;
 
-		bool ILapackAbstractApi.SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2 U, long ldu, TS3 Vct, long ldvct, TS4 S) => false;
-
-		bool ILapackAbstractApi.SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2 U, long ldu, TS3 valOut, TS3 valImagOut) => false;
-
-		bool ILapackAbstractApi.SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2 U, long ldu, TS3 vals, TS3 valsImag, TSInd select) => false;
-
-		bool ILapackAbstractApi.LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) => false;
-
-		bool ILapackAbstractApi.QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2 Q, long ldq) => false;
-
-		bool ILapackAbstractApi.LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) => false;
+		bool ILapackAbstractApi.SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2 U, long ldu, TS3 Vct, long ldvct, TS4 S, bool allowDestory) => false;
 #pragma warning restore CS8769
 		#endregion
 

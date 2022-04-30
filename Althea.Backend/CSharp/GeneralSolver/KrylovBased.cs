@@ -105,15 +105,14 @@ namespace Althea.Backend.CSharp.Solver
 			}
 		}
 
-		private static unsafe void ReorderSchur<T, TVec>(ReadOnlySpan<int> reorder, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static unsafe void ReorderSchur<T, TVec>(ReadOnlySpan<bool> select, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
-			int rows = reorder.Length;
-			Span<int> identity = stackalloc int[reorder.Length].FillWithRange(0);
+			int rows = select.Length;
 			//tex:$\mathbf H \overset{\text{Schur (order}=\vec v_\text{preserve}\text{)}}{\longrightarrow} \mathbf H \cdot \mathbf X$
 			fixed (T* ptrT = schurT.UnderlyingSpan, ptrU = schurU.UnderlyingSpan)
-			fixed (int* ptrIdentity = identity, ptrOrder = reorder)
+			fixed (bool* pSelect = select)
 			{
-				Mkl.LinearAlgebra.Dense.Api.SchurReorder(rows, ptrT, schurT.LeadDim, ptrU, schurU.LeadDim, ptrIdentity, ptrOrder);
+				LinearAlgebra.MatrixSolvers.SchurReorder(rows, ptrT, schurT.LeadDim, ptrU, schurU.LeadDim, pSelect);
 			}
 			int n = preserveCount;
 			//tex:${\vec{a}}^\ast={\vec{a}}^\ast X^\prime$
@@ -230,7 +229,7 @@ namespace Althea.Backend.CSharp.Solver
 			//\text{ where }\mathbf V = \mathbf U \mathbf X, \mathbf H_c \overset{\text{Eigen}}{\longrightarrow} \mathbf X \mathrm{diag}(\vec a) \mathbf X^{-1}$
 			fixed (T* ptrSchurT = schurT.UnderlyingSpan, ptrVecs = orderedVecs.UnderlyingSpan)
 			{
-				Mkl.LinearAlgebra.Dense.Api.SchurEigenvector(SolveVectorMode.Right, n, ptrSchurT, null, 1, ptrVecs, orderedVecs.LeadDim);
+				LinearAlgebra.MatrixSolvers.SchurEigenvector(SolveVectorMode.Right, n, ptrSchurT, null, 1, ptrVecs, orderedVecs.LeadDim);
 			}
 			#endregion
 
@@ -275,25 +274,24 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		#region preserve selection of Krylov-Schur
-		private static int PreserveSelect<T>(int nEig, int convergedWithin, ReadOnlySpan<T> orderedVals, ReadOnlySpan<T> orderedValsImag, SpanMatrix<T> orderedVecs, IPreserveSelector selector, Span<int> eigenReorder) where T : unmanaged, IFloatingPoint<T>
+		private static int PreserveSelect<T>(int nEig, int convergedWithin, ReadOnlySpan<T> orderedVals, ReadOnlySpan<T> orderedValsImag, SpanMatrix<T> orderedVecs, IPreserveSelector selector, Span<bool> eigenSelect) where T : unmanaged, IFloatingPoint<T>
 		{
 			var restVals = orderedVals[convergedWithin..];
 			var restValsImag = orderedValsImag.IsEmpty ? default : orderedValsImag[convergedWithin..];
 			var restVecs = orderedVecs[convergedWithin..];
 			Span<int> preserveIndices = stackalloc int[orderedVals.Length];
-			preserveIndices = selector.PreserveSelect<T>(restVals, restValsImag, restVecs.UnderlyingSpan, convergedWithin, nEig, orderedVals.Length, preserveIndices, false);
+			preserveIndices = selector.PreserveSelect(restVals, restValsImag, restVecs.UnderlyingSpan, convergedWithin, nEig, orderedVals.Length, preserveIndices, false);
 			int count = preserveIndices.Length;
 			if (count == 1)
-				Log.Write(Resource.RestartWarn1, category: nameof(KrylovSchur));
+				Log.Write(Resource.RestartWarn1, nameof(KrylovSchur), LogLevel.Warning);
 			if (count > orderedVals.Length / 2)
-				Log.Write(Resource.RestartWarn2, category: nameof(KrylovSchur));
-			eigenReorder[..convergedWithin].FillWithRange(0);
+				Log.Write(Resource.RestartWarn2, nameof(KrylovSchur), LogLevel.Warning);
 			count += convergedWithin;
-			preserveIndices.CopyTo(eigenReorder[convergedWithin..count]);
-			Span<int> identity = stackalloc int[orderedVals.Length].FillWithRange(0);
-			Span<int> diff = stackalloc int[orderedVals.Length - count];
-			identity.SetExept(eigenReorder[..count], diff);
-			diff.CopyTo(eigenReorder[count..]);
+			eigenSelect.Fill(false);
+			foreach (var ind in preserveIndices)
+			{
+				eigenSelect[ind] = true;
+			}
 			return count;
 		}
 		#endregion
@@ -339,21 +337,18 @@ namespace Althea.Backend.CSharp.Solver
 			Span<T> a = stackalloc T[iterPerRestart]; a[0] = β;
 			Span<IntPtr> tempQ = stackalloc IntPtr[iterPerRestart];
 			var qs = new SpanList<TVec>(tempQ.AsClassType<TVec>());
-			Span<T> __H = stackalloc T[iterPerRestart * iterPerRestart];
-			SpanMatrix<T> H = new(__H, iterPerRestart);
+			SpanMatrix<T> H = new(stackalloc T[iterPerRestart * iterPerRestart], iterPerRestart);
 
 			Span<T> orderedVals = stackalloc T[iterPerRestart];
 			Span<T> orderedValsImag = outEigvalsImag.IsEmpty ? default : stackalloc T[iterPerRestart];
-			Span<T> __vecs = stackalloc T[iterPerRestart * iterPerRestart];
-			SpanMatrix<T> orderedVecs = new(__vecs, iterPerRestart);
+			SpanMatrix<T> orderedVecs = new(stackalloc T[iterPerRestart * iterPerRestart], iterPerRestart);
 
-			Span<int> eigenReorder = stackalloc int[iterPerRestart];
+			Span<bool> eigenSelect = stackalloc bool[iterPerRestart];
 			Span<T> errorBounds = stackalloc T[iterPerRestart];
 
 			SpanList<T> convergedEigvals = new(stackalloc T[nEig + 1]);
 			SpanList<T> convergedEigvalsImag = outEigvalsImag.IsEmpty ? default : new(stackalloc T[nEig + 1]);
-			Span<T> __convergeVecs = stackalloc T[iterPerRestart * (nEig + 1)];
-			SpanMatrix<T> convergedEigvecs = new(__convergeVecs, iterPerRestart);
+			SpanMatrix<T> convergedEigvecs = new(stackalloc T[iterPerRestart * (nEig + 1)], iterPerRestart);
 			SpanMatrix<T> schurT = new(stackalloc T[iterPerRestart * iterPerRestart], iterPerRestart);
 			SpanMatrix<T> schurU = new(stackalloc T[iterPerRestart * iterPerRestart], iterPerRestart);
 
@@ -376,12 +371,12 @@ namespace Althea.Backend.CSharp.Solver
 
 					#region select the Ritz pairs to preserve
 					// use a separate method to reduce stack allocation
-					int preserveCount = PreserveSelect(nEig, converged, orderedVals, orderedValsImag, orderedVecs, selector, eigenReorder);
+					int preserveCount = PreserveSelect(nEig, converged, orderedVals, orderedValsImag, orderedVecs, selector, eigenSelect);
 					#endregion
 
 					#region Schur decomposition and prepare for restart
 					// use a separate method to reduce stack allocation
-					ReorderSchur(eigenReorder, preserveCount, schurT, schurU, r, ref qs, a, β);
+					ReorderSchur(eigenSelect, preserveCount, schurT, schurU, r, ref qs, a, β);
 					// log
 					Log.Write($"Preserved eigen-pair(s) = {preserveCount}", level: LogLevel.Trace);
 					#endregion

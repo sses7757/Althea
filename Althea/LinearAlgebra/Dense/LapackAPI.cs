@@ -25,11 +25,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
 		/// <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/>, can be the same as <paramref name="A"/>, null for not computing it</param>
 		/// <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
+		/// <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestory = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given symmetric-definite / hermitian-definite matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
@@ -51,11 +52,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="LUOut">The preallocated output LU factorization of <paramref name="B"/> stored in <paramref name="upper"/>, can be the same as <paramref name="B"/>, null for not computing it</param>
 		/// <param name="ldLU"></param>
 		/// <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
+		/// <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec, TS4? LUOut, long ldLU) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public abstract bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec, TS4? LUOut, long ldLU, bool allowDestory = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
@@ -74,12 +76,13 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
 		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
 		/// <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, null for not computing it</param>
+		/// <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public abstract bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestory = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
 
 		/// <summary>
 		/// When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
@@ -102,12 +105,13 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
 		/// <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
 		/// <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, null for not computing it</param>
+		/// <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2? valImagOut, TS2 valDenomOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public abstract bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2? valImagOut, TS2 valDenomOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestory = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
 		#endregion
 
 		#region other decompositions
@@ -130,12 +134,13 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="ldu">The leading dimension of <paramref name="U"/></param>
 		/// <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, null for not computing it, the same as <paramref name="A"/> for overwrite <paramref name="A"/></param>
 		/// <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
+		/// <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If both <paramref name="U"/> and <paramref name="Vct"/> == <paramref name="A"/> or the overwritten cannot be performed due to incompatible size</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
+		public abstract bool SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S, bool allowDestory = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>;
 
 		/// <summary>
 		/// Compute the standard Schur decomposition of given matrix <paramref name="A"/>.
@@ -178,7 +183,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="vals"/> (or <paramref name="valsImag"/>) is null or invalid</exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd>;
 		#endregion
 
 		#region linear solve
@@ -190,9 +195,9 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-		/// <param name="A">The input/output coefficient matrix; may be overwritten by its LU decomposition after exit.</param>
+		/// <param name="A">The input/output coefficient matrix which will be overwritten by its LU decomposition at exit</param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
-		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side which will be overwritten by solution X at exit</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
@@ -236,12 +241,13 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
+		/// <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestory = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 	}
 }

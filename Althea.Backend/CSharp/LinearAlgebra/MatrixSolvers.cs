@@ -5,6 +5,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra;
 
 internal static unsafe class MatrixSolvers
 {
+	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static T Hypot<T>(T x, T y) where T : unmanaged, IFloatingPoint<T>
 	{
@@ -60,7 +61,34 @@ internal static unsafe class MatrixSolvers
 	}
 
 
-	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot
+	public static void QRDecompose<T>(int m, int n, T* A, int ld, T* tau) where T : unmanaged, IFloatingPoint<T>
+	{
+		T two = T.One + T.One;
+		// reduce to tridiagonal by Householder reflect from the last column
+		for (int i = n - 1; i >= 2; i--)
+		{
+			int im1 = i - 1;
+			// get vector u and store in A's column i
+			//tex:$$\vec{u} = \pmatrix{\vec{A}_{0:i-1,i} \\  A_{i,i} \pm \|\vec{A}_{0:i,i}\|}$$
+			T* u = A + i * ld;
+			ref T uLast = ref u[i];
+			T normSqrU = NormSqr(u, i), normU = T.Sqrt(normSqrU);
+			normU = T.CopySign(normU, uLast);
+			// get tau[i]
+			//tex:$$H = I - \tau \vec{u}\vec{u}^T$$
+			tau[i] = T.One / (normSqrU + uLast * normU);
+			uLast += normU;
+			// get A[0..i, 0..i]
+			//tex:$\vec{p} = \tau A \vec{u}$ and store in diag[..i]
+			SymMatMulVec(A, ld, tau, u, diag, i);
+			//tex:$$\vec{p}=\vec{p}-\frac{\tau\vec{u}\cdot\vec{p}}{2}\vec{u}$$
+			T k = Dot(u, diag, i) * tau / two;
+			AddScaled(diag, u, -k, i);
+			//tex:$A_{0:i-1,0:i-1} = A_{0:i-1,0:i-1} - \vec{q}\vec{u}^T - \vec{u}\vec{q}^T$
+			SymRank2UpdateNeg(A, ld, diag, u, i);
+		}
+	}
+
 	/// <summary>
 	/// Reduce a symmetric matrix <paramref name="A"/> to a tridiagonal form stored as <paramref name="diag"/> and <paramref name="offDiag"/> where <paramref name="A"/> will be replaced by the unary transformation matrix at exit using Householder reflections.
 	/// </summary>
@@ -72,7 +100,7 @@ internal static unsafe class MatrixSolvers
 		{
 			int im1 = i - 1;
 			// get vector u and store in A's column i
-			//tex:$$\vec{u} = \pmatrix{\vec{A}_{0:i-2,i} \\  A_{i-1,i} \pm \|\vec{A}_{0,i-1,i}\|}$$
+			//tex:$$\vec{u} = \pmatrix{\vec{A}_{0:i-2,i} \\  A_{i-1,i} \pm \|\vec{A}_{0:i-1,i}\|}$$
 			T* u = A + i * ld;
 			ref T uLast = ref u[im1];
 			T normSqrU = NormSqr(u, i), normU = T.Sqrt(normSqrU);
@@ -135,58 +163,61 @@ internal static unsafe class MatrixSolvers
 	{
 		T two = T.One + T.One;
 		offDiag[n - 1] = T.Zero;
-		for (int l = 0; l < n; l++)
+		for (int i = 0; i < n; i++)
 		{
 			int iter = 0, m;
 		INNER_START:
-			for (m = l; m < n - 1; m++)
+			for (m = i; m < n - 1; m++)
 			{
 				T d = T.Abs(diag[m]) + T.Abs(diag[m + 1]);
 				// look for a single small sub-diagonal element to split the matrix.
 				if (T.Abs(offDiag[m]) + d == d)
 					break;
 			}
-			if (m == l)
+			if (m == i)
 				continue;
 			// QL with implicit shift
 			if (iter++ == 30)
 				return false;
-			// form shift
-			T g = (diag[l + 1] - diag[l]) / (two * offDiag[l]);
-			T r = Hypot(g, T.One);
-			g = diag[m] - diag[l] + offDiag[l] / (g + T.CopySign(r, g));
+			//tex: form shift $k_s$
+			T ks = (diag[i + 1] - diag[i]) / (two * offDiag[i]);
+			T r = Hypot(ks, T.One);
+			//tex: get $d_m - k_s$
+			ks = diag[m] - diag[i] + offDiag[i] / (ks + T.CopySign(r, ks));
 			T s = T.One, c = T.One, p = T.Zero;
-			for (int i = m - 1; i >= l; i--)
+			for (int j = m - 1; j >= i; j--)
 			{
-				T f = s * offDiag[i], b = c * offDiag[i];
-				r = Hypot(f, g);
-				offDiag[i + 1] = r;
+				// a plane rotation as in the original QL, followed by Givens rotations to restore tridiagonal form
+				T f = s * offDiag[j], b = c * offDiag[j];
+				r = Hypot(f, ks);
+				offDiag[j + 1] = r;
+				// deal with underflow
 				if (r == T.Zero)
 				{
-					diag[i + 1] -= p;
+					diag[j + 1] -= p;
 					offDiag[m] = T.Zero;
 					goto INNER_START;
 				}
 				s = f / r;
-				c = g / r;
-				g = diag[i + 1] - p;
-				r = (diag[i] - g) * s + two * c * b;
+				c = ks / r;
+				ks = diag[j + 1] - p;
+				r = (diag[j] - ks) * s + two * c * b;
 				p = s * r;
-				diag[i + 1] = g + p;
-				g = c * r - b;
+				diag[j + 1] = ks + p;
+				ks = c * r - b;
 				// compute eigenvectors
+				if (eigenvectors == null)
+					continue;
 				for (int k = 0; k < n; k++)
 				{
-					int indI = k + i * eigvecLD;
-					int indI1 = k + (i + 1) * eigvecLD;
-					f = eigenvectors[indI1];
-					T h = eigenvectors[indI];
-					eigenvectors[indI1] = s * h + c * f;
-					eigenvectors[indI] = c * h - s * f;
+					int indI = k + j * eigvecLD;
+					int indI1 = k + (j + 1) * eigvecLD;
+					eigenvectors[indI1] = s * eigenvectors[indI] + c * eigenvectors[indI1];
+					eigenvectors[indI] = c * eigenvectors[indI] - s * eigenvectors[indI1];
 				}
 			}
-			diag[l] -= p;
-			offDiag[l] = g;
+			diag[i] -= p;
+			offDiag[i] = ks;
 			offDiag[m] = T.Zero;
 			goto INNER_START;
 		}
