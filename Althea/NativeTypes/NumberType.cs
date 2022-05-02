@@ -191,7 +191,7 @@ namespace Althea.NativeTypes
 		/// <param name="x">The number to get conjugate</param>
 		/// <returns>The conjugate of <paramref name="x"/> if it is a complex type, otherwise <paramref name="x"/> itself.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe static T Conjugate<T>(this T x) where T : unmanaged, INumber<T>
+		public static T Conjugate<T>(this T x) where T : unmanaged, INumber<T>
 		{
 			if (!NumberType<T>.IsComplex)
 				return x;

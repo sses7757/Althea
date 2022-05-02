@@ -78,12 +78,17 @@ namespace Althea.NativeTypes
 	where T : unmanaged, IFloatingPoint<T>
 	{
 		/// <summary>
-		/// Get the magnitude or absolute value of this complex number
+		/// Get the magnitude or absolute value of this complex number.
 		/// </summary>
 		T Magnitude { get; }
 
 		/// <summary>
-		/// Get the phase of this complex number
+		/// Get the square of the magnitude or absolute value of this complex number.
+		/// </summary>
+		T MagnitudeSquared { get; }
+
+		/// <summary>
+		/// Get the phase of this complex number of range [0, 2π).
 		/// </summary>
 		T Phase { get; }
 
