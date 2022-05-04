@@ -428,11 +428,6 @@
         <member name="M:Althea.Array.AbstractDenseMatrix`2.Dispose">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.AbstractDenseMatrix`2.Finalize">
-            <summary>
-            Deconstructor to be invoked by GC.
-            </summary>
-        </member>
         <member name="M:Althea.Array.AbstractDenseMatrix`2.ToCompact">
             <summary>
             When implemented by a derived class, copy the values from this dense matrix to a new <typeparamref name="TS"/> with all values stored in compact mode that <see cref="P:Althea.Array.AbstractDenseMatrix`2.LeadDim"/> == <see cref="P:Althea.Array.AbstractDenseMatrix`2.NRows"/>.
@@ -1217,11 +1212,6 @@
         </member>
         <member name="M:Althea.Array.SparseMatrix`4.Dispose">
             <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.SparseMatrix`4.Finalize">
-            <summary>
-            Deconstructor to be invoked by GC.
-            </summary>
         </member>
         <member name="M:Althea.Array.SparseMatrix`4.#ctor">
             <summary>
@@ -2980,11 +2970,6 @@
         <member name="M:Althea.Array.DenseTensor`2.Dispose">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseTensor`2.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
-        </member>
         <member name="M:Althea.Array.DenseTensor`2.Equals(Althea.Array.DenseTensor{`0,`1})">
             <inheritdoc/>
         </member>
@@ -3178,11 +3163,6 @@
         </member>
         <member name="M:Althea.Array.SparseTensor`4.Dispose">
             <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.SparseTensor`4.Finalize">
-            <summary>
-            Deconstructor to be invoked by GC.
-            </summary>
         </member>
         <member name="M:Althea.Array.SparseTensor`4.#ctor">
             <summary>
@@ -3832,11 +3812,6 @@
         <member name="M:Althea.Array.DenseVector`2.Dispose">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseVector`2.Finalize">
-            <summary>
-            Deconstructor to be invoked by GC.
-            </summary>
-        </member>
         <member name="M:Althea.Array.DenseVector`2.Equals(Althea.Array.DenseVector{`0,`1})">
             <inheritdoc/>
         </member>
@@ -3993,11 +3968,6 @@
         </member>
         <member name="M:Althea.Array.SparseVector`4.Dispose">
             <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.SparseVector`4.Finalize">
-            <summary>
-            Deconstructor to be invoked by GC.
-            </summary>
         </member>
         <member name="M:Althea.Array.SparseVector`4.#ctor">
             <summary>
@@ -10044,7 +10014,7 @@
             The abstract interface for dense linear algebra LAPACK API routines 
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenStandardMatrixHermitian``4(System.Int64,System.Boolean,``1,System.Int64,``2,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenStandardMatrixHermitian``4(System.Int64,System.Boolean,``1,System.Int64,``2,``3,System.Int64,System.Boolean)">
             <summary>
             When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given hermitian matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
@@ -10059,11 +10029,12 @@
             <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
             <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/>, can be the same as <paramref name="A"/>, null for not computing it</param>
             <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenGeneralMatrixHermitian``5(Althea.LinearAlgebra.GeneralEigenType,System.Int64,System.Boolean,``1,System.Int64,``1,System.Int64,``2,``3,System.Int64,``4,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenGeneralMatrixHermitian``5(Althea.LinearAlgebra.GeneralEigenType,System.Int64,System.Boolean,``1,System.Int64,``1,System.Int64,``2,``3,System.Int64,``4,System.Int64,System.Boolean)">
             <summary>
             When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given symmetric-definite / hermitian-definite matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
             </summary>
@@ -10084,11 +10055,12 @@
             <param name="LUOut">The preallocated output LU factorization of <paramref name="B"/> stored in <paramref name="upper"/>, can be the same as <paramref name="B"/>, null for not computing it</param>
             <param name="ldLU"></param>
             <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenStandardMatrixGeneral``5(System.Int64,``1,System.Int64,``2,``2,``3,System.Int64,``4,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenStandardMatrixGeneral``5(System.Int64,``1,System.Int64,``2,``2,``3,System.Int64,``4,System.Int64,System.Boolean)">
             <summary>
             When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
@@ -10106,12 +10078,13 @@
             <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
             <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
             <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, null for not computing it</param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenGeneralMatrixGeneral``5(Althea.LinearAlgebra.GeneralEigenType,System.Int64,``1,System.Int64,``1,System.Int64,``2,``2,``2,``3,System.Int64,``4,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.EigenGeneralMatrixGeneral``5(Althea.LinearAlgebra.GeneralEigenType,System.Int64,``1,System.Int64,``1,System.Int64,``2,``2,``2,``3,System.Int64,``4,System.Int64,System.Boolean)">
             <summary>
             When implemented by a derived class, calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
             </summary>
@@ -10133,12 +10106,13 @@
             <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
             <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
             <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, null for not computing it</param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.SingularValues``5(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64,``4)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.SingularValues``5(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64,``4,System.Boolean)">
             <summary>
             When implemented by a derived class, compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
             </summary>
@@ -10158,6 +10132,7 @@
             <param name="ldu">The leading dimension of <paramref name="U"/></param>
             <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, null for not computing it, the same as <paramref name="A"/> for overwrite <paramref name="A"/></param>
             <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If both <paramref name="U"/> and <paramref name="Vct"/> == <paramref name="A"/> or the overwritten cannot be performed due to incompatible size</exception>
@@ -10213,9 +10188,9 @@
             <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
             <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-            <param name="A">The input/output coefficient matrix; may be overwritten by its LU decomposition after exit.</param>
+            <param name="A">The input/output coefficient matrix which will be overwritten by its LU decomposition at exit</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+            <param name="B">The input/output matrix whose each column is a vector at right-hand side which will be overwritten by solution X at exit</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
@@ -10240,7 +10215,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
             <summary>
             When implemented by a derived class, least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
             Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its implicit QR decomposition, and <paramref name="B"/> shall be replaced by the solution X.
@@ -10255,6 +10230,7 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
@@ -11448,7 +11424,7 @@
             The selector class for dense linear algebra LAPACK API routines 
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenStandardMatrixHermitian``4(System.Int64,System.Boolean,``1,System.Int64,``2,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenStandardMatrixHermitian``4(System.Int64,System.Boolean,``1,System.Int64,``2,``3,System.Int64,System.Boolean)">
             <summary>
             Calculate the eigenvalues (and eigenvectors) of given hermitian matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
@@ -11463,11 +11439,12 @@
             <param name="valOut">The preallocated output eigenvalues of type <typeparamref name="T"/></param>
             <param name="vecOut">The preallocated output eigenvectors of type <typeparamref name="T"/>, can be the same as <paramref name="A"/>, null for not computing it</param>
             <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenGeneralMatrixHermitian``5(Althea.LinearAlgebra.GeneralEigenType,System.Int64,System.Boolean,``1,System.Int64,``1,System.Int64,``2,``3,System.Int64,``4,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenGeneralMatrixHermitian``5(Althea.LinearAlgebra.GeneralEigenType,System.Int64,System.Boolean,``1,System.Int64,``1,System.Int64,``2,``3,System.Int64,``4,System.Int64,System.Boolean)">
             <summary>
             Calculate the eigenvalues (and eigenvectors) of given symmetric-definite / hermitian-definite matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem.
             </summary>
@@ -11488,11 +11465,12 @@
             <param name="LUOut">The preallocated output LU factorization of <paramref name="B"/> stored in <paramref name="upper"/>, can be the same as <paramref name="B"/>, null for not computing it</param>
             <param name="ldLU"></param>
             <param name="ldvec">The leading dimension of <paramref name="vecOut"/></param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenStandardMatrixGeneral``5(System.Int64,``1,System.Int64,``2,``2,``3,System.Int64,``4,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenStandardMatrixGeneral``5(System.Int64,``1,System.Int64,``2,``2,``3,System.Int64,``4,System.Int64,System.Boolean)">
             <summary>
             Calculate the eigenvalues (and eigenvectors) of given general matrix <paramref name="A"/> for the special eigen-problem.
             </summary>
@@ -11510,12 +11488,13 @@
             <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
             <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
             <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, null for not computing it</param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenGeneralMatrixGeneral``5(Althea.LinearAlgebra.GeneralEigenType,System.Int64,``1,System.Int64,``1,System.Int64,``2,``2,``2,``3,System.Int64,``4,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.EigenGeneralMatrixGeneral``5(Althea.LinearAlgebra.GeneralEigenType,System.Int64,``1,System.Int64,``1,System.Int64,``2,``2,``2,``3,System.Int64,``4,System.Int64,System.Boolean)">
             <summary>
             Calculate the eigenvalues (and eigenvectors) of given general matrix pair <paramref name="A"/>, <paramref name="B"/> for the general eigen-problem. The output eigenvalues are separated to prevent possible over- or under- flow.
             </summary>
@@ -11537,12 +11516,13 @@
             <param name="ldvl">The leading dimension of <paramref name="leftVec"/></param>
             <param name="ldvr">The leading dimension of <paramref name="rightVec"/></param>
             <param name="rightVec">The preallocated output right eigenvectors of type <typeparamref name="T"/>, null for not computing it</param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <remarks> When <typeparamref name="T"/> is a real type and <c><paramref name="valImagOut"/>[i] != 0</c>, <c><paramref name="leftVec"/>[.., i], <paramref name="leftVec"/>[.., i + 1]</c> shall be the real and imaginary parts of actual <c>left_eigenvector[i], left_eigenvector[i + 1].Conjugate</c>. Same for <paramref name="rightVec"/>.</remarks>
             <exception cref="T:System.ArgumentNullException">If <paramref name="valOut"/> or <paramref name="A"/> is null or invalid; or <paramref name="valImagOut"/> is null while <typeparamref name="T"/> is a real type</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.SingularValues``5(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64,``4)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.SingularValues``5(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64,``4,System.Boolean)">
             <summary>
             Compute the singular value decomposition (SVD) of a matrix <paramref name="A"/> and corresponding the left and/or right singular vectors: <paramref name="A"/> = <paramref name="U"/> * diag(<paramref name="S"/>) * <paramref name="Vct"/>.
             </summary>
@@ -11562,6 +11542,7 @@
             <param name="ldu">The leading dimension of <paramref name="U"/></param>
             <param name="Vct">The preallocated output right unitary ("ct" for conjugate transpose) matrix with size <paramref name="ldvct"/>×<paramref name="n"/>, null for not computing it, the same as <paramref name="A"/> for overwrite <paramref name="A"/></param>
             <param name="ldvct">The leading dimension of <paramref name="Vct"/></param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="S"/> or <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If both <paramref name="U"/> and <paramref name="Vct"/> == <paramref name="A"/> or the overwritten cannot be performed due to incompatible size</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -11617,9 +11598,9 @@
             <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
             <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-            <param name="A">The input/output coefficient matrix; may be overwritten by its LU decomposition after exit.</param>
+            <param name="A">The input/output coefficient matrix which will be overwritten by its LU decomposition at exit</param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
-            <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
+            <param name="B">The input/output matrix whose each column is a vector at right-hand side which will be overwritten by solution X at exit</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -11644,7 +11625,7 @@
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
             <summary>
             Least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
             Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its implicit QR decomposition, and <paramref name="B"/> shall be replaced by the solution X.
@@ -11659,6 +11640,7 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
+            <param name="allowDestory">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
@@ -14028,12 +14010,17 @@
         </member>
         <member name="P:Althea.NativeTypes.IComplexFloatNumber`2.Magnitude">
             <summary>
-            Get the magnitude or absolute value of this complex number
+            Get the magnitude or absolute value of this complex number.
+            </summary>
+        </member>
+        <member name="P:Althea.NativeTypes.IComplexFloatNumber`2.MagnitudeSquared">
+            <summary>
+            Get the square of the magnitude or absolute value of this complex number.
             </summary>
         </member>
         <member name="P:Althea.NativeTypes.IComplexFloatNumber`2.Phase">
             <summary>
-            Get the phase of this complex number
+            Get the phase of this complex number of range [0, 2π).
             </summary>
         </member>
         <member name="M:Althea.NativeTypes.IComplexFloatNumber`2.Pow(`0,`1)">

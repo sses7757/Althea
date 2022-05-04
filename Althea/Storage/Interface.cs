@@ -91,7 +91,7 @@ namespace Althea.Storage
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
 	public interface IStorage<T, TSelf> : IStorage, IReadOnlyList<T>,
-		 ICreateAlike<TSelf>, IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>,
+		ICreateAlike<TSelf>, IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>,
 		IAdditiveIdentity<TSelf, long>, IAdditionOperators<TSelf, long, TSelf>, ISubtractionOperators<TSelf, long, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IStorage<T, TSelf>

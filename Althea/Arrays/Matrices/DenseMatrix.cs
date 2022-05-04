@@ -95,14 +95,6 @@ namespace Althea.Array
 		}
 
 		/// <summary>
-		/// Deconstructor to be invoked by GC.
-		/// </summary>
-		~AbstractDenseMatrix()
-		{
-			this.Dispose();
-		}
-
-		/// <summary>
 		/// When implemented by a derived class, copy the values from this dense matrix to a new <typeparamref name="TS"/> with all values stored in compact mode that <see cref="AbstractDenseMatrix{T, TS}.LeadDim"/> == <see cref="AbstractDenseMatrix{T, TS}.NRows"/>.
 		/// </summary>
 		/// <returns>The created compact matrix's storage as a <typeparamref name="TS"/></returns>

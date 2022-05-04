@@ -120,14 +120,6 @@ namespace Althea.Array
 		}
 
 		/// <summary>
-		/// Deconstructor to be invoked by GC.
-		/// </summary>
-		~SparseVector()
-		{
-			this.Dispose();
-		}
-
-		/// <summary>
 		/// Create an empty sparse vector
 		/// </summary>
 		protected SparseVector()

@@ -1,4 +1,6 @@
-﻿using Althea.Helpers;
+﻿using System.Runtime.CompilerServices;
+
+using Althea.Helpers;
 using Althea.Linq;
 using Althea.Storage;
 
@@ -11,9 +13,11 @@ namespace Althea.Array
 	/// </summary>
 	public static class ArrayStorageManager
 	{
-		private static readonly object managerLock = new();
-
-		private static readonly Dictionary<IStorage, List<IStorage>> References = new();
+		private sealed class RefCount
+		{
+			public int count = 1;
+		}
+		private static readonly ConditionalWeakTable<IStorage, RefCount> ReferenceCountings = new();
 
 		/// <summary>
 		/// Add the given <paramref name="storage"/> to the manager whose <see cref="IStorage.Reference"/> is used to determine whether it is a referenced storage or not.
@@ -25,22 +29,13 @@ namespace Althea.Array
 		{
 			if (!storage.IsValid())
 				return storage;
-			lock (managerLock)
+			////lock (ReferenceCountings)
 			{
-				if (storage.Reference is null)
-				{
-					if (References.TryGetValue(storage, out var list))
-						list.Add(storage);
-					else
-						References.Add(storage, new() { storage });
-				}
+				var storageRoot = storage.Reference ?? storage;
+				if (ReferenceCountings.TryGetValue(storageRoot, out var refCount))
+					refCount.count++;
 				else
-				{
-					if (References.TryGetValue(storage.Reference, out var list))
-						list.Add(storage);
-					else
-						References.Add(storage.Reference, new() { storage });
-				}
+					ReferenceCountings.Add(storageRoot, new());
 			}
 			return storage;
 		}
@@ -54,33 +49,21 @@ namespace Althea.Array
 		{
 			if (storage is null || storage.Disposed)
 				return;
-			lock (managerLock)
+			////lock (ReferenceCountings)
 			{
-				if (storage.Reference is null)
+				var storageRoot = storage.Reference ?? storage;
+				if (ReferenceCountings.TryGetValue(storageRoot, out var refCount))
 				{
-					if (References.TryGetValue(storage, out var list))
+					refCount.count--;
+					if (refCount.count == 0)
 					{
-						list.SwapRemove(storage);
-						if (list.Count != 0)
-							return;
-						storage.Dispose();
-						References.Remove(storage);
-					}
-					else
-					{	// unmanaged storage
-						storage.Dispose();
+						ReferenceCountings.Remove(storageRoot);
+						storageRoot.Dispose();
 					}
 				}
 				else
 				{
-					if (References.TryGetValue(storage.Reference, out var list))
-					{
-						list.SwapRemove(storage);
-						if (list.Count != 0)
-							return;
-						storage.Reference.Dispose();
-						References.Remove(storage.Reference);
-					}
+					storage.Dispose();
 				}
 			}
 		}
@@ -92,7 +75,10 @@ namespace Althea.Array
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IValueArray{T, TSelf}"/></typeparam>
-	/// <remarks>All inherited classes shall be of column major if not specified.</remarks>
+	/// <remarks>
+	/// All inherited classes shall be of column major if not specified.<br/>
+	/// All inherited classes shall use <see cref="ArrayStorageManager.AddToManager{TS}"/> in constructors and <see cref="ArrayStorageManager.SafeDispose{TS}"/> in <see cref="IDisposable.Dispose"/> rather than fininalizers to improve GC performance.
+	/// </remarks>
 	public interface IValueArray<T, TSelf> : ICheckValid, IDisposable, IPrintable<T>,
 		ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf>
 		where T : unmanaged, INumber<T>

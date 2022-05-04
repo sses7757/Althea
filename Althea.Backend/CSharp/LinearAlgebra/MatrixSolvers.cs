@@ -87,15 +87,26 @@ internal static unsafe class MatrixSolvers
 			}
 		}
 	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void InPlaceTranspose<T>(T* A, int ld, int n) where T : unmanaged, IFloatingPoint<T>
+	{
+		for (int i = 0; i < n; i++)
+		{
+			for (int j = i + 1; j < n; j++)
+			{
+				(A[i + j * ld], A[j + i * ld]) = (A[j + i * ld], A[i + j * ld]);
+			}
+		}
+	}
 
 	/// <summary>
-	/// Perform the QR factorization of matrix <paramref name="A"/> of size <paramref name="m"/>x<paramref name="n"/>, whose upper part is the target triangular matrix, lower part (including diagonal) is the Householder reflectors and the real triangular diagonal is stored in <paramref name="diag"/>. <paramref name="diag"/> shall have length ≥ <c>max(<paramref name="n"/> - 1, min(m, n))</c>.
+	/// Perform the QR factorization of matrix <paramref name="A"/> of size <paramref name="m"/>×<paramref name="n"/>, whose upper part will be replaced by the output triangular matrix and lower part (including diagonal) will be replaced by the Householder reflectors; the diagonal elements are stored in <paramref name="diag"/> which shall have length ≥ <c>max(<paramref name="n"/> - 1, min(m, n))</c>.
 	/// </summary>
 	public static void QrFactorize<T>(int m, int n, T* A, int ld, T* diag) where T : unmanaged, IFloatingPoint<T>
 	{
 		T two = T.One + T.One, three = two + T.One;
 		// reduce to triangular by Householder reflect from the first column
-		int mn = Math.Min(m, n) - 1;
+		int mn = Math.Min(m, n);
 		for (int i = 0; i < mn; i++)
 		{
 			// get vector u and store in A[i:,i]
@@ -119,30 +130,78 @@ internal static unsafe class MatrixSolvers
 		}
 	}
 
-	public static void QrGenerateQ<T>(bool full, int m, int n, T* A, int ld, T* work) where T : unmanaged, IFloatingPoint<T>
+	/// <summary>
+	/// Generate the Q matrix from the outputs of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/>. The <paramref name="work"/> shall have length ≥ <paramref name="m"/>.
+	/// </summary>
+	public static void QrGenerateQ<T>(int m, int n, T* A, int ld, T* work) where T : unmanaged, IFloatingPoint<T>
 	{
 		// generate Q starting from the last column that stores vector u
-		int mn = Math.Min(m, n) - 1;
-		A[mn + mn * ld] = T.One;
-		for (int i = mn - 1; i >= 0; i--)
+		int mn = Math.Min(m, n);
+		for (int i = mn; i >= 0; i--)
 		{
-			int len = mn - i + 1;
+			int len = m - i + 1;
 			// get u from A's column i and copy to work space
 			T* u = work, Aii = A + (i + i * ld);
 			Unsafe.CopyBlockUnaligned(work, Aii, (uint)(len * sizeof(T)));
-			// set diag and reset first row and column of A[i.., i..] for this iteration
-			Aii[0] = T.One;
-			for (int j = i; j < mn; j++)
-				A[j + i * ld] = A[i + j * ld] = T.Zero;
-			// update Householder reflectors' product stored in row major A[i.., i..]
-			// TODO: size
-			//tex:$H_{(i)} = H_{(i-1)} - \tau H_{(i-1)} \vec{u}_{(i)}\vec{u}_{(i)}^T$
-			for (int j = i; j < mn; j++)
+			// prepare matrix A[i.., i..]
+			if (m > n && i == mn)
+			{   // H_n for full-sized Q, all fill with identity matrix
+				for (int j = i; j < m; j++)
+				{
+					Unsafe.InitBlockUnaligned(A + (j + 1 + j * ld), 0, (uint)((len - 1) * sizeof(T)));
+					A[j + j * ld] = T.One;
+				}
+			}
+			else
+			{   // only fill the first row and column of A[i.., i..] for this iteration
+				Aii[0] = T.One;
+				for (int j = i; j < m; j++)
+					A[j + i * ld] = A[i + j * ld] = T.Zero;
+			}
+			// update Householder reflectors' product stored in A[i.., i..]
+			//tex:$H_{(i)} = H_{(i-1)} - \tau \vec{u}_{(i)}\vec{u}_{(i)}^T H_{(i-1)}$
+			for (int j = i; j < m; j++)
 			{
 				T dot = Dot(u, A + j * ld, len);
 				AddScaled(A + j * ld, u, -dot, len);
 			}
 		}
+	}
+
+	/// <summary>
+	/// Compute the multiplication of Q matrix's transpose and <paramref name="B"/> with output of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/>. <paramref name="B"/> is of size <paramref name="m"/>×<paramref name="nrhs"/>.
+	/// </summary>
+	public static void QrQtMultiply<T>(int m, int n, int nrhs, T* A, int lda, T* B, int ldb) where T : unmanaged, IFloatingPoint<T>
+	{
+		for (int i = 0; i < n; i++)
+		{
+			//tex: compute $H_{(i)} B = B - \tau \vec{u}_{(i)}\vec{u}_{(i)}^T B$
+			for (int j = 0; j < nrhs; j++)
+			{
+				T dot = Dot(A + (i + i * lda), B + (i + j * ldb), m - i);
+				AddScaled(B + (i + j * ldb), A + (i + i * lda), -dot, m - i);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Solve a set of linear equations <c><paramref name="A"/> * X == <paramref name="B"/></c> where <paramref name="A"/> as the output of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/> (together with <paramref name="diag"/>) is an upper triangular matrix and <paramref name="B"/> of size <paramref name="n"/>×<paramref name="nrhs"/> is the right hand side vectors which will be replaced by the solutions <c>X</c>.
+	/// </summary>
+	public static void QrLinearSolve<T>(int n, int nrhs, T* A, T* diag, int lda, T* B, int ldb) where T : unmanaged, IFloatingPoint<T>
+	{
+		InPlaceTranspose(A, lda, n);
+		for (int k = 0; k < nrhs; k++)
+		{
+			T* b = B + k * ldb;
+			b[n - 1] /= diag[n - 1];
+			for (int i = n - 2; i >= 0; i--)
+			{
+				int i1 = i + 1;
+				T dot = Dot(A + (i1 + i * lda), b + i1, n - i1);
+				b[i] = (b[i] - dot) / diag[i];
+			}
+		}
+		InPlaceTranspose(A, lda, n);
 	}
 
 	/// <summary>
@@ -203,14 +262,7 @@ internal static unsafe class MatrixSolvers
 			for (int j = 0; j < i; j++)
 				A[j + i * ld] = A[i + j * ld] = T.Zero;
 		}
-		// in-place transpose A
-		for (int i = 0; i < n; i++)
-		{
-			for (int j = i + 1; j < n; j++)
-			{
-				(A[i + j * ld], A[j + i * ld]) = (A[j + i * ld], A[i + j * ld]);
-			}
-		}
+		InPlaceTranspose(A, ld, n);
 	}
 
 	/// <summary>

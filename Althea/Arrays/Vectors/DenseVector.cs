@@ -93,14 +93,6 @@ namespace Althea.Array
 			this.values.SafeDispose();
 			GC.SuppressFinalize(this);
 		}
-
-		/// <summary>
-		/// Deconstructor to be invoked by GC.
-		/// </summary>
-		~DenseVector()
-		{
-			this.Dispose();
-		}
 		#endregion
 
 		#region equality

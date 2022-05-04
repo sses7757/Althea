@@ -195,14 +195,6 @@ namespace Althea.Array
 		}
 
 		/// <summary>
-		/// Deconstructor to be invoked by GC.
-		/// </summary>
-		~SparseTensor()
-		{
-			this.Dispose();
-		}
-
-		/// <summary>
 		/// Create an empty sparse tensor.
 		/// </summary>
 		protected SparseTensor()

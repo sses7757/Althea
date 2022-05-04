@@ -138,14 +138,6 @@ namespace Althea.Array
 		}
 
 		/// <summary>
-		/// Deconstructor to be invoked by GC.
-		/// </summary>
-		~SparseMatrix()
-		{
-			this.Dispose();
-		}
-
-		/// <summary>
 		/// Create an empty sparse matrix.
 		/// </summary>
 		protected SparseMatrix()
