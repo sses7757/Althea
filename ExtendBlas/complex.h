@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 
-// TODO: CUDA has a problem that gives false warnings for CONSTEXPR IF
+// CUDA has a problem that gives false warnings for CONSTEXPR IF
 namespace BlasSupp
 {
 	template <typename T>

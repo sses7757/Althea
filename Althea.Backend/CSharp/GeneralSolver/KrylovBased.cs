@@ -450,7 +450,7 @@ namespace Althea.Backend.CSharp.Solver
 			// get norm of H
 			fixed (T* ptrH = Hprime.UnderlyingSpan, ptrVals = stackalloc T[n], ptrValsIm = NumberType<T>.IsComplex ? default : stackalloc T[n])
 			{
-				Mkl.LinearAlgebra.Dense.Api.HessenbergSchur(SolveVectorMode.Vector, n, ptrVals, ptrValsIm, ptrH, Hprime.LeadDim, null, 1);
+				Mkl.LinearAlgebra.Dense.Api.HessenbergSchur(SolveVectorMode.NoVector, n, ptrVals, ptrValsIm, ptrH, Hprime.LeadDim, null, 1);
 			}
 			if (NumberType<T>.IsComplex)
 			{
@@ -475,7 +475,7 @@ namespace Althea.Backend.CSharp.Solver
 					else
 					{
 						T b = Hprime[i, i + 1];
-						abs = new Complex<T>(a, b * c).Magnitude;
+						abs = T.Sqrt(a * a - b * c);
 						i++;
 					}
 					if (normH < abs)
@@ -485,9 +485,9 @@ namespace Althea.Backend.CSharp.Solver
 			//tex:$\mathbf H' = \left[\begin{matrix}\mathbf H\\\vec 0^T,\beta\end{matrix}\right]$
 			H.CopyTo(Hprime[..n, ..n]);
 			Hprime[n, n - 1] = β;
-			// direct solving by QR is not slower than separate approach
 			//tex:$\min_{\vec y^{(n)}}{\mathbf H' \vec y^{(n)} = \beta_0 \vec e_1}$, $\vec e_1 \in \mathbb F^{n+1}$
-			Span<T> y = stackalloc T[n1]; y[0] = β0;
+			Span<T> y = stackalloc T[n1];
+			y.Fill(T.Zero); y[0] = β0;
 			T normY;
 			fixed (T* ptrY = y, ptrR = Hprime.UnderlyingSpan)
 			{
