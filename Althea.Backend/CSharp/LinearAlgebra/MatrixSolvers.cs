@@ -1,16 +1,32 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 
 using Althea.NativeTypes;
 
 namespace Althea.Backend.CSharp.LinearAlgebra;
 
+
 internal static unsafe class MatrixSolvers
 {
+	// TODO: use existing codes
 	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot eigval argmin
+	#region utilities
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static T NormSqr<T>(T* vec, int n) where T : unmanaged, IFloatingPoint<T>
+	private static T NormSq<T>(T* vec, int n) where T : unmanaged, IFloatingPoint<T>
 	{
 		T norm = T.Zero;
+		if (!Vector.IsHardwareAccelerated || !typeof(T).IsPrimitive)
+			goto SCALAR;
+		T* end = vec + n;
+		Vector<T> norms = Vector<T>.Zero;
+		for (; vec < end; vec += Vector<T>.Count)
+		{
+			var v = Unsafe.ReadUnaligned<Vector<T>>(vec);
+			norms += v * v;
+		}
+		n = (int)(end - vec);
+		norm = Vector.Sum(norms);
+	SCALAR:
 		for (int i = 0; i < n; i++)
 		{
 			norm += vec[i] * vec[i];
@@ -21,6 +37,19 @@ internal static unsafe class MatrixSolvers
 	private static T Dot<T>(T* x, T* y, int n) where T : unmanaged, IFloatingPoint<T>
 	{
 		T dot = T.Zero;
+		if (!Vector.IsHardwareAccelerated || !typeof(T).IsPrimitive)
+			goto SCALAR;
+		T* end = x + n;
+		Vector<T> dots = Vector<T>.Zero;
+		for (; x < end; x += Vector<T>.Count, y += Vector<T>.Count)
+		{
+			var xx = Unsafe.ReadUnaligned<Vector<T>>(x);
+			var yy = Unsafe.ReadUnaligned<Vector<T>>(y);
+			dots += xx * yy;
+		}
+		n = (int)(end - x);
+		dot = Vector.Sum(dots);
+	SCALAR:
 		for (int i = 0; i < n; i++)
 			dot += x[i] * y[i];
 		return dot;
@@ -28,12 +57,37 @@ internal static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void Scale<T>(T* x, T α, int n) where T : unmanaged, IFloatingPoint<T>
 	{
+		if (!Vector.IsHardwareAccelerated || !typeof(T).IsPrimitive)
+			goto SCALAR;
+		T* end = x + n;
+		Vector<T> scalar = new(α);
+		for (; x < end; x += Vector<T>.Count)
+		{
+			var xx = Unsafe.ReadUnaligned<Vector<T>>(x);
+			xx *= scalar;
+			Unsafe.WriteUnaligned(x, xx);
+		}
+		n = (int)(end - x);
+	SCALAR:
 		for (int i = 0; i < n; i++)
 			x[i] = α * x[i];
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void AddScaled<T>(T* y, T* x, T α, int n) where T : unmanaged, IFloatingPoint<T>
 	{
+		if (!Vector.IsHardwareAccelerated || !typeof(T).IsPrimitive)
+			goto SCALAR;
+		T* end = x + n;
+		Vector<T> scalar = new(α);
+		for (; x < end; x += Vector<T>.Count, y += Vector<T>.Count)
+		{
+			var xx = Unsafe.ReadUnaligned<Vector<T>>(x);
+			var yy = Unsafe.ReadUnaligned<Vector<T>>(y);
+			yy += xx * scalar;
+			Unsafe.WriteUnaligned(y, yy);
+		}
+		n = (int)(end - x);
+	SCALAR:
 		for (int i = 0; i < n; i++)
 			y[i] += α * x[i];
 	}
@@ -58,10 +112,8 @@ internal static unsafe class MatrixSolvers
 	{
 		for (int i = 0; i < n; i++)
 		{
-			for (int j = 0; j < m; j++)
-			{
-				A[j + i * ld] -= x[j] * y[i];
-			}
+			T yy = y[i];
+			AddScaled(A + i * ld, x, -yy, m);
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,10 +121,9 @@ internal static unsafe class MatrixSolvers
 	{
 		for (int i = 0; i < n; i++)
 		{
-			for (int j = 0; j < n; j++)
-			{
-				A[j + i * ld] -= x[i] * y[j] + x[j] * y[i];
-			}
+			T xx = x[i], yy = y[i];
+			AddScaled(A + i * ld, x, -yy, n);
+			AddScaled(A + i * ld, y, -xx, n);
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,13 +137,15 @@ internal static unsafe class MatrixSolvers
 			}
 		}
 	}
+	#endregion
 
+	// checked
+	#region QR
 	/// <summary>
 	/// Perform the QR factorization of matrix <paramref name="A"/> of size <paramref name="m"/>×<paramref name="n"/>, whose upper part will be replaced by the output triangular matrix and lower part (including diagonal) will be replaced by the Householder reflectors; the diagonal elements are stored in <paramref name="diag"/> which shall have length ≥ <c>max(<paramref name="n"/> - 1, min(m, n))</c>.
 	/// </summary>
 	public static void QrFactorize<T>(int m, int n, T* A, int ld, T* diag) where T : unmanaged, IFloatingPoint<T>
 	{
-		T two = T.One + T.One, three = two + T.One;
 		// reduce to triangular by Householder reflect from the first column
 		int mn = Math.Min(m, n);
 		for (int i = 0; i < mn; i++)
@@ -100,11 +153,11 @@ internal static unsafe class MatrixSolvers
 			// get vector u and store in A[i:,i]
 			//tex:$$\vec{u} = \pmatrix{A_{i,i} \pm \|\vec{A}_{i:,i}\| \\ \vec{A}_{i+1:,i}}$$
 			T* u = A + (i + i * ld);
-			T normSqrU = NormSqr(u, m - i), normU = T.Sqrt(normSqrU);
+			T normSqU = NormSq(u, m - i), normU = T.Sqrt(normSqU);
 			normU = T.CopySign(normU, u[0]);
 			// get tau and A[i, i]
 			//tex: $$\tau = \frac{2}{\|\vec{u}\|^2}$$
-			T tau = T.One / (normSqrU + u[0] * normU);
+			T tau = T.One / (normSqU + u[0] * normU);
 			//tex:$$H = I - \tau \vec{u}\vec{u}^T $$
 			//tex:$$A_{i,i}' = \vec{H}_{i,i:} \vec{A}_{i:,i} = - \|\vec{A}_{i:,i}\|$$
 			u[0] += normU;
@@ -119,14 +172,16 @@ internal static unsafe class MatrixSolvers
 	}
 
 	/// <summary>
-	/// Generate the full Q matrix from the outputs of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/> and overwrite in <paramref name="A"/>. The <paramref name="work"/> shall have length ≥ <paramref name="m"/>.
+	/// Generate the Q matrix from the outputs of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/>. The <paramref name="work"/> shall have length ≥ <paramref name="m"/>.
 	/// </summary>
-	public static void QrGenerateQ<T>(int m, int n, T* A, int ld, T* work) where T : unmanaged, IFloatingPoint<T>
+	public static void QrGenerateQ<T>(int m, int n, int colLeft, int colRight, T* A, int ld, T* work) where T : unmanaged, IFloatingPoint<T>
 	{
 		// generate Q starting from the last column that stores vector u
 		int mn = Math.Min(m, n) - 1;
 		for (int i = mn; i >= 0; i--)
 		{
+			if (i >= colRight)
+				continue;
 			int len = m - i;
 			// get u from A's column i and copy to work space
 			T* u = work, Aii = A + (i + i * ld);
@@ -136,19 +191,35 @@ internal static unsafe class MatrixSolvers
 			{   // H_n for full-sized Q, all fill with identity matrix
 				for (int j = i; j < m; j++)
 				{
+					if (j < colLeft || j >= colRight)
+						continue;
 					Unsafe.InitBlockUnaligned(A + (j + 1 + j * ld), 0, (uint)((len - 1) * sizeof(T)));
 					A[j + j * ld] = T.One;
 				}
 			}
 			else
 			{   // only fill the first row and column of A[i.., i..] for this iteration
-				Aii[0] = T.One;
-				for (int j = i + 1; j < m; j++)
-					A[j + i * ld] = A[i + j * ld] = T.Zero;
+				if (i >= colLeft)
+				{
+					Aii[0] = T.One;
+					for (int j = i + 1; j < m; j++)
+					{
+						A[j + i * ld] = T.Zero;
+						if (j >= colLeft && j < colRight)
+							A[i + j * ld] = T.Zero;
+					}
+				}
+				else
+				{
+					for (int j = Math.Max(i + 1, colLeft); j < m && j < colRight; j++)
+					{
+						A[i + j * ld] = T.Zero;
+					}
+				}
 			}
 			// update Householder reflectors' product stored in A[i.., i..]
 			//tex:$H_{(i)} = H_{(i-1)} - \tau \vec{u}_{(i)}\vec{u}_{(i)}^T H_{(i-1)}$
-			for (int j = i; j < m; j++)
+			for (int j = Math.Max(i, colLeft); j < m && j < colRight; j++)
 			{
 				T dot = Dot(u, A + (i + j * ld), len);
 				AddScaled(A + (i + j * ld), u, -dot, len);
@@ -157,7 +228,7 @@ internal static unsafe class MatrixSolvers
 	}
 
 	/// <summary>
-	/// Compute the multiplication of Q matrix's transpose and <paramref name="B"/> with output of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/>. <paramref name="B"/> is of size <paramref name="m"/>×<paramref name="nrhs"/>.
+	/// Compute the multiplication of Q matrix's (conjugate) transpose and <paramref name="B"/> with output of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/>. <paramref name="B"/> is of size <paramref name="m"/>×<paramref name="nrhs"/> where <paramref name="A"/> is the output of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/>.
 	/// </summary>
 	public static void QrQtMultiply<T>(int m, int n, int nrhs, T* A, int lda, T* B, int ldb) where T : unmanaged, IFloatingPoint<T>
 	{
@@ -173,7 +244,7 @@ internal static unsafe class MatrixSolvers
 	}
 
 	/// <summary>
-	/// Solve a set of linear equations <c><paramref name="A"/> * X == <paramref name="B"/></c> where <paramref name="A"/> as the output of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/> (together with <paramref name="diag"/>) is an upper triangular matrix and <paramref name="B"/> of size <paramref name="n"/>×<paramref name="nrhs"/> is the right hand side vectors which will be replaced by the solutions <c>X</c>.
+	/// Solve a set of linear equations <c><paramref name="A"/> * X == <paramref name="B"/></c> where <paramref name="A"/> is the output of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/> (together with <paramref name="diag"/>) is an upper triangular matrix and <paramref name="B"/> of size <paramref name="n"/>×<paramref name="nrhs"/> is the right hand side vectors which will be replaced by the solutions <c>X</c>.
 	/// </summary>
 	public static void QrLinearSolve<T>(int n, int nrhs, T* A, T* diag, int lda, T* B, int ldb) where T : unmanaged, IFloatingPoint<T>
 	{
@@ -212,7 +283,9 @@ internal static unsafe class MatrixSolvers
 			}
 		}
 	}
+	#endregion
 
+	#region symmetric eigen
 	/// <summary>
 	/// Reduce a symmetric matrix <paramref name="A"/> to a tridiagonal form stored as <paramref name="diag"/> and <paramref name="offDiag"/> where <paramref name="A"/> will be replaced by the unary transformation matrix at exit using Householder reflections.
 	/// </summary>
@@ -227,7 +300,7 @@ internal static unsafe class MatrixSolvers
 			//tex:$$\vec{u} = \pmatrix{\vec{A}_{0:i-2,i} \\  A_{i-1,i} \pm \|\vec{A}_{0:i-1,i}\|}$$
 			T* u = A + i * ld;
 			ref T uLast = ref u[im1];
-			T normSqrU = NormSqr(u, i), normU = T.Sqrt(normSqrU);
+			T normSqrU = NormSq(u, i), normU = T.Sqrt(normSqrU);
 			normU = T.CopySign(normU, uLast);
 			// get tau and store in A[i, i-1]
 			//tex: $$\tau = \frac{2}{\|\vec{u}\|^2}$$
@@ -349,7 +422,9 @@ internal static unsafe class MatrixSolvers
 		}
 		return true;
 	}
+	#endregion
 
+	#region general eigen
 	public static bool HessenbergSchurDecompose<T>(int n, T* A, int ld, T* wr, T* wi) where T : unmanaged, IFloatingPoint<T>
 	{
 		// TODO: store exceptional shifts to restore Schur form
@@ -540,4 +615,5 @@ internal static unsafe class MatrixSolvers
 		}
 		return true;
 	}
+	#endregion
 }
