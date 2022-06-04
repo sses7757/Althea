@@ -787,7 +787,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				try
 				{
 					MatrixSolvers.SymmetricMatrixToTridiagonal(nn, pV, ldv, px, (T*)offDiag);
-					if (!MatrixSolvers.SymmetricTridiagonalMatrixEigensolve(nn, px, (T*)offDiag, vecOut is null ? null : pV, ldv))
+					if (!MatrixSolvers.SymmetricTridiagonalEigensolve(nn, px, (T*)offDiag, vecOut is null ? null : pV, ldv))
 						throw new MatrixSolveAlgorithmException(SolveMethodKind.QR, 1);
 					return true;
 				}

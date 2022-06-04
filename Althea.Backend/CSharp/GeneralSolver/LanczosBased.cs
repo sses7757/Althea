@@ -180,7 +180,7 @@ namespace Althea.Backend.CSharp.Solver
 				αs[firstNResidual..].CopyTo(eigval[firstNResidual..]);
 				βs[firstNResidual..].CopyTo(offDiag[firstNResidual..]);
 				// tridiagonal solve
-				if (!LinearAlgebra.MatrixSolvers.SymmetricTridiagonalMatrixEigensolve(N, eigvalPtr, offDiagPtr, eigvecPtr, eigvec.LeadDim))
+				if (!LinearAlgebra.MatrixSolvers.SymmetricTridiagonalEigensolve(N, eigvalPtr, offDiagPtr, eigvecPtr, eigvec.LeadDim))
 					throw new MatrixSolveAlgorithmException(SolveMethodKind.QR, 1);
 			}
 		}

@@ -9,7 +9,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra;
 internal static unsafe class MatrixSolvers
 {
 	// TODO: use existing codes
-	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot eigval argmin
+	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot \begin eigval argmin
 	#region utilities
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static T NormSq<T>(T* vec, int n) where T : unmanaged, IFloatingPoint<T>
@@ -92,6 +92,15 @@ internal static unsafe class MatrixSolvers
 			y[i] += α * x[i];
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void HouseholderColumnUpdate2<T>(T* A, int ld, int n, T h1, T h2, T h3) where T : unmanaged, IFloatingPoint<T>
+	{
+		// TODO: use SIMD
+		for (int i = 0; i < n; i++)
+		{
+			(A[i], A[ld + i]) = (A[i] * h1 + A[ld + i] * h3, A[i] * h3 + A[ld + i] * h2);
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void VecMulMat<T>(T* x, T* A, int ld, T* output, int m, int n) where T : unmanaged, IFloatingPoint<T>
 	{
 		for (int i = 0; i < n; i++)
@@ -172,7 +181,7 @@ internal static unsafe class MatrixSolvers
 	}
 
 	/// <summary>
-	/// Generate the Q matrix from the outputs of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/>. The <paramref name="work"/> shall have length ≥ <paramref name="m"/>.
+	/// Generate the Q matrix from the outputs of <see cref="QrFactorize{T}(int, int, T*, int, T*)"/>. The <paramref name="work"/> shall have length ≥ <paramref name="m"/>. Only the columns from <paramref name="colLeft"/> to <paramref name="colRight"/>(exclusive) of <paramref name="A"/> are modified to the result Q matrix.
 	/// </summary>
 	public static void QrGenerateQ<T>(int m, int n, int colLeft, int colRight, T* A, int ld, T* work) where T : unmanaged, IFloatingPoint<T>
 	{
@@ -287,7 +296,7 @@ internal static unsafe class MatrixSolvers
 
 	#region symmetric eigen
 	/// <summary>
-	/// Reduce a symmetric matrix <paramref name="A"/> to a tridiagonal form stored as <paramref name="diag"/> and <paramref name="offDiag"/> where <paramref name="A"/> will be replaced by the unary transformation matrix at exit using Householder reflections.
+	/// Reduce a symmetric matrix <paramref name="A"/> to a tridiagonal form stored as <paramref name="diag"/> and <paramref name="offDiag"/>[1..] where <paramref name="A"/> will be replaced by the unary transformation matrix at exit using Householder reflections.
 	/// </summary>
 	public static void SymmetricMatrixToTridiagonal<T>(int n, T* A, int ld, T* diag, T* offDiag) where T : unmanaged, IFloatingPoint<T>
 	{
@@ -317,11 +326,11 @@ internal static unsafe class MatrixSolvers
 			//tex:$A_{0:i-1,0:i-1} = A_{0:i-1,0:i-1} - \vec{q}\vec{u}^T - \vec{u}\vec{q}^T$
 			SymRank2UpdateNeg(A, ld, diag, u, i);
 			// get beta
-			//tex:$$\beta = -\frac{A_{i-1,i}}{|A_{i-1,i}|}\|A_{0:i-1,i}\|$$
-			offDiag[im1] = -normU;
+			//tex:$$\beta = \mp\|\vec{A}_{0:i-1,i}\|$$
+			offDiag[i] = -normU;
 		}
 		// get first off-diagonal
-		offDiag[0] = A[1];
+		offDiag[1] = A[1];
 		// reconstruct unary transformation matrix
 		diag[0] = A[0]; diag[1] = A[1 + ld];
 		A[0] = A[1 + ld] = T.One;
@@ -344,276 +353,102 @@ internal static unsafe class MatrixSolvers
 			for (int j = 0; j < i; j++)
 				A[j + i * ld] = A[i + j * ld] = T.Zero;
 		}
-		InPlaceTranspose(A, ld, n);
 	}
 
 	/// <summary>
 	/// Compute the eigenvalues and eigenvectors of a symmetric tridiagonal matrix represented by <paramref name="diag"/> and <paramref name="offDiag"/> where <paramref name="diag"/> will be replaced by the eigenvalues at exit. The <paramref name="eigenvectors"/> contains the original unary matrix to be multiplied in-place.
 	/// </summary>
-	public static bool SymmetricTridiagonalMatrixEigensolve<T>(int n, T* diag, T* offDiag, T* eigenvectors, int eigvecLD) where T : unmanaged, IFloatingPoint<T>
+	public static bool SymmetricTridiagonalEigensolve<T>(int n, T* diag, T* offDiag, T* eigenvectors, int eigvecLD) where T : unmanaged, IFloatingPoint<T>
 	{
-		T two = T.One + T.One;
-		offDiag[n - 1] = T.Zero;
-		for (int i = 0; i < n; i++)
+		// constants
+		T half = T.One / (T.One + T.One), two = T.One + T.One, four = T.One + T.One + T.One + T.One;
+		offDiag[0] = T.Zero; // off-diag is advanced by 1
+
+		// loop from the eigenvalue at right-bottom to the one at top-left
+		for (int k = n - 1; k > 0; k--)
 		{
-			int iter = 0, m;
-		INNER_START:
-			for (m = i; m < n - 1; m++)
+			int iter = 0, i;
+		RESTART_EIGVAL:
+			for (i = k - 1; i >= 0; i--)
 			{
-				T d = T.Abs(diag[m]) + T.Abs(diag[m + 1]);
+				T d = T.Abs(diag[i]) + T.Abs(diag[i + 1]);
 				// look for a single small sub-diagonal element which indicates convergence of one eigenvalue
-				if (T.Abs(offDiag[m]) + d == d)
+				if (T.Abs(offDiag[i + 1]) + d == d)
 					break;
 			}
-			if (m == i)
+			if (i == k - 1)
 			{   // eigenvalue converged
 				continue;
 			}
-			// now, A[i..m, i..m] (inclusive m) is tridiagonal in machine precision
-			// perform QL with implicit shift
+			if (i < 0)
+				i = 0;
+			// now, A[i..k, i..k] (inclusive k) is tridiagonal in machine precision
+			// perform QR with implicit shift
 			if (iter++ == 30)
+			{   // too many iterations for one eigenvalue, there may be errors
 				return false;
-			// get k_(shift)
-			//tex: $k_s = \text{argmin}_x{|d_i - x|}$ where $x \in \text{eigval}\pmatrix{d_i & e_i \\ e_i & d_{i+1}}$
-			T ks = (diag[i + 1] - diag[i]) / (two * offDiag[i]);
-			// the last Householder reflector u must be the one in QL factorization of A[i..m, i..m]
-			// i.e. the one computed from the last row/column of it
-			//tex:$\vec{u} = [0, \ldots, 0, e_{m-1}, d_m \pm \|(e_{m-1}, d_m)\|]^T$
-			T r = T.Sqrt(ks * ks + T.One);
-			//tex: get $d_m - k_s$
-			ks = diag[m] - diag[i] + offDiag[i] / (ks + T.CopySign(r, ks));
-			T s = T.One, c = T.One, p = T.Zero;
-			for (int j = m - 1; j >= i; j--)
+			}
+			// get eigenvalue shift
+			//tex: $s = \text{argmin}_x{|d_k - x|}$ where $x \in \text{eigval}\pmatrix{d_{k-1} & e_{k-1} \\ e_{k-1} & d_k}$
+			T s;
 			{
-				// a plane rotation as in the original QL, followed by Givens rotations to restore tridiagonal form
-				T f = s * offDiag[j], b = c * offDiag[j];
-				r = T.Sqrt(ks * ks + f * f);
-				offDiag[j + 1] = r;
-				// deal with underflow
-				if (r == T.Zero)
+				T dSub = diag[k - 1] - diag[k], dAdd = diag[k - 1] + diag[k];
+				T sqrt = T.Sqrt(dSub * dSub + four * offDiag[k] * offDiag[k]);
+				T s1 = half * (dAdd - sqrt);
+				T s2 = half * (dAdd + sqrt);
+				if (T.Abs(s1 - diag[k]) <= T.Abs(s2 - diag[k]))
+					s = s1;
+				else
+					s = s2;
+			}
+			// Householder reflect from the first column
+			T c = default;
+			for (int j = i; j < k; j++)
+			{
+				// get Householder reflector matrix [h1, h3; h3, h2]
+				//tex:$\gamma=\beta_{j-1}^2+c^2\pm\beta_{j-1}\sqrt{\beta_{j-1}^2+c^2}$, $h_1=-h_2={c^2}/{\gamma}-1$ and $h_3=-{c\left(\beta_{j-1}\pm\sqrt{\beta_{j-1}^2+c^2}\right)}/{\gamma}$
+				T b, norm, normSq, γ, h1, h2, h3;
+				if (j == i)
 				{
-					diag[j + 1] -= p;
-					offDiag[m] = T.Zero;
-					goto INNER_START;
+					b = diag[i] - s;
+					normSq = b * b + offDiag[i + 1] * offDiag[i + 1];
+					norm = T.Sqrt(normSq);
+					c = offDiag[i + 1];
 				}
-				s = f / r;
-				c = ks / r;
-				ks = diag[j + 1] - p;
-				r = (diag[j] - ks) * s + two * c * b;
-				p = s * r;
-				diag[j + 1] = ks + p;
-				ks = c * r - b;
-				// compute eigenvectors
+				else
+				{
+					b = offDiag[j];
+					normSq = c * c + offDiag[j] * offDiag[j];
+					norm = T.Sqrt(normSq);
+				}
+				γ = normSq + T.Abs(b) * norm;
+				h3 = -c * (b + T.CopySign(norm, b)) / γ;
+				h1 = c * c / γ - T.One; h2 = -h1;
+				// update diag and off-diag and c
+				//tex:$$\left[\begin{matrix}\beta_{j-1}&\alpha_j&\beta_j&c\\0&\beta_j&\alpha_{j+1}&\beta_{j+1}\\\end{matrix}\right]\gets\left[\begin{matrix}h_1&h_3\\h_3&h_2\\\end{matrix}\right]\left[\begin{matrix}\beta_{j-1}&\alpha_j&\beta_j&0\\c&\beta_j&\alpha_{j+1}&\beta_{j+1}\\\end{matrix}\right]$$
+				//$$\left[\begin{matrix}\alpha_j&\beta_j\\\beta_j&\alpha_{j+1}\\\end{matrix}\right]\gets\left[\begin{matrix}\alpha_j&\beta_j\\\beta_j&\alpha_{j+1}\\\end{matrix}\right]\left[\begin{matrix}h_1&h_3\\h_3&h_2\\\end{matrix}\right]$$
+				offDiag[j] = h1 * offDiag[j] + h3 * c;
+				if (j + 2 < n)
+					(offDiag[j + 2], c) = (h2 * offDiag[j + 2], h3 * offDiag[j + 2]);
+				(diag[j], diag[j + 1], offDiag[j + 1]) =
+					(
+					h1 * h1 * diag[j] + h3 * h3 * diag[j + 1] + two * h1 * h3 * offDiag[j + 1],
+					h3 * h3 * diag[j] + h2 * h2 * diag[j + 1] + two * h2 * h3 * offDiag[j + 1],
+					h3 * (h1 * diag[j] + h2 * diag[j + 1]) + offDiag[j + 1] * (h1 * h2 + h3 * h3)
+					);
+				// update eigenvectors
+				//tex:$$U_{:,j:j+1}\gets U_{:,j:j+1}\left[\begin{matrix}h_1&h_3\\h_3&h_2\\\end{matrix}\right]$$
 				if (eigenvectors == null)
 					continue;
-				int indI0 = j * eigvecLD;
-				int indI1 = (j + 1) * eigvecLD;
-				for (int k = 0; k < n; k++)
-				{
-					ref T ek0 = ref eigenvectors[k + indI0];
-					ref T ek1 = ref eigenvectors[k + indI1];
-					(ek0, ek1) = (s * ek0 + c * ek1, c * ek0 - s * ek1);
-				}
+				HouseholderColumnUpdate2(eigenvectors + j * eigvecLD, eigvecLD, n, h1, h2, h3);
 			}
-			diag[i] -= p;
-			offDiag[i] = ks;
-			offDiag[m] = T.Zero;
-			goto INNER_START;
+			goto RESTART_EIGVAL;
 		}
 		return true;
 	}
 	#endregion
 
 	#region general eigen
-	public static bool HessenbergSchurDecompose<T>(int n, T* A, int ld, T* wr, T* wi) where T : unmanaged, IFloatingPoint<T>
-	{
-		// TODO: store exceptional shifts to restore Schur form
-		// TODO: explicitly get unitary matrix
-		// TODO: reorder Schur decomposition result
-		// TODO: get eigenvectors from Schur decomposition result
-
-		T half = T.One / (T.One + T.One);
-		T threeFourth = (T.One + T.One + T.One) / T.ScaleB(T.One, 2);
-		T sevenSixteenth = (T.One + T.One + T.One + T.ScaleB(T.One, 2)) / T.ScaleB(T.One, 4);
-		Unsafe.InitBlockUnaligned(wi, 0, (uint)(n * sizeof(T)));
-		// get norm of A for small sub-diagonal elements
-		T normA = T.Zero;
-		for (int j = 0; j < n; j++)
-			for (int i = 0; i < Math.Min(j + 2, n); i++)
-				normA += T.Abs(A[i + j * ld]);
-		int m = n - 1; // last unconverged eigenvalue index
-		T t = T.Zero; // exceptional shift
-		while (m >= 0)
-		{
-			int iters = 0;
-		INNER_START:
-			// look for single small sub-diagonal element
-			int i = m;
-			for (; i > 0; i--)
-			{
-				T s = T.Abs(A[i - 1 + (i - 1) * ld]) + T.Abs(A[i + i * ld]);
-				if (s == T.Zero)
-					s = normA;
-				if (T.Abs(A[i + (i - 1) * ld]) + s == s)
-				{
-					A[i + (i - 1) * ld] = T.Zero;
-					break;
-				}
-			}
-			T x = A[m + m * ld];
-			if (i == m)
-			{   // one eigenvalue found
-				wr[m--] = x + t;
-				continue;
-			}
-			T y = A[m - 1 + (m - 1) * ld];
-			T w = A[m + (m - 1) * ld] * A[m - 1 + m * ld];
-			if (i == m - 1)
-			{   // two eigenvalues found
-				T pp = half * (y - x);
-				T qq = pp * pp + w;
-				T z = T.Sqrt(T.Abs(qq));
-				x += t;
-				if (qq >= T.Zero)
-				{   // a real pair
-					z = pp + T.CopySign(z, pp);
-					wr[m - 1] = wr[m] = x + z;
-					if (z != T.Zero)
-						wr[m] = x - w / z;
-				}
-				else
-				{   // a complex pair
-					wr[m - 1] = wr[m] = x + pp;
-					wi[m - 1] = -(wi[m] = z);
-				}
-				m -= 2;
-				continue;
-			}
-			// continue QR with shift iteration
-			if (iters == 30)
-				return false; // to many iterations
-			if (iters == 10 || iters == 20)
-			{   // form exceptional shift
-				t += x;
-				for (int j = 0; j < m; j++)
-					A[j + j * ld] -= x;
-				T s = T.Abs(A[m + (m - 1) * ld]) + T.Abs(A[m - 1 + (m - 2) * ld]);
-				y = x = threeFourth * s;
-				w = -sevenSixteenth * s * s;
-			}
-			++iters;
-			int k = m - 2;
-			T p = T.Zero, q = T.Zero, r = T.Zero;
-			for (; k >= i; k--)
-			{
-				// form shift
-				//tex:$p_1=a_{2,1}\{[(a_{n,n}-a_{1,1})(a_{n-1,n-1}-a_{1,1}) - a_{n-1,n}a_{n,n-1}] / a_{2,1} + a_{1,2}\}$
-				//tex:$q_1 = a_{2,1}[a_{2,2}-a_{1,1}-(a_{n,n} - a_{1,1}) - (a_{n-1,n-1}-a_{1,1})]$
-				//tex:$r_1 = a_{2,1}a_{3,2}$
-				T z = A[k + k * ld];
-				r = x - z;
-				T s = y - z;
-				p = (r * s - w) / A[k + 1 + k * ld] + A[k + (k + 1) * ld];
-				q = A[k + 1 + (k + 1) * ld] - z - r - s;
-				r = A[k + 2 + (k + 1) * ld];
-				// scale to prevent under- or over-flow
-				s = T.Abs(p) + T.Abs(q) + T.Abs(r);
-				q /= s; p /= s; r /= s;
-				if (k == i)
-					break;
-				// look for	2 consecutive small sub-diagonal elements
-				//tex:$|a_{k,k-1}(|q| + |r|)| \ll |p|(|a_{m+1,m+1}|+|a_{m,m}|+|a_{m-1,m-1}|)$
-				T u = T.Abs(A[k + (k - 1) * ld]) * (T.Abs(q) + T.Abs(r));
-				T v = T.Abs(p) * (T.Abs(A[k - 1 + (k + 1) * ld]) + T.Abs(z) + T.Abs(A[k + 1 + (k + 1) * ld]));
-				if (u + v == v)
-					break;
-			}
-			// set remaining sub-diagonals to 0
-			for (int l = k + 2; l <= m; l++)
-			{
-				A[l + (l - 2) * ld] = T.Zero;
-				if (l == m + 2)
-					continue;
-				A[l + (l - 3) * ld] = T.Zero;
-			}
-			// double QR steps on A[i..m, k..m] (inclusive m)
-			for (int l = k; l < m; l++)
-			{
-				if (l != k)
-				{   // setup of Householder reflector
-					p = A[l + (l - 1) * ld];
-					q = A[l + 1 + (l - 1) * ld];
-					r = T.Zero;
-					if (l != m - 1)
-						r = A[l + 2 + (l - 1) * ld];
-					if ((x = T.Abs(p) + T.Abs(q) + T.Abs(r)) != T.Zero)
-					{	// scale to prevent under- or over-flow
-						p /= x; q /= x; r /= x;
-					}
-				}
-				T s = T.CopySign(T.Sqrt(p * p + q * q + r * r), p);
-				if (s == T.Zero)
-					continue;
-				if (l == k)
-				{
-					if (i != k)
-						A[l + (l - 1) * ld] = -A[l + (l - 1) * ld];
-				}
-				else
-				{
-					A[l + (l - 1) * ld] = -s * x;
-				}
-				//tex: the non-zero elements of $\vec{u}$ are $(p \pm s)/(\pm s), q/(\pm s), r/(\pm s)$
-				p += s;
-				x = p / s;
-				y = q / s;
-				T z = r / s;
-				q /= p;
-				r /= p;
-				// modify rows of A
-				for (int j = l; j <= m; j++)
-				{
-					p = A[l + j * ld] + q * A[l + 1 + j * ld];
-					if (l != m - 1)
-					{
-						p += r * A[l + 2 + j * ld];
-						A[l + 2 + j * ld] -= p * z;
-					}
-					A[l + 1 + j * ld] -= p * y;
-					A[l + j * ld] -= p * x;
-				}
-				// modify columns of A
-				int mmin = Math.Min(m, l + 3);
-				for (int j = i; j <= mmin; j++)
-				{
-					p = x * A[j + l * ld] + y * A[j + (l + 1) * ld];
-					if (l != (m - 1))
-					{
-						p += z * A[j + (l + 2) * ld];
-						A[j + (l + 2) * ld] -= p * r;
-					}
-					A[j + (l + 1) * ld] -= p * q;
-					A[j + l * ld] -= p;
-				}
-			}
-			// loop
-			if (i >= m - 1)
-				continue;
-			else
-				goto INNER_START;
-		}
-		// chop small sub-diagonal values
-		T threshold = T.Sqrt(normA) * Math.Sqrt(NumberType<T>.MachinePrecision).As<double, T>();
-		for (int i = 0; i < n; i++)
-		{
-			for (int j = i + 1; j < n; j++)
-			{
-				ref T v = ref A[j + i * n];
-				if (T.Abs(v) < threshold)
-					v = T.Zero;
-			}
-		}
-		return true;
-	}
+	
 	#endregion
 }
