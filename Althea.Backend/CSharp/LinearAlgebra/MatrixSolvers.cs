@@ -9,7 +9,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra;
 internal static unsafe class MatrixSolvers
 {
 	// TODO: use existing codes
-	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot \begin eigval argmin
+	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot \begin \leftarrow eigval argmin
 	#region utilities
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static T NormSq<T>(T* vec, int n) where T : unmanaged, IFloatingPoint<T>
@@ -109,11 +109,20 @@ internal static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void MatMulScaledVec<T>(T* A, int ld, T α, T* x, T* output, int n) where T : unmanaged, IFloatingPoint<T>
+	private static void ScaledVecMulMat<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IFloatingPoint<T>
 	{
-		for (int i = 0; i < n; i++)
+		for (int i = 0; i < m; i++)
 		{
 			output[i] = α * Dot(A + i * ld, x, n);
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void MatMulScaledVec<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IFloatingPoint<T>
+	{
+		Unsafe.InitBlockUnaligned(output, 0, (uint)(m * sizeof(T)));
+		for (int i = 0; i < n; i++)
+		{
+			AddScaled(output, A + i * ld, x[i] * α, m);
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,8 +130,7 @@ internal static unsafe class MatrixSolvers
 	{
 		for (int i = 0; i < n; i++)
 		{
-			T yy = y[i];
-			AddScaled(A + i * ld, x, -yy, m);
+			AddScaled(A + i * ld, x, -y[i], m);
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,9 +138,8 @@ internal static unsafe class MatrixSolvers
 	{
 		for (int i = 0; i < n; i++)
 		{
-			T xx = x[i], yy = y[i];
-			AddScaled(A + i * ld, x, -yy, n);
-			AddScaled(A + i * ld, y, -xx, n);
+			AddScaled(A + i * ld, x, -y[i], n);
+			AddScaled(A + i * ld, y, -x[i], n);
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -302,55 +309,55 @@ internal static unsafe class MatrixSolvers
 	{
 		T two = T.One + T.One;
 		// reduce to tridiagonal by Householder reflect from the last column
-		for (int i = n - 1; i >= 2; i--)
+		for (int i = 0; i < n - 2; i++)
 		{
-			int im1 = i - 1;
-			// get vector u and store in A's column i
-			//tex:$$\vec{u} = \pmatrix{\vec{A}_{0:i-2,i} \\  A_{i-1,i} \pm \|\vec{A}_{0:i-1,i}\|}$$
-			T* u = A + i * ld;
-			ref T uLast = ref u[im1];
-			T normSqrU = NormSq(u, i), normU = T.Sqrt(normSqrU);
-			normU = T.CopySign(normU, uLast);
-			// get tau and store in A[i, i-1]
-			//tex: $$\tau = \frac{2}{\|\vec{u}\|^2}$$
-			//tex:$$H = I - \tau \vec{u}\vec{u}^T$$
-			T tau = T.One / (normSqrU + uLast * normU);
-			uLast += normU;
-			A[i + im1 * ld] = tau;
-			// get A[0..i, 0..i]
-			//tex:$\vec{p} = \tau A \vec{u}$ and store in diag[..i]
-			MatMulScaledVec(A, ld, tau, u, diag, i);
+			int len = n - i - 1;
+			// get Householder reflector and store in A's column i
+			// Householder reflector u is generated from A[i+1..,i]
+			T* u = A + (i + 1 + i * ld);
+			T normSqrU = NormSq(u, len), normU = T.Sqrt(normSqrU);
+			normU = T.CopySign(normU, u[0]);
+			// get tau and store in A[i, i+1]
+			//tex: $\tau = {2}/{\|\vec{u}\|^2}$, $H = I - \tau \vec{u}\vec{u}^T$
+			T tau = T.One / (normSqrU + u[0] * normU);
+			u[0] += normU;
+			A[i + (i + 1) * ld] = tau;
+			// get A[i.., i..]
+			//tex:$\vec{p} = \tau A_{i+1:,i+1:} \vec{u}$ and store in diag[..i]
+			ScaledVecMulMat(A + (i + 1 + (i + 1) * ld), ld, tau, u, diag, len, len);
 			//tex:$$\vec{p}=\vec{p}-\frac{\tau\vec{u}\cdot\vec{p}}{2}\vec{u}$$
-			T k = Dot(u, diag, i) * tau / two;
-			AddScaled(diag, u, -k, i);
-			//tex:$A_{0:i-1,0:i-1} = A_{0:i-1,0:i-1} - \vec{q}\vec{u}^T - \vec{u}\vec{q}^T$
-			SymRank2UpdateNeg(A, ld, diag, u, i);
+			T k = Dot(u, diag, len) * tau / two;
+			AddScaled(diag, u, -k, len);
+			//tex:$A_{i+1:,i+1:} = A_{i+1:,i+1:} - \vec{q}\vec{u}^T - \vec{u}\vec{q}^T$
+			SymRank2UpdateNeg(A + (i + 1 + (i + 1) * ld), ld, diag, u, len);
 			// get beta
-			//tex:$$\beta = \mp\|\vec{A}_{0:i-1,i}\|$$
-			offDiag[i] = -normU;
+			//tex:$$\beta = \mp\|\vec{A}_{i+1:,i}\|$$
+			offDiag[i + 1] = -normU;
 		}
-		// get first off-diagonal
-		offDiag[1] = A[1];
+		// get last off-diagonal
+		offDiag[n - 1] = A[n - 1 + (n - 2) * ld];
 		// reconstruct unary transformation matrix
-		diag[0] = A[0]; diag[1] = A[1 + ld];
-		A[0] = A[1 + ld] = T.One;
-		A[1] = A[ld] = T.Zero;
-		for (int i = 2; i < n; i++)
+		diag[n - 1] = A[n - 1 + (n - 1) * ld];
+		diag[n - 2] = A[n - 2 + (n - 2) * ld];
+		A[n - 1 + (n - 1) * ld] = A[n - 2 + (n - 2) * ld] = T.One;
+		A[n - 2 + (n - 1) * ld] = A[n - 1 + (n - 2) * ld] = T.Zero;
+		for (int i = n - 3; i >= 0; i--)
 		{
 			// get tau and vector u
-			T tau = A[i + (i - 1) * ld];
-			T* u = A + i * ld;
-			// update Householder reflectors' product stored in row major A[0..i, 0..i]
-			//tex:$H_{(i)} = H_{(i-1)} - \tau H_{(i-1)} \vec{u}_{(i)}\vec{u}_{(i)}^T$
-			for (int j = 0; j < i; j++)
+			int len = n - i - 1;
+			T tau = A[i + (i + 1) * ld];
+			T* u = A + (i + 1 + i * ld);
+			// update Householder reflectors' product stored in A[0..i, 0..i]
+			//tex:$Q = Q - \tau \vec{u}_{(i)}\vec{u}_{(i)}^T Q$
+			for (int j = i + 1; j < n; j++)
 			{
-				T dot = Dot(u, A + j * ld, i);
-				AddScaled(A + j * ld, u, -tau * dot, i);
+				T dot = Dot(u, A + (i + 1 + j * ld), len);
+				AddScaled(A + (i + 1 + j * ld), u, -tau * dot, len);
 			}
 			// set diag and reset last row and column of A[..i, ..i] for next iteration
 			diag[i] = A[i + i * ld];
 			A[i + i * ld] = T.One;
-			for (int j = 0; j < i; j++)
+			for (int j = i + 1; j < n; j++)
 				A[j + i * ld] = A[i + j * ld] = T.Zero;
 		}
 	}
@@ -449,6 +456,68 @@ internal static unsafe class MatrixSolvers
 	#endregion
 
 	#region general eigen
-	
+	/// <summary>
+	/// Reduce the given matrix <paramref name="A"/> of size <paramref name="n"/>×<paramref name="n"/> to a Hessenberg matrix in-place by a unary transformation which will be stored in <paramref name="Q"/>. If <paramref name="Q"/> is not required, then <paramref name="ldq"/> shall be 0 and <paramref name="Q"/> shall be a workspace with size ≥<c>3 * <paramref name="n"/></c>.
+	/// </summary>
+	public static void MatrixToHessenberg<T>(int n, T* A, int lda, T* Q, int ldq) where T : unmanaged, IFloatingPoint<T>
+	{
+		T two = T.One + T.One;
+		// reduce to Hessenberg form by Householder reflect from the last column
+		for (int i = 0; i < n - 2; i++)
+		{
+			int len = n - i - 1;
+			// get Householder reflector and store in A's column i
+			// Householder reflector u is generated from A[i+1..,i]
+			T* u = ldq == 0 ? Q + 1 : Q + (1 + i * ldq);
+			Unsafe.CopyBlockUnaligned(u, A + (i + 1 + i * lda), (uint)(len * sizeof(T)));
+			T normSqrU = NormSq(u, len), normU = T.Sqrt(normSqrU);
+			normU = T.CopySign(normU, u[0]);
+			// get tau and
+			//tex: $\tau = {2}/{\|\vec{u}\|^2}$, $H = I - \tau \vec{u}\vec{u}^T$
+			T tau = T.One / (normSqrU + u[0] * normU);
+			u[0] += normU;
+			// get A[i.., i..]
+			// set the -1-th element of vector u to 0 for simplification
+			u--; len++; u[0] = T.Zero;
+			//tex:$A_{i:,i:} \leftarrow H A_{i:,i:} H = (A - A\vec{u}\vec{u}^T - \vec{u}\vec{u}^T A + \vec{u}\vec{u}^T A \vec{u}\vec{u}^T)$
+			//tex: let $\vec{p} = \tau A_{i:,i:} \vec{u}$ and store in Q[.., i + 1], and
+			//let $\vec{q}^T = \tau \vec{u}^T A_{i:,i:}$ and store in Q[.., i + 2]
+			T* p = ldq == 0 ? Q + n : Q + (i + 1) * ldq;
+			T* q = ldq == 0 ? Q + 2 * n : Q + (i + 2) * ldq;
+			MatMulScaledVec(A + (i + i * lda), lda, tau, u, p, len, len);
+			ScaledVecMulMat(A + (i + i * lda), lda, tau, u, q, len, len);
+			//tex:$A_{i:,i:} = A_{i:,i:} - \vec{p}\vec{u}^T - \vec{u}\vec{q}^T (I - \tau \vec{u}\vec{u}^T)$
+			//tex:let $\vec{q} = \vec{q} - \tau (\vec{u}\cdot\vec{q}) \vec{u}$ then $A_{i:,i:} = A_{i:,i:} - \vec{p}\vec{u}^T - \vec{u}\vec{q}^T$
+			AddScaled(q, u, -tau * Dot(u, q, len), len);
+			Rank1UpdateNeg(A + (i + i * lda), lda, p, u, len, len);
+			Rank1UpdateNeg(A + (i + i * lda), lda, u, q, len, len);
+			// store tau
+			u[0] = tau;
+			Unsafe.InitBlockUnaligned(A + (i + 2 + i * lda), 0, (uint)((n - i - 2) * sizeof(T)));
+		}
+		if (ldq == 0)
+			return;
+		// reconstruct unary transformation matrix
+		Q[n - 1 + (n - 1) * ldq] = Q[n - 2 + (n - 2) * ldq] = T.One;
+		Q[n - 2 + (n - 1) * ldq] = Q[n - 1 + (n - 2) * ldq] = T.Zero;
+		for (int i = n - 3; i >= 0; i--)
+		{
+			// get tau and vector u
+			int len = n - i - 1;
+			T* u = Q + (1 + i * ldq);
+			T tau = u[-1];
+			// update Householder reflectors' product stored in Q[..i, ..i]
+			//tex:$Q = Q - \tau \vec{u}_{(i)}\vec{u}_{(i)}^T Q$
+			for (int j = i + 1; j < n; j++)
+			{
+				T dot = Dot(u, Q + (i + 1 + j * ldq), len);
+				AddScaled(Q + (i + 1 + j * ldq), u, -tau * dot, len);
+			}
+			// set diag and reset last row and column of Q[..i, ..i] for next iteration
+			Q[i + i * ldq] = T.One;
+			for (int j = i + 1; j < n; j++)
+				Q[j + i * ldq] = Q[i + j * ldq] = T.Zero;
+		}
+	}
 	#endregion
 }
