@@ -92,15 +92,6 @@ internal static unsafe class MatrixSolvers
 			y[i] += α * x[i];
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void HouseholderColumnUpdate2<T>(T* A, int ld, int n, T h1, T h2, T h3) where T : unmanaged, IFloatingPoint<T>
-	{
-		// TODO: use SIMD
-		for (int i = 0; i < n; i++)
-		{
-			(A[i], A[ld + i]) = (A[i] * h1 + A[ld + i] * h3, A[i] * h3 + A[ld + i] * h2);
-		}
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void VecMulMat<T>(T* x, T* A, int ld, T* output, int m, int n) where T : unmanaged, IFloatingPoint<T>
 	{
 		for (int i = 0; i < n; i++)
@@ -109,7 +100,7 @@ internal static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void ScaledVecMulMat<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IFloatingPoint<T>
+	private static void VecMulScaledMat<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IFloatingPoint<T>
 	{
 		for (int i = 0; i < m; i++)
 		{
@@ -151,6 +142,42 @@ internal static unsafe class MatrixSolvers
 			{
 				(A[i + j * ld], A[j + i * ld]) = (A[j + i * ld], A[i + j * ld]);
 			}
+		}
+	}
+
+	// TODO: SIMD
+	//tex:$H = \begin{pmatrix}h_1&h_3\\h_3&h_2\end{pmatrix}$
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void HouseholderColumnUpdate2<T>(T* A, int ld, int n, T h1, T h2, T h3) where T : unmanaged, IFloatingPoint<T>
+	{
+		for (int i = 0, j = ld; i < n; i++, j++)
+		{
+			(A[i], A[j]) = (A[i] * h1 + A[j] * h3, A[i] * h3 + A[j] * h2);
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void HouseholderRowUpdate2<T>(T* A, int ld, int n, T h1, T h2, T h3) where T : unmanaged, IFloatingPoint<T>
+	{
+		for (int i = 0, j = 0; i < n; i++, j += ld)
+		{
+			(A[j], A[j + 1]) = (A[j] * h1 + A[j + 1] * h3, A[j] * h3 + A[j + 1] * h2);
+		}
+	}
+	//tex:$H = \begin{pmatrix}h_1&h_4&h_5\\h_4&h_2&h_6\\h_5&h_6&h_3\end{pmatrix}$
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void HouseholderColumnUpdate3<T>(T* A, int ld, int n, T h1, T h2, T h3, T h4, T h5, T h6) where T : unmanaged, IFloatingPoint<T>
+	{
+		for (int i = 0, j = ld, k = ld * 2; i < n; i++, j++, k++)
+		{
+			(A[i], A[j], A[k]) = (A[i] * h1 + A[j] * h4 + A[k] * h5, A[i] * h4 + A[j] * h2 + A[k] * h6, A[i] * h5 + A[j] * h6 + A[k] * h3);
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void HouseholderRowUpdate3<T>(T* A, int ld, int n, T h1, T h2, T h3, T h4, T h5, T h6) where T : unmanaged, IFloatingPoint<T>
+	{
+		for (int i = 0, j = 0; i < n; i++, j += ld)
+		{
+			(A[j], A[j + 1], A[j + 2]) = (A[j] * h1 + A[j + 1] * h4 + A[j + 2] * h5, A[j] * h4 + A[j + 1] * h2 + A[j + 2] * h6, A[j] * h5 + A[j + 1] * h6 + A[j + 2] * h3);
 		}
 	}
 	#endregion
@@ -324,7 +351,7 @@ internal static unsafe class MatrixSolvers
 			A[i + (i + 1) * ld] = tau;
 			// get A[i.., i..]
 			//tex:$\vec{p} = \tau A_{i+1:,i+1:} \vec{u}$ and store in diag[..i]
-			ScaledVecMulMat(A + (i + 1 + (i + 1) * ld), ld, tau, u, diag, len, len);
+			VecMulScaledMat(A + (i + 1 + (i + 1) * ld), ld, tau, u, diag, len, len);
 			//tex:$$\vec{p}=\vec{p}-\frac{\tau\vec{u}\cdot\vec{p}}{2}\vec{u}$$
 			T k = Dot(u, diag, len) * tau / two;
 			AddScaled(diag, u, -k, len);
@@ -476,23 +503,21 @@ internal static unsafe class MatrixSolvers
 			//tex: $\tau = {2}/{\|\vec{u}\|^2}$, $H = I - \tau \vec{u}\vec{u}^T$
 			T tau = T.One / (normSqrU + u[0] * normU);
 			u[0] += normU;
-			// get A[i.., i..]
-			// set the -1-th element of vector u to 0 for simplification
-			u--; len++; u[0] = T.Zero;
-			//tex:$A_{i:,i:} \leftarrow H A_{i:,i:} H = (A - A\vec{u}\vec{u}^T - \vec{u}\vec{u}^T A + \vec{u}\vec{u}^T A \vec{u}\vec{u}^T)$
-			//tex: let $\vec{p} = \tau A_{i:,i:} \vec{u}$ and store in Q[.., i + 1], and
-			//let $\vec{q}^T = \tau \vec{u}^T A_{i:,i:}$ and store in Q[.., i + 2]
+			// get transformed A
+			//tex:$A \leftarrow H A H = (A - \tau A\vec{u}\vec{u}^T - \tau \vec{u}\vec{u}^T A + \tau^2 \vec{u}\vec{u}^T A \vec{u}\vec{u}^T)$
+			//tex: let $\vec{p} = \tau A \vec{u}$ and store in Q[.., i + 1], and
+			//let $\vec{q}^T = \tau \vec{u}^T A$ and store in Q[.., i + 2]
 			T* p = ldq == 0 ? Q + n : Q + (i + 1) * ldq;
 			T* q = ldq == 0 ? Q + 2 * n : Q + (i + 2) * ldq;
-			MatMulScaledVec(A + (i + i * lda), lda, tau, u, p, len, len);
-			ScaledVecMulMat(A + (i + i * lda), lda, tau, u, q, len, len);
+			MatMulScaledVec(A + (i + 1) * lda, lda, tau, u, p, n, len);
+			VecMulScaledMat(A + (i + 1), lda, tau, u, q, n, len);
 			//tex:$A_{i:,i:} = A_{i:,i:} - \vec{p}\vec{u}^T - \vec{u}\vec{q}^T (I - \tau \vec{u}\vec{u}^T)$
-			//tex:let $\vec{q} = \vec{q} - \tau (\vec{u}\cdot\vec{q}) \vec{u}$ then $A_{i:,i:} = A_{i:,i:} - \vec{p}\vec{u}^T - \vec{u}\vec{q}^T$
-			AddScaled(q, u, -tau * Dot(u, q, len), len);
-			Rank1UpdateNeg(A + (i + i * lda), lda, p, u, len, len);
-			Rank1UpdateNeg(A + (i + i * lda), lda, u, q, len, len);
+			//tex:let $\vec{q} = \vec{q} - \tau (\vec{u}\cdot\vec{q}) \vec{u}$ then $A = A - \vec{p}\vec{u}^T - \vec{u}\vec{q}^T$
+			AddScaled(q + (i + 1), u/*.Conjugate*/, -tau * Dot(u, q + (i + 1), len), len);
+			Rank1UpdateNeg(A + (i + 1) * lda, lda, p, u, n, len);
+			Rank1UpdateNeg(A + (i + 1), lda, u, q, len, n);
 			// store tau
-			u[0] = tau;
+			u[-1] = tau;
 			Unsafe.InitBlockUnaligned(A + (i + 2 + i * lda), 0, (uint)((n - i - 2) * sizeof(T)));
 		}
 		if (ldq == 0)
@@ -504,7 +529,7 @@ internal static unsafe class MatrixSolvers
 		{
 			// get tau and vector u
 			int len = n - i - 1;
-			T* u = Q + (1 + i * ldq);
+			T* u = ldq == 0 ? Q + 1 : Q + (1 + i * ldq);
 			T tau = u[-1];
 			// update Householder reflectors' product stored in Q[..i, ..i]
 			//tex:$Q = Q - \tau \vec{u}_{(i)}\vec{u}_{(i)}^T Q$
@@ -519,5 +544,158 @@ internal static unsafe class MatrixSolvers
 				Q[j + i * ldq] = Q[i + j * ldq] = T.Zero;
 		}
 	}
+
+	/// <summary>
+	/// Compute the Schur factorization of given upper Hessenberg matrix <paramref name="A"/> and corresponding unary matrix <paramref name="Q"/> to transformation a general matrix to <paramref name="A"/>. After return, <paramref name="A"/> will be replaced by its Schur form, <paramref name="Q"/> will multiply the Schur vectors in-place and <c><paramref name="wr"/> + √(-1) * <paramref name="wi"/></c> will be the eigenvalues.
+	/// </summary>
+	public static bool HessenbergSchurFactorize<T>(int n, T* A, int lda, T* Q, int ldq, T* wr, T* wi) where T : unmanaged, IFloatingPoint<T>
+	{
+		// constants
+		T two = T.One + T.One, half = T.One / two, halfSqrt2 = T.Sqrt(two) * half, four = two + two;
+		Unsafe.InitBlockUnaligned(wi, 0, (uint)(n * sizeof(T)));
+		T* v = stackalloc T[3];
+
+		// main loop to compute eigenvalues from bottom to top
+		for (int k = n - 1; k > 0; k--)
+		{
+			int iter = 0, i;
+		RESTART_EIGVAL:
+			// look for small sub-diagonal to split matrix
+			for (i = k; i > 0; i--)
+			{
+				T d = T.Abs(A[i + i * lda]) + T.Abs(A[i - 1 + (i - 1) * lda]);
+				if (T.Abs(A[i + (i - 1) * lda]) + d == d)
+				{
+					A[i + (i - 1) * lda] = T.Zero;
+					break;
+				}
+			}
+			// one eigenvalue converged
+			if (i == k)
+			{
+				wr[k] = A[i + i * lda];
+				continue;
+			}
+			// two eigenvalues converged
+			if (i == k - 1)
+			{
+				// transform to standard Schur form
+				//tex:$A_{i:k,:}\gets HA_{i:k,:}$; $A_{:,i:k}\gets A_{:,i:k}H$; $U_{:,i:k}\gets U_{:,i:k}H$,
+				//where $h_2,h_3=\frac{\sqrt2}{2}\sqrt{1\pm\frac{\left|b+c\right|}{\sqrt{\left(b+c\right)^2+\left(a-d\right)^2}}}$ for complex;
+				//or $h_2,h_3=\sqrt{\frac{2\alpha\left(b+c\right)+\left(a-d\right)\left[a-d\pm\sqrt{4bc+\left(a-d\right)^2}\right]}{2\left[\left(b+c\right)^2+\left(a-d\right)^2\right]}}$, $\alpha = b, c$ for real pair
+				T h1, h2, h3;
+				T ad = A[i + i * lda] - A[k + k * lda];
+				T bc = A[i + k * lda] + A[k + i * lda];
+				T b_c = A[i + k * lda] * A[k + i * lda];
+				T delta = ad * ad + four * b_c;
+				T nrm = bc * bc + ad * ad;
+				if (delta >= T.Zero)
+				{
+					delta = T.Sqrt(delta);
+					nrm *= two;
+					h2 = (two * A[i + k * lda] * bc + ad * (ad + delta)) / nrm;
+					h3 = (two * A[k + i * lda] * bc + ad * (ad - delta)) / nrm;
+					h2 = T.Sqrt(h2); h3 = T.Sqrt(h3);
+				}
+				else
+				{
+					nrm = T.Sqrt(nrm);
+					if (nrm == T.Abs(bc))
+						goto CONT;
+					h2 = halfSqrt2 * T.Sqrt(T.One + bc / nrm);
+					h3 = halfSqrt2 * T.Sqrt(T.One - bc / nrm);
+					if (ad < T.Zero && bc > T.Zero)
+					{
+						(h2, h3) = (h3, h2);
+					}
+					if (ad < T.Zero && bc < T.Zero)
+					{ }
+					if (ad > T.Zero && bc > T.Zero)
+					{ }
+					if (ad > T.Zero && bc < T.Zero)
+					{ }
+				}
+				h1 = -h2;
+				HouseholderColumnUpdate2(A + i * lda, lda, k + 1, h1, h2, h3);
+				HouseholderRowUpdate2(A + (i + i * lda), lda, n - i, h1, h2, h3);
+				HouseholderColumnUpdate2(Q + i * ldq, ldq, n, h1, h2, h3);
+				if (delta >= T.Zero)
+					A[k + i * lda] = T.Zero;
+				CONT:
+				T re = A[i + i * lda];
+				wr[i] = wr[k] = re;
+				re *= re;
+				T im = -A[i + k * lda] * A[k + i * lda];
+				if (re + im != re)
+				{
+					wi[i] = T.Sqrt(im);
+					wi[k] = -wi[i];
+				}
+				else
+				{
+					wr[k] = A[k + k * lda];
+				}
+				k--;
+				continue;
+			}
+			// no eigenvalue converged
+			if (i < 0)
+				i = 0;
+			if (iter++ == 30)
+			{   // too many iterations, there may be errors
+				return false;
+			}
+			// continue implicit QR iteration for A[i..k, i..k] (inclusive)
+			for (int j = i; j < k; j++)
+			{
+				if (j == i)
+				{
+					//tex:$$\vec{v}\gets \begin{pmatrix}{\left[\left(a_{k,k}-a_{i,i}\right)\left(a_{k-1,k-1}-a_{i,i}\right)-a_{k-1,k}a_{k,k-1}\right]}/{a_{i+1,i}}+a_{i,i+1} \\ a_{i,i}+a_{i+1,i+1}-\left(a_{k-1,k-1}+a_{k,k}\right) \\ a_{i+2,i+1} \end{pmatrix}$$
+					T akk = A[k + k * lda], aii = A[i + i * lda],
+					  ak1k1 = A[k - 1 + (k - 1) * lda], ai1i1 = A[i + 1 + (i + 1) * lda],
+					  ak1k = A[k - 1 + k * lda], akk1 = A[k + (k - 1) * lda],
+					  ai1i = A[i + 1 + i * lda], aii1 = A[i + (i + 1) * lda];
+					v[0] = ((akk - aii) * (ak1k1 - aii) - ak1k * akk1) / ai1i + aii1;
+					v[1] = aii + ai1i1 - (ak1k1 + akk);
+					v[2] = A[i + 2 + (i + 1) * lda];
+				}
+				else
+				{
+					//tex:$\vec{v}\gets{\vec{a}}_{j:j+2,j-1}$
+					Unsafe.CopyBlockUnaligned(v, A + (j + (j - 1) * lda), (uint)(3 * sizeof(T)));
+				}
+				int nv = j == k - 1 ? 2 : 3;
+				//tex:$H\gets I - 2\vec{v}\vec{v}^T / \|v\|^2 = \begin{pmatrix}h_1&h_4&h_5\\h_4&h_2&h_6\\h_5&h_6&h_3\end{pmatrix}$
+				T normV = T.Sqrt(NormSq(v, nv));
+				v[0] += T.CopySign(normV, v[0]);
+				T tau = two / NormSq(v, nv);
+				T h1 = T.One - tau * v[0] * v[0], h2 = T.One - tau * v[1] * v[1], h3 = T.One - tau * v[2] * v[2];
+				T h4 = -tau * v[0] * v[1], h5 = -tau * v[0] * v[2], h6 = -tau * v[1] * v[2];
+				//tex:$A_{j:j+2,:}\gets HA_{j:j+2,:}$; $A_{:,j:j+2}\gets A_{:,j:j+2}H$; $U_{:,j:j+2}\gets U_{:,j:j+2}H$
+				int colFree = j == i ? i : j - 1;
+				if (j == k - 1)
+				{
+					HouseholderColumnUpdate2(A + (j * lda), lda, Math.Min(j + 4, n), h1, h2, h4);
+					HouseholderRowUpdate2(A + (j + colFree * lda), lda, n - colFree, h1, h2, h4);
+					HouseholderColumnUpdate2(Q + (j * ldq), ldq, n, h1, h2, h4);
+					A[j + 1 + (j - 1) * lda] = T.Zero;
+				}
+				else
+				{
+					HouseholderColumnUpdate3(A + (j * lda), lda, Math.Min(j + 4, n), h1, h2, h3, h4, h5, h6);
+					HouseholderRowUpdate3(A + (j + colFree * lda), lda, n - colFree, h1, h2, h3, h4, h5, h6);
+					HouseholderColumnUpdate3(Q + (j * ldq), ldq, n, h1, h2, h3, h4, h5, h6);
+					if (j != i)
+						A[j + 1 + (j - 1) * lda] = A[j + 2 + (j - 1) * lda] = T.Zero;
+				}
+			}
+			// restart iteration for this eigenvalue
+			goto RESTART_EIGVAL;
+		}
+		// get first eigenvalue and return
+		wr[0] = A[0];
+		return true;
+	}
+
 	#endregion
 }
