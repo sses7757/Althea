@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
-
-using Althea.NativeTypes;
+using System.Runtime.InteropServices;
 
 namespace Althea.Backend.CSharp.LinearAlgebra;
 
@@ -182,7 +181,181 @@ internal static unsafe class MatrixSolvers
 	}
 	#endregion
 
-	// checked
+	#region orthogonal transformations
+	[StructLayout(LayoutKind.Sequential)]
+	private readonly ref struct Householder2<T> where T : unmanaged, IFloatingPoint<T>
+	{
+		private readonly T v1, v2, tau;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Householder2(T v1, T v2)
+		{
+			T normV = T.Sqrt(v1 * v1 + v2 * v2);
+			v1 += T.CopySign(normV, v1);
+			this.tau = (T.One + T.One) / (v1 * v1 + v2 * v2);
+			this.v1 = v1; this.v2 = v2;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly Householder2x2<T> ToReflectionMatrix()
+		{
+			T h2 = T.One - tau * v2 * v2, h4 = -tau * v1 * v2;
+			return new(h2, h4);
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	private readonly ref struct Householder3<T> where T : unmanaged, IFloatingPoint<T>
+	{
+		private readonly T v1, v2, v3, tau;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Householder3(T v1, T v2, T v3)
+		{
+			T temp = v2 * v2 + v3 * v3;
+			T normV = T.Sqrt(v1 * v1 + temp);
+			v1 += T.CopySign(normV, v1);
+			this.tau = (T.One + T.One) / (v1 * v1 + temp);
+			this.v1 = v1; this.v2 = v2; this.v3 = v3;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly Householder3x3<T> ToReflectionMatrix()
+		{
+			T h1 = T.One - tau * v1 * v1, h2 = T.One - tau * v2 * v2, h4 = -tau * v1 * v2;
+			T h3 = T.One - tau * v3 * v3, h5 = -tau * v1 * v3, h6 = -tau * v2 * v3;
+			return new(h1, h2, h3, h4, h5, h6);
+		}
+	}
+
+	//tex:$H = \begin{pmatrix}h_1&h_3\\h_3&h_2\end{pmatrix}$
+	[StructLayout(LayoutKind.Sequential)]
+	private readonly ref struct Householder2x2<T> where T : unmanaged, IFloatingPoint<T>
+	{
+		private readonly T h1, h2, h3;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Householder2x2(T h22, T h12)
+		{
+			this.h1 = -h22; this.h2 = h22; this.h3 = h12;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void ColumnUpdate(T* A, int ld, int n)
+		{
+			for (int i = 0, j = ld; i < n; i++, j++)
+			{
+				(A[i], A[j]) = (A[i] * h1 + A[j] * h3, A[i] * h3 + A[j] * h2);
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void RowUpdate(T* A, int ld, int n)
+		{
+			for (int nn = 0, i = 0; nn < n; nn++, i += ld)
+			{
+				int j = i + 1;
+				(A[i], A[j]) = (A[i] * h1 + A[j] * h3, A[i] * h3 + A[j] * h2);
+			}
+		}
+	}
+
+	//tex:$H = \begin{pmatrix}h_1&h_4&h_5\\h_4&h_2&h_6\\h_5&h_6&h_3\end{pmatrix}$
+	[StructLayout(LayoutKind.Sequential)]
+	private readonly ref struct Householder3x3<T> where T : unmanaged, IFloatingPoint<T>
+	{
+		private readonly T h1, h2, h3, h4, h5, h6;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Householder3x3(T h1, T h2, T h3, T h4, T h5, T h6)
+		{
+			this.h1 = h1; this.h2 = h2; this.h3 = h3; this.h4 = h4; this.h5 = h5; this.h6 = h6;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void ColumnUpdate(T* A, int ld, int n)
+		{
+			for (int i = 0, j = ld, k = ld * 2; i < n; i++, j++, k++)
+			{
+				(A[i], A[j], A[k]) = (A[i] * h1 + A[j] * h4 + A[k] * h5, A[i] * h4 + A[j] * h2 + A[k] * h6, A[i] * h5 + A[j] * h6 + A[k] * h3);
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void RowUpdate(T* A, int ld, int n)
+		{
+			for (int i = 0, j = 0; i < n; i++, j += ld)
+			{
+				(A[j], A[j + 1], A[j + 2]) = (A[j] * h1 + A[j + 1] * h4 + A[j + 2] * h5, A[j] * h4 + A[j + 1] * h2 + A[j + 2] * h6, A[j] * h5 + A[j + 1] * h6 + A[j + 2] * h3);
+			}
+		}
+	}
+
+	//tex:$Q = \begin{pmatrix}q_1&q_4&q_7\\q_2&q_5&q_8\\q_3&q_6&q_9\end{pmatrix}$
+	[StructLayout(LayoutKind.Sequential)]
+	private readonly ref struct Orthogonal3x3<T> where T : unmanaged, IFloatingPoint<T>
+	{
+		private readonly T q1, q2, q3, q4, q5, q6, q7, q8, q9;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Orthogonal3x3(T q1, T q2, T q3, T q4, T q5, T q6, T q7, T q8, T q9)
+		{
+			this.q1 = q1; this.q2 = q2; this.q3 = q3; this.q4 = q4; this.q5 = q5;
+			this.q6 = q6; this.q7 = q7; this.q8 = q8; this.q9 = q9;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void ColumnUpdate(T* A, int ld, int n)
+		{
+			for (int i = 0, j = ld, k = ld * 2; i < n; i++, j++, k++)
+			{
+				(A[i], A[j], A[k]) = (A[i] * q1 + A[j] * q2 + A[k] * q3, A[i] * q4 + A[j] * q5 + A[k] * q6, A[i] * q7 + A[j] * q8 + A[k] * q9);
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void RowUpdate(T* A, int ld, int n)
+		{
+			for (int nn = 0, i = 0; nn < n; nn++, i += ld)
+			{
+				int j = i + 1, k = j + 1;
+				// Q is transposed
+				(A[i], A[j], A[k]) = (A[i] * q1 + A[j] * q2 + A[k] * q3, A[i] * q4 + A[j] * q5 + A[k] * q6, A[i] * q7 + A[j] * q8 + A[k] * q9);
+			}
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	private readonly ref struct Orthogonal4x4<T> where T : unmanaged, IFloatingPoint<T>
+	{
+		private readonly T q1, q2, q3, q4, q5, q6, q7, q8, q9, qA, qB, qC, qD, qE, qF, qG;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void ColumnUpdate(T* A, int ld, int n)
+		{
+			for (int i = 0, j = ld, k = ld * 2, l = ld * 3; i < n; i++, j++, k++, l++)
+			{
+				(A[i], A[j], A[k], A[l]) =
+				(
+					A[i] * q1 + A[j] * q2 + A[k] * q3 + A[l] * q4,
+					A[i] * q5 + A[j] * q6 + A[k] * q7 + A[l] * q8,
+					A[i] * q9 + A[j] * qA + A[k] * qB + A[l] * qC,
+					A[i] * qD + A[j] * qE + A[k] * qF + A[l] * qG
+				);
+			}
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly void RowUpdate(T* A, int ld, int n)
+		{
+			for (int nn = 0, i = 0; nn < n; nn++, i += ld)
+			{
+				int j = i + 1, k = j + 1, l = k + 1;
+				// Q is transposed
+				(A[i], A[j], A[k], A[l]) =
+				(
+					A[i] * q1 + A[j] * q2 + A[k] * q3 + A[l] * q4,
+					A[i] * q5 + A[j] * q6 + A[k] * q7 + A[l] * q8,
+					A[i] * q9 + A[j] * qA + A[k] * qB + A[l] * qC,
+					A[i] * qD + A[j] * qE + A[k] * qF + A[l] * qG
+				);
+			}
+		}
+	}
+	#endregion
+
+
 	#region QR
 	/// <summary>
 	/// Perform the QR factorization of matrix <paramref name="A"/> of size <paramref name="m"/>×<paramref name="n"/>, whose upper part will be replaced by the output triangular matrix and lower part (including diagonal) will be replaced by the Householder reflectors; the diagonal elements are stored in <paramref name="diag"/> which shall have length ≥ <c>max(<paramref name="n"/> - 1, min(m, n))</c>.
@@ -545,6 +718,49 @@ internal static unsafe class MatrixSolvers
 		}
 	}
 
+	private static void ToStandardSchurForm<T>(int n, T* A, int lda, T* Q, int ldq, int i) where T : unmanaged, IFloatingPoint<T>
+	{
+		// constants
+		T two = T.One + T.One, half = T.One / two, halfSqrt2 = T.Sqrt(two) * half, four = two + two;
+		int k = i + 1;
+		// transform to standard Schur form
+		//tex:$A_{i:k,:}\gets HA_{i:k,:}$; $A_{:,i:k}\gets A_{:,i:k}H$; $U_{:,i:k}\gets U_{:,i:k}H$,
+		//where $h_2,h_3=\frac{\sqrt2}{2}\sqrt{1\pm\frac{\left|b+c\right|}{\sqrt{\left(b+c\right)^2+\left(a-d\right)^2}}}$ for complex;
+		//or $h_2,h_3=\sqrt{\frac{2\alpha\left(b+c\right)+\left(a-d\right)\left[a-d\pm\sqrt{4bc+\left(a-d\right)^2}\right]}{2\left[\left(b+c\right)^2+\left(a-d\right)^2\right]}}$, $\alpha = b, c$ for real pair
+		T h2, h3;
+		T ad = A[i + i * lda] - A[k + k * lda];
+		T bc = A[i + k * lda] + A[k + i * lda];
+		T b_c = A[i + k * lda] * A[k + i * lda];
+		T delta = ad * ad + four * b_c;
+		T nrm = bc * bc + ad * ad;
+		if (delta >= T.Zero)
+		{
+			delta = T.Sqrt(delta);
+			nrm *= two;
+			h2 = (two * A[i + k * lda] * bc + ad * (ad + delta)) / nrm;
+			h3 = (two * A[k + i * lda] * bc + ad * (ad - delta)) / nrm;
+			h2 = T.Sqrt(h2); h3 = T.Sqrt(h3);
+		}
+		else
+		{
+			nrm = T.Sqrt(nrm);
+			if (nrm == T.Abs(bc))
+				return;
+			h2 = halfSqrt2 * T.Sqrt(T.One + bc / nrm);
+			h3 = halfSqrt2 * T.Sqrt(T.One - bc / nrm);
+			if (ad < T.Zero)
+			{
+				(h2, h3) = (h3, h2);
+			}
+		}
+		Householder2x2<T> householder = new(h2, h3);
+		householder.ColumnUpdate(A + i * lda, lda, k + 1);
+		householder.RowUpdate(A + (i + i * lda), lda, n - i);
+		householder.ColumnUpdate(Q + i * ldq, ldq, n);
+		if (delta >= T.Zero)
+			A[k + i * lda] = T.Zero;
+	}
+
 	/// <summary>
 	/// Compute the Schur factorization of given upper Hessenberg matrix <paramref name="A"/> and corresponding unary matrix <paramref name="Q"/> to transformation a general matrix to <paramref name="A"/>. After return, <paramref name="A"/> will be replaced by its Schur form, <paramref name="Q"/> will multiply the Schur vectors in-place and <c><paramref name="wr"/> + √(-1) * <paramref name="wi"/></c> will be the eigenvalues.
 	/// </summary>
@@ -553,7 +769,7 @@ internal static unsafe class MatrixSolvers
 		// constants
 		T two = T.One + T.One, half = T.One / two, halfSqrt2 = T.Sqrt(two) * half, four = two + two;
 		Unsafe.InitBlockUnaligned(wi, 0, (uint)(n * sizeof(T)));
-		T* v = stackalloc T[3];
+		wr[0] = T.NaN;
 
 		// main loop to compute eigenvalues from bottom to top
 		for (int k = n - 1; k > 0; k--)
@@ -579,49 +795,7 @@ internal static unsafe class MatrixSolvers
 			// two eigenvalues converged
 			if (i == k - 1)
 			{
-				// transform to standard Schur form
-				//tex:$A_{i:k,:}\gets HA_{i:k,:}$; $A_{:,i:k}\gets A_{:,i:k}H$; $U_{:,i:k}\gets U_{:,i:k}H$,
-				//where $h_2,h_3=\frac{\sqrt2}{2}\sqrt{1\pm\frac{\left|b+c\right|}{\sqrt{\left(b+c\right)^2+\left(a-d\right)^2}}}$ for complex;
-				//or $h_2,h_3=\sqrt{\frac{2\alpha\left(b+c\right)+\left(a-d\right)\left[a-d\pm\sqrt{4bc+\left(a-d\right)^2}\right]}{2\left[\left(b+c\right)^2+\left(a-d\right)^2\right]}}$, $\alpha = b, c$ for real pair
-				T h1, h2, h3;
-				T ad = A[i + i * lda] - A[k + k * lda];
-				T bc = A[i + k * lda] + A[k + i * lda];
-				T b_c = A[i + k * lda] * A[k + i * lda];
-				T delta = ad * ad + four * b_c;
-				T nrm = bc * bc + ad * ad;
-				if (delta >= T.Zero)
-				{
-					delta = T.Sqrt(delta);
-					nrm *= two;
-					h2 = (two * A[i + k * lda] * bc + ad * (ad + delta)) / nrm;
-					h3 = (two * A[k + i * lda] * bc + ad * (ad - delta)) / nrm;
-					h2 = T.Sqrt(h2); h3 = T.Sqrt(h3);
-				}
-				else
-				{
-					nrm = T.Sqrt(nrm);
-					if (nrm == T.Abs(bc))
-						goto CONT;
-					h2 = halfSqrt2 * T.Sqrt(T.One + bc / nrm);
-					h3 = halfSqrt2 * T.Sqrt(T.One - bc / nrm);
-					if (ad < T.Zero && bc > T.Zero)
-					{
-						(h2, h3) = (h3, h2);
-					}
-					if (ad < T.Zero && bc < T.Zero)
-					{ }
-					if (ad > T.Zero && bc > T.Zero)
-					{ }
-					if (ad > T.Zero && bc < T.Zero)
-					{ }
-				}
-				h1 = -h2;
-				HouseholderColumnUpdate2(A + i * lda, lda, k + 1, h1, h2, h3);
-				HouseholderRowUpdate2(A + (i + i * lda), lda, n - i, h1, h2, h3);
-				HouseholderColumnUpdate2(Q + i * ldq, ldq, n, h1, h2, h3);
-				if (delta >= T.Zero)
-					A[k + i * lda] = T.Zero;
-				CONT:
+				ToStandardSchurForm(n, A, lda, Q, ldq, i);
 				T re = A[i + i * lda];
 				wr[i] = wr[k] = re;
 				re *= re;
@@ -648,6 +822,7 @@ internal static unsafe class MatrixSolvers
 			// continue implicit QR iteration for A[i..k, i..k] (inclusive)
 			for (int j = i; j < k; j++)
 			{
+				Householder3<T> householder = default;
 				if (j == i)
 				{
 					//tex:$$\vec{v}\gets \begin{pmatrix}{\left[\left(a_{k,k}-a_{i,i}\right)\left(a_{k-1,k-1}-a_{i,i}\right)-a_{k-1,k}a_{k,k-1}\right]}/{a_{i+1,i}}+a_{i,i+1} \\ a_{i,i}+a_{i+1,i+1}-\left(a_{k-1,k-1}+a_{k,k}\right) \\ a_{i+2,i+1} \end{pmatrix}$$
@@ -655,36 +830,36 @@ internal static unsafe class MatrixSolvers
 					  ak1k1 = A[k - 1 + (k - 1) * lda], ai1i1 = A[i + 1 + (i + 1) * lda],
 					  ak1k = A[k - 1 + k * lda], akk1 = A[k + (k - 1) * lda],
 					  ai1i = A[i + 1 + i * lda], aii1 = A[i + (i + 1) * lda];
-					v[0] = ((akk - aii) * (ak1k1 - aii) - ak1k * akk1) / ai1i + aii1;
-					v[1] = aii + ai1i1 - (ak1k1 + akk);
-					v[2] = A[i + 2 + (i + 1) * lda];
+					householder = new
+					(
+						((akk - aii) * (ak1k1 - aii) - ak1k * akk1) / ai1i + aii1,
+						aii + ai1i1 - (ak1k1 + akk),
+						A[i + 2 + (i + 1) * lda]
+					);
 				}
 				else
 				{
 					//tex:$\vec{v}\gets{\vec{a}}_{j:j+2,j-1}$
-					Unsafe.CopyBlockUnaligned(v, A + (j + (j - 1) * lda), (uint)(3 * sizeof(T)));
+					householder = new(A[j + (j - 1) * lda], A[j + 1 + (j - 1) * lda], A[j + 2 + (j - 1) * lda]);
 				}
-				int nv = j == k - 1 ? 2 : 3;
 				//tex:$H\gets I - 2\vec{v}\vec{v}^T / \|v\|^2 = \begin{pmatrix}h_1&h_4&h_5\\h_4&h_2&h_6\\h_5&h_6&h_3\end{pmatrix}$
-				T normV = T.Sqrt(NormSq(v, nv));
-				v[0] += T.CopySign(normV, v[0]);
-				T tau = two / NormSq(v, nv);
-				T h1 = T.One - tau * v[0] * v[0], h2 = T.One - tau * v[1] * v[1], h3 = T.One - tau * v[2] * v[2];
-				T h4 = -tau * v[0] * v[1], h5 = -tau * v[0] * v[2], h6 = -tau * v[1] * v[2];
 				//tex:$A_{j:j+2,:}\gets HA_{j:j+2,:}$; $A_{:,j:j+2}\gets A_{:,j:j+2}H$; $U_{:,j:j+2}\gets U_{:,j:j+2}H$
 				int colFree = j == i ? i : j - 1;
 				if (j == k - 1)
 				{
-					HouseholderColumnUpdate2(A + (j * lda), lda, Math.Min(j + 4, n), h1, h2, h4);
-					HouseholderRowUpdate2(A + (j + colFree * lda), lda, n - colFree, h1, h2, h4);
-					HouseholderColumnUpdate2(Q + (j * ldq), ldq, n, h1, h2, h4);
+					Householder2<T> householder2 = new(A[j + (j - 1) * lda], A[j + 1 + (j - 1) * lda]);
+					var reflector = householder2.ToReflectionMatrix();
+					reflector.ColumnUpdate(A + (j * lda), lda, Math.Min(j + 4, n));
+					reflector.RowUpdate(A + (j + colFree * lda), lda, n - colFree);
+					reflector.ColumnUpdate(Q + (j * ldq), ldq, n);
 					A[j + 1 + (j - 1) * lda] = T.Zero;
 				}
 				else
 				{
-					HouseholderColumnUpdate3(A + (j * lda), lda, Math.Min(j + 4, n), h1, h2, h3, h4, h5, h6);
-					HouseholderRowUpdate3(A + (j + colFree * lda), lda, n - colFree, h1, h2, h3, h4, h5, h6);
-					HouseholderColumnUpdate3(Q + (j * ldq), ldq, n, h1, h2, h3, h4, h5, h6);
+					var reflector = householder.ToReflectionMatrix();
+					reflector.ColumnUpdate(A + (j * lda), lda, Math.Min(j + 4, n));
+					reflector.RowUpdate(A + (j + colFree * lda), lda, n - colFree);
+					reflector.ColumnUpdate(Q + (j * ldq), ldq, n);
 					if (j != i)
 						A[j + 1 + (j - 1) * lda] = A[j + 2 + (j - 1) * lda] = T.Zero;
 				}
@@ -693,8 +868,146 @@ internal static unsafe class MatrixSolvers
 			goto RESTART_EIGVAL;
 		}
 		// get first eigenvalue and return
-		wr[0] = A[0];
+		if (T.IsNaN(wr[0]))
+			wr[0] = A[0];
 		return true;
+	}
+
+	/// <summary>
+	/// Sort the Schur factorization result (possibly generated from <see cref="HessenbergSchurFactorize{T}(int, T*, int, T*, int, T*, T*)"/>) by the given <paramref name="keys"/> corresponding to the eigenvalues <c><paramref name="wr"/> + √(-1) * <paramref name="wi"/></c>. All of the inputs will be sorted by <paramref name="keys"/> stably if <paramref name="keys"/> are same for eigenvalues with same value or conjugate.
+	/// </summary>
+	public static void ReorderSchurForm<T>(int n, T* A, int lda, T* Q, int ldq, T* wr, T* wi, Span<int> keys) where T : unmanaged, IFloatingPoint<T>
+	{
+		// work spaces
+		T* vecX = stackalloc T[4], work = stackalloc T[4];
+
+		// bubble sort outer loop
+		for (int k = 1; k < n; k++)
+		{
+			// bubble sort inner loop
+			for (int i = n - 1; i >= k;)
+			{
+				// get size
+				int q = A[i + (i - 1) * lda] != T.Zero ? 2 : 1;
+				int p = i >= q + 1 && A[i - q + (i - q - 1) * lda] != T.Zero ? 2 : 1;
+				if (keys[i] >= keys[i - q])
+				{
+					i -= q;
+					continue;
+				}
+				// 4 cases
+				if (p == 1 && q == 1)
+				{
+					int j = i - 1;
+					// swap simple ones
+					(keys[i], keys[j]) = (keys[j], keys[i]);
+					(wr[i], wr[j]) = (wr[j], wr[i]);
+					(wi[i], wi[j]) = (wi[j], wi[i]);
+					// set matrix T
+					T alpha1 = A[j + j * lda];
+					T alpha2 = A[i + i * lda];
+					T t = A[j + i * lda];
+					// solve X
+					T x = t / (alpha1 - alpha2);
+					// QR factorize
+					var reflector = new Householder2<T>(-x, T.One).ToReflectionMatrix();
+					// swap blocks
+					reflector.ColumnUpdate(A + j * lda, lda, i + 1);
+					reflector.RowUpdate(A + (j + j * lda), lda, n - j);
+					reflector.ColumnUpdate(Q + j * lda, ldq, n);
+					A[i + j * lda] = T.Zero;
+				}
+				else if (p == 2 && q == 1)
+				{
+					int jj = i - 2, j = i - 1;
+					// swap simple ones
+					(keys[i], keys[jj]) = (keys[jj], keys[i]);
+					(wr[i], wr[jj]) = (wr[jj], wr[i]);
+					(wi[jj], wi[j], wi[i]) = (wi[i], wi[jj], wi[j]);
+					// set matrix T
+					T alpha1 = A[jj + jj * lda], delta1 = A[j + j * lda], beta1 = A[jj + j * lda], gamma1 = A[j + jj * lda];
+					T t1 = A[jj + i * lda], t3 = A[j + i * lda];
+					T alpha2 = A[i + i * lda];
+					// solve X
+					//tex:$$x_1\gets \frac{t_1 \left(\alpha _2-\delta _1\right)+\beta _1 t_3}{\left(\alpha _1-\alpha _2\right) \left(\alpha _2-\delta _1\right)+\beta _1 \gamma _1},x_2\gets \frac{\left(\alpha _2-\alpha _1\right) t_3+\gamma _1 t_1}{\left(\alpha _1-\alpha _2\right) \left(\alpha _2-\delta _1\right)+\beta _1 \gamma _1}$$
+					T denom = T.One / ((alpha1 - alpha2) * (alpha2 - delta1) + beta1 * gamma1);
+					T x1 = ((alpha2 - delta1) * t1 + beta1 * t3) * denom;
+					T x2 = ((alpha2 - alpha1) * t3 + gamma1 * t1) * denom;
+					// QR factorize
+					var reflector = new Householder3<T>(-x1, -x2, T.One).ToReflectionMatrix();
+					// swap blocks
+					reflector.ColumnUpdate(A + jj * lda, lda, i + 1);
+					reflector.RowUpdate(A + (jj + jj * lda), lda, n - jj);
+					reflector.ColumnUpdate(Q + jj * lda, ldq, n);
+					A[j + jj * lda] = A[i + jj * lda] = T.Zero;
+				}
+				else if (p == 1 && q == 2)
+				{
+					int j = i - 2, ii = i - 1;
+					// swap simple ones
+					(keys[i], keys[j]) = (keys[j], keys[i]);
+					(wr[i], wr[j]) = (wr[j], wr[i]);
+					(wi[j], wi[ii], wi[i]) = (wi[ii], wi[i], wi[j]);
+					// set matrix T
+					T alpha1 = A[j + j * lda];
+					T t3 = A[j + ii * lda], t4 = A[j + i * lda];
+					T alpha2 = A[ii + ii * lda], delta2 = A[i + i * lda], beta2 = A[ii + i * lda], gamma2 = A[i + ii * lda];
+					// solve X
+					//tex:$$x_1 \gets \frac{t_3 \left(\delta _2-\alpha _1\right)-\gamma _2 t_4}{\beta _2 \gamma _2-\left(\alpha _1-\alpha _2\right) \left(\alpha _1-\delta _2\right)}, x_2 \gets \frac{\left(\alpha _1-\alpha _2\right) t_4+\beta _2 t_3}{\left(\alpha _1-\alpha _2\right) \left(\alpha _1-\delta _2\right)-\beta _2 \gamma _2}$$
+					T denom = T.One / ((alpha1 - alpha2) * (alpha1 - delta2) - beta2 * gamma2);
+					T x1 = (gamma2 * t4 + t3 * (alpha1 - delta2)) * denom;
+					T x2 = (beta2 * t3 + t4 * (alpha1 - alpha2)) * denom;
+					// QR factorize
+					Orthogonal3x3<T> reflector = new(-x1, T.One, T.Zero, -x2, T.Zero, T.One, default, default, default);
+					QrFactorize(3, 2, (T*)&reflector, 3, work);
+					QrGenerateQ(3, 2, 0, 3, (T*)&reflector, 3, work);
+					// swap blocks
+					reflector.ColumnUpdate(A + j * lda, lda, i + 1);
+					reflector.RowUpdate(A + (j + j * lda), lda, n - j);
+					reflector.ColumnUpdate(Q + j * lda, ldq, n);
+					A[i + j * lda] = A[i + ii * lda] = T.Zero;
+				}
+				else //if (p == 2 && q == 2)
+				{
+					int jj = i - 3, j = i - 2, ii = i - 1;
+					// swap simple ones
+					(keys[ii], keys[i], keys[jj], keys[j]) = (keys[jj], keys[j], keys[ii], keys[i]);
+					(wr[ii], wr[i], wr[jj], wr[j]) = (wr[jj], wr[j], wr[ii], wr[i]);
+					(wi[ii], wi[i], wi[jj], wi[j]) = (wi[jj], wi[j], wi[ii], wi[i]);
+					// set matrix T
+					//tex:$$T \gets \begin{pmatrix} \alpha _1-\alpha _2 & -\gamma _2 & \beta _1 & 0 \\ -\beta _2 & \alpha _1-\delta _2 & 0 & \beta _1 \\ \gamma _1 & 0 & \delta _1-\alpha _2 & -\gamma _2 \\ 0 & \gamma _1 & -\beta _2 & \delta _1-\delta _2 \end{pmatrix}$$
+					T alpha1 = A[jj + jj * lda], delta1 = A[j + j * lda], beta1 = A[jj + j * lda], gamma1 = A[j + jj * lda];
+					T alpha2 = A[ii + ii * lda], delta2 = A[i + i * lda], beta2 = A[ii + i * lda], gamma2 = A[i + ii * lda];
+					Orthogonal4x4<T> reflector = default;
+					T* matT = (T*)&reflector;
+					matT[0] = alpha1 - alpha2; matT[1] = -beta2; matT[2] = gamma1;
+					matT[4] = -gamma2; matT[5] = alpha1 - delta2; matT[7] = gamma1;
+					matT[8] = beta1; matT[10] = delta1 - alpha2; matT[11] = -beta2;
+					matT[13] = beta1; matT[14] = -gamma2; matT[15] = delta1 - delta2;
+					vecX[0] = A[jj + ii * lda]; vecX[1] = A[jj + i * lda];
+					vecX[2] = A[j + ii * lda]; vecX[3] = A[j + i * lda];
+					// solve X
+					QrFactorize(4, 4, matT, 4, work);
+					QrQtMultiply(4, 4, 1, matT, 4, vecX, 4);
+					QrLinearSolve(4, 1, matT, work, 4, vecX, 4);
+					// QR factorize
+					reflector = default;
+					matT[0] = -vecX[0]; matT[1] = -vecX[2]; matT[4] = -vecX[1]; matT[5] = -vecX[3];
+					matT[2] = T.One; matT[7] = T.One;
+					QrFactorize(4, 2, matT, 4, work);
+					QrGenerateQ(4, 2, 0, 4, matT, 4, work);
+					// swap blocks
+					reflector.ColumnUpdate(A + jj * lda, lda, i + 1);
+					reflector.RowUpdate(A + (jj + jj * lda), lda, n - jj);
+					reflector.ColumnUpdate(Q + jj * lda, ldq, n);
+					A[ii + jj * lda] = A[ii + j * lda] = A[i + jj * lda] = A[i + j * lda] = T.Zero;
+				}
+				i -= p;
+			}
+			// to standard Schur form if necessary
+			if (A[k + (k - 1) * lda] != T.Zero)
+				ToStandardSchurForm(n, A, lda, Q, ldq, k - 1);
+		}
 	}
 
 	#endregion
