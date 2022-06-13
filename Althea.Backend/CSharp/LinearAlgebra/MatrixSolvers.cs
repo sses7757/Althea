@@ -8,7 +8,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra;
 internal static unsafe class MatrixSolvers
 {
 	// TODO: use existing codes
-	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot \begin \leftarrow eigval argmin
+	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot \begin \leftarrow \circ \odot \otimes \mathcal \mathrm \le eigval argmin
 	#region utilities
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static T NormSq<T>(T* vec, int n) where T : unmanaged, IFloatingPoint<T>
@@ -116,6 +116,15 @@ internal static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void MatMulVec<T>(T* A, int ld, T* x, T* output, int m, int n) where T : unmanaged, IFloatingPoint<T>
+	{
+		Unsafe.InitBlockUnaligned(output, 0, (uint)(m * sizeof(T)));
+		for (int i = 0; i < n; i++)
+		{
+			AddScaled(output, A + i * ld, x[i], m);
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void Rank1UpdateNeg<T>(T* A, int ld, T* x, T* y, int m, int n) where T : unmanaged, IFloatingPoint<T>
 	{
 		for (int i = 0; i < n; i++)
@@ -144,39 +153,214 @@ internal static unsafe class MatrixSolvers
 		}
 	}
 
-	// TODO: SIMD
-	//tex:$H = \begin{pmatrix}h_1&h_3\\h_3&h_2\end{pmatrix}$
+	// x / (y + scalar)
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void HouseholderColumnUpdate2<T>(T* A, int ld, int n, T h1, T h2, T h3) where T : unmanaged, IFloatingPoint<T>
+	private static void PointWiseDivideAddScalar<T>(T* x, T* y, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IFloatingPoint<T>
 	{
-		for (int i = 0, j = ld; i < n; i++, j++)
+		if (resultIm != null)
 		{
-			(A[i], A[j]) = (A[i] * h1 + A[j] * h3, A[i] * h3 + A[j] * h2);
+			T imSq = scalarIm * scalarIm;
+			scalarIm = -scalarIm;
+			for (int i = 0; i < n; i++)
+			{
+				T abs = y[i] * y[i] + imSq;
+				result[i] = x[i] * y[i] / abs;
+				resultIm[i] = x[i] * scalarIm / abs;
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n; i++)
+			{
+				result[i] = x[i] / (y[i] + scalar);
+			}
+		}
+	}
+	// x / y
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void PointWiseDivide<T>(T* x, T* y, T* yIm, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPoint<T>
+	{
+		if (resultIm != null)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				T abs = y[i] * y[i] + yIm[i] * yIm[i];
+				(result[i], resultIm[i]) = (x[i] * y[i] / abs, -x[i] * yIm[i] / abs);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n; i++)
+			{
+				result[i] = x[i] / y[i];
+			}
+		}
+	}
+	// x * y
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void PointWiseMultiply<T>(T* x, T* xIm, T* y, T* yIm, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPoint<T>
+	{
+		if (resultIm != null)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				(result[i], resultIm[i]) = (x[i] * y[i] - xIm[i] * yIm[i], xIm[i] * y[i] + x[i] * yIm[i]);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n; i++)
+			{
+				result[i] = x[i] * y[i];
+			}
+		}
+	}
+	// x * y + z + scalar
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void PointWiseMultiplyAddScalar<T>(T* x, T* xIm, T* y, T* z, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IFloatingPoint<T>
+	{
+		if (resultIm != null)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				(result[i], resultIm[i]) = (x[i] * y[i] + z[i] + scalar, xIm[i] * y[i] + scalarIm);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n; i++)
+			{
+				result[i] = x[i] * y[i] + z[i] + scalar;
+			}
+		}
+	}
+	// a * b + x * y
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void PointWiseMultiplyAdd<T>(T* a, T* aIm, T* b, T* x, T* xIm, T* y, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPoint<T>
+	{
+		if (resultIm != null)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				(result[i], resultIm[i]) = (a[i] * b[i] + x[i] * y[i], aIm[i] * b[i] + xIm[i] * y[i]);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n; i++)
+			{
+				result[i] = a[i] * b[i] + x[i] * y[i];
+			}
+		}
+	}
+	// 1 / x
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void PointWiseInv<T>(T* x, T* xIm, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPoint<T>
+	{
+		if (resultIm != null)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				T abs = x[i] * x[i] + xIm[i] * xIm[i];
+				(result[i], resultIm[i]) = (x[i] / abs, -xIm[i] / abs);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n; i++)
+			{
+				result[i] = T.One / x[i];
+			}
+		}
+	}
+	// x + y * scalar
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void PointWiseAddScaled<T>(T* x, T* xIm, T* y, T* yIm, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IFloatingPoint<T>
+	{
+		if (resultIm != null)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				(result[i], resultIm[i]) = (x[i] + scalar * y[i] - scalarIm * yIm[i], xIm[i] + scalarIm * y[i] + scalar * yIm[i]);
+			}
+		}
+		else
+		{
+			for (int i = 0; i < n; i++)
+			{
+				result[i] = x[i] + scalar * y[i];
+			}
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void HouseholderRowUpdate2<T>(T* A, int ld, int n, T h1, T h2, T h3) where T : unmanaged, IFloatingPoint<T>
+	private static bool AllZeroComparedTo<T>(T* x, int n, T scalar) where T : unmanaged, IFloatingPoint<T>
 	{
-		for (int i = 0, j = 0; i < n; i++, j += ld)
+		for (int i = 0; i < n; i++)
 		{
-			(A[j], A[j + 1]) = (A[j] * h1 + A[j + 1] * h3, A[j] * h3 + A[j + 1] * h2);
+			if (x[i] + scalar != scalar)
+				return false;
 		}
-	}
-	//tex:$H = \begin{pmatrix}h_1&h_4&h_5\\h_4&h_2&h_6\\h_5&h_6&h_3\end{pmatrix}$
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void HouseholderColumnUpdate3<T>(T* A, int ld, int n, T h1, T h2, T h3, T h4, T h5, T h6) where T : unmanaged, IFloatingPoint<T>
-	{
-		for (int i = 0, j = ld, k = ld * 2; i < n; i++, j++, k++)
-		{
-			(A[i], A[j], A[k]) = (A[i] * h1 + A[j] * h4 + A[k] * h5, A[i] * h4 + A[j] * h2 + A[k] * h6, A[i] * h5 + A[j] * h6 + A[k] * h3);
-		}
+		return true;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void HouseholderRowUpdate3<T>(T* A, int ld, int n, T h1, T h2, T h3, T h4, T h5, T h6) where T : unmanaged, IFloatingPoint<T>
+	private static (T Re, T Im) Dot<T>(T* xRe, T* xIm, T* yRe, T* yIm, int n) where T : unmanaged, IFloatingPoint<T>
 	{
-		for (int i = 0, j = 0; i < n; i++, j += ld)
+		T dotRe = T.Zero, dotIm = T.Zero;
+		for (int i = 0; i < n; i++)
 		{
-			(A[j], A[j + 1], A[j + 2]) = (A[j] * h1 + A[j + 1] * h4 + A[j + 2] * h5, A[j] * h4 + A[j + 1] * h2 + A[j + 2] * h6, A[j] * h5 + A[j + 1] * h6 + A[j + 2] * h3);
+			dotRe += xRe[i] * yRe[i] + xIm[i] * yIm[i];
+			dotIm += xRe[i] * yIm[i] - xIm[i] * yRe[i];
+		}
+		return (dotRe, dotIm);
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static T NormSq<T>(T* vecRe, T* vecIm, int n) where T : unmanaged, IFloatingPoint<T>
+	{
+		T norm = T.Zero;
+		for (int i = 0; i < n; i++)
+			norm += vecRe[i] * vecRe[i] + vecIm[i] * vecIm[i];
+		return norm;
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void Scale<T>(T* xRe, T* xIm, int n, T scalar) where T : unmanaged, IFloatingPoint<T>
+	{
+		for (int i = 0; i < n; i++)
+		{
+			(xRe[i], xIm[i]) = (xRe[i] * scalar, xIm[i] * scalar);
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void Orthogonalize<T>(bool complex, int n, int nVecs, T* Q, int ldq) where T : unmanaged, IFloatingPoint<T>
+	{
+		if (complex)
+		{
+			for (int i = 0; i < nVecs; i++)
+			{
+				T* rRe = Q + 2 * i * ldq, rIm = Q + (2 * i + 1) * ldq;
+				for (int j = 0; j < i; j++)
+				{
+					T* qRe = Q + 2 * j * ldq, qIm = Q + (2 * j + 1) * ldq;
+					var (wRe, wIm) = Dot(qRe, qIm, rRe, rIm, n);
+					var denom = NormSq(qRe, qIm, n);
+					wRe /= denom; wIm /= denom;
+					PointWiseAddScaled(rRe, rIm, qRe, qIm, n, -wRe, -wIm, rRe, rIm);
+				}
+				Scale(rRe, rIm, n, T.One / T.Sqrt(NormSq(rRe, rIm, n)));
+			}
+		}
+		else
+		{
+			for (int i = 0; i < nVecs; i++)
+			{
+				var r = Q + i * ldq;
+				for (int j = 0; j < i; j++)
+				{
+					var q = Q + j * ldq;
+					var weight = Dot(q, r, n) / NormSq(q, n);
+					AddScaled(r, q, -weight, n);
+				}
+				Scale(r, T.One / T.Sqrt(NormSq(r, n)), n);
+			}
 		}
 	}
 	#endregion
@@ -647,7 +831,8 @@ internal static unsafe class MatrixSolvers
 				//tex:$$U_{:,j:j+1}\gets U_{:,j:j+1}\left[\begin{matrix}h_1&h_3\\h_3&h_2\\\end{matrix}\right]$$
 				if (eigenvectors == null)
 					continue;
-				HouseholderColumnUpdate2(eigenvectors + j * eigvecLD, eigvecLD, n, h1, h2, h3);
+				Householder2x2<T> reflector = new(h2, h3);
+				reflector.ColumnUpdate(eigenvectors + j * eigvecLD, eigvecLD, n);
 			}
 			goto RESTART_EIGVAL;
 		}
@@ -876,7 +1061,7 @@ internal static unsafe class MatrixSolvers
 	/// <summary>
 	/// Sort the Schur factorization result (possibly generated from <see cref="HessenbergSchurFactorize{T}(int, T*, int, T*, int, T*, T*)"/>) by the given <paramref name="keys"/> corresponding to the eigenvalues <c><paramref name="wr"/> + √(-1) * <paramref name="wi"/></c>. All of the inputs will be sorted by <paramref name="keys"/> stably if <paramref name="keys"/> are same for eigenvalues with same value or conjugate.
 	/// </summary>
-	public static void ReorderSchurForm<T>(int n, T* A, int lda, T* Q, int ldq, T* wr, T* wi, Span<int> keys) where T : unmanaged, IFloatingPoint<T>
+	public static void ReorderSchurForm<T, TKey>(int n, T* A, int lda, T* Q, int ldq, T* wr, T* wi, Span<TKey> keys) where T : unmanaged, IFloatingPoint<T> where TKey : IComparisonOperators<TKey, TKey>
 	{
 		// work spaces
 		T* vecX = stackalloc T[4], work = stackalloc T[4];
@@ -1010,5 +1195,149 @@ internal static unsafe class MatrixSolvers
 		}
 	}
 
+	/// <summary>
+	/// Compute the right eigenvectors of given Schur form <paramref name="A"/> multiplied by <paramref name="Q"/> and store the result in <paramref name="V"/> (cannot overlap with the former two matrices). <paramref name="work"/> shall have size ≥ 9 * <paramref name="n"/>.
+	/// </summary>
+	public static void SchurFormEigensolve<T>(int n, T* A, int lda, T* Q, int ldq, T* wr, T* wi, T* V, int ldv, T* work) where T : unmanaged, IFloatingPoint<T>
+	{
+		// store some diagonals
+		T* diag_m1 = work, diag_0 = work + n, diag_p1 = work + 2 * n;
+		diag_m1[0] = diag_p1[0] = diag_0[0] = T.Zero;
+		for (int i = 0; i < n - 1; i++)
+		{
+			int ip = i + 1;
+			diag_m1[ip] = -A[ip + i * lda];
+			diag_p1[ip] = A[i + ip * lda];
+			diag_0[ip] = A[i + i * lda];
+		}
+		// main loop
+		for (int k = 0; k < n;)
+		{
+			T* alpha = work + 3 * n, alphaIm = work + 4 * n;
+			T* beta = work + 5 * n, betaIm = work + 6 * n;
+			T* temp = work + 7 * n, tempIm = work + 8 * n;
+			// find last eigenvalue equals or conjugates
+			int l;
+			T λ = wr[k];
+			bool noComplex = wi[k] == T.Zero;
+			if (noComplex)
+			{
+				T λAbs = T.Abs(λ);
+				for (l = k; l < n; l++)
+				{
+					if (wi[l] != T.Zero || T.Abs(wr[l] - λ) + λAbs != λAbs)
+						break;
+				}
+				alphaIm = betaIm = tempIm = null;
+			}
+			else
+			{
+				T λAbs = λ * λ + wi[k] * wi[k];
+				for (l = k; l < n; l++)
+				{
+					if (wi[l] == T.Zero || (wr[l] - λ) * (wr[l] - λ) + (T.Abs(wi[l]) - wi[k]) * (T.Abs(wi[l]) - wi[k]) + λAbs != λAbs)
+						break;
+				}
+				λ = T.Sqrt(λAbs);
+			}
+			// get columns whose eigenvectors are not 0 and copy to V[..k, k..l]
+			//tex:$\mathcal{I}\gets\left\{i\middle|{\vec{a}}_{k:l,i}={\vec{e}}_{i-k+1}\lambda_k,k\le i < l\right\}$
+			int zeroColCount = 0;
+			for (int i = k; i < l; i++)
+			{
+				if (noComplex && !AllZeroComparedTo(A + (k + i * lda), i - k, λ))
+					continue;
+				if (!noComplex && ((i - k) % 2 == 1 || !AllZeroComparedTo(A + (k + i * lda), i - k, λ) || !AllZeroComparedTo(A + (k + (i + 1) * lda), i - k, λ)))
+					continue;
+				if (k != 0)
+					Unsafe.CopyBlockUnaligned(V + ((zeroColCount + k) * ldv), A + (i * lda), (uint)(k * sizeof(T)));
+				zeroColCount++;
+			}
+			// first eigenvectors shortcut
+			if (k == 0)
+			{
+				if (!noComplex)
+					zeroColCount *= 2;
+				for (int i = 0; i < zeroColCount; i++)
+				{
+					Unsafe.CopyBlockUnaligned(V + (i * ldv), Q + (i * ldq), (uint)(n * sizeof(T)));
+				}
+				for (int i = zeroColCount; i < l; i++)
+				{
+					Unsafe.InitBlockUnaligned(V + (i * ldv), 0, (uint)(n * sizeof(T)));
+				}
+				if (!noComplex)
+				{
+					//tex:$$\vec{v} = \left[ \pm \frac{\sqrt{b}}{\sqrt{c-b}},\frac{1}{\sqrt{\left| {b}/{c}\right| +1}} \right]$$
+					for (int i = 0; i < zeroColCount; i += 2)
+					{
+						T b = A[i + (i + 1) * lda], c = A[i + 1 + i * lda];
+						T im = T.Sqrt(T.Abs(b / (c - b))), re = T.One / T.Sqrt(T.Abs(b / c) + T.One);
+						// store real and imaginary parts in two columns
+						Scale(V + i * ldv, im, n);
+						Scale(V + (i + 1) * ldv, re, n);
+					}
+				}
+				k = l; continue;
+			}
+			// get work vector alpha and beta for row reduction
+			//tex:$\vec{\beta}\gets-{{\rm \text{diag}}_{-1}{A_{0:k-1,0:k-1}}}/{\left(\text{diag}{A_{0:k-2,0:k-2}}-\lambda_k\right)}$
+			//$\vec{\alpha}\gets{1}/{\left(\text{diag}{A_{1:k-1,1:k-1}}+\vec{\beta}\odot{\rm \text{diag}}_1{A_{0:k-1,0:k-1}}-\lambda_k\right)}$
+			//$\vec{\beta}\gets\vec{\alpha}\odot\vec{\beta}$
+			PointWiseDivideAddScalar(diag_m1, diag_0, k, -wr[k], -wi[k], beta, betaIm);
+			PointWiseMultiplyAddScalar(beta, betaIm, diag_p1, diag_0 + 1, k, -wr[k], -wi[k], alpha, alphaIm);
+			PointWiseInv(alpha, alphaIm, k, alpha, alphaIm);
+			PointWiseMultiply(alpha, alphaIm, beta, betaIm, k, beta, betaIm);
+			beta[k] = T.Zero; beta += 1;
+			if (betaIm != null)
+			{
+				betaIm[k] = T.Zero; betaIm += 1;
+			}
+			// row reduce V[..k, k..l]
+			//tex:$$V_{1:k-1,\mathcal{I}}\gets \text{diag}{\vec{\beta}}\cdot V_{0:k-2,\mathcal{I}}+\text{diag}{\vec{\alpha}}\cdot V_{1:k-1,\mathcal{I}}$$
+			//For j = k - 2, ..., 1 Do
+			//$$V_{1:j,\mathcal{I}}\gets V_{1:j,\mathcal{I}}-\left({\vec{\beta}}_{1:j}\odot{\vec{a}}_{0:j-1,j+1}+{\vec{\alpha}}_{1:j}\odot{\vec{a}}_{1:j,j+1}\right)\otimes{\vec{v}}_{k-1,\mathcal{I}}$$
+			for (int i = 0; i < zeroColCount; i++)
+			{
+				T* Vre = noComplex ? V + (k + i) * ldv : V + (k + i * 2) * ldv;
+				T* Vim = noComplex ? null : V + (k + i * 2 + 1) * ldv;
+				PointWiseMultiplyAdd(beta, betaIm, V + (k + i) * ldv, alpha, alphaIm, V + (k + i) * ldv, k - 1, Vre, Vim);
+			}
+			for (int j = k - 2; j > 0; j--)
+			{
+				PointWiseMultiplyAdd(beta, betaIm, A + j * lda, alpha, alphaIm, A + j * lda, j, temp, tempIm);
+				for (int i = 0; i < zeroColCount; i++)
+				{
+					T* Vre = noComplex ? V + (k + i) * ldv : V + (k + i * 2) * ldv;
+					T* Vim = noComplex ? null : V + (k + i * 2 + 1) * ldv;
+					PointWiseAddScaled(temp, tempIm, Vre, Vim, j, -Vre[k - 1], -Vim[k - 1], Vre, Vim);
+				}
+			}
+			// from eigenvectors
+			//tex:$V_{k:n,\mathcal{I}}\gets-\left[{\vec{e}}_1,\ldots,{\vec{e}}_{\left|\mathcal{I}\right|}\right]$; 
+			//$V_{:,\mathcal{I}}\gets\text{Orthogonalize}\left(V_{:,\mathcal{I}}\right)$; 
+			//$V_{:,\mathcal{I}}\gets U\cdot V_{:,\mathcal{I}}$
+			for (int i = 0; i < zeroColCount; i++)
+			{
+				Unsafe.InitBlockUnaligned(V + (k + (k + i) * ldv), 0, (uint)((n - k) * sizeof(T)));
+				if (noComplex)
+					V[k + i + (k + i) * ldv] = T.One;
+				else if (i % 2 == 0)
+					V[k + i / 2 + (k + i) * ldv] = T.One;
+			}
+			Orthogonalize(!noComplex, k + zeroColCount, zeroColCount, V + k * ldv, ldv);
+			for (int i = 0; i < zeroColCount; i++)
+			{
+				MatMulVec(Q, ldq, V + (k + i) * ldv, temp, n, n);
+				Unsafe.CopyBlockUnaligned(V + (k + i) * ldv, temp, (uint)(n * sizeof(T)));
+			}
+			for (int i = zeroColCount; i < l; i++)
+			{
+				Unsafe.InitBlockUnaligned(V + (k + i) * ldv, 0, (uint)(n * sizeof(T)));
+			}
+			// continue loop
+			k = l;
+		}
+	}
 	#endregion
 }
