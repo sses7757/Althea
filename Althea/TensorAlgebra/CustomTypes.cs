@@ -756,10 +756,8 @@ namespace Althea.TensorAlgebra
 		/// <param name="labels">The <see cref="Span{T}"/> of length equaling the rank. Filled with the actual output labels of actual output rank at exit.</param>
 		/// <returns>The <paramref name="reducePerm"/> of actual reduction rank</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Span<int> CheckReduce<T>(this ILabeledTensor<T> tensor, TensorOrder order, Span<int> reducePerm, ref Span<long> size, ref Span<char> labels) where T : unmanaged, INumber<T>
+		public static Span<int> CheckReduce<T>(this ILabeledTensor<T> tensor!!, TensorOrder order, Span<int> reducePerm, ref Span<long> size, ref Span<char> labels) where T : unmanaged, INumber<T>
 		{
-			if (tensor is null)
-				throw new ArgumentNullException(nameof(tensor));
 			int rank = tensor.Rank;
 			if (size.Length != rank)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(size));

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
+using Althea.Backend.CSharp.LinearAlgebra;
 using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.Linq;
@@ -86,7 +87,7 @@ namespace Althea.Backend.CSharp.Solver
 			//tex:$\mathbf H \overset{\text{Schur (no ordering)}}{\longrightarrow} \mathbf H_c \cdot \mathbf U$
 			fixed (T* ptrVals = outVals, ptrSchurT = outSchurT.UnderlyingSpan, ptrSchurU = outSchurU.UnderlyingSpan, ptrValsIm = outValsImag.IsEmpty ? default : outValsImag)
 			{
-				Mkl.LinearAlgebra.Dense.Api.HessenbergSchur(SolveVectorMode.Vector, n, ptrVals, ptrValsIm, ptrSchurT, outSchurT.LeadDim, ptrSchurU, outSchurU.LeadDim);
+				MatrixSolvers.HessenbergSchurFactorize(n, ptrSchurT, outSchurT.LeadDim, ptrSchurU, outSchurU.LeadDim, ptrVals, ptrValsIm);
 			}
 			// get conjugate pairs
 			if (!NumberType<T>.IsComplex)
@@ -105,14 +106,13 @@ namespace Althea.Backend.CSharp.Solver
 			}
 		}
 
-		private static unsafe void ReorderSchur<T, TVec>(ReadOnlySpan<bool> select, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static unsafe void ReorderSchur<T, TVec>(Span<byte> select, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			int rows = select.Length;
 			//tex:$\mathbf H \overset{\text{Schur (order}=\vec v_\text{preserve}\text{)}}{\longrightarrow} \mathbf H \cdot \mathbf X$
 			fixed (T* ptrT = schurT.UnderlyingSpan, ptrU = schurU.UnderlyingSpan)
-			fixed (bool* pSelect = select)
 			{
-				LinearAlgebra.MatrixSolvers.SchurReorder(rows, ptrT, schurT.LeadDim, ptrU, schurU.LeadDim, pSelect);
+				MatrixSolvers.ReorderSchurForm<T, byte>(rows, ptrT, schurT.LeadDim, ptrU, schurU.LeadDim, null, null, select);
 			}
 			int n = preserveCount;
 			//tex:${\vec{a}}^\ast={\vec{a}}^\ast X^\prime$
@@ -221,15 +221,15 @@ namespace Althea.Backend.CSharp.Solver
 			int n = H.Rows;
 			Span<int> conjugatePairs = stackalloc int[n];
 			GetSchur(n, H, orderedVals, orderedValsImag, schurT, schurU, conjugatePairs);
-			schurU.CopyTo(orderedVecs);
 			#endregion
 
 			#region get eigenvectors from Schur form
 			//tex:$\mathbf H \overset{\text{Eigen}}{\longrightarrow} \mathbf V \cdot \mathrm{diag}(\vec a) \cdot \mathbf V^{-1}
 			//\text{ where }\mathbf V = \mathbf U \mathbf X, \mathbf H_c \overset{\text{Eigen}}{\longrightarrow} \mathbf X \mathrm{diag}(\vec a) \mathbf X^{-1}$
-			fixed (T* ptrSchurT = schurT.UnderlyingSpan, ptrVecs = orderedVecs.UnderlyingSpan)
+			fixed (T* ptrSchurT = schurT.UnderlyingSpan, ptrSchurU = schurU.UnderlyingSpan, ptrVecs = orderedVecs.UnderlyingSpan, ptrVals = orderedVals, ptrValsImag = orderedValsImag)
 			{
-				LinearAlgebra.MatrixSolvers.SchurEigenvector(SolveVectorMode.Right, n, ptrSchurT, null, 1, ptrVecs, orderedVecs.LeadDim);
+				T* work = stackalloc T[n * (NumberType<T>.IsComplex ? 6 : 9)];
+				MatrixSolvers.SchurFormEigensolve(n, ptrSchurT, schurT.LeadDim, ptrSchurU, schurU.LeadDim, ptrVals, ptrValsImag, ptrVecs, orderedVecs.LeadDim, work);
 			}
 			#endregion
 
@@ -297,11 +297,9 @@ namespace Althea.Backend.CSharp.Solver
 		#endregion
 
 		// null return for not support
-		internal static int? KrylovSchur<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, WhichEigenvalues which, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<T> outEigvalsImag, Span<TVec> outEigvecs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static int? KrylovSchur<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial!!, WhichEigenvalues which, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<T> outEigvalsImag, Span<TVec> outEigvecs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
 			if (tolerance <= 0)
 				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.MustPositive);
 			T tol = tolerance.As<double, T>();
@@ -368,7 +366,7 @@ namespace Althea.Backend.CSharp.Solver
 					// get converged ones
 					var converged = GetConverge(H, β, tol, which, useGap, orderedVals, orderedValsImag, orderedVecs, schurT, schurU, errorBounds);
 					#endregion
-
+					// TODO: re-design select eigenvalues
 					#region select the Ritz pairs to preserve
 					// use a separate method to reduce stack allocation
 					int preserveCount = PreserveSelect(nEig, converged, orderedVals, orderedValsImag, orderedVecs, selector, eigenSelect);
@@ -450,7 +448,7 @@ namespace Althea.Backend.CSharp.Solver
 			// get norm of H
 			fixed (T* ptrH = Hprime.UnderlyingSpan, ptrVals = stackalloc T[n], ptrValsIm = NumberType<T>.IsComplex ? default : stackalloc T[n])
 			{
-				Mkl.LinearAlgebra.Dense.Api.HessenbergSchur(SolveVectorMode.NoVector, n, ptrVals, ptrValsIm, ptrH, Hprime.LeadDim, null, 1);
+				MatrixSolvers.HessenbergSchurFactorize(n, ptrH, Hprime.LeadDim, null, 1,  ptrVals, ptrValsIm);
 			}
 			if (NumberType<T>.IsComplex)
 			{
@@ -487,11 +485,14 @@ namespace Althea.Backend.CSharp.Solver
 			Hprime[n, n - 1] = β;
 			//tex:$\min_{\vec y^{(n)}}{\mathbf H' \vec y^{(n)} = \beta_0 \vec e_1}$, $\vec e_1 \in \mathbb F^{n+1}$
 			Span<T> y = stackalloc T[n1];
+			Span<T> diagR = stackalloc T[n];
 			y.Fill(T.Zero); y[0] = β0;
 			T normY;
-			fixed (T* ptrY = y, ptrR = Hprime.UnderlyingSpan)
+			fixed (T* ptrY = y, ptrR = Hprime.UnderlyingSpan, ptrDiag = diagR)
 			{
-				Mkl.LinearAlgebra.Dense.Api.LeastSquareSolve(n1, n, 1, ptrR, n1, ptrY, n1);
+				MatrixSolvers.QrFactorize(n1, n, ptrR, n1, ptrDiag);
+				MatrixSolvers.QrQtMultiply(n1, n, 1, ptrR, n1, ptrY, 1);
+				MatrixSolvers.QrLinearSolve(n, 1, ptrR, ptrDiag, n1, ptrY, 1);
 				LinearAlgebra.Api.Inner<T, bool>(true, ptrY, 1, ptrY, 1, n1, out normY);
 			}
 			//tex:converge when: $\|\vec r^{(n)}\| = \|\vec y^{(n)}\| \le \|\mathbf A\| \|\vec{b}\| \varepsilon$
@@ -566,15 +567,12 @@ namespace Althea.Backend.CSharp.Solver
 		}
 		#endregion
 
-		internal static bool GeneralMinimalResidual<T, TVec>(Func<TVec, TVec> matrixFunction, TVec b, TVec initGuess, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool checkFirst, TimeSpan interval, int maxStagnations, out TVec solution, out double relativeError)
+		internal static bool GeneralMinimalResidual<T, TVec>(Func<TVec, TVec> matrixFunction, TVec b!!, TVec initGuess!!, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool checkFirst, TimeSpan interval, int maxStagnations, out TVec solution, out double relativeError)
 			where TVec : class, IKrylovVector<T, TVec>
 			where T : unmanaged, IFloatingPoint<T>
 		{
+
 			#region basic
-			if (initGuess is null)
-				throw new ArgumentNullException(nameof(initGuess));
-			if (b is null)
-				throw new ArgumentNullException(nameof(b));
 			if (tolerance <= 0)
 				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.MustPositive);
 			// check parameters

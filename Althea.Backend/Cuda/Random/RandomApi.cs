@@ -74,13 +74,9 @@ namespace Althea.Backend.Cuda.Random
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out long length, out UniformDistribution<T>? uniform, out RandomBitsDistribution<T>? bits, out NormalDistribution<T>? normal, out LogNormalDistribution<T>? logNormal, out PoissonDistribution<T>? poisson) where T : unmanaged, INumber<T>
+		private static unsafe bool Check<T>(Storage<T> storage!!, IRandomDistribution distribution!!, out IntPtr pointer, out long length, out UniformDistribution<T>? uniform, out RandomBitsDistribution<T>? bits, out NormalDistribution<T>? normal, out LogNormalDistribution<T>? logNormal, out PoissonDistribution<T>? poisson) where T : unmanaged, INumber<T>
 		{
 			pointer = default; length = 0;
-			if (storage is null)
-				throw new ArgumentNullException(nameof(storage));
-			if (distribution is null)
-				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.Count != 1)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
 			uniform = distribution as UniformDistribution<T>;
@@ -182,10 +178,8 @@ namespace Althea.Backend.Cuda.Random
 			return true;
 		}
 
-		protected override bool FillWithRandom_<T1, T2>(Storage<T1> storage1, Storage<T2> storage2, IRandomDistribution distribution)
+		protected override bool FillWithRandom_<T1, T2>(Storage<T1> storage1, Storage<T2> storage2, IRandomDistribution distribution!!)
 		{
-			if (distribution is null)
-				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.Count != 2)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
 			if (distribution is not SimpleJointRandomDistribution d)
@@ -199,10 +193,8 @@ namespace Althea.Backend.Cuda.Random
 			this.Generate(storage2, p2, length2, dist21, dist22, dist23, dist24, dist25);
 			return true;
 		}
-		protected override bool FillWithRandom_<T1, T2, T3>(Storage<T1> storage1, Storage<T2> storage2, Storage<T3> storage3, IRandomDistribution distribution)
+		protected override bool FillWithRandom_<T1, T2, T3>(Storage<T1> storage1, Storage<T2> storage2, Storage<T3> storage3, IRandomDistribution distribution!!)
 		{
-			if (distribution is null)
-				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.Count != 3)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
 			if (distribution is not SimpleJointRandomDistribution d)

@@ -65,10 +65,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 
 		#region add multiply divide
-		private struct B_Multiply { }
-		private struct B_Divide { }
-		private struct B_Add { }
-		private struct B_AddScaled { }
+		internal struct B_Multiply { }
+		internal struct B_Divide { }
+		internal struct B_Add { }
+		internal struct B_AddScaled { }
 		private enum BinaryModify
 		{
 			Multiply,
@@ -315,6 +315,35 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool VectorsBinary<T, Op>(T* px, int incx, T* py, int incy, T* pz, int incz, T scalar, int length) where T : unmanaged, INumber<T>
+		{
+			if (incx != 1 || incy != 1 || incz != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
+			{   // no SIMD or too short
+				VectorsBinaryManaged<T, Op>(px, incx, py, incy, pz, incz, length, scalar);
+			}
+			else if (NumberType<T>.IsComplex)
+			{
+				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)
+				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
+					VectorsBinaryManaged<T, Op>(px, 1, py, 1, pz, 1, length, scalar);
+				}
+				else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
+				{
+					VectorsBinaryComplex<Op>((Complex<float>*)px, (Complex<float>*)py, (Complex<float>*)pz, length, *(Complex<float>*)&scalar);
+				}
+				else // double
+				{
+					VectorsBinaryComplex<Op>((Complex<double>*)px, (Complex<double>*)py, (Complex<double>*)pz, length, *(Complex<double>*)&scalar);
+				}
+			}
+			else
+			{
+				VectorsBinaryReal<T, Op>(px, py, pz, length, scalar);
+			}
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static bool VectorsBinary<T, TS1, TS2, TS3, Op>(TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ, T scalar) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!GetPointer(x, strideX, out T* px, out int lenx, out int incx))
@@ -341,30 +370,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				return Default.Scale(x, strideX, scalar + T.One);
 			}
 			// normal case
-			if (incx != 1 || incy != 1 || incz != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
-			{   // no SIMD or too short
-				VectorsBinaryManaged<T, Op>(px, incx, py, incy, pz, incz, length, scalar);
-			}
-			else if (NumberType<T>.IsComplex)
-			{
-				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)
-				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
-					VectorsBinaryManaged<T, Op>(px, 1, py, 1, pz, 1, length, scalar);
-				}
-				else if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
-				{
-					VectorsBinaryComplex<Op>((Complex<float>*)px, (Complex<float>*)py, (Complex<float>*)pz, length, *(Complex<float>*)&scalar);
-				}
-				else // double
-				{
-					VectorsBinaryComplex<Op>((Complex<double>*)px, (Complex<double>*)py, (Complex<double>*)pz, length, *(Complex<double>*)&scalar);
-				}
-			}
-			else
-			{
-				VectorsBinaryReal<T, Op>(px, py, pz, length, scalar);
-			}
-			return true;
+			return VectorsBinary<T, Op>(px, incx, py, incy, pz, incz, scalar, length);
 		}
 
 		public virtual partial bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>

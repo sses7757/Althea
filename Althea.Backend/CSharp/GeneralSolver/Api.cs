@@ -199,11 +199,8 @@ namespace Althea.Backend.CSharp.Solver
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void CheckParas<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int smallestK, ref int maxIter, bool herm) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static void CheckParas<T, TVec>(Func<TVec, TVec> matrixFunction!!, TVec initial, int smallestK, ref int maxIter, bool herm) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
-			// check MatrixFunction
-			if (matrixFunction is null)
-				throw new ArgumentNullException(nameof(matrixFunction));
 			try
 			{
 				// test matrix apply

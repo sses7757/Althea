@@ -355,11 +355,8 @@ namespace Althea.NativeTypes
 			@"(" + floatPattern2 + ")";
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool TryParseAny(delegate*<string, NumberStyles, IFormatProvider?, out T, bool> parseFunc, string? str, NumberStyles style, IFormatProvider? provider, out T real, out T imag)
+		private static unsafe bool TryParseAny(delegate*<string, NumberStyles, IFormatProvider?, out T, bool> parseFunc, string str!!, NumberStyles style, IFormatProvider? provider, out T real, out T imag)
 		{
-			if (str is null)
-				throw new ArgumentNullException(nameof(str));
-
 			real = imag = default;
 
 			Regex regex = new(regexPattern1);

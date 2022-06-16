@@ -35,15 +35,11 @@ namespace Althea.Backend.CSharp.Random
 
 		#region operations
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T, TS>(TS storage, IRandomDistribution distribution, out IntPtr pointer, out int length, out T offset, out T scale)
+		private static unsafe bool Check<T, TS>(TS storage!!, IRandomDistribution distribution!!, out IntPtr pointer, out int length, out T offset, out T scale)
 			where T : unmanaged, INumber<T>
 			where TS : class, IStorage<T, TS>
 		{
 			pointer = default; length = 0; offset = default; scale = default;
-			if (storage is null)
-				throw new ArgumentNullException(nameof(storage));
-			if (distribution is null)
-				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.RandomSeed.HasValue)
 				return false; // not support
 			if (!NumberType<T>.IsPrimitive)

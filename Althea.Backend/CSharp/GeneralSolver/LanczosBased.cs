@@ -397,13 +397,10 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region naive Lanczos
-		internal static (double val, TVec vec) NaiveLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool checkFirst, TimeSpan interval) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static (double val, TVec vec) NaiveLanczos<T, TVec>(Func<TVec, TVec> matrixFunction!!, TVec initial!!, int maxIter, bool checkFirst, TimeSpan interval) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
+
 			#region basic check
-			if (matrixFunction is null)
-				throw new ArgumentNullException(nameof(matrixFunction));
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
 			if (checkFirst)
 				Common.CheckParas<T, TVec>(matrixFunction, initial, 1, ref maxIter, true);
 			else if (maxIter <= 0)
@@ -483,11 +480,10 @@ namespace Althea.Backend.CSharp.Solver
 
 
 		#region restart lanczos
-		internal static int? RestartLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<TVec> outEigvecs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static int? RestartLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial!!, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<TVec> outEigvecs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
+
 			#region basic
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
 			if (tolerance <= 0)
 				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.MustPositive);
 			// check parameters
@@ -740,13 +736,9 @@ namespace Althea.Backend.CSharp.Solver
 
 		#region linear solve helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static TVec? CheckLinearSolve<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out T normB, out T realTolerance) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static TVec? CheckLinearSolve<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial!!, TVec rightSide!!, ref int maxIter, double tolerance, bool checkFirst, out T normB, out T realTolerance) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
-			if (rightSide is null)
-				throw new ArgumentNullException(nameof(rightSide));
 			if (tolerance <= 0)
 				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.MustPositive);
 			if (checkFirst)

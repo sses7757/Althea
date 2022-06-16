@@ -108,13 +108,11 @@ namespace Althea.Backend.Mkl.Random
 		const DistributionType INVALID = (DistributionType)(-1);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Check<T>(Storage<T> storage, IRandomDistribution distribution, out IntPtr pointer, out int length, out DistributionType type) where T : unmanaged, INumber<T>
+		private static bool Check<T>(Storage<T> storage, IRandomDistribution distribution!!, out IntPtr pointer, out int length, out DistributionType type) where T : unmanaged, INumber<T>
 		{
 			pointer = default; length = 0;
 			if (storage is null || !storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
-			if (distribution is null)
-				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.Count != 1)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
 
@@ -161,12 +159,10 @@ namespace Althea.Backend.Mkl.Random
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Check(ReadOnlySpan<IStorage> storages, IRandomDistribution distribution, Span<IntPtr> pointers, Span<int> lengths, out DistributionType type)
+		private static bool Check(ReadOnlySpan<IStorage> storages, IRandomDistribution distribution!!, Span<IntPtr> pointers, Span<int> lengths, out DistributionType type)
 		{
 			if (storages.Any(static s => s is null || !s.IsValid()))
 				throw new ArgumentNullException(nameof(storages));
-			if (distribution is null)
-				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.Count != storages.Length)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
 

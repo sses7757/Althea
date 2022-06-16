@@ -5,7 +5,10 @@ using System.Runtime.InteropServices;
 namespace Althea.Backend.CSharp.LinearAlgebra;
 
 
-internal static unsafe class MatrixSolvers
+/// <summary>
+/// Static class for solving matrices represented by <see cref="Span{T}"/>s.
+/// </summary>
+public static unsafe class MatrixSolvers
 {
 	// TODO: use existing codes
 	// Ignore Spelling: \vec \alpha \beta \tau \ldots \langle \rangle \pmatrix \cdot \begin \leftarrow \circ \odot \otimes \mathcal \mathrm \le eigval argmin
@@ -13,82 +16,28 @@ internal static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static T NormSq<T>(T* vec, int n) where T : unmanaged, IFloatingPoint<T>
 	{
-		T norm = T.Zero;
-		if (!Vector.IsHardwareAccelerated || !typeof(T).IsPrimitive)
-			goto SCALAR;
-		T* end = vec + n;
-		Vector<T> norms = Vector<T>.Zero;
-		for (; vec < end; vec += Vector<T>.Count)
-		{
-			var v = Unsafe.ReadUnaligned<Vector<T>>(vec);
-			norms += v * v;
-		}
-		n = (int)(end - vec);
-		norm = Vector.Sum(norms);
-	SCALAR:
-		for (int i = 0; i < n; i++)
-		{
-			norm += vec[i] * vec[i];
-		}
+		if (!Api.Inner<T, byte>(true, vec, 1, vec, 1, n, out T norm))
+			throw new NotSupportedException();
 		return norm;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static T Dot<T>(T* x, T* y, int n) where T : unmanaged, IFloatingPoint<T>
 	{
-		T dot = T.Zero;
-		if (!Vector.IsHardwareAccelerated || !typeof(T).IsPrimitive)
-			goto SCALAR;
-		T* end = x + n;
-		Vector<T> dots = Vector<T>.Zero;
-		for (; x < end; x += Vector<T>.Count, y += Vector<T>.Count)
-		{
-			var xx = Unsafe.ReadUnaligned<Vector<T>>(x);
-			var yy = Unsafe.ReadUnaligned<Vector<T>>(y);
-			dots += xx * yy;
-		}
-		n = (int)(end - x);
-		dot = Vector.Sum(dots);
-	SCALAR:
-		for (int i = 0; i < n; i++)
-			dot += x[i] * y[i];
+		if (!Api.Inner<T, bool>(true, x, 1, y, 1, n, out T dot))
+			throw new NotSupportedException();
 		return dot;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void Scale<T>(T* x, T α, int n) where T : unmanaged, IFloatingPoint<T>
 	{
-		if (!Vector.IsHardwareAccelerated || !typeof(T).IsPrimitive)
-			goto SCALAR;
-		T* end = x + n;
-		Vector<T> scalar = new(α);
-		for (; x < end; x += Vector<T>.Count)
-		{
-			var xx = Unsafe.ReadUnaligned<Vector<T>>(x);
-			xx *= scalar;
-			Unsafe.WriteUnaligned(x, xx);
-		}
-		n = (int)(end - x);
-	SCALAR:
-		for (int i = 0; i < n; i++)
-			x[i] = α * x[i];
+		if (!Api.VectorModify<T, T, Api.U_MultiplyScalar>(x, 1, x, 1, n, α))
+			throw new NotSupportedException();
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void AddScaled<T>(T* y, T* x, T α, int n) where T : unmanaged, IFloatingPoint<T>
 	{
-		if (!Vector.IsHardwareAccelerated || !typeof(T).IsPrimitive)
-			goto SCALAR;
-		T* end = x + n;
-		Vector<T> scalar = new(α);
-		for (; x < end; x += Vector<T>.Count, y += Vector<T>.Count)
-		{
-			var xx = Unsafe.ReadUnaligned<Vector<T>>(x);
-			var yy = Unsafe.ReadUnaligned<Vector<T>>(y);
-			yy += xx * scalar;
-			Unsafe.WriteUnaligned(y, yy);
-		}
-		n = (int)(end - x);
-	SCALAR:
-		for (int i = 0; i < n; i++)
-			y[i] += α * x[i];
+		if (!Api.VectorsBinary<T, Api.B_AddScaled>(x, 1, x, 1, y, 1, α, n))
+			throw new NotSupportedException();
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void VecMulMat<T>(T* x, T* A, int ld, T* output, int m, int n) where T : unmanaged, IFloatingPoint<T>
@@ -238,7 +187,7 @@ internal static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void PointWiseMultiplyAdd<T>(T* a, T* aIm, T* b, T* x, T* xIm, T* y, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPoint<T>
 	{
-		if (resultIm != null)
+		if (aIm != null)
 		{
 			for (int i = 0; i < n; i++)
 			{
@@ -1036,7 +985,8 @@ internal static unsafe class MatrixSolvers
 					var reflector = householder2.ToReflectionMatrix();
 					reflector.ColumnUpdate(A + (j * lda), lda, Math.Min(j + 4, n));
 					reflector.RowUpdate(A + (j + colFree * lda), lda, n - colFree);
-					reflector.ColumnUpdate(Q + (j * ldq), ldq, n);
+					if (Q != null)
+						reflector.ColumnUpdate(Q + (j * ldq), ldq, n);
 					A[j + 1 + (j - 1) * lda] = T.Zero;
 				}
 				else
@@ -1044,7 +994,8 @@ internal static unsafe class MatrixSolvers
 					var reflector = householder.ToReflectionMatrix();
 					reflector.ColumnUpdate(A + (j * lda), lda, Math.Min(j + 4, n));
 					reflector.RowUpdate(A + (j + colFree * lda), lda, n - colFree);
-					reflector.ColumnUpdate(Q + (j * ldq), ldq, n);
+					if (Q != null)
+						reflector.ColumnUpdate(Q + (j * ldq), ldq, n);
 					if (j != i)
 						A[j + 1 + (j - 1) * lda] = A[j + 2 + (j - 1) * lda] = T.Zero;
 				}
@@ -1200,6 +1151,8 @@ internal static unsafe class MatrixSolvers
 	/// </summary>
 	public static void SchurFormEigensolve<T>(int n, T* A, int lda, T* Q, int ldq, T* wr, T* wi, T* V, int ldv, T* work) where T : unmanaged, IFloatingPoint<T>
 	{
+		// constant
+		T criteriaAmplifier = T.ScaleB(T.One, sizeof(T) * 3 / 2), sqrtCriteriaAmplifier = T.Sqrt(criteriaAmplifier);
 		// store some diagonals
 		T* diag_m1 = work, diag_0 = work + n, diag_p1 = work + 2 * n;
 		diag_m1[0] = diag_p1[0] = diag_0[0] = T.Zero;
@@ -1222,23 +1175,28 @@ internal static unsafe class MatrixSolvers
 			bool noComplex = wi[k] == T.Zero;
 			if (noComplex)
 			{
-				T λAbs = T.Abs(λ);
+				// lessen the criteria
+				T λAbs = sqrtCriteriaAmplifier * T.Abs(λ);
 				for (l = k; l < n; l++)
 				{
-					if (wi[l] != T.Zero || T.Abs(wr[l] - λ) + λAbs != λAbs)
+					T diff = T.Abs(wr[l] - λ);
+					if (wi[l] != T.Zero || diff + λAbs != λAbs)
 						break;
 				}
 				alphaIm = betaIm = tempIm = null;
+				λ = λAbs;
 			}
 			else
 			{
-				T λAbs = λ * λ + wi[k] * wi[k];
+				// lessen the criteria
+				T λAbsSq = criteriaAmplifier * (λ * λ + wi[k] * wi[k]);
 				for (l = k; l < n; l++)
 				{
-					if (wi[l] == T.Zero || (wr[l] - λ) * (wr[l] - λ) + (T.Abs(wi[l]) - wi[k]) * (T.Abs(wi[l]) - wi[k]) + λAbs != λAbs)
+					T diff = (wr[l] - λ) * (wr[l] - λ) + (T.Abs(wi[l]) - wi[k]) * (T.Abs(wi[l]) - wi[k]);
+					if (wi[l] == T.Zero || diff + λAbsSq != λAbsSq)
 						break;
 				}
-				λ = T.Sqrt(λAbs);
+				λ = T.Sqrt(λAbsSq);
 			}
 			// get columns whose eigenvectors are not 0 and copy to V[..k, k..l]
 			//tex:$\mathcal{I}\gets\left\{i\middle|{\vec{a}}_{k:l,i}={\vec{e}}_{i-k+1}\lambda_k,k\le i < l\right\}$
@@ -1250,9 +1208,16 @@ internal static unsafe class MatrixSolvers
 				if (!noComplex && ((i - k) % 2 == 1 || !AllZeroComparedTo(A + (k + i * lda), i - k, λ) || !AllZeroComparedTo(A + (k + (i + 1) * lda), i - k, λ)))
 					continue;
 				if (k != 0)
-					Unsafe.CopyBlockUnaligned(V + ((zeroColCount + k) * ldv), A + (i * lda), (uint)(k * sizeof(T)));
+				{
+					if (noComplex)
+						Unsafe.CopyBlockUnaligned(V + ((zeroColCount + k) * ldv), A + (i * lda), (uint)(k * sizeof(T)));
+					else
+						Unsafe.CopyBlockUnaligned(V + ((zeroColCount + k) * ldv), A + ((i + 1) * lda), (uint)((k + 1) * sizeof(T)));
+				}
 				zeroColCount++;
 			}
+			// real end row number for complex
+			int kk = noComplex ? k : k + 1;
 			// first eigenvectors shortcut
 			if (k == 0)
 			{
@@ -1284,15 +1249,19 @@ internal static unsafe class MatrixSolvers
 			//tex:$\vec{\beta}\gets-{{\rm \text{diag}}_{-1}{A_{0:k-1,0:k-1}}}/{\left(\text{diag}{A_{0:k-2,0:k-2}}-\lambda_k\right)}$
 			//$\vec{\alpha}\gets{1}/{\left(\text{diag}{A_{1:k-1,1:k-1}}+\vec{\beta}\odot{\rm \text{diag}}_1{A_{0:k-1,0:k-1}}-\lambda_k\right)}$
 			//$\vec{\beta}\gets\vec{\alpha}\odot\vec{\beta}$
-			PointWiseDivideAddScalar(diag_m1, diag_0, k, -wr[k], -wi[k], beta, betaIm);
-			PointWiseMultiplyAddScalar(beta, betaIm, diag_p1, diag_0 + 1, k, -wr[k], -wi[k], alpha, alphaIm);
-			PointWiseInv(alpha, alphaIm, k, alpha, alphaIm);
-			PointWiseMultiply(alpha, alphaIm, beta, betaIm, k, beta, betaIm);
-			beta[k] = T.Zero; beta += 1;
+			PointWiseDivideAddScalar(diag_m1, diag_0, kk, -wr[k], -wi[k], beta, betaIm);
+			PointWiseMultiplyAddScalar(beta, betaIm, diag_p1, diag_0 + 1, kk, -wr[k], -wi[k], alpha, alphaIm);
+			PointWiseInv(alpha, alphaIm, kk, alpha, alphaIm);
+			PointWiseMultiply(alpha, alphaIm, beta, betaIm, kk, beta, betaIm);
+			// move beta forward for future computation
+			for (int i = 0; i < kk - 1; i++)
+				beta[i] = beta[i + 1];
 			if (betaIm != null)
-			{
-				betaIm[k] = T.Zero; betaIm += 1;
-			}
+				for (int i = 0; i < k; i++)
+					betaIm[i] = betaIm[i + 1];
+			beta[kk - 1] = T.Zero;
+			if (betaIm != null)
+				betaIm[k] = T.Zero;
 			// row reduce V[..k, k..l]
 			//tex:$$V_{1:k-1,\mathcal{I}}\gets \text{diag}{\vec{\beta}}\cdot V_{0:k-2,\mathcal{I}}+\text{diag}{\vec{\alpha}}\cdot V_{1:k-1,\mathcal{I}}$$
 			//For j = k - 2, ..., 1 Do
@@ -1301,16 +1270,25 @@ internal static unsafe class MatrixSolvers
 			{
 				T* Vre = noComplex ? V + (k + i) * ldv : V + (k + i * 2) * ldv;
 				T* Vim = noComplex ? null : V + (k + i * 2 + 1) * ldv;
-				PointWiseMultiplyAdd(beta, betaIm, V + (k + i) * ldv, alpha, alphaIm, V + (k + i) * ldv, k - 1, Vre, Vim);
+				PointWiseMultiplyAdd(beta, betaIm, Vre, alpha + 1, alphaIm + 1, Vre + 1, kk - 1, temp + 1, tempIm + 1);
+				temp[0] = alpha[0] * Vre[0];
+				if (!noComplex)
+					tempIm[0] = alphaIm[0] * Vre[0];
+				Unsafe.CopyBlockUnaligned(Vre, temp, (uint)(kk * sizeof(T)));
+				if (!noComplex)
+					Unsafe.CopyBlockUnaligned(Vim, tempIm, (uint)(kk * sizeof(T)));
 			}
-			for (int j = k - 2; j > 0; j--)
+			for (int j = kk - 1; j > 0; j--)
 			{
-				PointWiseMultiplyAdd(beta, betaIm, A + j * lda, alpha, alphaIm, A + j * lda, j, temp, tempIm);
+				PointWiseMultiplyAdd(beta, betaIm, A + j * lda, alpha + 1, alphaIm + 1, A + (1 + j * lda), j - 1, temp + 1, tempIm + 1);
+				temp[0] = alpha[0] * A[j * lda];
+				if (!noComplex)
+					tempIm[0] = alphaIm[0] * A[j * lda];
 				for (int i = 0; i < zeroColCount; i++)
 				{
 					T* Vre = noComplex ? V + (k + i) * ldv : V + (k + i * 2) * ldv;
 					T* Vim = noComplex ? null : V + (k + i * 2 + 1) * ldv;
-					PointWiseAddScaled(temp, tempIm, Vre, Vim, j, -Vre[k - 1], -Vim[k - 1], Vre, Vim);
+					PointWiseAddScaled(Vre, Vim, temp, tempIm, j, -Vre[j], noComplex ? default : -Vim[j], Vre, Vim);
 				}
 			}
 			// from eigenvectors
@@ -1319,21 +1297,29 @@ internal static unsafe class MatrixSolvers
 			//$V_{:,\mathcal{I}}\gets U\cdot V_{:,\mathcal{I}}$
 			for (int i = 0; i < zeroColCount; i++)
 			{
-				Unsafe.InitBlockUnaligned(V + (k + (k + i) * ldv), 0, (uint)((n - k) * sizeof(T)));
 				if (noComplex)
-					V[k + i + (k + i) * ldv] = T.One;
-				else if (i % 2 == 0)
-					V[k + i / 2 + (k + i) * ldv] = T.One;
+				{
+					Unsafe.InitBlockUnaligned(V + (k + (k + i) * ldv), 0, (uint)((n - k) * sizeof(T)));
+					V[k + i + (k + i) * ldv] = -T.One;
+				}
+				else
+				{
+					Unsafe.InitBlockUnaligned(V + (kk + (k + i * 2) * ldv), 0, (uint)((n - kk) * sizeof(T)));
+					Unsafe.InitBlockUnaligned(V + (kk + (k + i * 2 + 1) * ldv), 0, (uint)((n - kk) * sizeof(T)));
+					V[kk + i * 2 + (k + i * 2) * ldv] = -T.One;
+				}
 			}
-			Orthogonalize(!noComplex, k + zeroColCount, zeroColCount, V + k * ldv, ldv);
+			Orthogonalize(!noComplex, kk + zeroColCount, zeroColCount, V + k * ldv, ldv);
+			if (!noComplex)
+				zeroColCount *= 2;
 			for (int i = 0; i < zeroColCount; i++)
 			{
-				MatMulVec(Q, ldq, V + (k + i) * ldv, temp, n, n);
+				MatMulVec(Q, ldq, V + (k + i) * ldv, temp, n, k + i + 1);
 				Unsafe.CopyBlockUnaligned(V + (k + i) * ldv, temp, (uint)(n * sizeof(T)));
 			}
-			for (int i = zeroColCount; i < l; i++)
+			for (int i = zeroColCount + k; i < l; i++)
 			{
-				Unsafe.InitBlockUnaligned(V + (k + i) * ldv, 0, (uint)(n * sizeof(T)));
+				Unsafe.InitBlockUnaligned(V + i * ldv, 0, (uint)(n * sizeof(T)));
 			}
 			// continue loop
 			k = l;

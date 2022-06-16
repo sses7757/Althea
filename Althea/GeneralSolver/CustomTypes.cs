@@ -509,15 +509,10 @@ namespace Althea.GeneralSolver
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">I  <paramref name="maxIter"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool check = true)
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction!!, TVec initial!!, int maxIter, bool check = true)
 		{
 			if (maxIter <= 0)
 				throw new ArgumentOutOfRangeException(nameof(maxIter), maxIter, Resources.ParameterError.MustPositive);
-			if (matrixFunction is null)
-				throw new ArgumentNullException(nameof(matrixFunction));
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
-
 			this.MatrixFunction = matrixFunction;
 			this.PreconditionMatrixFunction = null;
 			this.InitialVector = initial;
@@ -543,7 +538,7 @@ namespace Althea.GeneralSolver
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
 		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> is too short</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction!!, TVec initial!!,
 									   Span<T> outputEigenvalues, Span<T> outputEigenvaluesImag,
 									   Span<TVec> outputRealEigenvectors,
 									   int nEig = 1, WhichEigenvalues which = WhichEigenvalues.LargestAbsolute,
@@ -559,10 +554,6 @@ namespace Althea.GeneralSolver
 				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.ParameterError.MustPositive);
 			if (nEig <= 0)
 				throw new ArgumentOutOfRangeException(nameof(nEig), nEig, Resources.ParameterError.MustPositive);
-			if (matrixFunction is null)
-				throw new ArgumentNullException(nameof(matrixFunction));
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
 			if (outputEigenvalues.Length < nEig)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputEigenvalues));
 			if (outputRealEigenvectors.Length < nEig)
@@ -595,7 +586,7 @@ namespace Althea.GeneralSolver
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
 		/// <exception cref="ArgumentException">If any of <paramref name="outputEigenvalues"/> or <paramref name="outputEigenvectors"/> is too short</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec initial,
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction!!, TVec initial!!,
 									   Span<T> outputEigenvalues, Span<TVec> outputEigenvectors,
 									   int nEig = 1, int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
 									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull,
@@ -609,10 +600,6 @@ namespace Althea.GeneralSolver
 				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.ParameterError.MustPositive);
 			if (nEig <= 0)
 				throw new ArgumentOutOfRangeException(nameof(nEig), nEig, Resources.ParameterError.MustPositive);
-			if (matrixFunction is null)
-				throw new ArgumentNullException(nameof(matrixFunction));
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
 			if (outputEigenvalues.Length < nEig)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outputEigenvalues));
 			if (outputEigenvectors.Length < nEig)
@@ -646,7 +633,7 @@ namespace Althea.GeneralSolver
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/> or <paramref name="tolerance"/> is out of range</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="rightSide"/> or <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, TVec rightSide, TVec initial, Func<TVec, TVec>? M = null,
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction!!, TVec rightSide!!, TVec initial!!, Func<TVec, TVec>? M = null,
 									   int maxRestarts = int.MaxValue, int iterPerRestart = 0, double tolerance = 0,
 									   ReorthogonalizeMethod reorthogonalize = ReorthogonalizeMethod.RobustFull,
 									   IPreserveSelector? selector = null, bool useGap = true, bool check = true)
@@ -657,13 +644,6 @@ namespace Althea.GeneralSolver
 				throw new ArgumentOutOfRangeException(nameof(tolerance), tolerance, Resources.ParameterError.CannotNegative);
 			if (maxRestarts <= 0)
 				throw new ArgumentOutOfRangeException(nameof(maxRestarts), maxRestarts, Resources.ParameterError.MustPositive);
-			if (matrixFunction is null)
-				throw new ArgumentNullException(nameof(matrixFunction));
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
-			if (rightSide is null)
-				throw new ArgumentNullException(nameof(rightSide));
-
 			this.MatrixFunction = matrixFunction;
 			this.PreconditionMatrixFunction = M;
 			this.InitialVector = initial;
@@ -689,13 +669,8 @@ namespace Althea.GeneralSolver
 		/// </summary>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
 		/// <exception cref="ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction, Func<TVec, TVec>? M, TVec initial, TVec? other, ref KrylovSubspaceSolveInfo<T, TVec> old)
+		public KrylovSubspaceSolveInfo(Func<TVec, TVec> matrixFunction!!, Func<TVec, TVec>? M, TVec initial!!, TVec? other, ref KrylovSubspaceSolveInfo<T, TVec> old)
 		{
-			if (matrixFunction is null)
-				throw new ArgumentNullException(nameof(matrixFunction));
-			if (initial is null)
-				throw new ArgumentNullException(nameof(initial));
-
 			this.MatrixFunction = matrixFunction;
 			this.PreconditionMatrixFunction = M ?? old.PreconditionMatrixFunction;
 			this.InitialVector = initial;

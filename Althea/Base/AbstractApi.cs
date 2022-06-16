@@ -229,9 +229,9 @@ namespace Althea
 		/// <exception cref="ArgumentException">If <paramref name="implementation"/> does not implements <typeparamref name="TApi"/> with empty constructor</exception>
 		/// <exception cref="ObjectDisposedException">If <paramref name="implementation"/> is disposed</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetImplementation(TApi implementation)
+		public static void SetImplementation(TApi implementation!!)
 		{
-			if (implementation is null || implementation.Disposed)
+			if (implementation.Disposed)
 				throw new ObjectDisposedException(nameof(implementation));
 			lock (apiChangeLock)
 			{
