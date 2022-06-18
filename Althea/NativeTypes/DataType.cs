@@ -1,126 +1,179 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Althea.Helpers;
 
 namespace Althea.NativeTypes
 {
 	#region data type enum
 	/// <summary>
+	/// The enumeration for number of sub-elements in one element
+	/// </summary>
+	[Flags]
+	public enum DataTypeTuple : byte
+	{
+		/// <summary>
+		/// Tuple size of 1, i.e. real numbers
+		/// </summary>
+		Real = 1 << 0,
+		/// <summary>
+		/// Tuple size of 2, i.e. complex numbers
+		/// </summary>
+		Complex = 1 << 1,
+		/// <summary>
+		/// Tuple size of 3, i.e. ternary numbers
+		/// </summary>
+		/// <remarks>NOT supported by most applications</remarks>
+		Ternary = 1 << 2,
+		/// <summary>
+		/// Tuple size of 4, i.e. quaternions
+		/// </summary>
+		/// <remarks>NOT supported by most applications</remarks>
+		Quaternion = 1 << 3,
+	}
+
+	/// <summary>
 	/// The general classification of data types supported, values ≤ 0 are treaded as not supported
 	/// </summary>
-	public enum DataTypeClassification : short
+	[Flags]
+	public enum DataTypeClassification : byte
 	{
 		/// <summary>
 		/// The floating point numbers defined in the "IEEE Standard 754 for Binary Floating-Point Arithmetic"
 		/// </summary>
-		FloatPoint_IEEE754 = 1,
+		FloatPoint_IEEE754 = 1 << 0,
 		/// <summary>
 		/// The signed integer numbers
 		/// </summary>
-		SignedInteger = 2,
+		SignedInteger = 1 << 1,
 		/// <summary>
 		/// The unsigned integer numbers
 		/// </summary>
-		UnsignedInteger = 3,
+		UnsignedInteger = 1 << 2,
 	}
 
 	/// <summary>
-	/// The general data types defined by flags and masks.
+	/// The enumeration for size of a sub-element in bytes
 	/// </summary>
+	[Flags]
+	public enum DataTypeSize : short
+	{
+		/// <summary>
+		/// 1 byte
+		/// </summary>
+		Byte1 = 1 << 0,
+		/// <summary>
+		/// 2 byte
+		/// </summary>
+		Byte2 = 1 << 1,
+		/// <summary>
+		/// 4 byte
+		/// </summary>
+		Byte4 = 1 << 2,
+		/// <summary>
+		/// 8 byte
+		/// </summary>
+		Byte8 = 1 << 3,
+	}
+
+	/// <summary>
+	/// The enumeration for general data types.
+	/// </summary>
+	[Flags]
 	public enum DataType : int
 	{
-		// concrete types
 		/// <summary>
-		/// <see cref="Half"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		RealHalf = DataTypeExtension.Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte2,
+		RealHalf = DataTypeTuple.Real + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
-		/// <see cref="float"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="float"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		RealSingle = DataTypeExtension.Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
+		RealSingle = DataTypeTuple.Real + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
 		/// <summary>
-		/// <see cref="double"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="double"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		RealDouble = DataTypeExtension.Real | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
-		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="Half"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte2"/>
-		/// </summary>
-		ComplexHalf = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte2,
-		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="float"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte4"/>
-		/// </summary>
-		ComplexSingle = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte4,
-		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="double"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="DataTypeExtension.Byte8"/>
-		/// </summary>
-		ComplexDouble = DataTypeExtension.Complex | DataTypeExtension.TypeFloatPoint_IEEE754 | DataTypeExtension.Byte8,
+		RealDouble = DataTypeTuple.Real + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
 
 		/// <summary>
-		/// <see cref="sbyte"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="Complex{T}"/> of <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		RealInt8 = DataTypeExtension.Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte1,
+		ComplexHalf = DataTypeTuple.Complex + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
-		/// <see cref="short"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="Complex{T}"/> of <see cref="float"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		RealInt16 = DataTypeExtension.Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte2,
+		ComplexSingle = DataTypeTuple.Complex + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
 		/// <summary>
-		/// <see cref="int"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="Complex{T}"/> of <see cref="double"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		RealInt32 = DataTypeExtension.Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte4,
-		/// <summary>
-		/// <see cref="long"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
-		/// </summary>
-		RealInt64 = DataTypeExtension.Real | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte8,
+		ComplexDouble = DataTypeTuple.Complex + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
 
 		/// <summary>
-		/// <see cref="byte"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="sbyte"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte1"/>
 		/// </summary>
-		RealUInt8 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte1,
+		RealInt8 = DataTypeTuple.Real + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte1 << 16),
 		/// <summary>
-		/// <see cref="ushort"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="short"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		RealUInt16 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte2,
+		RealInt16 = DataTypeTuple.Real + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
-		/// <see cref="int"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="int"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		RealUInt32 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte4,
+		RealInt32 = DataTypeTuple.Real + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte4 << 16),
 		/// <summary>
-		/// <see cref="long"/> = <see cref="DataTypeExtension.Real"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="long"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		RealUInt64 = DataTypeExtension.Real | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
+		RealInt64 = DataTypeTuple.Real + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte8 << 16),
 
 		/// <summary>
-		/// <see cref="ComplexInteger{T}"/> of <see cref="sbyte"/>  = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="byte"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte1"/>
 		/// </summary>
-		ComplexInt8 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte1,
+		RealUInt8 = DataTypeTuple.Real + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte1 << 16),
 		/// <summary>
-		/// <see cref="ComplexInteger{T}"/> of <see cref="short"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="ushort"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		ComplexInt16 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte2,
+		RealUInt16 = DataTypeTuple.Real + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
-		/// <see cref="ComplexInteger{T}"/> of <see cref="int"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="uint"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		ComplexInt32 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte4,
+		RealUInt32 = DataTypeTuple.Real + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte4 << 16),
 		/// <summary>
-		/// <see cref="ComplexInteger{T}"/> of <see cref="long"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeSignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="ulong"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		ComplexInt64 = DataTypeExtension.Complex | DataTypeExtension.TypeSignedInteger | DataTypeExtension.Byte8,
+		RealUInt64 = DataTypeTuple.Real + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte8 << 16),
 
 		/// <summary>
-		/// <see cref="ComplexInteger{T}"/> of <see cref="byte"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte1"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="sbyte"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte1"/>
 		/// </summary>
-		ComplexUInt8 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte1,
+		ComplexInt8 = DataTypeTuple.Complex + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte1 << 16),
 		/// <summary>
-		/// <see cref="ComplexInteger{T}"/> of <see cref="ushort"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte2"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="short"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		ComplexUInt16 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte2,
+		ComplexInt16 = DataTypeTuple.Complex + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
-		/// <see cref="ComplexInteger{T}"/> of <see cref="uint"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte4"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="int"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		ComplexUInt32 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte4,
+		ComplexInt32 = DataTypeTuple.Complex + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte4 << 16),
 		/// <summary>
-		/// <see cref="ComplexInteger{T}"/> of <see cref="ulong"/> = <see cref="DataTypeExtension.Complex"/> + <see cref="DataTypeExtension.TypeUnsignedInteger"/> + <see cref="DataTypeExtension.Byte8"/>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="long"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		ComplexUInt64 = DataTypeExtension.Complex | DataTypeExtension.TypeUnsignedInteger | DataTypeExtension.Byte8,
+		ComplexInt64 = DataTypeTuple.Complex + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte8 << 16),
+
+		/// <summary>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="sbyte"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte1"/>
+		/// </summary>
+		ComplexUInt8 = DataTypeTuple.Complex + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte1 << 16),
+		/// <summary>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="short"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte2"/>
+		/// </summary>
+		ComplexUInt16 = DataTypeTuple.Complex + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte2 << 16),
+		/// <summary>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="int"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte4"/>
+		/// </summary>
+		ComplexUInt32 = DataTypeTuple.Complex + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte4 << 16),
+		/// <summary>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="long"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte8"/>
+		/// </summary>
+		ComplexUInt64 = DataTypeTuple.Complex + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte8 << 16),
 	}
 	#endregion
 
@@ -131,84 +184,50 @@ namespace Althea.NativeTypes
 	/// </summary>
 	public static class DataTypeExtension
 	{
-		#region constants
-		/// <summary>
-		/// The right-most bit that represents the real base type, equals to zero, cannot be used separately.
-		/// </summary>
-		public const int Real = 0;
-		/// <summary>
-		/// The right-most bit that represents the complex base type, cannot be used separately. If the value does not have this bit, it is a real type.
-		/// </summary>
-		public const int Complex = 1;
-
-		/// <summary>
-		/// The type mask (from 1st bit to 7th bit), cannot be used separately.<br/>
-		/// <c>(value &amp; <see cref="TypeMask"/>) &gt;&gt; <see cref="TypeMaskStart"/> = </c> the actual data type classification as a <see cref="DataTypeClassification"/>.
-		/// </summary>
-		public const int TypeMask = 0b1111_1110;
-		/// <summary>
-		/// The start bit of <see cref="TypeMask"/>.
-		/// </summary>
-		public const int TypeMaskStart = 1;
-
-		/// <summary>
-		/// The number of bytes mask (from 8th bit to 15th bit), cannot be used separately.<br/>
-		/// <c>(value &amp; <see cref="ByteMask"/>) &gt;&gt; <see cref="ByteMaskStart"/> = </c> the bytes used (only half of a complex type's size shall be counted).
-		/// </summary>
-		public const int ByteMask = 0b1111_1111_0000_0000;
-		/// <summary>
-		/// The start bit of <see cref="ByteMask"/>.
-		/// </summary>
-		public const int ByteMaskStart = 8;
-
-		/// <summary>
-		/// The float base type; cannot be used separately.
-		/// </summary>
-		public const int TypeFloatPoint_IEEE754 = (int)DataTypeClassification.FloatPoint_IEEE754 << TypeMaskStart;
-		/// <summary>
-		/// The signed integer base type; cannot be used separately.
-		/// </summary>
-		public const int TypeSignedInteger = (int)DataTypeClassification.SignedInteger << TypeMaskStart;
-		/// <summary>
-		/// The unsigned integer base type; cannot be used separately.
-		/// </summary>
-		public const int TypeUnsignedInteger = (int)DataTypeClassification.UnsignedInteger << TypeMaskStart;
-
-		/// <summary>
-		/// The 1-byte base type; cannot be used separately.
-		/// </summary>
-		public const int Byte1 = 1 << ByteMaskStart;
-		/// <summary>
-		/// The 2-byte base type; cannot be used separately.
-		/// </summary>
-		public const int Byte2 = 2 << ByteMaskStart;
-		/// <summary>
-		/// The 4-byte base type; cannot be used separately.
-		/// </summary>
-		public const int Byte4 = 4 << ByteMaskStart;
-		/// <summary>
-		/// The 8-byte base type; cannot be used separately.
-		/// </summary>
-		public const int Byte8 = 8 << ByteMaskStart;
-		#endregion
-
 		#region DataType extension
 		/// <summary>
-		/// Construct a <see cref="DataType"/> from given parameters
+		/// Check whether the given <see cref="DataTypeClassification"/> has only one flag or not.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsAtomic(this DataTypeClassification type) => ((int)type).PopCount() == 1;
+
+		/// <summary>
+		/// Check whether the given <see cref="DataTypeTuple"/> has only one flag or not.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsAtomic(this DataTypeTuple type) => ((int)type).PopCount() == 1;
+
+		/// <summary>
+		/// Check whether the given <see cref="DataTypeSize"/> has only one flag or not.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsAtomic(this DataTypeSize type) => ((int)type).PopCount() == 1;
+
+		/// <summary>
+		/// Check whether the given <see cref="DataType"/> has only one flag or not.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsAtomic(this DataType type) => ((byte)type).PopCount() == 1 && ((short)type >> 8).PopCount() == 1 && ((int)type >> 16).PopCount() == 1;
+
+		/// <summary>
+		/// Construct a <see cref="DataType"/> from given parameters.
 		/// </summary>
 		/// <param name="complex">Whether the constructed <see cref="DataType"/> is a complex type</param>
 		/// <param name="type">The <see cref="DataTypeClassification"/> the constructed <see cref="DataType"/> is a floating point type</param>
 		/// <param name="size">The size in bytes of the constructed <see cref="DataType"/>; if <paramref name="complex"/> is true, this size shall be the <b>total</b> size of the complex struct in bytes</param>
-		/// <returns>The constructed <see cref="DataType"/> or the default value if <paramref name="type"/> is not supported</returns>
+		/// <returns>The constructed <see cref="DataType"/> or the default value if <paramref name="type"/> or <paramref name="size"/> is not supported</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DataType MakeDataType(bool complex, DataTypeClassification type, int size)
 		{
 			if (type <= 0)
 				return default;
+			int sizeB = size.FloorPowerOfTwo();
+			if (sizeB != size)
+				return default;
 			if (complex)
-				return (DataType)Complex | (DataType)((short)type << TypeMaskStart) | (DataType)((size / 2) << ByteMaskStart);
+				return (DataType)((int)DataTypeTuple.Complex + ((int)type << 8) + sizeB << 16);
 			else
-				return (DataType)Real | (DataType)((short)type << TypeMaskStart) | (DataType)(size << ByteMaskStart);
+				return (DataType)((int)DataTypeTuple.Real + ((int)type << 8) + sizeB << 16);
 		}
 
 		/// <summary>
@@ -217,7 +236,7 @@ namespace Althea.NativeTypes
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a real type.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsReal(this DataType dataType) => ((int)dataType & Complex) == 0;
+		public static bool IsReal(this DataType dataType) => (DataTypeTuple)dataType == DataTypeTuple.Real;
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is an integer type.
@@ -227,8 +246,8 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsInteger(this DataType dataType)
 		{
-			int t = ((int)dataType & TypeMask) << TypeMaskStart;
-			return t == TypeSignedInteger || t == TypeUnsignedInteger;
+			var c = (DataTypeClassification)((int)dataType >> 8);
+			return c == DataTypeClassification.SignedInteger || c == DataTypeClassification.UnsignedInteger;
 		}
 
 		/// <summary>
@@ -237,7 +256,7 @@ namespace Althea.NativeTypes
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is a signed integer type.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsSignedInteger(this DataType dataType) => ((int)dataType & TypeMask) == (TypeSignedInteger >> TypeMaskStart);
+		public static bool IsSignedInteger(this DataType dataType) => (DataTypeClassification)((int)dataType >> 8) == DataTypeClassification.SignedInteger;
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is an unsigned integer type.
@@ -245,7 +264,7 @@ namespace Althea.NativeTypes
 		/// <param name="dataType">The <see cref="DataType"/> to check</param>
 		/// <returns>True if <paramref name="dataType"/> is an unsigned integer type.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsUnsignedInteger(this DataType dataType) => ((int)dataType & TypeMask) == (TypeUnsignedInteger >> TypeMaskStart);
+		public static bool IsUnsignedInteger(this DataType dataType) => (DataTypeClassification)((int)dataType >> 8) == DataTypeClassification.UnsignedInteger;
 
 		/// <summary>
 		/// Get the number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.
@@ -253,7 +272,7 @@ namespace Althea.NativeTypes
 		/// <param name="dataType">The <see cref="DataType"/> to get</param>
 		/// <returns>The number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Bytes(this DataType dataType) => ((int)dataType & ByteMask) >> ByteMaskStart;
+		public static int Bytes(this DataType dataType) => (int)dataType >> 16;
 
 		/// <summary>
 		/// Get the corresponding real type of input <paramref name="type"/>
@@ -261,13 +280,7 @@ namespace Althea.NativeTypes
 		/// <param name="type">input <see cref="DataType"/></param>
 		/// <returns>the corresponding real type</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DataType RealCorrespond(this DataType type)
-		{
-			if (type.IsReal())
-				return type;
-			const int mask = 0b0001;
-			return (DataType)((int)type ^ mask);
-		}
+		public static DataType RealCorrespond(this DataType type) => (DataType)((((uint)type >> 8) << 8) + (uint)DataTypeTuple.Real);
 
 		/// <summary>
 		/// Get the corresponding complex type of input <paramref name="type"/>
@@ -275,23 +288,7 @@ namespace Althea.NativeTypes
 		/// <param name="type">input <see cref="DataType"/></param>
 		/// <returns>the corresponding complex type</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DataType ComplexCorrespond(this DataType type)
-		{
-			if (!type.IsReal())
-				return type;
-			const int mask = 0b0001;
-			return (DataType)((int)type ^ mask);
-		}
-
-		/// <summary>
-		/// Get the string representation of a given <see cref="DataType"/>
-		/// </summary>
-		/// <param name="dataType">The <see cref="DataType"/> to get string representation</param>
-		/// <returns>The string representation of <paramref name="dataType"/></returns>
-		public static string GetStringRepr(this DataType dataType)
-		{
-			return (dataType.IsReal() ? "Real" : "Complex") + $" Byte-{dataType.Bytes()} " + (dataType.IsInteger() ? "Integer" : "Float");
-		}
+		public static DataType ComplexCorrespond(this DataType type) => (DataType)((((uint)type >> 8) << 8) + (uint)DataTypeTuple.Complex);
 		#endregion
 
 		#region to DataType
