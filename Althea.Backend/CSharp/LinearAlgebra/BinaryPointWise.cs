@@ -69,12 +69,14 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		internal struct B_Divide { }
 		internal struct B_Add { }
 		internal struct B_AddScaled { }
+		internal struct B_AddConjugateScaled { }
 		private enum BinaryModify
 		{
 			Multiply,
 			Divide,
 			Add,
-			AddScaled
+			AddScaled,
+			AddConjScaled
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -87,8 +89,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				op = BinaryModify.Divide;
 			else if (typeof(Op) == typeof(B_Add))
 				op = BinaryModify.Add;
-			else
+			else if (typeof(Op) == typeof(B_AddScaled))
 				op = BinaryModify.AddScaled;
+			else
+				op = BinaryModify.AddConjScaled;
 
 			for (int i = 0, ix = 0, iy = 0, iz = 0; i < length; i++, ix += incx, iy += incy, iz += incz)
 			{
@@ -115,6 +119,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					Complex<double> temp = Complex<double>.FusedMultiplyAdd(*(Complex<double>*)&scalar, *(Complex<double>*)&b, *(Complex<double>*)&a);
 					v = *(T*)&temp;
 				}
+				else if ((typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>)) && op == BinaryModify.AddConjScaled)
+				{
+					Complex<float> temp = Complex<float>.FusedMultiplyAdd(*(Complex<float>*)&scalar, (*(Complex<float>*)&b).Conjugate, *(Complex<float>*)&a);
+					v = *(T*)&temp;
+				}
+				else if ((typeof(T) == typeof(Complex<double>) || typeof(T) == typeof(Complex<double>)) && op == BinaryModify.AddConjScaled)
+				{
+					Complex<double> temp = Complex<double>.FusedMultiplyAdd(*(Complex<double>*)&scalar, (*(Complex<double>*)&b).Conjugate, *(Complex<double>*)&a);
+					v = *(T*)&temp;
+				}
 				// otherwise
 				else
 				{
@@ -124,6 +138,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						BinaryModify.Divide => a / b,
 						BinaryModify.Add => a + b,
 						BinaryModify.AddScaled => a + b * scalar,
+						BinaryModify.AddConjScaled => a + b.Conjugate() * scalar,
 						_ => default,
 					};
 				}
@@ -216,8 +231,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				op = BinaryModify.Divide;
 			else if (typeof(Op) == typeof(B_Add))
 				op = BinaryModify.Add;
-			else
+			else if (typeof(Op) == typeof(B_AddScaled))
 				op = BinaryModify.AddScaled;
+			else
+				op = BinaryModify.AddConjScaled;
 
 			// loop
 			Vector256<float> scalarReals = new Vector<float>(scalar.Real).AsVector256();
@@ -242,6 +259,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					case BinaryModify.AddScaled:
 						ComplexUnpack(currentX1, currentX2, out currentX1, out currentX2);
 						ComplexUnpack(currentY1, currentY2, out currentY1, out currentY2);
+						UnpackComplexMultiplyAdd<byte>(scalarReals, scalarImags, currentY1, currentY2, ref currentX1, ref currentX2);
+						ComplexPack(currentX1, currentX2, out currentX1, out currentX2);
+						break;
+					case BinaryModify.AddConjScaled:
+						ComplexUnpack(currentX1, currentX2, out currentX1, out currentX2);
+						ComplexUnpack(currentY1, currentY2, out currentY1, out currentY2);
+						currentY2 = -currentY2;
 						UnpackComplexMultiplyAdd<byte>(scalarReals, scalarImags, currentY1, currentY2, ref currentX1, ref currentX2);
 						ComplexPack(currentX1, currentX2, out currentX1, out currentX2);
 						break;

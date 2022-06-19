@@ -17,13 +17,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		internal struct U_AddScalar { }
 		internal struct U_MultiplyScalar { }
 		internal struct U_Modulo { }
-		private struct U_PowerT { }
-		private struct U_PowerDouble { }
-		private struct U_Truncate { }
-		private struct U_Conjugate { }
-		private struct U_Sqrt { }
-		private struct U_Square { }
-		private struct U_Reciprocal { }
+		internal struct U_PowerT { }
+		internal struct U_PowerDouble { }
+		internal struct U_Truncate { }
+		internal struct U_Conjugate { }
+		internal struct U_Sqrt { }
+		internal struct U_Square { }
+		internal struct U_Reciprocal { }
 		private enum Modify
 		{
 			AddScalar,
