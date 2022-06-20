@@ -1,15 +1,15 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 using Althea.Backend.CSharp.LinearAlgebra;
-using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.Linq;
 using Althea.NativeTypes;
 
 
 // Ignore Spelling: \mathbf \overset \longrightarrow \mathrm \cdot \left \right \varepsilon \mathbb \begin \times \le
-namespace Althea.Backend.CSharp.Solver
+namespace Althea.GeneralSolvers.Krylov.Backend
 {
 	internal static class KrylovBased
 	{
@@ -448,7 +448,7 @@ namespace Althea.Backend.CSharp.Solver
 			// get norm of H
 			fixed (T* ptrH = Hprime.UnderlyingSpan, ptrVals = stackalloc T[n], ptrValsIm = NumberType<T>.IsComplex ? default : stackalloc T[n])
 			{
-				MatrixSolvers.HessenbergSchurFactorize(n, ptrH, Hprime.LeadDim, null, 1,  ptrVals, ptrValsIm);
+				MatrixSolvers.HessenbergSchurFactorize(n, ptrH, Hprime.LeadDim, null, 1, ptrVals, ptrValsIm);
 			}
 			if (NumberType<T>.IsComplex)
 			{
@@ -602,7 +602,7 @@ namespace Althea.Backend.CSharp.Solver
 			SpanMatrix<T> H = new(stackalloc T[iterPerRestart * iterPerRestart], iterPerRestart);
 			// calculate first r
 			//tex: $\vec r = \vec b - \mathbf A \vec x_0$
-			TVec r = Common.RSetToBSubAx<T, TVec>(matrixFunction,initGuess, b);
+			TVec r = Common.RSetToBSubAx<T, TVec>(matrixFunction, initGuess, b);
 			T residual = r.Norm(), oldResidual = residual;
 			TVec guess = initGuess.Clone();
 			T normB = b.Norm();
@@ -625,7 +625,7 @@ namespace Althea.Backend.CSharp.Solver
 					// dispose old ones
 					qs.ClearList(); // the old residual vector is destroyed here since it is the first of Q
 					H.UnderlyingSpan.Clear(); // clear H
-					// calculate
+											  // calculate
 					converge = GMResInner(matrixFunction, iterPerRestart, robustOrth, realTolerance, ref residual, H, ref r, ref qs, convergedVec);
 					if (converge)
 					{

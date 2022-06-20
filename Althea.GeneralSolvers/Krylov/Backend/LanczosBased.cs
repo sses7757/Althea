@@ -1,9 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using Althea.GeneralSolver;
+using Althea.Backend.CSharp.LinearAlgebra;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
@@ -11,7 +12,7 @@ using Althea.NativeTypes;
 
 
 // Ignore Spelling: \dfrac \cdot \alpha \mathbf \varepsilon \begin \ddots \cdots
-namespace Althea.Backend.CSharp.Solver
+namespace Althea.GeneralSolvers.Krylov.Backend
 {
 	internal static class LanczosBased
 	{
@@ -170,19 +171,17 @@ namespace Althea.Backend.CSharp.Solver
 				eigvec[firstNResidual, firstNResidual] = αs[firstNResidual];
 			}
 			Span<T> offDiag = stackalloc T[N];
-			fixed (T* eigvecPtr = eigvec[0], eigvalPtr = eigval, offDiagPtr = offDiag)
+			// reduce top-left part to tridiagonal
+			if (firstNResidual != 0)
 			{
-				// reduce top-left part to tridiagonal
-				if (firstNResidual != 0)
-				{
-					LinearAlgebra.MatrixSolvers.SymmetricMatrixToTridiagonal(firstNResidual + 1, eigvecPtr, eigvec.LeadDim, eigvalPtr, offDiagPtr);
-				}
-				αs[firstNResidual..].CopyTo(eigval[firstNResidual..]);
-				βs[firstNResidual..].CopyTo(offDiag[firstNResidual..]);
-				// tridiagonal solve
-				if (!LinearAlgebra.MatrixSolvers.SymmetricTridiagonalEigensolve(N, eigvalPtr, offDiagPtr, eigvecPtr, eigvec.LeadDim))
-					throw new MatrixSolveAlgorithmException(SolveMethodKind.QR, 1);
+				MatrixSolvers.HermitianMatrixToTridiagonal(eigvec[..(firstNResidual + 1), ..(firstNResidual + 1)], eigval[..(firstNResidual + 1)], offDiag[..(firstNResidual + 1)]);
 			}
+			αs[firstNResidual..].CopyTo(eigval[firstNResidual..]);
+			βs[firstNResidual..].CopyTo(offDiag[(firstNResidual + 1)..]);
+			// tridiagonal solve
+			var info = MatrixSolvers.HermitianTridiagonalEigensolve(eigval, offDiag, eigvec[..N, ..N]);
+			if (info != 0)
+				throw new MatrixSolveAlgorithmException(SolveMethodKind.Eigenvalue, info);
 		}
 		#endregion
 

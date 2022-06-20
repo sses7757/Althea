@@ -1305,8 +1305,8 @@ public static unsafe class MatrixSolvers
 	/// <param name="diagStore">The diagonal elements of tridiagonal matrix, can be generated from <see cref="HermitianMatrixToTridiagonal{T}(SpanMatrix{T}, Span{T}, Span{T})"/>, replaced by the eigenvalues after return</param>
 	/// <param name="offDiagStore">The off-diagonal elements of tridiagonal matrix, can be generated from <see cref="HermitianMatrixToTridiagonal{T}(SpanMatrix{T}, Span{T}, Span{T})"/>, destroyed after return</param>
 	/// <param name="eigenvectors">The input / output <see cref="SpanMatrix{T}"/> to store the multiplication result of <paramref name="eigenvectors"/> and the real eigenvectors of tridiagonal matrix</param>
-	/// <returns>Success or not.</returns>
-	public static bool HermitianTridiagonalEigensolve<T>(Span<T> diagStore, Span<T> offDiagStore, SpanMatrix<T> eigenvectors) where T : unmanaged, IFloatingPoint<T>
+	/// <returns>0 for success. Otherwise, number k indicates the k-th off-diagonal element of intermediate tridiagonal form did not converge to zero.</returns>
+	public static int HermitianTridiagonalEigensolve<T>(Span<T> diagStore, Span<T> offDiagStore, SpanMatrix<T> eigenvectors) where T : unmanaged, IFloatingPoint<T>
 	{
 		int n = diagStore.Length, evld = eigenvectors.LeadDim;
 		if (offDiagStore.Length != n)
@@ -1341,7 +1341,7 @@ public static unsafe class MatrixSolvers
 				// perform QR with implicit shift
 				if (iter++ == 30)
 				{   // too many iterations for one eigenvalue, there may be errors
-					return false;
+					return k;
 				}
 				// get eigenvalue shift
 				//tex: $s = \text{argmin}_x{|d_k - x|}$ where $x \in \text{eigval}\pmatrix{d_{k-1} & e_{k-1} \\ e_{k-1} & d_k}$
@@ -1401,7 +1401,7 @@ public static unsafe class MatrixSolvers
 				goto RESTART_EIGVAL;
 			}
 		}
-		return true;
+		return 0;
 	}
 	#endregion
 
@@ -1552,12 +1552,12 @@ public static unsafe class MatrixSolvers
 	/// <param name="eigenvalues">The output <see cref="Span{T}"/> to store the eigenvalues (or their real parts)</param>
 	/// <param name="eigenvaluesImag">The output <see cref="Span{T}"/> to store the eigenvalues' imaginary parts (cannot be empty if <typeparamref name="T"/> is a real type)</param>
 	/// <param name="workSpace">The working space with length ≥ 2 * matrix size if <typeparamref name="T"/> is a complex type, not required otherwise</param>
-	/// <returns>Success or not.</returns>
-	public static bool HessenbergSchurFactorize<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag = default, Span<T> workSpace = default) where T : unmanaged, IFloatingPoint<T>
+	/// <returns>0 for success. Otherwise, number k indicates the k-th off-diagonal element of intermediate Hessenberg form did not converge to zero.</returns>
+	public static int HessenbergSchurFactorize<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag = default, Span<T> workSpace = default) where T : unmanaged, IFloatingPoint<T>
 	{
 		CheckGeneralEigen(matrix, transformer, eigenvalues, eigenvaluesImag, out int n, out int lda, out int ldq);
 		if (n == 0)
-			return false;
+			return 0;
 		if (NumberType<T>.IsComplex && workSpace.Length < 2 * n)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(workSpace));
 
@@ -1616,7 +1616,7 @@ public static unsafe class MatrixSolvers
 					i = 0;
 				if (iter++ == 30)
 				{   // too many iterations, there may be errors
-					return false;
+					return k;
 				}
 				// continue implicit QR iteration for A[i..k, i..k] (inclusive)
 				for (int j = i; j < k; j++)
@@ -1670,7 +1670,7 @@ public static unsafe class MatrixSolvers
 			if (T.IsNaN(wr[0]))
 				wr[0] = A[0];
 		}
-		return true;
+		return 0;
 	}
 
 	/// <summary>

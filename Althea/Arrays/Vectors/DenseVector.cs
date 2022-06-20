@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
 
-using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.LinearAlgebra.Dense;
 using Althea.NativeTypes;
@@ -22,8 +21,7 @@ namespace Althea.Array
 	public class DenseVector<T, TS> : IDenseArray<T, TS>,
 		IBaseVector<T, DenseVector<T, TS>>,
 		IVectorUnaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>>,
-		IVectorBinaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseVector<T, TS>>,
-		IKrylovVector<T, DenseVector<T, TS>>, IConvertibleVector<T, DenseVector<T, TS>, DenseMatrix<T, TS>>
+		IVectorBinaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseVector<T, TS>>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
 	{
@@ -42,8 +40,22 @@ namespace Althea.Array
 		{
 			this.values = TS.Empty;
 		}
-		static DenseVector<T, TS> IValueArray<T, DenseVector<T, TS>>.Empty => new();
-		static DenseVector<T, TS> IKrylovVector<T, DenseVector<T, TS>>.Empty => new();
+
+		/// <summary>
+		/// Reference copy the <paramref name="original"/> <see cref="DenseVector{T, TS}"/> that not managed by <see cref="ArrayStorageManager"/>.
+		/// </summary>
+		/// <param name="original">The original <see cref="DenseVector{T, TS}"/> to reference from</param>
+		/// <remarks>ONLY use this when <paramref name="original"/> will be lost immediately.</remarks>
+		protected DenseVector(DenseVector<T, TS> original)
+		{
+			this.length = original.length;
+			this.stride = original.stride;
+			this.outerSize = original.outerSize;
+			this.values = original.values;
+		}
+
+		/// <inheritdoc/>
+		public static DenseVector<T, TS> Empty => new();
 
 		/// <summary>
 		/// Get the stride between consecutive elements of this vector in <typeparamref name="T"/>.
@@ -238,24 +250,6 @@ namespace Althea.Array
 				compact.Dispose();
 				throw;
 			}
-		}
-		#endregion
-
-		#region Krylov
-		void IKrylovVector<T, DenseVector<T, TS>>.Normalize() => ((IValueArray<T, DenseVector<T, TS>>)this).Normalize();
-
-		T IKrylovVector<T, DenseVector<T, TS>>.Dot(DenseVector<T, TS> other) => DenseOperation<T, TS>.Dot(this, other);
-
-		void IKrylovVector<T, DenseVector<T, TS>>.AddBy(DenseVector<T, TS> other, T scalar) => DenseOperation<T, TS>.AddBy(this, other, scalar);
-
-		void IKrylovVector<T, DenseVector<T, TS>>.ReplaceBy(DenseVector<T, TS> other) => other.CopyTo(this);
-
-		DenseMatrix<T, TS> IConvertibleVector<T, DenseVector<T, TS>, DenseMatrix<T, TS>>.ToMatrix(long rows)
-		{
-			if (this.length % rows != 0)
-				throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(rows));
-			var output = this.ToCompact();
-			return new(output, rows, this.length / rows);
 		}
 		#endregion
 

@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
 
-using Althea.GeneralSolver;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
@@ -51,6 +50,19 @@ namespace Althea.Array
 		protected AbstractDenseMatrix()
 		{
 			this.values = TS.Empty;
+		}
+
+		/// <summary>
+		/// Reference copy the <paramref name="original"/> <see cref="AbstractDenseMatrix{T, TS}"/> that not managed by <see cref="ArrayStorageManager"/>.
+		/// </summary>
+		/// <param name="original">The original <see cref="AbstractDenseMatrix{T, TS}"/> to reference from</param>
+		/// <remarks>ONLY use this when <paramref name="original"/> will be lost immediately.</remarks>
+		protected AbstractDenseMatrix(AbstractDenseMatrix<T, TS> original)
+		{
+			this.leadDim = original.leadDim; this.outerLength = original.outerLength;
+			this.rows = original.rows; this.cols = original.cols;
+			this.__ld = original.__ld; this.__cols = original.__cols;
+			this.values = original.values;
 		}
 
 		/// <inheritdoc/>
@@ -111,8 +123,7 @@ namespace Althea.Array
 		IBaseMatrix<T, DenseMatrix<T, TS>>,
 		IMatrixVectorMultiplyOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixUnaryOperators<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IMatrixBinaryOperators<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IConvertibleMatrix<T, DenseMatrix<T, TS>, DenseVector<T, TS>>
+		IMatrixBinaryOperators<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>
 		where T : unmanaged, INumber<T>
 		where TS : class, IStorage<T, TS>
 	{
@@ -136,6 +147,13 @@ namespace Althea.Array
 		{
 			// do nothing
 		}
+
+		/// <summary>
+		/// Reference copy the <paramref name="original"/> <see cref="DenseMatrix{T, TS}"/> that not managed by <see cref="ArrayStorageManager"/>.
+		/// </summary>
+		/// <param name="original">The original <see cref="DenseMatrix{T, TS}"/> to reference from</param>
+		/// <remarks>ONLY use this when <paramref name="original"/> will be lost immediately.</remarks>
+		protected DenseMatrix(DenseMatrix<T, TS> original) : base(original) { }
 		#endregion
 
 		#region equality
@@ -285,22 +303,6 @@ namespace Althea.Array
 				throw;
 			}
 		}
-		#endregion
-
-		#region Krylov
-		DenseVector<T, TS> IConvertibleMatrix<T, DenseMatrix<T, TS>, DenseVector<T, TS>>.ToVector()
-		{
-			var output = this.ToCompact();
-			return new(output, this.NRows * this.NCols);
-		}
-
-		static void IMatrixAddOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.AddMatrices(DenseMatrix<T, TS>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA, MatrixOperation opB) => DenseOperation<T, TS>.AddMatrices(A, scalarA, B, scalarB, C, opA, opB);
-
-		static DenseMatrix<T, TS> IMatrixAddOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.AddMatrices(DenseMatrix<T, TS>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, MatrixOperation opA, MatrixOperation opB) => DenseOperation<T, TS>.AddMatrices(A, scalarA, B, scalarB, opA, opB);
-
-		static void IMatrixMultiplyOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.MultiplyMatries(DenseMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA, MatrixOperation opB) => DenseOperation<T, TS>.MultiplyMatries(A, B, α, β, C, opA, opB);
-
-		static DenseMatrix<T, TS> IMatrixMultiplyOperations<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.MultiplyMatries(DenseMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, MatrixOperation opA, MatrixOperation opB) => DenseOperation<T, TS>.MultiplyMatries(A, B, α, opA, opB);
 		#endregion
 
 		#region serialization

@@ -748,8 +748,6 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		/// <inheritdoc/>
 		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestory) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
-			if (NumberType<T>.IsComplex)
-				return false;
 			if (!GetPointer(A, n, n, lda, out T* pA, out int nn, out _, out int ld))
 				return false;
 			if (!GetPointer(vecOut, n, n, ldvec, out T* pV, out _, out _, out int ldv))
@@ -786,9 +784,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				}
 				try
 				{
-					MatrixSolvers.SymmetricMatrixToTridiagonal(nn, pV, ldv, px, (T*)offDiag);
-					if (!MatrixSolvers.SymmetricTridiagonalEigensolve(nn, px, (T*)offDiag, vecOut is null ? null : pV, ldv))
-						throw new MatrixSolveAlgorithmException(SolveMethodKind.QR, 1);
+					MatrixSolvers.HermitianMatrixToTridiagonal<T>(new(new(pV, ldv * nn), nn, ldv), new(px, nn), new((T*)offDiag, nn));
+					var info = MatrixSolvers.HermitianTridiagonalEigensolve<T>(new(px, nn), new((T*)offDiag, nn), vecOut is null ? default : new(new(pV, ldv * nn), nn, ldv));
+					if (info != 0)	
+						throw new MatrixSolveAlgorithmException(SolveMethodKind.Eigenvalue, info);
 					return true;
 				}
 				finally
@@ -799,10 +798,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> => false;
+		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			return true;
+		}
 
 		/// <inheritdoc/>
 		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd> => false;
+
+		/// <inheritdoc/>
+		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestory) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4> => false;
 
 		/// <inheritdoc/>
 		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
@@ -815,8 +820,6 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 #pragma warning disable CS8769
 		bool ILapackAbstractApi.EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3 vecOut, long ldvec, TS4 LUOut, long ldLU, bool allowDestory) => false;
-
-		bool ILapackAbstractApi.EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2 valImagOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr, bool allowDestory) => false;
 
 		bool ILapackAbstractApi.EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2 valImagOut, TS2 valDenomOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr, bool allowDestory) => false;
 

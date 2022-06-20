@@ -23,6 +23,7 @@
 
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+    <RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Platform)' == 'x64' ">

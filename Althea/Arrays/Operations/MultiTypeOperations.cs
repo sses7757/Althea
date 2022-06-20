@@ -13,12 +13,12 @@ namespace Althea.Array
 	/// The interface for vectors' in-place operations.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The current concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec2">The other concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec1">The current concrete type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TVec2">The other concrete type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IVectorOperations<T, TVec1, TVec2>
 		where T : unmanaged, INumber<T>
-		where TVec1 : class, IBaseVector<T, TVec1>
-		where TVec2 : class, IBaseVector<T, TVec2>
+		where TVec1 : class, IVectorMetric
+		where TVec2 : class, IVectorMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, statically compute the dot (inner) product of <paramref name="left"/> and <paramref name="right"/>.
@@ -42,12 +42,12 @@ namespace Althea.Array
 	/// The interface for vectors' unary vector out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec1">The input vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TVec2">The output vector type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IVectorUnaryOperators<T, TVec1, TVec2>
 		where T : unmanaged, INumber<T>
-		where TVec1 : class, IBaseVector<T, TVec1>, IVectorUnaryOperators<T, TVec1, TVec2>
-		where TVec2 : class, IBaseVector<T, TVec2>
+		where TVec1 : class, IVectorMetric, IVectorUnaryOperators<T, TVec1, TVec2>
+		where TVec2 : class, IVectorMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TVec2"/> which is the negation result of the given <paramref name="vector"/>
@@ -86,14 +86,14 @@ namespace Althea.Array
 	/// The interface for vectors' binary out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The first input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec2">The second input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec3">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec1">The first input vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TVec2">The second input vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TVec3">The output vector type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IVectorBinaryOperators<T, TVec1, TVec2, TVec3>
 		where T : unmanaged, INumber<T>
-		where TVec1 : class, IBaseVector<T, TVec1>, IVectorBinaryOperators<T, TVec1, TVec2, TVec3>
-		where TVec2 : class, IBaseVector<T, TVec2>
-		where TVec3 : class, IBaseVector<T, TVec3>
+		where TVec1 : class, IVectorMetric, IVectorBinaryOperators<T, TVec1, TVec2, TVec3>
+		where TVec2 : class, IVectorMetric
+		where TVec3 : class, IVectorMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TVec3"/> which is the (point-wise) addition result of the given <paramref name="left"/> and <paramref name="right"/> vectors.
@@ -118,14 +118,14 @@ namespace Althea.Array
 	/// The interface for operations that multiply vectors and matrices of different types.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec1">The input vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TVec2">The output vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TMat">The input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixVectorMultiplyOperations<T, TVec1, TVec2, TMat>
 		where T : unmanaged, INumber<T>
-		where TVec1 : class, IBaseVector<T, TVec1>
-		where TVec2 : class, IBaseVector<T, TVec2>
-		where TMat : class, IBaseMatrix<T, TMat>
+		where TVec1 : class, IVectorMetric
+		where TVec2 : class, IVectorMetric
+		where TMat : class, IMatrixMetric
 	{
 		/// <summary>
 		/// Check the input parameters of <see cref="MatrixMultiplyVector(TMat, TVec1, TVec2, T, T, MatrixOperation)"/>.
@@ -182,14 +182,14 @@ namespace Althea.Array
 	/// The interface for operators that multiply vectors and matrices of different types out-of-place.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec1">The input vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TVec2">The output vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TMat">The input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixVectorMultiplyOperators<T, TVec1, TVec2, TMat>
 		where T : unmanaged, INumber<T>
-		where TVec1 : class, IBaseVector<T, TVec1>
-		where TVec2 : class, IBaseVector<T, TVec2>
-		where TMat : class, IBaseMatrix<T, TMat>, IMatrixVectorMultiplyOperators<T, TVec1, TVec2, TMat>
+		where TVec1 : class, IVectorMetric
+		where TVec2 : class, IVectorMetric
+		where TMat : class, IMatrixMetric, IMatrixVectorMultiplyOperators<T, TVec1, TVec2, TMat>
 	{
 		/// <summary>
 		/// When implemented by a derived class, compute the multiplication of the given <paramref name="matrix"/> and <paramref name="vector"/>.
@@ -210,14 +210,14 @@ namespace Althea.Array
 	/// The interface for operators that multiply vectors and matrices of different types out-of-place.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec1">The input vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec2">The output vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec1">The input vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TVec2">The output vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TMat">The input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IVectorMatrixMultiplyOperators<T, TVec1, TVec2, TMat>
 		where T : unmanaged, INumber<T>
-		where TVec1 : class, IBaseVector<T, TVec1>, IVectorMatrixMultiplyOperators<T, TVec1, TVec2, TMat>
-		where TVec2 : class, IBaseVector<T, TVec2>
-		where TMat : class, IBaseMatrix<T, TMat>
+		where TVec1 : class, IVectorMetric, IVectorMatrixMultiplyOperators<T, TVec1, TVec2, TMat>
+		where TVec2 : class, IVectorMetric
+		where TMat : class, IMatrixMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, compute the multiplication of the given <paramref name="matrix"/> and <paramref name="vector"/>.
@@ -238,12 +238,12 @@ namespace Althea.Array
 	/// The interface for operations that get diagonal elements of matrices to new vectors.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TMat">The matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixGetDiagonalVector<T, TVec, TMat>
 		where T : unmanaged, INumber<T>
-		where TVec : class, IBaseVector<T, TVec>
-		where TMat : class, IBaseMatrix<T, TMat>
+		where TVec : class, IVectorMetric
+		where TMat : class, IMatrixMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements of <paramref name="matrix"/> as a <typeparamref name="TVec"/>.
@@ -260,12 +260,12 @@ namespace Althea.Array
 	/// The interface for operations that get diagonal elements of matrices.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TMat">The matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixGetDiagonalVectorVariant<T, TVec, TMat>
 		where T : unmanaged, INumber<T>
-		where TVec : class, IBaseVector<T, TVec>
-		where TMat : class, IBaseMatrix<T, TMat>
+		where TVec : class, IVectorMetric
+		where TMat : class, IMatrixMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the <paramref name="k"/>-th diagonal elements of <paramref name="matrix"/> as a <typeparamref name="TVec"/> and write the result to <paramref name="overwrite"/>.
@@ -284,12 +284,12 @@ namespace Althea.Array
 	/// The interface for operations that set diagonal elements of matrices.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TMat">The matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixSetDiagonalVector<T, TVec, TMat>
 		where T : unmanaged, INumber<T>
-		where TVec : class, IBaseVector<T, TVec>
-		where TMat : class, IBaseMatrix<T, TMat>
+		where TVec : class, IVectorMetric
+		where TMat : class, IMatrixMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, set the <paramref name="k"/>-th diagonal elements  of <paramref name="matrix"/> to <paramref name="value"/>.
@@ -307,12 +307,12 @@ namespace Althea.Array
 	/// The interface for operations that get or set diagonal elements of matrices.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat">The matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IVectorMetric"/></typeparam>
+	/// <typeparam name="TMat">The matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixDiagonalVector<T, TVec, TMat> : IMatrixGetDiagonalVector<T, TVec, TMat>, IMatrixGetDiagonalVectorVariant<T, TVec, TMat>, IMatrixSetDiagonalVector<T, TVec, TMat>
 		where T : unmanaged, INumber<T>
-		where TVec : class, IBaseVector<T, TVec>
-		where TMat : class, IBaseMatrix<T, TMat>
+		where TVec : class, IVectorMetric
+		where TMat : class, IMatrixMetric
 	{ }
 	#endregion
 
@@ -321,14 +321,14 @@ namespace Althea.Array
 	/// The interface for matrices addition operations.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixAddOperations<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{
 		/// <summary>
 		/// Check the input parameters of <see cref="AddMatrices(TMat1?, T, TMat2?, T, TMat3, MatrixOperation, MatrixOperation)"/>.
@@ -427,14 +427,14 @@ namespace Althea.Array
 	/// The interface for matrices multiplication operations.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixMultiplyOperations<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{
 		/// <summary>
 		/// Check the input parameters of <see cref="MultiplyMatries(TMat1, TMat2, T, T, TMat3, MatrixOperation, MatrixOperation)"/>.
@@ -507,26 +507,26 @@ namespace Althea.Array
 	/// The interface for matrices' addition and multiplication operations.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixOperations<T, TMat1, TMat2, TMat3> : IMatrixAddOperations<T, TMat1, TMat2, TMat3>, IMatrixMultiplyOperations<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{ }
 
 	/// <summary>
 	/// The interface for matrices' unary matrix out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The output matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixUnaryOperators<T, TMat1, TMat2>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixUnaryOperators<T, TMat1, TMat2>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
+		where TMat1 : class, IMatrixMetric, IMatrixUnaryOperators<T, TMat1, TMat2>
+		where TMat2 : class, IMatrixMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TMat2"/> which is the point-wise negation result of the given <paramref name="matrix"/>.
@@ -577,14 +577,14 @@ namespace Althea.Array
 	/// The interface for matrices'  out-of-place multiplication operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixMultiplyOperator<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixMultiplyOperator<T, TMat1, TMat2, TMat3>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric, IMatrixMultiplyOperator<T, TMat1, TMat2, TMat3>
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the matrix multiplication result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
@@ -611,14 +611,14 @@ namespace Althea.Array
 	/// The interface for matrices' out-of-place addition operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixAddOperators<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixAddOperators<T, TMat1, TMat2, TMat3>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric, IMatrixAddOperators<T, TMat1, TMat2, TMat3>
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, create a new <typeparamref name="TMat3"/> which is the point-wise addition result of the given <paramref name="left"/> and <paramref name="right"/> matrices.
@@ -665,28 +665,28 @@ namespace Althea.Array
 	/// The interface for matrices' binary matrix out-of-place operators.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second input matrix type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The output matrix type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixBinaryOperators<T, TMat1, TMat2, TMat3> : IMatrixMultiplyOperator<T, TMat1, TMat2, TMat3>, IMatrixAddOperators<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>, IMatrixBinaryOperators<T, TMat1, TMat2, TMat3>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric, IMatrixBinaryOperators<T, TMat1, TMat2, TMat3>
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{ }
 
 	/// <summary>
 	/// The interface for matrices' in-place linear solver.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixLinearSolve<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, INumber<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{
 		/// <summary>
 		/// Check the input parameters of <see cref="LinearSolve(TMat1, TMat2, TMat3)"/>.
@@ -714,14 +714,14 @@ namespace Althea.Array
 	/// The interface for matrices' in-place least square solver.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixLeastSolve<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, IFloatingPoint<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{
 		/// <summary>
 		/// Check the input parameters of <see cref="LeastSquareSolve(TMat1, TMat2, TMat3)"/>.
@@ -749,14 +749,14 @@ namespace Althea.Array
 	/// The interface for matrices' in-place QR solvers.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixQRSolve<T, TMat1, TMat2, TMat3>
 		where T : unmanaged, IFloatingPoint<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
 	{
 		/// <summary>
 		/// Check the input parameters of <see cref="QRDecomposition(TMat1, TMat2, TMat3?, bool)"/>.
@@ -803,16 +803,16 @@ namespace Althea.Array
 	/// The interface for matrices' in-place eigen solvers.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IMatrixEigenSolve<T, TMat1, TMat2, TMat3, TVec>
 		where T : unmanaged, IFloatingPoint<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
-		where TVec : class, IBaseVector<T, TVec>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
+		where TVec : class, IVectorMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, solve the standard eigen-equation: <c><paramref name="matrix"/> * x = λ * x</c> and/or <c>y * <paramref name="matrix"/> = λ * y</c>. Where <c>x</c> and <c>y</c> are right and left eigenvectors and <c>λ</c> are eigenvalues, respectively.
@@ -849,16 +849,16 @@ namespace Althea.Array
 	/// The interface for matrices' in-place Schur decomposition solvers.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IMatrixSchurDecompose<T, TMat1, TMat2, TMat3, TVec>
 		where T : unmanaged, IFloatingPoint<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
-		where TVec : class, IBaseVector<T, TVec>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
+		where TVec : class, IVectorMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, compute the standard Schur decomposition of <paramref name="matrix"/>.
@@ -891,16 +891,16 @@ namespace Althea.Array
 	/// The interface for matrices' in-place SVD solvers.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <typeparam name="TMat1">The first matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
+	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IMatrixSVD<T, TMat1, TMat2, TMat3, TVec>
 		where T : unmanaged, IFloatingPoint<T>
-		where TMat1 : class, IBaseMatrix<T, TMat1>
-		where TMat2 : class, IBaseMatrix<T, TMat2>
-		where TMat3 : class, IBaseMatrix<T, TMat3>
-		where TVec : class, IBaseVector<T, TVec>
+		where TMat1 : class, IMatrixMetric
+		where TMat2 : class, IMatrixMetric
+		where TMat3 : class, IMatrixMetric
+		where TVec : class, IVectorMetric
 	{
 		/// <summary>
 		/// When implemented by a derived class, compute the singular value decomposition of the given <paramref name="matrix"/>.

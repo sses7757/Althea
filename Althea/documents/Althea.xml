@@ -411,6 +411,13 @@
             Create an empty <see cref="T:Althea.Array.AbstractDenseMatrix`2"/>.
             </summary>
         </member>
+        <member name="M:Althea.Array.AbstractDenseMatrix`2.#ctor(Althea.Array.AbstractDenseMatrix{`0,`1})">
+            <summary>
+            Reference copy the <paramref name="original"/> <see cref="T:Althea.Array.AbstractDenseMatrix`2"/> that not managed by <see cref="T:Althea.Array.ArrayStorageManager"/>.
+            </summary>
+            <param name="original">The original <see cref="T:Althea.Array.AbstractDenseMatrix`2"/> to reference from</param>
+            <remarks>ONLY use this when <paramref name="original"/> will be lost immediately.</remarks>
+        </member>
         <member name="P:Althea.Array.AbstractDenseMatrix`2.Storage">
             <inheritdoc/>
         </member>
@@ -451,6 +458,13 @@
             <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="rows"/></param>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+        </member>
+        <member name="M:Althea.Array.DenseMatrix`2.#ctor(Althea.Array.DenseMatrix{`0,`1})">
+            <summary>
+            Reference copy the <paramref name="original"/> <see cref="T:Althea.Array.DenseMatrix`2"/> that not managed by <see cref="T:Althea.Array.ArrayStorageManager"/>.
+            </summary>
+            <param name="original">The original <see cref="T:Althea.Array.DenseMatrix`2"/> to reference from</param>
+            <remarks>ONLY use this when <paramref name="original"/> will be lost immediately.</remarks>
         </member>
         <member name="M:Althea.Array.DenseMatrix`2.Equals(Althea.Array.DenseMatrix{`0,`1})">
             <inheritdoc/>
@@ -1706,8 +1720,8 @@
             The interface for vectors' in-place operations.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec1">The current concrete type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TVec2">The other concrete type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+            <typeparam name="TVec1">The current concrete type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TVec2">The other concrete type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IVectorOperations`3.Dot(`1,`2,System.Boolean)">
             <summary>
@@ -1731,8 +1745,8 @@
             The interface for vectors' unary vector out-of-place operators.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec1">The input vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TVec2">The output vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+            <typeparam name="TVec1">The input vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TVec2">The output vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IVectorUnaryOperators`3.op_UnaryNegation(`1)">
             <summary>
@@ -1771,9 +1785,9 @@
             The interface for vectors' binary out-of-place operators.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec1">The first input vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TVec2">The second input vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TVec3">The output vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+            <typeparam name="TVec1">The first input vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TVec2">The second input vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TVec3">The output vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IVectorBinaryOperators`4.op_Addition(`1,`2)">
             <summary>
@@ -1796,9 +1810,9 @@
             The interface for operations that multiply vectors and matrices of different types.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec1">The input vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TVec2">The output vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TMat">The input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec1">The input vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TVec2">The output vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TMat">The input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixVectorMultiplyOperations`4.CheckMatMulVec(`3,`1,`2,`0,Althea.LinearAlgebra.MatrixOperation)">
             <summary>
@@ -1836,9 +1850,9 @@
             The interface for operators that multiply vectors and matrices of different types out-of-place.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec1">The input vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TVec2">The output vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TMat">The input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec1">The input vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TVec2">The output vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TMat">The input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixVectorMultiplyOperators`4.op_Multiply(`3,`1)">
             <summary>
@@ -1859,9 +1873,9 @@
             The interface for operators that multiply vectors and matrices of different types out-of-place.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec1">The input vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TVec2">The output vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TMat">The input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec1">The input vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TVec2">The output vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TMat">The input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IVectorMatrixMultiplyOperators`4.op_Multiply(`3,`1)">
             <summary>
@@ -1882,8 +1896,8 @@
             The interface for operations that get diagonal elements of matrices to new vectors.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TMat">The matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec">The vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TMat">The matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixGetDiagonalVector`3.GetDiag(`2,System.Int64)">
             <summary>
@@ -1900,8 +1914,8 @@
             The interface for operations that get diagonal elements of matrices.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TMat">The matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec">The vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TMat">The matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixGetDiagonalVectorVariant`3.GetDiag(`2,System.Int64,`1)">
             <summary>
@@ -1920,8 +1934,8 @@
             The interface for operations that set diagonal elements of matrices.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TMat">The matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec">The vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TMat">The matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixSetDiagonalVector`3.SetDiag(`2,System.Int64,`1)">
             <summary>
@@ -1939,17 +1953,17 @@
             The interface for operations that get or set diagonal elements of matrices.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The vector type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
-            <typeparam name="TMat">The matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TVec">The vector type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
+            <typeparam name="TMat">The matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="T:Althea.Array.IMatrixAddOperations`4">
             <summary>
             The interface for matrices addition operations.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat1">The first concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixAddOperations`4.CheckAdd(`1,`0,`2,`0,`3,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
             <summary>
@@ -1992,9 +2006,9 @@
             The interface for matrices multiplication operations.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat1">The first concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixMultiplyOperations`4.CheckMul(`0,`1,`2,`3,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
             <summary>
@@ -2036,17 +2050,17 @@
             The interface for matrices' addition and multiplication operations.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat1">The first concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="T:Althea.Array.IMatrixUnaryOperators`3">
             <summary>
             The interface for matrices' unary matrix out-of-place operators.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat1">The input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The output matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The output matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixUnaryOperators`3.op_UnaryNegation(`1)">
             <summary>
@@ -2097,9 +2111,9 @@
             The interface for matrices'  out-of-place multiplication operators.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat1">The first input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The output matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The output matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixMultiplyOperator`4.op_Multiply(`1,`2)">
             <summary>
@@ -2126,9 +2140,9 @@
             The interface for matrices' out-of-place addition operators.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat1">The first input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The output matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The output matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixAddOperators`4.op_Addition(`1,`2)">
             <summary>
@@ -2175,18 +2189,18 @@
             The interface for matrices' binary matrix out-of-place operators.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat1">The first input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second input matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The output matrix type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second input matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The output matrix type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="T:Althea.Array.IMatrixLinearSolve`4">
             <summary>
             The interface for matrices' in-place linear solver.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixLinearSolve`4.CheckLinear(`1,`2,`3)">
             <summary>
@@ -2207,9 +2221,9 @@
             The interface for matrices' in-place least square solver.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixLeastSolve`4.CheckLeast(`1,`2,`3)">
             <summary>
@@ -2230,9 +2244,9 @@
             The interface for matrices' in-place QR solvers.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixQRSolve`4.CheckQR(`1,`2,`3,System.Boolean)">
             <summary>
@@ -2255,10 +2269,10 @@
             The interface for matrices' in-place eigen solvers.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixEigenSolve`5.StandardEigenSolve(`1,`4,`4,`2,`3)">
             <summary>
@@ -2295,10 +2309,10 @@
             The interface for matrices' in-place Schur decomposition solvers.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixSchurDecompose`5.SchurSolve(`1,`4,`4,`2,`3)">
             <summary>
@@ -2331,10 +2345,10 @@
             The interface for matrices' in-place SVD solvers.
             </summary>
             <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.Array.IBaseMatrix`2"/></typeparam>
-            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.Array.IBaseVector`2"/></typeparam>
+            <typeparam name="TMat1">The first matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat2">The second matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TMat3">The third matrix concrete type that implements <see cref="T:Althea.LinearAlgebra.IMatrixMetric"/></typeparam>
+            <typeparam name="TVec">The vector concrete type that implements <see cref="T:Althea.LinearAlgebra.IVectorMetric"/></typeparam>
         </member>
         <member name="M:Althea.Array.IMatrixSVD`5.SingularValueSolve(`1,`4,`2,`3)">
             <summary>
@@ -3552,7 +3566,10 @@
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TSelf">The concrete type that implements this <see cref="T:Althea.Array.IValueArray`2"/></typeparam>
-            <remarks>All inherited classes shall be of column major if not specified.</remarks>
+            <remarks>
+            All inherited classes shall be of column major if not specified.<br/>
+            All inherited classes shall use <see cref="M:Althea.Array.ArrayStorageManager.AddToManager``1(``0)"/> in constructors and <see cref="M:Althea.Array.ArrayStorageManager.SafeDispose``1(``0)"/> in <see cref="M:System.IDisposable.Dispose"/> rather than fininalizers to improve GC performance.
+            </remarks>
         </member>
         <member name="P:Althea.Array.IValueArray`2.Size">
             <summary>
@@ -3785,6 +3802,16 @@
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The storage type used by the value storage</typeparam>
+        </member>
+        <member name="M:Althea.Array.DenseVector`2.#ctor(Althea.Array.DenseVector{`0,`1})">
+            <summary>
+            Reference copy the <paramref name="original"/> <see cref="T:Althea.Array.DenseVector`2"/> that not managed by <see cref="T:Althea.Array.ArrayStorageManager"/>.
+            </summary>
+            <param name="original">The original <see cref="T:Althea.Array.DenseVector`2"/> to reference from</param>
+            <remarks>ONLY use this when <paramref name="original"/> will be lost immediately.</remarks>
+        </member>
+        <member name="P:Althea.Array.DenseVector`2.Empty">
+            <inheritdoc/>
         </member>
         <member name="P:Althea.Array.DenseVector`2.Stride">
             <summary>
@@ -4876,495 +4903,6 @@
             <summary>
             Export current settings to the file "Althea.json"
             </summary>
-        </member>
-        <member name="T:Althea.GeneralSolver.IAbstractApi">
-            <summary>
-            The abstract interface for runtime general solver API routines 
-            </summary>
-        </member>
-        <member name="M:Althea.GeneralSolver.IAbstractApi.KroneckerMultiplyVector``3(System.Boolean,``0,``1,``1,``2@,``0)">
-            <summary>
-            When implemented by a derived class, compute the product of the Kronecker Multiply or Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
-            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> op <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c> where '<c>op</c>' is '⨁' if <paramref name="multiply"/> is false or '⨂' otherwise.
-            </summary>
-            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.GeneralSolver.IConvertibleMatrix`3"/></typeparam>
-            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.GeneralSolver.IConvertibleVector`3"/></typeparam>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <param name="multiply">Whether to perform Kronecker Multiply or Kronecker Sum</param>
-            <param name="scalar">The scalar to multiply to the multiplication result</param>
-            <param name="leftMatrix">The input left matrix to perform the Kronecker multiply/sum</param>
-            <param name="rightMatrix">The input right matrix to perform the Kronecker multiply/sum</param>
-            <param name="vector">The input / output vector</param>
-            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.IAbstractApi.NaiveKrylovSubspaceEigenHermitain``2(Althea.GeneralSolver.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{System.Double,``1}@)">
-            <summary>
-            When implemented by a derived class, perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.
-            </summary>
-            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolver.IKrylovVector`2"/></typeparam>
-            <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
-            <param name="eigen">The output approximate lowest eigenvalue and corresponding eigenvector</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks>Only <paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.MatrixFunction"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.InitialVector"/> and <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.MaxRestarts"/> are used as inputs. Its <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output eigenvector.</remarks>
-            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.IAbstractApi.RestartKrylovSubspaceEigen``2(System.Boolean,Althea.GeneralSolver.KrylovSubspaceSolveInfo{``0,``1}@,System.Int32@)">
-            <summary>
-            When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
-            </summary>
-            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolver.IKrylovVector`2"/></typeparam>
-            <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
-            <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
-            <param name="converged">Output the number of converged eigen-pairs</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> are not used</remarks>
-            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.IAbstractApi.RestartKrylovSubspaceLinearSolve``2(System.Nullable{System.Boolean},Althea.GeneralSolver.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{``1,System.Double}@)">
-            <summary>
-            When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
-            </summary>
-            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolver.IKrylovVector`2"/></typeparam>
-            <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
-            <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
-            <param name="solve">Output the solve vector and the corresponding relative error</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output solve.</remarks>
-            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-        </member>
-        <member name="T:Althea.GeneralSolver.IKrylovVector`2">
-            <summary>
-            The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
-            </summary>
-            <typeparam name="TVec">The concrete vector type</typeparam>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-        </member>
-        <member name="P:Althea.GeneralSolver.IKrylovVector`2.Length">
-            <summary>
-            When implemented by a derived class, get the total presenting length of this vector
-            </summary>
-        </member>
-        <member name="M:Althea.GeneralSolver.IKrylovVector`2.FillWith(`0)">
-            <summary>
-            When implemented by a derived class, fill this vector with the given <paramref name="value"/>
-            </summary>
-            <param name="value">The value to fill</param>
-        </member>
-        <member name="M:Althea.GeneralSolver.IKrylovVector`2.Scale(`0)">
-            <summary>
-            When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
-            </summary>
-            <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
-        </member>
-        <member name="M:Althea.GeneralSolver.IKrylovVector`2.Norm">
-            <summary>
-            When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
-            </summary>
-            <returns>The 2-norm of this vector</returns>
-        </member>
-        <member name="M:Althea.GeneralSolver.IKrylovVector`2.Normalize">
-            <summary>
-            When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
-            </summary>
-            <exception cref="T:System.DivideByZeroException">If the 2-norm of this array is 0</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.IKrylovVector`2.Dot(`1)">
-            <summary>
-            When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
-            </summary>
-            <param name="other">The other <typeparamref name="TVec"/> to perform the dot product</param>
-            <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.IKrylovVector`2.AddBy(`1,`0)">
-            <summary>
-            When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
-            </summary>
-            <param name="other">The other <typeparamref name="TVec"/> to add</param>
-            <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.IKrylovVector`2.ReplaceBy(`1)">
-            <summary>
-            When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
-            </summary>
-            <param name="other">The other <typeparamref name="TVec"/> to replace from</param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
-        </member>
-        <member name="P:Althea.GeneralSolver.IKrylovVector`2.Empty">
-            <summary>
-            When implemented by a derived class, statically get an empty <typeparamref name="TVec"/>.
-            </summary>
-        </member>
-        <member name="M:Althea.GeneralSolver.IKrylovVector`2.OperateOn(System.ReadOnlySpan{`1},System.ReadOnlySpan{`0})">
-            <summary>
-            Statically multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="T:System.ReadOnlySpan`1"/> and obtain the result vector as a <typeparamref name="TVec"/>.
-            </summary>
-            <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
-            <param name="input">The input dense vector to be multiplied as a <see cref="T:System.ReadOnlySpan`1"/></param>
-            <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <typeparamref name="TVec"/></returns>
-            <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
-            <exception cref="T:System.ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
-        </member>
-        <member name="T:Althea.GeneralSolver.IConvertibleMatrix`3">
-            <summary>
-            The interface of matrices that can be converted to vectors.
-            </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat">The concrete matrix type</typeparam>
-            <typeparam name="TVec">The concrete vector type</typeparam>
-        </member>
-        <member name="M:Althea.GeneralSolver.IConvertibleMatrix`3.ToVector">
-            <summary>
-            When implemented by a derived class, convert this matrix to a vector of type <typeparamref name="TVec"/>
-            </summary>
-            <returns>The converted vector as a <typeparamref name="TVec"/> that shall NOT contain any referenced storage.</returns>
-        </member>
-        <member name="T:Althea.GeneralSolver.IConvertibleVector`3">
-            <summary>
-            The interface of vectors that can be converted to matrices.
-            </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TMat">The concrete matrix type</typeparam>
-            <typeparam name="TVec">The concrete vector type</typeparam>
-        </member>
-        <member name="M:Althea.GeneralSolver.IConvertibleVector`3.ToMatrix(System.Int64)">
-            <summary>
-            When implemented by a derived class, convert this vector to a matrix of type <typeparamref name="TMat"/>
-            </summary>
-            <param name="rows">The number of rows of the target matrix</param>
-            <returns>The converted matrix as a <typeparamref name="TMat"/> that shall NOT contain any referenced storage.</returns>
-        </member>
-        <member name="T:Althea.GeneralSolver.RestartStrategy">
-            <summary>
-            The <see cref="T:Althea.GeneralSolver.RestartStrategy"/> indicates which strategy shall be adopted by the thick restart Krylov subspace algorithms.
-            </summary>
-            <remarks>Other non built-in strategies are possible and they work as long as there exists implementation supporting them.</remarks>
-        </member>
-        <member name="F:Althea.GeneralSolver.RestartStrategy.Naive">
-            <summary>
-            The naïve strategy which only preserve the lowest Ritz eigen-pair and converged ones.
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.RestartStrategy.IndexBased">
-            <summary>
-            Based on the index of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
-            $$k=n_c+\min{\left\{n_{\mathrm{eig}},\left(p-n_c\right)\left(\frac{2}{5}+\frac{n_{\mathrm{eig}}}{10p}\right)\right\}}$$
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.RestartStrategy.CurrentResidualBest">
-            <summary>
-            Based on the residual of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
-            $$k=\underset{i}{\mathrm{argmax}}\left( \left| s_{n,i} \right| &lt; \max\left\{ \sqrt{\left| s_{n,n_{\mathrm{eig}}} \right|\max_{j}\left| s_{n,j} \right|},2\left| s_{n,n_{\mathrm{eig}}} \right| \right\} \right)$$
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.RestartStrategy.OneStepResidualImprove">
-            <summary>
-            Based on the improvement of residual of Ritz eigen-pairs of single iteration after the restart, preserve the smallest $k$ ones: <br/>
-            $$k=\max{\left\{n_{\mathrm{eig}},\frac{3p+2n_c}{5}\right\}}$$
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.RestartStrategy.WholeIterResidualImprove">
-            <summary>
-            Based on the improvement of residual of Ritz eigen-pairs of all iterations after the restart, preserve the smallest $k$ ones: <br/>
-            $$k=\underset{k}{\max}{\left(p-k\right)\frac{\lambda_{k+1}-\lambda_1}{\lambda_m-\lambda_1}}$$
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.RestartStrategy.KrylovSchur">
-            <summary>
-            The heuristic used by Krylov-Schur algorithm to prevent stagnating
-            </summary>
-        </member>
-        <member name="T:Althea.GeneralSolver.ReorthogonalizeMethod">
-            <summary>
-            The <see cref="T:Althea.GeneralSolver.ReorthogonalizeMethod"/> indicates which method shall be used to re-orthogonalize with the previous basis in Krylov subspace algorithms.
-            </summary>
-            <remarks>Other non built-in methods are possible and they work as long as there exists implementation supporting them.</remarks>
-        </member>
-        <member name="F:Althea.GeneralSolver.ReorthogonalizeMethod.None">
-            <summary>
-            Do not perform re-orthogonalization, <b>this may lead to serious problems, e.g. Lanczos may never converge</b>
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.ReorthogonalizeMethod.Selective">
-            <summary>
-            Selective re-orthogonalize, let the internal heuristic to determine when and which basis to re-orthogonalize
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.ReorthogonalizeMethod.Full">
-            <summary>
-            Perform full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="F:Althea.GeneralSolver.ReorthogonalizeMethod.Selective"/> one does not perform well
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.ReorthogonalizeMethod.RobustFull">
-            <summary>
-            Perform robust full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="F:Althea.GeneralSolver.ReorthogonalizeMethod.Selective"/> one does not perform well
-            </summary>
-        </member>
-        <member name="T:Althea.GeneralSolver.WhichEigenvalues">
-            <summary>
-            The <see cref="T:Althea.GeneralSolver.WhichEigenvalues"/> indicates which eigen-pairs are desired in Krylov subspace algorithms of non-hermitian matrices.
-            </summary>
-            <remarks>Other non built-in desired parts are possible and they work as long as there exists implementation supporting them.</remarks>
-        </member>
-        <member name="F:Althea.GeneralSolver.WhichEigenvalues.LargestAbsolute">
-            <summary>
-            The eigenvalues with largest absolute values are desired
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.WhichEigenvalues.LargestReal">
-            <summary>
-            The eigenvalues with largest real part values are desired
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.WhichEigenvalues.LargestAbsoluteImaginary">
-            <summary>
-            The eigenvalues with largest imaginary part's absolute values are desired
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.WhichEigenvalues.SmallestAbsolute">
-            <summary>
-            The eigenvalues with smallest absolute values are desired
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.WhichEigenvalues.SmallestReal">
-            <summary>
-            The eigenvalues with smallest real part values are desired
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.WhichEigenvalues.SmallestAbsoluteImaginary">
-            <summary>
-            The eigenvalues with smallest imaginary part's absolute values are desired
-            </summary>
-        </member>
-        <member name="T:Althea.GeneralSolver.IPreserveSelector">
-            <summary>
-            The interface for a user-defined (or a built in) restart strategy
-            </summary>
-        </member>
-        <member name="P:Althea.GeneralSolver.IPreserveSelector.Strategy">
-            <summary>
-            When implemented by a derived class, get the <see cref="T:Althea.GeneralSolver.RestartStrategy"/> of this selector
-            </summary>
-        </member>
-        <member name="M:Althea.GeneralSolver.IPreserveSelector.PreserveSelect``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Int32,System.Int32,System.Int32,System.Span{System.Int32},System.Boolean)">
-            <summary>
-            When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
-            </summary>
-            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
-            <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
-            <param name="estimateEigvalsImag"><paramref name="estimateEigvals"/>'s imaginary part if the eigenvalues are complexes or empty otherwise</param>
-            <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
-            <param name="nConverged">THe number of converged eigen-pairs</param>
-            <param name="nTarget">The number of smallest eigen-pairs wanted</param>
-            <param name="maxIter">The maximum number of iteration (per restart)</param>
-            <param name="output">The span used to put the result indices: preserve <paramref name="estimateEigvals"/>[<paramref name="output"/>] and <paramref name="estimateEigvecs"/>[<paramref name="estimateEigvecs"/>]</param>
-            <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
-            <returns>The <paramref name="output"/> with correct size.</returns>
-            <remarks>This method will only be invoked internally.</remarks>
-        </member>
-        <member name="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2">
-            <summary>
-            The information ref struct used as input and output of Krylov subspace methods.
-            </summary>
-            <typeparam name="T">Any floating point number as the data type</typeparam>
-            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolver.IKrylovVector`2"/></typeparam>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.MatrixFunction">
-            <summary>
-            The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/>
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.PreconditionMatrixFunction">
-            <summary>
-            The function that represents the hermitian positive definite preconditioner's matrix-solve function which returns the result of its inverse multiplying the input vector <typeparamref name="TVec"/>
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.InitialVector">
-            <summary>
-            The initial vector as a <typeparamref name="TVec"/>
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.OtherVector">
-            <summary>
-            The other vector used as a <typeparamref name="TVec"/>
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Tolerance">
-            <summary>
-            The tolerance of the convergence, default 0 means <c><see cref="F:Althea.NativeTypes.NumberType`1.MachinePrecision"/> ^ 0.9</c>
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.PreserveSelector">
-            <summary>
-            The <see cref="T:Althea.GeneralSolver.IPreserveSelector"/> used for selecting the preservation Ritz pairs, default null means <c>new <see cref="M:Althea.GeneralSolver.BuiltInPreserveSelector.#ctor(Althea.GeneralSolver.RestartStrategy)">BuiltInRestartStrategy</see>(<see cref="T:Althea.GeneralSolver.RestartStrategy"/>)</c>.
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvalues">
-            <summary>
-            The output converged eigenvalues sorted by the given order of <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag">
-            <summary>
-            Another <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> if the matrix is not hermitian and <typeparamref name="T"/> is not a complex.
-            </summary>
-            <remarks>When <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i] is not, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i + 1] shall be its negation.</remarks>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvectors">
-            <summary>
-            The output converged eigenvectors, sorted with <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.Eigenvalues"/> or <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>.
-            </summary>
-            <remarks>For real-typed <typeparamref name="T"/>, when <c><see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i]</c> is not 0, <c><see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i]</c> will contain the corresponding real parts of the actual <c>eigenvector[i]</c> and <c>eigenvector[i + 1]</c>, while <c><see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i + 1]</c> will contain the imaginary parts for <c>eigenvector[i]</c> and <c>-eigenvector[i + 1]</c>.</remarks>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.NumberEigenvaluesDesired">
-            <summary>
-            Only the top <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.NumberEigenvaluesDesired"/> eigen-pairs of <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/> are the targets. DO NOT set a large value since the Krylov subspace algorithms are not designed for it.
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.MaxRestarts">
-            <summary>
-            The maximum number of restarts, must be positive. Or the total number of iterations if the implementation solver does not restarts.
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.IterationsPerRestart">
-            <summary>
-            The iteration number per restart, default 0 means letting internal implementation determine
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.ReorthogonalizeMethod">
-            <summary>
-            The <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.ReorthogonalizeMethod"/> to indicate which re-orthogonalization method to use
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired">
-            <summary>
-            The <see cref="T:Althea.GeneralSolver.WhichEigenvalues"/> to indicate which kind of eigenvalues (and the corresponding eigenvectors) are desired
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.UseGapEstimation">
-            <summary>
-            Whether to use the estimated gap in the convergence criteria or use the matrix norm, default true. If the gap can be especially difficult to estimate, this shall be set to false.
-            </summary>
-        </member>
-        <member name="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.CheckMatrixFunction">
-            <summary>
-            Whether to check the <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.MatrixFunction"/> with <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.InitialVector"/> at first. If true, there will be some performance loss.
-            </summary>
-        </member>
-        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Int32,System.Boolean)">
-            <summary>
-            Create a <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> of the given naïve hermitian matrix eigen-solve problem
-            </summary>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">I  <paramref name="maxIter"/> is out of range</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Span{`0},System.Span{`0},System.Span{`1},System.Int32,Althea.GeneralSolver.WhichEigenvalues,System.Int32,System.Int32,System.Double,Althea.GeneralSolver.ReorthogonalizeMethod,Althea.GeneralSolver.IPreserveSelector,System.Boolean,System.Boolean)">
-            <summary>
-            Create a <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> of the given non-hermitian matrix eigen-solve problem
-            </summary>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-            <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> is too short</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Span{`0},System.Span{`1},System.Int32,System.Int32,System.Int32,System.Double,Althea.GeneralSolver.ReorthogonalizeMethod,Althea.GeneralSolver.IPreserveSelector,System.Boolean,System.Boolean)">
-            <summary>
-            Create a <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> of the given hermitian matrix eigen-solve problem
-            </summary>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-            <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/> or <paramref name="outputEigenvectors"/> is too short</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,`1,System.Func{`1,`1},System.Int32,System.Int32,System.Double,Althea.GeneralSolver.ReorthogonalizeMethod,Althea.GeneralSolver.IPreserveSelector,System.Boolean,System.Boolean)">
-            <summary>
-            Create a <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> of the given (non-)hermitian matrix solve problem.<br/>
-            The hermitian positive definite preconditioner <paramref name="M"/> can be null to represent no preconditioning.<br/>
-            The solver shall effectively solve the linear system <c>Hˉ¹ * A * (H')ˉ¹ * y == Hˉ¹ * b</c> for <c>y</c> where <c>y = H' * <paramref name="rightSide"/></c> and <c>M = H * H'</c>.
-            </summary>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/> or <paramref name="tolerance"/> is out of range</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="rightSide"/> or <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},System.Func{`1,`1},`1,`1,Althea.GeneralSolver.KrylovSubspaceSolveInfo{`0,`1}@)">
-            <summary>
-            Create a <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> from an <paramref name="old"/> one
-            </summary>
-            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
-        </member>
-        <member name="T:Althea.GeneralSolver.ApiSelector">
-            <summary>
-            The selector class for runtime general solver API routines 
-            </summary>
-        </member>
-        <member name="M:Althea.GeneralSolver.ApiSelector.KroneckerMultiplyVector``3(System.Boolean,``0,``1,``1,``2@,``0)">
-            <summary>
-            Compute the product of the Kronecker Multiply or Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
-            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> op <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c> where '<c>op</c>' is '⨁' if <paramref name="multiply"/> is false or '⨂' otherwise.
-            </summary>
-            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.GeneralSolver.IConvertibleMatrix`3"/></typeparam>
-            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.GeneralSolver.IConvertibleVector`3"/></typeparam>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <param name="multiply">Whether to perform Kronecker Multiply or Kronecker Sum</param>
-            <param name="scalar">The scalar to multiply to the multiplication result</param>
-            <param name="leftMatrix">The input left matrix to perform the Kronecker multiply/sum</param>
-            <param name="rightMatrix">The input right matrix to perform the Kronecker multiply/sum</param>
-            <param name="vector">The input / output vector</param>
-            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.ApiSelector.NaiveKrylovSubspaceEigenHermitain``2(Althea.GeneralSolver.KrylovSubspaceSolveInfo{``0,``1}@)">
-            <summary>
-            Perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.
-            </summary>
-            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolver.IKrylovVector`2"/></typeparam>
-            <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
-            <returns>The output approximate lowest eigenvalue and corresponding eigenvector.</returns>
-            <remarks>Only <paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.MatrixFunction"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.InitialVector"/> and <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.MaxRestarts"/> are used as inputs. Its <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output eigenvector.</remarks>
-            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.ApiSelector.RestartKrylovSubspaceEigen``2(System.Boolean,Althea.GeneralSolver.KrylovSubspaceSolveInfo{``0,``1}@)">
-            <summary>
-            Perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
-            </summary>
-            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolver.IKrylovVector`2"/></typeparam>
-            <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
-            <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
-            <returns>Output the number of converged eigen-pairs.</returns>
-            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> are not used</remarks>
-            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.GeneralSolver.ApiSelector.RestartKrylovSubspaceLinearSolve``2(System.Nullable{System.Boolean},Althea.GeneralSolver.KrylovSubspaceSolveInfo{``0,``1}@)">
-            <summary>
-            Perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
-            </summary>
-            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
-            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolver.IKrylovVector`2"/></typeparam>
-            <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
-            <param name="info">The <see cref="T:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
-            <returns>Output the solve vector and the corresponding relative error.</returns>
-            <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="F:Althea.GeneralSolver.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output solve.</remarks>
-            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="T:Althea.Helpers.MethodParametersInfo">
             <summary>
@@ -15147,6 +14685,33 @@
             <param name="provider">The <see cref="T:System.IFormatProvider"/></param>
             <returns>Success or not</returns>
         </member>
+        <member name="T:Althea.NativeTypes.DataTypeTuple">
+            <summary>
+            The enumeration for number of sub-elements in one element
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeTuple.Real">
+            <summary>
+            Tuple size of 1, i.e. real numbers
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeTuple.Complex">
+            <summary>
+            Tuple size of 2, i.e. complex numbers
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeTuple.Ternary">
+            <summary>
+            Tuple size of 3, i.e. ternary numbers
+            </summary>
+            <remarks>NOT supported by most applications</remarks>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeTuple.Quaternion">
+            <summary>
+            Tuple size of 4, i.e. quaternions
+            </summary>
+            <remarks>NOT supported by most applications</remarks>
+        </member>
         <member name="T:Althea.NativeTypes.DataTypeClassification">
             <summary>
             The general classification of data types supported, values ≤ 0 are treaded as not supported
@@ -15167,119 +14732,144 @@
             The unsigned integer numbers
             </summary>
         </member>
+        <member name="T:Althea.NativeTypes.DataTypeSize">
+            <summary>
+            The enumeration for size of a sub-element in bytes
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeSize.Byte1">
+            <summary>
+            1 byte
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeSize.Byte2">
+            <summary>
+            2 byte
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeSize.Byte4">
+            <summary>
+            4 byte
+            </summary>
+        </member>
+        <member name="F:Althea.NativeTypes.DataTypeSize.Byte8">
+            <summary>
+            8 byte
+            </summary>
+        </member>
         <member name="T:Althea.NativeTypes.DataType">
             <summary>
-            The general data types defined by flags and masks.
+            The enumeration for general data types.
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealHalf">
             <summary>
-            <see cref="T:System.Half"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:System.Half"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealSingle">
             <summary>
-            <see cref="T:System.Single"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:System.Single"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealDouble">
             <summary>
-            <see cref="T:System.Double"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:System.Double"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexHalf">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Half"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Half"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexSingle">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Single"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Single"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexDouble">
             <summary>
-            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Double"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:Althea.NativeTypes.Complex`1"/> of <see cref="T:System.Double"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealInt8">
             <summary>
-            <see cref="T:System.SByte"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
+            <see cref="T:System.SByte"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.SignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte1"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealInt16">
             <summary>
-            <see cref="T:System.Int16"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:System.Int16"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.SignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealInt32">
             <summary>
-            <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.SignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealInt64">
             <summary>
-            <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.SignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealUInt8">
             <summary>
-            <see cref="T:System.Byte"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
+            <see cref="T:System.Byte"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.UnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte1"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealUInt16">
             <summary>
-            <see cref="T:System.UInt16"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:System.UInt16"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.UnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealUInt32">
             <summary>
-            <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:System.UInt32"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.UnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.RealUInt64">
             <summary>
-            <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:System.UInt64"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Real"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.UnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexInt8">
             <summary>
-            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.SByte"/>  = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
+            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.SByte"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.SignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte1"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexInt16">
             <summary>
-            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int16"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int16"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.SignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexInt32">
             <summary>
-            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.SignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexInt64">
             <summary>
-            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.SignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte8"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexUInt8">
             <summary>
-            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Byte"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte1"/>
+            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.SByte"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.UnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte1"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexUInt16">
             <summary>
-            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.UInt16"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte2"/>
+            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int16"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.UnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte2"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexUInt32">
             <summary>
-            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.UInt32"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte4"/>
+            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int32"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.UnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte4"/>
             </summary>
         </member>
         <member name="F:Althea.NativeTypes.DataType.ComplexUInt64">
             <summary>
-            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.UInt64"/> = <see cref="F:Althea.NativeTypes.DataTypeExtension.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeExtension.Byte8"/>
+            <see cref="T:Althea.NativeTypes.ComplexInteger`1"/> of <see cref="T:System.Int64"/> = <see cref="F:Althea.NativeTypes.DataTypeTuple.Complex"/> + <see cref="F:Althea.NativeTypes.DataTypeClassification.UnsignedInteger"/> + <see cref="F:Althea.NativeTypes.DataTypeSize.Byte8"/>
             </summary>
         </member>
         <member name="T:Althea.NativeTypes.DataTypeExtension">
@@ -15287,81 +14877,34 @@
             The extension methods for <see cref="T:Althea.NativeTypes.DataType"/>
             </summary>
         </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.Real">
+        <member name="M:Althea.NativeTypes.DataTypeExtension.IsAtomic(Althea.NativeTypes.DataTypeClassification)">
             <summary>
-            The right-most bit that represents the real base type, equals to zero, cannot be used separately.
+            Check whether the given <see cref="T:Althea.NativeTypes.DataTypeClassification"/> has only one flag or not.
             </summary>
         </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.Complex">
+        <member name="M:Althea.NativeTypes.DataTypeExtension.IsAtomic(Althea.NativeTypes.DataTypeTuple)">
             <summary>
-            The right-most bit that represents the complex base type, cannot be used separately. If the value does not have this bit, it is a real type.
+            Check whether the given <see cref="T:Althea.NativeTypes.DataTypeTuple"/> has only one flag or not.
             </summary>
         </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.TypeMask">
+        <member name="M:Althea.NativeTypes.DataTypeExtension.IsAtomic(Althea.NativeTypes.DataTypeSize)">
             <summary>
-            The type mask (from 1st bit to 7th bit), cannot be used separately.<br/>
-            <c>(value &amp; <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeMask"/>) &gt;&gt; <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeMaskStart"/> = </c> the actual data type classification as a <see cref="T:Althea.NativeTypes.DataTypeClassification"/>.
+            Check whether the given <see cref="T:Althea.NativeTypes.DataTypeSize"/> has only one flag or not.
             </summary>
         </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.TypeMaskStart">
+        <member name="M:Althea.NativeTypes.DataTypeExtension.IsAtomic(Althea.NativeTypes.DataType)">
             <summary>
-            The start bit of <see cref="F:Althea.NativeTypes.DataTypeExtension.TypeMask"/>.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.ByteMask">
-            <summary>
-            The number of bytes mask (from 8th bit to 15th bit), cannot be used separately.<br/>
-            <c>(value &amp; <see cref="F:Althea.NativeTypes.DataTypeExtension.ByteMask"/>) &gt;&gt; <see cref="F:Althea.NativeTypes.DataTypeExtension.ByteMaskStart"/> = </c> the bytes used (only half of a complex type's size shall be counted).
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.ByteMaskStart">
-            <summary>
-            The start bit of <see cref="F:Althea.NativeTypes.DataTypeExtension.ByteMask"/>.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.TypeFloatPoint_IEEE754">
-            <summary>
-            The float base type; cannot be used separately.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.TypeSignedInteger">
-            <summary>
-            The signed integer base type; cannot be used separately.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.TypeUnsignedInteger">
-            <summary>
-            The unsigned integer base type; cannot be used separately.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.Byte1">
-            <summary>
-            The 1-byte base type; cannot be used separately.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.Byte2">
-            <summary>
-            The 2-byte base type; cannot be used separately.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.Byte4">
-            <summary>
-            The 4-byte base type; cannot be used separately.
-            </summary>
-        </member>
-        <member name="F:Althea.NativeTypes.DataTypeExtension.Byte8">
-            <summary>
-            The 8-byte base type; cannot be used separately.
+            Check whether the given <see cref="T:Althea.NativeTypes.DataType"/> has only one flag or not.
             </summary>
         </member>
         <member name="M:Althea.NativeTypes.DataTypeExtension.MakeDataType(System.Boolean,Althea.NativeTypes.DataTypeClassification,System.Int32)">
             <summary>
-            Construct a <see cref="T:Althea.NativeTypes.DataType"/> from given parameters
+            Construct a <see cref="T:Althea.NativeTypes.DataType"/> from given parameters.
             </summary>
             <param name="complex">Whether the constructed <see cref="T:Althea.NativeTypes.DataType"/> is a complex type</param>
             <param name="type">The <see cref="T:Althea.NativeTypes.DataTypeClassification"/> the constructed <see cref="T:Althea.NativeTypes.DataType"/> is a floating point type</param>
             <param name="size">The size in bytes of the constructed <see cref="T:Althea.NativeTypes.DataType"/>; if <paramref name="complex"/> is true, this size shall be the <b>total</b> size of the complex struct in bytes</param>
-            <returns>The constructed <see cref="T:Althea.NativeTypes.DataType"/> or the default value if <paramref name="type"/> is not supported</returns>
+            <returns>The constructed <see cref="T:Althea.NativeTypes.DataType"/> or the default value if <paramref name="type"/> or <paramref name="size"/> is not supported</returns>
         </member>
         <member name="M:Althea.NativeTypes.DataTypeExtension.IsReal(Althea.NativeTypes.DataType)">
             <summary>
@@ -15411,13 +14954,6 @@
             </summary>
             <param name="type">input <see cref="T:Althea.NativeTypes.DataType"/></param>
             <returns>the corresponding complex type</returns>
-        </member>
-        <member name="M:Althea.NativeTypes.DataTypeExtension.GetStringRepr(Althea.NativeTypes.DataType)">
-            <summary>
-            Get the string representation of a given <see cref="T:Althea.NativeTypes.DataType"/>
-            </summary>
-            <param name="dataType">The <see cref="T:Althea.NativeTypes.DataType"/> to get string representation</param>
-            <returns>The string representation of <paramref name="dataType"/></returns>
         </member>
         <member name="M:Althea.NativeTypes.DataTypeExtension.ToDataType(System.Type)">
             <summary>
@@ -22243,11 +21779,6 @@
         <member name="P:Althea.IBackends.Available">
             <summary>
             Check whether all the back-end implementations are available.
-            </summary>
-        </member>
-        <member name="P:Althea.IBackends.GeneralSolver">
-            <summary>
-            The API implementation of <see cref="T:Althea.GeneralSolver.IAbstractApi"/>.
             </summary>
         </member>
         <member name="P:Althea.IBackends.LinearAlgebraDenseBlas">

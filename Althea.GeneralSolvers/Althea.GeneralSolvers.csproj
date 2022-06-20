@@ -8,23 +8,39 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
+  
   <PropertyGroup>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-    <RootNamespace>Althea.Backend</RootNamespace>
-    <AssemblyName>Althea.Backend</AssemblyName>
+    <RootNamespace>Althea.GeneralSolvers</RootNamespace>
+    <AssemblyName>Althea.GeneralSolvers</AssemblyName>
     <AnalysisLevel>latest</AnalysisLevel>
+    <RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-    <RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
-  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Althea.Backend\Althea.Backend.csproj" />
+    <ProjectReference Include="..\Althea\Althea.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Update="Krylov\Resource.Designer.cs">
+      <DependentUpon>Resource.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Update="Krylov\Resource.resx">
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
 
   <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
     <DefineConstants>TRACE</DefineConstants>
@@ -44,37 +60,5 @@
     <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Althea\Althea.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Resource.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resource.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resource.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Cuda\SupplementCUDA.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Mkl\SupplementTBB.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
 </Project>
