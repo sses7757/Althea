@@ -321,6 +321,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.WrongSize);
 			return true;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void RealToComp<TComp>(TComp* real, TComp* comp, long n) where TComp : unmanaged, INumber<TComp>
+		{
+			if (!NumberType<TComp>.IsComplex)
+				return;
+			Unsafe.InitBlockUnaligned(comp, 0, (uint)(n * sizeof(TComp)));
+			if (typeof(TComp) == typeof(Complex<float>))
+				Storage.Api.PointerStridedCopy((float*)real, 1, (float*)comp, 2, n);
+			else
+				Storage.Api.PointerStridedCopy((double*)real, 1, (double*)comp, 2, n);
+		}
 		#endregion
 	}
 }

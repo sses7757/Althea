@@ -535,21 +535,21 @@ namespace Althea.Helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SpanMatrix(Span<T> span, int rows, int leadingDim = 0)
 		{
-			if (span.IsEmpty)
-				throw new ArgumentNullException(nameof(span));
-			if (rows <= 0)
+			if (rows < 0)
 				throw new ArgumentOutOfRangeException(nameof(rows), rows, Resources.ParameterError.MustPositive);
 			if (leadingDim < 0)
 				throw new ArgumentOutOfRangeException(nameof(leadingDim), leadingDim, Resources.ParameterError.CannotNegative);
 			if (leadingDim == 0)
 				leadingDim = rows;
-			if (span.Length % leadingDim != 0)
+			this._cols = span.Length / leadingDim;
+			if (span.Length % leadingDim != 0 && this._cols * leadingDim + rows < span.Length)
 				throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(leadingDim));
 
 			this._span = span;
 			this._rows = rows;
-			this._cols = span.Length / leadingDim;
 			this._leadDim = leadingDim;
+			if (span.Length % leadingDim != 0)
+				this._cols++;
 		}
 		#endregion
 

@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
+﻿using Althea.Backend.CSharp.Storage;
 using Althea.LinearAlgebra;
 using Althea.NativeTypes;
 
@@ -9,96 +7,6 @@ using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 {
-	#region buffer
-	internal readonly unsafe ref struct MatBuffer<T> where T : unmanaged
-	{
-		internal readonly long ld;
-		internal readonly T* ptr;
-		private readonly bool alloc;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal MatBuffer(T* org, long ld, long n)
-		{
-			if (org == null)
-			{
-				this.ptr = (T*)Marshal.AllocHGlobal((IntPtr)(n * n * sizeof(T)));
-				this.ld = n;
-				this.alloc = true;
-			}
-			else
-			{
-				this.ptr = org;
-				this.ld = ld;
-				this.alloc = false;
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			if (this.alloc)
-				Marshal.FreeHGlobal((IntPtr)this.ptr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator T*(MatBuffer<T> buffer) => buffer.ptr;
-	}
-	internal readonly unsafe ref struct VecBuffer<T> where T : unmanaged
-	{
-		internal readonly T* ptr;
-		private readonly bool alloc;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal VecBuffer(T* ptr)
-		{
-			this.ptr = ptr;
-			this.alloc = false;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal VecBuffer(long bytes)
-		{
-			this.ptr = (T*)Marshal.AllocHGlobal((IntPtr)bytes);
-			this.alloc = true;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
-		{
-			if (this.alloc)
-				Marshal.FreeHGlobal((IntPtr)this.ptr);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator T*(VecBuffer<T> buffer) => buffer.ptr;
-	}
-
-	internal static unsafe class Buffers
-	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static MatBuffer<T> Create<T>(T* ptr, long ld, long n) where T : unmanaged => new(ptr, ld, n);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static VecBuffer<T> Create<T>(long bytes) where T : unmanaged => new(bytes);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static VecBuffer<T> Create<T>(T* ptr) where T : unmanaged => new(ptr);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void RealToComp<TComp>(TComp* real, TComp* comp, long n) where TComp : unmanaged, INumber<TComp>
-		{
-			if (!NumberType<TComp>.IsComplex)
-				return;
-			Unsafe.InitBlockUnaligned(comp, 0, (uint)(n * sizeof(TComp)));
-			if (typeof(TComp) == typeof(Complex<float>))
-				Storage.Api.PointerStridedCopy((float*)real, 1, (float*)comp, 2, n);
-			else
-				Storage.Api.PointerStridedCopy((double*)real, 1, (double*)comp, 2, n);
-		}
-	}
-	#endregion
-
-
 	/// <remarks>The general SVD and general Schur decompositions are not supported, but can be added simply.</remarks>
 	public unsafe partial class Api
 	{
@@ -128,7 +36,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
 			func(MklMatrixLayout.ColMajor, vecOut is null ? MklVectorModeChar.Vector : MklVectorModeChar.NoVector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppx).Check(SolveMethodKind.Eigenvalue);
-			Buffers.RealToComp(ppx, px, n);
+			RealToComp(ppx, px, n);
 			return true;
 		}
 
@@ -163,7 +71,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
 			Storage.Api.PointerMemoryCopy2D(pB, ldb, ppLU, ppLU.ld, n, n);
 			func(MklMatrixLayout.ColMajor, type, vecOut is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppLU, ppLU.ld, ppx).Check(SolveMethodKind.GeneralEigen);
-			Buffers.RealToComp(ppx, px, n);
+			RealToComp(ppx, px, n);
 			return true;
 		}
 
@@ -317,7 +225,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				pU == pA ? MklSvdModeChar.Overwrite : fullU ? MklSvdModeChar.All : pU == null ? MklSvdModeChar.None : MklSvdModeChar.Store,
 				pV == pA ? MklSvdModeChar.Overwrite : fullV ? MklSvdModeChar.All : pV == null ? MklSvdModeChar.None : MklSvdModeChar.Store,
 				m, n, ppA, ppA.ld, ppx, pU, ldu, pV, ldvct, pSurperb).Check(SolveMethodKind.SVD);
-			Buffers.RealToComp(ppx, px, n);
+			RealToComp(ppx, px, n);
 			return true;
 		}
 

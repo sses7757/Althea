@@ -44,9 +44,6 @@ namespace Althea.Array
 		IMatrixMultiplyOperations<T, DiagonalMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixMultiplyOperations<T, DenseMatrix<T, TS>, DiagonalMatrix<T, TS>, DenseMatrix<T, TS>>,
 
-		IMatrixLinearSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-		IMatrixLinearSolve<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
-
 		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
 		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>
 
@@ -791,28 +788,6 @@ namespace Althea.Array
 		}
 		#endregion
 
-		#region matrix solve
-		/// <inheritdoc/>
-		public static void LinearSolve(DenseMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
-		{
-			IMatrixLinearSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckLinear(coefficients, rightHandSides, outSolves);
-			if (rightHandSides != outSolves)
-				rightHandSides.Storage.Copy2DTo<T, TS, TS>(rightHandSides.LeadDim, outSolves.Storage, outSolves.LeadDim, outSolves.NRows, outSolves.NCols);
-			using var coef = coefficients.ToCompact();
-			Lapack.LinearSolveGeneral<T, TS, TS>(coefficients.NRows, outSolves.NCols, coef, coefficients.NRows, outSolves.Storage, outSolves.LeadDim);
-		}
-
-		/// <inheritdoc/>
-		public static void LinearSolve(TriangularMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
-		{
-			if (coefficients.NRows != coefficients.NCols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
-			if (coefficients.NRows != outSolves.NRows)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outSolves));
-			Blas.TriangularMatrixSolve(true, coefficients.Upper, coefficients.UnitDiagonal, MatrixOperation.None, coefficients.NRows, outSolves.NCols, T.One, coefficients.Storage, coefficients.LeadDim, outSolves.Storage, outSolves.LeadDim);
-		}
-		#endregion
-
 		#region tensor
 		/// <inheritdoc/>
 		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T α, DenseTensor<T, TS> B!!, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
@@ -943,6 +918,8 @@ namespace Althea.Array
 	/// <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	public sealed class DenseSolvers<T, TS> :
+		IMatrixLinearSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
+		IMatrixLinearSolve<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixLeastSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixQRSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixQRSolve<T, DenseMatrix<T, TS>, TriangularMatrix<T, TS>, DenseMatrix<T, TS>>,
@@ -953,6 +930,28 @@ namespace Althea.Array
 		where T : unmanaged, IFloatingPoint<T>
 		where TS : class, IStorage<T, TS>
 	{
+		#region matrix linear solve
+		/// <inheritdoc/>
+		public static void LinearSolve(DenseMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
+		{
+			IMatrixLinearSolve<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckLinear(coefficients, rightHandSides, outSolves);
+			if (rightHandSides != outSolves)
+				rightHandSides.Storage.Copy2DTo<T, TS, TS>(rightHandSides.LeadDim, outSolves.Storage, outSolves.LeadDim, outSolves.NRows, outSolves.NCols);
+			using var coef = coefficients.ToCompact();
+			Lapack.LinearSolveGeneral<T, TS, TS>(coefficients.NRows, outSolves.NCols, coef, coefficients.NRows, outSolves.Storage, outSolves.LeadDim);
+		}
+
+		/// <inheritdoc/>
+		public static void LinearSolve(TriangularMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
+		{
+			if (coefficients.NRows != coefficients.NCols)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
+			if (coefficients.NRows != outSolves.NRows)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(outSolves));
+			Blas.TriangularMatrixSolve(true, coefficients.Upper, coefficients.UnitDiagonal, MatrixOperation.None, coefficients.NRows, outSolves.NCols, T.One, coefficients.Storage, coefficients.LeadDim, outSolves.Storage, outSolves.LeadDim);
+		}
+		#endregion
+
 		#region matrix QR and least square solve
 		/// <inheritdoc/>
 		public static void LeastSquareSolve(DenseMatrix<T, TS> coefficients, DenseMatrix<T, TS> rightHandSides, DenseMatrix<T, TS> outSolves)
@@ -1006,7 +1005,6 @@ namespace Althea.Array
 			}
 		}
 		#endregion
-
 
 		#region matrix eigen solve
 		private static void CheckStandardEigen(AbstractDenseMatrix<T, TS> matrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)

@@ -5,7 +5,9 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 using Althea.Array;
+using Althea.Backend.CSharp.Storage;
 using Althea.Backend.Storage;
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.LinearAlgebra.Sparse;
@@ -745,8 +747,24 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 
 		#region eigen
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static void Copy2D<T>(T* dst, int ldd, T* src, int lds, int m, int n) where T : unmanaged
+		{
+			if (m == ldd && m == lds)
+			{
+				Unsafe.CopyBlockUnaligned(dst, src, (uint)(m * n * sizeof(T)));
+			}
+			else
+			{
+				for (int i = 0; i < n; i++)
+				{
+					Unsafe.CopyBlockUnaligned(dst + i * ldd, src + i * lds, (uint)(m * sizeof(T)));
+				}
+			}
+		}
+
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestory) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestroy) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA, out int nn, out _, out int ld))
 				return false;
@@ -756,74 +774,199 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				return false;
 			if (nx < nn)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
-			if (pV == null && allowDestory)
+			if (pV == null && allowDestroy)
 			{
 				pV = pA; ldv = ld;
 			}
-			var buffer = ArrayPool<byte>.Shared.Rent((nn + (pV == null ? nn * nn : 0)) * sizeof(T));
-			fixed (byte* offDiag = buffer)
+			using var buffer = Buffers.Create<T>((nn + (pV == null ? nn * nn : 0)) * sizeof(T));
+			if (pV == null)
 			{
-				if (pV == null)
-				{
-					pV = (T*)offDiag + nn;
-					ldv = nn;
-				}
-				if (pA != pV)
-				{
-					if (nn == ld && nn == ldv)
-					{
-						Unsafe.CopyBlockUnaligned(pV, pA, (uint)(nn * nn * sizeof(T)));
-					}
-					else
-					{
-						for (int i = 0; i < nn; i++)
-						{
-							Unsafe.CopyBlockUnaligned(pV + i * ldv, pA + i * ld, (uint)(nn * sizeof(T)));
-						}
-					}
-				}
-				try
-				{
-					MatrixSolvers.HermitianMatrixToTridiagonal<T>(new(new(pV, ldv * nn), nn, ldv), new(px, nn), new((T*)offDiag, nn));
-					var info = MatrixSolvers.HermitianTridiagonalEigensolve<T>(new(px, nn), new((T*)offDiag, nn), vecOut is null ? default : new(new(pV, ldv * nn), nn, ldv));
-					if (info != 0)	
-						throw new MatrixSolveAlgorithmException(SolveMethodKind.Eigenvalue, info);
-					return true;
-				}
-				finally
-				{
-					ArrayPool<byte>.Shared.Return(buffer);
-				}
+				pV = (T*)buffer + nn; ldv = nn;
 			}
+			if (pA != pV)
+			{
+				Copy2D(pV, ldv, pA, ld, nn, nn);
+			}
+			MatrixSolvers.HermitianMatrixToTridiagonal<T>(new(new(pV, ldv * nn), nn, ldv), new(px, nn), new(buffer, nn));
+			var info = MatrixSolvers.HermitianTridiagonalEigensolve<T>(new(px, nn), new(buffer, nn), vecOut is null ? default : new(new(pV, ldv * nn), nn, ldv));
+			if (info != 0)
+				throw new MatrixSolveAlgorithmException(SolveMethodKind.Eigenvalue, info);
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool SchurCheck<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldv) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		{
+			pU = px = pxIm = null;
+			ldv = 0;
+			if (!GetPointer(A, n, n, lda, out pA, out nn, out _, out ld))
+				return false;
+			if (!GetPointer(U, n, n, ldu, out pU, out _, out _, out ldv))
+				return false;
+			if (!GetPointer(vals, 1, out px, out int nx, out _))
+				return false;
+			if (!NumberType<T>.IsComplex && valsImag is null)
+				throw new ArgumentNullException(nameof(valsImag));
+			int nxx = 0;
+			if (valsImag is not null && !NumberType<T>.IsComplex && !GetPointer(valsImag, 1, out pxIm, out nxx, out _))
+				return false;
+			if (nx < nn)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vals));
+			if (nxx != 0 && nxx < nn)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valsImag));
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int SchurDecompose<T>(T* pA, T* pU, T* px, T* pxIm, int nn, int ld, int ldv) where T : unmanaged, IFloatingPoint<T>
+		{
+			if (pU == null)
+				ldv = nn;
+			int info;
+			using var buffer = Buffers.Create<T>((pU == null ? 3 : NumberType<T>.IsComplex ? 2 : 0) * nn * sizeof(T));
+			SpanMatrix<T> matA = new(new(pA, ld * nn), ld);
+			SpanMatrix<T> matU = new(new(pU == null ? (T*)buffer : pU, ldv * nn), ldv);
+			MatrixSolvers.MatrixToHessenberg(matA, matU);
+			if (pU == null)
+				matU = default;
+			if (NumberType<T>.IsComplex)
+			{
+				info = MatrixSolvers.HessenbergSchurFactorize(matA, matU, new(px, nn), default, new((T*)buffer, 2 * nn));
+			}
+			else
+			{
+				info = MatrixSolvers.HessenbergSchurFactorize(matA, matU, new(px, nn), new(pxIm, nn));
+			}
+			return info;
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valsOut, TS3? valsOutImag) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
+			if (!SchurCheck(n, A, lda, U, ldu, valsOut, valsOutImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldv))
+				return false;
+			var info = SchurDecompose(pA, pU, px, pxIm, nn, ld, ldv);
+			if (info < 0)
+				throw new MatrixSolveAlgorithmException(SolveMethodKind.Schur, info);
 			return true;
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd> => false;
+		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			if (!SchurCheck(n, A, lda, U, ldu, vals, valsImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldvec))
+				return false;
+			if (!GetPointer(select, 1, out TInd* ps, out int ns, out _))
+				return false;
+			if (ns != nn)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(select));
+
+			SpanMatrix<T> matA = new(new(pA, ld * nn), ld),
+						  matU = new(new(pU, ldvec * nn), ldvec);
+			using var buffer = NumberType<T>.IsComplex ? Buffers.Create<T>(3 * nn * sizeof(T)) : default;
+			MatrixSolvers.ReorderSchurForm<T, TInd>(new(ps, nn), matA, matU, new(px, nn), new(pxIm, pxIm == null ? 0 : nn), new((T*)buffer, (T*)buffer == null ? 0 : 3 * nn));
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestory) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4> => false;
+		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valsOut, TS2? valsOutImag, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		{
+			if (leftVec is not null)
+				return false;
+			if (!SchurCheck(n, A, lda, rightVec, ldvr, valsOut, valsOutImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldv))
+				return false;
+
+			using var buffer = Buffers.Create<T>(((allowDestroy ? 0 : nn * nn) + (pU == null ? 0 : 9 * nn)) * sizeof(T));
+			T* temp = buffer;
+			if (!allowDestroy)
+			{
+				Copy2D(temp, nn, pA, ld, nn, nn);
+				pA = temp; ld = nn;
+				temp += nn * nn;
+			}
+			var info = SchurDecompose(pA, pU, px, pxIm, nn, ld, ldv);
+			if (info < 0)
+				throw new MatrixSolveAlgorithmException(SolveMethodKind.Schur, info);
+			if (pU == null)
+				return true;
+			SpanMatrix<T> matA = new(new(pA, ld * nn), ld),
+						  matU = new(new(pU, ldv * nn), ldv);
+			MatrixSolvers.SchurFormEigensolve(matA, matU, matU, new(temp, 9 * nn), new(px, nn), new(pxIm, pxIm == null ? 0 : nn));
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(A, n, n, lda, out T* pA, out int nn, out _, out int ld))
+				return false;
+			if (!GetPointer(B, n, nrhs, ldb, out T* pB, out _, out int nr, out int ldr))
+				return false;
+
+			using var buffer = Buffers.Create<T>(((allowDestroy ? 0 : nn * nn) + nn) * sizeof(T));
+			T* temp = buffer;
+			if (!allowDestroy)
+			{
+				Copy2D(temp, nn, pA, ld, nn, nn);
+				pA = temp; ld = nn; temp += nn * nn;
+			}
+			SpanMatrix<T> matA = new(new(pA, ld * nn), ld),
+						  matB = new(new(pB, ldr * nr), ldr);
+			MatrixSolvers.QrFactorize(matA, new(temp, nn));
+			MatrixSolvers.QrQtMultiply(matA, matB);
+			MatrixSolvers.QrLinearSolve(matA, new(temp, nn), matB);
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(A, m, n, lda, out T* pA, out int mm, out int nn, out int ldaa))
+				return false;
+			if (!GetPointer(Q, m, full ? m : Math.Min(m, n), ldq, out T* pQ, out _, out _, out int ldqq))
+				return false;
+
+			using var buffer = Buffers.Create<T>(nn * sizeof(T));
+			SpanMatrix<T> matA = new(new(pA, ldaa * nn), ldaa),
+						  matQ = new(new(pQ, ldqq * nn), ldqq);
+			MatrixSolvers.QrFactorize(matA, new(buffer, nn));
+			if (pQ != null)
+			{
+				Copy2D(pQ, ldqq, pA, ldaa, mm, Math.Min(mm, nn));
+				MatrixSolvers.QrGenerateQ(0, full ? mm : Math.Min(mm, nn), matA, new(buffer, nn));
+			}
+			return true;
+		}
 
 		/// <inheritdoc/>
-		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestory) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> => false;
+		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		{
+			if (!GetPointer(A, m, n, lda, out T* pA, out int mm, out int nn, out int ld))
+				return false;
+			if (!GetPointer(B, n, nrhs, ldb, out T* pB, out _, out int nr, out int ldr))
+				return false;
+
+			using var buffer = Buffers.Create<T>(((allowDestroy ? 0 : mm * nn) + mm) * sizeof(T));
+			T* temp = buffer;
+			if (!allowDestroy)
+			{
+				Copy2D(temp, mm, pA, ld, mm, nn);
+				pA = temp; ld = nn; temp += mm * nn;
+			}
+			SpanMatrix<T> matA = new(new(pA, ld * nn), ld),
+						  matB = new(new(pB, ldr * nr), ldr);
+			MatrixSolvers.QrFactorize(matA, new(temp, nn));
+			MatrixSolvers.QrQtMultiply(matA, matB);
+			MatrixSolvers.QrLinearSolve(matA[..nn, ..], new(temp, nn), matB);
+			return true;
+		}
 
 #pragma warning disable CS8769
-		bool ILapackAbstractApi.EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3 vecOut, long ldvec, TS4 LUOut, long ldLU, bool allowDestory) => false;
+		bool ILapackAbstractApi.EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3 vecOut, long ldvec, TS4 LUOut, long ldLU, bool allowDestroy) => false;
 
-		bool ILapackAbstractApi.EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2 valImagOut, TS2 valDenomOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr, bool allowDestory) => false;
+		bool ILapackAbstractApi.EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2 valImagOut, TS2 valDenomOut, TS3 leftVec, long ldvl, TS4 rightVec, long ldvr, bool allowDestroy) => false;
 
-		bool ILapackAbstractApi.SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2 U, long ldu, TS3 Vct, long ldvct, TS4 S, bool allowDestory) => false;
+		bool ILapackAbstractApi.SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2 U, long ldu, TS3 Vct, long ldvct, TS4 S, bool allowDestroy) => false;
 #pragma warning restore CS8769
 		#endregion
 

@@ -1416,7 +1416,7 @@ public static unsafe class MatrixSolvers
 		n = matrix.Rows; lda = matrix.LeadDim; ldq = transformer.LeadDim;
 		if (matrix.Cols != matrix.Rows)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(matrix));
-		if (transformer.Rows != n || transformer.Cols != n)
+		if (!transformer.IsEmpty && (transformer.Rows != n || transformer.Cols != n))
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(transformer));
 		if (eigenvalues.IsEmpty)
 			return;
@@ -1433,12 +1433,16 @@ public static unsafe class MatrixSolvers
 	/// </summary>
 	/// <typeparam name="T">The floating point data type</typeparam>
 	/// <param name="matrix">The input / output <see cref="SpanMatrix{T}"/> to be reduced to Hessenberg form</param>
-	/// <param name="transformer">The output <see cref="SpanMatrix{T}"/> to store the unary transformation matrix used to transform <paramref name="matrix"/> to Hessenberg form</param>
+	/// <param name="transformer">The output <see cref="SpanMatrix{T}"/> to store the unary transformation matrix used to transform <paramref name="matrix"/> to Hessenberg form if it desired. Otherwise, a working space with size ≥ (matrix size, 3).</param>
 	public static void MatrixToHessenberg<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer) where T : unmanaged, IFloatingPoint<T>
 	{
 		CheckGeneralEigen(matrix, transformer, default, default, out int n, out int lda, out int ldq);
-		if (n == 0)
+		if (n <= 3)
 			return;
+		if (transformer.IsEmpty || transformer.Rows != n || transformer.Cols < 3)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(transformer));
+		if (transformer.Cols < n)
+			ldq = 0; // indicate that Q is a working space
 
 		T two = T.One + T.One;
 		fixed (T* A = matrix.UnderlyingSpan, Q = transformer.UnderlyingSpan)
@@ -1650,7 +1654,8 @@ public static unsafe class MatrixSolvers
 						var reflector = householder2.ToReflectionMatrix();
 						reflector.ColumnUpdate(A + (j * lda), lda, Math.Min(j + 4, n), work);
 						reflector.RowUpdate(A + (j + colFree * lda), lda, n - colFree);
-						reflector.ColumnUpdate(Q + (j * ldq), ldq, n, work);
+						if (Q != null)
+							reflector.ColumnUpdate(Q + (j * ldq), ldq, n, work);
 						A[j + 1 + (j - 1) * lda] = T.Zero;
 					}
 					else
@@ -1658,7 +1663,8 @@ public static unsafe class MatrixSolvers
 						var reflector = householder.ToReflectionMatrix();
 						reflector.ColumnUpdate(A + (j * lda), lda, Math.Min(j + 4, n), work);
 						reflector.RowUpdate(A + (j + colFree * lda), lda, n - colFree);
-						reflector.ColumnUpdate(Q + (j * ldq), ldq, n, work);
+						if (Q != null)
+							reflector.ColumnUpdate(Q + (j * ldq), ldq, n, work);
 						if (j != i)
 							A[j + 1 + (j - 1) * lda] = A[j + 2 + (j - 1) * lda] = T.Zero;
 					}
@@ -1732,7 +1738,8 @@ public static unsafe class MatrixSolvers
 						// swap blocks
 						reflector.ColumnUpdate(A + j * lda, lda, i + 1, work);
 						reflector.RowUpdate(A + (j + j * lda), lda, n - j);
-						reflector.ColumnUpdate(Q + j * lda, ldq, n, work);
+						if (Q != null)
+							reflector.ColumnUpdate(Q + j * lda, ldq, n, work);
 						A[i + j * lda] = T.Zero;
 					}
 					else if (p == 2 && q == 1)
@@ -1757,7 +1764,8 @@ public static unsafe class MatrixSolvers
 						// swap blocks
 						reflector.ColumnUpdate(A + jj * lda, lda, i + 1, work);
 						reflector.RowUpdate(A + (jj + jj * lda), lda, n - jj);
-						reflector.ColumnUpdate(Q + jj * lda, ldq, n, work);
+						if (Q != null)
+							reflector.ColumnUpdate(Q + jj * lda, ldq, n, work);
 						A[j + jj * lda] = A[i + jj * lda] = T.Zero;
 					}
 					else if (p == 1 && q == 2)
@@ -1785,7 +1793,8 @@ public static unsafe class MatrixSolvers
 						// swap blocks
 						reflector.ColumnUpdate(A + j * lda, lda, i + 1, work);
 						reflector.RowUpdate(A + (j + j * lda), lda, n - j);
-						reflector.ColumnUpdate(Q + j * lda, ldq, n, work);
+						if (Q != null)
+							reflector.ColumnUpdate(Q + j * lda, ldq, n, work);
 						A[i + j * lda] = A[i + ii * lda] = T.Zero;
 					}
 					else //if (p == 2 && q == 2)
@@ -1822,7 +1831,8 @@ public static unsafe class MatrixSolvers
 						// swap blocks
 						reflector.ColumnUpdate(A + jj * lda, lda, i + 1, work);
 						reflector.RowUpdate(A + (jj + jj * lda), lda, n - jj);
-						reflector.ColumnUpdate(Q + jj * lda, ldq, n, work);
+						if (Q != null)
+							reflector.ColumnUpdate(Q + jj * lda, ldq, n, work);
 						A[ii + jj * lda] = A[ii + j * lda] = A[i + jj * lda] = A[i + j * lda] = T.Zero;
 					}
 					i -= p;
@@ -1869,6 +1879,7 @@ public static unsafe class MatrixSolvers
 				diag_p1[ip] = A[i + ip * lda];
 				diag_0[ip] = A[i + i * lda];
 			}
+			// TODO: change k to n ... 1
 			// main loop
 			for (int k = 0; k < n;)
 			{

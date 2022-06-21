@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 
 using Althea.Backend.Storage;
 using Althea.NativeTypes;
@@ -40,8 +39,6 @@ namespace Althea.Backend.CSharp.Random
 			where TS : class, IStorage<T, TS>
 		{
 			pointer = default; length = 0; offset = default; scale = default;
-			if (distribution.RandomSeed.HasValue)
-				return false; // not support
 			if (!NumberType<T>.IsPrimitive)
 				return false; // not support
 			if (storage is not PureStorage<T, CpuMemoryPointer> ps)
@@ -71,6 +68,8 @@ namespace Althea.Backend.CSharp.Random
 						Half r = (Half)(ReciprocalH * ((double)*(Half*)&s));
 						scale = *(T*)&r;
 					}
+					else
+						return false;
 				}
 			}
 			return true;
@@ -81,10 +80,14 @@ namespace Althea.Backend.CSharp.Random
 		private const double ReciprocalH = 1.0 / (ushort.MaxValue + 1.0);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void Generate<T>(IntPtr pointer, int length, T offset, T scale) where T : unmanaged, INumber<T>
+		private static unsafe void Generate<T>(IntPtr pointer, int length, T offset, T scale, long? seed) where T : unmanaged, INumber<T>
 		{
 			void* p = pointer.ToPointer();
-			RandomNumberGenerator.Fill(new(p, length));
+			if (!seed.HasValue)
+				System.Random.Shared.NextBytes(new Span<byte>(p, length));
+			else
+				new System.Random((int)seed.Value).NextBytes(new Span<byte>(p, length));
+			////RandomNumberGenerator.Fill(new(p, length));
 			if (scale == T.Zero) // random bits
 				return;
 			// else, random range
@@ -119,7 +122,7 @@ namespace Althea.Backend.CSharp.Random
 		{
 			if (!Check(storage, distribution, out var ptr, out int len, out T offset, out T scale))
 				return false;
-			Generate(ptr, len, offset, scale);
+			Generate(ptr, len, offset, scale, distribution.RandomSeed);
 			return true;
 		}
 
