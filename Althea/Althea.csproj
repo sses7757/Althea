@@ -61,6 +61,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
     </Compile>
+    <Compile Update="Random\MultidimensionalDistributions.cs">
+      <DependentUpon>MultidimensionalDistributions.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
     <Compile Update="Random\API.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -171,6 +176,10 @@
     <None Update="Helpers\SwapSort.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SwapSort.cs</LastGenOutput>
+    </None>
+    <None Update="Random\MultidimensionalDistributions.tt">
+      <LastGenOutput>MultidimensionalDistributions.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
     </None>
     <None Update="Random\API.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

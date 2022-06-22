@@ -195,7 +195,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <typeparam name="TS2">The second actual storage type that implements <see cref="IStorage{T, TSelf}"/> of data type <typeparamref name="T"/></typeparam>
 		/// <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
 		/// <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-		/// <param name="A">The input/output coefficient matrix which may be overwritten by its LU decomposition at exit</param>
+		/// <param name="A">The input/output coefficient matrix which may be overwritten by its LU decomposition at exit if <paramref name="allowDestroy"/></param>
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side which will be overwritten by solution X at exit</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>

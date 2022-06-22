@@ -9726,7 +9726,7 @@
             <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
             <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-            <param name="A">The input/output coefficient matrix which may be overwritten by its LU decomposition at exit</param>
+            <param name="A">The input/output coefficient matrix which may be overwritten by its LU decomposition at exit if <paramref name="allowDestroy"/></param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input/output matrix whose each column is a vector at right-hand side which will be overwritten by solution X at exit</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
@@ -11137,7 +11137,7 @@
             <typeparam name="TS2">The second actual storage type that implements <see cref="T:Althea.Storage.IStorage`2"/> of data type <typeparamref name="T"/></typeparam>
             <param name="n">The number of rows and columns of matrix <paramref name="A"/></param>
             <param name="nrhs">The number of right-hand sides, a.k.a. the number of linear systems.</param>
-            <param name="A">The input/output coefficient matrix which may be overwritten by its LU decomposition at exit</param>
+            <param name="A">The input/output coefficient matrix which may be overwritten by its LU decomposition at exit if <paramref name="allowDestroy"/></param>
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input/output matrix whose each column is a vector at right-hand side which will be overwritten by solution X at exit</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
@@ -14901,12 +14901,18 @@
         </member>
         <member name="M:Althea.NativeTypes.DataTypeExtension.MakeDataType(System.Boolean,Althea.NativeTypes.DataTypeClassification,System.Int32)">
             <summary>
-            Construct a <see cref="T:Althea.NativeTypes.DataType"/> from given parameters.
+            Construct an atomic <see cref="T:Althea.NativeTypes.DataType"/> from given parameters.
             </summary>
             <param name="complex">Whether the constructed <see cref="T:Althea.NativeTypes.DataType"/> is a complex type</param>
             <param name="type">The <see cref="T:Althea.NativeTypes.DataTypeClassification"/> the constructed <see cref="T:Althea.NativeTypes.DataType"/> is a floating point type</param>
             <param name="size">The size in bytes of the constructed <see cref="T:Althea.NativeTypes.DataType"/>; if <paramref name="complex"/> is true, this size shall be the <b>total</b> size of the complex struct in bytes</param>
             <returns>The constructed <see cref="T:Althea.NativeTypes.DataType"/> or the default value if <paramref name="type"/> or <paramref name="size"/> is not supported</returns>
+        </member>
+        <member name="M:Althea.NativeTypes.DataTypeExtension.MakeDataType(Althea.NativeTypes.DataTypeTuple,Althea.NativeTypes.DataTypeClassification,Althea.NativeTypes.DataTypeSize)">
+            <summary>
+            Construct a non-atomic <see cref="T:Althea.NativeTypes.DataType"/> from given parameters.
+            </summary>
+            <returns>The constructed <see cref="T:Althea.NativeTypes.DataType"/></returns>
         </member>
         <member name="M:Althea.NativeTypes.DataTypeExtension.IsReal(Althea.NativeTypes.DataType)">
             <summary>
@@ -15101,175 +15107,148 @@
             Get a <see cref="T:System.Boolean"/> indicating whether <typeparamref name="T"/> is a complex type or not.
             </summary>
         </member>
-        <member name="T:Althea.Random.Rank1RandomDistribution`1">
+        <member name="T:Althea.Random.IRandomDistribution">
             <summary>
-            The abstract class for a one-dimensional distribution.
+            The interface for the meta-data of a random number generator which generates random numbers from a certain random distribution.
             </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
         </member>
-        <member name="M:Althea.Random.Rank1RandomDistribution`1.DataTypeAt(System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank1RandomDistribution`1.Rank">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank1RandomDistribution`1.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="T:Althea.Random.Rank2RandomDistribution`2">
+        <member name="M:Althea.Random.IRandomDistribution.DataTypeAt(System.Int32)">
             <summary>
-            The abstract class for a two-dimensional distribution.
+            When implemented by a derived class, statically get a the <see cref="T:Althea.NativeTypes.DataType"/> of the given <paramref name="rank"/>.
             </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
         </member>
-        <member name="M:Althea.Random.Rank2RandomDistribution`2.DataTypeAt(System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank2RandomDistribution`2.Rank">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank2RandomDistribution`2.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="T:Althea.Random.Rank3RandomDistribution`3">
+        <member name="P:Althea.Random.IRandomDistribution.Rank">
             <summary>
-            The abstract class for a three-dimensional distribution.
+            When implemented by a derived class, get the rank of this <see cref="T:Althea.Random.IRandomDistribution"/>.
             </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
         </member>
-        <member name="M:Althea.Random.Rank3RandomDistribution`3.DataTypeAt(System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank3RandomDistribution`3.Rank">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank3RandomDistribution`3.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="T:Althea.Random.Rank4RandomDistribution`4">
+        <member name="P:Althea.Random.IRandomDistribution.RandomSeed">
             <summary>
-            The abstract class for a four-dimensional distribution.
+            When implemented by a derived class, get the random seed of this <see cref="T:Althea.Random.IRandomDistribution"/>. Null means let the internal implementation determine.
             </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
         </member>
-        <member name="M:Althea.Random.Rank4RandomDistribution`4.DataTypeAt(System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank4RandomDistribution`4.Rank">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank4RandomDistribution`4.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="T:Althea.Random.Rank5RandomDistribution`5">
+        <member name="T:Althea.Random.DisplaceScaleDistribution`1">
             <summary>
-            The abstract class for a five-dimensional distribution.
+            The abstract class for one-dimensional distributions which contain the <see cref="P:Althea.Random.DisplaceScaleDistribution`1.Displacement"/> and <see cref="P:Althea.Random.DisplaceScaleDistribution`1.ScaleFactor"/> of type <typeparamref name="T"/> as the parameters, inherits <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>.
             </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Displacement">The displacement factor (μ)</param>
+            <param name="ScaleFactor">The scaling factor (β)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
-        <member name="M:Althea.Random.Rank5RandomDistribution`5.DataTypeAt(System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank5RandomDistribution`5.Rank">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank5RandomDistribution`5.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="T:Althea.Random.Rank6RandomDistribution`6">
+        <member name="M:Althea.Random.DisplaceScaleDistribution`1.#ctor(`0,`0,System.Nullable{System.Int64})">
             <summary>
-            The abstract class for a six-dimensional distribution.
+            The abstract class for one-dimensional distributions which contain the <see cref="P:Althea.Random.DisplaceScaleDistribution`1.Displacement"/> and <see cref="P:Althea.Random.DisplaceScaleDistribution`1.ScaleFactor"/> of type <typeparamref name="T"/> as the parameters, inherits <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>.
             </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Displacement">The displacement factor (μ)</param>
+            <param name="ScaleFactor">The scaling factor (β)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
-        <member name="M:Althea.Random.Rank6RandomDistribution`6.DataTypeAt(System.Int32)">
-            <inheritdoc/>
+        <member name="P:Althea.Random.DisplaceScaleDistribution`1.Displacement">
+            <summary>The displacement factor (μ)</summary>
         </member>
-        <member name="P:Althea.Random.Rank6RandomDistribution`6.Rank">
-            <inheritdoc/>
+        <member name="P:Althea.Random.DisplaceScaleDistribution`1.ScaleFactor">
+            <summary>The scaling factor (β)</summary>
         </member>
-        <member name="P:Althea.Random.Rank6RandomDistribution`6.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="T:Althea.Random.Rank7RandomDistribution`7">
+        <member name="M:Althea.Random.DisplaceScaleDistribution`1.#ctor(System.Nullable{System.Int64})">
             <summary>
-            The abstract class for a seven-dimensional distribution.
+            Create a standard <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/> with μ = 0, β = 1
             </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
         </member>
-        <member name="M:Althea.Random.Rank7RandomDistribution`7.DataTypeAt(System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank7RandomDistribution`7.Rank">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank7RandomDistribution`7.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="T:Althea.Random.Rank8RandomDistribution`8">
+        <member name="M:Althea.Random.DisplaceScaleDistribution`1.TypeValid">
             <summary>
-            The abstract class for a eight-dimensional distribution.
+            Statically check the type <typeparamref name="T"/>'s validness for floating point real type constraint
             </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
-            <typeparam name="T8">Any unmanaged number as the eighth data type</typeparam>
         </member>
-        <member name="M:Althea.Random.Rank8RandomDistribution`8.DataTypeAt(System.Int32)">
+        <member name="M:Althea.Random.DisplaceScaleDistribution`1.IsValid">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Random.Rank8RandomDistribution`8.Rank">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.Rank8RandomDistribution`8.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="T:Althea.Random.Rank9RandomDistribution`9">
+        <member name="T:Althea.Random.ShapeDisplaceScaleDistribution`1">
             <summary>
-            The abstract class for a nine-dimensional distribution.
+            The abstract class for one-dimensional distributions which contain the <see cref="P:Althea.Random.ShapeDisplaceScaleDistribution`1.ShapeFactor"/> of type <typeparamref name="T"/> and the parameters of <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/> as the parameters, inherits <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>.
             </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
-            <typeparam name="T8">Any unmanaged number as the eighth data type</typeparam>
-            <typeparam name="T9">Any unmanaged number as the ninth data type</typeparam>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Displacement">The displacement factor (μ)</param>
+            <param name="ScaleFactor">The scaling factor (β)</param>
+            <param name="ShapeFactor">The shaping factor (α)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
-        <member name="M:Althea.Random.Rank9RandomDistribution`9.DataTypeAt(System.Int32)">
+        <member name="M:Althea.Random.ShapeDisplaceScaleDistribution`1.#ctor(`0,`0,`0,System.Nullable{System.Int64})">
+            <summary>
+            The abstract class for one-dimensional distributions which contain the <see cref="P:Althea.Random.ShapeDisplaceScaleDistribution`1.ShapeFactor"/> of type <typeparamref name="T"/> and the parameters of <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/> as the parameters, inherits <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Displacement">The displacement factor (μ)</param>
+            <param name="ScaleFactor">The scaling factor (β)</param>
+            <param name="ShapeFactor">The shaping factor (α)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.ShapeDisplaceScaleDistribution`1.ShapeFactor">
+            <summary>The shaping factor (α)</summary>
+        </member>
+        <member name="M:Althea.Random.ShapeDisplaceScaleDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a standard <see cref="T:Althea.Random.ShapeDisplaceScaleDistribution`1"/> with μ = 0, α = 1, β = 1
+            </summary>
+        </member>
+        <member name="T:Althea.Random.DegreeOfFreedomDistribution`1">
+            <summary>
+            The abstract class for one-dimensional distributions which contains <see cref="P:Althea.Random.DegreeOfFreedomDistribution`1.DegreeOfFreedom"/> as the parameter, inherits <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="DegreeOfFreedom">The degree of freedom</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.DegreeOfFreedomDistribution`1.#ctor(System.Int32,System.Nullable{System.Int64})">
+            <summary>
+            The abstract class for one-dimensional distributions which contains <see cref="P:Althea.Random.DegreeOfFreedomDistribution`1.DegreeOfFreedom"/> as the parameter, inherits <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="DegreeOfFreedom">The degree of freedom</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.DegreeOfFreedomDistribution`1.DegreeOfFreedom">
+            <summary>The degree of freedom</summary>
+        </member>
+        <member name="M:Althea.Random.DegreeOfFreedomDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a standard <see cref="T:Althea.Random.DegreeOfFreedomDistribution`1"/> with DoF = 1
+            </summary>
+        </member>
+        <member name="M:Althea.Random.DegreeOfFreedomDistribution`1.IsValid">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Random.Rank9RandomDistribution`9.Rank">
-            <inheritdoc/>
+        <member name="T:Althea.Random.BernoulliBasedDistribution`1">
+            <summary>
+            The abstract class for one-dimensional distributions based on the Bernoulli trial, inherits <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Probability">The probability of a Bernoulli trial succeeding (p)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
-        <member name="P:Althea.Random.Rank9RandomDistribution`9.RandomSeed">
+        <member name="M:Althea.Random.BernoulliBasedDistribution`1.#ctor(System.Decimal,System.Nullable{System.Int64})">
+            <summary>
+            The abstract class for one-dimensional distributions based on the Bernoulli trial, inherits <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>.
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Probability">The probability of a Bernoulli trial succeeding (p)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.BernoulliBasedDistribution`1.Probability">
+            <summary>The probability of a Bernoulli trial succeeding (p)</summary>
+        </member>
+        <member name="M:Althea.Random.BernoulliBasedDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a standard <see cref="T:Althea.Random.BernoulliBasedDistribution`1"/> with p = 0.5
+            </summary>
+        </member>
+        <member name="M:Althea.Random.BernoulliBasedDistribution`1.TypeValid">
+            <summary>
+            Statically check the type <typeparamref name="T"/>'s validness for integral real type constraint
+            </summary>
+        </member>
+        <member name="M:Althea.Random.BernoulliBasedDistribution`1.IsValid">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Random.IAbstractApi">
@@ -15320,171 +15299,6 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
         </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``8(``4,``5,``6,``7,Althea.Random.Rank4RandomDistribution{``0,``1,``2,``3})">
-            <summary>
-            When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank4RandomDistribution`4"/> indicating which distribution to use</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-        </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``10(``5,``6,``7,``8,``9,Althea.Random.Rank5RandomDistribution{``0,``1,``2,``3,``4})">
-            <summary>
-            When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank5RandomDistribution`5"/> indicating which distribution to use</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-        </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``12(``6,``7,``8,``9,``10,``11,Althea.Random.Rank6RandomDistribution{``0,``1,``2,``3,``4,``5})">
-            <summary>
-            When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="TS6">The sixth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="storage6">The sixth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank6RandomDistribution`6"/> indicating which distribution to use</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-        </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``14(``7,``8,``9,``10,``11,``12,``13,Althea.Random.Rank7RandomDistribution{``0,``1,``2,``3,``4,``5,``6})">
-            <summary>
-            When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="TS6">The sixth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
-            <typeparam name="TS7">The seventh storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="storage6">The sixth storage to be filled with random numbers</param>
-            <param name="storage7">The seventh storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank7RandomDistribution`7"/> indicating which distribution to use</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-        </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``16(``8,``9,``10,``11,``12,``13,``14,``15,Althea.Random.Rank8RandomDistribution{``0,``1,``2,``3,``4,``5,``6,``7})">
-            <summary>
-            When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="TS6">The sixth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
-            <typeparam name="TS7">The seventh storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T8">Any unmanaged number as the eighth data type</typeparam>
-            <typeparam name="TS8">The eighth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="storage6">The sixth storage to be filled with random numbers</param>
-            <param name="storage7">The seventh storage to be filled with random numbers</param>
-            <param name="storage8">The eighth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank8RandomDistribution`8"/> indicating which distribution to use</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-        </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``18(``9,``10,``11,``12,``13,``14,``15,``16,``17,Althea.Random.Rank9RandomDistribution{``0,``1,``2,``3,``4,``5,``6,``7,``8})">
-            <summary>
-            When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="TS6">The sixth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
-            <typeparam name="TS7">The seventh storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T8">Any unmanaged number as the eighth data type</typeparam>
-            <typeparam name="TS8">The eighth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T9">Any unmanaged number as the ninth data type</typeparam>
-            <typeparam name="TS9">The ninth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="storage6">The sixth storage to be filled with random numbers</param>
-            <param name="storage7">The seventh storage to be filled with random numbers</param>
-            <param name="storage8">The eighth storage to be filled with random numbers</param>
-            <param name="storage9">The ninth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank9RandomDistribution`9"/> indicating which distribution to use</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-        </member>
         <member name="M:Althea.Random.IAbstractApi.FillWithRandom(Althea.Random.IRandomDistribution,Althea.Storage.IStorage[])">
             <summary>
             When implemented by a derived class, fill the given <paramref name="storages"/> with random numbers generated from the given <paramref name="distribution"/>
@@ -15495,52 +15309,29 @@
             <exception cref="T:System.ArgumentNullException">If any of <paramref name="storages"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is of wrong rank or its data types are not the data types of <paramref name="storages"/></exception>
         </member>
-        <member name="T:Althea.Random.IRandomDistribution">
-            <summary>
-            The interface for the meta-data of a random number generator which generates random numbers from a certain random distribution.
-            </summary>
-        </member>
-        <member name="M:Althea.Random.IRandomDistribution.DataTypeAt(System.Int32)">
-            <summary>
-            When implemented by a derived class, statically get a the <see cref="T:Althea.NativeTypes.DataType"/> of the given <paramref name="rank"/>.
-            </summary>
-        </member>
-        <member name="P:Althea.Random.IRandomDistribution.Rank">
-            <summary>
-            When implemented by a derived class, statically get the rank of this <see cref="T:Althea.Random.IRandomDistribution"/>.
-            </summary>
-        </member>
-        <member name="P:Althea.Random.IRandomDistribution.RandomSeed">
-            <summary>
-            When implemented by a derived class, get the random seed of this <see cref="T:Althea.Random.IRandomDistribution"/>. Null means let the internal implementation determine.
-            </summary>
-        </member>
         <member name="T:Althea.Random.UniformDistribution`1">
             <summary>
             The class for a one-dimensional uniform distributions.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-        </member>
-        <member name="P:Althea.Random.UniformDistribution`1.LowerBound">
-            <summary>
-            Get the inclusive lower bound of this one-dimensional uniform distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Random.UniformDistribution`1.UpperBound">
-            <summary>
-            Get the exclusive upper bound of this one-dimensional uniform distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Random.UniformDistribution`1.RandomSeed">
-            <inheritdoc/>
+            <param name="LowerBound">The inclusive lower bound of this one-dimensional uniform distribution</param>
+            <param name="UpperBound">The exclusive upper bound of this one-dimensional uniform distribution</param>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
         <member name="M:Althea.Random.UniformDistribution`1.#ctor(`0,`0,System.Nullable{System.Int64})">
             <summary>
-            Create a new <see cref="T:Althea.Random.UniformDistribution`1"/> with the given <paramref name="lower"/> and <paramref name="upper"/> bounds and the random <paramref name="seed"/>
+            The class for a one-dimensional uniform distributions.
             </summary>
-            <param name="upper">The inclusive lower bound of this one-dimensional uniform distribution</param>
-            <param name="lower">The exclusive upper bound of this one-dimensional uniform distribution</param>
-            <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <param name="LowerBound">The inclusive lower bound of this one-dimensional uniform distribution</param>
+            <param name="UpperBound">The exclusive upper bound of this one-dimensional uniform distribution</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.UniformDistribution`1.LowerBound">
+            <summary>The inclusive lower bound of this one-dimensional uniform distribution</summary>
+        </member>
+        <member name="P:Althea.Random.UniformDistribution`1.UpperBound">
+            <summary>The exclusive upper bound of this one-dimensional uniform distribution</summary>
         </member>
         <member name="M:Althea.Random.UniformDistribution`1.#ctor(System.Nullable{System.Int64})">
             <summary>
@@ -15548,72 +15339,538 @@
             </summary>
             <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
         </member>
+        <member name="M:Althea.Random.UniformDistribution`1.IsValid">
+            <inheritdoc/>
+        </member>
         <member name="T:Althea.Random.RandomBitsDistribution`1">
             <summary>
             The class for one-dimensional distributions that randomize each bit.
             </summary>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
-        </member>
-        <member name="P:Althea.Random.RandomBitsDistribution`1.RandomSeed">
-            <inheritdoc/>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
         <member name="M:Althea.Random.RandomBitsDistribution`1.#ctor(System.Nullable{System.Int64})">
             <summary>
-            Create a new <see cref="T:Althea.Random.RandomBitsDistribution`1"/> with the given random <paramref name="seed"/>
+            The class for one-dimensional distributions that randomize each bit.
             </summary>
-            <param name="seed">The random seed of this uniform distribution, default null means let the internal implementation determine</param>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.RandomBitsDistribution`1.IsValid">
+            <inheritdoc/>
         </member>
         <member name="T:Althea.Random.NormalDistribution`1">
             <summary>
             The class for one-dimensional normal (Gaussian) distributions.
             </summary>
             <typeparam name="T">Any unmanaged floating point type</typeparam>
-        </member>
-        <member name="P:Althea.Random.NormalDistribution`1.Mean">
-            <summary>
-            Get the mean value of this normal distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Random.NormalDistribution`1.StandardDeviation">
-            <summary>
-            Get the standard deviation value of this normal distribution
-            </summary>
-        </member>
-        <member name="P:Althea.Random.NormalDistribution`1.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.NormalDistribution`1.#ctor">
-            <summary>
-            Create a standard normal distribution with mean = 0 and standard deviation = 1, and random seed is not set
-            </summary>
+            <param name="Mean">The mean value of this normal distribution (μ)</param>
+            <param name="StandardDeviation">The standard deviation of this normal distribution (σ)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
         <member name="M:Althea.Random.NormalDistribution`1.#ctor(`0,`0,System.Nullable{System.Int64})">
             <summary>
-            Create a normal distribution with given <paramref name="mean"/>, <paramref name="stddev"/> and the random <paramref name="seed"/>
+            The class for one-dimensional normal (Gaussian) distributions.
             </summary>
-            <param name="mean">The given mean value</param>
-            <param name="stddev">The given standard deviation</param>
-            <param name="seed">The given random seed, default null means has no preferred random seed</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stddev"/> is not larger than 0</exception>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Mean">The mean value of this normal distribution (μ)</param>
+            <param name="StandardDeviation">The standard deviation of this normal distribution (σ)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
-        <member name="M:Althea.Random.NormalDistribution`1.Equals(Althea.Random.NormalDistribution{`0})">
+        <member name="P:Althea.Random.NormalDistribution`1.Mean">
+            <summary>The mean value of this normal distribution (μ)</summary>
+        </member>
+        <member name="P:Althea.Random.NormalDistribution`1.StandardDeviation">
+            <summary>The standard deviation of this normal distribution (σ)</summary>
+        </member>
+        <member name="M:Althea.Random.NormalDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a standard normal distribution with μ=0 and σ=1
+            </summary>
+        </member>
+        <member name="T:Althea.Random.ChiSquareDistribution`1">
+            <summary>
+            The class for a one-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+        </member>
+        <member name="T:Althea.Random.LogNormalDistribution`1">
+            <summary>
+            The class for a one-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Mean">The mean value of log normal distribution's subject normal distribution (μ)</param>
+            <param name="StandardDeviation">The standard deviation of log normal distribution's subject normal distribution (σ)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.LogNormalDistribution`1.#ctor(`0,`0,System.Nullable{System.Int64})">
+            <summary>
+            The class for a one-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Mean">The mean value of log normal distribution's subject normal distribution (μ)</param>
+            <param name="StandardDeviation">The standard deviation of log normal distribution's subject normal distribution (σ)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.LogNormalDistribution`1.Mean">
+            <summary>The mean value of log normal distribution's subject normal distribution (μ)</summary>
+        </member>
+        <member name="P:Althea.Random.LogNormalDistribution`1.StandardDeviation">
+            <summary>The standard deviation of log normal distribution's subject normal distribution (σ)</summary>
+        </member>
+        <member name="M:Althea.Random.LogNormalDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a standard log normal distribution with μ=0 and σ=1
+            </summary>
+        </member>
+        <member name="T:Althea.Random.SkewNormalDistribution`1">
+            <summary>
+            The class for a one-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Mean">The mean value of skew normal distribution's subject normal distribution (μ)</param>
+            <param name="StandardDeviation">The standard deviation of skew normal distribution's subject normal distribution (σ)</param>
+            <param name="Skewness">The skewness factor of skew normal distribution (δ)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.SkewNormalDistribution`1.#ctor(`0,`0,`0,System.Nullable{System.Int64})">
+            <summary>
+            The class for a one-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Mean">The mean value of skew normal distribution's subject normal distribution (μ)</param>
+            <param name="StandardDeviation">The standard deviation of skew normal distribution's subject normal distribution (σ)</param>
+            <param name="Skewness">The skewness factor of skew normal distribution (δ)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.SkewNormalDistribution`1.Mean">
+            <summary>The mean value of skew normal distribution's subject normal distribution (μ)</summary>
+        </member>
+        <member name="P:Althea.Random.SkewNormalDistribution`1.StandardDeviation">
+            <summary>The standard deviation of skew normal distribution's subject normal distribution (σ)</summary>
+        </member>
+        <member name="P:Althea.Random.SkewNormalDistribution`1.Skewness">
+            <summary>The skewness factor of skew normal distribution (δ)</summary>
+        </member>
+        <member name="M:Althea.Random.SkewNormalDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a standard log normal distribution with μ=0, σ=1 and δ=0
+            </summary>
+        </member>
+        <member name="T:Althea.Random.ExponentialDistribution`1">
+            <summary>
+            The class for a one-dimensional exponential distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+        </member>
+        <member name="T:Althea.Random.LaplaceDistribution`1">
+            <summary>
+            The class for a one-dimensional Laplace distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+        </member>
+        <member name="T:Althea.Random.WeibullDistribution`1">
+            <summary>
+            The class for a one-dimensional Weibull distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.ShapeDisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+        </member>
+        <member name="T:Althea.Random.CauchyDistribution`1">
+            <summary>
+            The class for a one-dimensional Cauchy distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+        </member>
+        <member name="T:Althea.Random.RayleighDistribution`1">
+            <summary>
+            The class for a one-dimensional Rayleigh distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+        </member>
+        <member name="T:Althea.Random.GumbelDistribution`1">
+            <summary>
+            The class for a one-dimensional Gumbel distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.DisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+        </member>
+        <member name="T:Althea.Random.GammaDistribution`1">
+            <summary>
+            The class for a one-dimensional gamma distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.ShapeDisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+        </member>
+        <member name="T:Althea.Random.BetaDistribution`1">
+            <summary>
+            The class for a one-dimensional beta distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.ShapeDisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Displacement">The displacement factor (μ)</param>
+            <param name="ScaleFactor">The scaling factor (β)</param>
+            <param name="ShapeFactor1">The first shaping factor (α)</param>
+            <param name="ShapeFactor2">The second shaping factor (α')</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.BetaDistribution`1.#ctor(`0,`0,`0,`0,System.Nullable{System.Int64})">
+            <summary>
+            The class for a one-dimensional beta distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.ShapeDisplaceScaleDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Displacement">The displacement factor (μ)</param>
+            <param name="ScaleFactor">The scaling factor (β)</param>
+            <param name="ShapeFactor1">The first shaping factor (α)</param>
+            <param name="ShapeFactor2">The second shaping factor (α')</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.BetaDistribution`1.ShapeFactor1">
+            <summary>The first shaping factor (α)</summary>
+        </member>
+        <member name="P:Althea.Random.BetaDistribution`1.ShapeFactor2">
+            <summary>The second shaping factor (α')</summary>
+        </member>
+        <member name="M:Althea.Random.BetaDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            Create a standard <see cref="T:Althea.Random.BetaDistribution`1"/> with μ=0, α=1, α'=1, β=1
+            </summary>
+        </member>
+        <member name="M:Althea.Random.BetaDistribution`1.IsValid">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Random.NormalDistribution`1.Equals(System.Object)">
+        <member name="T:Althea.Random.PoissonDistribution`1">
+            <summary>
+            The class for a one-dimensional Poisson distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Lambda">The λ value of Poisson distribution</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.PoissonDistribution`1.#ctor(System.Decimal,System.Nullable{System.Int64})">
+            <summary>
+            The class for a one-dimensional Poisson distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Lambda">The λ value of Poisson distribution</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.PoissonDistribution`1.Lambda">
+            <summary>The λ value of Poisson distribution</summary>
+        </member>
+        <member name="M:Althea.Random.PoissonDistribution`1.IsValid">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Random.NormalDistribution`1.GetHashCode">
+        <member name="T:Althea.Random.BernoulliDistribution`1">
+            <summary>
+            The class for one-dimensional Bernoulli distribution, implements <see cref="T:Althea.Random.BernoulliBasedDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+        </member>
+        <member name="T:Althea.Random.GeometricDistribution`1">
+            <summary>
+            The class for one-dimensional geometric distribution, implements <see cref="T:Althea.Random.BernoulliBasedDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+        </member>
+        <member name="T:Althea.Random.BinomialDistribution`1">
+            <summary>
+            The class for one-dimensional binomial distribution, implements <see cref="T:Althea.Random.BernoulliBasedDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Probability"><inheritdoc/></param>
+            <param name="RandomSeed"><inheritdoc/></param>
+            <param name="NTrials">The number of independent Bernoulli trials (m)</param>
+        </member>
+        <member name="M:Althea.Random.BinomialDistribution`1.#ctor(System.Decimal,System.Int32,System.Nullable{System.Int64})">
+            <summary>
+            The class for one-dimensional binomial distribution, implements <see cref="T:Althea.Random.BernoulliBasedDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Probability"><inheritdoc/></param>
+            <param name="RandomSeed"><inheritdoc/></param>
+            <param name="NTrials">The number of independent Bernoulli trials (m)</param>
+        </member>
+        <member name="P:Althea.Random.BinomialDistribution`1.NTrials">
+            <summary>The number of independent Bernoulli trials (m)</summary>
+        </member>
+        <member name="M:Althea.Random.BinomialDistribution`1.IsValid">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Random.NormalDistribution`1.op_Equality(Althea.Random.NormalDistribution{`0},Althea.Random.NormalDistribution{`0})">
+        <member name="T:Althea.Random.NegativeBinomialDistribution`1">
+            <summary>
+            The class for one-dimensional negative binomial distribution, implements <see cref="T:Althea.Random.BernoulliBasedDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Probability"><inheritdoc/></param>
+            <param name="RandomSeed"><inheritdoc/></param>
+            <param name="SuccessCount">The number of success Bernoulli trials (r)</param>
+        </member>
+        <member name="M:Althea.Random.NegativeBinomialDistribution`1.#ctor(System.Decimal,System.Int32,System.Nullable{System.Int64})">
+            <summary>
+            The class for one-dimensional negative binomial distribution, implements <see cref="T:Althea.Random.BernoulliBasedDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Probability"><inheritdoc/></param>
+            <param name="RandomSeed"><inheritdoc/></param>
+            <param name="SuccessCount">The number of success Bernoulli trials (r)</param>
+        </member>
+        <member name="P:Althea.Random.NegativeBinomialDistribution`1.SuccessCount">
+            <summary>The number of success Bernoulli trials (r)</summary>
+        </member>
+        <member name="M:Althea.Random.NegativeBinomialDistribution`1.IsValid">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Random.NormalDistribution`1.op_Inequality(Althea.Random.NormalDistribution{`0},Althea.Random.NormalDistribution{`0})">
+        <member name="T:Althea.Random.HypergeometricDistribution`1">
+            <summary>
+            The class for a one-dimensional hyper-geometric distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="TotalSize">The total size of the hyper-geometric distribution (s)</param>
+            <param name="MarkSize">The size of success trials in <paramref name="TotalSize"/> (m)</param>
+            <param name="SampleSize">The size of the samples to be taken in <paramref name="TotalSize"/> (l)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.HypergeometricDistribution`1.#ctor(System.Int32,System.Int32,System.Int32,System.Nullable{System.Int64})">
+            <summary>
+            The class for a one-dimensional hyper-geometric distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.Rank1RandomDistribution`1"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="TotalSize">The total size of the hyper-geometric distribution (s)</param>
+            <param name="MarkSize">The size of success trials in <paramref name="TotalSize"/> (m)</param>
+            <param name="SampleSize">The size of the samples to be taken in <paramref name="TotalSize"/> (l)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.HypergeometricDistribution`1.TotalSize">
+            <summary>The total size of the hyper-geometric distribution (s)</summary>
+        </member>
+        <member name="P:Althea.Random.HypergeometricDistribution`1.MarkSize">
+            <summary>The size of success trials in <paramref name="TotalSize"/> (m)</summary>
+        </member>
+        <member name="P:Althea.Random.HypergeometricDistribution`1.SampleSize">
+            <summary>The size of the samples to be taken in <paramref name="TotalSize"/> (l)</summary>
+        </member>
+        <member name="M:Althea.Random.HypergeometricDistribution`1.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Random.Rank1RandomDistribution`1">
+            <summary>
+            The abstract class for a one-dimensional distribution.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <param name="RandomSeed">The random seed of this random distribution, null for unspecified</param>
+        </member>
+        <member name="M:Althea.Random.Rank1RandomDistribution`1.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            The abstract class for a one-dimensional distribution.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <param name="RandomSeed">The random seed of this random distribution, null for unspecified</param>
+        </member>
+        <member name="P:Althea.Random.Rank1RandomDistribution`1.RandomSeed">
+            <summary>The random seed of this random distribution, null for unspecified</summary>
+        </member>
+        <member name="M:Althea.Random.Rank1RandomDistribution`1.DataTypeAt(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Random.Rank1RandomDistribution`1.Rank">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.Rank1RandomDistribution`1.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Random.Rank2RandomDistribution`2">
+            <summary>
+            The abstract class for a two-dimensional distribution.
+            </summary>
+            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
+            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
+            <param name="RandomSeed">The random seed of this random distribution, null for unspecified</param>
+        </member>
+        <member name="M:Althea.Random.Rank2RandomDistribution`2.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            The abstract class for a two-dimensional distribution.
+            </summary>
+            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
+            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
+            <param name="RandomSeed">The random seed of this random distribution, null for unspecified</param>
+        </member>
+        <member name="P:Althea.Random.Rank2RandomDistribution`2.RandomSeed">
+            <summary>The random seed of this random distribution, null for unspecified</summary>
+        </member>
+        <member name="M:Althea.Random.Rank2RandomDistribution`2.DataTypeAt(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Random.Rank2RandomDistribution`2.Rank">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.Rank2RandomDistribution`2.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Random.Rank3RandomDistribution`3">
+            <summary>
+            The abstract class for a three-dimensional distribution.
+            </summary>
+            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
+            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
+            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
+            <param name="RandomSeed">The random seed of this random distribution, null for unspecified</param>
+        </member>
+        <member name="M:Althea.Random.Rank3RandomDistribution`3.#ctor(System.Nullable{System.Int64})">
+            <summary>
+            The abstract class for a three-dimensional distribution.
+            </summary>
+            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
+            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
+            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
+            <param name="RandomSeed">The random seed of this random distribution, null for unspecified</param>
+        </member>
+        <member name="P:Althea.Random.Rank3RandomDistribution`3.RandomSeed">
+            <summary>The random seed of this random distribution, null for unspecified</summary>
+        </member>
+        <member name="M:Althea.Random.Rank3RandomDistribution`3.DataTypeAt(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Random.Rank3RandomDistribution`3.Rank">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.Rank3RandomDistribution`3.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Random.BinormalDistribution`1">
+            <summary>
+            The class for a two-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.Rank2RandomDistribution`2"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Mean1">The first mean value (μ<sub>1</sub>)</param>
+            <param name="Mean2">The second mean value (μ<sub>2</sub>)</param>
+            <param name="StandardDeviation1">The first standard deviation (σ<sub>1</sub>)</param>
+            <param name="StandardDeviation2">The second standard deviation (σ<sub>2</sub>)</param>
+            <param name="Covariance">The covariance between two random variates (ρ)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.BinormalDistribution`1.#ctor(`0,`0,`0,`0,`0,System.Nullable{System.Int64})">
+            <summary>
+            The class for a two-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.Rank2RandomDistribution`2"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Mean1">The first mean value (μ<sub>1</sub>)</param>
+            <param name="Mean2">The second mean value (μ<sub>2</sub>)</param>
+            <param name="StandardDeviation1">The first standard deviation (σ<sub>1</sub>)</param>
+            <param name="StandardDeviation2">The second standard deviation (σ<sub>2</sub>)</param>
+            <param name="Covariance">The covariance between two random variates (ρ)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.BinormalDistribution`1.Mean1">
+            <summary>The first mean value (μ<sub>1</sub>)</summary>
+        </member>
+        <member name="P:Althea.Random.BinormalDistribution`1.Mean2">
+            <summary>The second mean value (μ<sub>2</sub>)</summary>
+        </member>
+        <member name="P:Althea.Random.BinormalDistribution`1.StandardDeviation1">
+            <summary>The first standard deviation (σ<sub>1</sub>)</summary>
+        </member>
+        <member name="P:Althea.Random.BinormalDistribution`1.StandardDeviation2">
+            <summary>The second standard deviation (σ<sub>2</sub>)</summary>
+        </member>
+        <member name="P:Althea.Random.BinormalDistribution`1.Covariance">
+            <summary>The covariance between two random variates (ρ)</summary>
+        </member>
+        <member name="M:Althea.Random.BinormalDistribution`1.#ctor(`0,System.Nullable{System.Int64})">
+            <summary>
+            Create a new bi-normal distribution with μ<sub>1</sub> = μ<sub>2</sub> = 0 and σ<sub>1</sub> = σ<sub>2</sub> = 1
+            </summary>
+        </member>
+        <member name="M:Althea.Random.BinormalDistribution`1.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Random.MultiNormalDistribution`1">
+            <summary>
+            The class for a multi-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.IRandomDistribution"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Means">The mean values of all dimensions</param>
+            <param name="CovarianceMatrix">The covariance matrix of all dimensions</param>
+            <param name="OriginalCovarianceStored">Whether the original matrix or the upper column-major Cholesky factorization of <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/> is stored</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.MultiNormalDistribution`1.#ctor(`0[],`0[],System.Boolean,System.Nullable{System.Int64})">
+            <summary>
+            The class for a multi-dimensional normal distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.IRandomDistribution"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="Means">The mean values of all dimensions</param>
+            <param name="CovarianceMatrix">The covariance matrix of all dimensions</param>
+            <param name="OriginalCovarianceStored">Whether the original matrix or the upper column-major Cholesky factorization of <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/> is stored</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.MultiNormalDistribution`1.Means">
+            <summary>The mean values of all dimensions</summary>
+        </member>
+        <member name="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix">
+            <summary>The covariance matrix of all dimensions</summary>
+        </member>
+        <member name="P:Althea.Random.MultiNormalDistribution`1.OriginalCovarianceStored">
+            <summary>Whether the original matrix or the upper column-major Cholesky factorization of <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/> is stored</summary>
+        </member>
+        <member name="P:Althea.Random.MultiNormalDistribution`1.RandomSeed">
+            <summary><inheritdoc/></summary>
+        </member>
+        <member name="P:Althea.Random.MultiNormalDistribution`1.Rank">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.MultiNormalDistribution`1.DataTypeAt(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.MultiNormalDistribution`1.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.MultiNormalDistribution`1.ToCholeskyStore">
+            <summary>
+            Change the <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/>'s store mode to store the upper column-major Cholesky factorization
+            </summary>
+        </member>
+        <member name="M:Althea.Random.MultiNormalDistribution`1.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Random.MultinomialDistribution`1">
+            <summary>
+            The class for a multinomial distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.IRandomDistribution"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Probabilities">The probabilities of all dimensions</param>
+            <param name="NTrials">The number of independent multi-dimensional Bernoulli trials (m)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.MultinomialDistribution`1.#ctor(System.Decimal[],System.Int32,System.Nullable{System.Int64})">
+            <summary>
+            The class for a multinomial distribution of type <typeparamref name="T"/>, implements <see cref="T:Althea.Random.IRandomDistribution"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="Probabilities">The probabilities of all dimensions</param>
+            <param name="NTrials">The number of independent multi-dimensional Bernoulli trials (m)</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.MultinomialDistribution`1.Probabilities">
+            <summary>The probabilities of all dimensions</summary>
+        </member>
+        <member name="P:Althea.Random.MultinomialDistribution`1.NTrials">
+            <summary>The number of independent multi-dimensional Bernoulli trials (m)</summary>
+        </member>
+        <member name="P:Althea.Random.MultinomialDistribution`1.RandomSeed">
+            <summary><inheritdoc/></summary>
+        </member>
+        <member name="P:Althea.Random.MultinomialDistribution`1.Rank">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.MultinomialDistribution`1.DataTypeAt(System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.MultinomialDistribution`1.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Random.MultinomialDistribution`1.ToString">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Random.ApiSelector">
             <summary>
-            The abstract class for a one-dimensional distribution.
+            The selector class for runtime random API routines 
             </summary>
         </member>
         <member name="M:Althea.Random.ApiSelector.FillWithRandom``2(``1,Althea.Random.IRandomDistribution)">
@@ -15656,171 +15913,6 @@
             <param name="storage2">The second storage to be filled with random numbers</param>
             <param name="storage3">The third storage to be filled with random numbers</param>
             <param name="distribution">The <see cref="T:Althea.Random.Rank3RandomDistribution`3"/> indicating which distribution to use</param>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``8(``4,``5,``6,``7,Althea.Random.Rank4RandomDistribution{``0,``1,``2,``3})">
-            <summary>
-            Fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank4RandomDistribution`4"/> indicating which distribution to use</param>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``10(``5,``6,``7,``8,``9,Althea.Random.Rank5RandomDistribution{``0,``1,``2,``3,``4})">
-            <summary>
-            Fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank5RandomDistribution`5"/> indicating which distribution to use</param>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``12(``6,``7,``8,``9,``10,``11,Althea.Random.Rank6RandomDistribution{``0,``1,``2,``3,``4,``5})">
-            <summary>
-            Fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="TS6">The sixth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="storage6">The sixth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank6RandomDistribution`6"/> indicating which distribution to use</param>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``14(``7,``8,``9,``10,``11,``12,``13,Althea.Random.Rank7RandomDistribution{``0,``1,``2,``3,``4,``5,``6})">
-            <summary>
-            Fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="TS6">The sixth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
-            <typeparam name="TS7">The seventh storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="storage6">The sixth storage to be filled with random numbers</param>
-            <param name="storage7">The seventh storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank7RandomDistribution`7"/> indicating which distribution to use</param>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``16(``8,``9,``10,``11,``12,``13,``14,``15,Althea.Random.Rank8RandomDistribution{``0,``1,``2,``3,``4,``5,``6,``7})">
-            <summary>
-            Fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="TS6">The sixth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
-            <typeparam name="TS7">The seventh storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T8">Any unmanaged number as the eighth data type</typeparam>
-            <typeparam name="TS8">The eighth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="storage6">The sixth storage to be filled with random numbers</param>
-            <param name="storage7">The seventh storage to be filled with random numbers</param>
-            <param name="storage8">The eighth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank8RandomDistribution`8"/> indicating which distribution to use</param>
-            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``18(``9,``10,``11,``12,``13,``14,``15,``16,``17,Althea.Random.Rank9RandomDistribution{``0,``1,``2,``3,``4,``5,``6,``7,``8})">
-            <summary>
-            Fill the given storages with random numbers generated from the given <paramref name="distribution"/>
-            </summary>
-            <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
-            <typeparam name="TS1">The first storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
-            <typeparam name="TS2">The second storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
-            <typeparam name="TS3">The third storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T4">Any unmanaged number as the fourth data type</typeparam>
-            <typeparam name="TS4">The fourth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T5">Any unmanaged number as the fifth data type</typeparam>
-            <typeparam name="TS5">The fifth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T6">Any unmanaged number as the sixth data type</typeparam>
-            <typeparam name="TS6">The sixth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T7">Any unmanaged number as the seventh data type</typeparam>
-            <typeparam name="TS7">The seventh storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T8">Any unmanaged number as the eighth data type</typeparam>
-            <typeparam name="TS8">The eighth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="T9">Any unmanaged number as the ninth data type</typeparam>
-            <typeparam name="TS9">The ninth storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage1">The first storage to be filled with random numbers</param>
-            <param name="storage2">The second storage to be filled with random numbers</param>
-            <param name="storage3">The third storage to be filled with random numbers</param>
-            <param name="storage4">The fourth storage to be filled with random numbers</param>
-            <param name="storage5">The fifth storage to be filled with random numbers</param>
-            <param name="storage6">The sixth storage to be filled with random numbers</param>
-            <param name="storage7">The seventh storage to be filled with random numbers</param>
-            <param name="storage8">The eighth storage to be filled with random numbers</param>
-            <param name="storage9">The ninth storage to be filled with random numbers</param>
-            <param name="distribution">The <see cref="T:Althea.Random.Rank9RandomDistribution`9"/> indicating which distribution to use</param>
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>

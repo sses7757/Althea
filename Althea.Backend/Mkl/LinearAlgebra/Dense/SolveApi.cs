@@ -12,7 +12,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	{
 		#region eigen-problems
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestroy = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -32,16 +32,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppV = Buffers.Create(pV, ldvec, n);
+			using var ppV = allowDestroy && pV == null ? Buffers.Create(pA, lda, n) : Buffers.Create(pV, ldvec, n);
 			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
-			func(MklMatrixLayout.ColMajor, vecOut is null ? MklVectorModeChar.Vector : MklVectorModeChar.NoVector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppx).Check(SolveMethodKind.Eigenvalue);
+			func(MklMatrixLayout.ColMajor, pV == null ? MklVectorModeChar.Vector : MklVectorModeChar.NoVector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppx).Check(SolveMethodKind.Eigenvalue);
 			RealToComp(ppx, px, n);
 			return true;
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec, TS4? LUOut, long ldLU) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec, TS4? LUOut, long ldLU, bool allowDestroy = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -65,8 +65,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppV = Buffers.Create(pV, ldvec, n);
-			using var ppLU = Buffers.Create(pLU, ldLU, n);
+			using var ppV = allowDestroy && pV == null ? Buffers.Create(pA, lda, n) : Buffers.Create(pV, ldvec, n);
+			using var ppLU = allowDestroy && pLU == null ? Buffers.Create(pB, ldb, n) : Buffers.Create(pLU, ldLU, n);
 			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
 			Storage.Api.PointerMemoryCopy2D(pB, ldb, ppLU, ppLU.ld, n, n);
@@ -76,7 +76,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valOut, TS2? valImagOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valsOut, TS2? valsOutImag, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -84,19 +84,19 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(rightVec, n, n, ldvr, out T* pVr))
 				return false;
-			if (!GetPointer(valOut, 1, out T* px, out long nx))
+			if (!GetPointer(valsOut, 1, out T* px, out long nx))
 				return false;
-			if (!NumberType<T>.IsComplex && valImagOut is null)
-				throw new ArgumentNullException(nameof(valImagOut));
+			if (!NumberType<T>.IsComplex && valsOutImag is null)
+				throw new ArgumentNullException(nameof(valsOutImag));
 			T* pxx = null;
-			if (valImagOut is not null && !GetPointer(valImagOut, 1, out pxx, out long nx2))
+			if (valsOutImag is not null && !GetPointer(valsOutImag, 1, out pxx, out long nx2))
 			{
 				if (nx2 != nx)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valImagOut));
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valsOutImag));
 				return false;
 			}
 			if (nx < n)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valsOut));
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, T*, T*, long, T*, long, MklLapackInfo> funcRe = default(T) switch
 			{
 				float => &NM.LAPACKE_sgeev,
@@ -111,7 +111,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (funcRe == null && funcIm == null)
 				return false;
-			using var ppA = this.AllowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, n, n);
+			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, n, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, n, n);
 			MklLapackInfo info;
 			if (funcRe != null)
@@ -127,7 +127,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS2? valImagOut, TS2 valDenomOut, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valsOut, TS2? valsOutImag, TS2 valsOutDenom, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -137,23 +137,23 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(rightVec, n, n, ldvr, out T* pVr))
 				return false;
-			if (!GetPointer(valOut, 1, out T* px, out long nx))
+			if (!GetPointer(valsOut, 1, out T* px, out long nx))
 				return false;
-			if (!GetPointer(valDenomOut, 1, out T* pxd, out long nxd))
+			if (!GetPointer(valsOutDenom, 1, out T* pxd, out long nxd))
 				return false;
 			if (nxd != nx)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valDenomOut));
-			if (!NumberType<T>.IsComplex && valImagOut is null)
-				throw new ArgumentNullException(nameof(valImagOut));
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valsOutDenom));
+			if (!NumberType<T>.IsComplex && valsOutImag is null)
+				throw new ArgumentNullException(nameof(valsOutImag));
 			T* pxx = null;
-			if (valImagOut is not null && !GetPointer(valImagOut, 1, out pxx, out long nx2))
+			if (valsOutImag is not null && !GetPointer(valsOutImag, 1, out pxx, out long nx2))
 			{
 				if (nx2 != nx)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valImagOut));
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valsOutImag));
 				return false;
 			}
 			if (nx < n)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valsOut));
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, long, T*, T*, T*, T*, long, T*, long, MklLapackInfo> funcRe = default(T) switch
 			{
 				float => &NM.LAPACKE_sggev,
@@ -168,8 +168,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (funcRe == null && funcIm == null)
 				return false;
-			using var ppA = this.AllowDestroy ? Buffers.Create<T>(pA, lda, n) : Buffers.Create<T>(null, n, n);
-			using var ppB = this.AllowDestroy ? Buffers.Create<T>(pB, ldb, n) : Buffers.Create<T>(null, n, n);
+			using var ppA = allowDestroy ? Buffers.Create<T>(pA, lda, n) : Buffers.Create<T>(null, n, n);
+			using var ppB = allowDestroy ? Buffers.Create<T>(pB, ldb, n) : Buffers.Create<T>(null, n, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, n, n);
 			Storage.Api.PointerMemoryCopy2D(pB, ldb, ppB, ppB.ld, n, n);
 			MklLapackInfo info;
@@ -188,7 +188,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region other decompositions
 		/// <inheritdoc/>
-		public virtual bool SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S, bool allowDestroy = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			long mn = Math.Min(m, n);
 			if (!GetPointer(A, m, n, lda, out T* pA))
@@ -217,7 +217,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppA = this.AllowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
+			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, m, n);
 			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
 			using var pSurperb = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create<T>(n * sizeof(T));
@@ -277,7 +277,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (typeof(TInd) != typeof(long))
 				return false;
@@ -331,7 +331,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region linear solve
 		/// <inheritdoc/>
-		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -348,7 +348,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (func == null)
 				return false;
 			using var ipiv = Buffers.Create<long>(n * sizeof(long));
-			func(MklMatrixLayout.ColMajor, n, nrhs, pA, lda, ipiv, pB, ldb).Check(SolveMethodKind.LU);
+			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, n, n);
+			func(MklMatrixLayout.ColMajor, n, nrhs, ppA, ppA.ld, ipiv, pB, ldb).Check(SolveMethodKind.LU);
 			return true;
 		}
 		#endregion
@@ -395,7 +396,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!GetPointer(A, m, n, lda, out T* pA))
 				return false;
@@ -411,7 +412,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppA = this.AllowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
+			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, m, n);
 			func(MklMatrixLayout.ColMajor, MklOperationChar.NoneTranspose, m, n, nrhs, ppA, ppA.ld, pB, ldb).Check(SolveMethodKind.QR);
 			return true;

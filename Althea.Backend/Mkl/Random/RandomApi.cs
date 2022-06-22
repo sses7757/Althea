@@ -1,25 +1,22 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Threading;
 
 using Althea.Backend.Mkl.LinearAlgebra.Dense;
-using Althea.Backend.Random;
-using Althea.Backend.Storage;
+using Althea.Storage;
 using Althea.Linq;
 using Althea.NativeTypes;
 using Althea.Random;
 
 
-#pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
 namespace Althea.Backend.Mkl.Random
 {
 	/// <summary>
-	/// The MKL back-end of the <see cref="AbstractApi"/> that supports filling CPU arrays with a variety kinds of distributions.
+	/// The MKL back-end of the <see cref="Althea.Random.IAbstractApi"/> that supports filling CPU arrays with a variety kinds of distributions.
 	/// </summary>
 	/// <remarks>Only use the <see cref="GeneratorType.SFMT19937"/> is used currently, but the other generator type's support can be easily added.<br/>
-	/// Only the default generating algorithms are used currently, but the other ones' support can be easily added.<br/>
-	/// Since using the same MKL VSL stream results to thread blockage, this class utilizes a <see cref="ThreadLocal{T}"/> to make sure that multi-threading in C# works properly.</remarks>
-	public class RandomApi : AbstractApi
+	/// Only the default generating algorithms are used currently, but other ones can be easily added.<br/>
+	/// Since using the same MKL VSL stream results to thread blockage, this class utilizes a <see cref="ThreadLocal{T}"/> generator to make sure that multi-threading in C# works properly.</remarks>
+	public unsafe class Api : Althea.Random.IAbstractApi
 	{
 		#region basic
 		private readonly ThreadLocal<(IntPtr stream, uint seed)> generator;
@@ -29,9 +26,12 @@ namespace Althea.Backend.Mkl.Random
 			get => this.generator.Value.stream;
 		}
 
-		public RandomApi()
+		/// <summary>
+		/// Create an <see cref="Api"/>
+		/// </summary>
+		public Api()
 		{
-			this.generator = new ThreadLocal<(IntPtr, uint)>(InitializeGenerator, trackAllValues: true);
+			this.generator = new ThreadLocal<(IntPtr, uint)>(InitializeGenerator, true);
 		}
 
 		private static (IntPtr, uint) InitializeGenerator()
@@ -51,55 +51,34 @@ namespace Althea.Backend.Mkl.Random
 			return stream;
 		}
 
-		protected override void Dispose(bool disposeManaged)
+		/// <inheritdoc/>
+		public void Dispose()
 		{
 			foreach (var (stream, _) in this.generator.Values)
 			{
 				NativeMethods.vslDeleteStream(in stream);
 			}
 			this.generator.Dispose();
-		}
-		#endregion
-
-		#region support
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static IntPtr GetPointer<T>(Storage<T> s) where T : unmanaged, INumber<T>
-		{
-			if (s is null || !s.IsValid() || s.Count != 1 || !Supported(s.LocationDescription))
-				return default;
-			if (s[0].Pointer is not IMemoryPointer mp)
-				return default;
-			if (mp.Pointer == default)
-				return default;
-			return (IntPtr)(mp.Pointer.ToInt64() + s[0].OffsetInBytes);
+			this.Disposed = true;
+			GC.SuppressFinalize(this);
 		}
 
+		/// <inheritdoc/>
+		public bool Disposed { get; set; } = false;
+
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Supported(CombinationOfLocations location)
+		private static bool GetPointer<T, TS>(TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
-			if (location.Count != 1)
-				return false;
-			var loc = location[0];
-			return loc.Type == LocationType.CpuRam;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedUnary(CombinationOfLocations location1) => Supported(location1);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedBinary(CombinationOfLocations location1, CombinationOfLocations location2) => Supported(location1) && Supported(location2);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedTrinary(CombinationOfLocations location1, CombinationOfLocations location2, CombinationOfLocations location3) => Supported(location1) && Supported(location2) && Supported(location3);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool IsSupportedNary(ReadOnlySpan<CombinationOfLocations> locations)
-		{
-			for (int i = 0; i < locations.Length; i++)
-			{
-				if (!Supported(locations[i]))
-					return false;
-			}
+			pointer = default; length = 0;
+			if (s is null || !s.IsValid())
+				throw new ArgumentNullException(sName);
+			if (s is not PureStorage<T, CpuMemoryPointer> ps)
+				return false; // not support
+			ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
+			if (pointer == default)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
+			length = ps.Length;
 			return true;
 		}
 		#endregion
@@ -108,28 +87,17 @@ namespace Althea.Backend.Mkl.Random
 		const DistributionType INVALID = (DistributionType)(-1);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Check<T>(Storage<T> storage, IRandomDistribution distribution!!, out IntPtr pointer, out int length, out DistributionType type) where T : unmanaged, INumber<T>
+		private static unsafe bool Check<T, TS>(TS storage, IRandomDistribution distribution!!, out T* pointer, out long length, out DistributionType type) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			pointer = default; length = 0;
+			type = INVALID;
 			if (storage is null || !storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
-			if (distribution.Count != 1)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
+			if (distribution.Rank != 1)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(distribution));
+			if (!GetPointer(storage, out pointer, out length))
+				return false;
 
-			type = INVALID;
-			var ss = storage[0];
-			if (storage.Count != 1 || ss.Pointer is not IMemoryPointer p)
-				return false; // not support
-			if (Const<T>.IsComplex)
-				return false; // not support
-			if (ss.LengthInBytes / Unmanaged<T>.Size > int.MaxValue)
-				return false; // not support
-
-			pointer = (IntPtr)(p.Pointer.ToInt64() + ss.OffsetInBytes);
-			length = (int)(ss.LengthInBytes / Unmanaged<T>.Size);
-
-			if (distribution is SimpleJointRandomDistribution join && join.Count == 1)
-				distribution = join[0];
 			type = distribution switch
 			{
 				UniformDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) || typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Uniform : INVALID,
@@ -353,7 +321,7 @@ namespace Althea.Backend.Mkl.Random
 				int rank = normalS.Rank;
 				switch (normalS.CovarianceStorage)
 				{
-					case MultiNormalDistribution<float>.StorageType.Full:
+					case MultiNormalDistribution<float>.StorageType.Original:
 						storage = MklRngMatrixStorage.Full;
 						// factorize
 						float[] tempFull = new float[rank * rank];
@@ -389,7 +357,7 @@ namespace Althea.Backend.Mkl.Random
 				int rank = normalD.Rank;
 				switch (normalD.CovarianceStorage)
 				{
-					case MultiNormalDistribution<double>.StorageType.Full:
+					case MultiNormalDistribution<double>.StorageType.Original:
 						storage = MklRngMatrixStorage.Full;
 						// factorize
 						double[] tempFull = new double[rank * rank];

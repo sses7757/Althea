@@ -2,6 +2,7 @@
 
 using Althea.Helpers;
 
+
 namespace Althea.NativeTypes
 {
 	#region data type enum
@@ -210,7 +211,7 @@ namespace Althea.NativeTypes
 		public static bool IsAtomic(this DataType type) => ((byte)type).PopCount() == 1 && ((short)type >> 8).PopCount() == 1 && ((int)type >> 16).PopCount() == 1;
 
 		/// <summary>
-		/// Construct a <see cref="DataType"/> from given parameters.
+		/// Construct an atomic <see cref="DataType"/> from given parameters.
 		/// </summary>
 		/// <param name="complex">Whether the constructed <see cref="DataType"/> is a complex type</param>
 		/// <param name="type">The <see cref="DataTypeClassification"/> the constructed <see cref="DataType"/> is a floating point type</param>
@@ -229,6 +230,13 @@ namespace Althea.NativeTypes
 			else
 				return (DataType)((int)DataTypeTuple.Real + ((int)type << 8) + sizeB << 16);
 		}
+
+		/// <summary>
+		/// Construct a non-atomic <see cref="DataType"/> from given parameters.
+		/// </summary>
+		/// <returns>The constructed <see cref="DataType"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DataType MakeDataType(DataTypeTuple tuple, DataTypeClassification type, DataTypeSize size) => (DataType)tuple + ((int)type << 8) + ((int)size << 16);
 
 		/// <summary>
 		/// Check if <paramref name="dataType"/> is a real type.

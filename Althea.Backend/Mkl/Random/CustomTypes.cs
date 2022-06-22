@@ -149,6 +149,8 @@ namespace Althea.Backend.Mkl.Random
 	#endregion
 
 	#region other enum
+	// Ignore Spelling: Wichmann Mersenne Gumbel Marsaglia Johnk
+
 	/// <summary>
 	/// The MKL random number generator type.
 	/// </summary>
@@ -328,10 +330,6 @@ namespace Althea.Backend.Mkl.Random
 		/// <see cref="WeibullDistribution{T}"/>
 		/// </summary>
 		Weibull,
-		/// <summary>
-		/// <see cref="SimpleJointRandomDistribution"/>
-		/// </summary>
-		SimpleJoint,
 	}
 	#endregion
 
@@ -508,7 +506,7 @@ namespace Althea.Backend.Mkl.Random
 		/// <summary>
 		/// CJA - stands for first letters of Cheng, Johnk, and Atkinson:
 		/// <list type="table">
-		/// <listheader><term>pl, q</term>						<description>  Actual algorithm</description></listheader>
+		/// <listheader><term>p, q</term>						<description>  Actual algorithm</description></listheader>
 		/// <item><term>min(p,q) &gt; 1</term>					<description>  Cheng's method: generation of beta random numbers of the second kind based on acceptance/rejection technique and its transformation to beta random numbers of the first kind</description></item>
 		/// <item><term>max(p,q) &lt; 1</term>					<description>  Method of Johnk and Atkinson:<br/>
 		/// If <c>q + K*p^2+C ≤ 0, K=0.852..., C=-0.956...</c>, use algorithm of Johnk: beta distributed random number is generated as <c>u₁^(1/p) / (u₁^(1/p) + u₂^(1/q))</c> if <c>u₁^(1/p)+u₂^(1/q) ≤ 1</c>;<br/>

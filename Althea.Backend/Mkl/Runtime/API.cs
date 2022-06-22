@@ -22,7 +22,7 @@ namespace Althea.Backend.Mkl
 		/// </summary>
 		AVX2 = 2,
 		/// <summary>
-		/// Intel AVX-512 on Intel® Xeon Phi™ processors.
+		/// Intel® Advanced Vector Extensions 512 (Intel® AVX-512) on Intel® Xeon Phi™ processors.
 		/// </summary>
 		AVX512_MIC = 3,
 		/// <summary>
