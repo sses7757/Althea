@@ -1045,6 +1045,16 @@ namespace Althea.Helpers
 		public static Span<T> CreateSpan<T>(ref T value, int length) => MemoryMarshal.CreateSpan(ref value, length);
 
 		/// <summary>
+		/// Creates a new read-only span over a portion of a read-only regular managed object.
+		/// </summary>
+		/// <typeparam name="T">The data type</typeparam>
+		/// <param name="value">The reference to the first element</param>
+		/// <param name="length">The number of elements in <paramref name="value"/></param>
+		/// <returns>A <see cref="Span{T}"/> on <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<T> CreateSpanFromReadOnly<T>(in T value, int length) => CreateSpan(ref Unsafe.AsRef(in value), length);
+
+		/// <summary>
 		/// Creates a new read-only span over a portion of a regular managed object.
 		/// </summary>
 		/// <typeparam name="TFrom">The source data type</typeparam>
@@ -1053,7 +1063,31 @@ namespace Althea.Helpers
 		/// <param name="length">The number of elements in <typeparamref name="TTo"/></param>
 		/// <returns>A <see cref="Span{T}"/> on <paramref name="value"/>.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Span<TTo> CreateSpan<TFrom, TTo>(ref TFrom value, int length) => MemoryMarshal.CreateSpan(ref Unsafe.As<TFrom, TTo>(ref value), length);
+		public static Span<TTo> CreateSpan<TFrom, TTo>(ref TFrom value, int length) => CreateSpan<TFrom, TTo>(ref value, 0, length);
+
+		/// <summary>
+		/// Creates a new read-only span over a portion of a regular managed object.
+		/// </summary>
+		/// <typeparam name="TFrom">The source data type</typeparam>
+		/// <typeparam name="TTo">The destination data type</typeparam>
+		/// <param name="value">The reference to the first element</param>
+		/// <param name="offsetFrom">The offset to <paramref name="value"/> in <typeparamref name="TFrom"/></param>
+		/// <param name="length">The number of elements in <typeparamref name="TTo"/></param>
+		/// <returns>A <see cref="Span{T}"/> on <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<TTo> CreateSpan<TFrom, TTo>(ref TFrom value, int offsetFrom, int length) => MemoryMarshal.CreateSpan(ref Unsafe.As<TFrom, TTo>(ref Unsafe.Add(ref value, offsetFrom)), length);
+
+		/// <summary>
+		/// Creates a new read-only span over a portion of a read-only regular managed object.
+		/// </summary>
+		/// <typeparam name="TFrom">The source data type</typeparam>
+		/// <typeparam name="TTo">The destination data type</typeparam>
+		/// <param name="value">The reference to the first element</param>
+		/// <param name="offsetFrom">The offset to <paramref name="value"/> in <typeparamref name="TFrom"/></param>
+		/// <param name="length">The number of elements in <typeparamref name="TTo"/></param>
+		/// <returns>A <see cref="Span{T}"/> on <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<TTo> CreateSpanFromReadOnly<TFrom, TTo>(in TFrom value, int offsetFrom, int length) => CreateSpan<TFrom, TTo>(ref Unsafe.AsRef(in value), offsetFrom, length);
 		#endregion
 
 		#region temporary span

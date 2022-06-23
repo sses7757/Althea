@@ -18,20 +18,18 @@ using Althea.NativeTypes;
 namespace Althea.Random
 {
 	/// <summary>
-	/// The abstract class for a one-dimensional distribution.
+	/// The abstract interface for one-dimensional distributions.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <param name="RandomSeed">The random seed of this random distribution, null for unspecified</param>
-	public abstract record Rank1RandomDistribution<T>(long? RandomSeed) : IRandomDistribution, ICheckValid where T : unmanaged, INumber<T>
+	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
+	public interface IRank1Distribution<T, TSelf> : IRandomDistribution<TSelf>, ICheckValid where T : unmanaged, INumber<T> where TSelf : struct, IRank1Distribution<T, TSelf>
 	{
-		/// <inheritdoc/>
-		public static DataType DataTypeAt(int rank) => rank == 0 ? Unmanaged<T>.DataType : throw new ArgumentOutOfRangeException(nameof(rank));
+		/// <summary>
+		/// Statically get the <see cref="DataType"/> of <paramref name="rank"/>.
+		/// </summary>
+		protected new static DataType DataTypeAt(int rank) => rank == 0 ? Unmanaged<T>.DataType : throw new ArgumentOutOfRangeException(nameof(rank));
 
-		/// <inheritdoc/>
-		public int Rank => 1;
-
-		/// <inheritdoc/>
-		public abstract bool IsValid();
+		int IRandomDistribution<TSelf>.Rank => 1;
 	}
 <# for (int i = 2; i <= count; i++) { #>
 <#
@@ -45,16 +43,18 @@ namespace Althea.Random
 #>
 
 	/// <summary>
-	/// The abstract class for a <#=num[i]#>-dimensional distribution.
+	/// The abstract interface for <#=num[i]#>-dimensional distributions.
 	/// </summary>
 <# for (int j = 1; j <= i; j++) { #>
 	/// <typeparam name="T<#=j#>">Any unmanaged number as the <#=ordinal[j]#> data type</typeparam>
 <# } #>
-	/// <param name="RandomSeed">The random seed of this random distribution, null for unspecified</param>
-	public abstract record Rank<#=i#>RandomDistribution<<#=numberTypes#>>(long? RandomSeed) : IRandomDistribution, ICheckValid <#=numberConstriant#>
+	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
+	public interface IRank<#=i#>Distribution<<#=numberTypes#>, TSelf> : IRandomDistribution<TSelf> <#=numberConstriant#> where TSelf : struct, IRank<#=i#>Distribution<<#=numberTypes#>, TSelf>
 	{
-		/// <inheritdoc/>
-		public static DataType DataTypeAt(int rank)
+		/// <summary>
+		/// Statically get the <see cref="DataType"/> of <paramref name="rank"/>.
+		/// </summary>
+		protected new static DataType DataTypeAt(int rank)
 		{
 			return rank switch
 			{
@@ -65,11 +65,7 @@ namespace Althea.Random
 			};
 		}
 
-		/// <inheritdoc/>
-		public int Rank => <#=i#>;
-
-		/// <inheritdoc/>
-		public abstract bool IsValid();
+		int IRandomDistribution<TSelf>.Rank => <#=i#>;
 	}
 <# } #>
 }

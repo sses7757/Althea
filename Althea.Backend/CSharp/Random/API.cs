@@ -34,9 +34,10 @@ namespace Althea.Backend.CSharp.Random
 
 		#region operations
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T, TS>(TS storage!!, IRandomDistribution distribution!!, out IntPtr pointer, out int length, out T offset, out T scale)
+		private static unsafe bool Check<T, TS, TDist>(TS storage!!, TDist distribution, out IntPtr pointer, out int length, out T offset, out T scale)
 			where T : unmanaged, INumber<T>
 			where TS : class, IStorage<T, TS>
+			where TDist : struct, IRandomDistribution<TDist>
 		{
 			pointer = default; length = 0; offset = default; scale = default;
 			if (!NumberType<T>.IsPrimitive)
@@ -45,6 +46,8 @@ namespace Althea.Backend.CSharp.Random
 				return false; // not support
 			if (distribution is not (UniformDistribution<T> or RandomBitsDistribution<T>))
 				return false; // not support
+			if (!distribution.IsValid())
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(distribution));
 
 			pointer = (IntPtr)(ps.Pointer.Pointer.Pointer.ToInt64() + ps.Pointer.OffsetInBytes); length = (int)ps.Pointer.LengthInBytes;
 			if (distribution is UniformDistribution<T> u)
@@ -118,7 +121,7 @@ namespace Althea.Backend.CSharp.Random
 		}
 
 		/// <inheritdoc/>
-		public bool FillWithRandom<T, TS>(TS storage, IRandomDistribution distribution) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public bool FillWithRandom<T, TS, TDist>(TS storage, TDist distribution) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>
 		{
 			if (!Check(storage, distribution, out var ptr, out int len, out T offset, out T scale))
 				return false;
@@ -126,23 +129,9 @@ namespace Althea.Backend.CSharp.Random
 			return true;
 		}
 
-		bool Althea.Random.IAbstractApi.FillWithRandom(IRandomDistribution distribution, params IStorage[] storages) => false;
-
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, TS1, TS2>(TS1 storage1, TS2 storage2, Rank2RandomDistribution<T1, T2> distribution) => false;
-
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, TS1, TS2, TS3>(TS1 storage1, TS2 storage2, TS3 storage3, Rank3RandomDistribution<T1, T2, T3> distribution) => false;
-
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, T4, TS1, TS2, TS3, TS4>(TS1 storage1, TS2 storage2, TS3 storage3, TS4 storage4, Rank4RandomDistribution<T1, T2, T3, T4> distribution) => false;
-
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, T4, T5, TS1, TS2, TS3, TS4, TS5>(TS1 storage1, TS2 storage2, TS3 storage3, TS4 storage4, TS5 storage5, Rank5RandomDistribution<T1, T2, T3, T4, T5> distribution) => false;
-
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, T4, T5, T6, TS1, TS2, TS3, TS4, TS5, TS6>(TS1 storage1, TS2 storage2, TS3 storage3, TS4 storage4, TS5 storage5, TS6 storage6, Rank6RandomDistribution<T1, T2, T3, T4, T5, T6> distribution) => false;
-
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, T4, T5, T6, T7, TS1, TS2, TS3, TS4, TS5, TS6, TS7>(TS1 storage1, TS2 storage2, TS3 storage3, TS4 storage4, TS5 storage5, TS6 storage6, TS7 storage7, Rank7RandomDistribution<T1, T2, T3, T4, T5, T6, T7> distribution) => false;
-
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, T4, T5, T6, T7, T8, TS1, TS2, TS3, TS4, TS5, TS6, TS7, TS8>(TS1 storage1, TS2 storage2, TS3 storage3, TS4 storage4, TS5 storage5, TS6 storage6, TS7 storage7, TS8 storage8, Rank8RandomDistribution<T1, T2, T3, T4, T5, T6, T7, T8> distribution) => false;
-
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, T4, T5, T6, T7, T8, T9, TS1, TS2, TS3, TS4, TS5, TS6, TS7, TS8, TS9>(TS1 storage1, TS2 storage2, TS3 storage3, TS4 storage4, TS5 storage5, TS6 storage6, TS7 storage7, TS8 storage8, TS9 storage9, Rank9RandomDistribution<T1, T2, T3, T4, T5, T6, T7, T8, T9> distribution) => false;
+		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, TS1, TS2, TDist>(TS1 storage1, TS2 storage2, TDist distribution) => false;
+		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, TS1, TS2, TS3, TDist>(TS1 storage1, TS2 storage2, TS3 storage3, TDist distribution) => false;
+		bool Althea.Random.IAbstractApi.FillWithRandom<TDist>(TDist distribution, params IStorage[] storages) => false;
 		#endregion
 	}
 }

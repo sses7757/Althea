@@ -18,13 +18,14 @@ namespace Althea.Random
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS">The storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TDist">The distribution type that implements <see cref="IRank1Distribution{T, TSelf}"/></typeparam>
 		/// <param name="storage">The storage to be filled with random numbers</param>
-		/// <param name="distribution">The <see cref="IRandomDistribution"/> indicating which distribution to use, must be of rank-1</param>
+		/// <param name="distribution">The <typeparamref name="TDist"/> indicating which distribution to use</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
 		[AbstractApiMethod]
-		public abstract bool FillWithRandom<T, TS>(TS storage, IRandomDistribution distribution) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool FillWithRandom<T, TS, TDist>(TS storage, TDist distribution) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>;
 
 		/// <summary>
 		/// When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
@@ -33,13 +34,14 @@ namespace Althea.Random
 		/// <typeparam name="TS1">The first storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
 		/// <typeparam name="TS2">The second storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TDist">The distribution type that implements <see cref="IRank2Distribution{T1, T2, TSelf}"/></typeparam>
 		/// <param name="storage1">The first storage to be filled with random numbers</param>
 		/// <param name="storage2">The second storage to be filled with random numbers</param>
-		/// <param name="distribution">The <see cref="Rank2RandomDistribution{T1, T2}"/> indicating which distribution to use</param>
+		/// <param name="distribution">The <typeparamref name="TDist"/> indicating which distribution to use</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the storages is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool FillWithRandom<T1, T2, TS1, TS2>(TS1 storage1, TS2 storage2, Rank2RandomDistribution<T1, T2> distribution) where T1 : unmanaged, INumber<T1> where T2 : unmanaged, INumber<T2> where TS1 : class, IStorage<T1, TS1> where TS2 : class, IStorage<T2, TS2>;
+		public abstract bool FillWithRandom<T1, T2, TS1, TS2, TDist>(TS1 storage1, TS2 storage2, TDist distribution) where T1 : unmanaged, INumber<T1> where T2 : unmanaged, INumber<T2> where TS1 : class, IStorage<T1, TS1> where TS2 : class, IStorage<T2, TS2> where TDist : struct, IRank2Distribution<T1, T2, TDist>;
 
 		/// <summary>
 		/// When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
@@ -50,24 +52,26 @@ namespace Althea.Random
 		/// <typeparam name="TS2">The second storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
 		/// <typeparam name="TS3">The third storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TDist">The distribution type that implements <see cref="IRank3Distribution{T1, T2, T3, TSelf}"/></typeparam>
 		/// <param name="storage1">The first storage to be filled with random numbers</param>
 		/// <param name="storage2">The second storage to be filled with random numbers</param>
 		/// <param name="storage3">The third storage to be filled with random numbers</param>
-		/// <param name="distribution">The <see cref="Rank3RandomDistribution{T1, T2, T3}"/> indicating which distribution to use</param>
+		/// <param name="distribution">The <typeparamref name="TDist"/> indicating which distribution to use</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the storages is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool FillWithRandom<T1, T2, T3, TS1, TS2, TS3>(TS1 storage1, TS2 storage2, TS3 storage3, Rank3RandomDistribution<T1, T2, T3> distribution) where T1 : unmanaged, INumber<T1> where T2 : unmanaged, INumber<T2> where T3 : unmanaged, INumber<T3> where TS1 : class, IStorage<T1, TS1> where TS2 : class, IStorage<T2, TS2> where TS3 : class, IStorage<T3, TS3>;
+		public abstract bool FillWithRandom<T1, T2, T3, TS1, TS2, TS3, TDist>(TS1 storage1, TS2 storage2, TS3 storage3, TDist distribution) where T1 : unmanaged, INumber<T1> where T2 : unmanaged, INumber<T2> where T3 : unmanaged, INumber<T3> where TS1 : class, IStorage<T1, TS1> where TS2 : class, IStorage<T2, TS2> where TS3 : class, IStorage<T3, TS3> where TDist : struct, IRank3Distribution<T1, T2, T3, TDist>;
 
 		/// <summary>
 		/// When implemented by a derived class, fill the given <paramref name="storages"/> with random numbers generated from the given <paramref name="distribution"/>
 		/// </summary>
-		/// <param name="distribution">The <see cref="IRandomDistribution"/> indicating which distribution to use, must be of rank equaling the length of <paramref name="storages"/></param>
+		/// <typeparam name="TDist">The distribution type that implements <see cref="IRandomDistribution{TSelf}"/></typeparam>
+		/// <param name="distribution">The <typeparamref name="TDist"/> indicating which distribution to use. Its data type and rank must be the same as <paramref name="storages"/>'.</param>
 		/// <param name="storages">The array of <see cref="IStorage"/>s to be filled with random numbers</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of <paramref name="storages"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="distribution"/> is of wrong rank or its data types are not the data types of <paramref name="storages"/></exception>
 		[AbstractApiMethod]
-		public abstract bool FillWithRandom(IRandomDistribution distribution, params IStorage[] storages);
+		public abstract bool FillWithRandom<TDist>(TDist distribution, params IStorage[] storages) where TDist : struct, IRandomDistribution<TDist>;
 	}
 }

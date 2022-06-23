@@ -61,15 +61,15 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
     </Compile>
-    <Compile Update="Random\MultidimensionalDistributions.cs">
-      <DependentUpon>MultidimensionalDistributions.tt</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
     <Compile Update="Random\API.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>API.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Random\BaseDistributions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>BaseDistributions.tt</DependentUpon>
     </Compile>
     <Compile Update="Storage\MixedStorage.cs">
       <DesignTime>True</DesignTime>
@@ -177,13 +177,13 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SwapSort.cs</LastGenOutput>
     </None>
-    <None Update="Random\MultidimensionalDistributions.tt">
-      <LastGenOutput>MultidimensionalDistributions.cs</LastGenOutput>
-      <Generator>TextTemplatingFileGenerator</Generator>
-    </None>
     <None Update="Random\API.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>API.cs</LastGenOutput>
+    </None>
+    <None Update="Random\BaseDistributions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>BaseDistributions.cs</LastGenOutput>
     </None>
     <None Update="Storage\MixedStorage.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
