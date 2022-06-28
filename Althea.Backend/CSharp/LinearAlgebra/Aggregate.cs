@@ -6,7 +6,7 @@ using System.Runtime.Intrinsics.X86;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra

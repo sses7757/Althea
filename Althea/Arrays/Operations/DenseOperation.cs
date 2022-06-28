@@ -4,7 +4,7 @@ using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Storage;
 using Althea.TensorAlgebra;
 
@@ -927,7 +927,7 @@ namespace Althea.Array
 		IMatrixEigenSolve<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseVector<T, TS>>,
 		IMatrixSchurDecompose<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseVector<T, TS>>,
 		IMatrixSVD<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseVector<T, TS>>
-		where T : unmanaged, IFloatingPoint<T>
+		where T : unmanaged, IFloatingPointIeee754<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region matrix linear solve

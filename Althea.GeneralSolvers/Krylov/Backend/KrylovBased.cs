@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using Althea.Backend.CSharp.LinearAlgebra;
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 // Ignore Spelling: \mathbf \overset \longrightarrow \mathrm \cdot \left \right \varepsilon \mathbb \begin \times \le
@@ -16,7 +16,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		#region common
 
 		#region inner
-		private static void KrylovSchurInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, ReadOnlySpan<T> a, ref T β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static void KrylovSchurInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, ReadOnlySpan<T> a, ref T β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			Span<T> w = stackalloc T[iters];
 			int nPreserve = qs.Count;
@@ -56,7 +56,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region final calculation
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Span<TVec> FinalCalc<T, TVec>(SpanMatrix<T> vecs, ReadOnlySpan<TVec> Q, Span<TVec> vector) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static Span<TVec> FinalCalc<T, TVec>(SpanMatrix<T> vecs, ReadOnlySpan<TVec> Q, Span<TVec> vector) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			try
 			{
@@ -81,7 +81,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		#region Krylov-Schur
 
 		#region get convergence of Krylov-Schur
-		private static unsafe void GetSchur<T>(int n, SpanMatrix<T> H, Span<T> outVals, Span<T> outValsImag, SpanMatrix<T> outSchurT, SpanMatrix<T> outSchurU, Span<int> outConjugatePairs) where T : unmanaged, IFloatingPoint<T>
+		private static unsafe void GetSchur<T>(int n, SpanMatrix<T> H, Span<T> outVals, Span<T> outValsImag, SpanMatrix<T> outSchurT, SpanMatrix<T> outSchurU, Span<int> outConjugatePairs) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			H.CopyTo(outSchurT);
 			//tex:$\mathbf H \overset{\text{Schur (no ordering)}}{\longrightarrow} \mathbf H_c \cdot \mathbf U$
@@ -106,7 +106,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 			}
 		}
 
-		private static unsafe void ReorderSchur<T, TVec>(Span<byte> select, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static unsafe void ReorderSchur<T, TVec>(Span<byte> select, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			int rows = select.Length;
 			//tex:$\mathbf H \overset{\text{Schur (order}=\vec v_\text{preserve}\text{)}}{\longrightarrow} \mathbf H \cdot \mathbf X$
@@ -146,7 +146,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 			}
 		}
 
-		private static unsafe void SortPairs<T>(int n, WhichEigenvalues which, Span<T> orderedVals, Span<T> orderedValsImag, SpanMatrix<T> orderedVecs, Span<int> conjugatePairs) where T : unmanaged, IFloatingPoint<T>
+		private static unsafe void SortPairs<T>(int n, WhichEigenvalues which, Span<T> orderedVals, Span<T> orderedValsImag, SpanMatrix<T> orderedVecs, Span<int> conjugatePairs) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			Span<T> reordered = stackalloc T[n];
 			if (NumberType<T>.IsComplex)
@@ -215,7 +215,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 			}
 		}
 
-		private static unsafe int GetConverge<T>(SpanMatrix<T> H, T beta, T tol, WhichEigenvalues which, bool useGap, Span<T> orderedVals, Span<T> orderedValsImag, SpanMatrix<T> orderedVecs, SpanMatrix<T> schurT, SpanMatrix<T> schurU, Span<T> errorBounds) where T : unmanaged, IFloatingPoint<T>
+		private static unsafe int GetConverge<T>(SpanMatrix<T> H, T beta, T tol, WhichEigenvalues which, bool useGap, Span<T> orderedVals, Span<T> orderedValsImag, SpanMatrix<T> orderedVecs, SpanMatrix<T> schurT, SpanMatrix<T> schurU, Span<T> errorBounds) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			#region Schur decomposition first
 			int n = H.Rows;
@@ -274,7 +274,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		#endregion
 
 		#region preserve selection of Krylov-Schur
-		private static int PreserveSelect<T>(int nEig, int convergedWithin, ReadOnlySpan<T> orderedVals, ReadOnlySpan<T> orderedValsImag, SpanMatrix<T> orderedVecs, IPreserveSelector selector, Span<bool> eigenSelect) where T : unmanaged, IFloatingPoint<T>
+		private static int PreserveSelect<T>(int nEig, int convergedWithin, ReadOnlySpan<T> orderedVals, ReadOnlySpan<T> orderedValsImag, SpanMatrix<T> orderedVecs, IPreserveSelector selector, Span<bool> eigenSelect) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			var restVals = orderedVals[convergedWithin..];
 			var restValsImag = orderedValsImag.IsEmpty ? default : orderedValsImag[convergedWithin..];
@@ -297,7 +297,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		#endregion
 
 		// null return for not support
-		internal static int? KrylovSchur<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial!!, WhichEigenvalues which, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<T> outEigvalsImag, Span<TVec> outEigvecs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static int? KrylovSchur<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial!!, WhichEigenvalues which, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<T> outEigvalsImag, Span<TVec> outEigvecs) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
 			if (tolerance <= 0)
@@ -438,7 +438,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		#region Generalized Minimal Residual (GMRES)
 
 		#region get convergence of GMRES
-		private static unsafe bool LinearSolveConvergenceCheck<T>(int n, SpanMatrix<T> H, T β0, T β, T tol, Span<T> convergedVec, bool forceCalc = false) where T : unmanaged, IFloatingPoint<T>
+		private static unsafe bool LinearSolveConvergenceCheck<T>(int n, SpanMatrix<T> H, T β0, T β, T tol, Span<T> convergedVec, bool forceCalc = false) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			H = H.SubMatrix(..n, ..n);
 			int n1 = n + 1;
@@ -507,7 +507,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region GMRES inner
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static T GetNewInitial<T, TVec>(Func<TVec, TVec> A, TVec b, TVec guess, ref TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<T> vec) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static T GetNewInitial<T, TVec>(Func<TVec, TVec> A, TVec b, TVec guess, ref TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<T> vec) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			TVec? temp = null;
 			try
@@ -526,7 +526,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 			}
 		}
 
-		private static bool GMResInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, T tol, ref T β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs, Span<T> convergedVec) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static bool GMResInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, T tol, ref T β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs, Span<T> convergedVec) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			T orgBeta = β;
 			Span<T> w = stackalloc T[iters];
@@ -569,7 +569,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		internal static bool GeneralMinimalResidual<T, TVec>(Func<TVec, TVec> matrixFunction, TVec b!!, TVec initGuess!!, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool checkFirst, TimeSpan interval, int maxStagnations, out TVec solution, out double relativeError)
 			where TVec : class, IKrylovVector<T, TVec>
-			where T : unmanaged, IFloatingPoint<T>
+			where T : unmanaged, IFloatingPointIeee754<T>
 		{
 
 			#region basic

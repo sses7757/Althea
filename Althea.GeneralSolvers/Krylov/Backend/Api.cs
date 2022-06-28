@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.GeneralSolvers.Krylov.Backend
@@ -42,7 +42,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region eigen
 		/// <inheritdoc/>
-		public virtual bool NaiveKrylovSubspaceEigenHermitain<T, TVec>(ref KrylovSubspaceSolveInfo<T, TVec> info, out (double Value, TVec Vector) eigen) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		public virtual bool NaiveKrylovSubspaceEigenHermitain<T, TVec>(ref KrylovSubspaceSolveInfo<T, TVec> info, out (double Value, TVec Vector) eigen) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			eigen = (0, TVec.Empty);
 			eigen = LanczosBased.NaiveLanczos<T, TVec>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.CheckMatrixFunction, this.InfoLogInterval);
@@ -50,7 +50,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		}
 
 		/// <inheritdoc/>
-		public virtual bool RestartKrylovSubspaceEigen<T, TVec>(bool hermitian, ref KrylovSubspaceSolveInfo<T, TVec> info, out int converged) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		public virtual bool RestartKrylovSubspaceEigen<T, TVec>(bool hermitian, ref KrylovSubspaceSolveInfo<T, TVec> info, out int converged) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			converged = 0;
 			int iter = info.IterationsPerRestart == 0 ? Common.HERM_MAX_ITER : info.IterationsPerRestart;
@@ -76,7 +76,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region linear solve
 		/// <inheritdoc/>
-		public virtual bool RestartKrylovSubspaceLinearSolve<T, TVec>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<T, TVec> info, out (TVec Vector, double RelativeError) solve) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		public virtual bool RestartKrylovSubspaceLinearSolve<T, TVec>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<T, TVec> info, out (TVec Vector, double RelativeError) solve) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			if (info.OtherVector is null)
 				throw new ArgumentNullException(nameof(info), nameof(info.OtherVector));
@@ -104,7 +104,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 	{
 		#region from T to real
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool ToRealCheck<T>(this T value, out T real) where T : unmanaged, IFloatingPoint<T>
+		internal static bool ToRealCheck<T>(this T value, out T real) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			if (NumberType<T>.IsComplex)
 			{
@@ -123,7 +123,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static T ToRealCheck<T>(this T value) where T : unmanaged, IFloatingPoint<T>
+		internal static T ToRealCheck<T>(this T value) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			if (NumberType<T>.IsComplex)
 			{
@@ -159,7 +159,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void CheckParas<T, TVec>(Func<TVec, TVec> matrixFunction!!, TVec initial, int smallestK, ref int maxIter, bool herm) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static void CheckParas<T, TVec>(Func<TVec, TVec> matrixFunction!!, TVec initial, int smallestK, ref int maxIter, bool herm) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			try
 			{
@@ -200,7 +200,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region gap
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static T GetGap<T>(T beta, T tol, ReadOnlySpan<T> vals, ReadOnlySpan<T> vecsLastRow, int target = 0, ReadOnlySpan<int> conjugatePairs = default, T normA = default) where T : unmanaged, IFloatingPoint<T>
+		internal static T GetGap<T>(T beta, T tol, ReadOnlySpan<T> vals, ReadOnlySpan<T> vecsLastRow, int target = 0, ReadOnlySpan<int> conjugatePairs = default, T normA = default) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			if (normA == T.Zero)
 				normA = vals.Max(static v => T.Abs(v));
@@ -234,7 +234,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region orthogonalization
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void RobustOrthogonalize<T, TVec>(TVec r, ReadOnlySpan<TVec> qs, Span<T> weights, bool robust = true) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static void RobustOrthogonalize<T, TVec>(TVec r, ReadOnlySpan<TVec> qs, Span<T> weights, bool robust = true) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			if (qs.IsEmpty)
 				return;
@@ -266,7 +266,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static TVec RSetToBSubAx<T, TVec>(Func<TVec, TVec> A, TVec x, TVec b)
 			where TVec : class, IKrylovVector<T, TVec>
-			where T : unmanaged, IFloatingPoint<T>
+			where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			TVec r = A.Invoke(x);
 			try
@@ -285,7 +285,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void RSetToBSubAx<T, TVec>(Func<TVec, TVec> A, ref TVec r, TVec x, TVec b)
 			where TVec : class, IKrylovVector<T, TVec>
-			where T : unmanaged, IFloatingPoint<T>
+			where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			r?.Dispose();
 			r = A.Invoke(x);

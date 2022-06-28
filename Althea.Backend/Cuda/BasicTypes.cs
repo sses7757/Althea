@@ -1,6 +1,6 @@
 ﻿using System;
 
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.Backend.Cuda

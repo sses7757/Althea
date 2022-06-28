@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Storage;
 
 

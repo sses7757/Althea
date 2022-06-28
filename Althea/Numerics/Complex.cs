@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Althea.Resources;
 
 
-namespace Althea.NativeTypes
+namespace Althea.Numerics
 {
 	#region interface
 	/// <summary>
@@ -54,7 +54,7 @@ namespace Althea.NativeTypes
 	/// The base interface for complex float numbers
 	/// </summary>
 	/// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
-	public interface IComplexFloatNumber<TSelf> : IComplexNumber<TSelf>, IFloatingPoint<TSelf>
+	public interface IComplexFloatNumber<TSelf> : IComplexNumber<TSelf>, IFloatingPointIeee754<TSelf>
 		where TSelf : IComplexFloatNumber<TSelf>
 	{
 		/// <summary>
@@ -75,7 +75,7 @@ namespace Althea.NativeTypes
 	/// <typeparam name="T">The type of corresponding real number</typeparam>
 	public interface IComplexFloatNumber<TSelf, T> : IComplexNumber<TSelf, T>, IComplexFloatNumber<TSelf>
 	where TSelf : IComplexFloatNumber<TSelf, T>
-	where T : unmanaged, IFloatingPoint<T>
+	where T : unmanaged, IFloatingPointIeee754<T>
 	{
 		/// <summary>
 		/// Get the magnitude or absolute value of this complex number.
@@ -122,7 +122,7 @@ namespace Althea.NativeTypes
 	/// <remarks>Arithmetic overflows are not checked in the methods of <see cref="Complex{T}"/> since they shall not be used for actual computation tasks,<br/>
 	/// although JIT will probably inline the static functions inside them for better performance if it detected that they are hot paths.</remarks>
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Complex<T> : IComplexFloatNumber<Complex<T>, T>, ICustomNumberType<Complex<T>> where T : unmanaged, IFloatingPoint<T>
+	public struct Complex<T> : IComplexFloatNumber<Complex<T>, T>, ICustomNumberType<Complex<T>> where T : unmanaged, IFloatingPointIeee754<T>
 	{
 		#region basic
 		private readonly T real, imag;
@@ -1205,9 +1205,9 @@ namespace Althea.NativeTypes
 			return new(T.Sqrt(T.MinMagnitude(x.MagnitudeSquared, y.MagnitudeSquared)));
 		}
 
-		static Complex<T> IFloatingPoint<Complex<T>>.BitIncrement(Complex<T> x) => throw new InvalidOperationException();
-		static Complex<T> IFloatingPoint<Complex<T>>.BitDecrement(Complex<T> x) => throw new InvalidOperationException();
-		static TInteger IFloatingPoint<Complex<T>>.ILogB<TInteger>(Complex<T> x) => throw new InvalidOperationException();
+		static Complex<T> IFloatingPointIeee754<Complex<T>>.BitIncrement(Complex<T> x) => throw new InvalidOperationException();
+		static Complex<T> IFloatingPointIeee754<Complex<T>>.BitDecrement(Complex<T> x) => throw new InvalidOperationException();
+		static TInteger IFloatingPointIeee754<Complex<T>>.ILogB<TInteger>(Complex<T> x) => throw new InvalidOperationException();
 		#endregion
 
 		#region string representation

@@ -8,7 +8,7 @@ using Althea.Backend.Cuda.LinearAlgebra.Sparse;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 namespace Althea.Backend.Cuda
 {

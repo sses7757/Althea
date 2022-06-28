@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.Storage

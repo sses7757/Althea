@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 
 using Althea.LinearAlgebra;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.Backend.Cuda.LinearAlgebra

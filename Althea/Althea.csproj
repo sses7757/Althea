@@ -61,6 +61,26 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
     </Compile>
+    <Compile Update="Numerics\IntegerTypes.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>IntegerTypes.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Numerics\RealTypes.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>RealTypes.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Numerics\Real2Types.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Real2Types.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Numerics\RealTypes.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>RealTypes.tt</DependentUpon>
+    </Compile>
     <Compile Update="Random\API.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -176,6 +196,14 @@
     <None Update="Helpers\SwapSort.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SwapSort.cs</LastGenOutput>
+    </None>
+    <None Update="Numerics\RealTypes.tt">
+      <LastGenOutput>RealTypes.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Numerics\IntegerTypes.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IntegerTypes.cs</LastGenOutput>
     </None>
     <None Update="Random\API.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

@@ -3,7 +3,7 @@
 using Althea.Helpers;
 
 
-namespace Althea.NativeTypes
+namespace Althea.Numerics
 {
 	#region data type enum
 	/// <summary>
@@ -74,6 +74,10 @@ namespace Althea.NativeTypes
 		/// 8 byte
 		/// </summary>
 		Byte8 = 1 << 3,
+		/// <summary>
+		/// 16 byte
+		/// </summary>
+		Byte16 = 1 << 4,
 	}
 
 	/// <summary>
@@ -124,6 +128,10 @@ namespace Althea.NativeTypes
 		/// <see cref="long"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
 		RealInt64 = DataTypeTuple.Real + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte8 << 16),
+		/// <summary>
+		/// <see cref="System.Int128"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte16"/>
+		/// </summary>
+		RealInt128 = DataTypeTuple.Real + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte16 << 16),
 
 		/// <summary>
 		/// <see cref="byte"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte1"/>
@@ -141,6 +149,10 @@ namespace Althea.NativeTypes
 		/// <see cref="ulong"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
 		RealUInt64 = DataTypeTuple.Real + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte8 << 16),
+		/// <summary>
+		/// <see cref="System.UInt128"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte16"/>
+		/// </summary>
+		RealUInt128 = DataTypeTuple.Real + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte16 << 16),
 
 		/// <summary>
 		/// <see cref="ComplexInteger{T}"/> of <see cref="sbyte"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte1"/>
@@ -158,6 +170,10 @@ namespace Althea.NativeTypes
 		/// <see cref="ComplexInteger{T}"/> of <see cref="long"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
 		ComplexInt64 = DataTypeTuple.Complex + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte8 << 16),
+		/// <summary>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="System.Int128"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte16"/>
+		/// </summary>
+		ComplexInt128 = DataTypeTuple.Complex + (DataTypeClassification.SignedInteger << 8) + (DataTypeSize.Byte16 << 16),
 
 		/// <summary>
 		/// <see cref="ComplexInteger{T}"/> of <see cref="sbyte"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte1"/>
@@ -175,6 +191,10 @@ namespace Althea.NativeTypes
 		/// <see cref="ComplexInteger{T}"/> of <see cref="long"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
 		ComplexUInt64 = DataTypeTuple.Complex + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte8 << 16),
+		/// <summary>
+		/// <see cref="ComplexInteger{T}"/> of <see cref="System.UInt128"/> = <see cref="DataTypeTuple.Complex"/> + <see cref="DataTypeClassification.UnsignedInteger"/> + <see cref="DataTypeSize.Byte16"/>
+		/// </summary>
+		ComplexUInt128 = DataTypeTuple.Complex + (DataTypeClassification.UnsignedInteger << 8) + (DataTypeSize.Byte16 << 16),
 	}
 	#endregion
 

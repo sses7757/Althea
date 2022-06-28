@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 using Althea.Backend.Cuda.LinearAlgebra.Dense;
 using Althea.Backend.Storage;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Resources;
 using Althea.Storage;
 

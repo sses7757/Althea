@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 
 using Althea.LinearAlgebra;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 using NMC = Althea.Backend.Mkl.LinearAlgebra.Dense.CustomNativeMethods;

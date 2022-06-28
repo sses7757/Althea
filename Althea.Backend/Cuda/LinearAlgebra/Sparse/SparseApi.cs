@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using Althea.Arrays;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释

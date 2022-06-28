@@ -7,7 +7,7 @@ using System.Runtime.Intrinsics.X86;
 using Althea.Backend.Storage;
 using Althea.Linq;
 using Althea.LinearAlgebra;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra
@@ -97,7 +97,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorModifyFloatManaged<T, U, Op>(T* x, int incx, T* y, int incy, int length, U scalar) where T : unmanaged, IFloatingPoint<T> where U : unmanaged, IFloatingPoint<U>
+		private static void VectorModifyFloatManaged<T, U, Op>(T* x, int incx, T* y, int incy, int length, U scalar) where T : unmanaged, IFloatingPointIeee754<T> where U : unmanaged, IFloatingPointIeee754<U>
 		{
 			Modify op;
 			if (typeof(Op) == typeof(U_PowerT))

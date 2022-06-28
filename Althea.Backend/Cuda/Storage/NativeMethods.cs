@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 #pragma warning disable IDE1006 // 命名样式

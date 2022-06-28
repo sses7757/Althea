@@ -5,7 +5,7 @@ using System.Runtime.Intrinsics.Arm;
 using System.Text;
 
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Resources;
 
 

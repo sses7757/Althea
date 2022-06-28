@@ -3,7 +3,7 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Dense;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Storage;
 
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;

@@ -4,7 +4,7 @@ using System.Threading;
 using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 

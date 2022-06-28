@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.GeneralSolvers.Krylov
@@ -262,7 +262,7 @@ namespace Althea.GeneralSolvers.Krylov
 		/// <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
 		/// <returns>The <paramref name="output"/> with correct size.</returns>
 		/// <remarks>This method will only be invoked internally.</remarks>
-		Span<int> PreserveSelect<T>(ReadOnlySpan<T> estimateEigvals, ReadOnlySpan<T> estimateEigvalsImag, ReadOnlySpan<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPoint<T>;
+		Span<int> PreserveSelect<T>(ReadOnlySpan<T> estimateEigvals, ReadOnlySpan<T> estimateEigvalsImag, ReadOnlySpan<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPointIeee754<T>;
 	}
 
 	internal sealed class BuiltInPreserveSelector : IPreserveSelector
@@ -274,7 +274,7 @@ namespace Althea.GeneralSolvers.Krylov
 			this.Strategy = strategy;
 		}
 
-		public Span<int> PreserveSelect<T>(ReadOnlySpan<T> estimateEigvals, ReadOnlySpan<T> estimateEigvalsImag, ReadOnlySpan<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPoint<T>
+		public Span<int> PreserveSelect<T>(ReadOnlySpan<T> estimateEigvals, ReadOnlySpan<T> estimateEigvalsImag, ReadOnlySpan<T> estimateEigvecs, int nConverged, int nTarget, int maxIter, Span<int> output, bool withConverged = true) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			int length = estimateEigvals.Length;
 			int indexMax = 0;
@@ -378,7 +378,7 @@ namespace Althea.GeneralSolvers.Krylov
 	/// </summary>
 	/// <typeparam name="T">Any floating point number as the data type</typeparam>
 	/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-	public readonly ref struct KrylovSubspaceSolveInfo<T, TVec> where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+	public readonly ref struct KrylovSubspaceSolveInfo<T, TVec> where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 	{
 		#region fields
 		/// <summary>

@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Resources;
 
 
@@ -47,7 +47,7 @@ namespace Althea.Storage
 		long LengthInBytes { get; }
 
 		/// <summary>
-		/// When implemented by a derived class, statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>.
+		/// When implemented by a derived class, statically get the data type of this storage as a <see cref="Numerics.DataType"/>.
 		/// </summary>
 		abstract static DataType DataType { get; }
 

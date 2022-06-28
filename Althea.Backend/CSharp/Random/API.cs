@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Random;
 
 using LAD = Althea.Backend.CSharp.LinearAlgebra.Api;

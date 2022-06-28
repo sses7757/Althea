@@ -1,0 +1,293 @@
+﻿<#@ template debug="true" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+<#
+var reps = new string[] { "Double", "Single", "Half" };
+var orgs = new string[] { "double", "float", "System.Half" };
+var mps = new string[] { "2.220446049250313E-16", "1.1920928955078125E-07F", "(System.Half)0.0009765625F" };
+var ones = new string[] { "1.0", "1.0F", "System.Half.One" };
+var zeros = new string[] { "0.0", "0.0F", "System.Half.Zero" };
+var negzeros = new string[] { "-0.0", "-0.0F", "System.Half.NegativeZero" };
+var negones = new string[] { "-1.0", "-1.0F", "System.Half.NegativeOne" };
+
+var methods = new (string name, string type, string param, string invoke)[]
+{
+	("Ceiling", "TSelf", "TSelf x", "x"),
+	("Floor", "TSelf", "TSelf x", "x"),
+	("Round", "TSelf", "TSelf x", "x"),
+	("Round", "TSelf", "TSelf x, int digits", "x, digits"),
+	("Round", "TSelf", "TSelf x, MidpointRounding mode", "x, mode"),
+	("Round", "TSelf", "TSelf x, int digits, MidpointRounding mode", "x, digits, mode"),
+	("Truncate", "TSelf", "TSelf x", "x"),
+	("FusedMultiplyAdd", "TSelf", "TSelf left, TSelf right, TSelf addend", "left, right, addend"),
+	("ReciprocalEstimate", "TSelf", "TSelf x", "x"),
+	("ReciprocalSqrtEstimate", "TSelf", "TSelf x", "x"),
+	("IsFinite", "bool", "TSelf value", "value"),
+	("IsNaN", "bool", "TSelf value", "value"),
+	("IsNegative", "bool", "TSelf value", "value"),
+	("IsPositive", "bool", "TSelf value", "value"),
+	("IsInteger", "bool", "TSelf value", "value"),
+	("IsOddInteger", "bool", "TSelf value", "value"),
+	("Abs", "TSelf", "TSelf value", "value"),
+	("MaxMagnitude", "TSelf", "TSelf x, TSelf y", "x, y"),
+	("MaxMagnitudeNumber", "TSelf", "TSelf x, TSelf y", "x, y"),
+	("MinMagnitude", "TSelf", "TSelf x, TSelf y", "x, y"),
+	("MinMagnitudeNumber", "TSelf", "TSelf x, TSelf y", "x, y"),
+	("CopySign", "TSelf", "TSelf value, TSelf sign", "value, sign"),
+	("Max", "TSelf", "TSelf x, TSelf y", "x, y"),
+	("Min", "TSelf", "TSelf x, TSelf y", "x, y"),
+	("Parse", "TSelf", "string s, IFormatProvider? provider", "s, provider"),
+	("Parse", "TSelf", "string s, NumberStyles style, IFormatProvider? provider", "s, style, provider"),
+	("Parse", "TSelf", "ReadOnlySpan<char> s, IFormatProvider? provider", "s, provider"),
+	("Parse", "TSelf", "ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider", "s, style, provider"),
+	("Acosh", "TSelf", "TSelf x", "x"),
+	("Asinh", "TSelf", "TSelf x", "x"),
+	("Atanh", "TSelf", "TSelf x", "x"),
+	("Cosh", "TSelf", "TSelf x", "x"),
+	("Sinh", "TSelf", "TSelf x", "x"),
+	("Tanh", "TSelf", "TSelf x", "x"),
+	("Log", "TSelf", "TSelf x", "x"),
+	("Log", "TSelf", "TSelf x, TSelf newBase", "x, newBase"),
+	("LogP1", "TSelf", "TSelf x", "x"),
+	("Log2", "TSelf", "TSelf x", "x"),
+	("Log2P1", "TSelf", "TSelf x", "x"),
+	("Log10", "TSelf", "TSelf x", "x"),
+	("Log10P1", "TSelf", "TSelf x", "x"),
+	("Pow", "TSelf", "TSelf x, TSelf y", "x, y"),
+	("Cbrt", "TSelf", "TSelf x", "x"),
+	("Sqrt", "TSelf", "TSelf x", "x"),
+	("Acos", "TSelf", "TSelf x", "x"),
+	("Asin", "TSelf", "TSelf x", "x"),
+	("Atan", "TSelf", "TSelf x", "x"),
+	("Atan2", "TSelf", "TSelf y, TSelf x", "y, x"),
+	("Cos", "TSelf", "TSelf x", "x"),
+	("Sin", "TSelf", "TSelf x", "x"),
+	("SinCos", "(TSelf Sin, TSelf Cos)", "TSelf x", "x"),
+	("Tan", "TSelf", "TSelf x", "x"),
+	("Exp", "TSelf", "TSelf x", "x"),
+	("ExpM1", "TSelf", "TSelf x", "x"),
+	("Exp2", "TSelf", "TSelf x", "x"),
+	("Exp2M1", "TSelf", "TSelf x", "x"),
+	("Exp10", "TSelf", "TSelf x", "x"),
+	("Exp10M1", "TSelf", "TSelf x", "x"),
+};
+var operators = new (string op, string type, string param, string invoke)[]
+{
+	("<", "bool", "TSelf left, TSelf right", "left, right"),
+	("<=", "bool", "TSelf left, TSelf right", "left, right"),
+	(">", "bool", "TSelf left, TSelf right", "left, right"),
+	(">=", "bool", "TSelf left, TSelf right", "left, right"),
+	("==", "bool", "TSelf left, TSelf right", "left, right"),
+	("!=", "bool", "TSelf left, TSelf right", "left, right"),
+	("+", "TSelf", "TSelf left, TSelf right", "left, right"),
+	("-", "TSelf", "TSelf left, TSelf right", "left, right"),
+	("*", "TSelf", "TSelf left, TSelf right", "left, right"),
+	("/", "TSelf", "TSelf left, TSelf right", "left, right"),
+	("-", "TSelf", "TSelf value", "value"),
+	("+", "TSelf", "TSelf value", "value"),
+};
+var checkedOperators = new (string name, string op, string type, string param, string invoke)[]
+{
+	("IAdditionOperators<TSelf, TSelf, TSelf>.op_CheckedAddition", "+", "TSelf", "TSelf left, TSelf right", "left, right"),
+	("ISubtractionOperators<TSelf, TSelf, TSelf>.op_CheckedSubtraction", "-", "TSelf", "TSelf left, TSelf right", "left, right"),
+	("IMultiplyOperators<TSelf, TSelf, TSelf>.op_CheckedMultiply", "*", "TSelf", "TSelf left, TSelf right", "left, right"),
+	("IDivisionOperators<TSelf, TSelf, TSelf>.op_CheckedDivision", "/", "TSelf", "TSelf left, TSelf right", "left, right"),
+	("IUnaryNegationOperators<TSelf, TSelf>.op_CheckedUnaryNegation", "-", "TSelf", "TSelf value", "value"),
+};
+var propertyNames = new string[] { "NaN", "NegativeInfinity", "PositiveInfinity", "E", "Epsilon", "Pi", "Tau" };
+var propertyTypes = new string[] { "TSelf", "TSelf", "TSelf", "TSelf", "TSelf", "TSelf", "TSelf", "TSelf" };
+#>
+// NOTICE:
+// This file is generated by corresponding ".tt" file template, do NOT modify this file.
+
+using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Numerics;
+
+
+namespace Althea.Numerics;
+<# for (int i = 0; i < reps.Length; i++) { #>
+
+
+/// <summary>
+/// The custom replacement of <see cref="<#=orgs[i]#>"/> that implements <see cref="IFloatingPoint{TSelf}"/>.
+/// </summary>
+public readonly struct <#=reps[i]#> : IFloatingPoint<<#=reps[i]#>>
+{
+	private readonly <#=orgs[i]#> _value;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private <#=reps[i]#>(<#=orgs[i]#> v) => this._value = v;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator <#=reps[i]#>(<#=orgs[i]#> v) => new(v);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator <#=orgs[i]#>(<#=reps[i]#> v) => v._value;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool Equals(<#=reps[i]#> other) => this == other;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override bool Equals(object? obj) => this._value.Equals(obj);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override int GetHashCode() => this._value.GetHashCode();
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public int CompareTo(object? obj) => this._value.CompareTo(obj);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public int CompareTo(<#=reps[i]#> other) => this._value.CompareTo(other);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) => this._value.TryFormat(destination, out charsWritten, format, provider);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override string ToString() => this._value.ToString();
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public string ToString(string? format, IFormatProvider? formatProvider) => this._value.ToString(format, formatProvider);
+
+	/// <inheritdoc/>
+	public static DataType Type => DataType.Real<#=reps[i]#>;
+
+	/// <inheritdoc/>
+	public static <#=reps[i]#> MachinePrecision => <#=mps[i]#>;
+
+	/// <inheritdoc/>
+	public static <#=reps[i]#> One => <#=ones[i]#>;
+
+	/// <inheritdoc/>
+	public static <#=reps[i]#> Zero => <#=zeros[i]#>;
+	
+	/// <inheritdoc/>
+	public static <#=reps[i]#> NegativeOne => <#=negones[i]#>;
+
+	/// <inheritdoc/>
+	public static <#=reps[i]#> NegativeZero => <#=negzeros[i]#>;
+
+	/// <inheritdoc/>
+	public static <#=reps[i]#> AdditiveIdentity => <#=zeros[i]#>;
+
+	/// <inheritdoc/>
+	public static <#=reps[i]#> MultiplicativeIdentity => <#=ones[i]#>;
+
+<# foreach (var (name, type) in propertyNames.Zip(propertyTypes, (n, t) => (n, t))) { #>
+	/// <inheritdoc/>
+	public static <#=type.Replace("TSelf", reps[i])#> <#=name#> => <#=orgs[i]#>.<#=name#>;
+<# } #>
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsReal(<#=reps[i]#> value) => true;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsComplex(<#=reps[i]#> value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(<#=reps[i]#> value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsZero(<#=reps[i]#> value) => value._value == <#=zeros[i]#>;
+	
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static <#=reps[i]#> Sign(<#=reps[i]#> value) => (<#=orgs[i]#>)<#=orgs[i]#>.Sign(value);
+
+	/// <inheritdoc/>
+	public static bool TryParse(string? s, IFormatProvider? provider, out <#=reps[i]#> result)
+	{
+		bool success = <#=orgs[i]#>.TryParse(s, provider, out var res);
+		result = res;
+		return success;
+	}
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out <#=reps[i]#> result)
+	{
+		bool success = <#=orgs[i]#>.TryParse(s, provider, out var res);
+		result = res;
+		return success;
+	}
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out <#=reps[i]#> result)
+	{
+		bool success = <#=orgs[i]#>.TryParse(s, style, provider, out var res);
+		result = res;
+		return success;
+	}
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out <#=reps[i]#> result)
+	{
+		bool success = <#=orgs[i]#>.TryParse(s, style, provider, out var res);
+		result = res;
+		return success;
+	}
+
+<# foreach (var (name, type, param, invoke) in methods) { #>
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static <#=type.Replace("TSelf", reps[i])#> <#=name#><#=param.Contains("TOther") ? "<TOther>" : ""#>(<#=param.Replace("TSelf", reps[i])#>)<#=param.Contains("TOther") ? " where TOther : INumber<TOther>" : ""#> => <#=orgs[i]#>.<#=name#>(<#=invoke#>);
+
+<# } #>
+<# foreach (var (name, type, param, invoke) in operators) { #>
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static <#=type.Replace("TSelf", reps[i])#> operator <#=name#>(<#=param.Replace("TSelf", reps[i])#>) => <#=invoke.Contains(", ") ? invoke.Replace(", ", $"._value {name} ") + "._value" : name + invoke + "._value"#>;
+<# } #>
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static <#=reps[i]#> operator ++(<#=reps[i]#> value)
+	{
+		var v = value._value;
+		++v;
+		return v;
+	}
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static <#=reps[i]#> operator --(<#=reps[i]#> value)
+	{
+		var v = value._value;
+		--v;
+		return v;
+	}
+	
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static <#=reps[i]#> IIncrementOperators<<#=reps[i]#>>.op_CheckedIncrement(<#=reps[i]#> value) => ++value;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static <#=reps[i]#> IDecrementOperators<<#=reps[i]#>>.op_CheckedDecrement(<#=reps[i]#> value) => --value;
+
+	<# foreach (var (name, op, type, param, invoke) in checkedOperators) { #>
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static <#=type.Replace("TSelf", reps[i])#> <#=name.Replace("TSelf", reps[i])#>(<#=param.Replace("TSelf", reps[i])#>) => checked(<#=invoke.Contains(", ") ? invoke.Replace(", ", $"._value {op} ") + "._value" : op + invoke + "._value"#>);
+<# } #>
+}
+<# } #>

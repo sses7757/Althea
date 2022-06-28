@@ -6,7 +6,7 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Resources;
 
 using Mem = Althea.Storage.ApiSelector;
@@ -350,7 +350,7 @@ namespace Althea.Storage
 		public static CachedStorage<T, TS, TPh, TPl> Empty => new ReferenceCachedStorage<T, TS, TPh, TPl>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 

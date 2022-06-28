@@ -1,4 +1,4 @@
-﻿using Althea.NativeTypes;
+﻿using Althea.Numerics;
 using Althea.Storage;
 
 

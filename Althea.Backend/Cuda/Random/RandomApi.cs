@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Random;
 using Althea.Backend.Random;
 

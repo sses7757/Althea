@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.Backend.Cuda

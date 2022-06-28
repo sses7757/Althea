@@ -2,42 +2,8 @@
 using System.Runtime.CompilerServices;
 
 
-namespace Althea.NativeTypes
+namespace Althea.Numerics
 {
-	#region custom native type interface
-	/// <summary>
-	/// The interface for custom number types
-	/// </summary>
-	/// <typeparam name="TSelf">The type of actual struct that implement this interface</typeparam>
-	public interface ICustomNumberType<TSelf> : INumber<TSelf> where TSelf : ICustomNumberType<TSelf>
-	{
-		/// <summary>
-		/// Statically get the <see cref="DataTypeClassification"/> of <typeparamref name="TSelf"/>.
-		/// </summary>
-		abstract static DataTypeClassification Classification { get; }
-
-		/// <summary>
-		/// Statically get the machine precision of <typeparamref name="TSelf"/>.
-		/// </summary>
-		abstract static double MachinePrecision { get; }
-
-		/// <summary>
-		/// Statically get whether <typeparamref name="TSelf"/> is a complex type or not.
-		/// </summary>
-		abstract static bool IsComplex { get; }
-
-		/// <summary>
-		/// Statically try to create a number of type <typeparamref name="TOther"/> from a number of type <typeparamref name="TSelf"/>.
-		/// </summary>
-		/// <typeparam name="TOther">The other number type to create to</typeparam>
-		/// <param name="from">The input number to convert from of type <typeparamref name="TSelf"/></param>
-		/// <param name="to">The output number to convert to of type <typeparamref name="TOther"/></param>
-		/// <returns>Conversion success or not.</returns>
-		abstract static bool TryCreateOther<TOther>(TSelf from, out TOther to) where TOther : unmanaged, INumber<TOther>;
-	}
-	#endregion
-
-
 	#region native types
 	internal static class ComplexConverter
 	{
@@ -94,7 +60,7 @@ namespace Althea.NativeTypes
 			where TFrom : unmanaged, INumber<TFrom> where TTFrom : unmanaged, INumber<TTFrom>
 			where TTo : unmanaged, INumber<TTo> where TTTo : unmanaged, INumber<TTTo>
 		{
-			TTTo real = TTTo.CreateSaturating(*(TTFrom*)&v), imag = TTTo.CreateSaturating(*(1 + (TTFrom*)&v));
+			TTTo real = INumberBase<TTTo>.CreateSaturating(*(TTFrom*)&v), imag = INumberBase<TTTo>.CreateSaturating(*(1 + (TTFrom*)&v));
 			TTo result = default;
 			*(TTTo*)&result = real; *(1 + (TTTo*)&result) = imag;
 			return result;
@@ -103,7 +69,7 @@ namespace Althea.NativeTypes
 			where TFrom : unmanaged, INumber<TFrom> where TTFrom : unmanaged, INumber<TTFrom>
 			where TTo : unmanaged, INumber<TTo> where TTTo : unmanaged, INumber<TTTo>
 		{
-			TTTo real = TTTo.CreateTruncating(*(TTFrom*)&v), imag = TTTo.CreateTruncating(*(1 + (TTFrom*)&v));
+			TTTo real = INumberBase<TTTo>.CreateSaturating(*(TTFrom*)&v), imag = INumberBase<TTTo>.CreateSaturating(*(1 + (TTFrom*)&v));
 			TTo result = default;
 			*(TTTo*)&result = real; *(1 + (TTTo*)&result) = imag;
 			return result;
@@ -159,7 +125,7 @@ namespace Althea.NativeTypes
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryConvert<T1, T2>(T1 x, out T2 y) where T1 : INumber<T1> where T2 : INumber<T2>
 		{
-			if (T2.TryCreate(x, out y))
+			if (INumber<T2>.CreateSaturating(x, out y))
 				return true;
 			var createT2 = NumberType<T2>.GetTryCreateOther<T1>();
 			if (createT2 is null)
@@ -235,7 +201,7 @@ namespace Althea.NativeTypes
 		}
 
 		/// <summary>
-		/// Get the <see cref="NativeTypes.DataType"/> of <typeparamref name="T"/>.
+		/// Get the <see cref="Numerics.DataType"/> of <typeparamref name="T"/>.
 		/// </summary>
 		/// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not a supported data type</exception>
 		public static DataType DataType => DataTypeExtension.ToDataType<T>();
@@ -289,18 +255,6 @@ namespace Althea.NativeTypes
 				IsComplex = (bool)typeof(T).GetProperty(nameof(ICustomNumberType<Complex<float>>.IsComplex), ANY_STATIC)!.GetValue(null);
 #pragma warning restore CS8605
 			}
-		}
-
-		/// <summary>
-		/// Check whether the given <paramref name="value"/> contains only real value or not.
-		/// </summary>
-		/// <param name="value">The given value of type <typeparamref name="T"/> to check</param>
-		public static bool IsRealValue(T value)
-		{
-			if (!IsComplex)
-				return true;
-			T abs = T.Abs(value * T.Sign(value));
-			return abs == value || abs == -value;
 		}
 
 		/// <summary>

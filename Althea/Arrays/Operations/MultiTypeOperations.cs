@@ -683,7 +683,7 @@ namespace Althea.Array
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixLinearSolve<T, TMat1, TMat2, TMat3>
-		where T : unmanaged, IFloatingPoint<T>
+		where T : unmanaged, IFloatingPointIeee754<T>
 		where TMat1 : class, IMatrixMetric
 		where TMat2 : class, IMatrixMetric
 		where TMat3 : class, IMatrixMetric
@@ -718,7 +718,7 @@ namespace Althea.Array
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixLeastSolve<T, TMat1, TMat2, TMat3>
-		where T : unmanaged, IFloatingPoint<T>
+		where T : unmanaged, IFloatingPointIeee754<T>
 		where TMat1 : class, IMatrixMetric
 		where TMat2 : class, IMatrixMetric
 		where TMat3 : class, IMatrixMetric
@@ -753,7 +753,7 @@ namespace Althea.Array
 	/// <typeparam name="TMat2">The second matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	public interface IMatrixQRSolve<T, TMat1, TMat2, TMat3>
-		where T : unmanaged, IFloatingPoint<T>
+		where T : unmanaged, IFloatingPointIeee754<T>
 		where TMat1 : class, IMatrixMetric
 		where TMat2 : class, IMatrixMetric
 		where TMat3 : class, IMatrixMetric
@@ -808,7 +808,7 @@ namespace Althea.Array
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IMatrixEigenSolve<T, TMat1, TMat2, TMat3, TVec>
-		where T : unmanaged, IFloatingPoint<T>
+		where T : unmanaged, IFloatingPointIeee754<T>
 		where TMat1 : class, IMatrixMetric
 		where TMat2 : class, IMatrixMetric
 		where TMat3 : class, IMatrixMetric
@@ -854,7 +854,7 @@ namespace Althea.Array
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IMatrixSchurDecompose<T, TMat1, TMat2, TMat3, TVec>
-		where T : unmanaged, IFloatingPoint<T>
+		where T : unmanaged, IFloatingPointIeee754<T>
 		where TMat1 : class, IMatrixMetric
 		where TMat2 : class, IMatrixMetric
 		where TMat3 : class, IMatrixMetric
@@ -896,7 +896,7 @@ namespace Althea.Array
 	/// <typeparam name="TMat3">The third matrix concrete type that implements <see cref="IMatrixMetric"/></typeparam>
 	/// <typeparam name="TVec">The vector concrete type that implements <see cref="IVectorMetric"/></typeparam>
 	public interface IMatrixSVD<T, TMat1, TMat2, TMat3, TVec>
-		where T : unmanaged, IFloatingPoint<T>
+		where T : unmanaged, IFloatingPointIeee754<T>
 		where TMat1 : class, IMatrixMetric
 		where TMat2 : class, IMatrixMetric
 		where TMat3 : class, IMatrixMetric

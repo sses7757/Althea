@@ -3,7 +3,7 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Resources;
 using Althea.SourceGenerator;
 using Althea.Storage;

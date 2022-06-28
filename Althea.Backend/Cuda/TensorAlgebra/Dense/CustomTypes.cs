@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 using Althea.Linq;
 using Althea.Helpers;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;
 using Althea.Backend.Cuda.TensorAlgebra.Dense;

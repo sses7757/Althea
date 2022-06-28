@@ -1,6 +1,6 @@
 ﻿using Althea.Array;
 using Althea.Helpers;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.SourceGenerator;
 using Althea.Storage;
 
@@ -25,7 +25,7 @@ namespace Althea.Transformer
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentException">If <paramref name="output"/>'s rank is different from <paramref name="input"/>'s rank</exception>
 		[AbstractApiMethod]
-		public abstract bool FourierTransform<T, TS1, TS2>(bool forward, DenseArrayWrapper<T, TS1> input, DenseArrayWrapper<T, TS2> output) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool FourierTransform<T, TS1, TS2>(bool forward, DenseArrayWrapper<T, TS1> input, DenseArrayWrapper<T, TS2> output) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the Fourier transform (from real type to complex type) to the given <paramref name="input"/> array and write the result to the given <paramref name="output"/> array.
@@ -39,7 +39,7 @@ namespace Althea.Transformer
 		/// <exception cref="ArgumentException">If <paramref name="output"/>'s rank is different from <paramref name="input"/>'s rank</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is a complex type</exception>
 		[AbstractApiMethod]
-		public abstract bool FourierTransform<T, TS1, TS2>(DenseArrayWrapper<T, TS1> input, DenseArrayWrapper<Complex<T>, TS2> output) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<Complex<T>, TS2>;
+		public abstract bool FourierTransform<T, TS1, TS2>(DenseArrayWrapper<T, TS1> input, DenseArrayWrapper<Complex<T>, TS2> output) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<Complex<T>, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform the inverse Fourier transform (from complex type to real type) to the given <paramref name="input"/> array and write the result to the given <paramref name="output"/> array.
@@ -53,6 +53,6 @@ namespace Althea.Transformer
 		/// <exception cref="ArgumentException">If <paramref name="output"/>'s rank is different from <paramref name="input"/>'s rank</exception>
 		/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is a complex type</exception>
 		[AbstractApiMethod]
-		public abstract bool FourierTransform<T, TS1, TS2>(DenseArrayWrapper<Complex<T>, TS1> input, DenseArrayWrapper<T, TS2> output) where T : unmanaged, IFloatingPoint<T> where TS1 : class, IStorage<Complex<T>, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool FourierTransform<T, TS1, TS2>(DenseArrayWrapper<Complex<T>, TS1> input, DenseArrayWrapper<T, TS2> output) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<Complex<T>, TS1> where TS2 : class, IStorage<T, TS2>;
 	}
 }

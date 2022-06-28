@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using Althea.Array;
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra

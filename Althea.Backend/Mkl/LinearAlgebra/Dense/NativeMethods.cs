@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 
 using Althea.LinearAlgebra;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.SourceGenerator;
 
 

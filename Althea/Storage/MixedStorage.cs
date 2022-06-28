@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Resources;
 
 using Mem = Althea.Storage.ApiSelector;
@@ -81,7 +81,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2> Empty => new ReferenceMixedStorage<T, TP1, TP2>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 
@@ -548,7 +548,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 
@@ -1056,7 +1056,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 
@@ -1605,7 +1605,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 
@@ -2195,7 +2195,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 
@@ -2826,7 +2826,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 
@@ -3498,7 +3498,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 
@@ -4211,7 +4211,7 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="NativeTypes.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
 		public static DataType DataType => Unmanaged<T>.DataType;
 

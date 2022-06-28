@@ -6,7 +6,7 @@ using System.Text.Json;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Storage;
 using Althea.TensorAlgebra;
 

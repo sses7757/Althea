@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 #pragma warning disable IDE1006

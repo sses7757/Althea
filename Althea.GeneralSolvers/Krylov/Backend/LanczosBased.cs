@@ -8,7 +8,7 @@ using Althea.Backend.CSharp.LinearAlgebra;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 
 
 // Ignore Spelling: \dfrac \cdot \alpha \mathbf \varepsilon \begin \ddots \cdots
@@ -17,7 +17,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 	internal static class LanczosBased
 	{
 		#region restart info
-		private ref struct RestartBasicInfo<T, TVec> where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private ref struct RestartBasicInfo<T, TVec> where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			internal TVec ResidualVec;
 
@@ -52,7 +52,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region initialize Lanczos
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, ref TVec q0, out TVec r, out T α0, out T β0) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, ref TVec q0, out TVec r, out T α0, out T β0) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			q0.Normalize();
 			//tex: $\vec r = A \vec q$
@@ -67,7 +67,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, T ψ, out TVec r, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, ref RestartBasicInfo<T, TVec> info) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, T ψ, out TVec r, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, ref RestartBasicInfo<T, TVec> info) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			T oneFourth = T.One / ((T.One + T.One) + (T.One + T.One));
 
@@ -114,7 +114,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region main loop of Lanczos
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> matrixFunction, TVec q, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs, ref TVec newq, bool dispose = true) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> matrixFunction, TVec q, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs, ref TVec newq, bool dispose = true) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			//tex: $\vec v=\vec q$
 			/*var v = q;*/
@@ -137,7 +137,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> MatMulVecFunc, SpanList<TVec> qs, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> MatMulVecFunc, SpanList<TVec> qs, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			TVec newq = TVec.Empty;
 			LanczosMainCalc(MatMulVecFunc, qs[^1], ref r, ref αs, ref βs, ref newq, dispose: false);
@@ -147,7 +147,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region tridiagonal solve Lanczos
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void LanczosTridiagSolve<T>(SpanList<T> αs, SpanList<T> βs, Span<T> eigval, SpanMatrix<T> eigvec, int firstNResidual = 0) where T : unmanaged, IFloatingPoint<T>
+		private static unsafe void LanczosTridiagSolve<T>(SpanList<T> αs, SpanList<T> βs, Span<T> eigval, SpanMatrix<T> eigvec, int firstNResidual = 0) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			// check NaN
 			if (αs.AsSpan().Any(static a => !T.IsFinite(a)) || βs.AsSpan().Any(static b => !T.IsFinite(b)))
@@ -186,7 +186,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		#endregion
 
 		#region orthogonality tracker
-		private readonly ref struct OrthogonalityTracker<T> where T : unmanaged, IFloatingPoint<T>
+		private readonly ref struct OrthogonalityTracker<T> where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			private static readonly T TWO = T.One + T.One;
 			private static readonly T FIVE = T.One + T.One + T.One + T.One + T.One;
@@ -344,7 +344,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		#endregion
 
 		#region convergence check
-		private static (bool converge, string message, string trace) LanczosConvergenceCheck<T>(ReadOnlySpan<T> eigval, SpanMatrix<T> eigvec, T beta, T tol, int nConverged, bool useGap) where T : unmanaged, IFloatingPoint<T>
+		private static (bool converge, string message, string trace) LanczosConvergenceCheck<T>(ReadOnlySpan<T> eigval, SpanMatrix<T> eigvec, T beta, T tol, int nConverged, bool useGap) where T : unmanaged, IFloatingPointIeee754<T>
 		{
 			int iter = eigval.Length - 1;
 			// get θ_0  S_j,0 for convergence check
@@ -375,7 +375,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		#endregion
 
 		#region add unconverged vectors
-		private static void AddUnconvergedVectors<T, TVec>(ref RestartBasicInfo<T, TVec> info, ReadOnlySpan<TVec> Q, ReadOnlySpan<int> preserve, Span<T> eigvals, SpanMatrix<T> eigvecs, TVec r, T rNorm) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static void AddUnconvergedVectors<T, TVec>(ref RestartBasicInfo<T, TVec> info, ReadOnlySpan<TVec> Q, ReadOnlySpan<int> preserve, Span<T> eigvals, SpanMatrix<T> eigvecs, TVec r, T rNorm) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			Span<T> lastRow = stackalloc T[eigvecs.Cols];
 			//tex:$\vec{r}$ so that $A\vec{y}_i - \vartheta_i\vec{y}_i = \sigma_i\vec{r}$
@@ -396,7 +396,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 
 		#region naive Lanczos
-		internal static (double val, TVec vec) NaiveLanczos<T, TVec>(Func<TVec, TVec> matrixFunction!!, TVec initial!!, int maxIter, bool checkFirst, TimeSpan interval) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static (double val, TVec vec) NaiveLanczos<T, TVec>(Func<TVec, TVec> matrixFunction!!, TVec initial!!, int maxIter, bool checkFirst, TimeSpan interval) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 
 			#region basic check
@@ -479,7 +479,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 
 		#region restart lanczos
-		internal static int? RestartLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial!!, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<TVec> outEigvecs) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static int? RestartLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial!!, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<TVec> outEigvecs) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 
 			#region basic
@@ -613,7 +613,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		}
 
 
-		private static bool RestartLanczosInner<T, TVec>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, bool? robustOrth, bool useGap, ref RestartBasicInfo<T, TVec> restartInfo, Span<T> eigvals, SpanMatrix<T> eigvecs, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, out TVec r) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static bool RestartLanczosInner<T, TVec>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, bool? robustOrth, bool useGap, ref RestartBasicInfo<T, TVec> restartInfo, Span<T> eigvals, SpanMatrix<T> eigvecs, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, out TVec r) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region constants
 			double _machinePrecision = NumberType<T>.MachinePrecision,
@@ -735,7 +735,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 		#region linear solve helpers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static TVec? CheckLinearSolve<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial!!, TVec rightSide!!, ref int maxIter, double tolerance, bool checkFirst, out T normB, out T realTolerance) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static TVec? CheckLinearSolve<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial!!, TVec rightSide!!, ref int maxIter, double tolerance, bool checkFirst, out T normB, out T realTolerance) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
 			if (tolerance <= 0)
@@ -769,7 +769,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static (double relativeError, TVec? solve) CheckLinearSolveInitial<T, TVec>(Func<TVec, TVec> matrix, TVec initial, TVec b, T normB, T realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out T minResidual) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		private static (double relativeError, TVec? solve) CheckLinearSolveInitial<T, TVec>(Func<TVec, TVec> matrix, TVec initial, TVec b, T normB, T realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out T minResidual) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region initial vector check
 			x = initial;
@@ -803,7 +803,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 
 		#region preconditioned conjugate gradient
-		internal static (TVec Solve, double RelativeError) ConjugateGradient<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static (TVec Solve, double RelativeError) ConjugateGradient<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
 			var simpleSolution = CheckLinearSolve<T, TVec>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out T normB, out T realTolerance);
@@ -969,7 +969,7 @@ namespace Althea.GeneralSolvers.Krylov.Backend
 
 
 		#region preconditioned minimal residual
-		internal static (TVec Solve, double RelativeError) MinimalResidual<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IFloatingPoint<T> where TVec : class, IKrylovVector<T, TVec>
+		internal static (TVec Solve, double RelativeError) MinimalResidual<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IFloatingPointIeee754<T> where TVec : class, IKrylovVector<T, TVec>
 		{
 			#region basic
 			var simpleSolution = CheckLinearSolve<T, TVec>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out T normB, out T realTolerance);

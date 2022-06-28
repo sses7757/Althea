@@ -3,7 +3,7 @@
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Storage;
 
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
@@ -466,7 +466,7 @@ namespace Althea.Array
 		/// <exception cref="InvalidOperationException">If this is a Hermitian matrix and <paramref name="value"/> is not a real number</exception>
 		public void FillWith(T value)
 		{
-			if (!this.herm || NumberType<T>.IsRealValue(value))
+			if (!this.herm || !T.IsComplexNumber(value))
 				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 			else
 				throw new InvalidOperationException();
@@ -475,7 +475,7 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void AddScalar(T value)
 		{
-			if (!this.herm || NumberType<T>.IsRealValue(value))
+			if (!this.herm || !T.IsComplexNumber(value))
 				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 			throw new InvalidOperationException();
 		}
@@ -483,7 +483,7 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void Scale(T value)
 		{
-			if (!this.herm || NumberType<T>.IsRealValue(value))
+			if (!this.herm || !T.IsComplexNumber(value))
 				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 			else
 				throw new InvalidOperationException();

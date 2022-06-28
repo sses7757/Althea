@@ -4,7 +4,7 @@ using System.Threading;
 using Althea.Backend.Mkl.LinearAlgebra.Dense;
 using Althea.Storage;
 using Althea.Linq;
-using Althea.NativeTypes;
+using Althea.Numerics;
 using Althea.Random;
 
 
