@@ -234,7 +234,7 @@ namespace Althea.Numerics
 				{
 					byte or ushort or uint or ulong or nuint => DataTypeClassification.UnsignedInteger,
 					sbyte or short or int or long or nint => DataTypeClassification.SignedInteger,
-					Half or float or double => DataTypeClassification.FloatPoint_IEEE754,
+					Half or float or double => DataTypeClassification.BinaryFloat_IEEE754,
 					_ => 0,
 				};
 				MachinePrecision = default(T) switch

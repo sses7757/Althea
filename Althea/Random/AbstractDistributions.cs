@@ -44,7 +44,7 @@ namespace Althea.Random
 	public interface IFloatingPointDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, INumber<T> where TSelf : struct, IFloatingPointDistribution<T, TSelf>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.FloatPoint_IEEE754, Unmanaged<T>.DataType);
+		bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.BinaryFloat_IEEE754, Unmanaged<T>.DataType);
 	}
 
 	/// <summary>

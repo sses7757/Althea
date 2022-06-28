@@ -3,6 +3,7 @@ global using System.Linq;
 global using System.Collections.Generic;
 
 global using Althea.Storage;
+global using Althea.Numerics;
 
 using System.Diagnostics;
 

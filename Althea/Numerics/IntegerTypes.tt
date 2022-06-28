@@ -1,4 +1,4 @@
-﻿<#@ template debug="true" hostspecific="false" language="C#" #>
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -74,7 +74,7 @@ namespace Althea.Numerics;
 /// <summary>
 /// The custom replacement of <see cref="<#=orgs[i]#>"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
+public readonly partial struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
 {
 	private readonly <#=orgs[i]#> _value;
 
@@ -284,11 +284,21 @@ public readonly struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
 	public static <#=type.Replace("TSelf", reps[i])#> <#=name#><#=param.Contains("TOther") ? "<TOther>" : ""#>(<#=param.Replace("TSelf", reps[i])#>)<#=param.Contains("TOther") ? " where TOther : INumber<TOther>" : ""#> => <#=orgs[i]#>.<#=name#>(<#=invoke#>);
 
 <# } #>
-<# foreach (var (name, type, param, invoke) in operators) { #>
+<# foreach (var (name, type, param, invoke) in operators)
+{
+	if (orgs[i] == "ulong" && name == "-" && !invoke.Contains(", "))
+	{
+#>
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UInt64 operator -(UInt64 left) => (ulong)(-(long)left._value);
+<# } else { #>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static <#=type.Replace("TSelf", reps[i])#> operator <#=name#>(<#=param.Replace("TSelf", reps[i])#>) => <#=type == "TSelf" ? $"({orgs[i]})" : ""#>(<#=invoke.Contains(", ") ? invoke.Replace(", ", $"._value {name} ") + (invoke.Contains("shiftAmount") ? "" : "._value") : name + invoke + "._value"#>);
-<# } #>
+
+<#	}
+} #>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -336,11 +346,20 @@ public readonly struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
 	static <#=reps[i]#> IShiftOperators<<#=reps[i]#>, <#=reps[i]#>>.op_UnsignedRightShift(<#=reps[i]#> value, int shiftAmount) => (<#=orgs[i]#>)(value._value >> shiftAmount);
 <# } #>
 
-<# foreach (var (name, op, type, param, invoke) in checkedOperators) { #>
+<# foreach (var (name, op, type, param, invoke) in checkedOperators)
+{
+	if (orgs[i] == "ulong" && name.Contains("CheckedUnaryNegation"))
+	{
+#>
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static UInt64 <#=name.Replace("TSelf", reps[i])#>(UInt64 left) => checked((ulong)(-(long)left._value));
+<# } else { #>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static <#=type.Replace("TSelf", reps[i])#> <#=name.Replace("TSelf", reps[i])#>(<#=param.Replace("TSelf", reps[i])#>) => checked(<#=type == "TSelf" ? $"({orgs[i]})" : ""#>(<#=invoke.Contains(", ") ? invoke.Replace(", ", $"._value {op} ") + (invoke.Contains("shiftAmount") ? "" : "._value") : op + invoke + "._value"#>));
 
-<# } #>
+<#	}
+} #>
 }
 <# } #>

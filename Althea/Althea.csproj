@@ -18,6 +18,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Numerics\Conversions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Conversions.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
   </ItemGroup>
 
@@ -60,6 +68,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Numerics\Conversions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Conversions.tt</DependentUpon>
     </Compile>
     <Compile Update="Numerics\IntegerTypes.cs">
       <DesignTime>True</DesignTime>
@@ -196,6 +209,10 @@
     <None Update="Helpers\SwapSort.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SwapSort.cs</LastGenOutput>
+    </None>
+    <None Update="Numerics\Conversions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Conversions.cs</LastGenOutput>
     </None>
     <None Update="Numerics\RealTypes.tt">
       <LastGenOutput>RealTypes.cs</LastGenOutput>

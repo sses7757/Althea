@@ -10,9 +10,9 @@ namespace Althea.Numerics;
 
 
 /// <summary>
-/// The custom replacement of <see cref="double"/> that implements <see cref="IFloatingPoint{TSelf}"/>.
+/// The custom replacement of <see cref="double"/> that implements <see cref="IBinaryFloat{TSelf}"/>.
 /// </summary>
-public readonly struct Double : IFloatingPoint<Double>
+public readonly partial struct Double : IBinaryFloat<Double>
 {
 	private readonly double _value;
 
@@ -467,9 +467,9 @@ public readonly struct Double : IFloatingPoint<Double>
 
 
 /// <summary>
-/// The custom replacement of <see cref="float"/> that implements <see cref="IFloatingPoint{TSelf}"/>.
+/// The custom replacement of <see cref="float"/> that implements <see cref="IBinaryFloat{TSelf}"/>.
 /// </summary>
-public readonly struct Single : IFloatingPoint<Single>
+public readonly partial struct Single : IBinaryFloat<Single>
 {
 	private readonly float _value;
 
@@ -924,9 +924,9 @@ public readonly struct Single : IFloatingPoint<Single>
 
 
 /// <summary>
-/// The custom replacement of <see cref="System.Half"/> that implements <see cref="IFloatingPoint{TSelf}"/>.
+/// The custom replacement of <see cref="System.Half"/> that implements <see cref="IBinaryFloat{TSelf}"/>.
 /// </summary>
-public readonly struct Half : IFloatingPoint<Half>
+public readonly partial struct Half : IBinaryFloat<Half>
 {
 	private readonly System.Half _value;
 

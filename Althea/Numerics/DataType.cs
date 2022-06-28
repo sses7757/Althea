@@ -39,9 +39,9 @@ namespace Althea.Numerics
 	public enum DataTypeClassification : byte
 	{
 		/// <summary>
-		/// The floating point numbers defined in the "IEEE Standard 754 for Binary Floating-Point Arithmetic"
+		/// The binary floating point numbers defined in the "IEEE Standard 754 for Binary Floating-Point Arithmetic"
 		/// </summary>
-		FloatPoint_IEEE754 = 1 << 0,
+		BinaryFloat_IEEE754 = 1 << 0,
 		/// <summary>
 		/// The signed integer numbers
 		/// </summary>
@@ -50,6 +50,11 @@ namespace Althea.Numerics
 		/// The unsigned integer numbers
 		/// </summary>
 		UnsignedInteger = 1 << 2,
+		/// <summary>
+		/// The decimal floating point numbers defined in the "IEEE Standard 754 for Decimal Floating-Point Arithmetic"
+		/// </summary>
+		/// <remarks>NOT supported by most applications</remarks>
+		DecimalFloat_IEEE754 = 1 << 3,
 	}
 
 	/// <summary>
@@ -87,30 +92,30 @@ namespace Althea.Numerics
 	public enum DataType : int
 	{
 		/// <summary>
-		/// <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
+		/// <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		RealHalf = DataTypeTuple.Real + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
+		RealHalf = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
-		/// <see cref="float"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte4"/>
+		/// <see cref="float"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		RealSingle = DataTypeTuple.Real + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
+		RealSingle = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
 		/// <summary>
-		/// <see cref="double"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte8"/>
+		/// <see cref="double"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		RealDouble = DataTypeTuple.Real + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
+		RealDouble = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
 
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
+		/// <see cref="Complex{T}"/> of <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		ComplexHalf = DataTypeTuple.Complex + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
+		ComplexHalf = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="float"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte4"/>
+		/// <see cref="Complex{T}"/> of <see cref="float"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		ComplexSingle = DataTypeTuple.Complex + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
+		ComplexSingle = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="double"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.FloatPoint_IEEE754"/> + <see cref="DataTypeSize.Byte8"/>
+		/// <see cref="Complex{T}"/> of <see cref="double"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		ComplexDouble = DataTypeTuple.Complex + (DataTypeClassification.FloatPoint_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
+		ComplexDouble = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
 
 		/// <summary>
 		/// <see cref="sbyte"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte1"/>

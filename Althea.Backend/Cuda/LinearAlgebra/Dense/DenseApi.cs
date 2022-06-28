@@ -458,7 +458,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			index = -1;
 			if (!CheckPointer(x, out var px, out var n, strideX))
 				return false;
-			if (!Const<T>.IsPreDefined || (Const<T>.DataTypeClass == DataTypeClassification.FloatPoint_IEEE754 && Const<T>.DataType.Bytes() < sizeof(float)))
+			if (!Const<T>.IsPreDefined || (Const<T>.DataTypeClass == DataTypeClassification.BinaryFloat_IEEE754 && Const<T>.DataType.Bytes() < sizeof(float)))
 				return false; // half float is not supported
 			delegate*<IntPtr, int, IntPtr, int, int*, CudaBlasStatus> func;
 			if (this.Cuda110OrAbove)

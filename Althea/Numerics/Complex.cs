@@ -179,7 +179,7 @@ namespace Althea.Numerics
 			if (typeof(T).IsGenericType)
 				throw new InvalidOperationException(Resources.ArithmeticError.DataTypeNotAllow);
 			// native type check
-			if (NumberType<T>.Classification < DataTypeClassification.FloatPoint_IEEE754 ||
+			if (NumberType<T>.Classification < DataTypeClassification.BinaryFloat_IEEE754 ||
 				NumberType<T>.Classification == DataTypeClassification.SignedInteger ||
 				NumberType<T>.Classification == DataTypeClassification.UnsignedInteger)
 				throw new InvalidOperationException(Resources.ArithmeticError.DataTypeNotAllow);

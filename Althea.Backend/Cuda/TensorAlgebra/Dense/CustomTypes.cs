@@ -43,7 +43,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	public enum ComputeType
 	{
 		/// <summary>
-		/// <see cref="DataTypeClassification.FloatPoint_IEEE754"/> binary-16 floating point number (a.k.a. <see cref="System.Half"/>)
+		/// <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> binary-16 floating point number (a.k.a. <see cref="System.Half"/>)
 		/// </summary>
 		Half = 1 << 0,
 		/// <summary>
@@ -55,11 +55,11 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		/// </summary>
 		TensorFloat32 = 1 << 3,
 		/// <summary>
-		/// <see cref="DataTypeClassification.FloatPoint_IEEE754"/> binary-32 floating point number (a.k.a. <see cref="float"/>) 
+		/// <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> binary-32 floating point number (a.k.a. <see cref="float"/>) 
 		/// </summary>
 		Single = 1 << 2,
 		/// <summary>
-		/// <see cref="DataTypeClassification.FloatPoint_IEEE754"/> binary-64 floating point number (a.k.a. <see cref="Double"/>) 
+		/// <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> binary-64 floating point number (a.k.a. <see cref="Double"/>) 
 		/// </summary>
 		Double = 1 << 4,
 		/// <summary>

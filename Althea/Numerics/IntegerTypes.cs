@@ -12,7 +12,7 @@ namespace Althea.Numerics;
 /// <summary>
 /// The custom replacement of <see cref="sbyte"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct Int8 : IBinaryInteger<Int8>
+public readonly partial struct Int8 : IBinaryInteger<Int8>
 {
 	private readonly sbyte _value;
 
@@ -241,60 +241,79 @@ public readonly struct Int8 : IBinaryInteger<Int8>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(Int8 left, Int8 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(Int8 left, Int8 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(Int8 left, Int8 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(Int8 left, Int8 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(Int8 left, Int8 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(Int8 left, Int8 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator +(Int8 left, Int8 right) => (sbyte)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator -(Int8 left, Int8 right) => (sbyte)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator *(Int8 left, Int8 right) => (sbyte)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator /(Int8 left, Int8 right) => (sbyte)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator -(Int8 value) => (sbyte)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator +(Int8 value) => (sbyte)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator &(Int8 left, Int8 right) => (sbyte)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator |(Int8 left, Int8 right) => (sbyte)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator ^(Int8 left, Int8 right) => (sbyte)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator ~(Int8 value) => (sbyte)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator %(Int8 left, Int8 right) => (sbyte)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator <<(Int8 value, int shiftAmount) => (sbyte)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int8 operator >>(Int8 value, int shiftAmount) => (sbyte)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -362,7 +381,7 @@ public readonly struct Int8 : IBinaryInteger<Int8>
 /// <summary>
 /// The custom replacement of <see cref="short"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct Int16 : IBinaryInteger<Int16>
+public readonly partial struct Int16 : IBinaryInteger<Int16>
 {
 	private readonly short _value;
 
@@ -589,60 +608,79 @@ public readonly struct Int16 : IBinaryInteger<Int16>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(Int16 left, Int16 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(Int16 left, Int16 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(Int16 left, Int16 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(Int16 left, Int16 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(Int16 left, Int16 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(Int16 left, Int16 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator +(Int16 left, Int16 right) => (short)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator -(Int16 left, Int16 right) => (short)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator *(Int16 left, Int16 right) => (short)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator /(Int16 left, Int16 right) => (short)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator -(Int16 value) => (short)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator +(Int16 value) => (short)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator &(Int16 left, Int16 right) => (short)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator |(Int16 left, Int16 right) => (short)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator ^(Int16 left, Int16 right) => (short)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator ~(Int16 value) => (short)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator %(Int16 left, Int16 right) => (short)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator <<(Int16 value, int shiftAmount) => (short)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int16 operator >>(Int16 value, int shiftAmount) => (short)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -710,7 +748,7 @@ public readonly struct Int16 : IBinaryInteger<Int16>
 /// <summary>
 /// The custom replacement of <see cref="int"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct Int32 : IBinaryInteger<Int32>
+public readonly partial struct Int32 : IBinaryInteger<Int32>
 {
 	private readonly int _value;
 
@@ -937,60 +975,79 @@ public readonly struct Int32 : IBinaryInteger<Int32>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(Int32 left, Int32 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(Int32 left, Int32 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(Int32 left, Int32 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(Int32 left, Int32 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(Int32 left, Int32 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(Int32 left, Int32 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator +(Int32 left, Int32 right) => (int)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator -(Int32 left, Int32 right) => (int)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator *(Int32 left, Int32 right) => (int)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator /(Int32 left, Int32 right) => (int)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator -(Int32 value) => (int)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator +(Int32 value) => (int)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator &(Int32 left, Int32 right) => (int)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator |(Int32 left, Int32 right) => (int)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator ^(Int32 left, Int32 right) => (int)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator ~(Int32 value) => (int)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator %(Int32 left, Int32 right) => (int)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator <<(Int32 value, int shiftAmount) => (int)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int32 operator >>(Int32 value, int shiftAmount) => (int)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1058,7 +1115,7 @@ public readonly struct Int32 : IBinaryInteger<Int32>
 /// <summary>
 /// The custom replacement of <see cref="long"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct Int64 : IBinaryInteger<Int64>
+public readonly partial struct Int64 : IBinaryInteger<Int64>
 {
 	private readonly long _value;
 
@@ -1285,60 +1342,79 @@ public readonly struct Int64 : IBinaryInteger<Int64>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(Int64 left, Int64 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(Int64 left, Int64 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(Int64 left, Int64 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(Int64 left, Int64 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(Int64 left, Int64 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(Int64 left, Int64 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator +(Int64 left, Int64 right) => (long)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator -(Int64 left, Int64 right) => (long)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator *(Int64 left, Int64 right) => (long)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator /(Int64 left, Int64 right) => (long)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator -(Int64 value) => (long)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator +(Int64 value) => (long)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator &(Int64 left, Int64 right) => (long)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator |(Int64 left, Int64 right) => (long)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator ^(Int64 left, Int64 right) => (long)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator ~(Int64 value) => (long)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator %(Int64 left, Int64 right) => (long)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator <<(Int64 value, int shiftAmount) => (long)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int64 operator >>(Int64 value, int shiftAmount) => (long)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1406,7 +1482,7 @@ public readonly struct Int64 : IBinaryInteger<Int64>
 /// <summary>
 /// The custom replacement of <see cref="System.Int128"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct Int128 : IBinaryInteger<Int128>
+public readonly partial struct Int128 : IBinaryInteger<Int128>
 {
 	private readonly System.Int128 _value;
 
@@ -1633,60 +1709,79 @@ public readonly struct Int128 : IBinaryInteger<Int128>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(Int128 left, Int128 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(Int128 left, Int128 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(Int128 left, Int128 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(Int128 left, Int128 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(Int128 left, Int128 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(Int128 left, Int128 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator +(Int128 left, Int128 right) => (System.Int128)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator -(Int128 left, Int128 right) => (System.Int128)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator *(Int128 left, Int128 right) => (System.Int128)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator /(Int128 left, Int128 right) => (System.Int128)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator -(Int128 value) => (System.Int128)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator +(Int128 value) => (System.Int128)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator &(Int128 left, Int128 right) => (System.Int128)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator |(Int128 left, Int128 right) => (System.Int128)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator ^(Int128 left, Int128 right) => (System.Int128)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator ~(Int128 value) => (System.Int128)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator %(Int128 left, Int128 right) => (System.Int128)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator <<(Int128 value, int shiftAmount) => (System.Int128)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Int128 operator >>(Int128 value, int shiftAmount) => (System.Int128)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1754,7 +1849,7 @@ public readonly struct Int128 : IBinaryInteger<Int128>
 /// <summary>
 /// The custom replacement of <see cref="byte"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct UInt8 : IBinaryInteger<UInt8>
+public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 {
 	private readonly byte _value;
 
@@ -1981,60 +2076,79 @@ public readonly struct UInt8 : IBinaryInteger<UInt8>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(UInt8 left, UInt8 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(UInt8 left, UInt8 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(UInt8 left, UInt8 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(UInt8 left, UInt8 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(UInt8 left, UInt8 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(UInt8 left, UInt8 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator +(UInt8 left, UInt8 right) => (byte)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator -(UInt8 left, UInt8 right) => (byte)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator *(UInt8 left, UInt8 right) => (byte)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator /(UInt8 left, UInt8 right) => (byte)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator -(UInt8 value) => (byte)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator +(UInt8 value) => (byte)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator &(UInt8 left, UInt8 right) => (byte)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator |(UInt8 left, UInt8 right) => (byte)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator ^(UInt8 left, UInt8 right) => (byte)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator ~(UInt8 value) => (byte)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator %(UInt8 left, UInt8 right) => (byte)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator <<(UInt8 value, int shiftAmount) => (byte)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt8 operator >>(UInt8 value, int shiftAmount) => (byte)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2102,7 +2216,7 @@ public readonly struct UInt8 : IBinaryInteger<UInt8>
 /// <summary>
 /// The custom replacement of <see cref="ushort"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct UInt16 : IBinaryInteger<UInt16>
+public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 {
 	private readonly ushort _value;
 
@@ -2331,60 +2445,79 @@ public readonly struct UInt16 : IBinaryInteger<UInt16>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(UInt16 left, UInt16 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(UInt16 left, UInt16 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(UInt16 left, UInt16 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(UInt16 left, UInt16 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(UInt16 left, UInt16 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(UInt16 left, UInt16 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator +(UInt16 left, UInt16 right) => (ushort)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator -(UInt16 left, UInt16 right) => (ushort)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator *(UInt16 left, UInt16 right) => (ushort)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator /(UInt16 left, UInt16 right) => (ushort)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator -(UInt16 value) => (ushort)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator +(UInt16 value) => (ushort)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator &(UInt16 left, UInt16 right) => (ushort)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator |(UInt16 left, UInt16 right) => (ushort)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator ^(UInt16 left, UInt16 right) => (ushort)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator ~(UInt16 value) => (ushort)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator %(UInt16 left, UInt16 right) => (ushort)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator <<(UInt16 value, int shiftAmount) => (ushort)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt16 operator >>(UInt16 value, int shiftAmount) => (ushort)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2452,7 +2585,7 @@ public readonly struct UInt16 : IBinaryInteger<UInt16>
 /// <summary>
 /// The custom replacement of <see cref="uint"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct UInt32 : IBinaryInteger<UInt32>
+public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 {
 	private readonly uint _value;
 
@@ -2681,60 +2814,79 @@ public readonly struct UInt32 : IBinaryInteger<UInt32>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(UInt32 left, UInt32 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(UInt32 left, UInt32 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(UInt32 left, UInt32 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(UInt32 left, UInt32 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(UInt32 left, UInt32 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(UInt32 left, UInt32 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator +(UInt32 left, UInt32 right) => (uint)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator -(UInt32 left, UInt32 right) => (uint)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator *(UInt32 left, UInt32 right) => (uint)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator /(UInt32 left, UInt32 right) => (uint)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator -(UInt32 value) => (uint)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator +(UInt32 value) => (uint)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator &(UInt32 left, UInt32 right) => (uint)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator |(UInt32 left, UInt32 right) => (uint)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator ^(UInt32 left, UInt32 right) => (uint)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator ~(UInt32 value) => (uint)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator %(UInt32 left, UInt32 right) => (uint)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator <<(UInt32 value, int shiftAmount) => (uint)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt32 operator >>(UInt32 value, int shiftAmount) => (uint)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2802,7 +2954,7 @@ public readonly struct UInt32 : IBinaryInteger<UInt32>
 /// <summary>
 /// The custom replacement of <see cref="ulong"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct UInt64 : IBinaryInteger<UInt64>
+public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 {
 	private readonly ulong _value;
 
@@ -3031,60 +3183,78 @@ public readonly struct UInt64 : IBinaryInteger<UInt64>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(UInt64 left, UInt64 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(UInt64 left, UInt64 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(UInt64 left, UInt64 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(UInt64 left, UInt64 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(UInt64 left, UInt64 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(UInt64 left, UInt64 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator +(UInt64 left, UInt64 right) => (ulong)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator -(UInt64 left, UInt64 right) => (ulong)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator *(UInt64 left, UInt64 right) => (ulong)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator /(UInt64 left, UInt64 right) => (ulong)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator -(UInt64 value) => (ulong)(-value._value);
+	public static UInt64 operator -(UInt64 left) => (ulong)(-(long)left._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator +(UInt64 value) => (ulong)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator &(UInt64 left, UInt64 right) => (ulong)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator |(UInt64 left, UInt64 right) => (ulong)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator ^(UInt64 left, UInt64 right) => (ulong)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator ~(UInt64 value) => (ulong)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator %(UInt64 left, UInt64 right) => (ulong)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator <<(UInt64 value, int shiftAmount) => (ulong)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt64 operator >>(UInt64 value, int shiftAmount) => (ulong)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3144,15 +3314,14 @@ public readonly struct UInt64 : IBinaryInteger<UInt64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 IUnaryNegationOperators<UInt64, UInt64>.op_CheckedUnaryNegation(UInt64 value) => checked((ulong)(-value._value));
-
+	static UInt64 IUnaryNegationOperators<UInt64, UInt64>.op_CheckedUnaryNegation(UInt64 left) => checked((ulong)(-(long)left._value));
 }
 
 
 /// <summary>
 /// The custom replacement of <see cref="System.UInt128"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
 /// </summary>
-public readonly struct UInt128 : IBinaryInteger<UInt128>
+public readonly partial struct UInt128 : IBinaryInteger<UInt128>
 {
 	private readonly System.UInt128 _value;
 
@@ -3381,60 +3550,79 @@ public readonly struct UInt128 : IBinaryInteger<UInt128>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <(UInt128 left, UInt128 right) => (left._value < right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator <=(UInt128 left, UInt128 right) => (left._value <= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >(UInt128 left, UInt128 right) => (left._value > right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator >=(UInt128 left, UInt128 right) => (left._value >= right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator ==(UInt128 left, UInt128 right) => (left._value == right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool operator !=(UInt128 left, UInt128 right) => (left._value != right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator +(UInt128 left, UInt128 right) => (System.UInt128)(left._value + right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator -(UInt128 left, UInt128 right) => (System.UInt128)(left._value - right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator *(UInt128 left, UInt128 right) => (System.UInt128)(left._value * right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator /(UInt128 left, UInt128 right) => (System.UInt128)(left._value / right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator -(UInt128 value) => (System.UInt128)(-value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator +(UInt128 value) => (System.UInt128)(+value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator &(UInt128 left, UInt128 right) => (System.UInt128)(left._value & right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator |(UInt128 left, UInt128 right) => (System.UInt128)(left._value | right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator ^(UInt128 left, UInt128 right) => (System.UInt128)(left._value ^ right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator ~(UInt128 value) => (System.UInt128)(~value._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator %(UInt128 left, UInt128 right) => (System.UInt128)(left._value % right._value);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator <<(UInt128 value, int shiftAmount) => (System.UInt128)(value._value << shiftAmount);
+
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UInt128 operator >>(UInt128 value, int shiftAmount) => (System.UInt128)(value._value >> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -20,7 +20,7 @@ public interface INumber<TSelf> :
 	IUnaryNegationOperators<TSelf, TSelf>, IUnaryPlusOperators<TSelf, TSelf>,
 	IIncrementOperators<TSelf>, IDecrementOperators<TSelf>,
 	ISpanParsable<TSelf>, ISpanFormattable
-	where TSelf : INumber<TSelf>
+	where TSelf : unmanaged, INumber<TSelf>
 {
 	#region meta
 	/// <summary>
@@ -83,13 +83,13 @@ public interface INumber<TSelf> :
 	#endregion
 
 	#region conversion
-	abstract static bool TryConvertFromChecked<TOther>(TOther value, out TSelf result) where TOther : INumber<TOther>;
+	abstract static bool TryConvertFromChecked<TOther>(TOther value, out TSelf result) where TOther : unmanaged, INumber<TOther>;
 
-	abstract static bool TryConvertFrom<TOther>(TOther value, out TSelf result) where TOther : INumber<TOther>;
+	abstract static bool TryConvertFrom<TOther>(TOther value, out TSelf result) where TOther : unmanaged, INumber<TOther>;
 
-	abstract static bool TryConvertToChecked<TOther>(TSelf value, out TOther result) where TOther : INumber<TOther>;
+	abstract static bool TryConvertToChecked<TOther>(TSelf value, out TOther result) where TOther : unmanaged, INumber<TOther>;
 
-	abstract static bool TryConvertTo<TOther>(TSelf value, out TOther result) where TOther : INumber<TOther>;
+	abstract static bool TryConvertTo<TOther>(TSelf value, out TOther result) where TOther : unmanaged, INumber<TOther>;
 	#endregion
 
 	#region parse
@@ -104,17 +104,17 @@ public interface INumber<TSelf> :
 }
 
 /// <summary>
-/// The base interface for all floating point numbers used by <see cref="Althea"/> including floating point complex numbers.
+/// The base interface for all binary floating point numbers used by <see cref="Althea"/> including binary floating point complex numbers.
 /// </summary>
 /// <remarks>
-/// The official <see cref="IFloatingPointIeee754{TSelf}"/> is not used since it is not suitable for complex numbers.
+/// The official <see cref="IBinaryFloatingPointIeee754{TSelf}"/> is not used since it is not suitable for complex numbers.
 /// </remarks>
-/// <typeparam name="TSelf">The actual type that implements this <see cref="IFloatingPoint{TSelf}"/></typeparam>
-public interface IFloatingPoint<TSelf> : INumber<TSelf>,
+/// <typeparam name="TSelf">The actual type that implements this <see cref="IBinaryFloat{TSelf}"/></typeparam>
+public interface IBinaryFloat<TSelf> : INumber<TSelf>,
 	IHyperbolicFunctions<TSelf>, ILogarithmicFunctions<TSelf>,
 	IPowerFunctions<TSelf>, IRootFunctions<TSelf>,
 	ITrigonometricFunctions<TSelf>, IExponentialFunctions<TSelf>
-	where TSelf : IFloatingPoint<TSelf>
+	where TSelf : unmanaged, IBinaryFloat<TSelf>
 {
 	#region constants
 	abstract static TSelf NegativeOne { get; }
@@ -170,8 +170,9 @@ public interface IFloatingPoint<TSelf> : INumber<TSelf>,
 /// <typeparam name="TSelf">The actual type that implements this <see cref="IBinaryInteger{TSelf}"/></typeparam>
 public interface IBinaryInteger<TSelf> : INumber<TSelf>,
 	IBitwiseOperators<TSelf, TSelf, TSelf>, IModulusOperators<TSelf, TSelf, TSelf>, IShiftOperators<TSelf, TSelf>
-	where TSelf : IBinaryInteger<TSelf>
+	where TSelf : unmanaged, IBinaryInteger<TSelf>
 {
+	#region math
 	abstract static bool IsPow2(TSelf value);
 
 	abstract static TSelf Log2(TSelf value);
@@ -187,4 +188,5 @@ public interface IBinaryInteger<TSelf> : INumber<TSelf>,
 	abstract static TSelf LeadingZeroCount(TSelf value);
 
 	abstract static TSelf TrailingZeroCount(TSelf value);
+	#endregion
 }
