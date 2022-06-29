@@ -1,7 +1,4 @@
-﻿using Althea.Numerics;
-
-
-namespace Althea.Random
+﻿namespace Althea.Random
 {
 	/// <summary>
 	/// The struct for a one-dimensional uniform distributions.

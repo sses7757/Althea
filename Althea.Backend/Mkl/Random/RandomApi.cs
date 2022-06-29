@@ -101,7 +101,7 @@ namespace Althea.Backend.Mkl.Random
 			type = distribution switch
 			{
 				UniformDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) || typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Uniform : INVALID,
-				RandomBitsDistribution<T> => Unmanaged<T>.Size == sizeof(int) || Unmanaged<T>.Size == sizeof(long) ? DistributionType.RandomBits : INVALID,
+				RandomBitsDistribution<T> => T.Size == sizeof(int) || T.Size == sizeof(long) ? DistributionType.RandomBits : INVALID,
 
 				BetaDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Beta : INVALID,
 				CauchyDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Cauchy : INVALID,

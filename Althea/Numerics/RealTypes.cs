@@ -66,6 +66,12 @@ public readonly partial struct Double : IBinaryFloat<Double>
 	public static Double MachinePrecision => 2.220446049250313E-16;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(double);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static Double One => 1.0;
 
 	/// <inheritdoc/>
@@ -117,6 +123,10 @@ public readonly partial struct Double : IBinaryFloat<Double>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Double Sign(Double value) => (double)double.Sign(value);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Double Conjugate(Double value) => value;
 
 	/// <inheritdoc/>
 	public static bool TryParse(string? s, IFormatProvider? provider, out Double result)
@@ -523,6 +533,12 @@ public readonly partial struct Single : IBinaryFloat<Single>
 	public static Single MachinePrecision => 1.1920928955078125E-07F;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(float);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static Single One => 1.0F;
 
 	/// <inheritdoc/>
@@ -574,6 +590,10 @@ public readonly partial struct Single : IBinaryFloat<Single>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Single Sign(Single value) => (float)float.Sign(value);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Single Conjugate(Single value) => value;
 
 	/// <inheritdoc/>
 	public static bool TryParse(string? s, IFormatProvider? provider, out Single result)
@@ -980,6 +1000,12 @@ public readonly partial struct Half : IBinaryFloat<Half>
 	public static Half MachinePrecision => (System.Half)0.0009765625F;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(System.Half);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static Half One => System.Half.One;
 
 	/// <inheritdoc/>
@@ -1031,6 +1057,10 @@ public readonly partial struct Half : IBinaryFloat<Half>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Half Sign(Half value) => (System.Half)System.Half.Sign(value);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Half Conjugate(Half value) => value;
 
 	/// <inheritdoc/>
 	public static bool TryParse(string? s, IFormatProvider? provider, out Half result)

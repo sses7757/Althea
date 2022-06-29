@@ -68,6 +68,12 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 	public static Int8 MachinePrecision => (sbyte)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(sbyte);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static Int8 One => (sbyte)1;
 
 	/// <inheritdoc/>
@@ -106,6 +112,10 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(Int8 value) => value._value == (sbyte)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Int8 Conjugate(Int8 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -435,6 +445,12 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 	public static Int16 MachinePrecision => (short)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(short);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static Int16 One => (short)1;
 
 	/// <inheritdoc/>
@@ -473,6 +489,10 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(Int16 value) => value._value == (short)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Int16 Conjugate(Int16 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -802,6 +822,12 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 	public static Int32 MachinePrecision => (int)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(int);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static Int32 One => (int)1;
 
 	/// <inheritdoc/>
@@ -840,6 +866,10 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(Int32 value) => value._value == (int)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Int32 Conjugate(Int32 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1169,6 +1199,12 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 	public static Int64 MachinePrecision => (long)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(long);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static Int64 One => (long)1;
 
 	/// <inheritdoc/>
@@ -1207,6 +1243,10 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(Int64 value) => value._value == (long)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Int64 Conjugate(Int64 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1536,6 +1576,12 @@ public readonly partial struct Int128 : IBinaryInteger<Int128>
 	public static Int128 MachinePrecision => (System.Int128)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(System.Int128);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static Int128 One => (System.Int128)1;
 
 	/// <inheritdoc/>
@@ -1574,6 +1620,10 @@ public readonly partial struct Int128 : IBinaryInteger<Int128>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(Int128 value) => value._value == (System.Int128)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Int128 Conjugate(Int128 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1903,6 +1953,12 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 	public static UInt8 MachinePrecision => (byte)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(byte);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static UInt8 One => (byte)1;
 
 	/// <inheritdoc/>
@@ -1941,6 +1997,10 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(UInt8 value) => value._value == (byte)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UInt8 Conjugate(UInt8 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2272,6 +2332,12 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 	public static UInt16 MachinePrecision => (ushort)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(ushort);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static UInt16 One => (ushort)1;
 
 	/// <inheritdoc/>
@@ -2310,6 +2376,10 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(UInt16 value) => value._value == (ushort)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UInt16 Conjugate(UInt16 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2641,6 +2711,12 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 	public static UInt32 MachinePrecision => (uint)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(uint);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static UInt32 One => (uint)1;
 
 	/// <inheritdoc/>
@@ -2679,6 +2755,10 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(UInt32 value) => value._value == (uint)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UInt32 Conjugate(UInt32 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3010,6 +3090,12 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 	public static UInt64 MachinePrecision => (ulong)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(ulong);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static UInt64 One => (ulong)1;
 
 	/// <inheritdoc/>
@@ -3048,6 +3134,10 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(UInt64 value) => value._value == (ulong)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UInt64 Conjugate(UInt64 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3377,6 +3467,12 @@ public readonly partial struct UInt128 : IBinaryInteger<UInt128>
 	public static UInt128 MachinePrecision => (System.UInt128)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(System.UInt128);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static UInt128 One => (System.UInt128)1;
 
 	/// <inheritdoc/>
@@ -3415,6 +3511,10 @@ public readonly partial struct UInt128 : IBinaryInteger<UInt128>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(UInt128 value) => value._value == (System.UInt128)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UInt128 Conjugate(UInt128 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

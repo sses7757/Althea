@@ -169,6 +169,12 @@ public readonly partial struct <#=reps[i]#> : IBinaryFloat<<#=reps[i]#>>
 	public static <#=reps[i]#> MachinePrecision => <#=mps[i]#>;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(<#=orgs[i]#>);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static <#=reps[i]#> One => <#=ones[i]#>;
 
 	/// <inheritdoc/>
@@ -210,6 +216,10 @@ public readonly partial struct <#=reps[i]#> : IBinaryFloat<<#=reps[i]#>>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static <#=reps[i]#> Sign(<#=reps[i]#> value) => (<#=orgs[i]#>)<#=orgs[i]#>.Sign(value);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static <#=reps[i]#> Conjugate(<#=reps[i]#> value) => value;
 
 	/// <inheritdoc/>
 	public static bool TryParse(string? s, IFormatProvider? provider, out <#=reps[i]#> result)

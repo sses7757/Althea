@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using Althea.Numerics;
+using Althea.Helpers;
 using Althea.Resources;
 
 using Mem = Althea.Storage.ApiSelector;
@@ -56,7 +56,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="PureStorage{T, TP}"/> as a <see cref="CombinationOfLocations"/>
@@ -196,7 +196,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<PureStorage<T, TP>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<PureStorage<T, TP>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="PureStorage{T, TP}"/> is equal to the <paramref name="other"/> <see cref="PureStorage{T, TP}"/> of the same type.
@@ -228,9 +228,9 @@ namespace Althea.Storage
 		public static long operator -(PureStorage<T, TP> left, PureStorage<T, TP> right)
 		{
 			long diffBytes = IStorage<T, PureStorage<T, TP>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -252,6 +252,8 @@ namespace Althea.Storage
 		/// <see cref="PureStorage{T, TP}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(PureStorage<T, TP> left, PureStorage<T, TP> right) => !left.Equals(right);
+		static PureStorage<T, TP> System.Numerics.IAdditionOperators<PureStorage<T, TP>, long, PureStorage<T, TP>>.op_CheckedAddition(PureStorage<T, TP> left, long right) => left + right;
+		static PureStorage<T, TP> System.Numerics.ISubtractionOperators<PureStorage<T, TP>, long, PureStorage<T, TP>>.op_CheckedSubtraction(PureStorage<T, TP> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -263,7 +265,7 @@ namespace Althea.Storage
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<PureStorage<T, TP>>.ToString(this);
-
+	
 		static JsonConverter<PureStorage<T, TP>> IStorage<T, PureStorage<T, TP>>.JsonConverter => new JsonConverter();
 
 		private sealed class JsonConverter : JsonConverter<PureStorage<T, TP>>
@@ -282,7 +284,7 @@ namespace Althea.Storage
 
 				byte[] data = reader.GetBytesFromBase64();
 				TP pointer = Mem.Allocate<TP>(data.LongLength);
-				Mem.FromManaged<byte, TP>(pointer, data);
+				Mem.FromManaged<UInt8, TP>(pointer, data.AsAux());
 				
 				if (!reader.Read())
 					throw new JsonException();
@@ -298,7 +300,7 @@ namespace Althea.Storage
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
 				byte[] temp = new byte[value.LengthInBytes];
-				Mem.ToManaged<byte, TP>(value.Pointer, temp);
+				Mem.ToManaged<UInt8, TP>(value.Pointer, temp.AsAux());
 				writer.WriteStartObject();
 				writer.WriteBase64String(nameof(Repr.Data), temp);
 				writer.WriteEndObject();
@@ -327,7 +329,7 @@ namespace Althea.Storage
 		/// <param name="length">The length to create in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
-		public ActualPureStorage(long length) : base(length > 0 ? Mem.Allocate<TP>(length * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
+		public ActualPureStorage(long length) : base(length > 0 ? Mem.Allocate<TP>(length * T.Size) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -361,7 +363,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
 		public ReferencePureStorage(IStorage? storage, long offset = 0, long newLength = 0) :
-			base(storage is PureStorageBase<TP> p ? p.Pointer.MoveBy(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size) : default)
+			base(storage is PureStorageBase<TP> p ? p.Pointer.MoveBy(offset * T.Size, newLength * T.Size) : default)
 		{
 			var (reference, _, _) = IReferenceStorage<T, PureStorage<T, TP>>.Create<PureStorageBase<TP>>(storage, offset, newLength);
 			this.Reference = reference;

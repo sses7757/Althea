@@ -5,8 +5,6 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.Linq;
-using Althea.Numerics;
 using Althea.Storage;
 
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
@@ -276,10 +274,10 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void Conjugate()
 		{
-			if (NumberType<T>.IsComplex)
+			if (T.IsComplexType)
 			{
 				ExtBlas.GeneralVectorUnary<T, TS, TS>(UnaryOperation.Conjugate, this.values, 1, this.values, 1);
-				this.defaultValue = this.defaultValue.Conjugate();
+				this.defaultValue = T.Conjugate(this.defaultValue);
 			}
 		}
 		#endregion
@@ -288,14 +286,14 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public T Sum()
 		{
-			T defaultSum = this.defaultValue * T.Create(this.rows * this.cols - this.values.Length);
+			T defaultSum = this.defaultValue * (this.rows * this.cols - this.values.Length).As<T>();
 			return defaultSum + ExtBlas.GeneralVectorReduce<T, TS>(ReduceOperation.Add, this.values, 1);
 		}
 
 		/// <inheritdoc/>
 		public T AbsSum()
 		{
-			T defaultSum = T.Abs(this.defaultValue) * T.Create(this.rows * this.cols - this.values.Length);
+			T defaultSum = T.Abs(this.defaultValue) * (this.rows * this.cols - this.values.Length).As<T>();
 			return defaultSum + Blas.AbsoluteValueSum<T, TS>(this.values, 1);
 		}
 
@@ -305,10 +303,10 @@ namespace Althea.Array
 			if (this.defaultValue == T.Zero)
 				return Blas.Norm<T, TS>(this.values, 1);
 			T abs = T.Abs(this.defaultValue);
-			T defaultSum = abs * abs * T.Create(this.rows * this.cols - this.values.Length);
+			T defaultSum = abs * abs * (this.rows * this.cols - this.values.Length).As<T>();
 			T norm = Blas.Norm<T, TS>(this.values, 1);
-			double n = (norm * norm + defaultSum).As<T, double>();
-			return Math.Sqrt(n).As<double, T>();
+			double n = (norm * norm + defaultSum).AsDouble();
+			return Math.Sqrt(n).As<T>();
 		}
 
 		/// <inheritdoc/>
@@ -436,7 +434,7 @@ namespace Althea.Array
 
 		static IEnumerable<string> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyNames => new[] { "DataType", "IndexType", "Format", "DefaultValue", "Size", "BlockSize", "Non-zeros", "Values", "RowIndices", "ColumnIndices" };
 
-		IEnumerable<object?> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyValues => new object[] { Unmanaged<T>.DataType, Unmanaged<TInd>.DataType, this.Format, this.defaultValue, $"{this.rows}x{this.cols}", ((ISparseArray<T, TInd, TS, TSInd>)this).BlockSize.SpanJoin('x'), this.nnz, this.values, this.rowIndices, this.colIndices };
+		IEnumerable<object?> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyValues => new object[] { T.Type, TInd.Type, this.Format, this.defaultValue, $"{this.rows}x{this.cols}", ((ISparseArray<T, TInd, TS, TSInd>)this).BlockSize.SpanJoin('x'), this.nnz, this.values, this.rowIndices, this.colIndices };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.ToString(this);

@@ -97,7 +97,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorModifyFloatManaged<T, U, Op>(T* x, int incx, T* y, int incy, int length, U scalar) where T : unmanaged, IFloatingPointIeee754<T> where U : unmanaged, IFloatingPointIeee754<U>
+		private static void VectorModifyFloatManaged<T, U, Op>(T* x, int incx, T* y, int incy, int length, U scalar) where T : unmanaged, IBinaryFloat<T> where U : unmanaged, IBinaryFloat<U>
 		{
 			Modify op;
 			if (typeof(Op) == typeof(U_PowerT))
@@ -501,7 +501,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			if (NumberType<T>.IsComplex)
 			{
-				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)
+				if (NumberType<T>.DataType.IsInteger() || !Avx.IsSupported)
 				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
 					VectorModifyManaged<T, U, Op>(px, 1, py, 1, length, scalar);
 				}

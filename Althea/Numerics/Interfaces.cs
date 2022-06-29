@@ -32,6 +32,16 @@ public interface INumber<TSelf> :
 	/// Statically get the machine precision of <typeparamref name="TSelf"/>.
 	/// </summary>
 	abstract static TSelf MachinePrecision { get; }
+
+	/// <summary>
+	/// Statically get the size of type <typeparamref name="TSelf"/> (in bytes).
+	/// </summary>
+	abstract static int Size { get; }
+
+	/// <summary>
+	/// Statically get whether type <typeparamref name="TSelf"/> is a complex type or not.
+	/// </summary>
+	abstract static bool IsComplexType { get; }
 	#endregion
 
 	#region constants
@@ -63,13 +73,11 @@ public interface INumber<TSelf> :
 	#endregion
 
 	#region computation
+	abstract static TSelf Conjugate(TSelf value);
+
 	abstract static TSelf Abs(TSelf value);
 
-	abstract static TSelf MaxMagnitude(TSelf x, TSelf y);
-
 	abstract static TSelf MaxMagnitudeNumber(TSelf x, TSelf y);
-
-	abstract static TSelf MinMagnitude(TSelf x, TSelf y);
 
 	abstract static TSelf MinMagnitudeNumber(TSelf x, TSelf y);
 

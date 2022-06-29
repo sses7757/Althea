@@ -1,7 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Althea.Numerics;
-
 
 namespace Althea.LinearAlgebra
 {
@@ -265,7 +263,7 @@ namespace Althea.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static MatrixOperation Simplify<T>(this MatrixOperation input, bool? hermitian = null) where T : unmanaged, INumber<T>
 		{
-			bool isComplex = NumberType<T>.IsComplex;
+			bool isComplex = T.IsComplexType;
 			bool symm = hermitian.HasValue && !hermitian.Value, herm = isComplex && hermitian.HasValue && hermitian.Value;
 			switch (input)
 			{

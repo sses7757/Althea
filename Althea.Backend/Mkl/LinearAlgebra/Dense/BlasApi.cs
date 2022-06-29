@@ -61,9 +61,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotComplex);
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
-			if (Unmanaged<T>.DataType == DataType.ComplexSingle)
+			if (NumberType<T>.DataType == DataType.ComplexSingle)
 				*(float*)&result = NM.cblas_scasum(n, px, strideX);
-			else if (Unmanaged<T>.DataType == DataType.ComplexDouble)
+			else if (NumberType<T>.DataType == DataType.ComplexDouble)
 				*(double*)&result = NM.cblas_dzasum(n, px, strideX);
 			else
 				return false;
@@ -87,7 +87,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				index = func(n, px, strideX);
 				return true;
 			}
-			return NMC.vecArgAbsMax(Unmanaged<T>.DataType, n, px, strideX, out index).Check();
+			return NMC.vecArgAbsMax(NumberType<T>.DataType, n, px, strideX, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -107,7 +107,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				index = func(n, px, strideX);
 				return true;
 			}
-			return NMC.vecArgAbsMin(Unmanaged<T>.DataType, n, px, strideX, out index).Check();
+			return NMC.vecArgAbsMin(NumberType<T>.DataType, n, px, strideX, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -124,7 +124,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				*(double*)&result = NM.cblas_dasum(n, px, strideX);
 			}
-			else if (NMC.vecAbsSum(Unmanaged<T>.DataType, n, px, strideX, &result) != CustomStatus.Success)
+			else if (NMC.vecAbsSum(NumberType<T>.DataType, n, px, strideX, &result) != CustomStatus.Success)
 				return false;
 			sum = result;
 			return true;
@@ -915,7 +915,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(C, m, n, ldc, out T* pC))
 				return false;
-			return NMC.triMatAdd(Unmanaged<T>.DataType, unitDiag, upper, opA, opB, m, n, &α, pA, lda, &β, pB, ldb, pC, ldc).Check();
+			return NMC.triMatAdd(NumberType<T>.DataType, unitDiag, upper, opA, opB, m, n, &α, pA, lda, &β, pB, ldb, pC, ldc).Check();
 		}
 
 		/// <inheritdoc/>
@@ -927,7 +927,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(C, n, n, ldc, out T* pC))
 				return false;
-			return NMC.symmMatAdd(Unmanaged<T>.DataType, upperA, upperB, upperC, opA, opB, n, &α, pA, lda, &β, pB, ldb, pC, ldc).Check();
+			return NMC.symmMatAdd(NumberType<T>.DataType, upperA, upperB, upperC, opA, opB, n, &α, pA, lda, &β, pB, ldb, pC, ldc).Check();
 		}
 
 		/// <inheritdoc/>
@@ -942,7 +942,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(C, m, n, ldc, out T* pC))
 				return false;
-			return NMC.triMatMul(Unmanaged<T>.DataType, unitDiag, upper, opA, opB, m, n, k, &α, pA, lda, pB, ldb, &β, pC, ldc).Check();
+			return NMC.triMatMul(NumberType<T>.DataType, unitDiag, upper, opA, opB, m, n, k, &α, pA, lda, pB, ldb, &β, pC, ldc).Check();
 		}
 
 		/// <inheritdoc/>
@@ -954,7 +954,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(C, n, n, ldc, out T* pC))
 				return false;
-			return NMC.symmMatMul(Unmanaged<T>.DataType, upperA, upperB, hermA, hermB, opA, opB, n, &α, pA, lda, pB, ldb, &β, pC, ldc).Check();
+			return NMC.symmMatMul(NumberType<T>.DataType, upperA, upperB, hermA, hermB, opA, opB, n, &α, pA, lda, pB, ldb, &β, pC, ldc).Check();
 		}
 
 		/// <inheritdoc/>
@@ -962,7 +962,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
-			return NMC.matMakeHerm(Unmanaged<T>.DataType, upper, hermitian, n, pA, lda).Check();
+			return NMC.matMakeHerm(NumberType<T>.DataType, upper, hermitian, n, pA, lda).Check();
 		}
 
 		/// <inheritdoc/>
@@ -970,7 +970,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			if (!GetPointer(A, m, n, lda, out T* pA))
 				return false;
-			return NMC.triMatClear(Unmanaged<T>.DataType, clearLower, clearDiag, m, n, pA, lda).Check();
+			return NMC.triMatClear(NumberType<T>.DataType, clearLower, clearDiag, m, n, pA, lda).Check();
 		}
 
 		/// <inheritdoc/>
@@ -981,7 +981,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(B, m, n, ldb, out T* pB))
 				return false;
 			T one = T.One;
-			return NMC.triMatMulCopy(Unmanaged<T>.DataType, upper, copyDiag, opA, m, n, &one, pA, lda, pB, ldb).Check();
+			return NMC.triMatMulCopy(NumberType<T>.DataType, upper, copyDiag, opA, m, n, &one, pA, lda, pB, ldb).Check();
 		}
 		#endregion
 	}

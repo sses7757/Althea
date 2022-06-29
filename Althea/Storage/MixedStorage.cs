@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Althea.Linq;
-using Althea.Numerics;
+using Althea.Helpers;
 using Althea.Resources;
 
 using Mem = Althea.Storage.ApiSelector;
@@ -81,9 +81,9 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2> Empty => new ReferenceMixedStorage<T, TP1, TP2>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2}"/> as a <see cref="CombinationOfLocations"/>
@@ -238,12 +238,12 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer2.LengthInBytes / Unmanaged<TOut>.Size, });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<MixedStorage<T, TP1, TP2>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2}"/> of the same type.
@@ -275,9 +275,9 @@ namespace Althea.Storage
 		public static long operator -(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -299,6 +299,9 @@ namespace Althea.Storage
 		/// <see cref="MixedStorage{T, TP1, TP2}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right) => !left.Equals(right);
+
+		static MixedStorage<T, TP1, TP2> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2>, long, MixedStorage<T, TP1, TP2>>.op_CheckedAddition(MixedStorage<T, TP1, TP2> left, long right) => left + right;
+		static MixedStorage<T, TP1, TP2> System.Numerics.ISubtractionOperators<MixedStorage<T, TP1, TP2>, long, MixedStorage<T, TP1, TP2>>.op_CheckedSubtraction(MixedStorage<T, TP1, TP2> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -332,7 +335,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data1 = reader.GetBytesFromBase64();
 				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				Mem.FromManaged<UInt8, TP1>(pointer1, data1.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -343,7 +346,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data2 = reader.GetBytesFromBase64();
 				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				Mem.FromManaged<UInt8, TP2>(pointer2, data2.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 				
@@ -362,11 +365,11 @@ namespace Althea.Storage
 				writer.WriteStartObject();
 				
 				// write pointer 1
-				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				size = (int)Mem.ToManaged<UInt8, TP1>(value.Pointer1, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
 				
 				// write pointer 2
-				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				size = (int)Mem.ToManaged<UInt8, TP2>(value.Pointer2, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
 				
 				writer.WriteEndObject();
@@ -397,7 +400,7 @@ namespace Althea.Storage
 		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative))
+		public ActualMixedStorage(long length1, long length2) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative))
 		{
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
@@ -548,9 +551,9 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> as a <see cref="CombinationOfLocations"/>
@@ -708,12 +711,12 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer2.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer3.LengthInBytes / Unmanaged<TOut>.Size, });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of the same type.
@@ -745,9 +748,9 @@ namespace Althea.Storage
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -769,6 +772,9 @@ namespace Althea.Storage
 		/// <see cref="MixedStorage{T, TP1, TP2, TP3}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right) => !left.Equals(right);
+
+		static MixedStorage<T, TP1, TP2, TP3> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3>, long, MixedStorage<T, TP1, TP2, TP3>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3> left, long right) => left + right;
+		static MixedStorage<T, TP1, TP2, TP3> System.Numerics.ISubtractionOperators<MixedStorage<T, TP1, TP2, TP3>, long, MixedStorage<T, TP1, TP2, TP3>>.op_CheckedSubtraction(MixedStorage<T, TP1, TP2, TP3> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -802,7 +808,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data1 = reader.GetBytesFromBase64();
 				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				Mem.FromManaged<UInt8, TP1>(pointer1, data1.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -813,7 +819,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data2 = reader.GetBytesFromBase64();
 				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				Mem.FromManaged<UInt8, TP2>(pointer2, data2.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -824,7 +830,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data3 = reader.GetBytesFromBase64();
 				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				Mem.FromManaged<UInt8, TP3>(pointer3, data3.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 				
@@ -843,15 +849,15 @@ namespace Althea.Storage
 				writer.WriteStartObject();
 				
 				// write pointer 1
-				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				size = (int)Mem.ToManaged<UInt8, TP1>(value.Pointer1, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
 				
 				// write pointer 2
-				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				size = (int)Mem.ToManaged<UInt8, TP2>(value.Pointer2, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
 				
 				// write pointer 3
-				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				size = (int)Mem.ToManaged<UInt8, TP3>(value.Pointer3, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
 				
 				writer.WriteEndObject();
@@ -884,7 +890,7 @@ namespace Althea.Storage
 		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative))
+		public ActualMixedStorage(long length1, long length2, long length3) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative))
 		{
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
@@ -1056,9 +1062,9 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> as a <see cref="CombinationOfLocations"/>
@@ -1219,12 +1225,12 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer2.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer3.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer4.LengthInBytes / Unmanaged<TOut>.Size, });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of the same type.
@@ -1256,9 +1262,9 @@ namespace Althea.Storage
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -1280,6 +1286,9 @@ namespace Althea.Storage
 		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right) => !left.Equals(right);
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4>, long, MixedStorage<T, TP1, TP2, TP3, TP4>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left + right;
+		static MixedStorage<T, TP1, TP2, TP3, TP4> System.Numerics.ISubtractionOperators<MixedStorage<T, TP1, TP2, TP3, TP4>, long, MixedStorage<T, TP1, TP2, TP3, TP4>>.op_CheckedSubtraction(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -1313,7 +1322,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data1 = reader.GetBytesFromBase64();
 				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				Mem.FromManaged<UInt8, TP1>(pointer1, data1.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -1324,7 +1333,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data2 = reader.GetBytesFromBase64();
 				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				Mem.FromManaged<UInt8, TP2>(pointer2, data2.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -1335,7 +1344,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data3 = reader.GetBytesFromBase64();
 				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				Mem.FromManaged<UInt8, TP3>(pointer3, data3.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -1346,7 +1355,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data4 = reader.GetBytesFromBase64();
 				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				Mem.FromManaged<UInt8, TP4>(pointer4, data4.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 				
@@ -1365,19 +1374,19 @@ namespace Althea.Storage
 				writer.WriteStartObject();
 				
 				// write pointer 1
-				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				size = (int)Mem.ToManaged<UInt8, TP1>(value.Pointer1, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
 				
 				// write pointer 2
-				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				size = (int)Mem.ToManaged<UInt8, TP2>(value.Pointer2, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
 				
 				// write pointer 3
-				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				size = (int)Mem.ToManaged<UInt8, TP3>(value.Pointer3, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
 				
 				// write pointer 4
-				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				size = (int)Mem.ToManaged<UInt8, TP4>(value.Pointer4, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
 				
 				writer.WriteEndObject();
@@ -1412,7 +1421,7 @@ namespace Althea.Storage
 		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative))
 		{
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
@@ -1605,9 +1614,9 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> as a <see cref="CombinationOfLocations"/>
@@ -1771,12 +1780,12 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer2.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer3.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer4.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer5.LengthInBytes / Unmanaged<TOut>.Size, });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of the same type.
@@ -1808,9 +1817,9 @@ namespace Althea.Storage
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -1832,6 +1841,9 @@ namespace Althea.Storage
 		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right) => !left.Equals(right);
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left + right;
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> System.Numerics.ISubtractionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.op_CheckedSubtraction(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -1865,7 +1877,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data1 = reader.GetBytesFromBase64();
 				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				Mem.FromManaged<UInt8, TP1>(pointer1, data1.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -1876,7 +1888,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data2 = reader.GetBytesFromBase64();
 				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				Mem.FromManaged<UInt8, TP2>(pointer2, data2.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -1887,7 +1899,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data3 = reader.GetBytesFromBase64();
 				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				Mem.FromManaged<UInt8, TP3>(pointer3, data3.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -1898,7 +1910,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data4 = reader.GetBytesFromBase64();
 				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				Mem.FromManaged<UInt8, TP4>(pointer4, data4.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -1909,7 +1921,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data5 = reader.GetBytesFromBase64();
 				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				Mem.FromManaged<UInt8, TP5>(pointer5, data5.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 				
@@ -1928,23 +1940,23 @@ namespace Althea.Storage
 				writer.WriteStartObject();
 				
 				// write pointer 1
-				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				size = (int)Mem.ToManaged<UInt8, TP1>(value.Pointer1, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
 				
 				// write pointer 2
-				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				size = (int)Mem.ToManaged<UInt8, TP2>(value.Pointer2, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
 				
 				// write pointer 3
-				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				size = (int)Mem.ToManaged<UInt8, TP3>(value.Pointer3, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
 				
 				// write pointer 4
-				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				size = (int)Mem.ToManaged<UInt8, TP4>(value.Pointer4, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
 				
 				// write pointer 5
-				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				size = (int)Mem.ToManaged<UInt8, TP5>(value.Pointer5, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
 				
 				writer.WriteEndObject();
@@ -1981,7 +1993,7 @@ namespace Althea.Storage
 		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative))
 		{
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
@@ -2195,9 +2207,9 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> as a <see cref="CombinationOfLocations"/>
@@ -2364,12 +2376,12 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer2.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer3.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer4.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer5.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer6.LengthInBytes / Unmanaged<TOut>.Size, });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, storage.Pointer6.LengthInBytes / TOut.Size, });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of the same type.
@@ -2401,9 +2413,9 @@ namespace Althea.Storage
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -2425,6 +2437,9 @@ namespace Althea.Storage
 		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right) => !left.Equals(right);
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left + right;
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> System.Numerics.ISubtractionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.op_CheckedSubtraction(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -2458,7 +2473,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data1 = reader.GetBytesFromBase64();
 				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				Mem.FromManaged<UInt8, TP1>(pointer1, data1.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -2469,7 +2484,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data2 = reader.GetBytesFromBase64();
 				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				Mem.FromManaged<UInt8, TP2>(pointer2, data2.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -2480,7 +2495,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data3 = reader.GetBytesFromBase64();
 				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				Mem.FromManaged<UInt8, TP3>(pointer3, data3.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -2491,7 +2506,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data4 = reader.GetBytesFromBase64();
 				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				Mem.FromManaged<UInt8, TP4>(pointer4, data4.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -2502,7 +2517,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data5 = reader.GetBytesFromBase64();
 				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				Mem.FromManaged<UInt8, TP5>(pointer5, data5.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -2513,7 +2528,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data6 = reader.GetBytesFromBase64();
 				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
-				Mem.FromManaged<byte, TP6>(pointer6, data6);
+				Mem.FromManaged<UInt8, TP6>(pointer6, data6.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 				
@@ -2532,27 +2547,27 @@ namespace Althea.Storage
 				writer.WriteStartObject();
 				
 				// write pointer 1
-				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				size = (int)Mem.ToManaged<UInt8, TP1>(value.Pointer1, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
 				
 				// write pointer 2
-				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				size = (int)Mem.ToManaged<UInt8, TP2>(value.Pointer2, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
 				
 				// write pointer 3
-				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				size = (int)Mem.ToManaged<UInt8, TP3>(value.Pointer3, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
 				
 				// write pointer 4
-				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				size = (int)Mem.ToManaged<UInt8, TP4>(value.Pointer4, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
 				
 				// write pointer 5
-				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				size = (int)Mem.ToManaged<UInt8, TP5>(value.Pointer5, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
 				
 				// write pointer 6
-				size = (int)Mem.ToManaged<byte, TP6>(value.Pointer6, temp);
+				size = (int)Mem.ToManaged<UInt8, TP6>(value.Pointer6, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
 				
 				writer.WriteEndObject();
@@ -2591,7 +2606,7 @@ namespace Althea.Storage
 		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative))
 		{
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
@@ -2826,9 +2841,9 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> as a <see cref="CombinationOfLocations"/>
@@ -2998,12 +3013,12 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer2.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer3.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer4.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer5.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer6.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer7.LengthInBytes / Unmanaged<TOut>.Size, });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, storage.Pointer6.LengthInBytes / TOut.Size, storage.Pointer7.LengthInBytes / TOut.Size, });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of the same type.
@@ -3035,9 +3050,9 @@ namespace Althea.Storage
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -3059,6 +3074,9 @@ namespace Althea.Storage
 		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right) => !left.Equals(right);
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left + right;
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> System.Numerics.ISubtractionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.op_CheckedSubtraction(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -3092,7 +3110,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data1 = reader.GetBytesFromBase64();
 				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				Mem.FromManaged<UInt8, TP1>(pointer1, data1.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3103,7 +3121,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data2 = reader.GetBytesFromBase64();
 				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				Mem.FromManaged<UInt8, TP2>(pointer2, data2.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3114,7 +3132,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data3 = reader.GetBytesFromBase64();
 				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				Mem.FromManaged<UInt8, TP3>(pointer3, data3.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3125,7 +3143,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data4 = reader.GetBytesFromBase64();
 				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				Mem.FromManaged<UInt8, TP4>(pointer4, data4.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3136,7 +3154,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data5 = reader.GetBytesFromBase64();
 				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				Mem.FromManaged<UInt8, TP5>(pointer5, data5.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3147,7 +3165,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data6 = reader.GetBytesFromBase64();
 				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
-				Mem.FromManaged<byte, TP6>(pointer6, data6);
+				Mem.FromManaged<UInt8, TP6>(pointer6, data6.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3158,7 +3176,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data7 = reader.GetBytesFromBase64();
 				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
-				Mem.FromManaged<byte, TP7>(pointer7, data7);
+				Mem.FromManaged<UInt8, TP7>(pointer7, data7.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 				
@@ -3177,31 +3195,31 @@ namespace Althea.Storage
 				writer.WriteStartObject();
 				
 				// write pointer 1
-				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				size = (int)Mem.ToManaged<UInt8, TP1>(value.Pointer1, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
 				
 				// write pointer 2
-				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				size = (int)Mem.ToManaged<UInt8, TP2>(value.Pointer2, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
 				
 				// write pointer 3
-				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				size = (int)Mem.ToManaged<UInt8, TP3>(value.Pointer3, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
 				
 				// write pointer 4
-				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				size = (int)Mem.ToManaged<UInt8, TP4>(value.Pointer4, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
 				
 				// write pointer 5
-				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				size = (int)Mem.ToManaged<UInt8, TP5>(value.Pointer5, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
 				
 				// write pointer 6
-				size = (int)Mem.ToManaged<byte, TP6>(value.Pointer6, temp);
+				size = (int)Mem.ToManaged<UInt8, TP6>(value.Pointer6, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
 				
 				// write pointer 7
-				size = (int)Mem.ToManaged<byte, TP7>(value.Pointer7, temp);
+				size = (int)Mem.ToManaged<UInt8, TP7>(value.Pointer7, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
 				
 				writer.WriteEndObject();
@@ -3242,7 +3260,7 @@ namespace Althea.Storage
 		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative))
 		{
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
@@ -3498,9 +3516,9 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> as a <see cref="CombinationOfLocations"/>
@@ -3673,12 +3691,12 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer2.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer3.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer4.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer5.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer6.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer7.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer8.LengthInBytes / Unmanaged<TOut>.Size, });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, storage.Pointer6.LengthInBytes / TOut.Size, storage.Pointer7.LengthInBytes / TOut.Size, storage.Pointer8.LengthInBytes / TOut.Size, });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of the same type.
@@ -3710,9 +3728,9 @@ namespace Althea.Storage
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -3734,6 +3752,9 @@ namespace Althea.Storage
 		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right) => !left.Equals(right);
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left + right;
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> System.Numerics.ISubtractionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.op_CheckedSubtraction(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -3767,7 +3788,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data1 = reader.GetBytesFromBase64();
 				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				Mem.FromManaged<UInt8, TP1>(pointer1, data1.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3778,7 +3799,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data2 = reader.GetBytesFromBase64();
 				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				Mem.FromManaged<UInt8, TP2>(pointer2, data2.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3789,7 +3810,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data3 = reader.GetBytesFromBase64();
 				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				Mem.FromManaged<UInt8, TP3>(pointer3, data3.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3800,7 +3821,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data4 = reader.GetBytesFromBase64();
 				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				Mem.FromManaged<UInt8, TP4>(pointer4, data4.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3811,7 +3832,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data5 = reader.GetBytesFromBase64();
 				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				Mem.FromManaged<UInt8, TP5>(pointer5, data5.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3822,7 +3843,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data6 = reader.GetBytesFromBase64();
 				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
-				Mem.FromManaged<byte, TP6>(pointer6, data6);
+				Mem.FromManaged<UInt8, TP6>(pointer6, data6.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3833,7 +3854,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data7 = reader.GetBytesFromBase64();
 				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
-				Mem.FromManaged<byte, TP7>(pointer7, data7);
+				Mem.FromManaged<UInt8, TP7>(pointer7, data7.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -3844,7 +3865,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data8 = reader.GetBytesFromBase64();
 				TP8 pointer8 = Mem.Allocate<TP8>(data8.LongLength);
-				Mem.FromManaged<byte, TP8>(pointer8, data8);
+				Mem.FromManaged<UInt8, TP8>(pointer8, data8.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 				
@@ -3863,35 +3884,35 @@ namespace Althea.Storage
 				writer.WriteStartObject();
 				
 				// write pointer 1
-				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				size = (int)Mem.ToManaged<UInt8, TP1>(value.Pointer1, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
 				
 				// write pointer 2
-				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				size = (int)Mem.ToManaged<UInt8, TP2>(value.Pointer2, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
 				
 				// write pointer 3
-				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				size = (int)Mem.ToManaged<UInt8, TP3>(value.Pointer3, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
 				
 				// write pointer 4
-				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				size = (int)Mem.ToManaged<UInt8, TP4>(value.Pointer4, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
 				
 				// write pointer 5
-				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				size = (int)Mem.ToManaged<UInt8, TP5>(value.Pointer5, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
 				
 				// write pointer 6
-				size = (int)Mem.ToManaged<byte, TP6>(value.Pointer6, temp);
+				size = (int)Mem.ToManaged<UInt8, TP6>(value.Pointer6, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
 				
 				// write pointer 7
-				size = (int)Mem.ToManaged<byte, TP7>(value.Pointer7, temp);
+				size = (int)Mem.ToManaged<UInt8, TP7>(value.Pointer7, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
 				
 				// write pointer 8
-				size = (int)Mem.ToManaged<byte, TP8>(value.Pointer8, temp);
+				size = (int)Mem.ToManaged<UInt8, TP8>(value.Pointer8, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data8), new(temp, 0, size));
 				
 				writer.WriteEndObject();
@@ -3934,7 +3955,7 @@ namespace Althea.Storage
 		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative))
 		{
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
@@ -4211,9 +4232,9 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(null);
 
 		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
+		/// Statically get the data type of this storage as a <see cref="DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> as a <see cref="CombinationOfLocations"/>
@@ -4389,12 +4410,12 @@ namespace Althea.Storage
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> storage) where TOut : unmanaged, INumber<TOut>
 		{
 			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer2.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer3.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer4.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer5.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer6.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer7.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer8.LengthInBytes / Unmanaged<TOut>.Size, storage.Pointer9.LengthInBytes / Unmanaged<TOut>.Size, });
+			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, storage.Pointer6.LengthInBytes / TOut.Size, storage.Pointer7.LengthInBytes / TOut.Size, storage.Pointer8.LengthInBytes / TOut.Size, storage.Pointer9.LengthInBytes / TOut.Size, });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of the same type.
@@ -4426,9 +4447,9 @@ namespace Althea.Storage
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -4450,6 +4471,9 @@ namespace Althea.Storage
 		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right) => !left.Equals(right);
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left + right;
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> System.Numerics.ISubtractionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.op_CheckedSubtraction(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -4483,7 +4507,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data1 = reader.GetBytesFromBase64();
 				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<byte, TP1>(pointer1, data1);
+				Mem.FromManaged<UInt8, TP1>(pointer1, data1.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -4494,7 +4518,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data2 = reader.GetBytesFromBase64();
 				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<byte, TP2>(pointer2, data2);
+				Mem.FromManaged<UInt8, TP2>(pointer2, data2.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -4505,7 +4529,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data3 = reader.GetBytesFromBase64();
 				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<byte, TP3>(pointer3, data3);
+				Mem.FromManaged<UInt8, TP3>(pointer3, data3.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -4516,7 +4540,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data4 = reader.GetBytesFromBase64();
 				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<byte, TP4>(pointer4, data4);
+				Mem.FromManaged<UInt8, TP4>(pointer4, data4.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -4527,7 +4551,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data5 = reader.GetBytesFromBase64();
 				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<byte, TP5>(pointer5, data5);
+				Mem.FromManaged<UInt8, TP5>(pointer5, data5.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -4538,7 +4562,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data6 = reader.GetBytesFromBase64();
 				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
-				Mem.FromManaged<byte, TP6>(pointer6, data6);
+				Mem.FromManaged<UInt8, TP6>(pointer6, data6.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -4549,7 +4573,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data7 = reader.GetBytesFromBase64();
 				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
-				Mem.FromManaged<byte, TP7>(pointer7, data7);
+				Mem.FromManaged<UInt8, TP7>(pointer7, data7.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -4560,7 +4584,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data8 = reader.GetBytesFromBase64();
 				TP8 pointer8 = Mem.Allocate<TP8>(data8.LongLength);
-				Mem.FromManaged<byte, TP8>(pointer8, data8);
+				Mem.FromManaged<UInt8, TP8>(pointer8, data8.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 
@@ -4571,7 +4595,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data9 = reader.GetBytesFromBase64();
 				TP9 pointer9 = Mem.Allocate<TP9>(data9.LongLength);
-				Mem.FromManaged<byte, TP9>(pointer9, data9);
+				Mem.FromManaged<UInt8, TP9>(pointer9, data9.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 				
@@ -4590,39 +4614,39 @@ namespace Althea.Storage
 				writer.WriteStartObject();
 				
 				// write pointer 1
-				size = (int)Mem.ToManaged<byte, TP1>(value.Pointer1, temp);
+				size = (int)Mem.ToManaged<UInt8, TP1>(value.Pointer1, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
 				
 				// write pointer 2
-				size = (int)Mem.ToManaged<byte, TP2>(value.Pointer2, temp);
+				size = (int)Mem.ToManaged<UInt8, TP2>(value.Pointer2, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
 				
 				// write pointer 3
-				size = (int)Mem.ToManaged<byte, TP3>(value.Pointer3, temp);
+				size = (int)Mem.ToManaged<UInt8, TP3>(value.Pointer3, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
 				
 				// write pointer 4
-				size = (int)Mem.ToManaged<byte, TP4>(value.Pointer4, temp);
+				size = (int)Mem.ToManaged<UInt8, TP4>(value.Pointer4, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
 				
 				// write pointer 5
-				size = (int)Mem.ToManaged<byte, TP5>(value.Pointer5, temp);
+				size = (int)Mem.ToManaged<UInt8, TP5>(value.Pointer5, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
 				
 				// write pointer 6
-				size = (int)Mem.ToManaged<byte, TP6>(value.Pointer6, temp);
+				size = (int)Mem.ToManaged<UInt8, TP6>(value.Pointer6, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
 				
 				// write pointer 7
-				size = (int)Mem.ToManaged<byte, TP7>(value.Pointer7, temp);
+				size = (int)Mem.ToManaged<UInt8, TP7>(value.Pointer7, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
 				
 				// write pointer 8
-				size = (int)Mem.ToManaged<byte, TP8>(value.Pointer8, temp);
+				size = (int)Mem.ToManaged<UInt8, TP8>(value.Pointer8, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data8), new(temp, 0, size));
 				
 				// write pointer 9
-				size = (int)Mem.ToManaged<byte, TP9>(value.Pointer9, temp);
+				size = (int)Mem.ToManaged<UInt8, TP9>(value.Pointer9, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data9), new(temp, 0, size));
 				
 				writer.WriteEndObject();
@@ -4667,7 +4691,7 @@ namespace Althea.Storage
 		/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative), length9 >= 0 ? Mem.Allocate<TP9>(length9 * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.CannotNegative))
+		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative), length9 >= 0 ? Mem.Allocate<TP9>(length9 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.CannotNegative))
 		{
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);

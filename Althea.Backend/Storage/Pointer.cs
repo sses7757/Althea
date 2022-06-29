@@ -61,7 +61,7 @@ namespace Althea.Backend.Storage
 		/// <param name="pointer">The allocated pointer on managed memory</param>
 		/// <param name="length">The length in <typeparamref name="T"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CpuMemoryPointer Create<T>(IntPtr pointer, long length) where T : unmanaged, INumber<T> => new(pointer, length * Unmanaged<T>.Size);
+		public static CpuMemoryPointer Create<T>(IntPtr pointer, long length) where T : unmanaged, INumber<T> => new(pointer, length * T.Size);
 		#endregion
 
 		#region equality
@@ -112,7 +112,7 @@ namespace Althea.Backend.Storage
 		internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged, INumber<T> => new(this.UnmangedPointer<T>(offset), length);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Span<T> AsSpan<T, TP>(PointerSegment<TP> pointerSegment) where T : unmanaged, INumber<T> where TP : IPointer<TP> => this.AsSpan<T>(pointerSegment.OffsetInBytes / Unmanaged<T>.Size, (int)(pointerSegment.LengthInBytes / Unmanaged<T>.Size));
+		internal Span<T> AsSpan<T, TP>(PointerSegment<TP> pointerSegment) where T : unmanaged, INumber<T> where TP : IPointer<TP> => this.AsSpan<T>(pointerSegment.OffsetInBytes / T.Size, (int)(pointerSegment.LengthInBytes / T.Size));
 		#endregion
 	}
 

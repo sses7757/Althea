@@ -289,7 +289,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			if (NumberType<T>.IsComplex)
 			{
-				if (Unmanaged<T>.DataType.IsInteger() || !Avx2.IsSupported)
+				if (NumberType<T>.DataType.IsInteger() || !Avx2.IsSupported)
 					return VectorArgMinMaxManaged<T, Test>(px, inc, length, out index);
 				index = typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>)
 					? VectorArgMinMaxCompexSingle<Test>((Complex<float>*)px, length)
@@ -513,7 +513,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			if (NumberType<T>.IsComplex)
 			{
-				if (Unmanaged<T>.DataType.IsInteger() || !Avx2.IsSupported)
+				if (NumberType<T>.DataType.IsInteger() || !Avx2.IsSupported)
 					return VectorMinMaxManaged<T, Test>(px, inc, length, out extreme);
 				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
 				{
@@ -806,7 +806,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		internal static bool Inner<T, Dot>(bool conjX, T* px, int incx, T* py, int incy, int length, out T dot) where T : unmanaged, INumber<T>
 		{
 			if (incx != 1 || incy != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4) ||
-				(NumberType<T>.IsComplex && (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)))
+				(NumberType<T>.IsComplex && (NumberType<T>.DataType.IsInteger() || !Avx.IsSupported)))
 			{   // no SIMD or too short
 				// no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
 				dot = conjX ? VectorInnerManaged<T, Dot, bool>(px, incx, py, incy, length) : VectorInnerManaged<T, Dot, byte>(px, incx, py, incy, length);
@@ -1236,7 +1236,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			if (NumberType<T>.IsComplex)
 			{
-				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported) // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
+				if (NumberType<T>.DataType.IsInteger() || !Avx.IsSupported) // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
 					return VectorAbsSumProdManaged<T, Test>(px, inc, length, out aggregate);
 				if (typeof(T) == typeof(Complex<float>) || typeof(T) == typeof(Complex<float>))
 				{

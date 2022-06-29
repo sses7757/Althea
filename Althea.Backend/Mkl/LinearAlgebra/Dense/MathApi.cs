@@ -353,7 +353,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				Unsafe.InitBlockUnaligned(px, 0, (uint)(n * sizeof(T)));
 				return true;
 			}
-			return NMC.vecFillVal(Unmanaged<T>.DataType, n, &scalar, px, incx).Check();
+			return NMC.vecFillVal(NumberType<T>.DataType, n, &scalar, px, incx).Check();
 		}
 
 		private static bool PowerScalar<T>(long n, T scalar, T* px, long strideX, T* py, long strideY) where T : unmanaged, INumber<T>
@@ -590,7 +590,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				BinaryScalarOperation.Truncate => &NMC.vecClip,
 				_ => null,
 			};
-			return func != null && func(Unmanaged<T>.DataType, n, &scalar, px, strideX, py, strideY).Check();
+			return func != null && func(NumberType<T>.DataType, n, &scalar, px, strideX, py, strideY).Check();
 		}
 
 		/// <inheritdoc/>
@@ -633,12 +633,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			CustomStatus status = CustomStatus.NotSupported;
 			if (func is not null)
 			{
-				status = func(Unmanaged<T>.DataType, n, px, strideX, &reduce);
+				status = func(NumberType<T>.DataType, n, px, strideX, &reduce);
 				result = reduce;
 			}
 			if (funcInd is not null)
 			{
-				status = funcInd(Unmanaged<T>.DataType, n, px, strideX, out long index);
+				status = funcInd(NumberType<T>.DataType, n, px, strideX, out long index);
 				result = px[index];
 				if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
 					result = T.Abs(result);
@@ -666,7 +666,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				ReduceOperation.AbsoluteMininum => &NMC.vecArgAbsMin,
 				_ => null,
 			};
-			return funcInd != null && funcInd(Unmanaged<T>.DataType, n, px, strideX, out index).Check();
+			return funcInd != null && funcInd(NumberType<T>.DataType, n, px, strideX, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -818,7 +818,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (ny < n)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(y));
 			delegate*<DataType, bool, long, T*, long, T*, long, CustomStatus> func = op == BinaryOperation.Add ? &NMC.vecParSum : op == BinaryOperation.Multiply ? &NMC.vecParProd : null;
-			return func != null && func(Unmanaged<T>.DataType, inclusive, n, px, strideX, py, strideY).Check();
+			return func != null && func(NumberType<T>.DataType, inclusive, n, px, strideX, py, strideY).Check();
 		}
 
 		/// <inheritdoc/>
@@ -829,7 +829,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(destination, strideDestination, out TOut* py, out long ny))
 				return false;
 			n = Math.Min(n, ny);
-			return NMC.vecDataConvert(Unmanaged<TIn>.DataType, Unmanaged<TOut>.DataType, true, n, px, strideSource, py, strideDestination).Check();
+			return NMC.vecDataConvert(NumberType<TIn>.DataType, NumberType<TOut>.DataType, true, n, px, strideSource, py, strideDestination).Check();
 		}
 
 		/// <inheritdoc/>
@@ -842,7 +842,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (ny != n)
 				return true;
-			return NMC.vecsEq(Unmanaged<T>.DataType, n, px, strideX, py, strideY, out equals).Check();
+			return NMC.vecsEq(NumberType<T>.DataType, n, px, strideX, py, strideY, out equals).Check();
 		}
 		#endregion
 
@@ -856,7 +856,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(C, ma * mb, na * nb, ldc, out T* pC))
 				return false;
-			return NMC.matKron(Unmanaged<T>.DataType, &α, pA, lda, ma, na, pB, ldb, mb, nb, &β, pC, ldc).Check();
+			return NMC.matKron(NumberType<T>.DataType, &α, pA, lda, ma, na, pB, ldb, mb, nb, &β, pC, ldc).Check();
 		}
 		#endregion
 
@@ -899,7 +899,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(B, rows, cols, ldb, out T* pB))
 				return false;
 			if (op == BinaryScalarOperation.Fill)
-				return NMC.matFillVal(Unmanaged<T>.DataType, rows, cols, &scalar, pB, ldb).Check();
+				return NMC.matFillVal(NumberType<T>.DataType, rows, cols, &scalar, pB, ldb).Check();
 			delegate*<DataType, long, long, T*, T*, long, T*, long, CustomStatus> func = op switch
 			{
 				BinaryScalarOperation.Add => &NMC.matAddScalar,
@@ -907,7 +907,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				BinaryScalarOperation.Truncate => &NMC.matClip,
 				_ => null,
 			};
-			return func != null && func(Unmanaged<T>.DataType, rows, cols, &scalar, pA, lda, pB, ldb).Check();
+			return func != null && func(NumberType<T>.DataType, rows, cols, &scalar, pA, lda, pB, ldb).Check();
 		}
 
 		/// <inheritdoc/>
@@ -948,12 +948,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			CustomStatus status = CustomStatus.NotSupported;
 			if (func is not null)
 			{
-				status = func(Unmanaged<T>.DataType, rows, cols, pA, lda, &reduce);
+				status = func(NumberType<T>.DataType, rows, cols, pA, lda, &reduce);
 				result = reduce;
 			}
 			if (funcInd is not null)
 			{
-				status = funcInd(Unmanaged<T>.DataType, rows, cols, pA, lda, out long index);
+				status = funcInd(NumberType<T>.DataType, rows, cols, pA, lda, out long index);
 				result = pA[index];
 				if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
 					result = T.Abs(result);
@@ -979,7 +979,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				ReduceOperation.AbsoluteMininum => &NMC.matArgAbsMin,
 				_ => null,
 			};
-			return funcInd != null && funcInd(Unmanaged<T>.DataType, rows, cols, pA, lda, out index).Check();
+			return funcInd != null && funcInd(NumberType<T>.DataType, rows, cols, pA, lda, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1000,7 +1000,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				ReduceOperation.Norm => &NMC.matColsNorm,
 				_ => null
 			};
-			return func != null && func(Unmanaged<T>.DataType, rows, cols, pA, lda, px, strideX).Check();
+			return func != null && func(NumberType<T>.DataType, rows, cols, pA, lda, px, strideX).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1016,7 +1016,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				BinaryOperation.Multiply => &NMC.matColsParProd,
 				_ => null
 			};
-			return func != null && func(Unmanaged<T>.DataType, inclusive, rows, cols, pA, lda, pB, ldb).Check();
+			return func != null && func(NumberType<T>.DataType, inclusive, rows, cols, pA, lda, pB, ldb).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1029,7 +1029,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(B, rows, cols, ldb, out T* pB))
 				return false;
-			return NMC.matsEq(Unmanaged<T>.DataType, rows, cols, pA, lda, pB, ldb, out equals).Check();
+			return NMC.matsEq(NumberType<T>.DataType, rows, cols, pA, lda, pB, ldb, out equals).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1041,7 +1041,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(destination, rows, cols, ldd, out TOut* pB))
 				return false;
-			return NMC.matDataConvert(Unmanaged<TIn>.DataType, Unmanaged<TOut>.DataType, true, rows, cols, pA, lds, pB, ldd).Check();
+			return NMC.matDataConvert(NumberType<TIn>.DataType, NumberType<TOut>.DataType, true, rows, cols, pA, lds, pB, ldd).Check();
 		}
 		#endregion
 
@@ -1059,10 +1059,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					return true;
 				case UnaryOperation.Conjugate:
 					T one = T.One;
-					return NMC.triMatMulCopy(Unmanaged<T>.DataType, upper, !unitDiag, MatrixOperation.Conjugate, rows, cols, &one, pA, lda, pB, ldb).Check();
+					return NMC.triMatMulCopy(NumberType<T>.DataType, upper, !unitDiag, MatrixOperation.Conjugate, rows, cols, &one, pA, lda, pB, ldb).Check();
 				case UnaryOperation.Negate:
 					T negOne = -T.One;
-					return NMC.triMatMulCopy(Unmanaged<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &negOne, pA, lda, pB, ldb).Check();
+					return NMC.triMatMulCopy(NumberType<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &negOne, pA, lda, pB, ldb).Check();
 				default:
 					return false;
 			}
@@ -1077,9 +1077,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			return op switch
 			{
-				BinaryScalarOperation.Add => NMC.triMatAddCopy(Unmanaged<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
-				BinaryScalarOperation.Multiply => NMC.triMatMulCopy(Unmanaged<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
-				BinaryScalarOperation.Fill => NMC.triMatFillVal(Unmanaged<T>.DataType, upper, unitDiag, rows, cols, &scalar, pB, ldb).Check(),
+				BinaryScalarOperation.Add => NMC.triMatAddCopy(NumberType<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
+				BinaryScalarOperation.Multiply => NMC.triMatMulCopy(NumberType<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
+				BinaryScalarOperation.Fill => NMC.triMatFillVal(NumberType<T>.DataType, upper, unitDiag, rows, cols, &scalar, pB, ldb).Check(),
 				_ => false,
 			};
 		}
@@ -1095,7 +1095,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			T one = T.One;
 			if (op == BinaryOperation.Add)
-				return NMC.triMatAdd(Unmanaged<T>.DataType, unitDiag, upper, MatrixOperation.None, MatrixOperation.None, rows, cols, &one, pA, lda, &one, pB, ldb, pC, ldc).Check();
+				return NMC.triMatAdd(NumberType<T>.DataType, unitDiag, upper, MatrixOperation.None, MatrixOperation.None, rows, cols, &one, pA, lda, &one, pB, ldb, pC, ldc).Check();
 			else
 				return false;
 		}
@@ -1142,12 +1142,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				if (triFunc != null)
 				{
-					status = triFunc(Unmanaged<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, &reduce);
+					status = triFunc(NumberType<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, &reduce);
 					result = reduce;
 				}
 				if (funcInd != null)
 				{
-					status = funcInd(Unmanaged<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, out long index);
+					status = funcInd(NumberType<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, out long index);
 					result = pA[index];
 					if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
 						result = T.Abs(result);
@@ -1157,12 +1157,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				if (symFunc != null)
 				{
-					status = symFunc(Unmanaged<T>.DataType, upper, false, rows, pA, lda, &reduce);
+					status = symFunc(NumberType<T>.DataType, upper, false, rows, pA, lda, &reduce);
 					result = reduce;
 				}
 				if (funcInd != null)
 				{
-					status = funcInd(Unmanaged<T>.DataType, upper, false, rows, cols, pA, lda, out long index);
+					status = funcInd(NumberType<T>.DataType, upper, false, rows, cols, pA, lda, out long index);
 					result = pA[index];
 					if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
 						result = T.Abs(result);
@@ -1189,7 +1189,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				ReduceOperation.AbsoluteMininum => &NMC.triMatArgAbsMin,
 				_ => null,
 			};
-			return funcInd != null && funcInd(Unmanaged<T>.DataType, upper, triangular && unitDiagOrHerm, rows, cols, pA, lda, out index).Check();
+			return funcInd != null && funcInd(NumberType<T>.DataType, upper, triangular && unitDiagOrHerm, rows, cols, pA, lda, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1227,9 +1227,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				_ => null
 			};
 			if (triangular)
-				return triFunc != null && triFunc(Unmanaged<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, px, strideX).Check();
+				return triFunc != null && triFunc(NumberType<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, px, strideX).Check();
 			else
-				return symFunc != null && symFunc(Unmanaged<T>.DataType, upper, unitDiagOrHerm, rows, pA, lda, px, strideX).Check();
+				return symFunc != null && symFunc(NumberType<T>.DataType, upper, unitDiagOrHerm, rows, pA, lda, px, strideX).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1253,9 +1253,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				_ => null
 			};
 			if (triangular)
-				return triFunc != null && triFunc(Unmanaged<T>.DataType, inclusive, upper, unitDiagOrHerm, rows, cols, pA, lda, pB, ldb).Check();
+				return triFunc != null && triFunc(NumberType<T>.DataType, inclusive, upper, unitDiagOrHerm, rows, cols, pA, lda, pB, ldb).Check();
 			else
-				return symFunc != null && symFunc(Unmanaged<T>.DataType, inclusive, upper, unitDiagOrHerm, rows, pA, lda, pB, ldb).Check();
+				return symFunc != null && symFunc(NumberType<T>.DataType, inclusive, upper, unitDiagOrHerm, rows, pA, lda, pB, ldb).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1266,7 +1266,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(B, rows, cols, ldb, out T* pB))
 				return false;
-			return NMC.triMatsEq(Unmanaged<T>.DataType, upper, ignoreDiag, rows, cols, pA, lda, pB, ldb, out equals).Check();
+			return NMC.triMatsEq(NumberType<T>.DataType, upper, ignoreDiag, rows, cols, pA, lda, pB, ldb, out equals).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1276,7 +1276,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(destination, rows, cols, ldd, out TOut* pB))
 				return false;
-			return NMC.triMatDataConvert(Unmanaged<TIn>.DataType, Unmanaged<TOut>.DataType, true, upper, ignoreDiag, rows, cols, pA, lds, pB, ldd).Check();
+			return NMC.triMatDataConvert(NumberType<TIn>.DataType, NumberType<TOut>.DataType, true, upper, ignoreDiag, rows, cols, pA, lds, pB, ldd).Check();
 		}
 		#endregion
 	}

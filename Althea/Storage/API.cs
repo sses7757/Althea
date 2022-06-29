@@ -89,7 +89,7 @@ namespace Althea.Storage
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		[AbstractApiMethod]
-		public virtual bool MemoryCopy<TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied) where TP1 : IPointer<TP1> where TP2 : IPointer<TP2> => this.MemoryCopy<byte, TP1, TP2>(source, destination, out actualCopied);
+		public virtual bool MemoryCopy<TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied) where TP1 : IPointer<TP1> where TP2 : IPointer<TP2> => this.MemoryCopy<UInt8, TP1, TP2>(source, destination, out actualCopied);
 		#endregion
 
 		#region storage and managed operations
@@ -752,7 +752,7 @@ namespace Althea.Storage
 			var handle = typeof(TS).TypeHandle;
 			if (fillByteFunc.TryGetValue(handle, out var filler))
 				goto FINAL;
-			filler = GetFillMethod<TS, byte>();
+			filler = GetFillMethod<TS, UInt8>();
 			fillByteFunc[handle] = filler;
 		FINAL:
 			((Action<TS, byte>)filler).Invoke(storage, value);

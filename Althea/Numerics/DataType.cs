@@ -1,7 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Althea.Helpers;
-
 
 namespace Althea.Numerics
 {
@@ -215,25 +213,25 @@ namespace Althea.Numerics
 		/// Check whether the given <see cref="DataTypeClassification"/> has only one flag or not.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsAtomic(this DataTypeClassification type) => ((int)type).PopCount() == 1;
+		public static bool IsAtomic(this DataTypeClassification type) => int.PopCount((int)type) == 1;
 
 		/// <summary>
 		/// Check whether the given <see cref="DataTypeTuple"/> has only one flag or not.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsAtomic(this DataTypeTuple type) => ((int)type).PopCount() == 1;
+		public static bool IsAtomic(this DataTypeTuple type) => int.PopCount((int)type) == 1;
 
 		/// <summary>
 		/// Check whether the given <see cref="DataTypeSize"/> has only one flag or not.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsAtomic(this DataTypeSize type) => ((int)type).PopCount() == 1;
+		public static bool IsAtomic(this DataTypeSize type) => int.PopCount((int)type) == 1;
 
 		/// <summary>
 		/// Check whether the given <see cref="DataType"/> has only one flag or not.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsAtomic(this DataType type) => ((byte)type).PopCount() == 1 && ((short)type >> 8).PopCount() == 1 && ((int)type >> 16).PopCount() == 1;
+		public static bool IsAtomic(this DataType type) => byte.PopCount((byte)type) == 1 && int.PopCount((short)type >> 8) == 1 && int.PopCount((int)type >> 16) == 1;
 
 		/// <summary>
 		/// Construct an atomic <see cref="DataType"/> from given parameters.
@@ -247,7 +245,7 @@ namespace Althea.Numerics
 		{
 			if (type <= 0)
 				return default;
-			int sizeB = size.FloorPowerOfTwo();
+			int sizeB = 1 << int.Log2(size);
 			if (sizeB != size)
 				return default;
 			if (complex)
@@ -336,12 +334,10 @@ namespace Althea.Numerics
 			object? v;
 			try
 			{
-				v = typeof(DataTypeExtension).GetMethod(nameof(ToDataType), 1,
-														System.Reflection.BindingFlags.Static |
-														System.Reflection.BindingFlags.NonPublic,
-														null, Type.EmptyTypes, null)?
-											 .MakeGenericMethod(type)?
-											 .Invoke(null, null);
+				var t = typeof(INumber<>).MakeGenericType(type);
+				if (!type.IsAssignableTo(t))
+					throw new NotSupportedException();
+				v = type.GetProperty(nameof(INumber<Int8>.Type), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)?.GetGetMethod()?.Invoke(null, null);
 			}
 			catch (Exception)
 			{
@@ -350,47 +346,6 @@ namespace Althea.Numerics
 			if (v is not DataType d)
 				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			return d;
-		}
-
-		/// <summary>
-		/// Convert the <typeparamref name="T"/> to the <see cref="DataType"/>
-		/// </summary>
-		/// <typeparam name="T">The generic type to get its <see cref="DataType"/></typeparam>
-		/// <returns>The corresponding <see cref="DataType"/> of <typeparamref name="T"/></returns>
-		/// <exception cref="NotSupportedException">if <typeparamref name="T"/> is not a supported data type</exception>
-		internal static DataType ToDataType<T>() where T : unmanaged, INumber<T>
-		{
-			return default(T) switch
-			{
-				// built-in float types
-				Half => DataType.RealHalf,
-				float => DataType.RealSingle,
-				double => DataType.RealDouble,
-				// built-in integer types
-				sbyte => DataType.RealInt8,
-				short => DataType.RealInt16,
-				int => DataType.RealInt32,
-				long => DataType.RealInt64,
-				byte => DataType.RealUInt8,
-				ushort => DataType.RealUInt16,
-				uint => DataType.RealUInt32,
-				ulong => DataType.RealUInt64,
-				// complex types
-				Complex<Half> => DataType.ComplexHalf,
-				Complex<float> => DataType.ComplexSingle,
-				Complex<double> => DataType.ComplexDouble,
-				ComplexInteger<sbyte> => DataType.ComplexInt8,
-				ComplexInteger<short> => DataType.ComplexInt16,
-				ComplexInteger<int> => DataType.ComplexInt32,
-				ComplexInteger<long> => DataType.ComplexInt64,
-				ComplexInteger<byte> => DataType.ComplexUInt8,
-				ComplexInteger<ushort> => DataType.ComplexUInt16,
-				ComplexInteger<uint> => DataType.ComplexUInt32,
-				ComplexInteger<ulong> => DataType.ComplexUInt64,
-				// otherwise
-				_ => NumberType<T>.Classification == 0 ? throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow) : 
-					MakeDataType(NumberType<T>.IsComplex, NumberType<T>.Classification, Unmanaged<T>.Size),
-			};
 		}
 		#endregion
 	}

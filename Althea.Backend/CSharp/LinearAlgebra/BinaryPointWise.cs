@@ -30,7 +30,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 			if (incx == 1 && incy == 1)
 			{
-				if (Unmanaged<T>.DataType.IsInteger())
+				if (NumberType<T>.DataType.IsInteger())
 				{
 					length *= sizeof(T);
 					equals = new ReadOnlySpan<byte>(px, length).SequenceEqual(new(py, length));
@@ -347,7 +347,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else if (NumberType<T>.IsComplex)
 			{
-				if (Unmanaged<T>.DataType.IsInteger() || !Avx.IsSupported)
+				if (NumberType<T>.DataType.IsInteger() || !Avx.IsSupported)
 				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
 					VectorsBinaryManaged<T, Op>(px, 1, py, 1, pz, 1, length, scalar);
 				}
@@ -1154,7 +1154,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else if (NumberType<TIn>.IsComplex && !NumberType<TOut>.IsComplex)
 			{   // need complex abs
-				if (Unmanaged<TIn>.DataType.IsInteger() || !Avx.IsSupported)
+				if (NumberType<TIn>.DataType.IsInteger() || !Avx.IsSupported)
 				{   // no AVX's HorizontalAdd and Unpack (Vector<T> has not corresponding implementation yet)
 					VectorCastManaged(px, 1, py, 1, length);
 				}

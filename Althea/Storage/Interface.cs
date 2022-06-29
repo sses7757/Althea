@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 
-using Althea.Numerics;
 using Althea.Resources;
 
 
@@ -91,8 +90,9 @@ namespace Althea.Storage
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
 	public interface IStorage<T, TSelf> : IStorage, IReadOnlyList<T>,
-		ICreateAlike<TSelf>, IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>,
-		IAdditiveIdentity<TSelf, long>, IAdditionOperators<TSelf, long, TSelf>, ISubtractionOperators<TSelf, long, TSelf>
+		ICreateAlike<TSelf>, System.Numerics.IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>,
+		System.Numerics.IAdditiveIdentity<TSelf, long>, System.Numerics.IAdditionOperators<TSelf, long, TSelf>,
+		System.Numerics.ISubtractionOperators<TSelf, long, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IStorage<T, TSelf>
 	{
@@ -155,7 +155,7 @@ namespace Althea.Storage
 		/// <param name="newLength">The length to check in <typeparamref name="T"/>, default 0 means auto calculation by <paramref name="offset"/></param>
 		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/>.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public virtual bool IsOffsetValid(long offset, long newLength = 0) => this.IsByteOffsetValid(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size);
+		public virtual bool IsOffsetValid(long offset, long newLength = 0) => this.IsByteOffsetValid(offset * T.Size, newLength * T.Size);
 
 		/// <summary>
 		/// When implemented by a derived class, check whether this <typeparamref name="TSelf"/> has same origin as the <paramref name="other"/> <typeparamref name="TSelf"/>.
@@ -271,7 +271,7 @@ namespace Althea.Storage
 			this.GetPointerSizes(lengths);
 			for (int i = 0; i < lengths.Length; i++)
 			{
-				lengths[i] /= Unmanaged<T>.Size;
+				lengths[i] /= T.Size;
 			}
 			lengths[^1] += diff;
 			return TSelf.Create(lengths);
@@ -308,9 +308,9 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="Unmanaged{T}.Size"/>.
+		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="INumber{TSelf}.Size"/>.
 		/// </summary>
-		public long Length => this.LengthInBytes / Unmanaged<T>.Size;
+		public long Length => this.LengthInBytes / T.Size;
 
 		/// <summary>
 		/// When implemented by a derived class, make a referenced <typeparamref name="TSelf"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.
@@ -344,11 +344,11 @@ namespace Althea.Storage
 			this.GetPointerSizes(sizes);
 			for (int i = 0; i < sizes.Length; i++)
 			{
-				if (sizes[i] * Unmanaged<T>.Size % Unmanaged<TOut>.Size != 0)
+				if (sizes[i] * T.Size % TOut.Size != 0)
 					throw new InvalidCastException(ArithmeticError.CannotDivide);
 				length += sizes[i];
 			}
-			return length / Unmanaged<TOut>.Size;
+			return length / TOut.Size;
 		}
 
 		/// <summary>
@@ -397,8 +397,8 @@ namespace Althea.Storage
 				return default;
 			if (!sizeInBytes)
 			{
-				offset *= Unmanaged<T>.Size;
-				newLength *= Unmanaged<T>.Size;
+				offset *= T.Size;
+				newLength *= T.Size;
 			}
 			// get offset and new length in bytes
 			if (newLength <= 0)
@@ -425,7 +425,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the total offset compared to the start of the underlying reference in <typeparamref name="T"/>.
 		/// </summary>
-		/// <remarks>The default implementation does not check whether <see cref="IStorage.TotalOffsetInBytes"/> can be divided by <see cref="Unmanaged{T}.Size"/> or not.</remarks>
-		public long TotalOffset => TotalOffsetInBytes / Unmanaged<T>.Size;
+		/// <remarks>The default implementation does not check whether <see cref="IStorage.TotalOffsetInBytes"/> can be divided by <see cref="INumber{TSelf}.Size"/> or not.</remarks>
+		public long TotalOffset => TotalOffsetInBytes / T.Size;
 	}
 }

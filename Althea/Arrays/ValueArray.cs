@@ -80,7 +80,7 @@ namespace Althea.Array
 	/// All inherited classes shall use <see cref="ArrayStorageManager.AddToManager{TS}"/> in constructors and <see cref="ArrayStorageManager.SafeDispose{TS}"/> in <see cref="IDisposable.Dispose"/> rather than fininalizers to improve GC performance.
 	/// </remarks>
 	public interface IValueArray<T, TSelf> : ICheckValid, IDisposable, IPrintable<T>,
-		ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf>
+		ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, System.Numerics.IEqualityOperators<TSelf, TSelf>
 		where T : unmanaged, INumber<T>
 		where TSelf : class, IValueArray<T, TSelf>
 	{

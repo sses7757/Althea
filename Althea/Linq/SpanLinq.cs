@@ -1,8 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Resources;
 using Althea.Helpers;
+using Althea.Resources;
 
 
 namespace Althea.Linq
@@ -794,7 +795,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to check</param>
 		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
-		public static bool FastAllZeros<T>(this Span<T> span) where T : unmanaged, INumber<T>
+		public static bool FastAllZeros<T>(this Span<T> span) where T : unmanaged
 		{
 			return FastAllZeros((ReadOnlySpan<T>)span);
 		}
@@ -804,7 +805,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to check</param>
 		/// <returns>All elements in <paramref name="span"/> are zeros</returns>
-		public static unsafe bool FastAllZeros<T>(this ReadOnlySpan<T> span) where T : unmanaged, INumber<T>
+		public static unsafe bool FastAllZeros<T>(this ReadOnlySpan<T> span) where T : unmanaged
 		{
 			int size = Math.Min(span.Length, 8) * sizeof(T);
 			ReadOnlySpan<byte> spanFirst = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref span.Ref()), size);
@@ -1046,7 +1047,7 @@ namespace Althea.Linq
 		/// <returns>The created <typeparamref name="TStruct"/></returns>
 		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TStruct ToStruct<T, TStruct>(this Span<T> span) where T : unmanaged, INumber<T> where TStruct : struct
+		public static TStruct ToStruct<T, TStruct>(this Span<T> span) where T : unmanaged where TStruct : struct
 		{
 			return ToStruct<T, TStruct>((ReadOnlySpan<T>)span);
 		}
@@ -1060,7 +1061,7 @@ namespace Althea.Linq
 		/// <returns>The created <typeparamref name="TStruct"/></returns>
 		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TStruct ToStruct<T, TStruct>(this ReadOnlySpan<T> span) where T : unmanaged, INumber<T> where TStruct : struct
+		public static TStruct ToStruct<T, TStruct>(this ReadOnlySpan<T> span) where T : unmanaged where TStruct : struct
 		{
 			span.ToStruct(out TStruct s);
 			return s;
@@ -1075,7 +1076,7 @@ namespace Althea.Linq
 		/// <param name="struct">The output <typeparamref name="TStruct"/></param>
 		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe void ToStruct<T, TStruct>(this ReadOnlySpan<T> span, out TStruct @struct) where T : unmanaged, INumber<T> where TStruct : struct
+		public static unsafe void ToStruct<T, TStruct>(this ReadOnlySpan<T> span, out TStruct @struct) where T : unmanaged where TStruct : struct
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size > span.Length)
@@ -1097,7 +1098,7 @@ namespace Althea.Linq
 		/// <returns>The <paramref name="span"/></returns>
 		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe Span<T> FromStruct<T, TStruct>(this Span<T> span, TStruct @struct) where T : unmanaged, INumber<T> where TStruct : struct
+		public static unsafe Span<T> FromStruct<T, TStruct>(this Span<T> span, TStruct @struct) where T : unmanaged where TStruct : struct
 		{
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size > span.Length)
@@ -1394,7 +1395,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to pick</param>
 		/// <returns>The number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
-		public static int DistinctCount<T>(this Span<T> span) where T : unmanaged, INumber<T>
+		public static int DistinctCount<T>(this Span<T> span) where T : unmanaged, IEquatable<T>
 		{
 			return DistinctCount((ReadOnlySpan<T>)span);
 		}
@@ -1404,7 +1405,7 @@ namespace Althea.Linq
 		/// </summary>
 		/// <param name="span">The span to pick</param>
 		/// <returns>The number of distinct element(s) <see cref="IReadOnlyList{T}"/></returns>
-		public static int DistinctCount<T>(this ReadOnlySpan<T> span) where T : unmanaged, INumber<T>
+		public static int DistinctCount<T>(this ReadOnlySpan<T> span) where T : unmanaged, IEquatable<T>
 		{
 			int len = span.Length;
 			if (len <= 1)

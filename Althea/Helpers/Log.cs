@@ -388,7 +388,7 @@ namespace Althea.Helpers
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="level"/> is of invalid value</exception>
 		public static async void Write(string msg, [CallerMemberName] string? category = null, LogLevel level = LogLevel.Information)
 		{
-			if (!level.IsValid() || !((int)level).IsPowerOfTwo())
+			if (!level.IsValid() || !int.IsPow2((int)level))
 				throw new ArgumentOutOfRangeException(nameof(level), level, Resources.ParameterError.InvalidValue);
 			await logger.Write(msg, category, level);
 		}

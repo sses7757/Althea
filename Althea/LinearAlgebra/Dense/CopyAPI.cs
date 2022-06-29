@@ -3,7 +3,6 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
-using Althea.Numerics;
 using Althea.Resources;
 using Althea.SourceGenerator;
 using Althea.Storage;
@@ -1005,7 +1004,7 @@ namespace Althea.LinearAlgebra.Dense
 			copier = GetCopy2DMethod<T, TS1, TS2>();
 			copy2DFunc[(handle1, handle2)] = copier;
 		FINAL:
-			((Action<TS1, TS2, long, long, long, long>)copier).Invoke(source, destination, sourceLD * Unmanaged<T>.Size, destinationLD * Unmanaged<T>.Size, height, width);
+			((Action<TS1, TS2, long, long, long, long>)copier).Invoke(source, destination, sourceLD * T.Size, destinationLD * T.Size, height, width);
 		}
 
 		/// <summary>

@@ -235,13 +235,13 @@ namespace Althea.Backend.Cuda.Storage
 
 		protected override unsafe bool FillWithValue_<T>(PointerSegment pointer, T value)
 		{
-			if (value.IsZero() || Unmanaged<T>.Size == sizeof(byte))
+			if (value.IsZero() || T.Size == sizeof(byte))
 				return FillWithValue_(pointer, *(byte*)&value);
 			long offset = pointer.GetPointerOffsetCuda(out var mp, out var sp);
 			if (offset == NOT_SUPPORT)
 				return false;
 			if (mp is not null)
-				NativeMethods.vecFillVal(Const<T>.DataType, mp.OffsetPointer(offset), &value, pointer.LengthInBytes / Unmanaged<T>.Size, 1);
+				NativeMethods.vecFillVal(Const<T>.DataType, mp.OffsetPointer(offset), &value, pointer.LengthInBytes / T.Size, 1);
 			if (sp is not null)
 				sp.NativeStream.SetValues(value, pointer.LengthInBytes);
 			return true;

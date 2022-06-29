@@ -1,7 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Althea.Numerics;
-
 
 namespace Althea.Random
 {
@@ -44,7 +42,7 @@ namespace Althea.Random
 	public interface IFloatingPointDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, INumber<T> where TSelf : struct, IFloatingPointDistribution<T, TSelf>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.BinaryFloat_IEEE754, Unmanaged<T>.DataType);
+		bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.BinaryFloat_IEEE754, T.Type);
 	}
 
 	/// <summary>
@@ -55,7 +53,7 @@ namespace Althea.Random
 	public interface IIntegralDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, INumber<T> where TSelf : struct, IIntegralDistribution<T, TSelf>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.UnsignedInteger | DataTypeClassification.SignedInteger, Unmanaged<T>.DataType);
+		bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.UnsignedInteger | DataTypeClassification.SignedInteger, T.Type);
 	}
 
 	/// <summary>

@@ -1,5 +1,4 @@
-﻿using Althea.Numerics;
-using Althea.Storage;
+﻿using Althea.Storage;
 
 
 namespace Althea.Helpers

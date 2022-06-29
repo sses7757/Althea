@@ -16,7 +16,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool GetPointerIndexType<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
-			if (!Unmanaged<T>.DataType.IsInteger())
+			if (!NumberType<T>.DataType.IsInteger())
 			{
 				pointer = default; length = 0;
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotInteger);

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -762,6 +763,10 @@ namespace Althea.Storage
 		/// <returns>A <see cref="long"/> as the difference between the <see cref="Pointer"/>s of <paramref name="left"/> and <paramref name="right"/></returns>
 		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different pointers</exception>
 		public static long operator -(PointerSegment<T> left, PointerSegment<T> right) => left.Pointer == right.Pointer ? left.OffsetInBytes - right.OffsetInBytes : throw new InvalidOperationException();
+
+		static PointerSegment<T> IAdditionOperators<PointerSegment<T>, long, PointerSegment<T>>.op_CheckedAddition(PointerSegment<T> left, long right) => left + right;
+		static PointerSegment<T> ISubtractionOperators<PointerSegment<T>, long, PointerSegment<T>>.op_CheckedSubtraction(PointerSegment<T> left, long right) => left - right;
+		static long ISubtractionOperators<PointerSegment<T>, PointerSegment<T>, long>.op_CheckedSubtraction(PointerSegment<T> left, PointerSegment<T> right) => left - right;
 
 		/// <summary>
 		/// Implicitly convert a pointer of type <typeparamref name="T"/> to a <see cref="PointerSegment{T}"/>

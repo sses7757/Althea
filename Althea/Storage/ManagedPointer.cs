@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.Numerics;
 
 
 namespace Althea.Storage
@@ -120,7 +119,7 @@ namespace Althea.Storage
 
 		public static ManagedPureStorage<T> Empty => new();
 
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		public static CombinationOfLocations LocationDescription => new StorageLocation(LocationType.CpuRam, 0);
 
@@ -128,11 +127,11 @@ namespace Althea.Storage
 
 		public static IEnumerable<string> PropertyNames => new[] { nameof(Pointer) };
 
-		static long IAdditiveIdentity<ManagedPureStorage<T>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<ManagedPureStorage<T>, long>.AdditiveIdentity => 0;
 
 		public long LengthInBytes => this.Pointer.LengthInBytes;
 
-		public long Length => this.Pointer.LengthInBytes / Unmanaged<T>.Size;
+		public long Length => this.Pointer.LengthInBytes / T.Size;
 
 		public IEnumerable<object?> PropertyValues => new object[] { this.Pointer  };
 
@@ -185,6 +184,10 @@ namespace Althea.Storage
 		{
 			return other is ManagedPureStorage<T> mp && this.Pointer.OverlapWith(mp.Pointer);
 		}
+
+		static ManagedPureStorage<T> System.Numerics.IAdditionOperators<ManagedPureStorage<T>, long, ManagedPureStorage<T>>.op_CheckedAddition(ManagedPureStorage<T> left, long right) => left + right;
+
+		static ManagedPureStorage<T> System.Numerics.ISubtractionOperators<ManagedPureStorage<T>, long, ManagedPureStorage<T>>.op_CheckedSubtraction(ManagedPureStorage<T> left, long right) => left - right;
 		#endregion
 	}
 }

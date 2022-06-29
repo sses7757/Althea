@@ -1,12 +1,11 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text.Json.Serialization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.Numerics;
 using Althea.Resources;
 
 using Mem = Althea.Storage.ApiSelector;
@@ -28,7 +27,7 @@ namespace Althea.Storage
 	/// The interface for caching strategy of a two-level caching system
 	/// </summary>
 	/// <typeparam name="TSelf">The actual unmanaged number that implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
-	public interface ICacheStrategy<TSelf> : IEqualityOperators<TSelf, TSelf>, ICheckValid where TSelf : struct, ICacheStrategy<TSelf>
+	public interface ICacheStrategy<TSelf> : System.Numerics.IEqualityOperators<TSelf, TSelf>, ICheckValid where TSelf : struct, ICacheStrategy<TSelf>
 	{
 		/// <summary>
 		/// When implemented by a derived struct, statically create a <typeparamref name="TSelf"/> and get the size of the cache level in bytes with given size of the low speed level.
@@ -68,11 +67,11 @@ namespace Althea.Storage
 	/// <summary>
 	/// The direct mapping cache strategy as the default strategy as well as a demonstration
 	/// </summary>
-	public struct DirectMappingStrategy : ICacheStrategy<DirectMappingStrategy>, IEqualityOperators<DirectMappingStrategy, DirectMappingStrategy>
+	public struct DirectMappingStrategy : ICacheStrategy<DirectMappingStrategy>, System.Numerics.IEqualityOperators<DirectMappingStrategy, DirectMappingStrategy>
 	{
 		#region basic
 		[StructLayout(LayoutKind.Explicit)]
-		private struct CacheLineInfo : IEqualityOperators<CacheLineInfo, CacheLineInfo>, IEquatable<CacheLineInfo>
+		private struct CacheLineInfo : System.Numerics.IEqualityOperators<CacheLineInfo, CacheLineInfo>, IEquatable<CacheLineInfo>
 		{
 			[FieldOffset(0)] // little-endian
 			private byte dirtyAndValid;
@@ -166,6 +165,9 @@ namespace Althea.Storage
 			this.lineInfo = new CacheLineInfo[1 << nCacheLinesLog2];
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static int CeilLog2(int v) => int.Log2(v - 1) + 1;
+
 		/// <summary>
 		/// Statically create a <see cref="DirectMappingStrategy"/> and get the size of the cache level in bytes with given size of the low speed level.
 		/// </summary>
@@ -176,15 +178,15 @@ namespace Althea.Storage
 		public static DirectMappingStrategy Create(long actualStorageInBytes, out long cacheSizeInBytes)
 		{
 			const int MAX_CACHE_LINE_BITS = 13; // 8KiB
-			int addressBits = (int)actualStorageInBytes.CeilLog2();
+			int addressBits = CeilLog2((int)actualStorageInBytes);
 			if (addressBits <= MAX_CACHE_LINE_BITS)
 			{
-				byte bits = (byte)actualStorageInBytes.Log2();
+				byte bits = (byte)CeilLog2((int)actualStorageInBytes);
 				cacheSizeInBytes = 1 << bits;
 				return new(bits, (byte)(actualStorageInBytes > cacheSizeInBytes ? 2 : 1));
 			}
 			cacheSizeInBytes = 1 << MAX_CACHE_LINE_BITS;
-			return new(MAX_CACHE_LINE_BITS, (byte)((actualStorageInBytes + 1) >> MAX_CACHE_LINE_BITS).CeilLog2());
+			return new(MAX_CACHE_LINE_BITS, (byte)CeilLog2((int)(actualStorageInBytes + 1) >> MAX_CACHE_LINE_BITS));
 		}
 
 		/// <inheritdoc/>
@@ -352,7 +354,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
 		/// </summary>
-		public static DataType DataType => Unmanaged<T>.DataType;
+		public static DataType DataType => T.Type;
 
 		/// <summary>
 		/// Statically get the description of the storage locations of this <see cref="CachedStorage{T, TS, TPh, TPl}"/> as a <see cref="CombinationOfLocations"/>
@@ -516,12 +518,12 @@ namespace Althea.Storage
 		/// <returns>A new <see cref="CachedStorage{T, TS, TPh, TPl}"/> that likes <paramref name="storage"/></returns>
 		public static CachedStorage<T, TS, TPh, TPl> CreateAlike<TOut>(CachedStorage<TOut, TS, TPh, TPl> storage) where TOut : unmanaged, INumber<TOut>
 		{
-			return Create(stackalloc long[] { storage.Cache.LengthInBytes / Unmanaged<TOut>.Size, storage.Length });
+			return Create(stackalloc long[] { storage.Cache.LengthInBytes / TOut.Size, storage.Length });
 		}
 		#endregion
 
 		#region operators
-		static long IAdditiveIdentity<CachedStorage<T, TS, TPh, TPl>, long>.AdditiveIdentity => 0;
+		static long System.Numerics.IAdditiveIdentity<CachedStorage<T, TS, TPh, TPl>, long>.AdditiveIdentity => 0;
 
 		/// <summary>
 		/// Indicates whether the current <see cref="CachedStorage{T, TS, TPh, TPl}"/> is equal to the <paramref name="other"/> <see cref="CachedStorage{T, TS, TPh, TPl}"/> of the same type.
@@ -553,9 +555,9 @@ namespace Althea.Storage
 		public static long operator -(CachedStorage<T, TS, TPh, TPl> left, CachedStorage<T, TS, TPh, TPl> right)
 		{
 			long diffBytes = IStorage<T, CachedStorage<T, TS, TPh, TPl>>.StorageDiffBytes(left, right);
-			if (diffBytes % Unmanaged<T>.Size != 0)
+			if (diffBytes % T.Size != 0)
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / Unmanaged<T>.Size;
+			return diffBytes / T.Size;
 		}
 
 		/// <summary>
@@ -577,6 +579,8 @@ namespace Althea.Storage
 		/// <see cref="CachedStorage{T, TS, TPh, TPl}"/> inequality operator
 		/// </summary>
 		public static bool operator !=(CachedStorage<T, TS, TPh, TPl> left, CachedStorage<T, TS, TPh, TPl> right) => !left.Equals(right);
+		static CachedStorage<T, TS, TPh, TPl> System.Numerics.IAdditionOperators<CachedStorage<T, TS, TPh, TPl>, long, CachedStorage<T, TS, TPh, TPl>>.op_CheckedAddition(CachedStorage<T, TS, TPh, TPl> left, long right) => left + right;
+		static CachedStorage<T, TS, TPh, TPl> System.Numerics.ISubtractionOperators<CachedStorage<T, TS, TPh, TPl>, long, CachedStorage<T, TS, TPh, TPl>>.op_CheckedSubtraction(CachedStorage<T, TS, TPh, TPl> left, long right) => left - right;
 		#endregion
 
 		#region string
@@ -606,7 +610,7 @@ namespace Althea.Storage
 
 				byte[] data = reader.GetBytesFromBase64();
 				TPl pointer = Mem.Allocate<TPl>(data.LongLength);
-				Mem.FromManaged<byte, TPl>(pointer, data);
+				Mem.FromManaged<UInt8, TPl>(pointer, data.AsAux());
 
 				if (!reader.Read())
 					throw new JsonException();
@@ -623,7 +627,7 @@ namespace Althea.Storage
 					throw new JsonException(ParameterError.InvalidValue);
 				byte[] temp = new byte[value.LengthInBytes];
 				value.Strategy.Flush(value.CopyWrapper);
-				Mem.ToManaged<byte, TPl>(value.Memory, temp);
+				Mem.ToManaged<UInt8, TPl>(value.Memory, temp.AsAux());
 				writer.WriteStartObject();
 				writer.WriteBase64String(nameof(Repr.Data), temp);
 				writer.WriteEndObject();
@@ -677,7 +681,7 @@ namespace Althea.Storage
 		/// <param name="length">The length to create in <typeparamref name="T"/></param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
-		public ActualCachedStorage(long length) : this(length > 0 ? Mem.Allocate<TPl>(length * Unmanaged<T>.Size) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
+		public ActualCachedStorage(long length) : this(length > 0 ? Mem.Allocate<TPl>(length * T.Size) : throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive))
 		{
 			// do nothing
 		}
@@ -737,7 +741,7 @@ namespace Althea.Storage
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="CachedStorageBase{TS, TPh, TPl}"/></exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
 		public ReferenceCachedStorage(IStorage? storage, long offset = 0, long newLength = 0) :
-			base(storage is CachedStorageBase<TS, TPh, TPl> p ? p.Memory.MoveBy(offset * Unmanaged<T>.Size, newLength * Unmanaged<T>.Size) : default)
+			base(storage is CachedStorageBase<TS, TPh, TPl> p ? p.Memory.MoveBy(offset * T.Size, newLength * T.Size) : default)
 		{
 			var (reference, totalOffsetBytes, _) = IReferenceStorage<T, CachedStorage<T, TS, TPh, TPl>>.Create<CachedStorageBase<TS, TPh, TPl>>(storage, offset, newLength);
 			this.Reference = reference;

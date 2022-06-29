@@ -18,35 +18,35 @@ public static unsafe class MatrixSolvers
 	#region utilities
 	#region linear algebra
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static T NormSq<T>(T* vec, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static T NormSq<T>(T* vec, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Api.Inner<T, byte>(true, vec, 1, vec, 1, n, out T norm);
 		return norm;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static T Dot<T>(T* x, T* y, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static T Dot<T>(T* x, T* y, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Api.Inner<T, bool>(true, x, 1, y, 1, n, out T dot);
 		return dot;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static T DotU<T>(T* x, T* y, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static T DotU<T>(T* x, T* y, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Api.Inner<T, bool>(false, x, 1, y, 1, n, out T dot);
 		return dot;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void Scale<T>(T* x, T α, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void Scale<T>(T* x, T α, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Api.VectorModify<T, T, Api.U_MultiplyScalar>(x, 1, x, 1, n, α);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void AddScaled<T>(T* y, T* x, T α, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void AddScaled<T>(T* y, T* x, T α, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Api.VectorsBinary<T, Api.B_AddScaled>(x, 1, x, 1, y, 1, α, n);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void AddConjugateScaled<T>(T* y, T* x, T α, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void AddConjugateScaled<T>(T* y, T* x, T α, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (NumberType<T>.IsComplex)
 			Api.VectorsBinary<T, Api.B_AddConjugateScaled>(x, 1, x, 1, y, 1, α, n);
@@ -54,7 +54,7 @@ public static unsafe class MatrixSolvers
 			AddScaled(y, x, α, n);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void VecMulMat<T>(T* x, T* A, int ld, T* output, int m, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void VecMulMat<T>(T* x, T* A, int ld, T* output, int m, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		for (int i = 0; i < n; i++)
 		{
@@ -62,7 +62,7 @@ public static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void VecMulScaledMat<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void VecMulScaledMat<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		for (int i = 0; i < m; i++)
 		{
@@ -70,7 +70,7 @@ public static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void MatMulScaledVec<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void MatMulScaledVec<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Unsafe.InitBlockUnaligned(output, 0, (uint)(m * sizeof(T)));
 		if (NumberType<T>.IsComplex)
@@ -89,7 +89,7 @@ public static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void MatMulVec<T>(T* A, int ld, T* x, T* output, int m, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void MatMulVec<T>(T* A, int ld, T* x, T* output, int m, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Unsafe.InitBlockUnaligned(output, 0, (uint)(m * sizeof(T)));
 		if (NumberType<T>.IsComplex)
@@ -108,7 +108,7 @@ public static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void Rank1UpdateNeg<T>(T* A, int ld, T* x, T* y, int m, int n, bool conj = true) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void Rank1UpdateNeg<T>(T* A, int ld, T* x, T* y, int m, int n, bool conj = true) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (NumberType<T>.IsComplex && conj)
 		{
@@ -126,7 +126,7 @@ public static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void SymRank2UpdateNeg<T>(T* A, int ld, T* x, T* y, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void SymRank2UpdateNeg<T>(T* A, int ld, T* x, T* y, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (NumberType<T>.IsComplex)
 		{
@@ -146,7 +146,7 @@ public static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void InPlaceTranspose<T>(T* A, int ld, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void InPlaceTranspose<T>(T* A, int ld, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		for (int i = 0; i < n; i++)
 		{
@@ -163,13 +163,13 @@ public static unsafe class MatrixSolvers
 
 	// x / (y + scalar)
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void PointWiseDivideAddScalar<T>(T* x, T* y, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void PointWiseDivideAddScalar<T>(T* x, T* y, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (resultIm != null)
 		{   // real type
 			T imSq = scalarIm * scalarIm;
 			scalarIm = -scalarIm;
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			Vector<T> imSqs = new(imSq), scalarIms = new(scalarIm);
@@ -196,7 +196,7 @@ public static unsafe class MatrixSolvers
 		}
 		else
 		{
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			if (NumberType<T>.IsComplex)
 			{
@@ -225,11 +225,11 @@ public static unsafe class MatrixSolvers
 	}
 	// x / y
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void PointWiseDivide<T>(T* x, T* y, T* yIm, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void PointWiseDivide<T>(T* x, T* y, T* yIm, int n, T* result, T* resultIm) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (resultIm != null)
 		{   // real type
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			while (x + Vector<T>.Count <= xEnd)
@@ -261,11 +261,11 @@ public static unsafe class MatrixSolvers
 	}
 	// x * y
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void PointWiseMultiply<T>(T* x, T* xIm, T* y, T* yIm, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void PointWiseMultiply<T>(T* x, T* xIm, T* y, T* yIm, int n, T* result, T* resultIm) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (resultIm != null)
 		{   // real type
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			while (x + Vector<T>.Count <= xEnd)
@@ -296,11 +296,11 @@ public static unsafe class MatrixSolvers
 	}
 	// x * y + z + scalar
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void PointWiseMultiplyAddScalar<T>(T* x, T* xIm, T* y, T* z, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void PointWiseMultiplyAddScalar<T>(T* x, T* xIm, T* y, T* z, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (resultIm != null)
 		{   // real type
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			Vector<T> scalars = new(scalar), scalarsIm = new(scalarIm);
@@ -334,11 +334,11 @@ public static unsafe class MatrixSolvers
 	}
 	// a * b + x * y
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void PointWiseMultiplyAdd<T>(T* a, T* aIm, T* b, T* x, T* xIm, T* y, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void PointWiseMultiplyAdd<T>(T* a, T* aIm, T* b, T* x, T* xIm, T* y, int n, T* result, T* resultIm) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (aIm != null)
 		{
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			while (x + Vector<T>.Count <= xEnd)
@@ -364,7 +364,7 @@ public static unsafe class MatrixSolvers
 		}
 		else
 		{
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			if (NumberType<T>.IsComplex)
 			{
@@ -395,11 +395,11 @@ public static unsafe class MatrixSolvers
 	}
 	// 1 / x
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void PointWiseInv<T>(T* x, T* xIm, int n, T* result, T* resultIm) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void PointWiseInv<T>(T* x, T* xIm, int n, T* result, T* resultIm) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (resultIm != null)
 		{
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			while (x + Vector<T>.Count <= xEnd)
@@ -427,11 +427,11 @@ public static unsafe class MatrixSolvers
 	}
 	// x + y * scalar
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void PointWiseAddScaled<T>(T* x, T* xIm, T* y, T* yIm, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void PointWiseAddScaled<T>(T* x, T* xIm, T* y, T* yIm, int n, T scalar, T scalarIm, T* result, T* resultIm) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (resultIm != null)
 		{
-			if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			Vector<T> scalars = new(scalar), scalarsIm = new(scalarIm);
@@ -460,9 +460,9 @@ public static unsafe class MatrixSolvers
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool AllZeroComparedTo<T>(T* x, int n, T scalar) where T : unmanaged, IFloatingPointIeee754<T>
+	private static bool AllZeroComparedTo<T>(T* x, int n, T scalar) where T : unmanaged, IBinaryFloat<T>
 	{
-		if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+		if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 			goto SCALAR;
 		T* xEnd = x + n;
 		Vector<T> scalars = new(scalar);
@@ -487,10 +487,10 @@ public static unsafe class MatrixSolvers
 
 	#region orthogonalize
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static (T Re, T Im) Dot<T>(T* xRe, T* xIm, T* yRe, T* yIm, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static (T Re, T Im) Dot<T>(T* xRe, T* xIm, T* yRe, T* yIm, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		T dotRe = T.Zero, dotIm = T.Zero;
-		if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+		if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 			goto SCALAR;
 		T* xEnd = xRe + n;
 		Vector<T> dotsRe = new(T.Zero), dotsIm = new(T.Zero);
@@ -516,10 +516,10 @@ public static unsafe class MatrixSolvers
 		return (dotRe, dotIm);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static T NormSq<T>(T* vecRe, T* vecIm, int n) where T : unmanaged, IFloatingPointIeee754<T>
+	private static T NormSq<T>(T* vecRe, T* vecIm, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		T norm = T.Zero;
-		if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+		if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 			goto SCALAR;
 		T* xEnd = vecRe + n;
 		Vector<T> norms = new(T.Zero);
@@ -538,13 +538,13 @@ public static unsafe class MatrixSolvers
 		return norm;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void Scale<T>(T* xRe, T* xIm, int n, T scalar) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void Scale<T>(T* xRe, T* xIm, int n, T scalar) where T : unmanaged, IBinaryFloat<T>
 	{
 		Api.VectorModify<T, T, Api.U_MultiplyScalar>(xRe, 1, xRe, 1, n, scalar);
 		Api.VectorModify<T, T, Api.U_MultiplyScalar>(xIm, 1, xIm, 1, n, scalar);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void Orthogonalize<T>(bool complex, int n, int nVecs, T* Q, int ldq) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void Orthogonalize<T>(bool complex, int n, int nVecs, T* Q, int ldq) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (complex)
 		{
@@ -583,7 +583,7 @@ public static unsafe class MatrixSolvers
 
 	#region orthogonal transformations
 	[StructLayout(LayoutKind.Sequential)]
-	private readonly ref struct Householder2<T> where T : unmanaged, IFloatingPointIeee754<T>
+	private readonly ref struct Householder2<T> where T : unmanaged, IBinaryFloat<T>
 	{
 		private readonly T v1, v2, tau;
 
@@ -604,7 +604,7 @@ public static unsafe class MatrixSolvers
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	private readonly ref struct Householder3<T> where T : unmanaged, IFloatingPointIeee754<T>
+	private readonly ref struct Householder3<T> where T : unmanaged, IBinaryFloat<T>
 	{
 		private readonly T v1, v2, v3, tau;
 
@@ -628,7 +628,7 @@ public static unsafe class MatrixSolvers
 
 	//tex:$H = \begin{pmatrix}h_1&h_3\\\bar{h}_3&h_2\end{pmatrix}$
 	[StructLayout(LayoutKind.Sequential)]
-	private readonly ref struct Householder2x2<T> where T : unmanaged, IFloatingPointIeee754<T>
+	private readonly ref struct Householder2x2<T> where T : unmanaged, IBinaryFloat<T>
 	{
 		private readonly T h1, h2, h3;
 
@@ -650,7 +650,7 @@ public static unsafe class MatrixSolvers
 			}
 			else
 			{
-				if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+				if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 					goto SCALAR;
 				T* Aend = A + n;
 				T* AA = A + ld;
@@ -683,7 +683,7 @@ public static unsafe class MatrixSolvers
 
 	//tex:$H = \begin{pmatrix}h_1&h_4&h_5\\\bar{h}_4&h_2&h_6\\\bar{h}_5&\bar{h}_6&h_3\end{pmatrix}$
 	[StructLayout(LayoutKind.Sequential)]
-	private readonly ref struct Householder3x3<T> where T : unmanaged, IFloatingPointIeee754<T>
+	private readonly ref struct Householder3x3<T> where T : unmanaged, IBinaryFloat<T>
 	{
 		private readonly T h1, h2, h3, h4, h5, h6;
 
@@ -715,7 +715,7 @@ public static unsafe class MatrixSolvers
 			}
 			else
 			{
-				if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+				if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 					goto SCALAR;
 				T* Aend = A + n;
 				T* AA = A + ld, AAA = A + 2 * ld;
@@ -744,7 +744,7 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void RowUpdate(T* A, int ld, int n)
 		{
-			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 3)
+			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (NumberType<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 3)
 			{   // scalar
 				T h4c = h4.Conjugate(), h5c = h5.Conjugate(), h6c = h6.Conjugate();
 				for (int i = 0, j = 0; i < n; i++, j += ld)
@@ -785,7 +785,7 @@ public static unsafe class MatrixSolvers
 
 	//tex:$Q = \begin{pmatrix}q_1&q_4&q_7\\q_2&q_5&q_8\\q_3&q_6&q_9\end{pmatrix}$
 	[StructLayout(LayoutKind.Sequential)]
-	private readonly ref struct Orthogonal3x3<T> where T : unmanaged, IFloatingPointIeee754<T>
+	private readonly ref struct Orthogonal3x3<T> where T : unmanaged, IBinaryFloat<T>
 	{
 		private readonly T q1, q2, q3, q4, q5, q6, q7, q8, q9;
 
@@ -818,7 +818,7 @@ public static unsafe class MatrixSolvers
 			}
 			else
 			{
-				if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+				if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 					goto SCALAR;
 				T* Aend = A + n;
 				T* AA = A + ld, AAA = A + 2 * ld;
@@ -861,7 +861,7 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void RowUpdate(T* A, int ld, int n)
 		{
-			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 3)
+			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (NumberType<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 3)
 			{   // scalar
 				var conj = this;
 				if (NumberType<T>.IsComplex)
@@ -901,7 +901,7 @@ public static unsafe class MatrixSolvers
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	private readonly ref struct Orthogonal4x4<T> where T : unmanaged, IFloatingPointIeee754<T>
+	private readonly ref struct Orthogonal4x4<T> where T : unmanaged, IBinaryFloat<T>
 	{
 		private readonly T q1, q2, q3, q4, q5, q6, q7, q8, q9, qA, qB, qC, qD, qE, qF, qG;
 
@@ -938,7 +938,7 @@ public static unsafe class MatrixSolvers
 			}
 			else
 			{
-				if (!Vector.IsHardwareAccelerated || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16)
+				if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
 					goto SCALAR;
 				T* Aend = A + n;
 				while (A + Vector<T>.Count <= Aend)
@@ -984,7 +984,7 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void RowUpdate(T* A, int ld, int n)
 		{
-			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (Unmanaged<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 4)
+			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (NumberType<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 4)
 			{   // scalar
 				var conj = this;
 				if (NumberType<T>.IsComplex)
@@ -1038,7 +1038,7 @@ public static unsafe class MatrixSolvers
 	/// <typeparam name="T">The floating point data type</typeparam>
 	/// <param name="matrix">The input / output matrix to be QR factorized. Its lower triangular part will be replaced Householder reflectors and upper part by the result triangular matrix.</param>
 	/// <param name="diagStore">The output <see cref="Span{T}"/> to store the real diagonal elements of the resulting triangular matrix.</param>
-	public static void QrFactorize<T>(SpanMatrix<T> matrix, Span<T> diagStore) where T : unmanaged, IFloatingPointIeee754<T>
+	public static void QrFactorize<T>(SpanMatrix<T> matrix, Span<T> diagStore) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (matrix.Rows <= 1)
 			return;
@@ -1081,7 +1081,7 @@ public static unsafe class MatrixSolvers
 	/// <param name="colRight">The right most Q matrix's column's index to generate (exclusive).</param>
 	/// <param name="matrix">The output of <see cref="QrFactorize{T}(SpanMatrix{T}, Span{T})"/> whose columns from <paramref name="colLeft"/> to <paramref name="colRight"/> will be overwritten by the result Q matrix.</param>
 	/// <param name="workSpace">The working space with length ≥ the number of rows of <paramref name="matrix"/>.</param>
-	public static void QrGenerateQ<T>(int colLeft, int colRight, SpanMatrix<T> matrix, Span<T> workSpace) where T : unmanaged, IFloatingPointIeee754<T>
+	public static void QrGenerateQ<T>(int colLeft, int colRight, SpanMatrix<T> matrix, Span<T> workSpace) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (matrix.Rows <= 1)
 			return;
@@ -1147,7 +1147,7 @@ public static unsafe class MatrixSolvers
 	/// <typeparam name="T">The floating point data type</typeparam>
 	/// <param name="matrix">The output of <see cref="QrFactorize{T}(SpanMatrix{T}, Span{T})"/>, not modified</param>
 	/// <param name="rightHandSides">The input / output matrix to right multiply Q's (conjugate) transpose</param>
-	public static void QrQtMultiply<T>(SpanMatrix<T> matrix, SpanMatrix<T> rightHandSides) where T : unmanaged, IFloatingPointIeee754<T>
+	public static void QrQtMultiply<T>(SpanMatrix<T> matrix, SpanMatrix<T> rightHandSides) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (matrix.Rows <= 1)
 			return;
@@ -1175,7 +1175,7 @@ public static unsafe class MatrixSolvers
 	/// <param name="matrix">The output matrix of <see cref="QrFactorize{T}(SpanMatrix{T}, Span{T})"/>, must be set to <c><see cref="SpanMatrix{T}.Rows"/> == <see cref="SpanMatrix{T}.Cols"/></c>, not modified</param>
 	/// <param name="diagStore">The output <see cref="Span{T}"/> of <see cref="QrFactorize{T}(SpanMatrix{T}, Span{T})"/>, not modified</param>
 	/// <param name="rightHandSides">The output right hand side matrix of <see cref="QrQtMultiply{T}(SpanMatrix{T}, SpanMatrix{T})"/>, replaced by the solution after return</param>
-	public static void QrLinearSolve<T>(SpanMatrix<T> matrix, ReadOnlySpan<T> diagStore, SpanMatrix<T> rightHandSides) where T : unmanaged, IFloatingPointIeee754<T>
+	public static void QrLinearSolve<T>(SpanMatrix<T> matrix, ReadOnlySpan<T> diagStore, SpanMatrix<T> rightHandSides) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (matrix.Rows <= 1)
 			return;
@@ -1233,7 +1233,7 @@ public static unsafe class MatrixSolvers
 	/// <param name="matrix">The input / output <see cref="SpanMatrix{T}"/> to be reduced, replaced by the unary transformation matrix used to transform original matrix to tridiagonal form after return.</param>
 	/// <param name="diagStore">The output <see cref="Span{T}"/> to store the diagonal elements of result tridiagonal matrix</param>
 	/// <param name="offDiagStore">The output <see cref="Span{T}"/> to store the off diagonal elements of result tridiagonal matrix</param>
-	public static void HermitianMatrixToTridiagonal<T>(SpanMatrix<T> matrix, Span<T> diagStore, Span<T> offDiagStore) where T : unmanaged, IFloatingPointIeee754<T>
+	public static void HermitianMatrixToTridiagonal<T>(SpanMatrix<T> matrix, Span<T> diagStore, Span<T> offDiagStore) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (matrix.IsEmpty)
 			return;
@@ -1306,7 +1306,7 @@ public static unsafe class MatrixSolvers
 	/// <param name="offDiagStore">The off-diagonal elements of tridiagonal matrix, can be generated from <see cref="HermitianMatrixToTridiagonal{T}(SpanMatrix{T}, Span{T}, Span{T})"/>, destroyed after return</param>
 	/// <param name="eigenvectors">The input / output <see cref="SpanMatrix{T}"/> to store the multiplication result of <paramref name="eigenvectors"/> and the real eigenvectors of tridiagonal matrix</param>
 	/// <returns>0 for success. Otherwise, number k indicates the k-th off-diagonal element of intermediate tridiagonal form did not converge to zero.</returns>
-	public static int HermitianTridiagonalEigensolve<T>(Span<T> diagStore, Span<T> offDiagStore, SpanMatrix<T> eigenvectors) where T : unmanaged, IFloatingPointIeee754<T>
+	public static int HermitianTridiagonalEigensolve<T>(Span<T> diagStore, Span<T> offDiagStore, SpanMatrix<T> eigenvectors) where T : unmanaged, IBinaryFloat<T>
 	{
 		int n = diagStore.Length, evld = eigenvectors.LeadDim;
 		if (offDiagStore.Length != n)
@@ -1408,7 +1408,7 @@ public static unsafe class MatrixSolvers
 
 	#region general eigen
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void CheckGeneralEigen<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag, out int n, out int lda, out int ldq) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void CheckGeneralEigen<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag, out int n, out int lda, out int ldq) where T : unmanaged, IBinaryFloat<T>
 	{
 		n = lda = ldq = 0;
 		if (matrix.IsEmpty)
@@ -1434,7 +1434,7 @@ public static unsafe class MatrixSolvers
 	/// <typeparam name="T">The floating point data type</typeparam>
 	/// <param name="matrix">The input / output <see cref="SpanMatrix{T}"/> to be reduced to Hessenberg form</param>
 	/// <param name="transformer">The output <see cref="SpanMatrix{T}"/> to store the unary transformation matrix used to transform <paramref name="matrix"/> to Hessenberg form if it desired. Otherwise, a working space with size ≥ (matrix size, 3).</param>
-	public static void MatrixToHessenberg<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer) where T : unmanaged, IFloatingPointIeee754<T>
+	public static void MatrixToHessenberg<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer) where T : unmanaged, IBinaryFloat<T>
 	{
 		CheckGeneralEigen(matrix, transformer, default, default, out int n, out int lda, out int ldq);
 		if (n <= 3)
@@ -1504,7 +1504,7 @@ public static unsafe class MatrixSolvers
 		}
 	}
 
-	private static void ToStandardSchurForm<T>(int n, T* A, int lda, T* Q, int ldq, int i) where T : unmanaged, IFloatingPointIeee754<T>
+	private static void ToStandardSchurForm<T>(int n, T* A, int lda, T* Q, int ldq, int i) where T : unmanaged, IBinaryFloat<T>
 	{
 		// constants
 		T two = T.One + T.One, half = T.One / two, halfSqrt2 = T.Sqrt(two) * half, four = two + two;
@@ -1557,7 +1557,7 @@ public static unsafe class MatrixSolvers
 	/// <param name="eigenvaluesImag">The output <see cref="Span{T}"/> to store the eigenvalues' imaginary parts (cannot be empty if <typeparamref name="T"/> is a real type)</param>
 	/// <param name="workSpace">The working space with length ≥ 2 * matrix size if <typeparamref name="T"/> is a complex type, not required otherwise</param>
 	/// <returns>0 for success. Otherwise, number k indicates the k-th off-diagonal element of intermediate Hessenberg form did not converge to zero.</returns>
-	public static int HessenbergSchurFactorize<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag = default, Span<T> workSpace = default) where T : unmanaged, IFloatingPointIeee754<T>
+	public static int HessenbergSchurFactorize<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag = default, Span<T> workSpace = default) where T : unmanaged, IBinaryFloat<T>
 	{
 		CheckGeneralEigen(matrix, transformer, eigenvalues, eigenvaluesImag, out int n, out int lda, out int ldq);
 		if (n == 0)
@@ -1690,7 +1690,7 @@ public static unsafe class MatrixSolvers
 	/// <param name="eigenvalues">The input / output eigenvalues to be sorted by <paramref name="keys"/></param>
 	/// <param name="eigenvaluesImag">The input / output eigenvalues' imaginary parts to be sorted by <paramref name="keys"/></param>
 	/// <param name="workSpace">The additional working space, length ≥ 3 * matrix size when <typeparamref name="T"/> is complex, not required otherwise</param>
-	public static void ReorderSchurForm<T, TKey>(Span<TKey> keys, SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag = default, Span<T> workSpace = default) where T : unmanaged, IFloatingPointIeee754<T> where TKey : IComparisonOperators<TKey, TKey>
+	public static void ReorderSchurForm<T, TKey>(Span<TKey> keys, SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag = default, Span<T> workSpace = default) where T : unmanaged, IBinaryFloat<T> where TKey : IComparisonOperators<TKey, TKey>
 	{
 		CheckGeneralEigen(matrix, transformer, eigenvalues, eigenvaluesImag, out int n, out int lda, out int ldq);
 		if (n == 0)
@@ -1854,7 +1854,7 @@ public static unsafe class MatrixSolvers
 	/// <param name="workSpace">The working space with length ≥ 9 * matrix size</param>
 	/// <param name="eigenvalues">The input eigenvalues</param>
 	/// <param name="eigenvaluesImag">The input eigenvalues' imaginary parts if <typeparamref name="T"/> is a real type</param>
-	public static void SchurFormEigensolve<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer, SpanMatrix<T> eigenvectors, Span<T> workSpace, Span<T> eigenvalues, Span<T> eigenvaluesImag = default) where T : unmanaged, IFloatingPointIeee754<T>
+	public static void SchurFormEigensolve<T>(SpanMatrix<T> matrix, SpanMatrix<T> transformer, SpanMatrix<T> eigenvectors, Span<T> workSpace, Span<T> eigenvalues, Span<T> eigenvaluesImag = default) where T : unmanaged, IBinaryFloat<T>
 	{
 		CheckGeneralEigen(matrix, transformer, eigenvalues, eigenvaluesImag, out int n, out int lda, out int ldq);
 		if (n == 0)

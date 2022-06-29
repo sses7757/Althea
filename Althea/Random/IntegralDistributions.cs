@@ -1,7 +1,4 @@
-﻿using Althea.Numerics;
-
-
-namespace Althea.Random
+﻿namespace Althea.Random
 {
 	// Ignore Spelling: \dfrac \ln \det \lt \alpha \mbox \dbinom \binom
 	/// <summary>

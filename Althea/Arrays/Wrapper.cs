@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
-using Althea.Numerics;
 using Althea.Storage;
 
 
@@ -199,7 +198,7 @@ namespace Althea.Array
 	/// The structure for the format of any sparse array with size the same as an <see cref="int"/>.
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
-	public readonly struct SparseFormat : IEqualityOperators<SparseFormat, SparseFormat>, IBitwiseOperators<SparseFormat, SparseFormat, SparseFormat>
+	public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseFormat, SparseFormat>, System.Numerics.IBitwiseOperators<SparseFormat, SparseFormat, SparseFormat>
 	{
 		#region enumerates
 		/// <summary>
@@ -424,7 +423,7 @@ namespace Althea.Array
 		/// <summary>
 		/// Get whether this <see cref="SparseFormat"/> is an atomic format, i.e. a specific format, or not.
 		/// </summary>
-		public readonly bool IsAtomic => ((byte)this.type).IsPowerOfTwo() && ((byte)this.blocking).IsPowerOfTwo() && ((byte)this.major).IsPowerOfTwo();
+		public readonly bool IsAtomic => byte.IsPow2((byte)this.type) && byte.IsPow2((byte)this.blocking) && byte.IsPow2((byte)this.major);
 
 		/// <summary>
 		/// Get whether this <see cref="SparseFormat"/> is of <see cref="Type.Compressed"/> or not.
@@ -454,7 +453,7 @@ namespace Althea.Array
 			get
 			{
 				byte t = (byte)this.type, b = (byte)this.blocking, m = (byte)this.major;
-				byte pt = t.PopCount(), pb = b.PopCount(), pm = m.PopCount();
+				byte pt = byte.PopCount(t), pb = byte.PopCount(b), pm = byte.PopCount(m);
 				return pt * pb * pm;
 			}
 		}
@@ -470,7 +469,7 @@ namespace Althea.Array
 			if (this.data == 0)
 				return Span<SparseFormat>.Empty;
 			byte t = (byte)this.type, b = (byte)this.blocking, m = (byte)this.major;
-			byte pt = t.PopCount(), pb = b.PopCount(), pm = m.PopCount();
+			byte pt = byte.PopCount(t), pb = byte.PopCount(b), pm = byte.PopCount(m);
 			int count = pt * pb * pm;
 			if (result.Length < count)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(result));
@@ -482,7 +481,7 @@ namespace Althea.Array
 				{
 					for (byte im = 0; im < pm; im++)
 					{
-						byte lt = t.Log2(), lb = b.Log2(), lm = m.Log2();
+						byte lt = byte.Log2(t), lb = byte.Log2(b), lm = byte.Log2(m);
 						result[count++] = new((Type)(1 << lt), (Blocking)(1 << lb), (Major)(1 << lm));
 						t = t.ResetBit(lt); b = b.ResetBit(lb); m = m.ResetBit(lm);
 					}
@@ -531,7 +530,7 @@ namespace Althea.Array
 		#region basic
 		static SparseArrayWrapper()
 		{
-			if (Unmanaged<TInd>.Size > sizeof(long))
+			if (TInd.Size > sizeof(long))
 				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 

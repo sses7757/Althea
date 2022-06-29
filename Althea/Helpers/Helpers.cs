@@ -1,11 +1,11 @@
 ﻿using System.Buffers;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.Arm;
 using System.Text;
 
 using Althea.Linq;
-using Althea.Numerics;
 using Althea.Resources;
 
 
@@ -113,70 +113,13 @@ namespace Althea.Helpers
 		}
 
 		/// <summary>
-		/// Whether the input integer is a power of 2
-		/// </summary>
-		/// <param name="x">The input integer</param>
-		/// <returns>Whether <paramref name="x"/> is a power of 2</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.IsPow2(x);
-
-		/// <summary>
-		/// Get the nearest power of 2 integer which is not larger than the input integer
-		/// </summary>
-		/// <param name="x">The input integer</param>
-		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T FloorPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.One << T.Log2(x).As<T, int>();
-
-		/// <summary>
-		/// Get the nearest power of 2 integer which is not less than the input integer
-		/// </summary>
-		/// <param name="x">The input integer</param>
-		/// <returns><paramref name="x"/>'s the nearest power of 2</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T CeilPowerOfTwo<T>(this T x) where T : IBinaryInteger<T> => T.One << (T.Log2(x - T.One).As<T, int>() + 1);
-
-		/// <summary>
-		/// Get the floor round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>The nearest log2 of <paramref name="input"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T Log2<T>(this T input) where T : IBinaryInteger<T> => T.Log2(input);
-
-		/// <summary>
-		/// Get the ceiling round of log2(<paramref name="input"/>)
-		/// </summary>
-		/// <param name="input">input number</param>
-		/// <returns>The ceiling round of log2 of <paramref name="input"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T CeilLog2<T>(this T input) where T : IBinaryInteger<T> => T.Log2(input - T.One) + T.One;
-
-		/// <summary>
-		/// Get the division and remainder of <paramref name="denominator"/> / <paramref name="numerator"/>
-		/// </summary>
-		/// <param name="denominator">The input denominator</param>
-		/// <param name="numerator">The input numerator</param>
-		/// <returns>The quotient and the remainder of <paramref name="denominator"/> / <paramref name="numerator"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static (T Quotient, T Remainder) DivRem<T>(this T denominator, T numerator) where T : IBinaryInteger<T> => T.DivRem(denominator, numerator);
-
-		/// <summary>
-		/// Count the <paramref name="input"/>'s bits which are set to 1
-		/// </summary>
-		/// <param name="input">input integer</param>
-		/// <returns>The number <paramref name="input"/>'s bits set</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T PopCount<T>(this T input) where T : IBinaryInteger<T> => T.PopCount(input);
-
-		/// <summary>
 		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
 		/// </summary>
 		/// <param name="input">input number</param>
 		/// <param name="bit">bit position</param>
 		/// <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsBitSet<T>(this T input, byte bit) where T : IBinaryInteger<T> => (input & T.Create(1 << bit)) == T.Zero;
+		public static bool IsBitSet(this int input, byte bit) => (input & (1 << bit)) == 0;
 
 		/// <summary>
 		/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0
@@ -185,7 +128,7 @@ namespace Althea.Helpers
 		/// <param name="bit">bit position</param>
 		/// <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsBitNotSet<T>(this T input, byte bit) where T : IBinaryInteger<T> => (input & T.Create(1 << bit)) != T.Zero;
+		public static bool IsBitNotSet(this int input, byte bit) => (input & (1 << bit)) != 0;
 
 		/// <summary>
 		/// Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 1
@@ -194,7 +137,7 @@ namespace Althea.Helpers
 		/// <param name="bit">bit position</param>
 		/// <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 1</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T SetBit<T>(this T input, byte bit) where T : IBinaryInteger<T> => input | T.Create(1 << bit);
+		public static int SetBit(this int input, byte bit) => input | (1 << bit);
 
 		/// <summary>
 		/// Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 0
@@ -203,7 +146,25 @@ namespace Althea.Helpers
 		/// <param name="bit">bit position</param>
 		/// <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 0</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ResetBit<T>(this T input, byte bit) where T : IBinaryInteger<T> => input & ~T.Create(1 << bit);
+		public static int ResetBit(this int input, byte bit) => input & ~(1 << bit);
+
+		/// <summary>
+		/// Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 1
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 1</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte SetBit(this byte input, byte bit) => (byte)(input | (1 << bit));
+
+		/// <summary>
+		/// Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 0
+		/// </summary>
+		/// <param name="input">input number</param>
+		/// <param name="bit">bit position</param>
+		/// <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 0</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static byte ResetBit(this byte input, byte bit) => (byte)(input & ~(1 << bit));
 		#endregion
 
 		#region time related
@@ -1024,6 +985,12 @@ namespace Althea.Helpers
 	public static class SpanHelper
 	{
 		#region create
+		/// <summary>
+		/// Convert an array of <see cref="byte"/> to a <see cref="Span{T}"/> of <see cref="UInt8"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<UInt8> AsAux(this byte[]? array) => array is null || array.Length == 0 ? default : MemoryMarshal.CreateSpan(ref Unsafe.As<byte, UInt8>(ref array[0]), array.Length);
+
 		/// <summary>
 		/// Creates a new read-only span over a portion of a regular managed object.
 		/// </summary>

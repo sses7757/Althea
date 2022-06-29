@@ -134,6 +134,12 @@ public readonly partial struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
 	public static <#=reps[i]#> MachinePrecision => (<#=orgs[i]#>)1;
 
 	/// <inheritdoc/>
+	public static unsafe int Size => sizeof(<#=orgs[i]#>);
+
+	/// <inheritdoc/>
+	public static bool IsComplexType => false;
+
+	/// <inheritdoc/>
 	public static <#=reps[i]#> One => (<#=orgs[i]#>)1;
 
 	/// <inheritdoc/>
@@ -172,6 +178,10 @@ public readonly partial struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsZero(<#=reps[i]#> value) => value._value == (<#=orgs[i]#>)0;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static <#=reps[i]#> Conjugate(<#=reps[i]#> value) => value;
 
 <# if (!reps[i].StartsWith("U")) { #>
 	/// <inheritdoc/>

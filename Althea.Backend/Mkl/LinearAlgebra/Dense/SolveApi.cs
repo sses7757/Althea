@@ -12,7 +12,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	{
 		#region eigen-problems
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestroy = false) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -41,7 +41,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec, TS4? LUOut, long ldLU, bool allowDestroy = false) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool EigenGeneralMatrixHermitian<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, bool upper, TS1 A, long lda, TS1 B, long ldb, TS2 valOut, TS3? vecOut, long ldvec, TS4? LUOut, long ldLU, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -76,7 +76,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valsOut, TS2? valsOutImag, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy = false) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valsOut, TS2? valsOutImag, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -127,7 +127,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valsOut, TS2? valsOutImag, TS2 valsOutDenom, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy = false) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool EigenGeneralMatrixGeneral<T, TS1, TS2, TS3, TS4>(GeneralEigenType type, long n, TS1 A, long lda, TS1 B, long ldb, TS2 valsOut, TS2? valsOutImag, TS2 valsOutDenom, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -188,7 +188,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region other decompositions
 		/// <inheritdoc/>
-		public virtual bool SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S, bool allowDestroy = false) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool SingularValues<T, TS1, TS2, TS3, TS4>(bool fullU, bool fullV, long m, long n, TS1 A, long lda, TS2? U, long ldu, TS3? Vct, long ldvct, TS4 S, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			long mn = Math.Min(m, n);
 			if (!GetPointer(A, m, n, lda, out T* pA))
@@ -230,7 +230,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valOut, TS3? valImagOut) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -277,7 +277,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (typeof(TInd) != typeof(long))
 				return false;
@@ -331,7 +331,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region linear solve
 		/// <inheritdoc/>
-		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
@@ -356,7 +356,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region QR solve
 		/// <inheritdoc/>
-		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!GetPointer(A, m, n, lda, out T* pA))
 				return false;
@@ -396,7 +396,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <inheritdoc/>
-		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!GetPointer(A, m, n, lda, out T* pA))
 				return false;

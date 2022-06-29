@@ -3,7 +3,6 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Dense;
-using Althea.Numerics;
 using Althea.Storage;
 
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
@@ -280,7 +279,7 @@ namespace Althea.Array
 
 		static IEnumerable<string> IMainPropertyFormattable<DenseVector<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Length", "Stride" };
 
-		IEnumerable<object?> IMainPropertyFormattable<DenseVector<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.length, this.values, this.stride };
+		IEnumerable<object?> IMainPropertyFormattable<DenseVector<T, TS>>.PropertyValues => new object[] { T.Type, this.length, this.values, this.stride };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<DenseVector<T, TS>>.ToString(this);

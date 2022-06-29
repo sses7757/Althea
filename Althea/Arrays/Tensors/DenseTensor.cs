@@ -6,7 +6,6 @@ using System.Text.Json;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
-using Althea.Numerics;
 using Althea.Storage;
 using Althea.TensorAlgebra;
 
@@ -379,7 +378,7 @@ namespace Althea.Array
 
 		static IEnumerable<string> IMainPropertyFormattable<DenseTensor<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "OuterSize" };
 
-		IEnumerable<object?> IMainPropertyFormattable<DenseTensor<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.values, "{" + this.Size.SpanJoin('x') + "}", "{" + this.OuterSize.SpanJoin('x') + "}" };
+		IEnumerable<object?> IMainPropertyFormattable<DenseTensor<T, TS>>.PropertyValues => new object[] { T.Type, this.values, "{" + this.Size.SpanJoin('x') + "}", "{" + this.OuterSize.SpanJoin('x') + "}" };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<DenseTensor<T, TS>>.ToString(this);

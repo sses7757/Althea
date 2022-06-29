@@ -3375,7 +3375,7 @@
                       <Metric Name="ExecutableLines" Value="5" />
                     </Metrics>
                   </Method>
-                  <Method Name="SparseArrayWrapper&lt;TVal, TInd, TSVal, TSInd&gt; SparseArrayWrapper&lt;TVal, TInd, TSVal, TSInd&gt;.Create(ISparseArray&lt;TVal, TInd, TSVal, TSInd&gt; array)" File="D:\Works\git\ALTHEA\Althea\Arrays\Wrapper.cs" Line="648">
+                  <Method Name="SparseArrayWrapper&lt;(ISparseArray&lt;TVal, TInd, TSVal, TSInd&gt; array).As<TVal, TInd, TSVal, TSInd&gt; SparseArrayWrapper&lt;TVal, TInd, TSVal, TSInd&gt;>()" File="D:\Works\git\ALTHEA\Althea\Arrays\Wrapper.cs" Line="648">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="65" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -3997,7 +3997,7 @@
                       <Metric Name="ExecutableLines" Value="2" />
                     </Metrics>
                   </Method>
-                  <Method Name="TApi IAbstractRuntimeApi&lt;TApi&gt;.Create(Type type)" File="D:\Works\git\ALTHEA\Althea\Base\AbstractApi.cs" Line="36">
+                  <Method Name="(Type type).As<TApi IAbstractRuntimeApi&lt;TApi&gt;>()" File="D:\Works\git\ALTHEA\Althea\Base\AbstractApi.cs" Line="36">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="64" />
                       <Metric Name="CyclomaticComplexity" Value="4" />
@@ -14869,7 +14869,7 @@
                       <Metric Name="ExecutableLines" Value="1" />
                     </Metrics>
                   </Field>
-                  <Method Name="SparseMatrix&lt;T, TInd, TS, TSInd&gt; SparseMatrix&lt;T, TInd, TS, TSInd&gt;.Create(in SparseArrayWrapper&lt;T, TInd, TS, TSInd&gt; wrapper)" File="D:\Works\git\ALTHEA\Althea\Arrays\Matrices\SparseMatrix.cs" Line="496">
+                  <Method Name="SparseMatrix&lt;(in SparseArrayWrapper&lt;T, TInd, TS, TSInd&gt; wrapper).As<T, TInd, TS, TSInd&gt; SparseMatrix&lt;T, TInd, TS, TSInd&gt;>()" File="D:\Works\git\ALTHEA\Althea\Arrays\Matrices\SparseMatrix.cs" Line="496">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="76" />
                       <Metric Name="CyclomaticComplexity" Value="3" />
@@ -16393,7 +16393,7 @@
                       <Metric Name="ExecutableLines" Value="1" />
                     </Metrics>
                   </Field>
-                  <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseTensor&lt;T, TInd, TS, TSInd&gt;.Create(in SparseArrayWrapper&lt;T, TInd, TS, TSInd&gt; wrapper)" File="D:\Works\git\ALTHEA\Althea\Arrays\Tensors\SparseTensor.cs" Line="550">
+                  <Method Name="SparseTensor&lt;(in SparseArrayWrapper&lt;T, TInd, TS, TSInd&gt; wrapper).As<T, TInd, TS, TSInd&gt; SparseTensor&lt;T, TInd, TS, TSInd&gt;>()" File="D:\Works\git\ALTHEA\Althea\Arrays\Tensors\SparseTensor.cs" Line="550">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="76" />
                       <Metric Name="CyclomaticComplexity" Value="3" />
@@ -17289,7 +17289,7 @@
                       <Metric Name="ExecutableLines" Value="1" />
                     </Metrics>
                   </Field>
-                  <Method Name="SparseVector&lt;T, TInd, TS, TSInd&gt; SparseVector&lt;T, TInd, TS, TSInd&gt;.Create(in SparseArrayWrapper&lt;T, TInd, TS, TSInd&gt; wrapper)" File="D:\Works\git\ALTHEA\Althea\Arrays\Vectors\SparseVector.cs" Line="455">
+                  <Method Name="SparseVector&lt;(in SparseArrayWrapper&lt;T, TInd, TS, TSInd&gt; wrapper).As<T, TInd, TS, TSInd&gt; SparseVector&lt;T, TInd, TS, TSInd&gt;>()" File="D:\Works\git\ALTHEA\Althea\Arrays\Vectors\SparseVector.cs" Line="455">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="76" />
                       <Metric Name="CyclomaticComplexity" Value="3" />
@@ -34599,7 +34599,7 @@
                   <Metric Name="ExecutableLines" Value="6" />
                 </Metrics>
                 <Members>
-                  <Method Name="TSelf ICacheStrategy&lt;TSelf&gt;.Create(long actualStorageInBytes, out long cacheSizeInBytes)" File="D:\Works\git\ALTHEA\Althea\Storage\CacheStorage.cs" Line="39">
+                  <Method Name="(long actualStorageInBytes, out long cacheSizeInBytes).As<TSelf ICacheStrategy&lt;TSelf&gt;>()" File="D:\Works\git\ALTHEA\Althea\Storage\CacheStorage.cs" Line="39">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -35176,7 +35176,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="TSelf IStorage&lt;T, TSelf&gt;.Create(ReadOnlySpan&lt;long&gt; lengths)" File="D:\Works\git\ALTHEA\Althea\Storage\Interface.cs" Line="246">
+                  <Method Name="(ReadOnlySpan&lt;long&gt; lengths).As<TSelf IStorage&lt;T, TSelf&gt;>()" File="D:\Works\git\ALTHEA\Althea\Storage\Interface.cs" Line="246">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -35993,7 +35993,7 @@
                       </Method>
                     </Accessors>
                   </Property>
-                  <Method Name="ManagedPureStorage&lt;T&gt; ManagedPureStorage&lt;T&gt;.Create(ReadOnlySpan&lt;long&gt; lengths)" File="D:\Works\git\ALTHEA\Althea\Storage\ManagedPointer.cs" Line="150">
+                  <Method Name="ManagedPureStorage&lt;(ReadOnlySpan&lt;long&gt; lengths).As<T&gt; ManagedPureStorage&lt;T&gt;>()" File="D:\Works\git\ALTHEA\Althea\Storage\ManagedPointer.cs" Line="150">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -36727,7 +36727,7 @@
                       <Metric Name="ExecutableLines" Value="3" />
                     </Metrics>
                   </Method>
-                  <Method Name="PureStorage&lt;T, TP&gt; PureStorage&lt;T, TP&gt;.Create(ReadOnlySpan&lt;long&gt; lengths)" File="D:\Works\git\ALTHEA\Althea\Storage\PureStorages.cs" Line="172">
+                  <Method Name="PureStorage&lt;(ReadOnlySpan&lt;long&gt; lengths).As<T, TP&gt; PureStorage&lt;T, TP&gt;>()" File="D:\Works\git\ALTHEA\Althea\Storage\PureStorages.cs" Line="172">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="77" />
                       <Metric Name="CyclomaticComplexity" Value="3" />
@@ -38428,7 +38428,7 @@
                       <Metric Name="ExecutableLines" Value="1" />
                     </Metrics>
                   </Method>
-                  <Method Name="TensorOrder TensorOrder.Create(params OrderElement[] elements)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\TensorOrder.cs" Line="418">
+                  <Method Name="(params OrderElement[] elements).As<TensorOrder TensorOrder>()" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\TensorOrder.cs" Line="418">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="58" />
                       <Metric Name="CyclomaticComplexity" Value="9" />

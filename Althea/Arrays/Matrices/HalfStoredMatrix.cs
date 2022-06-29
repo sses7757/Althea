@@ -3,7 +3,6 @@
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
-using Althea.Numerics;
 using Althea.Storage;
 
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
@@ -290,7 +289,7 @@ namespace Althea.Array
 
 		static IEnumerable<string> IMainPropertyFormattable<TriangularMatrix<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "LeadDim", "Upper", "UnitDiagonal" };
 
-		IEnumerable<object?> IMainPropertyFormattable<TriangularMatrix<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.Storage, $"{this.NRows}x{this.NCols}", this.LeadDim, this.upper, this.unitDiag };
+		IEnumerable<object?> IMainPropertyFormattable<TriangularMatrix<T, TS>>.PropertyValues => new object[] { T.Type, this.Storage, $"{this.NRows}x{this.NCols}", this.LeadDim, this.upper, this.unitDiag };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<TriangularMatrix<T, TS>>.ToString(this);
@@ -370,7 +369,7 @@ namespace Althea.Array
 		{
 			this.upper = upper;
 			this.herm = herm ?? true;
-			if (!NumberType<T>.IsComplex)
+			if (!T.IsComplexType)
 				this.herm = false;
 		}
 		#endregion
@@ -445,7 +444,7 @@ namespace Althea.Array
 			get
 			{
 				if ((this.upper && x > y) || (!this.upper && x < y))
-					return this.herm ? this[y, x] : this[y, x].Conjugate();
+					return this.herm ? this[y, x] : T.Conjugate(this[y, x]);
 				IBaseMatrix<T, SymmetricMatrix<T, TS>>.CheckIndex(this, x, y);
 				return (this.Storage + (x + y * this.LeadDim)).ToManaged<T, TS>();
 			}
@@ -453,7 +452,7 @@ namespace Althea.Array
 			{
 #pragma warning disable CA2011
 				if ((this.upper && x > y) || (!this.upper && x < y))
-					this[y, x] = this.herm ? value : value.Conjugate();
+					this[y, x] = this.herm ? value : T.Conjugate(value);
 #pragma warning restore CA2011
 				IBaseMatrix<T, SymmetricMatrix<T, TS>>.CheckIndex(this, x, y);
 				(this.Storage + (x + y * this.LeadDim)).FromManaged(value);
@@ -466,7 +465,7 @@ namespace Althea.Array
 		/// <exception cref="InvalidOperationException">If this is a Hermitian matrix and <paramref name="value"/> is not a real number</exception>
 		public void FillWith(T value)
 		{
-			if (!this.herm || !T.IsComplexNumber(value))
+			if (!this.herm || !T.IsComplex(value))
 				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 			else
 				throw new InvalidOperationException();
@@ -475,7 +474,7 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void AddScalar(T value)
 		{
-			if (!this.herm || !T.IsComplexNumber(value))
+			if (!this.herm || !T.IsComplex(value))
 				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 			throw new InvalidOperationException();
 		}
@@ -483,7 +482,7 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void Scale(T value)
 		{
-			if (!this.herm || !T.IsComplexNumber(value))
+			if (!this.herm || !T.IsComplex(value))
 				HalfBlas.HalfMatrixBinaryScalar(BinaryScalarOperation.Fill, this.upper, false, this.NRows, this.NCols, value, this.Storage, this.LeadDim, this.Storage, this.LeadDim);
 			else
 				throw new InvalidOperationException();
@@ -608,7 +607,7 @@ namespace Althea.Array
 
 		static IEnumerable<string> IMainPropertyFormattable<SymmetricMatrix<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "LeadDim", "Upper", "Hermitian" };
 
-		IEnumerable<object?> IMainPropertyFormattable<SymmetricMatrix<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.Storage, $"{this.NRows}x{this.NCols}", this.LeadDim, this.upper, this.herm };
+		IEnumerable<object?> IMainPropertyFormattable<SymmetricMatrix<T, TS>>.PropertyValues => new object[] { T.Type, this.Storage, $"{this.NRows}x{this.NCols}", this.LeadDim, this.upper, this.herm };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<SymmetricMatrix<T, TS>>.ToString(this);
@@ -628,7 +627,7 @@ namespace Althea.Array
 				for (int x = 0; x < rows; x++)
 				{
 					if ((this.upper && x > y) || (!this.upper && x < y))
-						values[x + y * rows] = this.herm ? values[y + x * rows] : values[y + x * rows].Conjugate();
+						values[x + y * rows] = this.herm ? values[y + x * rows] : T.Conjugate(values[y + x * rows]);
 				}
 			}
 			return values.ToMatrixString(rows, false, this.NCols - cols, settings.Value.Precision) + (this.NRows == rows ? "" : string.Format(Resources.Print.MoreRows, this.NRows - rows));

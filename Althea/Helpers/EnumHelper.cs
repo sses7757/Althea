@@ -1,4 +1,6 @@
-﻿using Althea.Linq;
+﻿using System.Numerics;
+
+using Althea.Linq;
 
 
 namespace Althea.Helpers

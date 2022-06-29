@@ -764,7 +764,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestroy) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool EigenStandardMatrixHermitian<T, TS1, TS2, TS3>(long n, bool upper, TS1 A, long lda, TS2 valOut, TS3? vecOut, long ldvec, bool allowDestroy) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA, out int nn, out _, out int ld))
 				return false;
@@ -795,7 +795,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool SchurCheck<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldv) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		private static bool SchurCheck<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldv) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			pU = px = pxIm = null;
 			ldv = 0;
@@ -818,7 +818,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int SchurDecompose<T>(T* pA, T* pU, T* px, T* pxIm, int nn, int ld, int ldv) where T : unmanaged, IFloatingPointIeee754<T>
+		private static int SchurDecompose<T>(T* pA, T* pU, T* px, T* pxIm, int nn, int ld, int ldv) where T : unmanaged, IBinaryFloat<T>
 		{
 			if (pU == null)
 				ldv = nn;
@@ -841,7 +841,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valsOut, TS3? valsOutImag) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool SchurDecomposition<T, TS1, TS2, TS3>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 valsOut, TS3? valsOutImag) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (!SchurCheck(n, A, lda, U, ldu, valsOut, valsOutImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldv))
 				return false;
@@ -852,7 +852,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, INumber<TInd> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (!SchurCheck(n, A, lda, U, ldu, vals, valsImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldvec))
 				return false;
@@ -869,7 +869,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		/// <inheritdoc/>
-		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valsOut, TS2? valsOutImag, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
+		public virtual bool EigenStandardMatrixGeneral<T, TS1, TS2, TS3, TS4>(long n, TS1 A, long lda, TS2 valsOut, TS2? valsOutImag, TS3? leftVec, long ldvl, TS4? rightVec, long ldvr, bool allowDestroy) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TS4 : class, IStorage<T, TS4>
 		{
 			if (leftVec is not null)
 				return false;
@@ -896,7 +896,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		/// <inheritdoc/>
-		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool LinearSolveGeneral<T, TS1, TS2>(long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!GetPointer(A, n, n, lda, out T* pA, out int nn, out _, out int ld))
 				return false;
@@ -919,7 +919,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		/// <inheritdoc/>
-		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool QRDecomposition<T, TS1, TS2>(bool full, long m, long n, TS1 A, long lda, TS2? Q, long ldq) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!GetPointer(A, m, n, lda, out T* pA, out int mm, out int nn, out int ldaa))
 				return false;
@@ -939,7 +939,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		/// <inheritdoc/>
-		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy) where T : unmanaged, IFloatingPointIeee754<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!GetPointer(A, m, n, lda, out T* pA, out int mm, out int nn, out int ld))
 				return false;

@@ -103,8 +103,6 @@ namespace Althea.SourceGenerator
 				if (selectorName[0] == 'I')
 					selectorName = selectorName.Substring(1);
 				string usingStatements = string.Join(Environment.NewLine, usings.Where(u => !u.ToString().Contains("Althea.SourceGenerator")));
-				if (!usingStatements.Contains("using Althea.NativeTypes;"))
-					usingStatements += Environment.NewLine + "using Althea.NativeTypes;";
 				if (!usingStatements.Contains("using Althea.Resources;"))
 					usingStatements += Environment.NewLine + "using Althea.Resources;";
 				int classDocStart = ns.ToString().IndexOf("/// <summary>"), classDocEnd = ns.ToString().IndexOf("	/// </summary>");

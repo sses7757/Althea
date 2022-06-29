@@ -704,7 +704,7 @@ namespace Althea.Array
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(matrix));
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
-			if (!NumberType<T>.IsComplex)
+			if (!T.IsComplexType)
 				conjugateRight = false;
 			Blas.GeneralRankOneUpdate(conjugateRight, matrix.NRows, matrix.NCols, α, left.Storage, left.Stride, right.Storage, right.Stride, β, matrix.Storage, matrix.LeadDim);
 		}
@@ -927,7 +927,7 @@ namespace Althea.Array
 		IMatrixEigenSolve<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseVector<T, TS>>,
 		IMatrixSchurDecompose<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseVector<T, TS>>,
 		IMatrixSVD<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseVector<T, TS>>
-		where T : unmanaged, IFloatingPointIeee754<T>
+		where T : unmanaged, IBinaryFloat<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region matrix linear solve
@@ -1015,7 +1015,7 @@ namespace Althea.Array
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outValues));
 			if (outValues.Stride != 1)
 				throw new NotSupportedException();
-			if (matrix is DenseMatrix<T, TS> && !NumberType<T>.IsComplex)
+			if (matrix is DenseMatrix<T, TS> && !T.IsComplexType)
 			{
 				if (outValuesImag is null)
 					throw new ArgumentNullException(nameof(outValuesImag));
@@ -1050,7 +1050,7 @@ namespace Althea.Array
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outValues));
 			if (outValues.Stride != 1)
 				throw new NotSupportedException();
-			if (matrix is DenseMatrix<T, TS> && !NumberType<T>.IsComplex)
+			if (matrix is DenseMatrix<T, TS> && !T.IsComplexType)
 			{
 				if (outValuesImag is null)
 					throw new ArgumentNullException(nameof(outValuesImag));
@@ -1091,7 +1091,7 @@ namespace Althea.Array
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outVectors));
 			if (outValues.Stride != 1)
 				throw new NotSupportedException();
-			if (!NumberType<T>.IsComplex)
+			if (!T.IsComplexType)
 			{
 				if (outValuesImag is null)
 					throw new ArgumentNullException(nameof(outValuesImag));

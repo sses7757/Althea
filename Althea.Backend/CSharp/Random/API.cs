@@ -53,7 +53,7 @@ namespace Althea.Backend.CSharp.Random
 			if (distribution is UniformDistribution<T> u)
 			{
 				offset = u.LowerBound; scale = u.UpperBound - offset;
-				if (!Unmanaged<T>.DataType.IsInteger())
+				if (!NumberType<T>.DataType.IsInteger())
 				{
 					T s = scale;
 					if (typeof(T) == typeof(double))
@@ -94,8 +94,8 @@ namespace Althea.Backend.CSharp.Random
 			if (scale == T.Zero) // random bits
 				return;
 			// else, random range
-			int len = length / Unmanaged<T>.Size;
-			DataType type = Unmanaged<T>.DataType;
+			int len = length / T.Size;
+			DataType type = NumberType<T>.DataType;
 			switch (type)
 			{
 				case DataType.RealSingle:

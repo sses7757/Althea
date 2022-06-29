@@ -5,7 +5,6 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.Numerics;
 using Althea.Storage;
 
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
@@ -59,7 +58,7 @@ namespace Althea.Array
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool GetOffsets(long presentIndex, Span<long> offsets)
 		{
-			var ind = TInd.Create(presentIndex);
+			var ind = (presentIndex).As<TInd>();
 			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
 			offsets[0] = find;
 			if (offsets.Length > 1)
@@ -83,7 +82,7 @@ namespace Althea.Array
 			if (nnz + 1 > this.MaxStored)
 				return false;
 			this.Storage.TryInsert(offset, stackalloc T[] { value });
-			this.IndexStorage.TryInsert(offset, stackalloc TInd[] { TInd.Create(presentIndex) });
+			this.IndexStorage.TryInsert(offset, stackalloc TInd[] { (presentIndex).As<TInd>() });
 			this.NStored = nnz + 1;
 			return true;
 		}
@@ -144,7 +143,7 @@ namespace Althea.Array
 			var (startIndex, start, count) = this.GetFirstDimOffsets(n, restIndices, offsets, lengths, allLengths, null);
 			if (count == 0)
 				return new();
-			var outInds = this.indices.MakeReference(start, count).ApplyToAlike((org, alike) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-startIndex), org, 1, alike, 1));
+			var outInds = this.indices.MakeReference(start, count).ApplyToAlike((org, alike) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (-startIndex).As<TInd>(), org, 1, alike, 1));
 			return new(allLengths[..n], this.Storage.MakeReference(start, count), outInds, this.DefaultValue, -1, this.Labels[..n]);
 		}
 
@@ -157,7 +156,7 @@ namespace Althea.Array
 				return;
 			this.Storage.MakeReference(start, count).CopyTo<T, TS, TS>(overwrite.Storage);
 			this.indices.MakeReference(start, count).CopyTo<TInd, TSInd, TSInd>(overwrite.IndexStorage);
-			ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(-startIndex), overwrite.IndexStorage, 1, overwrite.IndexStorage, 1);
+			ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (-startIndex).As<TInd>(), overwrite.IndexStorage, 1, overwrite.IndexStorage, 1);
 		}
 
 		/// <inheritdoc/>
@@ -170,7 +169,7 @@ namespace Althea.Array
 			value.Storage.CopyTo<T, TS, TS>(this.Storage.MakeReference(start, count));
 			var inds = this.indices.MakeReference(start, count);
 			value.IndexStorage.CopyTo<TInd, TSInd, TSInd>(inds);
-			ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.Create(startIndex), inds, 1, inds, 1);
+			ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (startIndex).As<TInd>(), inds, 1, inds, 1);
 		}
 
 		/// <inheritdoc/>
@@ -284,7 +283,7 @@ namespace Althea.Array
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(blockSize));
 				this.blockSize.CopyFromSpan(blockSize);
 				Span<int> bs = stackalloc int[this.Rank];
-				blockSize.CopyTo(bs, static a => a.As<TInd, int>());
+				blockSize.CopyTo(bs, static a => a.AsInt32());
 				this.blockLength = bs.Prod();
 				if (values.Length != indices.Length * this.blockLength)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
@@ -306,7 +305,7 @@ namespace Althea.Array
 		private bool GetOffsets(long presentIndex, Span<long> offsets)
 		{
 			long insideBlockOffset = presentIndex % this.blockLength;
-			var ind = TInd.Create(presentIndex / this.blockLength);
+			var ind = (presentIndex / this.blockLength).As<TInd>();
 			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
 			offsets[0] = find * this.blockLength + insideBlockOffset;
 			if (offsets.Length > 1)
@@ -333,7 +332,7 @@ namespace Althea.Array
 			Span<T> values = temp.IsEmpty ? stackalloc T[this.blockLength] : temp.Data;
 			values.Fill(this.DefaultValue); values[(int)(offsetVal % this.blockLength)] = value;
 			this.Storage.TryInsert(offsetVal, values);
-			this.IndexStorage.TryInsert(offsetInd, stackalloc TInd[] { TInd.Create(offsetInd * this.blockLength) });
+			this.IndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (offsetInd * this.blockLength).As<TInd>() });
 			this.NStored = nnz + this.blockLength;
 			return true;
 		}
@@ -402,7 +401,7 @@ namespace Althea.Array
 			var (startOffsetInd, countInd) = this.GetFirstDimOffsets(n, restIndices, offsets, lengths, allLengths, null);
 			if (countInd == 0)
 				return new();
-			var outInds = this.indices.MakeReference(startOffsetInd, countInd).ApplyToClone(i => ExtBlas.PointWiseAddScalar(i, 1, TInd.Create(-startOffsetInd)));
+			var outInds = this.indices.MakeReference(startOffsetInd, countInd).ApplyToClone(i => ExtBlas.PointWiseAddScalar(i, 1, (-startOffsetInd).As<TInd>()));
 			return new(allLengths[..n], this.BlockSize, this.Storage.MakeReference(startOffsetInd * this.blockLength, countInd * this.blockLength), outInds, this.DefaultValue, -1, this.Labels[..n]);
 		}
 
@@ -415,7 +414,7 @@ namespace Althea.Array
 				return;
 			this.Storage.MakeReference(startOffsetInd * this.blockLength, countInd * this.blockLength).CopyTo<T, TS, TS>(overwrite.Storage);
 			this.indices.MakeReference(startOffsetInd, countInd).CopyTo<TInd, TSInd, TSInd>(overwrite.IndexStorage);
-			ExtBlas.PointWiseAddScalar(overwrite.IndexStorage, 1, TInd.Create(-startOffsetInd));
+			ExtBlas.PointWiseAddScalar(overwrite.IndexStorage, 1, (-startOffsetInd).As<TInd>());
 		}
 
 		/// <inheritdoc/>
@@ -428,7 +427,7 @@ namespace Althea.Array
 			value.Storage.CopyTo<T, TS, TS>(this.Storage.MakeReference(startOffsetInd * this.blockLength, countInd * this.blockLength));
 			var inds = this.indices.MakeReference(startOffsetInd, countInd);
 			value.IndexStorage.CopyTo<TInd, TSInd, TSInd>(inds);
-			ExtBlas.PointWiseAddScalar(inds, 1, TInd.Create(startOffsetInd));
+			ExtBlas.PointWiseAddScalar(inds, 1, (startOffsetInd).As<TInd>());
 		}
 		*/
 
@@ -454,7 +453,7 @@ namespace Althea.Array
 			this.IndexStorage.ToManaged(indices);
 
 			Span<long> bs = stackalloc long[this.Rank];
-			this.BlockSize.CopyTo(bs, static b => b.As<TInd, long>());
+			this.BlockSize.CopyTo(bs, static b => b.AsInt64());
 			Span<long> bsp = stackalloc long[this.Rank + 1];
 			bs.AccumulateProd(bsp);
 			Span<long> position = stackalloc long[this.Rank];
@@ -508,7 +507,7 @@ namespace Althea.Array
 				return false;
 			var size = wrapper.Size;
 			var blockSize = wrapper.BlockSize;
-			long blockLength = blockSize.Prod().As<TInd, long>();
+			long blockLength = blockSize.Prod().AsInt64();
 			var indices = wrapper.IndexStorages[0];
 			var values = wrapper.ValueStorages[0];
 			if (values.Length != indices.Length * blockLength)
@@ -519,7 +518,7 @@ namespace Althea.Array
 
 		static CoordinateBlockSparseTensor()
 		{
-			if (Unmanaged<TInd>.Size > sizeof(long))
+			if (TInd.Size > sizeof(long))
 				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			Creators.Add(TryCreate);
 			Deserializers.Add(TryJsonDeserialize);

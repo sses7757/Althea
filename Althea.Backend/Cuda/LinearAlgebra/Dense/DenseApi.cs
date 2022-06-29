@@ -150,7 +150,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = s[0];
 			if (s.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			long len = p.LengthInBytes / Unmanaged<T>.Size;
+			long len = p.LengthInBytes / T.Size;
 			len = (len - 1) / stride + 1;
 			if (len > int.MaxValue)
 				return false;
@@ -166,7 +166,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = s[0];
 			if (s.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			length = p.LengthInBytes / Unmanaged<T>.Size;
+			length = p.LengthInBytes / T.Size;
 			length = (length - 1) / stride + 1;
 			ptr = mp.OffsetPointer(p.OffsetInBytes);
 			return true;
@@ -181,7 +181,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = A[0];
 			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			long len = p.LengthInBytes / Unmanaged<T>.Size;
+			long len = p.LengthInBytes / T.Size;
 			if (ld < rows)
 				throw new ArgumentOutOfRangeException(nameof(ld), ld, Resources.Parameter.InvalidValue);
 			if (cols * ld > len)
@@ -203,7 +203,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = A[0];
 			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			long len = p.LengthInBytes / Unmanaged<T>.Size;
+			long len = p.LengthInBytes / T.Size;
 			long cols = op.CanInPlace() ? colsAfterOp : rowsAfterOp;
 			long rows = op.CanInPlace() ? rowsAfterOp : colsAfterOp;
 			if (ld < rows)
@@ -226,7 +226,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			var p = A[0];
 			if (A.Count != 1 || p.Pointer is not IMemoryPointer mp || !this.IsSupported(mp.Location))
 				return false;
-			long len = p.LengthInBytes / Unmanaged<T>.Size;
+			long len = p.LengthInBytes / T.Size;
 			if (cols * ld > len)
 				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(A));
 			ptr = mp.OffsetPointer(p.OffsetInBytes);

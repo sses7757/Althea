@@ -4,7 +4,6 @@ using System.Text.Json;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
-using Althea.Numerics;
 using Althea.Storage;
 
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
@@ -332,7 +331,7 @@ namespace Althea.Array
 
 		static IEnumerable<string> IMainPropertyFormattable<DenseMatrix<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "LeadDim" };
 
-		IEnumerable<object?> IMainPropertyFormattable<DenseMatrix<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.Storage, $"{this.NRows}x{this.NCols}", this.LeadDim };
+		IEnumerable<object?> IMainPropertyFormattable<DenseMatrix<T, TS>>.PropertyValues => new object[] { T.Type, this.Storage, $"{this.NRows}x{this.NCols}", this.LeadDim };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<DenseMatrix<T, TS>>.ToString(this);
@@ -595,7 +594,7 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public static DiagonalMatrix<T, TS> operator ^(DiagonalMatrix<T, TS> matrix!!, MatrixOperation operation)
 		{
-			if (!NumberType<T>.IsComplex || (operation & MatrixOperation.Conjugate) != 0)
+			if (!T.IsComplexType || (operation & MatrixOperation.Conjugate) != 0)
 				return ((ICloneable<DiagonalMatrix<T, TS>>)matrix).Clone();
 			return matrix.ApplyToClone(static m => ExtBlas.GeneralVectorUnary<T, TS, TS>(UnaryOperation.Conjugate, m.values, m.stride, m.values, m.stride));
 		}
@@ -711,7 +710,7 @@ namespace Althea.Array
 
 		static IEnumerable<string> IMainPropertyFormattable<DiagonalMatrix<T, TS>>.PropertyNames => new[] { "DataType", "Values", "Size", "Stride" };
 
-		IEnumerable<object?> IMainPropertyFormattable<DiagonalMatrix<T, TS>>.PropertyValues => new object[] { Unmanaged<T>.DataType, this.values, $"{this.n}x{this.n}", this.stride };
+		IEnumerable<object?> IMainPropertyFormattable<DiagonalMatrix<T, TS>>.PropertyValues => new object[] { T.Type, this.values, $"{this.n}x{this.n}", this.stride };
 
 		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<DiagonalMatrix<T, TS>>.ToString(this);

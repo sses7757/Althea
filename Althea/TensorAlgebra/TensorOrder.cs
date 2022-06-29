@@ -12,7 +12,7 @@ namespace Althea.TensorAlgebra
 	/// <summary>
 	/// The struct act as elements used to create <see cref="TensorOrder"/>s.
 	/// </summary>
-	public readonly struct OrderElement : IEqualityOperators<OrderElement, OrderElement>
+	public readonly struct OrderElement : System.Numerics.IEqualityOperators<OrderElement, OrderElement>
 	{
 		#region basic
 		internal readonly TensorOrder.Union main, auxi;
@@ -150,7 +150,7 @@ namespace Althea.TensorAlgebra
 		}
 
 		[StructLayout(LayoutKind.Explicit, Size = sizeof(int))]
-		internal readonly struct Union : IEqualityOperators<Union, Union>
+		internal readonly struct Union : System.Numerics.IEqualityOperators<Union, Union>
 		{
 			#region basic
 			[FieldOffset(0)]

@@ -2,6 +2,8 @@
 global using System.Collections.Generic;
 global using System.Linq;
 
+global using Althea.Numerics;
+
 using System.Runtime.CompilerServices;
 using System.Text;
 

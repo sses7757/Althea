@@ -4,7 +4,6 @@ using System.Text;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.Numerics;
 
 
 namespace Althea.Random
@@ -24,7 +23,7 @@ namespace Althea.Random
 	//tex:Two-dimensional normal distribution PDF: $$P_{\mu_1,\mu_2,\sigma_1,\sigma_2,\rho}(x,y) = \frac{1}{2\pi\sigma_1\sigma_2\sqrt{1-\rho^2}}\exp{\left[-\frac{1}{2\left(1-\rho^2\right)}\left(\frac{{(x-\mu_1)}^2}{\sigma_1^2}-\frac{2\rho(x-\mu_1)(y-\mu_2)}{\sigma_1\sigma_2}+\frac{{(y-\mu_2)}^2}{\sigma_2^2}\right)\right]}$$
 	public readonly record struct BinormalDistribution<T>(T Mean1, T Mean2, T StandardDeviation1, T StandardDeviation2, T Covariance, long? RandomSeed = null) :
 		IFloatingPointDistribution<T, BinormalDistribution<T>>, IRank2Distribution<T, T, BinormalDistribution<T>>
-		where T : unmanaged, IFloatingPointIeee754<T>
+		where T : unmanaged, IBinaryFloat<T>
 	{
 		/// <summary>
 		/// Create a new bi-normal distribution with μ<sub>1</sub> = μ<sub>2</sub> = 0 and σ<sub>1</sub> = σ<sub>2</sub> = 1
@@ -45,9 +44,9 @@ namespace Althea.Random
 	//\exp{\left( -\frac12(\vec x - \vec \mu)^T \Sigma^{-1} (\vec x - \vec \mu) \right)}$$
 	//where $D$ is the number of dimensions, $\vec\mu$ is the mean values of all dimensions, $\Sigma$ is the covariance matrix (which is symmetric-definite).
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct MultiNormalDistribution<T> : IEqualityOperators<MultiNormalDistribution<T>, MultiNormalDistribution<T>>,
+	public readonly struct MultiNormalDistribution<T> : System.Numerics.IEqualityOperators<MultiNormalDistribution<T>, MultiNormalDistribution<T>>,
 		IFloatingPointDistribution<T, MultiNormalDistribution<T>>, IRandomDistribution<MultiNormalDistribution<T>>
-		where T : unmanaged, IFloatingPointIeee754<T>
+		where T : unmanaged, IBinaryFloat<T>
 	{
 		#region basic
 		private readonly int rank;
@@ -79,7 +78,7 @@ namespace Althea.Random
 
 		private Span<T> P_CovarianceMatrix => SpanHelper.CreateSpanFromReadOnly<long, T>(in this.seed, 1, this.rank * this.rank);
 
-		static DataType IRandomDistribution<MultiNormalDistribution<T>>.DataTypeAt(int rank) => Unmanaged<T>.DataType;
+		static DataType IRandomDistribution<MultiNormalDistribution<T>>.DataTypeAt(int rank) => T.Type;
 
 		bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, MultiNormalDistribution<T>>)this).IsValid() && this.rank >= 3 && (!this.OriginalCovarianceStored || IsSymmetricPositiveDefinite(this.CovarianceMatrix));
 
@@ -272,7 +271,7 @@ namespace Althea.Random
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
 	//tex:Multinomial normal distribution PDF:
 	//$$P_{m,\vec p}(\vec k) = \frac{m!}{\prod_i{k_i}} \prod_i{p^{k_i}}$$
-	public readonly struct MultinomialDistribution<T> : IEqualityOperators<MultinomialDistribution<T>, MultinomialDistribution<T>>,
+	public readonly struct MultinomialDistribution<T> : System.Numerics.IEqualityOperators<MultinomialDistribution<T>, MultinomialDistribution<T>>,
 		IFloatingPointDistribution<T, MultinomialDistribution<T>>, IRandomDistribution<MultinomialDistribution<T>>
 		where T : unmanaged, IBinaryInteger<T>
 	{
@@ -294,7 +293,7 @@ namespace Althea.Random
 
 		private Span<T> P_Probabilities => SpanHelper.CreateSpanFromReadOnly<long, T>(in this.seed, 1, this.rank);
 
-		static DataType IRandomDistribution<MultinomialDistribution<T>>.DataTypeAt(int rank) => Unmanaged<T>.DataType;
+		static DataType IRandomDistribution<MultinomialDistribution<T>>.DataTypeAt(int rank) => T.Type;
 
 		bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, MultinomialDistribution<T>>)this).IsValid() && this.rank >= 3;
 
