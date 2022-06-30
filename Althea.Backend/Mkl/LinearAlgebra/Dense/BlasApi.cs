@@ -28,7 +28,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		internal protected static bool HorizontalAbsoluteValueArgMinMax<T, TS>(bool max, TS x, int strideX, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
 		{
 			index = -1;
-			if (!NumberType<T>.IsComplex)
+			if (!T.IsComplexType)
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotComplex);
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
@@ -57,7 +57,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			sum = T.Zero;
 			T result = T.Zero;
-			if (!NumberType<T>.IsComplex)
+			if (!T.IsComplexType)
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotComplex);
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
@@ -377,7 +377,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
-			if (NumberType<T>.IsComplex && !conjX)
+			if (T.IsComplexType && !conjX)
 				return false;
 			var funcRe = default(T) switch
 			{
@@ -405,7 +405,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(A, n, n, lda, out T* pA))
 				return false;
-			if (NumberType<T>.IsComplex && !conjugate)
+			if (T.IsComplexType && !conjugate)
 				return false;
 			var funcRe = default(T) switch
 			{
@@ -882,7 +882,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			conjX &= NumberType<T>.IsComplex;
+			conjX &= T.IsComplexType;
 			opA = opA.Simplify<T>();
 			conjX = opA.HasConjugate() ^ conjX;
 			if (!opA.CanInPlace())

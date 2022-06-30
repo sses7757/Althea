@@ -18,11 +18,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Numerics\ComplexConversions.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ComplexConversions.tt</DependentUpon>
-    </None>
     <None Include="Numerics\Conversions.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -73,11 +68,6 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Numerics\ComplexConversions.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ComplexConversions.tt</DependentUpon>
     </Compile>
     <Compile Update="Numerics\Conversions.cs">
       <DesignTime>True</DesignTime>
@@ -219,10 +209,6 @@
     <None Update="Helpers\SwapSort.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SwapSort.cs</LastGenOutput>
-    </None>
-    <None Update="Numerics\ComplexConversions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ComplexConversions.cs</LastGenOutput>
     </None>
     <None Update="Numerics\Conversions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

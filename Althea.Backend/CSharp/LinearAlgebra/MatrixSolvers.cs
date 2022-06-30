@@ -4,10 +4,9 @@ using System.Runtime.InteropServices;
 
 using Althea.Helpers;
 using Althea.Linq;
-using Althea.Numerics;
+
 
 namespace Althea.Backend.CSharp.LinearAlgebra;
-
 
 /// <summary>
 /// Static class for solving matrices represented by <see cref="Span{T}"/>s.
@@ -38,7 +37,7 @@ public static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void Scale<T>(T* x, T α, int n) where T : unmanaged, IBinaryFloat<T>
 	{
-		Api.VectorModify<T, T, Api.U_MultiplyScalar>(x, 1, x, 1, n, α);
+		Api.VectorModify<T, Api.U_MultiplyScalar>(x, 1, x, 1, n, α);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void AddScaled<T>(T* y, T* x, T α, int n) where T : unmanaged, IBinaryFloat<T>
@@ -48,7 +47,7 @@ public static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void AddConjugateScaled<T>(T* y, T* x, T α, int n) where T : unmanaged, IBinaryFloat<T>
 	{
-		if (NumberType<T>.IsComplex)
+		if (T.IsComplexType)
 			Api.VectorsBinary<T, Api.B_AddConjugateScaled>(x, 1, x, 1, y, 1, α, n);
 		else
 			AddScaled(y, x, α, n);
@@ -73,11 +72,11 @@ public static unsafe class MatrixSolvers
 	private static void MatMulScaledVec<T>(T* A, int ld, T α, T* x, T* output, int m, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Unsafe.InitBlockUnaligned(output, 0, (uint)(m * sizeof(T)));
-		if (NumberType<T>.IsComplex)
+		if (T.IsComplexType)
 		{
 			for (int i = 0; i < n; i++)
 			{
-				AddScaled(output, A + i * ld, (x[i] * α).Conjugate(), m);
+				AddScaled(output, A + i * ld, T.Conjugate(x[i] * α), m);
 			}
 		}
 		else
@@ -92,11 +91,11 @@ public static unsafe class MatrixSolvers
 	private static void MatMulVec<T>(T* A, int ld, T* x, T* output, int m, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		Unsafe.InitBlockUnaligned(output, 0, (uint)(m * sizeof(T)));
-		if (NumberType<T>.IsComplex)
+		if (T.IsComplexType)
 		{
 			for (int i = 0; i < n; i++)
 			{
-				AddScaled(output, A + i * ld, x[i].Conjugate(), m);
+				AddScaled(output, A + i * ld, T.Conjugate(x[i]), m);
 			}
 		}
 		else
@@ -110,11 +109,11 @@ public static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void Rank1UpdateNeg<T>(T* A, int ld, T* x, T* y, int m, int n, bool conj = true) where T : unmanaged, IBinaryFloat<T>
 	{
-		if (NumberType<T>.IsComplex && conj)
+		if (T.IsComplexType && conj)
 		{
 			for (int i = 0; i < n; i++)
 			{
-				AddScaled(A + i * ld, x, -y[i].Conjugate(), m);
+				AddScaled(A + i * ld, x, -T.Conjugate(y[i]), m);
 			}
 		}
 		else
@@ -128,12 +127,12 @@ public static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void SymRank2UpdateNeg<T>(T* A, int ld, T* x, T* y, int n) where T : unmanaged, IBinaryFloat<T>
 	{
-		if (NumberType<T>.IsComplex)
+		if (T.IsComplexType)
 		{
 			for (int i = 0; i < n; i++)
 			{
-				AddScaled(A + i * ld, x, -y[i].Conjugate(), n);
-				AddScaled(A + i * ld, y, -x[i].Conjugate(), n);
+				AddScaled(A + i * ld, x, -T.Conjugate(y[i]), n);
+				AddScaled(A + i * ld, y, -T.Conjugate(x[i]), n);
 			}
 		}
 		else
@@ -169,22 +168,30 @@ public static unsafe class MatrixSolvers
 		{   // real type
 			T imSq = scalarIm * scalarIm;
 			scalarIm = -scalarIm;
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
-			Vector<T> imSqs = new(imSq), scalarIms = new(scalarIm);
-			while (x + Vector<T>.Count <= xEnd)
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void Exec<U>(T imSq, T scalarIm) where U : unmanaged
 			{
-				var xx = Unsafe.ReadUnaligned<Vector<T>>(x);
-				var yy = Unsafe.ReadUnaligned<Vector<T>>(y);
-				var abs = yy * yy + imSqs;
-				yy *= xx / abs;
-				xx *= scalarIms / abs;
-				Unsafe.WriteUnaligned(result, yy);
-				Unsafe.WriteUnaligned(resultIm, xx);
-				x += Vector<T>.Count; y += Vector<T>.Count;
-				result += Vector<T>.Count; resultIm += Vector<T>.Count;
+				Vector<U> imSqs = new(*(U*)&imSq), scalarIms = new(*(U*)&scalarIm);
+				while (x + Vector<T>.Count <= xEnd)
+				{
+					var xx = Unsafe.ReadUnaligned<Vector<U>>(x);
+					var yy = Unsafe.ReadUnaligned<Vector<U>>(y);
+					var abs = yy * yy + imSqs;
+					yy *= xx / abs;
+					xx *= scalarIms / abs;
+					Unsafe.WriteUnaligned(result, yy);
+					Unsafe.WriteUnaligned(resultIm, xx);
+					x += Vector<U>.Count; y += Vector<U>.Count;
+					result += Vector<U>.Count; resultIm += Vector<U>.Count;
+				}
 			}
+			if (scalar is Numerics.Single)
+				Exec<float>(imSq, scalarIm);
+			else
+				Exec<double>(imSq, scalarIm);
 			n = (int)(xEnd - x);
 		SCALAR:
 			for (int i = 0; i < n; i++)
@@ -196,25 +203,33 @@ public static unsafe class MatrixSolvers
 		}
 		else
 		{
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
-			if (NumberType<T>.IsComplex)
+			if (T.IsComplexType)
 			{
-				Api.VectorModify<T, T, Api.U_AddScalar>(y, 1, result, 1, n, scalar);
+				Api.VectorModify<T, Api.U_AddScalar>(y, 1, result, 1, n, scalar);
 				Api.VectorsBinary<T, Api.B_Divide>(x, 1, result, 1, result, 1, default, n);
 				return;
 			}
 			// real type
 			T* xEnd = x + n;
-			Vector<T> scalars = new(scalar);
-			while (x + Vector<T>.Count <= xEnd)
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void Exec<U>(T scalar) where U : unmanaged
 			{
-				var xx = Unsafe.ReadUnaligned<Vector<T>>(x);
-				var yy = Unsafe.ReadUnaligned<Vector<T>>(y);
-				xx /= (yy + scalars);
-				Unsafe.WriteUnaligned(result, xx);
-				x += Vector<T>.Count; y += Vector<T>.Count; result += Vector<T>.Count;
+				Vector<U> scalars = new(*(U*)&scalar);
+				while (x + Vector<T>.Count <= xEnd)
+				{
+					var xx = Unsafe.ReadUnaligned<Vector<U>>(x);
+					var yy = Unsafe.ReadUnaligned<Vector<U>>(y);
+					xx /= yy + scalars;
+					Unsafe.WriteUnaligned(result, xx);
+					x += Vector<U>.Count; y += Vector<U>.Count; result += Vector<U>.Count;
+				}
 			}
+			if (scalar is Numerics.Single)
+				Exec<float>(scalar);
+			else
+				Exec<double>(scalar);
 			n = (int)(xEnd - x);
 		SCALAR:
 			for (int i = 0; i < n; i++)
@@ -229,7 +244,7 @@ public static unsafe class MatrixSolvers
 	{
 		if (resultIm != null)
 		{   // real type
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			while (x + Vector<T>.Count <= xEnd)
@@ -265,7 +280,7 @@ public static unsafe class MatrixSolvers
 	{
 		if (resultIm != null)
 		{   // real type
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			while (x + Vector<T>.Count <= xEnd)
@@ -300,7 +315,7 @@ public static unsafe class MatrixSolvers
 	{
 		if (resultIm != null)
 		{   // real type
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			Vector<T> scalars = new(scalar), scalarsIm = new(scalarIm);
@@ -329,7 +344,7 @@ public static unsafe class MatrixSolvers
 		{
 			Api.VectorsBinary<T, Api.B_Multiply>(x, 1, y, 1, result, 1, default, n);
 			Api.VectorsBinary<T, Api.B_Add>(result, 1, z, 1, result, 1, default, n);
-			Api.VectorModify<T, T, Api.U_AddScalar>(result, 1, result, 1, n, scalar);
+			Api.VectorModify<T, Api.U_AddScalar>(result, 1, result, 1, n, scalar);
 		}
 	}
 	// a * b + x * y
@@ -338,7 +353,7 @@ public static unsafe class MatrixSolvers
 	{
 		if (aIm != null)
 		{
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			while (x + Vector<T>.Count <= xEnd)
@@ -364,9 +379,9 @@ public static unsafe class MatrixSolvers
 		}
 		else
 		{
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
-			if (NumberType<T>.IsComplex)
+			if (T.IsComplexType)
 			{
 				Api.VectorsBinary<T, Api.B_Multiply>(a, 1, b, 1, resultIm, 1, default, n);
 				Api.VectorsBinary<T, Api.B_Multiply>(x, 1, y, 1, result, 1, default, n);
@@ -399,7 +414,7 @@ public static unsafe class MatrixSolvers
 	{
 		if (resultIm != null)
 		{
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			while (x + Vector<T>.Count <= xEnd)
@@ -422,7 +437,7 @@ public static unsafe class MatrixSolvers
 		}
 		else
 		{
-			Api.VectorModify<T, T, Api.U_Reciprocal>(x, 1, result, 1, n, default);
+			Api.VectorModify<T, Api.U_Reciprocal>(x, 1, result, 1, n, default);
 		}
 	}
 	// x + y * scalar
@@ -431,7 +446,7 @@ public static unsafe class MatrixSolvers
 	{
 		if (resultIm != null)
 		{
-			if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+			if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 				goto SCALAR;
 			T* xEnd = x + n;
 			Vector<T> scalars = new(scalar), scalarsIm = new(scalarIm);
@@ -462,7 +477,7 @@ public static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static bool AllZeroComparedTo<T>(T* x, int n, T scalar) where T : unmanaged, IBinaryFloat<T>
 	{
-		if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+		if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 			goto SCALAR;
 		T* xEnd = x + n;
 		Vector<T> scalars = new(scalar);
@@ -490,7 +505,7 @@ public static unsafe class MatrixSolvers
 	private static (T Re, T Im) Dot<T>(T* xRe, T* xIm, T* yRe, T* yIm, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		T dotRe = T.Zero, dotIm = T.Zero;
-		if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+		if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 			goto SCALAR;
 		T* xEnd = xRe + n;
 		Vector<T> dotsRe = new(T.Zero), dotsIm = new(T.Zero);
@@ -519,7 +534,7 @@ public static unsafe class MatrixSolvers
 	private static T NormSq<T>(T* vecRe, T* vecIm, int n) where T : unmanaged, IBinaryFloat<T>
 	{
 		T norm = T.Zero;
-		if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+		if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 			goto SCALAR;
 		T* xEnd = vecRe + n;
 		Vector<T> norms = new(T.Zero);
@@ -540,8 +555,8 @@ public static unsafe class MatrixSolvers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void Scale<T>(T* xRe, T* xIm, int n, T scalar) where T : unmanaged, IBinaryFloat<T>
 	{
-		Api.VectorModify<T, T, Api.U_MultiplyScalar>(xRe, 1, xRe, 1, n, scalar);
-		Api.VectorModify<T, T, Api.U_MultiplyScalar>(xIm, 1, xIm, 1, n, scalar);
+		Api.VectorModify<T, Api.U_MultiplyScalar>(xRe, 1, xRe, 1, n, scalar);
+		Api.VectorModify<T, Api.U_MultiplyScalar>(xIm, 1, xIm, 1, n, scalar);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void Orthogonalize<T>(bool complex, int n, int nVecs, T* Q, int ldq) where T : unmanaged, IBinaryFloat<T>
@@ -598,7 +613,7 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly Householder2x2<T> ToReflectionMatrix()
 		{
-			T h2 = T.One - tau * v2 * v2.Conjugate(), h3 = -tau * v1 * v2.Conjugate();
+			T h2 = T.One - tau * v2 * T.Conjugate(v2), h3 = -tau * v1 * T.Conjugate(v2);
 			return new(h2, h3);
 		}
 	}
@@ -620,8 +635,8 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly Householder3x3<T> ToReflectionMatrix()
 		{
-			T h1 = T.One - tau * v1 * v1.Conjugate(), h2 = T.One - tau * v2 * v2.Conjugate(), h4 = -tau * v1 * v2.Conjugate();
-			T h3 = T.One - tau * v3 * v3.Conjugate(), h5 = -tau * v1 * v3.Conjugate(), h6 = -tau * v2 * v3.Conjugate();
+			T h1 = T.One - tau * v1 * T.Conjugate(v1), h2 = T.One - tau * v2 * T.Conjugate(v2), h4 = -tau * v1 * T.Conjugate(v2);
+			T h3 = T.One - tau * v3 * T.Conjugate(v3), h5 = -tau * v1 * T.Conjugate(v3), h6 = -tau * v2 * T.Conjugate(v3);
 			return new(h1, h2, h3, h4, h5, h6);
 		}
 	}
@@ -640,17 +655,17 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void ColumnUpdate(T* A, int ld, int n, T* temp = null)
 		{
-			if (NumberType<T>.IsComplex)
+			if (T.IsComplexType)
 			{
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A, 1, temp, 1, n, h1);
-				Api.VectorsBinary<T, Api.B_AddScaled>(temp, 1, A + ld, 1, temp, 1, h3.Conjugate(), n);
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A + ld, 1, A + ld, 1, n, h2);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A, 1, temp, 1, n, h1);
+				Api.VectorsBinary<T, Api.B_AddScaled>(temp, 1, A + ld, 1, temp, 1, T.Conjugate(h3), n);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A + ld, 1, A + ld, 1, n, h2);
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + ld, 1, A, 1, A + ld, 1, h3, n);
 				Unsafe.CopyBlockUnaligned(A, temp, (uint)(n * sizeof(T)));
 			}
 			else
 			{
-				if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+				if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 					goto SCALAR;
 				T* Aend = A + n;
 				T* AA = A + ld;
@@ -672,7 +687,7 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void RowUpdate(T* A, int ld, int n)
 		{
-			T h3c = h3.Conjugate();
+			T h3c = T.Conjugate(h3);
 			for (int nn = 0, i = 0; nn < n; nn++, i += ld)
 			{
 				int j = i + 1;
@@ -695,18 +710,18 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void ColumnUpdate(T* A, int ld, int n, T* temp = null)
 		{
-			if (NumberType<T>.IsComplex)
+			if (T.IsComplexType)
 			{
 				T* temp1 = temp, temp2 = temp + n;
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A, 1, temp1, 1, n, h1);
-				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, A + ld, 1, temp1, 1, h4.Conjugate(), n);
-				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, A + 2 * ld, 1, temp1, 1, h5.Conjugate(), n);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A, 1, temp1, 1, n, h1);
+				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, A + ld, 1, temp1, 1, T.Conjugate(h4), n);
+				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, A + 2 * ld, 1, temp1, 1, T.Conjugate(h5), n);
 
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A, 1, temp2, 1, n, h4);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A, 1, temp2, 1, n, h4);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, A + ld, 1, temp2, 1, h2, n);
-				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, A + 2 * ld, 1, temp2, 1, h6.Conjugate(), n);
+				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, A + 2 * ld, 1, temp2, 1, T.Conjugate(h6), n);
 
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A + 2 * ld, 1, A + 2 * ld, 1, n, h3);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A + 2 * ld, 1, A + 2 * ld, 1, n, h3);
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + 2 * ld, 1, A, 1, A + 2 * ld, 1, h5, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + 2 * ld, 1, A + ld, 1, A + 2 * ld, 1, h6, n);
 
@@ -715,7 +730,7 @@ public static unsafe class MatrixSolvers
 			}
 			else
 			{
-				if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+				if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 					goto SCALAR;
 				T* Aend = A + n;
 				T* AA = A + ld, AAA = A + 2 * ld;
@@ -744,9 +759,9 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void RowUpdate(T* A, int ld, int n)
 		{
-			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (NumberType<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 3)
+			if (!Vector.IsHardwareAccelerated || T.IsComplexType || (T.Type & Accelerated) == 0 || n < 16 || Vector<T>.Count < 3)
 			{   // scalar
-				T h4c = h4.Conjugate(), h5c = h5.Conjugate(), h6c = h6.Conjugate();
+				T h4c = T.Conjugate(h4), h5c = T.Conjugate(h5), h6c = T.Conjugate(h6);
 				for (int i = 0, j = 0; i < n; i++, j += ld)
 				{
 					(A[j], A[j + 1], A[j + 2]) =
@@ -798,18 +813,18 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void ColumnUpdate(T* A, int ld, int n, T* temp = null)
 		{
-			if (NumberType<T>.IsComplex)
+			if (T.IsComplexType)
 			{
 				T* temp1 = temp, temp2 = temp + n;
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A, 1, temp1, 1, n, q1);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A, 1, temp1, 1, n, q1);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, A + ld, 1, temp1, 1, q2, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, A + 2 * ld, 1, temp1, 1, q3, n);
 
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A, 1, temp2, 1, n, q4);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A, 1, temp2, 1, n, q4);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, A + ld, 1, temp2, 1, q5, n);
-				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, A + 2 * ld, 1, temp2, 1, q6.Conjugate(), n);
+				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, A + 2 * ld, 1, temp2, 1, T.Conjugate(q6), n);
 
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A + 2 * ld, 1, A + 2 * ld, 1, n, q9);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A + 2 * ld, 1, A + 2 * ld, 1, n, q9);
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + 2 * ld, 1, A, 1, A + 2 * ld, 1, q7, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + 2 * ld, 1, A + ld, 1, A + 2 * ld, 1, q8, n);
 
@@ -818,7 +833,7 @@ public static unsafe class MatrixSolvers
 			}
 			else
 			{
-				if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+				if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 					goto SCALAR;
 				T* Aend = A + n;
 				T* AA = A + ld, AAA = A + 2 * ld;
@@ -861,15 +876,15 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void RowUpdate(T* A, int ld, int n)
 		{
-			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (NumberType<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 3)
+			if (!Vector.IsHardwareAccelerated || T.IsComplexType || (T.Type & Accelerated) == 0 || n < 16 || Vector<T>.Count < 3)
 			{   // scalar
 				var conj = this;
-				if (NumberType<T>.IsComplex)
+				if (T.IsComplexType)
 				{
 					Span<T> values = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(in conj.q1), 9);
 					for (int i = 0; i < values.Length; i++)
 					{
-						values[i] = values[i].Conjugate();
+						values[i] = T.Conjugate(values[i]);
 					}
 				}
 				conj.RowUpdateManaged(A, ld, n);
@@ -909,25 +924,25 @@ public static unsafe class MatrixSolvers
 		public readonly void ColumnUpdate(T* A, int ld, int n, T* temp = null)
 		{
 			T* AA = A + ld, AAA = A + 2 * ld, AAAA = A + 3 * ld;
-			if (NumberType<T>.IsComplex)
+			if (T.IsComplexType)
 			{
 				T* temp1 = temp, temp2 = temp + n, temp3 = temp + n * 2;
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A, 1, temp1, 1, n, q1);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A, 1, temp1, 1, n, q1);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, AA, 1, temp1, 1, q2, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, AAA, 1, temp1, 1, q3, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp1, 1, AAAA, 1, temp1, 1, q4, n);
 
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A, 1, temp2, 1, n, q5);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A, 1, temp2, 1, n, q5);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, AA, 1, temp2, 1, q6, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, AAA, 1, temp2, 1, q7, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp2, 1, AAAA, 1, temp2, 1, q8, n);
 
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(A, 1, temp3, 1, n, q9);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(A, 1, temp3, 1, n, q9);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp3, 1, AA, 1, temp3, 1, qA, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp3, 1, AAA, 1, temp3, 1, qB, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp3, 1, AAAA, 1, temp3, 1, qC, n);
 
-				Api.VectorModify<T, T, Api.U_MultiplyScalar>(AAAA, 1, AAAA, 1, n, qG);
+				Api.VectorModify<T, Api.U_MultiplyScalar>(AAAA, 1, AAAA, 1, n, qG);
 				Api.VectorsBinary<T, Api.B_AddScaled>(AAAA, 1, A, 1, AAAA, 1, qD, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(AAAA, 1, AA, 1, AAAA, 1, qE, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(AAAA, 1, AAA, 1, AAAA, 1, qF, n);
@@ -938,7 +953,7 @@ public static unsafe class MatrixSolvers
 			}
 			else
 			{
-				if (!Vector.IsHardwareAccelerated || (NumberType<T>.DataType & Accelerated) == 0 || n < 16)
+				if (!Vector.IsHardwareAccelerated || (T.Type & Accelerated) == 0 || n < 16)
 					goto SCALAR;
 				T* Aend = A + n;
 				while (A + Vector<T>.Count <= Aend)
@@ -984,15 +999,15 @@ public static unsafe class MatrixSolvers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public readonly void RowUpdate(T* A, int ld, int n)
 		{
-			if (!Vector.IsHardwareAccelerated || NumberType<T>.IsComplex || (NumberType<T>.DataType & Accelerated) == 0 || n < 16 || Vector<T>.Count < 4)
+			if (!Vector.IsHardwareAccelerated || T.IsComplexType || (T.Type & Accelerated) == 0 || n < 16 || Vector<T>.Count < 4)
 			{   // scalar
 				var conj = this;
-				if (NumberType<T>.IsComplex)
+				if (T.IsComplexType)
 				{
 					Span<T> values = MemoryMarshal.CreateSpan(ref Unsafe.AsRef(in conj.q1), 9);
 					for (int i = 0; i < values.Length; i++)
 					{
-						values[i] = values[i].Conjugate();
+						values[i] = T.Conjugate(values[i]);
 					}
 				}
 				conj.RowUpdateManaged(A, ld, n);
@@ -1422,9 +1437,9 @@ public static unsafe class MatrixSolvers
 			return;
 		if (eigenvalues.Length != n)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(eigenvalues));
-		if (!NumberType<T>.IsComplex && eigenvaluesImag.IsEmpty)
+		if (!T.IsComplexType && eigenvaluesImag.IsEmpty)
 			throw new ArgumentNullException(nameof(eigenvaluesImag));
-		if (!NumberType<T>.IsComplex && eigenvaluesImag.Length != n)
+		if (!T.IsComplexType && eigenvaluesImag.Length != n)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(eigenvaluesImag));
 	}
 
@@ -1562,12 +1577,12 @@ public static unsafe class MatrixSolvers
 		CheckGeneralEigen(matrix, transformer, eigenvalues, eigenvaluesImag, out int n, out int lda, out int ldq);
 		if (n == 0)
 			return 0;
-		if (NumberType<T>.IsComplex && workSpace.Length < 2 * n)
+		if (T.IsComplexType && workSpace.Length < 2 * n)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(workSpace));
 
 		// constants
 		T two = T.One + T.One, half = T.One / two, halfSqrt2 = T.Sqrt(two) * half, four = two + two;
-		T epsilon = T.ScaleB(T.One, -2 * sizeof(T));
+		T epsilon = T.Exp2((-2 * sizeof(T)).As<T>());
 		eigenvaluesImag.Fill(T.Zero);
 		eigenvalues[0] = T.NaN;
 		fixed (T* A = matrix.UnderlyingSpan, Q = transformer.UnderlyingSpan, wr = eigenvalues, wi = eigenvaluesImag.IsEmpty ? null : eigenvaluesImag, work = workSpace.IsEmpty ? null : workSpace)
@@ -1595,7 +1610,7 @@ public static unsafe class MatrixSolvers
 					continue;
 				}
 				// two eigenvalues converged
-				if (!NumberType<T>.IsComplex && i == k - 1 && T.Abs(A[k + (k - 1) * lda]) > epsilon * T.Abs(A[k - 1 + k * lda]))
+				if (!T.IsComplexType && i == k - 1 && T.Abs(A[k + (k - 1) * lda]) > epsilon * T.Abs(A[k - 1 + k * lda]))
 				{   // prevent 3 real eigenvalues where first one converges while last two does not
 					ToStandardSchurForm(n, A, lda, Q, ldq, i);
 					T re = A[i + i * lda];
@@ -1697,7 +1712,7 @@ public static unsafe class MatrixSolvers
 			return;
 		if (keys.Length != n)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(keys));
-		if (NumberType<T>.IsComplex && workSpace.Length < 3 * n)
+		if (T.IsComplexType && workSpace.Length < 3 * n)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(workSpace));
 
 		// work spaces
@@ -1866,7 +1881,7 @@ public static unsafe class MatrixSolvers
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(workSpace));
 
 		// constant
-		T criteriaAmplifier = T.ScaleB(T.One, sizeof(T) * 3 / 2), sqrtCriteriaAmplifier = T.Sqrt(criteriaAmplifier);
+		T criteriaAmplifier = T.Exp2((sizeof(T) * 3 / 2).As<T>()), sqrtCriteriaAmplifier = T.Sqrt(criteriaAmplifier);
 		fixed (T* A = matrix.UnderlyingSpan, Q = transformer.UnderlyingSpan, V = eigenvectors.UnderlyingSpan,
 				  wr = eigenvalues, wi = eigenvaluesImag.IsEmpty ? null : eigenvaluesImag, work = workSpace)
 		{   // store some diagonals
@@ -1887,7 +1902,7 @@ public static unsafe class MatrixSolvers
 				T* beta = work + 5 * n, betaIm = work + 6 * n;
 				T* temp = work + 7 * n, tempIm = work + 8 * n;
 				T* transformTemp = null;
-				if (NumberType<T>.IsComplex)
+				if (T.IsComplexType)
 				{
 					alpha = work + 3 * n; beta = work + 4 * n; temp = work + 5 * n;
 					transformTemp = work + 6 * n;

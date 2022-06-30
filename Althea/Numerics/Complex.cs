@@ -511,18 +511,8 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Complex<T> operator *(Complex<T> x, Complex<T> y)
 	{
-		T real = T.FusedMultiplyAdd(x.real, y.real, -x.imag * y.imag);
-		T imag = T.FusedMultiplyAdd(x.real, y.imag, x.imag * y.real);
-		return new Complex<T>(real, imag);
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Complex<T> AMinusXY(Complex<T> a, Complex<T> x, Complex<T> y)
-	{
-		T temp1 = T.FusedMultiplyAdd(x.real, y.real, -a.real);
-		T real = T.FusedMultiplyAdd(x.imag, y.imag, -temp1);
-		T temp2 = T.FusedMultiplyAdd(x.real, y.imag, -a.imag);
-		T imag = T.FusedMultiplyAdd(x.imag, y.real, -temp2);
+		T real = x.real * y.real - x.imag * y.imag;
+		T imag = x.real * y.imag + x.imag * y.real;
 		return new Complex<T>(real, imag);
 	}
 	/// <inheritdoc/>
@@ -530,8 +520,8 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	public static Complex<T> operator /(Complex<T> x, Complex<T> y)
 	{
 		T squareAbsY = y.MagnitudeSquared;
-		T acbd = T.FusedMultiplyAdd(x.real, y.real, x.imag * y.imag);
-		T bcad = T.FusedMultiplyAdd(x.imag, y.real, -x.real * y.imag);
+		T acbd = x.real * y.real + x.imag * y.imag;
+		T bcad = x.imag * y.real - x.real * y.imag;
 		return new(acbd / squareAbsY, bcad / squareAbsY);
 	}
 	/// <inheritdoc/>
@@ -777,7 +767,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		Complex<T> w = Sqrt(new(T.One + x.real, -x.imag));
 		Complex<T> z = Sqrt(new(T.One - x.real, -x.imag));
 		T real = RealTwo * T.Atan2(z.real, w.real);
-		T imag = T.FusedMultiplyAdd(w.real, z.imag, w.imag * z.real);
+		T imag = w.real * z.imag + w.imag * z.real;
 		imag = T.Asinh(imag);
 		return new(real, imag);
 	}
@@ -787,7 +777,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	{
 		Complex<T> w = Sqrt(new(x.real + T.One, -x.imag));
 		Complex<T> z = Sqrt(new(x.real - T.One, x.imag));
-		T real = T.FusedMultiplyAdd(w.real, z.real, -w.imag * z.imag);
+		T real = w.real * z.real - w.imag * z.imag;
 		real = T.Asinh(real);
 		T imag = RealTwo * T.Atan2(Sqrt(w.Conjugate).imag, z.real);
 		return new(real, imag);
@@ -805,9 +795,9 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	{
 		Complex<T> w = Sqrt(new(T.One - x.imag, x.real));
 		Complex<T> z = Sqrt(new(T.One + x.imag, -x.real));
-		T real = T.FusedMultiplyAdd(w.imag, z.real, -w.real * z.imag);
+		T real = w.imag * z.real - w.real * z.imag;
 		real = T.Asinh(real);
-		T wzReal = T.FusedMultiplyAdd(x.real, x.real, -T.FusedMultiplyAdd(x.imag, x.imag, T.NegativeOne));
+		T wzReal = x.real * x.real - x.imag * x.imag + T.One;
 		T imag = T.Atan2(x.imag, wzReal);
 		return new(real, imag);
 	}
@@ -844,8 +834,8 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		{
 			T reFrom1 = T.One - absRe;
 			T imSquared = absIm * absIm;
-			real = RealQuarter * Log1p(RealFour * absRe / T.FusedMultiplyAdd(reFrom1, reFrom1, imSquared));
-			imag = RealHalf * T.Atan2(RealTwo * x.imag, T.FusedMultiplyAdd(reFrom1, absRe + T.One, -imSquared));
+			real = RealQuarter * Log1p(RealFour * absRe / (reFrom1 * reFrom1 + imSquared));
+			imag = RealHalf * T.Atan2(RealTwo * x.imag, (reFrom1 * (absRe + T.One) - imSquared));
 		}
 		else if (x.imag == T.Zero)
 		{ // (±1, 0)
@@ -854,7 +844,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		}
 		else
 		{ // (±1, nonzero)
-			real = T.Log(T.Sqrt(T.Sqrt(T.FusedMultiplyAdd(x.imag, x.imag, RealFour))) / T.Sqrt(absIm));
+			real = T.Log(T.Sqrt(T.Sqrt(x.imag * x.imag + RealFour)) / T.Sqrt(absIm));
 			imag = T.CopySign(RealHalf * (RealHalfPi + T.Atan2(absIm, RealTwo)), x.imag);
 		}
 		real = T.CopySign(real, x.real);
@@ -907,9 +897,9 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	public static Complex<T> Tanh(Complex<T> x)
 	{
 		T imag = T.Tan(x.imag), s = T.Sinh(x.real);
-		T b = s * T.FusedMultiplyAdd(imag, imag, T.One);
-		T scale = T.One / T.FusedMultiplyAdd(b, s, T.One);
-		T real = T.Sqrt(T.FusedMultiplyAdd(s, s, T.One)) * b;
+		T b = s * (imag * imag + T.One);
+		T scale = T.One / (b * s + T.One);
+		T real = T.Sqrt(s * s + T.One) * b;
 		return new(real * scale, imag * scale);
 	}
 	/// <inheritdoc/>

@@ -33,7 +33,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (func == null)
 				return false;
 			using var ppV = allowDestroy && pV == null ? Buffers.Create(pA, lda, n) : Buffers.Create(pV, ldvec, n);
-			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
+			using var ppx = T.IsComplexType ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
 			func(MklMatrixLayout.ColMajor, pV == null ? MklVectorModeChar.Vector : MklVectorModeChar.NoVector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppx).Check(SolveMethodKind.Eigenvalue);
 			RealToComp(ppx, px, n);
@@ -67,7 +67,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			using var ppV = allowDestroy && pV == null ? Buffers.Create(pA, lda, n) : Buffers.Create(pV, ldvec, n);
 			using var ppLU = allowDestroy && pLU == null ? Buffers.Create(pB, ldb, n) : Buffers.Create(pLU, ldLU, n);
-			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
+			using var ppx = T.IsComplexType ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
 			Storage.Api.PointerMemoryCopy2D(pB, ldb, ppLU, ppLU.ld, n, n);
 			func(MklMatrixLayout.ColMajor, type, vecOut is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppLU, ppLU.ld, ppx).Check(SolveMethodKind.GeneralEigen);
@@ -86,7 +86,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(valsOut, 1, out T* px, out long nx))
 				return false;
-			if (!NumberType<T>.IsComplex && valsOutImag is null)
+			if (!T.IsComplexType && valsOutImag is null)
 				throw new ArgumentNullException(nameof(valsOutImag));
 			T* pxx = null;
 			if (valsOutImag is not null && !GetPointer(valsOutImag, 1, out pxx, out long nx2))
@@ -143,7 +143,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (nxd != nx)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valsOutDenom));
-			if (!NumberType<T>.IsComplex && valsOutImag is null)
+			if (!T.IsComplexType && valsOutImag is null)
 				throw new ArgumentNullException(nameof(valsOutImag));
 			T* pxx = null;
 			if (valsOutImag is not null && !GetPointer(valsOutImag, 1, out pxx, out long nx2))
@@ -219,8 +219,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, m, n);
-			using var ppx = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
-			using var pSurperb = NumberType<T>.IsComplex ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create<T>(n * sizeof(T));
+			using var ppx = T.IsComplexType ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
+			using var pSurperb = T.IsComplexType ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create<T>(n * sizeof(T));
 			func(MklMatrixLayout.ColMajor,
 				pU == pA ? MklSvdModeChar.Overwrite : fullU ? MklSvdModeChar.All : pU == null ? MklSvdModeChar.None : MklSvdModeChar.Store,
 				pV == pA ? MklSvdModeChar.Overwrite : fullV ? MklSvdModeChar.All : pV == null ? MklSvdModeChar.None : MklSvdModeChar.Store,
@@ -238,7 +238,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(valOut, 1, out T* px, out long nx))
 				return false;
-			if (!NumberType<T>.IsComplex && valImagOut is null)
+			if (!T.IsComplexType && valImagOut is null)
 				throw new ArgumentNullException(nameof(valImagOut));
 			T* pxx = null;
 			if (valImagOut is not null && !GetPointer(valImagOut, 1, out pxx, out long nx2))
@@ -292,7 +292,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(select));
 			if (!GetPointer(vals, 1, out T* px, out long nx))
 				return false;
-			if (!NumberType<T>.IsComplex && valsImag is null)
+			if (!T.IsComplexType && valsImag is null)
 				throw new ArgumentNullException(nameof(valsImag));
 			T* pxx = null;
 			if (valsImag is not null && !GetPointer(valsImag, 1, out pxx, out long nx2))

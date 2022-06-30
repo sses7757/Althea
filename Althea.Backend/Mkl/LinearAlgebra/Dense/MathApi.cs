@@ -510,7 +510,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <inheritdoc/>
 		public virtual bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
-			if (op == UnaryOperation.Identity || (op == UnaryOperation.Conjugate && !NumberType<T>.IsComplex))
+			if (op == UnaryOperation.Identity || (op == UnaryOperation.Conjugate && !T.IsComplexType))
 				return true;
 			if (op == UnaryOperation.Negate)
 			{
@@ -562,7 +562,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return AdditionalUnary((UnaryOperationSupplement)op, n, px, strideX, py, strideY);
-			if (op == UnaryOperation.AbsoluteValue && NumberType<T>.IsComplex)
+			if (op == UnaryOperation.AbsoluteValue && T.IsComplexType)
 				strideY *= 2;
 			if (strideX == 1 && strideY == 1)
 				func(n, px, py);
