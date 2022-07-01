@@ -1,7 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Althea.Numerics;
-
 
 namespace Althea.Backend.Storage
 {
