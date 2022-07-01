@@ -9,7 +9,7 @@ using Althea.Storage;
 
 namespace Althea.Backend.Cuda
 {
-	internal sealed class TempGpuStorage<T> : PureOrMixedStorage<T> where T : unmanaged, INumber<T>
+	internal sealed class TempGpuStorage<T> : PureOrMixedStorage<T> where T : unmanaged, IBaseNumber<T>
 	{
 		private readonly PointerSegment pointerSegment;
 
@@ -235,7 +235,7 @@ namespace Althea.Backend.Cuda
 		/// <exception cref="OutOfMemoryException">If the requested number of bytes are too large to be allocated</exception>
 		/// <exception cref="StatusException">If the CUDA API call returns other error status</exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe CudaBuffer Create<T>(int workSpaceDeviceT, int workSpaceHostT = 0, bool extraDeviceInfo = true) where T : unmanaged, INumber<T>
+		public static unsafe CudaBuffer Create<T>(int workSpaceDeviceT, int workSpaceHostT = 0, bool extraDeviceInfo = true) where T : unmanaged, IBaseNumber<T>
 		{
 			return new((long)workSpaceDeviceT * sizeof(T), (long)workSpaceHostT * sizeof(T), extraDeviceInfo ? sizeof(int) : 0);
 		}

@@ -12,7 +12,7 @@ namespace Althea.Array
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements <see cref="IBaseTensor{T, TSelf}"/></typeparam>
 	public interface IBaseTensor<T, TSelf> : ILabeledTensor<T>, IValueArray<T, TSelf>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TSelf : class, IBaseTensor<T, TSelf>
 	{
 		#region basic

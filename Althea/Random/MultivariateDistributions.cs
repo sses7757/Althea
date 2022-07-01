@@ -273,7 +273,7 @@ namespace Althea.Random
 	//$$P_{m,\vec p}(\vec k) = \frac{m!}{\prod_i{k_i}} \prod_i{p^{k_i}}$$
 	public readonly struct MultinomialDistribution<T> : System.Numerics.IEqualityOperators<MultinomialDistribution<T>, MultinomialDistribution<T>>,
 		IFloatingPointDistribution<T, MultinomialDistribution<T>>, IRandomDistribution<MultinomialDistribution<T>>
-		where T : unmanaged, IBinaryInteger<T>
+		where T : unmanaged, IBinaryInt<T>
 	{
 		#region basic
 		private readonly int rank;

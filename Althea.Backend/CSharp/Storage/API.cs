@@ -60,14 +60,14 @@ namespace Althea.Backend.CSharp.Storage
 		{
 			if (!CheckType<TP>())
 				return false;
-			var span = pointer.Pointer.FromGeneric().AsSpan<byte, TP>(pointer);
+			var span = pointer.Pointer.FromGeneric().AsSpan<UnsignedInt8, TP>(pointer);
 			span.Fill(value);
 			return true;
 		}
 
 		/// <inheritdoc/>
 		public bool FillWithValue<T, TP>(PointerSegment<TP> pointer, T value)
-			where T : unmanaged, INumber<T>
+			where T : unmanaged, IBaseNumber<T>
 			where TP : IPointer<TP>
 		{
 			if (!CheckType<TP>())
@@ -79,15 +79,15 @@ namespace Althea.Backend.CSharp.Storage
 
 		/// <inheritdoc/>
 		public bool MemoryCopy<T, TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied)
-			where T : unmanaged, INumber<T>
+			where T : unmanaged, IBaseNumber<T>
 			where TP1 : IPointer<TP1>
 			where TP2 : IPointer<TP2>
 		{
 			actualCopied = 0;
 			if (!CheckType<TP1>() || !CheckType<TP2>())
 				return false;
-			var srcSpan = source.Pointer.FromGeneric().AsSpan<byte, TP1>(source);
-			var dstSpan = destination.Pointer.FromGeneric().AsSpan<byte, TP2>(destination);
+			var srcSpan = source.Pointer.FromGeneric().AsSpan<UnsignedInt8, TP1>(source);
+			var dstSpan = destination.Pointer.FromGeneric().AsSpan<UnsignedInt8, TP2>(destination);
 			int copy = Math.Min(srcSpan.Length, dstSpan.Length);
 			srcSpan[..copy].CopyTo(dstSpan[..copy]);
 			actualCopied = copy;
@@ -96,7 +96,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		/// <inheritdoc/>
 		public virtual bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth)
-			where T : unmanaged, INumber<T>
+			where T : unmanaged, IBaseNumber<T>
 			where TP1 : IPointer<TP1>
 			where TP2 : IPointer<TP2>
 		{
@@ -123,7 +123,7 @@ namespace Althea.Backend.CSharp.Storage
 
 		/// <inheritdoc/>
 		public virtual bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, long strideSource, PointerSegment<TP2> destination, long strideDestination, out long actualCopied)
-			where T : unmanaged, INumber<T>
+			where T : unmanaged, IBaseNumber<T>
 			where TP1 : IPointer<TP1>
 			where TP2 : IPointer<TP2>
 		{

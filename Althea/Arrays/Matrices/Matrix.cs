@@ -11,7 +11,7 @@ namespace Althea.Array
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IBaseMatrix{T, TSelf}"/></typeparam>
-	public interface IBaseMatrix<T, TSelf> : IMatrixMetric, IValueArray<T, TSelf> where T : unmanaged, INumber<T> where TSelf : class, IBaseMatrix<T, TSelf>
+	public interface IBaseMatrix<T, TSelf> : IMatrixMetric, IValueArray<T, TSelf> where T : unmanaged, IBaseNumber<T> where TSelf : class, IBaseMatrix<T, TSelf>
 	{
 		#region indexing
 		/// <summary>

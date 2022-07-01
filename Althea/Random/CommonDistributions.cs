@@ -8,7 +8,7 @@
 	/// <param name="UpperBound">The exclusive upper bound of this one-dimensional uniform distribution</param>
 	/// <param name="RandomSeed">See <see cref="IRandomDistribution{TSelf}.RandomSeed"/></param>
 	public readonly record struct UniformDistribution<T>(T LowerBound, T UpperBound, long? RandomSeed) : IRank1Distribution<T, UniformDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a new <see cref="UniformDistribution{T}"/> with the given random <paramref name="seed"/> and lower and upper bond equaling to 0 and 1 respectively.
@@ -28,7 +28,7 @@
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <param name="RandomSeed">See <see cref="IRandomDistribution{TSelf}.RandomSeed"/></param>
 	public readonly record struct RandomBitsDistribution<T>(long? RandomSeed) : IRank1Distribution<T, RandomBitsDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <inheritdoc/>
 		public bool IsValid() => true;

@@ -21,7 +21,7 @@ namespace Althea.Array
 		IBaseVector<T, DenseVector<T, TS>>,
 		IVectorUnaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>>,
 		IVectorBinaryOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseVector<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic

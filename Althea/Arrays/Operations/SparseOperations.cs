@@ -38,7 +38,7 @@ namespace Althea.Array
 		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>,
 		ITensorOperations<T, DenseTensor<T, TS>, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>
 
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region vector

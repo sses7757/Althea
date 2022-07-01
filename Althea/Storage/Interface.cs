@@ -93,7 +93,7 @@ namespace Althea.Storage
 		ICreateAlike<TSelf>, System.Numerics.IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>,
 		System.Numerics.IAdditiveIdentity<TSelf, long>, System.Numerics.IAdditionOperators<TSelf, long, TSelf>,
 		System.Numerics.ISubtractionOperators<TSelf, long, TSelf>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TSelf : class, IStorage<T, TSelf>
 	{
 		T IReadOnlyList<T>.this[int index] => this.MakeReference(index, 1).ToManaged<T, TSelf>();
@@ -221,7 +221,7 @@ namespace Althea.Storage
 		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
 		/// <returns>A referenced storage of type <typeparamref name="TSelf"/> over <paramref name="storage"/></returns>
 		/// <exception cref="InvalidCastException">If a referenced <typeparamref name="TOther"/> cannot be created from <typeparamref name="TSelf"/></exception>
-		abstract static TSelf RefFrom<TOut, TOther>(TOther storage) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<TOut, TOther>;
+		abstract static TSelf RefFrom<TOut, TOther>(TOther storage) where TOut : unmanaged, IBaseNumber<TOut> where TOther : class, IStorage<TOut, TOther>;
 
 		/// <summary>
 		/// When implemented by a derived class, statically allocate and creates a new <typeparamref name="TSelf"/> alike <paramref name="storage"/>.
@@ -232,7 +232,7 @@ namespace Althea.Storage
 		/// <returns>A new <typeparamref name="TSelf"/> that likes <paramref name="storage"/></returns>
 		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
 		/// <exception cref="InvalidCastException">If an actual storage <typeparamref name="TOther"/> cannot be created alike <typeparamref name="TSelf"/></exception>
-		abstract static TSelf CreateAlike<TOut, TOther>(TOther storage) where TOut : unmanaged, INumber<TOut> where TOther : class, IStorage<TOut, TOther>;
+		abstract static TSelf CreateAlike<TOut, TOther>(TOther storage) where TOut : unmanaged, IBaseNumber<TOut> where TOther : class, IStorage<TOut, TOther>;
 
 		/// <summary>
 		/// When implemented by a derived class, statically create a new <typeparamref name="TSelf"/> of given lengths.
@@ -308,7 +308,7 @@ namespace Althea.Storage
 		}
 
 		/// <summary>
-		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="INumber{TSelf}.Size"/>.
+		/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="IBaseNumber{TSelf}.Size"/>.
 		/// </summary>
 		public long Length => this.LengthInBytes / T.Size;
 
@@ -337,7 +337,7 @@ namespace Althea.Storage
 		/// <returns>The <see cref="Length"/> divided by the size of <typeparamref name="TOut"/></returns>
 		/// <exception cref="InvalidCastException">If the sizes of the pointers of this storage cannot be divided by the size of <typeparamref name="TOut"/></exception>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public long CheckCast<TOut>() where TOut : unmanaged, INumber<TOut>
+		public long CheckCast<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
 		{
 			long length = 0;
 			Span<long> sizes = stackalloc long[TSelf.PointerGetters.Length];
@@ -362,7 +362,7 @@ namespace Althea.Storage
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
-	public interface IActualStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, INumber<T> where TStorage : class, IStorage<T, TStorage>
+	public interface IActualStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, IBaseNumber<T> where TStorage : class, IStorage<T, TStorage>
 	{
 	}
 
@@ -371,7 +371,7 @@ namespace Althea.Storage
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TStorage">The actual class that implement <see cref="IStorage{T, TStorage}"/></typeparam>
-	public interface IReferenceStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, INumber<T> where TStorage : class, IStorage<T, TStorage>
+	public interface IReferenceStorage<T, TStorage> : IStorage<T, TStorage> where T : unmanaged, IBaseNumber<T> where TStorage : class, IStorage<T, TStorage>
 	{
 		abstract IStorage? IStorage.Reference { get; }
 
@@ -425,7 +425,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the total offset compared to the start of the underlying reference in <typeparamref name="T"/>.
 		/// </summary>
-		/// <remarks>The default implementation does not check whether <see cref="IStorage.TotalOffsetInBytes"/> can be divided by <see cref="INumber{TSelf}.Size"/> or not.</remarks>
+		/// <remarks>The default implementation does not check whether <see cref="IStorage.TotalOffsetInBytes"/> can be divided by <see cref="IBaseNumber{TSelf}.Size"/> or not.</remarks>
 		public long TotalOffset => TotalOffsetInBytes / T.Size;
 	}
 }

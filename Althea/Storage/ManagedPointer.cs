@@ -28,7 +28,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// Get the underlying data as a <see cref="Span{T}"/> of <typeparamref name="T"/>
 		/// </summary>
-		public Span<T> AsData<T>() where T : unmanaged, INumber<T> => this.Data.As<byte, T>();
+		public Span<T> AsData<T>() where T : unmanaged, IBaseNumber<T> => this.Data.As<byte, T>();
 
 		/// <summary>
 		/// Create a new <see cref="ManagedPointer"/> with given <paramref name="data"/> as a pointer from a fixed managed buffer and <paramref name="length"/>.
@@ -94,7 +94,7 @@ namespace Althea.Storage
 		#endregion
 	}
 
-	internal sealed class ManagedPureStorage<T> : IStorage<T, ManagedPureStorage<T>> where T : unmanaged, INumber<T>
+	internal sealed class ManagedPureStorage<T> : IStorage<T, ManagedPureStorage<T>> where T : unmanaged, IBaseNumber<T>
 	{
 		#region basic
 		IStorage? IStorage.Reference => null;

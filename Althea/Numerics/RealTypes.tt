@@ -5,13 +5,13 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
 <#
-var reps = new string[] { "Double", "Single", "Half" };
-var orgs = new string[] { "double", "float", "System.Half" };
-var mps = new string[] { "2.220446049250313E-16", "1.1920928955078125E-07F", "(System.Half)0.0009765625F" };
-var ones = new string[] { "1.0", "1.0F", "System.Half.One" };
-var zeros = new string[] { "0.0", "0.0F", "System.Half.Zero" };
-var negzeros = new string[] { "-0.0", "-0.0F", "System.Half.NegativeZero" };
-var negones = new string[] { "-1.0", "-1.0F", "System.Half.NegativeOne" };
+var reps = new string[] { "Float64", "Float32", "Float16" };
+var orgs = new string[] { "double", "float", "Half" };
+var mps = new string[] { "2.220446049250313E-16", "1.1920928955078125E-07F", "(Half)0.0009765625F" };
+var ones = new string[] { "1.0", "1.0F", "Half.One" };
+var zeros = new string[] { "0.0", "0.0F", "Half.Zero" };
+var negzeros = new string[] { "-0.0", "-0.0F", "Half.NegativeZero" };
+var negones = new string[] { "-1.0", "-1.0F", "Half.NegativeOne" };
 
 var methods = new (string name, string type, string param, string invoke)[]
 {

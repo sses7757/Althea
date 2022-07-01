@@ -248,7 +248,7 @@ namespace Althea.Backend.Cuda.Storage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static new bool FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged, INumber<T> => Default.FillWithValue_(pointer, value);
+		internal static new bool FillWithValue<T>(PointerSegment pointer, T value) where T : unmanaged, IBaseNumber<T> => Default.FillWithValue_(pointer, value);
 		#endregion
 
 		#region copy
@@ -357,7 +357,7 @@ namespace Althea.Backend.Cuda.Storage
 		#endregion
 
 		#region strided copy
-		internal static unsafe bool PointerStridedCopy<T>(IntPtr source, int incrementSource, IntPtr destination, int incrementDestination, MemoryCopyKind copyKind, int copies) where T : unmanaged, INumber<T>
+		internal static unsafe bool PointerStridedCopy<T>(IntPtr source, int incrementSource, IntPtr destination, int incrementDestination, MemoryCopyKind copyKind, int copies) where T : unmanaged, IBaseNumber<T>
 		{
 			if (incrementSource == 1 && incrementDestination == 1)
 			{
@@ -380,10 +380,10 @@ namespace Althea.Backend.Cuda.Storage
 						delegate*<IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func = null;
 						switch (Const<T>.DataType)
 						{
-							case DataType.RealSingle:
+							case DataType.RealFloat32:
 								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasScopy : &LinearAlgebra.Dense.NativeMethods.cublasScopy_v2;
 								break;
-							case DataType.RealDouble:
+							case DataType.RealFloat64:
 								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasDcopy : &LinearAlgebra.Dense.NativeMethods.cublasDcopy_v2;
 								break;
 							case DataType.ComplexSingle:

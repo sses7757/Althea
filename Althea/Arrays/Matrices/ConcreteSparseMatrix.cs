@@ -22,7 +22,7 @@ namespace Althea.Array
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	public class CoordinateSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
@@ -199,7 +199,7 @@ namespace Althea.Array
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	public class CompressSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
@@ -428,7 +428,7 @@ namespace Althea.Array
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential)]
 	public class CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
@@ -665,7 +665,7 @@ namespace Althea.Array
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential)]
 	public class CompressBlockSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic

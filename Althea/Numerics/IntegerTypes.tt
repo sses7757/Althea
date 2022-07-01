@@ -5,9 +5,9 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
 <#
-var reps = new string[] { "Int8", "Int16", "Int32", "Int64", "Int128", "UInt8", "UInt16", "UInt32", "UInt64", "UInt128" };
-var orgs = new string[] { "sbyte", "short", "int", "long", "System.Int128", "byte", "ushort", "uint", "ulong", "System.UInt128" };
-var uorgs = new string[] { "byte", "ushort", "uint", "ulong", "System.UInt128", "byte", "ushort", "uint", "ulong", "System.UInt128" };
+var reps = new string[] { "SignedInt8", "SignedInt16", "SignedInt32", "SignedInt64", "SignedInt128", "UnsignedInt8", "UnsignedInt16", "UnsignedInt32", "UnsignedInt64", "UnsignedInt128" };
+var orgs = new string[] { "sbyte", "short", "int", "long", "Int128", "byte", "ushort", "uint", "ulong", "UInt128" };
+var uorgs = new string[] { "byte", "ushort", "uint", "ulong", "UInt128", "byte", "ushort", "uint", "ulong", "UInt128" };
 
 var methods = new (string name, string type, string param, string invoke)[]
 {
@@ -72,9 +72,9 @@ namespace Althea.Numerics;
 
 
 /// <summary>
-/// The custom replacement of <see cref="<#=orgs[i]#>"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="<#=orgs[i]#>"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
+public readonly partial struct <#=reps[i]#> : IBinaryInt<<#=reps[i]#>>
 {
 	private readonly <#=orgs[i]#> _value;
 
@@ -128,7 +128,7 @@ public readonly partial struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
 	public string ToString(string? format, IFormatProvider? formatProvider) => this._value.ToString(format, formatProvider);
 
 	/// <inheritdoc/>
-	public static DataType Type => DataType.Real<#=reps[i]#>;
+	public static DataType Type => DataType.Real<#=reps[i].Replace("Unsigned", "U").Replace("Signed", "")#>;
 
 	/// <inheritdoc/>
 	public static <#=reps[i]#> MachinePrecision => (<#=orgs[i]#>)1;
@@ -301,7 +301,7 @@ public readonly partial struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
 #>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator -(UInt64 left) => (ulong)(-(long)left._value);
+	public static <#=reps[i]#> operator -(<#=reps[i]#> left) => (ulong)(-(long)left._value);
 <# } else { #>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -363,7 +363,7 @@ public readonly partial struct <#=reps[i]#> : IBinaryInteger<<#=reps[i]#>>
 #>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 <#=name.Replace("TSelf", reps[i])#>(UInt64 left) => checked((ulong)(-(long)left._value));
+	static <#=reps[i]#> <#=name.Replace("TSelf", reps[i])#>(<#=reps[i]#> left) => checked((ulong)(-(long)left._value));
 <# } else { #>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

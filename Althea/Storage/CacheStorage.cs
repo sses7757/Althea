@@ -323,7 +323,7 @@ namespace Althea.Storage
 	/// <typeparam name="TPh">Any high speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TPl">Any low speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public abstract class CachedStorage<T, TS, TPh, TPl> : CachedStorageBase<TS, TPh, TPl>, IStorage<T, CachedStorage<T, TS, TPh, TPl>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : struct, ICacheStrategy<TS>
 		where TPh : notnull, IPointer<TPh>
 		where TPl : notnull, IPointer<TPl>
@@ -478,7 +478,7 @@ namespace Althea.Storage
 		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
 		/// <returns>The referenced <see cref="CachedStorage{T, TS, TPh, TPl}"/> of data type <typeparamref name="TOut"/></returns>
 		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public CachedStorage<TOut, TS, TPh, TPl> As<TOut>() where TOut : unmanaged, INumber<TOut>
+		public CachedStorage<TOut, TS, TPh, TPl> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
 		{
 			if (typeof(TOut) == typeof(T))
 				return this.MakeReference() as CachedStorage<TOut, TS, TPh, TPl> ?? CachedStorage<TOut, TS, TPh, TPl>.Empty;
@@ -516,7 +516,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
 		/// <returns>A new <see cref="CachedStorage{T, TS, TPh, TPl}"/> that likes <paramref name="storage"/></returns>
-		public static CachedStorage<T, TS, TPh, TPl> CreateAlike<TOut>(CachedStorage<TOut, TS, TPh, TPl> storage) where TOut : unmanaged, INumber<TOut>
+		public static CachedStorage<T, TS, TPh, TPl> CreateAlike<TOut>(CachedStorage<TOut, TS, TPh, TPl> storage) where TOut : unmanaged, IBaseNumber<TOut>
 		{
 			return Create(stackalloc long[] { storage.Cache.LengthInBytes / TOut.Size, storage.Length });
 		}
@@ -610,7 +610,7 @@ namespace Althea.Storage
 
 				byte[] data = reader.GetBytesFromBase64();
 				TPl pointer = Mem.Allocate<TPl>(data.LongLength);
-				Mem.FromManaged<UInt8, TPl>(pointer, data.AsAux());
+				Mem.FromManaged<UnsignedInt8, TPl>(pointer, data.AsAux());
 
 				if (!reader.Read())
 					throw new JsonException();
@@ -627,7 +627,7 @@ namespace Althea.Storage
 					throw new JsonException(ParameterError.InvalidValue);
 				byte[] temp = new byte[value.LengthInBytes];
 				value.Strategy.Flush(value.CopyWrapper);
-				Mem.ToManaged<UInt8, TPl>(value.Memory, temp.AsAux());
+				Mem.ToManaged<UnsignedInt8, TPl>(value.Memory, temp.AsAux());
 				writer.WriteStartObject();
 				writer.WriteBase64String(nameof(Repr.Data), temp);
 				writer.WriteEndObject();
@@ -644,7 +644,7 @@ namespace Althea.Storage
 	/// <typeparam name="TPh">Any high speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TPl">Any low speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public sealed class ActualCachedStorage<T, TS, TPh, TPl> : CachedStorage<T, TS, TPh, TPl>, IActualStorage<T, CachedStorage<T, TS, TPh, TPl>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : struct, ICacheStrategy<TS>
 		where TPh : notnull, IPointer<TPh>
 		where TPl : notnull, IPointer<TPl>
@@ -695,7 +695,7 @@ namespace Althea.Storage
 	/// <typeparam name="TPh">Any high speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TPl">Any low speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public sealed class ReferenceCachedStorage<T, TS, TPh, TPl> : CachedStorage<T, TS, TPh, TPl>, IReferenceStorage<T, CachedStorage<T, TS, TPh, TPl>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : struct, ICacheStrategy<TS>
 		where TPh : notnull, IPointer<TPh>
 		where TPl : notnull, IPointer<TPl>

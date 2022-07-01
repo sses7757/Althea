@@ -7,85 +7,85 @@ using System.Runtime.CompilerServices;
 namespace Althea.Numerics;
 
 
-public readonly partial struct Double
+public readonly partial struct Float64
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Double value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(Float64 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -97,81 +97,81 @@ public readonly partial struct Double
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Double value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(Float64 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -183,69 +183,69 @@ public readonly partial struct Double
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Double result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Float64 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (double)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (double)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (double)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (double)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (double)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (double)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (double)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (double)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (double)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (double)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (double)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (double)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (double)(*(System.UInt128*)&value);
 			return true;
@@ -256,69 +256,69 @@ public readonly partial struct Double
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Double result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Float64 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((double)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((double)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((double)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((double)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((double)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((double)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((double)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((double)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((double)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((double)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((double)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((double)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((double)(*(System.UInt128*)&value));
 			return true;
@@ -329,85 +329,85 @@ public readonly partial struct Double
 }
 
 
-public readonly partial struct Single
+public readonly partial struct Float32
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Single value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(Float32 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -419,81 +419,81 @@ public readonly partial struct Single
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Single value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(Float32 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -505,69 +505,69 @@ public readonly partial struct Single
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Single result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Float32 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (float)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (float)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (float)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (float)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (float)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (float)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (float)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (float)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (float)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (float)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (float)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (float)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (float)(*(System.UInt128*)&value);
 			return true;
@@ -578,69 +578,69 @@ public readonly partial struct Single
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Single result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Float32 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((float)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((float)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((float)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((float)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((float)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((float)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((float)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((float)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((float)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((float)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((float)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((float)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((float)(*(System.UInt128*)&value));
 			return true;
@@ -651,85 +651,85 @@ public readonly partial struct Single
 }
 
 
-public readonly partial struct Half
+public readonly partial struct Float16
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Half value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(Float16 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -741,81 +741,81 @@ public readonly partial struct Half
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Half value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(Float16 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -827,69 +827,69 @@ public readonly partial struct Half
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Half result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Float16 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (System.Half)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (System.Half)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (System.Half)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (System.Half)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (System.Half)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (System.Half)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (System.Half)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (System.Half)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (System.Half)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (System.Half)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (System.Half)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (System.Half)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (System.Half)(*(System.UInt128*)&value);
 			return true;
@@ -900,69 +900,69 @@ public readonly partial struct Half
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Half result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Float16 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((System.Half)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((System.Half)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((System.Half)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((System.Half)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((System.Half)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((System.Half)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((System.Half)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((System.Half)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((System.Half)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((System.Half)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((System.Half)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((System.Half)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((System.Half)(*(System.UInt128*)&value));
 			return true;
@@ -973,85 +973,85 @@ public readonly partial struct Half
 }
 
 
-public readonly partial struct Int8
+public readonly partial struct SignedInt8
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Int8 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(SignedInt8 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -1063,81 +1063,81 @@ public readonly partial struct Int8
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Int8 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(SignedInt8 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -1149,69 +1149,69 @@ public readonly partial struct Int8
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Int8 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out SignedInt8 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (sbyte)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (sbyte)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (sbyte)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (sbyte)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (sbyte)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (sbyte)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (sbyte)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (sbyte)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (sbyte)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (sbyte)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (sbyte)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (sbyte)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (sbyte)(*(System.UInt128*)&value);
 			return true;
@@ -1222,69 +1222,69 @@ public readonly partial struct Int8
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Int8 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out SignedInt8 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((sbyte)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((sbyte)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((sbyte)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((sbyte)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((sbyte)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((sbyte)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((sbyte)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((sbyte)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((sbyte)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((sbyte)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((sbyte)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((sbyte)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((sbyte)(*(System.UInt128*)&value));
 			return true;
@@ -1295,85 +1295,85 @@ public readonly partial struct Int8
 }
 
 
-public readonly partial struct Int16
+public readonly partial struct SignedInt16
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Int16 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(SignedInt16 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -1385,81 +1385,81 @@ public readonly partial struct Int16
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Int16 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(SignedInt16 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -1471,69 +1471,69 @@ public readonly partial struct Int16
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Int16 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out SignedInt16 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (short)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (short)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (short)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (short)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (short)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (short)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (short)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (short)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (short)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (short)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (short)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (short)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (short)(*(System.UInt128*)&value);
 			return true;
@@ -1544,69 +1544,69 @@ public readonly partial struct Int16
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Int16 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out SignedInt16 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((short)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((short)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((short)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((short)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((short)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((short)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((short)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((short)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((short)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((short)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((short)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((short)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((short)(*(System.UInt128*)&value));
 			return true;
@@ -1617,85 +1617,85 @@ public readonly partial struct Int16
 }
 
 
-public readonly partial struct Int32
+public readonly partial struct SignedInt32
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Int32 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(SignedInt32 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -1707,81 +1707,81 @@ public readonly partial struct Int32
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Int32 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(SignedInt32 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -1793,69 +1793,69 @@ public readonly partial struct Int32
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Int32 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out SignedInt32 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (int)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (int)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (int)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (int)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (int)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (int)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (int)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (int)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (int)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (int)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (int)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (int)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (int)(*(System.UInt128*)&value);
 			return true;
@@ -1866,69 +1866,69 @@ public readonly partial struct Int32
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Int32 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out SignedInt32 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((int)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((int)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((int)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((int)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((int)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((int)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((int)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((int)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((int)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((int)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((int)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((int)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((int)(*(System.UInt128*)&value));
 			return true;
@@ -1939,85 +1939,85 @@ public readonly partial struct Int32
 }
 
 
-public readonly partial struct Int64
+public readonly partial struct SignedInt64
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Int64 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(SignedInt64 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -2029,81 +2029,81 @@ public readonly partial struct Int64
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Int64 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(SignedInt64 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -2115,69 +2115,69 @@ public readonly partial struct Int64
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Int64 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out SignedInt64 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (long)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (long)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (long)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (long)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (long)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (long)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (long)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (long)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (long)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (long)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (long)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (long)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (long)(*(System.UInt128*)&value);
 			return true;
@@ -2188,69 +2188,69 @@ public readonly partial struct Int64
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Int64 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out SignedInt64 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((long)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((long)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((long)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((long)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((long)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((long)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((long)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((long)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((long)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((long)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((long)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((long)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((long)(*(System.UInt128*)&value));
 			return true;
@@ -2261,85 +2261,85 @@ public readonly partial struct Int64
 }
 
 
-public readonly partial struct Int128
+public readonly partial struct SignedInt128
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Int128 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(SignedInt128 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -2351,81 +2351,81 @@ public readonly partial struct Int128
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Int128 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(SignedInt128 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -2437,69 +2437,69 @@ public readonly partial struct Int128
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Int128 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out SignedInt128 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (System.Int128)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (System.Int128)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (System.Int128)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (System.Int128)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (System.Int128)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (System.Int128)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (System.Int128)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (System.Int128)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (System.Int128)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (System.Int128)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (System.Int128)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (System.Int128)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (System.Int128)(*(System.UInt128*)&value);
 			return true;
@@ -2510,69 +2510,69 @@ public readonly partial struct Int128
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Int128 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out SignedInt128 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((System.Int128)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((System.Int128)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((System.Int128)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((System.Int128)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((System.Int128)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((System.Int128)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((System.Int128)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((System.Int128)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((System.Int128)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((System.Int128)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((System.Int128)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((System.Int128)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((System.Int128)(*(System.UInt128*)&value));
 			return true;
@@ -2583,85 +2583,85 @@ public readonly partial struct Int128
 }
 
 
-public readonly partial struct UInt8
+public readonly partial struct UnsignedInt8
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(UInt8 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(UnsignedInt8 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -2673,81 +2673,81 @@ public readonly partial struct UInt8
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(UInt8 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(UnsignedInt8 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -2759,69 +2759,69 @@ public readonly partial struct UInt8
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UInt8 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UnsignedInt8 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (byte)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (byte)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (byte)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (byte)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (byte)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (byte)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (byte)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (byte)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (byte)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (byte)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (byte)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (byte)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (byte)(*(System.UInt128*)&value);
 			return true;
@@ -2832,69 +2832,69 @@ public readonly partial struct UInt8
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UInt8 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UnsignedInt8 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((byte)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((byte)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((byte)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((byte)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((byte)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((byte)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((byte)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((byte)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((byte)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((byte)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((byte)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((byte)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((byte)(*(System.UInt128*)&value));
 			return true;
@@ -2905,85 +2905,85 @@ public readonly partial struct UInt8
 }
 
 
-public readonly partial struct UInt16
+public readonly partial struct UnsignedInt16
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(UInt16 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(UnsignedInt16 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -2995,81 +2995,81 @@ public readonly partial struct UInt16
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(UInt16 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(UnsignedInt16 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -3081,69 +3081,69 @@ public readonly partial struct UInt16
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UInt16 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UnsignedInt16 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (ushort)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (ushort)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (ushort)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (ushort)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (ushort)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (ushort)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (ushort)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (ushort)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (ushort)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (ushort)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (ushort)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (ushort)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (ushort)(*(System.UInt128*)&value);
 			return true;
@@ -3154,69 +3154,69 @@ public readonly partial struct UInt16
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UInt16 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UnsignedInt16 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((ushort)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((ushort)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((ushort)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((ushort)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((ushort)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((ushort)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((ushort)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((ushort)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((ushort)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((ushort)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((ushort)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((ushort)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((ushort)(*(System.UInt128*)&value));
 			return true;
@@ -3227,85 +3227,85 @@ public readonly partial struct UInt16
 }
 
 
-public readonly partial struct UInt32
+public readonly partial struct UnsignedInt32
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(UInt32 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(UnsignedInt32 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -3317,81 +3317,81 @@ public readonly partial struct UInt32
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(UInt32 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(UnsignedInt32 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -3403,69 +3403,69 @@ public readonly partial struct UInt32
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UInt32 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UnsignedInt32 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (uint)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (uint)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (uint)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (uint)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (uint)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (uint)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (uint)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (uint)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (uint)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (uint)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (uint)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (uint)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (uint)(*(System.UInt128*)&value);
 			return true;
@@ -3476,69 +3476,69 @@ public readonly partial struct UInt32
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UInt32 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UnsignedInt32 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((uint)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((uint)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((uint)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((uint)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((uint)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((uint)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((uint)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((uint)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((uint)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((uint)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((uint)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((uint)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((uint)(*(System.UInt128*)&value));
 			return true;
@@ -3549,85 +3549,85 @@ public readonly partial struct UInt32
 }
 
 
-public readonly partial struct UInt64
+public readonly partial struct UnsignedInt64
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(UInt64 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(UnsignedInt64 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -3639,81 +3639,81 @@ public readonly partial struct UInt64
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(UInt64 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(UnsignedInt64 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -3725,69 +3725,69 @@ public readonly partial struct UInt64
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UInt64 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UnsignedInt64 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (ulong)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (ulong)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (ulong)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (ulong)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (ulong)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (ulong)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (ulong)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (ulong)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (ulong)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (ulong)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (ulong)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (ulong)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (ulong)(*(System.UInt128*)&value);
 			return true;
@@ -3798,69 +3798,69 @@ public readonly partial struct UInt64
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UInt64 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UnsignedInt64 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((ulong)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((ulong)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((ulong)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((ulong)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((ulong)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((ulong)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((ulong)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((ulong)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((ulong)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((ulong)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((ulong)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((ulong)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((ulong)(*(System.UInt128*)&value));
 			return true;
@@ -3871,85 +3871,85 @@ public readonly partial struct UInt64
 }
 
 
-public readonly partial struct UInt128
+public readonly partial struct UnsignedInt128
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(UInt128 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(UnsignedInt128 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = (double)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = (float)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = (System.Half)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = (sbyte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = (short)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = (int)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = (long)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = (System.Int128)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = (byte)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = (ushort)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = (uint)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = (ulong)value._value;
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = (System.UInt128)value._value;
 			result = *(TOther*)&v;
@@ -3961,81 +3961,81 @@ public readonly partial struct UInt128
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(UInt128 value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(UnsignedInt128 value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			var v = checked((double)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			var v = checked((float)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			var v = checked((System.Half)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			var v = checked((sbyte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			var v = checked((short)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			var v = checked((int)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			var v = checked((long)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			var v = checked((System.Int128)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			var v = checked((byte)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			var v = checked((ushort)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			var v = checked((uint)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			var v = checked((ulong)value._value);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			var v = checked((System.UInt128)value._value);
 			result = *(TOther*)&v;
@@ -4047,69 +4047,69 @@ public readonly partial struct UInt128
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UInt128 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out UnsignedInt128 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = (System.UInt128)(*(double*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = (System.UInt128)(*(float*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = (System.UInt128)(*(System.Half*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = (System.UInt128)(*(sbyte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = (System.UInt128)(*(short*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = (System.UInt128)(*(int*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = (System.UInt128)(*(long*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = (System.UInt128)(*(System.Int128*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = (System.UInt128)(*(byte*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = (System.UInt128)(*(ushort*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = (System.UInt128)(*(uint*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = (System.UInt128)(*(ulong*)&value);
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = (System.UInt128)(*(System.UInt128*)&value);
 			return true;
@@ -4120,69 +4120,69 @@ public readonly partial struct UInt128
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UInt128 result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out UnsignedInt128 result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			result = checked((System.UInt128)(*(double*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			result = checked((System.UInt128)(*(float*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			result = checked((System.UInt128)(*(System.Half*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			result = checked((System.UInt128)(*(sbyte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			result = checked((System.UInt128)(*(short*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			result = checked((System.UInt128)(*(int*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			result = checked((System.UInt128)(*(long*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			result = checked((System.UInt128)(*(System.Int128*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			result = checked((System.UInt128)(*(byte*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			result = checked((System.UInt128)(*(ushort*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			result = checked((System.UInt128)(*(uint*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			result = checked((System.UInt128)(*(ulong*)&value));
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			result = checked((System.UInt128)(*(System.UInt128*)&value));
 			return true;
@@ -4197,162 +4197,162 @@ public readonly partial struct Complex<T>
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(Complex<T> value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(Complex<T> value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Complex<Double>))
+		if (typeof(TOther) == typeof(Complex<Float64>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Double re))
+			if (!NumberConvert.TryConvert(value.real, out Float64 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Double im))
+			if (!NumberConvert.TryConvert(value.imag, out Float64 im))
 				return false;
-			var v = new Complex<Double>(re, im);
+			var v = new Complex<Float64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Single>))
+		if (typeof(TOther) == typeof(Complex<Float32>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Single re))
+			if (!NumberConvert.TryConvert(value.real, out Float32 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Single im))
+			if (!NumberConvert.TryConvert(value.imag, out Float32 im))
 				return false;
-			var v = new Complex<Single>(re, im);
+			var v = new Complex<Float32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Half>))
+		if (typeof(TOther) == typeof(Complex<Float16>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Half re))
+			if (!NumberConvert.TryConvert(value.real, out Float16 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Half im))
+			if (!NumberConvert.TryConvert(value.imag, out Float16 im))
 				return false;
-			var v = new Complex<Half>(re, im);
+			var v = new Complex<Float16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int8>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt8>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int8 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt8 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int8 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt8 im))
 				return false;
-			var v = new ComplexInteger<Int8>(re, im);
+			var v = new ComplexInteger<SignedInt8>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int16>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt16>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int16 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt16 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int16 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt16 im))
 				return false;
-			var v = new ComplexInteger<Int16>(re, im);
+			var v = new ComplexInteger<SignedInt16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int32>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt32>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int32 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt32 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int32 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt32 im))
 				return false;
-			var v = new ComplexInteger<Int32>(re, im);
+			var v = new ComplexInteger<SignedInt32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int64>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt64>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int64 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt64 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int64 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt64 im))
 				return false;
-			var v = new ComplexInteger<Int64>(re, im);
+			var v = new ComplexInteger<SignedInt64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int128>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt128>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int128 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt128 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int128 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt128 im))
 				return false;
-			var v = new ComplexInteger<Int128>(re, im);
+			var v = new ComplexInteger<SignedInt128>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt8>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt8>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt8 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt8 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt8 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt8 im))
 				return false;
-			var v = new ComplexInteger<UInt8>(re, im);
+			var v = new ComplexInteger<UnsignedInt8>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt16>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt16>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt16 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt16 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt16 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt16 im))
 				return false;
-			var v = new ComplexInteger<UInt16>(re, im);
+			var v = new ComplexInteger<UnsignedInt16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt32>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt32>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt32 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt32 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt32 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt32 im))
 				return false;
-			var v = new ComplexInteger<UInt32>(re, im);
+			var v = new ComplexInteger<UnsignedInt32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt64>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt64>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt64 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt64 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt64 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt64 im))
 				return false;
-			var v = new ComplexInteger<UInt64>(re, im);
+			var v = new ComplexInteger<UnsignedInt64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt128>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt128>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt128 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt128 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt128 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt128 im))
 				return false;
-			var v = new ComplexInteger<UInt128>(re, im);
+			var v = new ComplexInteger<UnsignedInt128>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
@@ -4361,162 +4361,162 @@ public readonly partial struct Complex<T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(Complex<T> value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(Complex<T> value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Complex<Double>))
+		if (typeof(TOther) == typeof(Complex<Float64>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Double re))
+			if (!NumberConvert.TryConvertChecked(value.real, out Float64 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Double im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out Float64 im))
 				return false;
-			var v = new Complex<Double>(re, im);
+			var v = new Complex<Float64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Single>))
+		if (typeof(TOther) == typeof(Complex<Float32>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Single re))
+			if (!NumberConvert.TryConvertChecked(value.real, out Float32 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Single im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out Float32 im))
 				return false;
-			var v = new Complex<Single>(re, im);
+			var v = new Complex<Float32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Half>))
+		if (typeof(TOther) == typeof(Complex<Float16>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Half re))
+			if (!NumberConvert.TryConvertChecked(value.real, out Float16 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Half im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out Float16 im))
 				return false;
-			var v = new Complex<Half>(re, im);
+			var v = new Complex<Float16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int8>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt8>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int8 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt8 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int8 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt8 im))
 				return false;
-			var v = new ComplexInteger<Int8>(re, im);
+			var v = new ComplexInteger<SignedInt8>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int16>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt16>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int16 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt16 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int16 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt16 im))
 				return false;
-			var v = new ComplexInteger<Int16>(re, im);
+			var v = new ComplexInteger<SignedInt16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int32>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt32>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int32 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt32 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int32 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt32 im))
 				return false;
-			var v = new ComplexInteger<Int32>(re, im);
+			var v = new ComplexInteger<SignedInt32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int64>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt64>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int64 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt64 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int64 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt64 im))
 				return false;
-			var v = new ComplexInteger<Int64>(re, im);
+			var v = new ComplexInteger<SignedInt64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int128>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt128>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int128 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt128 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int128 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt128 im))
 				return false;
-			var v = new ComplexInteger<Int128>(re, im);
+			var v = new ComplexInteger<SignedInt128>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt8>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt8>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt8 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt8 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt8 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt8 im))
 				return false;
-			var v = new ComplexInteger<UInt8>(re, im);
+			var v = new ComplexInteger<UnsignedInt8>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt16>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt16>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt16 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt16 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt16 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt16 im))
 				return false;
-			var v = new ComplexInteger<UInt16>(re, im);
+			var v = new ComplexInteger<UnsignedInt16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt32>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt32>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt32 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt32 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt32 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt32 im))
 				return false;
-			var v = new ComplexInteger<UInt32>(re, im);
+			var v = new ComplexInteger<UnsignedInt32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt64>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt64>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt64 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt64 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt64 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt64 im))
 				return false;
-			var v = new ComplexInteger<UInt64>(re, im);
+			var v = new ComplexInteger<UnsignedInt64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt128>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt128>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt128 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt128 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt128 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt128 im))
 				return false;
-			var v = new ComplexInteger<UInt128>(re, im);
+			var v = new ComplexInteger<UnsignedInt128>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
@@ -4525,103 +4525,103 @@ public readonly partial struct Complex<T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Complex<T> result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out Complex<T> result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Double>))
+		if (typeof(TOther) == typeof(Complex<Float64>))
 		{
-			var v = *(Complex<Double>*)&value;
+			var v = *(Complex<Float64>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4629,9 +4629,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Single>))
+		if (typeof(TOther) == typeof(Complex<Float32>))
 		{
-			var v = *(Complex<Single>*)&value;
+			var v = *(Complex<Float32>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4639,9 +4639,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Half>))
+		if (typeof(TOther) == typeof(Complex<Float16>))
 		{
-			var v = *(Complex<Half>*)&value;
+			var v = *(Complex<Float16>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4649,9 +4649,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int8>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt8>))
 		{
-			var v = *(ComplexInteger<Int8>*)&value;
+			var v = *(ComplexInteger<SignedInt8>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4659,9 +4659,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int16>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt16>))
 		{
-			var v = *(ComplexInteger<Int16>*)&value;
+			var v = *(ComplexInteger<SignedInt16>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4669,9 +4669,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int32>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt32>))
 		{
-			var v = *(ComplexInteger<Int32>*)&value;
+			var v = *(ComplexInteger<SignedInt32>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4679,9 +4679,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int64>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt64>))
 		{
-			var v = *(ComplexInteger<Int64>*)&value;
+			var v = *(ComplexInteger<SignedInt64>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4689,9 +4689,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int128>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt128>))
 		{
-			var v = *(ComplexInteger<Int128>*)&value;
+			var v = *(ComplexInteger<SignedInt128>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4699,9 +4699,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt8>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt8>))
 		{
-			var v = *(ComplexInteger<UInt8>*)&value;
+			var v = *(ComplexInteger<UnsignedInt8>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4709,9 +4709,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt16>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt16>))
 		{
-			var v = *(ComplexInteger<UInt16>*)&value;
+			var v = *(ComplexInteger<UnsignedInt16>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4719,9 +4719,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt32>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt32>))
 		{
-			var v = *(ComplexInteger<UInt32>*)&value;
+			var v = *(ComplexInteger<UnsignedInt32>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4729,9 +4729,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt64>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt64>))
 		{
-			var v = *(ComplexInteger<UInt64>*)&value;
+			var v = *(ComplexInteger<UnsignedInt64>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4739,9 +4739,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt128>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt128>))
 		{
-			var v = *(ComplexInteger<UInt128>*)&value;
+			var v = *(ComplexInteger<UnsignedInt128>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -4754,103 +4754,103 @@ public readonly partial struct Complex<T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Complex<T> result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out Complex<T> result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Double>))
+		if (typeof(TOther) == typeof(Complex<Float64>))
 		{
-			var v = *(Complex<Double>*)&value;
+			var v = *(Complex<Float64>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4858,9 +4858,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Single>))
+		if (typeof(TOther) == typeof(Complex<Float32>))
 		{
-			var v = *(Complex<Single>*)&value;
+			var v = *(Complex<Float32>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4868,9 +4868,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Half>))
+		if (typeof(TOther) == typeof(Complex<Float16>))
 		{
-			var v = *(Complex<Half>*)&value;
+			var v = *(Complex<Float16>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4878,9 +4878,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int8>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt8>))
 		{
-			var v = *(ComplexInteger<Int8>*)&value;
+			var v = *(ComplexInteger<SignedInt8>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4888,9 +4888,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int16>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt16>))
 		{
-			var v = *(ComplexInteger<Int16>*)&value;
+			var v = *(ComplexInteger<SignedInt16>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4898,9 +4898,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int32>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt32>))
 		{
-			var v = *(ComplexInteger<Int32>*)&value;
+			var v = *(ComplexInteger<SignedInt32>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4908,9 +4908,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int64>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt64>))
 		{
-			var v = *(ComplexInteger<Int64>*)&value;
+			var v = *(ComplexInteger<SignedInt64>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4918,9 +4918,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int128>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt128>))
 		{
-			var v = *(ComplexInteger<Int128>*)&value;
+			var v = *(ComplexInteger<SignedInt128>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4928,9 +4928,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt8>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt8>))
 		{
-			var v = *(ComplexInteger<UInt8>*)&value;
+			var v = *(ComplexInteger<UnsignedInt8>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4938,9 +4938,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt16>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt16>))
 		{
-			var v = *(ComplexInteger<UInt16>*)&value;
+			var v = *(ComplexInteger<UnsignedInt16>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4948,9 +4948,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt32>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt32>))
 		{
-			var v = *(ComplexInteger<UInt32>*)&value;
+			var v = *(ComplexInteger<UnsignedInt32>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4958,9 +4958,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt64>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt64>))
 		{
-			var v = *(ComplexInteger<UInt64>*)&value;
+			var v = *(ComplexInteger<UnsignedInt64>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4968,9 +4968,9 @@ public readonly partial struct Complex<T>
 			result = new Complex<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt128>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt128>))
 		{
-			var v = *(ComplexInteger<UInt128>*)&value;
+			var v = *(ComplexInteger<UnsignedInt128>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -4987,162 +4987,162 @@ public readonly partial struct ComplexInteger<T>
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(ComplexInteger<T> value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(ComplexInteger<T> value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 			return NumberConvert.TryConvert(value.real, out result);
-		if (typeof(TOther) == typeof(Complex<Double>))
+		if (typeof(TOther) == typeof(Complex<Float64>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Double re))
+			if (!NumberConvert.TryConvert(value.real, out Float64 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Double im))
+			if (!NumberConvert.TryConvert(value.imag, out Float64 im))
 				return false;
-			var v = new Complex<Double>(re, im);
+			var v = new Complex<Float64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Single>))
+		if (typeof(TOther) == typeof(Complex<Float32>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Single re))
+			if (!NumberConvert.TryConvert(value.real, out Float32 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Single im))
+			if (!NumberConvert.TryConvert(value.imag, out Float32 im))
 				return false;
-			var v = new Complex<Single>(re, im);
+			var v = new Complex<Float32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Half>))
+		if (typeof(TOther) == typeof(Complex<Float16>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Half re))
+			if (!NumberConvert.TryConvert(value.real, out Float16 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Half im))
+			if (!NumberConvert.TryConvert(value.imag, out Float16 im))
 				return false;
-			var v = new Complex<Half>(re, im);
+			var v = new Complex<Float16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int8>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt8>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int8 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt8 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int8 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt8 im))
 				return false;
-			var v = new ComplexInteger<Int8>(re, im);
+			var v = new ComplexInteger<SignedInt8>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int16>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt16>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int16 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt16 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int16 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt16 im))
 				return false;
-			var v = new ComplexInteger<Int16>(re, im);
+			var v = new ComplexInteger<SignedInt16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int32>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt32>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int32 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt32 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int32 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt32 im))
 				return false;
-			var v = new ComplexInteger<Int32>(re, im);
+			var v = new ComplexInteger<SignedInt32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int64>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt64>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int64 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt64 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int64 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt64 im))
 				return false;
-			var v = new ComplexInteger<Int64>(re, im);
+			var v = new ComplexInteger<SignedInt64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int128>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt128>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out Int128 re))
+			if (!NumberConvert.TryConvert(value.real, out SignedInt128 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out Int128 im))
+			if (!NumberConvert.TryConvert(value.imag, out SignedInt128 im))
 				return false;
-			var v = new ComplexInteger<Int128>(re, im);
+			var v = new ComplexInteger<SignedInt128>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt8>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt8>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt8 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt8 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt8 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt8 im))
 				return false;
-			var v = new ComplexInteger<UInt8>(re, im);
+			var v = new ComplexInteger<UnsignedInt8>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt16>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt16>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt16 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt16 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt16 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt16 im))
 				return false;
-			var v = new ComplexInteger<UInt16>(re, im);
+			var v = new ComplexInteger<UnsignedInt16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt32>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt32>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt32 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt32 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt32 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt32 im))
 				return false;
-			var v = new ComplexInteger<UInt32>(re, im);
+			var v = new ComplexInteger<UnsignedInt32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt64>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt64>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt64 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt64 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt64 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt64 im))
 				return false;
-			var v = new ComplexInteger<UInt64>(re, im);
+			var v = new ComplexInteger<UnsignedInt64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt128>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt128>))
 		{
-			if (!NumberConvert.TryConvert(value.real, out UInt128 re))
+			if (!NumberConvert.TryConvert(value.real, out UnsignedInt128 re))
 				return false;
-			if (!NumberConvert.TryConvert(value.imag, out UInt128 im))
+			if (!NumberConvert.TryConvert(value.imag, out UnsignedInt128 im))
 				return false;
-			var v = new ComplexInteger<UInt128>(re, im);
+			var v = new ComplexInteger<UnsignedInt128>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
@@ -5151,162 +5151,162 @@ public readonly partial struct ComplexInteger<T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(ComplexInteger<T> value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(ComplexInteger<T> value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 			return NumberConvert.TryConvertChecked(value.real, out result);
-		if (typeof(TOther) == typeof(Complex<Double>))
+		if (typeof(TOther) == typeof(Complex<Float64>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Double re))
+			if (!NumberConvert.TryConvertChecked(value.real, out Float64 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Double im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out Float64 im))
 				return false;
-			var v = new Complex<Double>(re, im);
+			var v = new Complex<Float64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Single>))
+		if (typeof(TOther) == typeof(Complex<Float32>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Single re))
+			if (!NumberConvert.TryConvertChecked(value.real, out Float32 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Single im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out Float32 im))
 				return false;
-			var v = new Complex<Single>(re, im);
+			var v = new Complex<Float32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Half>))
+		if (typeof(TOther) == typeof(Complex<Float16>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Half re))
+			if (!NumberConvert.TryConvertChecked(value.real, out Float16 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Half im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out Float16 im))
 				return false;
-			var v = new Complex<Half>(re, im);
+			var v = new Complex<Float16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int8>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt8>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int8 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt8 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int8 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt8 im))
 				return false;
-			var v = new ComplexInteger<Int8>(re, im);
+			var v = new ComplexInteger<SignedInt8>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int16>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt16>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int16 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt16 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int16 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt16 im))
 				return false;
-			var v = new ComplexInteger<Int16>(re, im);
+			var v = new ComplexInteger<SignedInt16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int32>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt32>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int32 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt32 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int32 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt32 im))
 				return false;
-			var v = new ComplexInteger<Int32>(re, im);
+			var v = new ComplexInteger<SignedInt32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int64>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt64>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int64 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt64 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int64 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt64 im))
 				return false;
-			var v = new ComplexInteger<Int64>(re, im);
+			var v = new ComplexInteger<SignedInt64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int128>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt128>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out Int128 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out SignedInt128 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out Int128 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out SignedInt128 im))
 				return false;
-			var v = new ComplexInteger<Int128>(re, im);
+			var v = new ComplexInteger<SignedInt128>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt8>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt8>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt8 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt8 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt8 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt8 im))
 				return false;
-			var v = new ComplexInteger<UInt8>(re, im);
+			var v = new ComplexInteger<UnsignedInt8>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt16>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt16>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt16 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt16 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt16 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt16 im))
 				return false;
-			var v = new ComplexInteger<UInt16>(re, im);
+			var v = new ComplexInteger<UnsignedInt16>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt32>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt32>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt32 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt32 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt32 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt32 im))
 				return false;
-			var v = new ComplexInteger<UInt32>(re, im);
+			var v = new ComplexInteger<UnsignedInt32>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt64>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt64>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt64 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt64 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt64 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt64 im))
 				return false;
-			var v = new ComplexInteger<UInt64>(re, im);
+			var v = new ComplexInteger<UnsignedInt64>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt128>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt128>))
 		{
-			if (!NumberConvert.TryConvertChecked(value.real, out UInt128 re))
+			if (!NumberConvert.TryConvertChecked(value.real, out UnsignedInt128 re))
 				return false;
-			if (!NumberConvert.TryConvertChecked(value.imag, out UInt128 im))
+			if (!NumberConvert.TryConvertChecked(value.imag, out UnsignedInt128 im))
 				return false;
-			var v = new ComplexInteger<UInt128>(re, im);
+			var v = new ComplexInteger<UnsignedInt128>(re, im);
 			result = *(TOther*)&v;
 			return true;
 		}
@@ -5315,103 +5315,103 @@ public readonly partial struct ComplexInteger<T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out ComplexInteger<T> result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out ComplexInteger<T> result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			if (!NumberConvert.TryConvert(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Double>))
+		if (typeof(TOther) == typeof(Complex<Float64>))
 		{
-			var v = *(Complex<Double>*)&value;
+			var v = *(Complex<Float64>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5419,9 +5419,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Single>))
+		if (typeof(TOther) == typeof(Complex<Float32>))
 		{
-			var v = *(Complex<Single>*)&value;
+			var v = *(Complex<Float32>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5429,9 +5429,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Half>))
+		if (typeof(TOther) == typeof(Complex<Float16>))
 		{
-			var v = *(Complex<Half>*)&value;
+			var v = *(Complex<Float16>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5439,9 +5439,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int8>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt8>))
 		{
-			var v = *(ComplexInteger<Int8>*)&value;
+			var v = *(ComplexInteger<SignedInt8>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5449,9 +5449,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int16>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt16>))
 		{
-			var v = *(ComplexInteger<Int16>*)&value;
+			var v = *(ComplexInteger<SignedInt16>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5459,9 +5459,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int32>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt32>))
 		{
-			var v = *(ComplexInteger<Int32>*)&value;
+			var v = *(ComplexInteger<SignedInt32>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5469,9 +5469,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int64>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt64>))
 		{
-			var v = *(ComplexInteger<Int64>*)&value;
+			var v = *(ComplexInteger<SignedInt64>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5479,9 +5479,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int128>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt128>))
 		{
-			var v = *(ComplexInteger<Int128>*)&value;
+			var v = *(ComplexInteger<SignedInt128>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5489,9 +5489,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt8>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt8>))
 		{
-			var v = *(ComplexInteger<UInt8>*)&value;
+			var v = *(ComplexInteger<UnsignedInt8>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5499,9 +5499,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt16>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt16>))
 		{
-			var v = *(ComplexInteger<UInt16>*)&value;
+			var v = *(ComplexInteger<UnsignedInt16>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5509,9 +5509,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt32>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt32>))
 		{
-			var v = *(ComplexInteger<UInt32>*)&value;
+			var v = *(ComplexInteger<UnsignedInt32>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5519,9 +5519,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt64>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt64>))
 		{
-			var v = *(ComplexInteger<UInt64>*)&value;
+			var v = *(ComplexInteger<UnsignedInt64>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5529,9 +5529,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt128>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt128>))
 		{
-			var v = *(ComplexInteger<UInt128>*)&value;
+			var v = *(ComplexInteger<UnsignedInt128>*)&value;
 			if (!NumberConvert.TryConvert(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvert(v.Imaginary, out T im))
@@ -5544,103 +5544,103 @@ public readonly partial struct ComplexInteger<T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out ComplexInteger<T> result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out ComplexInteger<T> result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
-		if (typeof(TOther) == typeof(Double))
+		if (typeof(TOther) == typeof(Float64))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Single))
+		if (typeof(TOther) == typeof(Float32))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Half))
+		if (typeof(TOther) == typeof(Float16))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int8))
+		if (typeof(TOther) == typeof(SignedInt8))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int16))
+		if (typeof(TOther) == typeof(SignedInt16))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int32))
+		if (typeof(TOther) == typeof(SignedInt32))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int64))
+		if (typeof(TOther) == typeof(SignedInt64))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Int128))
+		if (typeof(TOther) == typeof(SignedInt128))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt8))
+		if (typeof(TOther) == typeof(UnsignedInt8))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt16))
+		if (typeof(TOther) == typeof(UnsignedInt16))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt32))
+		if (typeof(TOther) == typeof(UnsignedInt32))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt64))
+		if (typeof(TOther) == typeof(UnsignedInt64))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(UInt128))
+		if (typeof(TOther) == typeof(UnsignedInt128))
 		{
 			if (!NumberConvert.TryConvertChecked(value, out T re))
 				return false;
 			result = re;
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Double>))
+		if (typeof(TOther) == typeof(Complex<Float64>))
 		{
-			var v = *(Complex<Double>*)&value;
+			var v = *(Complex<Float64>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5648,9 +5648,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Single>))
+		if (typeof(TOther) == typeof(Complex<Float32>))
 		{
-			var v = *(Complex<Single>*)&value;
+			var v = *(Complex<Float32>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5658,9 +5658,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(Complex<Half>))
+		if (typeof(TOther) == typeof(Complex<Float16>))
 		{
-			var v = *(Complex<Half>*)&value;
+			var v = *(Complex<Float16>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5668,9 +5668,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int8>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt8>))
 		{
-			var v = *(ComplexInteger<Int8>*)&value;
+			var v = *(ComplexInteger<SignedInt8>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5678,9 +5678,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int16>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt16>))
 		{
-			var v = *(ComplexInteger<Int16>*)&value;
+			var v = *(ComplexInteger<SignedInt16>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5688,9 +5688,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int32>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt32>))
 		{
-			var v = *(ComplexInteger<Int32>*)&value;
+			var v = *(ComplexInteger<SignedInt32>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5698,9 +5698,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int64>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt64>))
 		{
-			var v = *(ComplexInteger<Int64>*)&value;
+			var v = *(ComplexInteger<SignedInt64>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5708,9 +5708,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<Int128>))
+		if (typeof(TOther) == typeof(ComplexInteger<SignedInt128>))
 		{
-			var v = *(ComplexInteger<Int128>*)&value;
+			var v = *(ComplexInteger<SignedInt128>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5718,9 +5718,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt8>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt8>))
 		{
-			var v = *(ComplexInteger<UInt8>*)&value;
+			var v = *(ComplexInteger<UnsignedInt8>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5728,9 +5728,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt16>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt16>))
 		{
-			var v = *(ComplexInteger<UInt16>*)&value;
+			var v = *(ComplexInteger<UnsignedInt16>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5738,9 +5738,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt32>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt32>))
 		{
-			var v = *(ComplexInteger<UInt32>*)&value;
+			var v = *(ComplexInteger<UnsignedInt32>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5748,9 +5748,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt64>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt64>))
 		{
-			var v = *(ComplexInteger<UInt64>*)&value;
+			var v = *(ComplexInteger<UnsignedInt64>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))
@@ -5758,9 +5758,9 @@ public readonly partial struct ComplexInteger<T>
 			result = new ComplexInteger<T>(re, im);
 			return true;
 		}
-		if (typeof(TOther) == typeof(ComplexInteger<UInt128>))
+		if (typeof(TOther) == typeof(ComplexInteger<UnsignedInt128>))
 		{
-			var v = *(ComplexInteger<UInt128>*)&value;
+			var v = *(ComplexInteger<UnsignedInt128>*)&value;
 			if (!NumberConvert.TryConvertChecked(v.Real, out T re))
 				return false;
 			if (!NumberConvert.TryConvertChecked(v.Imaginary, out T im))

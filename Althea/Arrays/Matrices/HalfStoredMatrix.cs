@@ -22,7 +22,7 @@ namespace Althea.Array
 		IMatrixUnaryOperators<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>,
 		IMatrixBinaryOperators<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixBinaryOperators<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic
@@ -332,7 +332,7 @@ namespace Althea.Array
 		IMatrixBinaryOperators<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixAddOperators<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>>,
 		IMatrixMultiplyOperator<T, SymmetricMatrix<T, TS>, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic

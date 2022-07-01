@@ -12,7 +12,7 @@ namespace Althea.Array
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The concrete type that implements this <see cref="IBaseVector{T, TSelf}"/></typeparam>
 	public interface IBaseVector<T, TSelf> : IVectorMetric, IValueArray<T, TSelf>, IReadOnlyList<T>
-		where T : unmanaged, INumber<T> where TSelf : class, IBaseVector<T, TSelf>
+		where T : unmanaged, IBaseNumber<T> where TSelf : class, IBaseVector<T, TSelf>
 	{
 		#region indexing
 		/// <summary>

@@ -7,7 +7,7 @@ namespace Althea.Array
 	/// The interface of (column-major) dense arrays.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface IArray<T> where T : unmanaged, INumber<T>
+	public interface IArray<T> where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, get the size (in <typeparamref name="T"/>) of this array (the extent at each dimension) as a <see cref="ReadOnlySpan{T}"/> of <see cref="long"/>, must be of positive numbers.
@@ -19,7 +19,7 @@ namespace Althea.Array
 	/// The interface of (column-major) dense arrays that may exist extra pitch at each dimension and thus the strides are not simply the accumulated product of its size.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface IPitchedArray<T> : IArray<T> where T : unmanaged, INumber<T>
+	public interface IPitchedArray<T> : IArray<T> where T : unmanaged, IBaseNumber<T>
 	{
 		#region properties
 		/// <summary>
@@ -45,7 +45,7 @@ namespace Althea.Array
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value array</typeparam>
-	public interface IDenseArray<T, TS> : IPitchedArray<T> where T : unmanaged, INumber<T> where TS : class, Storage.IStorage<T, TS>
+	public interface IDenseArray<T, TS> : IPitchedArray<T> where T : unmanaged, IBaseNumber<T> where TS : class, Storage.IStorage<T, TS>
 	{
 		#region properties
 		/// <summary>
@@ -59,7 +59,7 @@ namespace Althea.Array
 	/// The base interface for sparse arrays.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface ISparseArray<T> : IArray<T> where T : unmanaged, INumber<T>
+	public interface ISparseArray<T> : IArray<T> where T : unmanaged, IBaseNumber<T>
 	{
 		#region properties
 		/// <summary>
@@ -87,7 +87,7 @@ namespace Althea.Array
 	/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
 	/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
 	public interface ISparseArray<T, TInd, TS, TSInd> : ISparseArray<T>
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, Storage.IStorage<T, TS> where TSInd : class, Storage.IStorage<TInd, TSInd>
 	{
 		#region properties
@@ -112,7 +112,7 @@ namespace Althea.Array
 	/// The interface for tensor that contains basic members (size and labels).
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface ILabeledTensor<T> where T : unmanaged, INumber<T>
+	public interface ILabeledTensor<T> where T : unmanaged, IBaseNumber<T>
 	{
 		#region properties
 		/// <summary>
@@ -168,7 +168,7 @@ namespace Althea.Array
 	/// The interface for printable arrays.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface IPrintable<T> where T : unmanaged, INumber<T>
+	public interface IPrintable<T> where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, print this array to <see cref="string"/> under given print <paramref name="settings"/>.

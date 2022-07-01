@@ -266,7 +266,7 @@ namespace Althea.TensorAlgebra
 		/// <see cref="Dense.BaseApiSelector.Contract"/>;
 		/// </code></example>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static TensorContractInfo Create<T>(ILabeledTensor<T> left!!, ILabeledTensor<T> right!!, ILabeledTensor<T>? output, Span<int> leftConc, Span<int> rightConc, Span<int> leftFree, Span<int> rightFree, Span<long> outSize = default, Span<char> outLabels = default) where T : unmanaged, INumber<T>
+		public static TensorContractInfo Create<T>(ILabeledTensor<T> left!!, ILabeledTensor<T> right!!, ILabeledTensor<T>? output, Span<int> leftConc, Span<int> rightConc, Span<int> leftFree, Span<int> rightFree, Span<long> outSize = default, Span<char> outLabels = default) where T : unmanaged, IBaseNumber<T>
 		{
 			// create spans
 			if (output is null)
@@ -295,7 +295,7 @@ namespace Althea.TensorAlgebra
 		/// <param name="right">The input right <see cref="ILabeledTensor{T}"/></param>
 		/// <returns>The contraction part's rank</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int GetContractRank<T>(ILabeledTensor<T> left, ILabeledTensor<T> right) where T : unmanaged, INumber<T>
+		public static int GetContractRank<T>(ILabeledTensor<T> left, ILabeledTensor<T> right) where T : unmanaged, IBaseNumber<T>
 		{
 			ReadOnlySpan<char> labelA = left.Labels, labelB = right.Labels;
 			int commonRank = 0, rankA = left.Rank;
@@ -756,7 +756,7 @@ namespace Althea.TensorAlgebra
 		/// <param name="labels">The <see cref="Span{T}"/> of length equaling the rank. Filled with the actual output labels of actual output rank at exit.</param>
 		/// <returns>The <paramref name="reducePerm"/> of actual reduction rank</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Span<int> CheckReduce<T>(this ILabeledTensor<T> tensor!!, TensorOrder order, Span<int> reducePerm, ref Span<long> size, ref Span<char> labels) where T : unmanaged, INumber<T>
+		public static Span<int> CheckReduce<T>(this ILabeledTensor<T> tensor!!, TensorOrder order, Span<int> reducePerm, ref Span<long> size, ref Span<char> labels) where T : unmanaged, IBaseNumber<T>
 		{
 			int rank = tensor.Rank;
 			if (size.Length != rank)

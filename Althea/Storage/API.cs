@@ -60,7 +60,7 @@ namespace Althea.Storage
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool FillWithValue<T, TP>(PointerSegment<TP> pointer, T value) where T : unmanaged, INumber<T> where TP : IPointer<TP>;
+		public abstract bool FillWithValue<T, TP>(PointerSegment<TP> pointer, T value) where T : unmanaged, IBaseNumber<T> where TP : IPointer<TP>;
 
 		/// <summary>
 		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.
@@ -75,7 +75,7 @@ namespace Althea.Storage
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in <typeparamref name="T"/></remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool MemoryCopy<T, TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
+		public abstract bool MemoryCopy<T, TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied) where T : unmanaged, IBaseNumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
 
 		/// <summary>
 		/// When implemented by a derived class, copy memory from <paramref name="source"/> to <paramref name="destination"/>.
@@ -89,7 +89,7 @@ namespace Althea.Storage
 		/// <remarks>The one with less length in <paramref name="source"/> and <paramref name="destination"/> is used as the actual copy length in bytes</remarks>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		[AbstractApiMethod]
-		public virtual bool MemoryCopy<TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied) where TP1 : IPointer<TP1> where TP2 : IPointer<TP2> => this.MemoryCopy<UInt8, TP1, TP2>(source, destination, out actualCopied);
+		public virtual bool MemoryCopy<TP1, TP2>(PointerSegment<TP1> source, PointerSegment<TP2> destination, out long actualCopied) where TP1 : IPointer<TP1> where TP2 : IPointer<TP2> => this.MemoryCopy<UnsignedInt8, TP1, TP2>(source, destination, out actualCopied);
 		#endregion
 
 		#region storage and managed operations
@@ -104,7 +104,7 @@ namespace Althea.Storage
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		[AbstractApiMethod]
-		public unsafe virtual bool ToManaged<T, TP>(PointerSegment<TP> source, Span<T> destination, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		public unsafe virtual bool ToManaged<T, TP>(PointerSegment<TP> source, Span<T> destination, out long actualCopied) where T : unmanaged, IBaseNumber<T> where TP : IPointer<TP>
 		{
 			if (destination.IsEmpty)
 				throw new ArgumentNullException(nameof(destination));
@@ -126,7 +126,7 @@ namespace Althea.Storage
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid</exception>
 		[AbstractApiMethod]
-		public unsafe virtual bool FromManaged<T, TP>(PointerSegment<TP> destination, ReadOnlySpan<T> values, out long actualCopied) where T : unmanaged, INumber<T> where TP : IPointer<TP>
+		public unsafe virtual bool FromManaged<T, TP>(PointerSegment<TP> destination, ReadOnlySpan<T> values, out long actualCopied) where T : unmanaged, IBaseNumber<T> where TP : IPointer<TP>
 		{
 			if (values.IsEmpty)
 				throw new ArgumentNullException(nameof(values));
@@ -150,7 +150,7 @@ namespace Althea.Storage
 		internal static readonly MethodInfo SizeOfPointerMethod = typeof(IStorage).GetMethod(nameof(IStorage.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null);
 #pragma warning restore CS8601
 
-		private static Action<TS, T> GetFillMethod<TS, T>() where TS : class, IStorage where T : unmanaged, INumber<T>
+		private static Action<TS, T> GetFillMethod<TS, T>() where TS : class, IStorage where T : unmanaged, IBaseNumber<T>
 		{
 			var type = typeof(TS);
 			var pointerGetters = TS.PointerGetters;
@@ -606,7 +606,7 @@ namespace Althea.Storage
 			return method.CreateDelegate<Action<TS1, TS2>>();
 		}
 
-		private static TDelegate GetToFromManagedMethod<T, TS, TDelegate>(bool to) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> where TDelegate : Delegate
+		private static TDelegate GetToFromManagedMethod<T, TS, TDelegate>(bool to) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDelegate : Delegate
 		{
 			Type spanType = to ? typeof(Span<T>) : typeof(ReadOnlySpan<T>);
 			var spanGetLen = spanType.GetProperty(nameof(Span<T>.Length))?.GetGetMethod();
@@ -752,7 +752,7 @@ namespace Althea.Storage
 			var handle = typeof(TS).TypeHandle;
 			if (fillByteFunc.TryGetValue(handle, out var filler))
 				goto FINAL;
-			filler = GetFillMethod<TS, UInt8>();
+			filler = GetFillMethod<TS, UnsignedInt8>();
 			fillByteFunc[handle] = filler;
 		FINAL:
 			((Action<TS, byte>)filler).Invoke(storage, value);
@@ -769,7 +769,7 @@ namespace Althea.Storage
 		/// <param name="value">The value to fill</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
-		public static unsafe void FillWith<T, TS>(this TS storage, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static unsafe void FillWith<T, TS>(this TS storage, T value) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
@@ -801,7 +801,7 @@ namespace Althea.Storage
 		/// <returns>Actual length in <typeparamref name="T"/> copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
-		public static long CopyTo<T, TS1, TS2>(this TS1 source, TS2 destination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public static long CopyTo<T, TS1, TS2>(this TS1 source, TS2 destination) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -823,7 +823,7 @@ namespace Althea.Storage
 			return copyLen;
 		}
 
-		private delegate void ToManagedDelegate<T, TS>(TS source, Span<T> destination) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		private delegate void ToManagedDelegate<T, TS>(TS source, Span<T> destination) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		private static readonly Dictionary<RuntimeTypeHandle, Delegate> toManagedFunc = new();
 
@@ -837,7 +837,7 @@ namespace Althea.Storage
 		/// <returns>Actual length in <typeparamref name="T"/> copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
-		public static long ToManaged<T, TS>(this TS source, Span<T> destination) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static long ToManaged<T, TS>(this TS source, Span<T> destination) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -854,7 +854,7 @@ namespace Althea.Storage
 			return Math.Min(source.Length, destination.Length);
 		}
 
-		private delegate void FromManagedDelegate<T, TS>(TS destination, ReadOnlySpan<T> source) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		private delegate void FromManagedDelegate<T, TS>(TS destination, ReadOnlySpan<T> source) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		private static readonly Dictionary<RuntimeTypeHandle, Delegate> fromManagedFunc = new();
 
@@ -868,7 +868,7 @@ namespace Althea.Storage
 		/// <returns>Actual length in <typeparamref name="T"/> copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
-		public static long FromManaged<T, TS>(this TS destination, ReadOnlySpan<T> source) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static long FromManaged<T, TS>(this TS destination, ReadOnlySpan<T> source) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!destination.IsValid())
 				throw new ArgumentNullException(nameof(destination));
@@ -894,7 +894,7 @@ namespace Althea.Storage
 		/// <returns>The first element of <paramref name="storage"/>.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
-		public static T ToManaged<T, TS>(this TS storage) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static T ToManaged<T, TS>(this TS storage) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			Span<T> v = stackalloc T[1];
 			ToManaged(storage, v);
@@ -910,7 +910,7 @@ namespace Althea.Storage
 		/// <param name="value">The value of type <typeparamref name="T"/> to set</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is invalid</exception>
 		/// <exception cref="InvalidOperationException">If the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
-		public static void FromManaged<T, TS>(this TS storage, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static void FromManaged<T, TS>(this TS storage, T value) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			ReadOnlySpan<T> v = stackalloc T[] { value };
 			FromManaged(storage, v);

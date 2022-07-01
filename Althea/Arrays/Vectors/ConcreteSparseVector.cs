@@ -22,7 +22,7 @@ namespace Althea.Array
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Pack = sizeof(long))]
 	public class CoordinateSparseVector<T, TInd, TS, TSInd> : SparseVector<T, TInd, TS, TSInd>
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
@@ -230,7 +230,7 @@ namespace Althea.Array
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Pack = sizeof(long))]
 	public class BlockSparseVector<T, TInd, TS, TSInd> : SparseVector<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic

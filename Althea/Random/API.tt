@@ -36,7 +36,7 @@ namespace Althea.Random
 		/// <exception cref="ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
 		[AbstractApiMethod]
-		public abstract bool FillWithRandom<T, TS, TDist>(TS storage, TDist distribution) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>;
+		public abstract bool FillWithRandom<T, TS, TDist>(TS storage, TDist distribution) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>;
 
 <# for (int i = 2; i <= count; i++) { #>
 <#
@@ -48,7 +48,7 @@ namespace Althea.Random
 	for (int j = 1; j <= i; j++)
 	{
 		storageParams += $"TS{j} storage{j}, ";
-		numberConstriant += $"where T{j} : unmanaged, INumber<T{j}> ";
+		numberConstriant += $"where T{j} : unmanaged, IBaseNumber<T{j}> ";
 		storageConstriant += $"where TS{j} : class, IStorage<T{j}, TS{j}> ";
 	}
 	storageParams = storageParams.Substring(0, storageParams.Length - 2);

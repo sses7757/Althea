@@ -383,7 +383,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// <exception cref="System.IO.IOException">If an I/O error occurs</exception>
 		/// <exception cref="ObjectDisposedException">If this is already disposed</exception>
 		/// <exception cref="UnauthorizedAccessException">If this <see cref="Stream"/> was created read-only</exception>
-		public void SetValues<T>(T value, long length, IntPtr buffer, long bufferSize, bool doRegister) where T : unmanaged, INumber<T>
+		public void SetValues<T>(T value, long length, IntPtr buffer, long bufferSize, bool doRegister) where T : unmanaged, IBaseNumber<T>
 		{
 			length = this.SetValuesCheck<T>(length);
 

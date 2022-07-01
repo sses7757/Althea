@@ -16,10 +16,10 @@ namespace Althea.Backend.Mkl.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool CheckType<TP>() where TP : IPointer<TP> => typeof(TP) == typeof(CpuMemoryPointer);
 
-		private delegate void BlasCopy<T>(long n, T* src, long incSrc, T* dst, long incDst) where T : unmanaged, INumber<T>;
+		private delegate void BlasCopy<T>(long n, T* src, long incSrc, T* dst, long incDst) where T : unmanaged, IBaseNumber<T>;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool PointerStridedCopy<T>(T* source, long strideSource, T* destination, long strideDestination, long count) where T : unmanaged, INumber<T>
+		internal static bool PointerStridedCopy<T>(T* source, long strideSource, T* destination, long strideDestination, long count) where T : unmanaged, IBaseNumber<T>
 		{
 			// shortcut
 			if (strideSource == 1 && strideDestination == 1)
@@ -54,7 +54,7 @@ namespace Althea.Backend.Mkl.Storage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool PointerMemoryCopy2D<T>(T* source, long sourceLD, T* destination, long destinationLD, long height, long width, Althea.LinearAlgebra.MatrixOperation op = Althea.LinearAlgebra.MatrixOperation.None, T scale = default) where T : unmanaged, INumber<T>
+		internal static bool PointerMemoryCopy2D<T>(T* source, long sourceLD, T* destination, long destinationLD, long height, long width, Althea.LinearAlgebra.MatrixOperation op = Althea.LinearAlgebra.MatrixOperation.None, T scale = default) where T : unmanaged, IBaseNumber<T>
 		{
 			if (scale == default)
 				scale = T.One;

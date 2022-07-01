@@ -9,10 +9,10 @@ namespace Althea.Numerics;
 /// The base interface for all numbers used by <see cref="Althea"/> including complex numbers.
 /// </summary>
 /// <remarks>
-/// The official <see cref="INumberBase{TSelf}"/> is not used since it has too little interface members while <see cref="System.Numerics.INumber{TSelf}"/> is not suitable for complex numbers.
+/// The official <see cref="INumberBase{TSelf}"/> is not used since it has too little interface members while <see cref="INumber{TSelf}"/> is not suitable for complex numbers.
 /// </remarks>
-/// <typeparam name="TSelf">The actual type that implements this <see cref="INumber{TSelf}"/></typeparam>
-public interface INumber<TSelf> :
+/// <typeparam name="TSelf">The actual type that implements this <see cref="IBaseNumber{TSelf}"/></typeparam>
+public interface IBaseNumber<TSelf> :
 	IComparisonOperators<TSelf, TSelf>, IEqualityOperators<TSelf, TSelf>,
 	IAdditionOperators<TSelf, TSelf, TSelf>, ISubtractionOperators<TSelf, TSelf, TSelf>,
 	IMultiplyOperators<TSelf, TSelf, TSelf>, IDivisionOperators<TSelf, TSelf, TSelf>,
@@ -20,7 +20,7 @@ public interface INumber<TSelf> :
 	IUnaryNegationOperators<TSelf, TSelf>, IUnaryPlusOperators<TSelf, TSelf>,
 	IIncrementOperators<TSelf>, IDecrementOperators<TSelf>,
 	ISpanParsable<TSelf>, ISpanFormattable
-	where TSelf : unmanaged, INumber<TSelf>
+	where TSelf : unmanaged, IBaseNumber<TSelf>
 {
 	#region meta
 	/// <summary>
@@ -91,13 +91,13 @@ public interface INumber<TSelf> :
 	#endregion
 
 	#region conversion
-	abstract static bool TryConvertFromChecked<TOther>(TOther value, out TSelf result) where TOther : unmanaged, INumber<TOther>;
+	abstract static bool TryConvertFromChecked<TOther>(TOther value, out TSelf result) where TOther : unmanaged, IBaseNumber<TOther>;
 
-	abstract static bool TryConvertFrom<TOther>(TOther value, out TSelf result) where TOther : unmanaged, INumber<TOther>;
+	abstract static bool TryConvertFrom<TOther>(TOther value, out TSelf result) where TOther : unmanaged, IBaseNumber<TOther>;
 
-	abstract static bool TryConvertToChecked<TOther>(TSelf value, out TOther result) where TOther : unmanaged, INumber<TOther>;
+	abstract static bool TryConvertToChecked<TOther>(TSelf value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>;
 
-	abstract static bool TryConvertTo<TOther>(TSelf value, out TOther result) where TOther : unmanaged, INumber<TOther>;
+	abstract static bool TryConvertTo<TOther>(TSelf value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>;
 	#endregion
 
 	#region parse
@@ -118,7 +118,7 @@ public interface INumber<TSelf> :
 /// The official <see cref="IBinaryFloatingPointIeee754{TSelf}"/> is not used since it is not suitable for complex numbers.
 /// </remarks>
 /// <typeparam name="TSelf">The actual type that implements this <see cref="IBinaryFloat{TSelf}"/></typeparam>
-public interface IBinaryFloat<TSelf> : INumber<TSelf>,
+public interface IBinaryFloat<TSelf> : IBaseNumber<TSelf>,
 	IHyperbolicFunctions<TSelf>, ILogarithmicFunctions<TSelf>,
 	IPowerFunctions<TSelf>, IRootFunctions<TSelf>,
 	ITrigonometricFunctions<TSelf>, IExponentialFunctions<TSelf>
@@ -175,10 +175,10 @@ public interface IBinaryFloat<TSelf> : INumber<TSelf>,
 /// <remarks>
 /// The official <see cref="IBinaryInteger{TSelf}"/> is not used since it is not suitable for complex numbers.
 /// </remarks>
-/// <typeparam name="TSelf">The actual type that implements this <see cref="IBinaryInteger{TSelf}"/></typeparam>
-public interface IBinaryInteger<TSelf> : INumber<TSelf>,
+/// <typeparam name="TSelf">The actual type that implements this <see cref="IBinaryInt{TSelf}"/></typeparam>
+public interface IBinaryInt<TSelf> : IBaseNumber<TSelf>,
 	IBitwiseOperators<TSelf, TSelf, TSelf>, IModulusOperators<TSelf, TSelf, TSelf>, IShiftOperators<TSelf, TSelf>
-	where TSelf : unmanaged, IBinaryInteger<TSelf>
+	where TSelf : unmanaged, IBinaryInt<TSelf>
 {
 	#region math
 	abstract static bool IsPow2(TSelf value);

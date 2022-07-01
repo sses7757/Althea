@@ -9,7 +9,7 @@ namespace Althea.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
-	public interface IRank1Distribution<T, TSelf> : IRandomDistribution<TSelf>, ICheckValid where T : unmanaged, INumber<T> where TSelf : struct, IRank1Distribution<T, TSelf>
+	public interface IRank1Distribution<T, TSelf> : IRandomDistribution<TSelf>, ICheckValid where T : unmanaged, IBaseNumber<T> where TSelf : struct, IRank1Distribution<T, TSelf>
 	{
 		/// <summary>
 		/// Statically get the <see cref="DataType"/> of <paramref name="rank"/>.
@@ -25,7 +25,7 @@ namespace Althea.Random
 	/// <typeparam name="T1">Any unmanaged number as the first data type</typeparam>
 	/// <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
-	public interface IRank2Distribution<T1, T2, TSelf> : IRandomDistribution<TSelf> where T1 : unmanaged, INumber<T1> where T2 : unmanaged, INumber<T2> where TSelf : struct, IRank2Distribution<T1, T2, TSelf>
+	public interface IRank2Distribution<T1, T2, TSelf> : IRandomDistribution<TSelf> where T1 : unmanaged, IBaseNumber<T1> where T2 : unmanaged, IBaseNumber<T2> where TSelf : struct, IRank2Distribution<T1, T2, TSelf>
 	{
 		/// <summary>
 		/// Statically get the <see cref="DataType"/> of <paramref name="rank"/>.
@@ -50,7 +50,7 @@ namespace Althea.Random
 	/// <typeparam name="T2">Any unmanaged number as the second data type</typeparam>
 	/// <typeparam name="T3">Any unmanaged number as the third data type</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
-	public interface IRank3Distribution<T1, T2, T3, TSelf> : IRandomDistribution<TSelf> where T1 : unmanaged, INumber<T1> where T2 : unmanaged, INumber<T2> where T3 : unmanaged, INumber<T3> where TSelf : struct, IRank3Distribution<T1, T2, T3, TSelf>
+	public interface IRank3Distribution<T1, T2, T3, TSelf> : IRandomDistribution<TSelf> where T1 : unmanaged, IBaseNumber<T1> where T2 : unmanaged, IBaseNumber<T2> where T3 : unmanaged, IBaseNumber<T3> where TSelf : struct, IRank3Distribution<T1, T2, T3, TSelf>
 	{
 		/// <summary>
 		/// Statically get the <see cref="DataType"/> of <paramref name="rank"/>.

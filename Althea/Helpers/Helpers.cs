@@ -986,10 +986,10 @@ namespace Althea.Helpers
 	{
 		#region create
 		/// <summary>
-		/// Convert an array of <see cref="byte"/> to a <see cref="Span{T}"/> of <see cref="UInt8"/>.
+		/// Convert an array of <see cref="byte"/> to a <see cref="Span{T}"/> of <see cref="UnsignedInt8"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Span<UInt8> AsAux(this byte[]? array) => array is null || array.Length == 0 ? default : MemoryMarshal.CreateSpan(ref Unsafe.As<byte, UInt8>(ref array[0]), array.Length);
+		public static Span<UnsignedInt8> AsAux(this byte[]? array) => array is null || array.Length == 0 ? default : MemoryMarshal.CreateSpan(ref Unsafe.As<byte, UnsignedInt8>(ref array[0]), array.Length);
 
 		/// <summary>
 		/// Creates a new read-only span over a portion of a regular managed object.

@@ -243,7 +243,7 @@ namespace Althea.TensorAlgebra
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> or its <see cref="ILabeledTensor{T}.Labels"/> is null</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="tensor"/>.<see cref="ILabeledTensor{T}.Rank">Rank</see> is too small or <paramref name="tensor"/>.<see cref="ILabeledTensor{T}.Labels">Label</see> does not contain all of the <see cref="char"/> label(s) of this <see cref="TensorOrder"/></exception>
 		/// <exception cref="ArgumentException">If <paramref name="tensor"/> leads to duplicated result permutation order</exception>
-		public Span<int> GetOrder<T>(ILabeledTensor<T> tensor!!, Span<int> outputPermutation, bool allowPartial = false) where T : unmanaged, INumber<T>
+		public Span<int> GetOrder<T>(ILabeledTensor<T> tensor!!, Span<int> outputPermutation, bool allowPartial = false) where T : unmanaged, IBaseNumber<T>
 		{
 			int rank = tensor.Rank;
 			int length = this.order.NonDefaults;
@@ -343,7 +343,7 @@ namespace Althea.TensorAlgebra
 		/// <exception cref="ArgumentNullException">if <paramref name="tensor"/> or its <see cref="ILabeledTensor{T}.Labels"/> is null</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="tensor"/>'s <see cref="ILabeledTensor{T}.Rank"/> is too small</exception>
 		/// <exception cref="ArgumentException">if <paramref name="tensor"/> leads to duplicated result permutation order or ts <see cref="ILabeledTensor{T}.Labels"/> does not contains the label here</exception>
-		public int[] GetOrder<T>(ILabeledTensor<T> tensor!!, bool allowPartial = false) where T : unmanaged, INumber<T>
+		public int[] GetOrder<T>(ILabeledTensor<T> tensor!!, bool allowPartial = false) where T : unmanaged, IBaseNumber<T>
 		{
 			var array = new int[tensor.Rank];
 			var output = this.GetOrder(tensor, array, allowPartial);
@@ -360,7 +360,7 @@ namespace Althea.TensorAlgebra
 		/// <exception cref="ArgumentNullException">if <paramref name="tensor"/> is null</exception>
 		/// <exception cref="ArgumentOutOfRangeException">if <paramref name="tensor"/>'s <see cref="ILabeledTensor{T}.Rank"/> is too small</exception>
 		/// <exception cref="ArgumentException">if <paramref name="tensor"/> leads to duplicated result permutation order</exception>
-		public char[] GetCharOrder<T>(ILabeledTensor<T> tensor!!, bool allowPartial = false) where T : unmanaged, INumber<T>
+		public char[] GetCharOrder<T>(ILabeledTensor<T> tensor!!, bool allowPartial = false) where T : unmanaged, IBaseNumber<T>
 		{
 			Span<int> span = stackalloc int[tensor.Rank];
 			span = this.GetOrder(tensor, span, allowPartial);

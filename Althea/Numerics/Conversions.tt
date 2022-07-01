@@ -5,7 +5,7 @@
 <#@ import namespace="System.Collections.Generic" #>
 <#@ output extension=".cs" #>
 <#
-var reps = new string[] { "Double", "Single", "Half", "Int8", "Int16", "Int32", "Int64", "Int128", "UInt8", "UInt16", "UInt32", "UInt64", "UInt128" };
+var reps = new string[] { "Float64", "Float32", "Float16", "SignedInt8", "SignedInt16", "SignedInt32", "SignedInt64", "SignedInt128", "UnsignedInt8", "UnsignedInt16", "UnsignedInt32", "UnsignedInt64", "UnsignedInt128" };
 var orgs = new string[] { "double", "float", "System.Half", "sbyte", "short", "int", "long", "System.Int128", "byte", "ushort", "uint", "ulong", "System.UInt128" };
 #>
 // NOTICE:
@@ -22,7 +22,7 @@ public readonly partial struct <#=reps[i]#>
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(<#=reps[i]#> value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(<#=reps[i]#> value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 <# for (int j = 0; j < reps.Length; j++) { #>
 		if (typeof(TOther) == typeof(<#=reps[j]#>))
@@ -38,7 +38,7 @@ public readonly partial struct <#=reps[i]#>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(<#=reps[i]#> value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(<#=reps[i]#> value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 <# for (int j = 0; j < reps.Length; j++) { #>
 		if (typeof(TOther) == typeof(<#=reps[j]#>))
@@ -54,7 +54,7 @@ public readonly partial struct <#=reps[i]#>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out <#=reps[i]#> result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out <#=reps[i]#> result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 <# for (int j = 0; j < reps.Length; j++) { #>
 		if (typeof(TOther) == typeof(<#=reps[j]#>))
@@ -69,7 +69,7 @@ public readonly partial struct <#=reps[i]#>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out <#=reps[i]#> result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out <#=reps[i]#> result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 <# for (int j = 0; j < reps.Length; j++) { #>
 		if (typeof(TOther) == typeof(<#=reps[j]#>))
@@ -90,7 +90,7 @@ public readonly partial struct <#=structType#><T>
 {
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertTo<TOther>(<#=structType#><T> value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertTo<TOther>(<#=structType#><T> value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
 <# for (int j = 0; j < reps.Length; j++) { #>
@@ -117,7 +117,7 @@ public readonly partial struct <#=structType#><T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertToChecked<TOther>(<#=structType#><T> value, out TOther result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertToChecked<TOther>(<#=structType#><T> value, out TOther result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
 <# for (int j = 0; j < reps.Length; j++) { #>
@@ -144,7 +144,7 @@ public readonly partial struct <#=structType#><T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFrom<TOther>(TOther value, out <#=structType#><T> result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFrom<TOther>(TOther value, out <#=structType#><T> result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
 <# for (int j = 0; j < reps.Length; j++) { #>
@@ -175,7 +175,7 @@ public readonly partial struct <#=structType#><T>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out <#=structType#><T> result) where TOther : unmanaged, INumber<TOther>
+	public static unsafe bool TryConvertFromChecked<TOther>(TOther value, out <#=structType#><T> result) where TOther : unmanaged, IBaseNumber<TOther>
 	{
 		result = default;
 <# for (int j = 0; j < reps.Length; j++) { #>

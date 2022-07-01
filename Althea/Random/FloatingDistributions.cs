@@ -11,7 +11,7 @@
 	//tex:Normal distribution PDF: $$P_{\mu,\sigma}(x)=\frac{1}{\sigma\sqrt{2\pi}}\exp{\left( -\frac{(x-\mu)^2}{2\sigma^2} \right)}$$
 	public readonly record struct NormalDistribution<T>(T Displacement, T ScaleFactor, long? RandomSeed = null) :
 		IDisplaceScaleDistribution<T, NormalDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard normal distribution with μ = 0 and σ = 1
@@ -30,7 +30,7 @@
 	//tex:$\chi^2$ distribution PDF: $$P_{v}(x)=\begin{cases}\dfrac{x^{(v-2)/2}e^{-x/2}}{2^{v/2}\Gamma(v/2)} & x \ge 0 \\ 0 & x \lt 0 \end{cases}$$
 	public readonly record struct ChiSquareDistribution<T>(int DegreeOfFreedom, long? RandomSeed = null) :
 		IDegreeOfFreedomDistribution<T, ChiSquareDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard χ² distribution with DoF = 1
@@ -50,7 +50,7 @@
 	//tex:Log normal distribution PDF: $$P_{\mu,\sigma}(x)=\frac{1}{\sqrt{2\pi} \sigma x}\exp{\left[ -\frac{\left( \ln{x} - \mu \right)^2}{2\sigma^2} \right]}$$
 	public readonly record struct LogNormalDistribution<T>(T Displacement, T ScaleFactor, long? RandomSeed = null) :
 		IDisplaceScaleDistribution<T, LogNormalDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard log normal distribution with μ = 0 and σ = 1
@@ -71,7 +71,7 @@
 	//tex:Log normal distribution PDF: $$P_{\mu,\sigma,\delta}(x) = \frac{1}{\sqrt{2 \pi } \sigma} \exp\left[-\frac{(x-\mu )^2}{2 \sigma ^2}\right] \text{erfc} \left[ \frac{\delta (x-\mu )}{\sqrt{2} \sigma } \right]$$
 	public readonly record struct SkewNormalDistribution<T>(T Displacement, T ScaleFactor, T ShapeFactor, long? RandomSeed = null) :
 		IDisplaceScaleShapeDistribution<T, SkewNormalDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard log normal distribution with μ = 0, σ = 1 and δ = 0
@@ -93,7 +93,7 @@
 	//0 & x \lt \mu \end{cases}$$
 	public readonly record struct ExponentialDistribution<T>(T Displacement, T ScaleFactor, long? RandomSeed = null) :
 		IDisplaceScaleDistribution<T, ExponentialDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard exponential distribution with μ = 0 and β = 1
@@ -113,7 +113,7 @@
 	//tex:Laplace distribution PDF: $$P_{\mu,\beta}(x) = \frac{1}{\sqrt{2\beta}} \exp{\left( -\frac{|x-\mu|}{\beta} \right)}$$
 	public readonly record struct LaplaceDistribution<T>(T Displacement, T ScaleFactor, long? RandomSeed = null) :
 		IDisplaceScaleDistribution<T, LaplaceDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard Laplace distribution with μ = 0 and β = 1
@@ -136,7 +136,7 @@
 	//0 & x \lt \mu\end{cases}$$
 	public readonly record struct WeibullDistribution<T>(T Displacement, T ScaleFactor, T ShapeFactor, long? RandomSeed = null) :
 		IDisplaceScaleShapeDistribution<T, WeibullDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard Laplace distribution with μ = 0, β = 1 and α = 1
@@ -156,7 +156,7 @@
 	//tex:Cauchy distribution PDF: $$P_{\mu,\beta}(x) = \frac{1}{\pi\beta\left[ 1 + \left( \frac{x-\mu}{\beta} \right)^2 \right]}$$
 	public readonly record struct CauchyDistribution<T>(T Displacement, T ScaleFactor, long? RandomSeed = null) :
 		IDisplaceScaleDistribution<T, CauchyDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard Cauchy distribution with μ = 0 and β = 1
@@ -176,7 +176,7 @@
 	//tex:Rayleigh distribution PDF: $$P_{\mu,\beta}(x) = \frac{2(x-\mu)}{\beta^2}\exp{\left[ - \left( \frac{x-\mu}{\beta} \right)^2 \right]}$$
 	public readonly record struct RayleighDistribution<T>(T Displacement, T ScaleFactor, long? RandomSeed = null) :
 		IDisplaceScaleDistribution<T, RayleighDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard Cauchy distribution with μ = 0 and β = 1
@@ -197,7 +197,7 @@
 	//\exp{\left[ -\exp{\left( \frac{x-\mu}{\beta} \right)} \right]}$$
 	public readonly record struct GumbelDistribution<T>(T Displacement, T ScaleFactor, long? RandomSeed = null) :
 		IDisplaceScaleDistribution<T, GumbelDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard Gumbel distribution with μ = 0 and β = 1
@@ -221,7 +221,7 @@
 	//where $\Gamma(a)$ is the complete gamma function.
 	public readonly record struct GammaDistribution<T>(T Displacement, T ScaleFactor, T ShapeFactor, long? RandomSeed = null) :
 		IDisplaceScaleShapeDistribution<T, GammaDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard Gamma distribution with μ = 0, β = 1 and α = 1
@@ -246,7 +246,7 @@
 	//where $B(p,q)$ is the complete beta function.
 	public readonly record struct BetaDistribution<T>(T Displacement, T ScaleFactor, T ShapeFactor, T ShapeFactorOther, long? RandomSeed = null) :
 		IDisplaceScaleShapeDistribution<T, BetaDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard <see cref="BetaDistribution{T}"/> with μ = 0, α = 1, α' = 1 and β = 1

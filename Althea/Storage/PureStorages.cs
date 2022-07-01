@@ -36,9 +36,9 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract pure storage class that inherits <see cref="PureStorageBase{TP}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class PureStorage<T, TP> : PureStorageBase<TP>, IStorage<T, PureStorage<T, TP>> where T : unmanaged, INumber<T> where TP : notnull, IPointer<TP>
+	public abstract class PureStorage<T, TP> : PureStorageBase<TP>, IStorage<T, PureStorage<T, TP>> where T : unmanaged, IBaseNumber<T> where TP : notnull, IPointer<TP>
 	{
 		#region basic
 		/// <summary>
@@ -150,7 +150,7 @@ namespace Althea.Storage
 		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
 		/// <returns>The referenced <see cref="PureStorage{T, TP}"/> of data type <typeparamref name="TOut"/></returns>
 		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public PureStorage<TOut, TP> As<TOut>() where TOut : unmanaged, INumber<TOut>
+		public PureStorage<TOut, TP> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
 		{
 			if (typeof(TOut) == typeof(T))
 				return this.MakeReference() as PureStorage<TOut, TP> ?? PureStorage<TOut, TP>.Empty;
@@ -188,7 +188,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
 		/// <returns>A new <see cref="PureStorage{T, TP}"/> that likes <paramref name="storage"/></returns>
-		public static PureStorage<T, TP> CreateAlike<TOut>(PureStorage<TOut, TP> storage) where TOut : unmanaged, INumber<TOut>
+		public static PureStorage<T, TP> CreateAlike<TOut>(PureStorage<TOut, TP> storage) where TOut : unmanaged, IBaseNumber<TOut>
 		{
 			var descr = PureStorage<TOut, TP>.LocationDescription;
 			return Create(stackalloc long[] { storage.Length });
@@ -284,7 +284,7 @@ namespace Althea.Storage
 
 				byte[] data = reader.GetBytesFromBase64();
 				TP pointer = Mem.Allocate<TP>(data.LongLength);
-				Mem.FromManaged<UInt8, TP>(pointer, data.AsAux());
+				Mem.FromManaged<UnsignedInt8, TP>(pointer, data.AsAux());
 				
 				if (!reader.Read())
 					throw new JsonException();
@@ -300,7 +300,7 @@ namespace Althea.Storage
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
 				byte[] temp = new byte[value.LengthInBytes];
-				Mem.ToManaged<UInt8, TP>(value.Pointer, temp.AsAux());
+				Mem.ToManaged<UnsignedInt8, TP>(value.Pointer, temp.AsAux());
 				writer.WriteStartObject();
 				writer.WriteBase64String(nameof(Repr.Data), temp);
 				writer.WriteEndObject();
@@ -312,10 +312,10 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a pure storage on a single location.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public sealed class ActualPureStorage<T, TP> : PureStorage<T, TP>, IActualStorage<T, PureStorage<T, TP>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TP : notnull, IPointer<TP>
 	{
 		internal ActualPureStorage(TP pointer) : base(pointer)
@@ -338,10 +338,10 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a pure storage on a single location.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	public sealed class ReferencePureStorage<T, TP> : PureStorage<T, TP>, IReferenceStorage<T, PureStorage<T, TP>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TP : notnull, IPointer<TP>
 	{
 		/// <summary>

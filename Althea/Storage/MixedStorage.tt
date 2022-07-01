@@ -82,12 +82,12 @@ namespace Althea.Storage
 	/// <summary>
 	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{<#=pointerTypes#>}"/> and constrains data type to <typeparamref name="T"/>
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
 <# for (int j = 0; j < i; j++) { #>
 	/// <typeparam name="TP<#=j + 1#>">The <#=ordinal[j]#> pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 <# } #>
 	public abstract class MixedStorage<T, <#=pointerTypes#>> : MixedStorageBase<<#=pointerTypes#>>, IStorage<T, MixedStorage<T, <#=pointerTypes#>>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		<# for (int j = 1; j <= i; j++) { #>where TP<#=j#> : notnull, IPointer<TP<#=j#>> <# } #>
 
 	{
@@ -230,7 +230,7 @@ namespace Althea.Storage
 		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
 		/// <returns>The referenced <see cref="MixedStorage{T, <#=pointerTypes#>}"/> of data type <typeparamref name="TOut"/></returns>
 		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, <#=pointerTypes#>> As<TOut>() where TOut : unmanaged, INumber<TOut>
+		public MixedStorage<TOut, <#=pointerTypes#>> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
 		{
 			if (typeof(TOut) == typeof(T))
 				return this.MakeReference() as MixedStorage<TOut, <#=pointerTypes#>> ?? MixedStorage<TOut, <#=pointerTypes#>>.Empty;
@@ -268,7 +268,7 @@ namespace Althea.Storage
 		/// </summary>
 		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, <#=pointerTypes#>}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, <#=pointerTypes#>> CreateAlike<TOut>(MixedStorage<TOut, <#=pointerTypes#>> storage) where TOut : unmanaged, INumber<TOut>
+		public static MixedStorage<T, <#=pointerTypes#>> CreateAlike<TOut>(MixedStorage<TOut, <#=pointerTypes#>> storage) where TOut : unmanaged, IBaseNumber<TOut>
 		{
 			var descr = MixedStorage<TOut, <#=pointerTypes#>>.LocationDescription;
 			return Create(stackalloc long[] { <# for (int j = 1; j <= i; j++) { #>storage.Pointer<#=j#>.LengthInBytes / TOut.Size, <# } #>});
@@ -369,7 +369,7 @@ namespace Althea.Storage
 					throw new JsonException();
 				byte[] data<#=j#> = reader.GetBytesFromBase64();
 				TP<#=j#> pointer<#=j#> = Mem.Allocate<TP<#=j#>>(data<#=j#>.LongLength);
-				Mem.FromManaged<UInt8, TP<#=j#>>(pointer<#=j#>, data<#=j#>.AsAux());
+				Mem.FromManaged<UnsignedInt8, TP<#=j#>>(pointer<#=j#>, data<#=j#>.AsAux());
 				if (!reader.Read())
 					throw new JsonException();
 <# } #>
@@ -390,7 +390,7 @@ namespace Althea.Storage
 <# for (int j = 1; j <= i; j++) { #>
 				
 				// write pointer <#=j#>
-				size = (int)Mem.ToManaged<UInt8, TP<#=j#>>(value.Pointer<#=j#>, temp.AsAux());
+				size = (int)Mem.ToManaged<UnsignedInt8, TP<#=j#>>(value.Pointer<#=j#>, temp.AsAux());
 				writer.WriteBase64String(nameof(Repr.Data<#=j#>), new(temp, 0, size));
 <# } #>
 				
@@ -403,12 +403,12 @@ namespace Althea.Storage
 	/// <summary>
 	/// The actual storage class for a mixed storage on <#=i#> locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
 <# for (int j = 0; j < i; j++) { #>
 	/// <typeparam name="TP<#=j + 1#>">The <#=ordinal[j]#> pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 <# } #>
 	public sealed class ActualMixedStorage<T, <#=pointerTypes#>> : MixedStorage<T, <#=pointerTypes#>>, IActualStorage<T, MixedStorage<T, <#=pointerTypes#>>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		<# for (int j = 1; j <= i; j++) { #>where TP<#=j#> : notnull, IPointer<TP<#=j#>> <# } #>
 
 	{
@@ -435,12 +435,12 @@ namespace Althea.Storage
 	/// <summary>
 	/// The reference storage class for a mixed storage on <#=i#> locations.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="INumber{TSelf}"/> as the data type</typeparam>
+	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
 <# for (int j = 0; j < i; j++) { #>
 	/// <typeparam name="TP<#=j + 1#>">The <#=ordinal[j]#> pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 <# } #>
 	public sealed class ReferenceMixedStorage<T, <#=pointerTypes#>> : MixedStorage<T, <#=pointerTypes#>>, IReferenceStorage<T, MixedStorage<T, <#=pointerTypes#>>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		<# for (int j = 1; j <= i; j++) { #>where TP<#=j#> : notnull, IPointer<TP<#=j#>> <# } #>
 
 	{

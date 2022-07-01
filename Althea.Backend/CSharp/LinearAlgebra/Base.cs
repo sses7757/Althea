@@ -40,7 +40,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	#region helpers
 	#region load and simple op
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>
+	private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = null; length = inc = 0;
 		if (s is null || !s.IsValid())
@@ -58,7 +58,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		return true;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int ldd) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>
+	private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int ldd) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = null; mm = nn = ldd = 0;
 		if (s is null || !s.IsValid())
@@ -143,7 +143,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void StoreVector<T>(Vector<T> v1, Vector<T> v2, Vector<T> v3, Vector<T> v4, Vector<T> v5, Vector<T> v6, Vector<T> v7, Vector<T> v8, T* r) where T : unmanaged, Numerics.INumber<T>
+	private static void StoreVector<T>(Vector<T> v1, Vector<T> v2, Vector<T> v3, Vector<T> v4, Vector<T> v5, Vector<T> v6, Vector<T> v7, Vector<T> v8, T* r) where T : unmanaged, IBaseNumber<T>
 	{
 		Unsafe.WriteUnaligned(r + Vector<T>.Count * 0, v1);
 		Unsafe.WriteUnaligned(r + Vector<T>.Count * 1, v2);
@@ -175,17 +175,17 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		// abs of {0, 2, 1, 3}-th complex
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Vector256<float> ComplexSquareAbsNoOrder(float* p)
+	private static Vector256<float> ComplexSquareAbsNoOrderSingle(void* p)
 	{
-		Vector256<float> current1 = LoadVector256(p);
-		Vector256<float> current2 = LoadVector256(p + Vector256<float>.Count);
+		Vector256<float> current1 = LoadVector256<float>(p);
+		Vector256<float> current2 = LoadVector256((float*)p + Vector256<float>.Count);
 		return ComplexSquareAbsNoOrder(current1, current2);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Vector256<double> ComplexSquareAbsNoOrder(double* p)
+	private static Vector256<double> ComplexSquareAbsNoOrderDouble(void* p)
 	{
-		Vector256<double> current1 = LoadVector256(p);
-		Vector256<double> current2 = LoadVector256(p + Vector256<double>.Count);
+		Vector256<double> current1 = LoadVector256<double>(p);
+		Vector256<double> current2 = LoadVector256((double*)p + Vector256<double>.Count);
 		return ComplexSquareAbsNoOrder(current1, current2);
 	}
 
@@ -471,22 +471,22 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void ComplexMultiplyAdd<Conj>(float* a, float* b, ref Vector256<float> realC, ref Vector256<float> imagC)
+	private static void ComplexMultiplyAddSingle<Conj>(void* a, void* b, ref Vector256<float> realC, ref Vector256<float> imagC)
 	{
-		Vector256<float> a0 = LoadVector256(a);
-		Vector256<float> a1 = LoadVector256(a + Vector256<float>.Count);
-		Vector256<float> b0 = LoadVector256(b);
-		Vector256<float> b1 = LoadVector256(b + Vector256<float>.Count);
+		Vector256<float> a0 = LoadVector256((float*)a);
+		Vector256<float> a1 = LoadVector256((float*)a + Vector256<float>.Count);
+		Vector256<float> b0 = LoadVector256((float*)b);
+		Vector256<float> b1 = LoadVector256((float*)b + Vector256<float>.Count);
 
 		ComplexMultiplyAdd<Conj>(a0, a1, b0, b1, ref realC, ref imagC);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void ComplexMultiplyAdd<Conj>(double* a, double* b, ref Vector256<double> realC, ref Vector256<double> imagC)
+	private static void ComplexMultiplyAddDouble<Conj>(void* a, void* b, ref Vector256<double> realC, ref Vector256<double> imagC)
 	{
-		Vector256<double> a0 = LoadVector256(a);
-		Vector256<double> a1 = LoadVector256(a + Vector256<double>.Count);
-		Vector256<double> b0 = LoadVector256(b);
-		Vector256<double> b1 = LoadVector256(b + Vector256<double>.Count);
+		Vector256<double> a0 = LoadVector256((double*)a);
+		Vector256<double> a1 = LoadVector256((double*)a + Vector256<double>.Count);
+		Vector256<double> b0 = LoadVector256((double*)b);
+		Vector256<double> b1 = LoadVector256((double*)b + Vector256<double>.Count);
 
 		ComplexMultiplyAdd<Conj>(a0, a1, b0, b1, ref realC, ref imagC);
 	}
@@ -603,85 +603,85 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 
 	#region operations
 	/// <inheritdoc/>
-	public virtual partial bool AbsoluteValueArgMax<T, TS>(TS x, long strideX, out long index) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool AbsoluteValueArgMax<T, TS>(TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool AbsoluteValueArgMin<T, TS>(TS x, long strideX, out long index) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool AbsoluteValueArgMin<T, TS>(TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool AbsoluteValueSum<T, TS>(TS x, long strideX, out T sum) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool AbsoluteValueSum<T, TS>(TS x, long strideX, out T sum) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool Norm<T, TS>(TS x, long strideX, out T norm) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool Norm<T, TS>(TS x, long strideX, out T norm) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool Scale<T, TS>(TS x, long strideX, T scalar) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool Scale<T, TS>(TS x, long strideX, T scalar) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool Add<T, TS1, TS2>(T α, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, Numerics.INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool Add<T, TS1, TS2>(T α, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool Dot<T, TS1, TS2>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, Numerics.INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool Dot<T, TS1, TS2>(bool conjX, TS1 x, long strideX, TS2 y, long strideY, out T dot) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorsEqual<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, Numerics.INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool GeneralVectorsEqual<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, Numerics.INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, Numerics.INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool GeneralVectorBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorReduce<T, TS>(ReduceOperation op, TS x, long strideX, out T result) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool GeneralVectorReduce<T, TS>(ReduceOperation op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorArgReduce<T, TS>(ReduceOperation op, TS x, long strideX, out long index) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool GeneralVectorArgReduce<T, TS>(ReduceOperation op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, Numerics.INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+	public virtual partial bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorsScan<T, TS1, TS2>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, Numerics.INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool GeneralVectorsScan<T, TS1, TS2>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorsCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, Numerics.INumber<TIn> where TOut : unmanaged, Numerics.INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+	public virtual partial bool GeneralVectorsCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
 
 	/// <inheritdoc/>
-	public virtual partial bool Sort<T, TS>(TS array, long stride) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool Sort<T, TS>(TS array, long stride) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, Numerics.INumber<TOther> where TS2 : class, IStorage<TOther, TS2>;
+	public virtual partial bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, IBaseNumber<TOther> where TS2 : class, IStorage<TOther, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, Numerics.IBinaryInteger<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, Numerics.IBinaryInteger<TOut> where TSOut : class, IStorage<TOut, TSOut>;
+	public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInt<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, IBinaryInt<TOut> where TSOut : class, IStorage<TOut, TSOut>;
 
 	/// <inheritdoc/>
-	public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) where T : unmanaged, Numerics.IBinaryInteger<T> where TOut : unmanaged, Numerics.IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
+	public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) where T : unmanaged, IBinaryInt<T> where TOut : unmanaged, IBinaryInt<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
 
 	/// <inheritdoc/>
-	public virtual partial bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>;
+	public virtual partial bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>;
 
 	/// <inheritdoc/>
-	public virtual partial bool VectorSetValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+	public virtual partial bool VectorSetValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 
 	/// <inheritdoc/>
-	public virtual partial bool VectorGatherValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+	public virtual partial bool VectorGatherValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 
 	/// <inheritdoc/>
-	public virtual partial bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+	public virtual partial bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 
 	/// <inheritdoc/>
-	public virtual partial bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+	public virtual partial bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 	#endregion
 
 
@@ -850,7 +850,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	/// <inheritdoc/>
-	public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, Numerics.INumber<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	public virtual bool SchurReorder<T, TInd, TS1, TS2, TS3, TSInd>(long n, TS1 A, long lda, TS2? U, long ldu, TS3 vals, TS3? valsImag, TSInd select) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TInd : unmanaged, IBaseNumber<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		if (!SchurCheck(n, A, lda, U, ldu, vals, valsImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldvec))
 			return false;

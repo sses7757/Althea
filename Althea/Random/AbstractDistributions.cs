@@ -39,7 +39,7 @@ namespace Althea.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type for all dimensions</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
-	public interface IFloatingPointDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, INumber<T> where TSelf : struct, IFloatingPointDistribution<T, TSelf>
+	public interface IFloatingPointDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, IBaseNumber<T> where TSelf : struct, IFloatingPointDistribution<T, TSelf>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.BinaryFloat_IEEE754, T.Type);
@@ -50,7 +50,7 @@ namespace Althea.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged floating point type for all dimensions</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
-	public interface IIntegralDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, INumber<T> where TSelf : struct, IIntegralDistribution<T, TSelf>
+	public interface IIntegralDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, IBaseNumber<T> where TSelf : struct, IIntegralDistribution<T, TSelf>
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.UnsignedInteger | DataTypeClassification.SignedInteger, T.Type);
@@ -62,7 +62,7 @@ namespace Althea.Random
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
 	public interface IDisplaceScaleDistribution<T, TSelf> : IFloatingPointDistribution<T, TSelf>, IRank1Distribution<T, TSelf>
-		where T : unmanaged, INumber<T> where TSelf : struct, IDisplaceScaleDistribution<T, TSelf>
+		where T : unmanaged, IBaseNumber<T> where TSelf : struct, IDisplaceScaleDistribution<T, TSelf>
 	{
 		/// <summary>
 		/// The displacement value (μ)
@@ -83,7 +83,7 @@ namespace Althea.Random
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
 	public interface IDisplaceScaleShapeDistribution<T, TSelf> : IDisplaceScaleDistribution<T, TSelf>
-		where T : unmanaged, INumber<T> where TSelf : struct, IDisplaceScaleShapeDistribution<T, TSelf>
+		where T : unmanaged, IBaseNumber<T> where TSelf : struct, IDisplaceScaleShapeDistribution<T, TSelf>
 	{
 		/// <summary>
 		/// The shape factor (α)
@@ -97,7 +97,7 @@ namespace Althea.Random
 	/// <typeparam name="T">Any unmanaged floating point type</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
 	public interface IDegreeOfFreedomDistribution<T, TSelf> : IFloatingPointDistribution<T, TSelf>, IRank1Distribution<T, TSelf>
-		where T : unmanaged, INumber<T> where TSelf : struct, IDegreeOfFreedomDistribution<T, TSelf>
+		where T : unmanaged, IBaseNumber<T> where TSelf : struct, IDegreeOfFreedomDistribution<T, TSelf>
 	{
 		/// <summary>
 		/// The degree of freedom
@@ -114,7 +114,7 @@ namespace Althea.Random
 	/// <typeparam name="T">Any unmanaged integral type</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
 	public interface IBernoulliBasedDistribution<T, TSelf> : IIntegralDistribution<T, TSelf>, IRank1Distribution<T, TSelf>
-		where T : unmanaged, INumber<T> where TSelf : struct, IBernoulliBasedDistribution<T, TSelf>
+		where T : unmanaged, IBaseNumber<T> where TSelf : struct, IBernoulliBasedDistribution<T, TSelf>
 	{
 		/// <summary>
 		/// The probability of a Bernoulli trial succeeding (p)

@@ -92,15 +92,15 @@ namespace Althea.Numerics
 		/// <summary>
 		/// <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		RealHalf = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
+		RealFloat16 = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
 		/// <see cref="float"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		RealSingle = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
+		RealFloat32 = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
 		/// <summary>
 		/// <see cref="double"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		RealDouble = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
+		RealFloat64 = DataTypeTuple.Real + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
 
 		/// <summary>
 		/// <see cref="Complex{T}"/> of <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
@@ -334,10 +334,10 @@ namespace Althea.Numerics
 			object? v;
 			try
 			{
-				var t = typeof(INumber<>).MakeGenericType(type);
+				var t = typeof(IBaseNumber<>).MakeGenericType(type);
 				if (!type.IsAssignableTo(t))
 					throw new NotSupportedException();
-				v = type.GetProperty(nameof(INumber<Int8>.Type), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)?.GetGetMethod()?.Invoke(null, null);
+				v = type.GetProperty(nameof(IBaseNumber<Float16>.Type), System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)?.GetGetMethod()?.Invoke(null, null);
 			}
 			catch (Exception)
 			{

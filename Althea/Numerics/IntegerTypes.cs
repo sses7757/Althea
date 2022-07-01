@@ -10,28 +10,28 @@ namespace Althea.Numerics;
 
 
 /// <summary>
-/// The custom replacement of <see cref="sbyte"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="sbyte"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct Int8 : IBinaryInteger<Int8>
+public readonly partial struct SignedInt8 : IBinaryInt<SignedInt8>
 {
 	private readonly sbyte _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Int8(sbyte v) => this._value = v;
+	private SignedInt8(sbyte v) => this._value = v;
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Int8(sbyte v) => new(v);
+	public static implicit operator SignedInt8(sbyte v) => new(v);
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator sbyte(Int8 v) => v._value;
+	public static implicit operator sbyte(SignedInt8 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(Int8 other) => this == other;
+	public bool Equals(SignedInt8 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -47,7 +47,7 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(Int8 other) => this._value.CompareTo(other);
+	public int CompareTo(SignedInt8 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -65,7 +65,7 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 	public static DataType Type => DataType.RealInt8;
 
 	/// <inheritdoc/>
-	public static Int8 MachinePrecision => (sbyte)1;
+	public static SignedInt8 MachinePrecision => (sbyte)1;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(sbyte);
@@ -74,87 +74,87 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static Int8 One => (sbyte)1;
+	public static SignedInt8 One => (sbyte)1;
 
 	/// <inheritdoc/>
-	public static Int8 Zero => (sbyte)0;
+	public static SignedInt8 Zero => (sbyte)0;
 	
 	/// <inheritdoc/>
-	public static Int8 AdditiveIdentity => (sbyte)0;
+	public static SignedInt8 AdditiveIdentity => (sbyte)0;
 
 	/// <inheritdoc/>
-	public static Int8 MultiplicativeIdentity => (sbyte)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(Int8 value) => true;
+	public static SignedInt8 MultiplicativeIdentity => (sbyte)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(Int8 value) => false;
+	public static bool IsReal(SignedInt8 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(Int8 value) => false;
+	public static bool IsComplex(SignedInt8 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(SignedInt8 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(Int8 value) => true;
+	public static bool IsFinite(SignedInt8 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(Int8 value) => false;
+	public static bool IsNaN(SignedInt8 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(Int8 value) => true;
+	public static bool IsInteger(SignedInt8 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(Int8 value) => value._value == (sbyte)0;
+	public static bool IsZero(SignedInt8 value) => value._value == (sbyte)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Conjugate(Int8 value) => value;
+	public static SignedInt8 Conjugate(SignedInt8 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 MinMagnitudeNumber(Int8 x, Int8 y) => sbyte.MaxMagnitude(x, y) == sbyte.Abs(x) ? x : y;
+	public static SignedInt8 MinMagnitudeNumber(SignedInt8 x, SignedInt8 y) => sbyte.MaxMagnitude(x, y) == sbyte.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 MaxMagnitudeNumber(Int8 x, Int8 y) => sbyte.MinMagnitude(x, y) == sbyte.Abs(x) ? x : y;
+	public static SignedInt8 MaxMagnitudeNumber(SignedInt8 x, SignedInt8 y) => sbyte.MinMagnitude(x, y) == sbyte.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(Int8 value) => sbyte.IsNegative(value);
+	public static bool IsNegative(SignedInt8 value) => sbyte.IsNegative(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(Int8 value) => sbyte.IsPositive(value);
+	public static bool IsPositive(SignedInt8 value) => sbyte.IsPositive(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Abs(Int8 value) => sbyte.Abs(value);
+	public static SignedInt8 Abs(SignedInt8 value) => sbyte.Abs(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 MaxMagnitude(Int8 x, Int8 y) => sbyte.MaxMagnitude(x, y);
+	public static SignedInt8 MaxMagnitude(SignedInt8 x, SignedInt8 y) => sbyte.MaxMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 MinMagnitude(Int8 x, Int8 y) => sbyte.MinMagnitude(x, y);
+	public static SignedInt8 MinMagnitude(SignedInt8 x, SignedInt8 y) => sbyte.MinMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 CopySign(Int8 value, Int8 sign) => sbyte.CopySign(value, sign);
+	public static SignedInt8 CopySign(SignedInt8 value, SignedInt8 sign) => sbyte.CopySign(value, sign);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Sign(Int8 value) => (sbyte)sbyte.Sign(value);
+	public static SignedInt8 Sign(SignedInt8 value) => (sbyte)sbyte.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out Int8 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out SignedInt8 result)
 	{
 		bool success = sbyte.TryParse(s, provider, out var res);
 		result = res;
@@ -163,7 +163,7 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Int8 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out SignedInt8 result)
 	{
 		bool success = sbyte.TryParse(s, provider, out var res);
 		result = res;
@@ -172,7 +172,7 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Int8 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out SignedInt8 result)
 	{
 		bool success = sbyte.TryParse(s, style, provider, out var res);
 		result = res;
@@ -181,7 +181,7 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Int8 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out SignedInt8 result)
 	{
 		bool success = sbyte.TryParse(s, style, provider, out var res);
 		result = res;
@@ -190,144 +190,144 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(Int8 value) => sbyte.IsPow2(value);
+	public static bool IsPow2(SignedInt8 value) => sbyte.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Log2(Int8 value) => sbyte.Log2(value);
+	public static SignedInt8 Log2(SignedInt8 value) => sbyte.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (Int8 Quotient, Int8 Remainder) DivRem(Int8 left, Int8 right) => sbyte.DivRem(left, right);
+	public static (SignedInt8 Quotient, SignedInt8 Remainder) DivRem(SignedInt8 left, SignedInt8 right) => sbyte.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 RotateLeft(Int8 value, int rotateAmount) => sbyte.RotateLeft(value, rotateAmount);
+	public static SignedInt8 RotateLeft(SignedInt8 value, int rotateAmount) => sbyte.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 RotateRight(Int8 value, int rotateAmount) => sbyte.RotateRight(value, rotateAmount);
+	public static SignedInt8 RotateRight(SignedInt8 value, int rotateAmount) => sbyte.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 PopCount(Int8 value) => sbyte.PopCount(value);
+	public static SignedInt8 PopCount(SignedInt8 value) => sbyte.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 LeadingZeroCount(Int8 value) => sbyte.LeadingZeroCount(value);
+	public static SignedInt8 LeadingZeroCount(SignedInt8 value) => sbyte.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 TrailingZeroCount(Int8 value) => sbyte.TrailingZeroCount(value);
+	public static SignedInt8 TrailingZeroCount(SignedInt8 value) => sbyte.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(Int8 value) => sbyte.IsOddInteger(value);
+	public static bool IsOddInteger(SignedInt8 value) => sbyte.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Max(Int8 x, Int8 y) => sbyte.Max(x, y);
+	public static SignedInt8 Max(SignedInt8 x, SignedInt8 y) => sbyte.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Min(Int8 x, Int8 y) => sbyte.Min(x, y);
+	public static SignedInt8 Min(SignedInt8 x, SignedInt8 y) => sbyte.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Parse(string s, IFormatProvider? provider) => sbyte.Parse(s, provider);
+	public static SignedInt8 Parse(string s, IFormatProvider? provider) => sbyte.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => sbyte.Parse(s, provider);
+	public static SignedInt8 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => sbyte.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Parse(string s, NumberStyles style, IFormatProvider? provider) => sbyte.Parse(s, style, provider);
+	public static SignedInt8 Parse(string s, NumberStyles style, IFormatProvider? provider) => sbyte.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => sbyte.Parse(s, style, provider);
+	public static SignedInt8 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => sbyte.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(Int8 left, Int8 right) => (left._value < right._value);
+	public static bool operator <(SignedInt8 left, SignedInt8 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(Int8 left, Int8 right) => (left._value <= right._value);
+	public static bool operator <=(SignedInt8 left, SignedInt8 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(Int8 left, Int8 right) => (left._value > right._value);
+	public static bool operator >(SignedInt8 left, SignedInt8 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(Int8 left, Int8 right) => (left._value >= right._value);
+	public static bool operator >=(SignedInt8 left, SignedInt8 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(Int8 left, Int8 right) => (left._value == right._value);
+	public static bool operator ==(SignedInt8 left, SignedInt8 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(Int8 left, Int8 right) => (left._value != right._value);
+	public static bool operator !=(SignedInt8 left, SignedInt8 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator +(Int8 left, Int8 right) => (sbyte)(left._value + right._value);
+	public static SignedInt8 operator +(SignedInt8 left, SignedInt8 right) => (sbyte)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator -(Int8 left, Int8 right) => (sbyte)(left._value - right._value);
+	public static SignedInt8 operator -(SignedInt8 left, SignedInt8 right) => (sbyte)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator *(Int8 left, Int8 right) => (sbyte)(left._value * right._value);
+	public static SignedInt8 operator *(SignedInt8 left, SignedInt8 right) => (sbyte)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator /(Int8 left, Int8 right) => (sbyte)(left._value / right._value);
+	public static SignedInt8 operator /(SignedInt8 left, SignedInt8 right) => (sbyte)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator -(Int8 value) => (sbyte)(-value._value);
+	public static SignedInt8 operator -(SignedInt8 value) => (sbyte)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator +(Int8 value) => (sbyte)(+value._value);
+	public static SignedInt8 operator +(SignedInt8 value) => (sbyte)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator &(Int8 left, Int8 right) => (sbyte)(left._value & right._value);
+	public static SignedInt8 operator &(SignedInt8 left, SignedInt8 right) => (sbyte)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator |(Int8 left, Int8 right) => (sbyte)(left._value | right._value);
+	public static SignedInt8 operator |(SignedInt8 left, SignedInt8 right) => (sbyte)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator ^(Int8 left, Int8 right) => (sbyte)(left._value ^ right._value);
+	public static SignedInt8 operator ^(SignedInt8 left, SignedInt8 right) => (sbyte)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator ~(Int8 value) => (sbyte)(~value._value);
+	public static SignedInt8 operator ~(SignedInt8 value) => (sbyte)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator %(Int8 left, Int8 right) => (sbyte)(left._value % right._value);
+	public static SignedInt8 operator %(SignedInt8 left, SignedInt8 right) => (sbyte)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator <<(Int8 value, int shiftAmount) => (sbyte)(value._value << shiftAmount);
+	public static SignedInt8 operator <<(SignedInt8 value, int shiftAmount) => (sbyte)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator >>(Int8 value, int shiftAmount) => (sbyte)(value._value >> shiftAmount);
+	public static SignedInt8 operator >>(SignedInt8 value, int shiftAmount) => (sbyte)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator ++(Int8 value)
+	public static SignedInt8 operator ++(SignedInt8 value)
 	{
 		var v = value._value;
 		++v;
@@ -336,7 +336,7 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int8 operator --(Int8 value)
+	public static SignedInt8 operator --(SignedInt8 value)
 	{
 		var v = value._value;
 		--v;
@@ -345,7 +345,7 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int8 IIncrementOperators<Int8>.op_CheckedIncrement(Int8 value)
+	static SignedInt8 IIncrementOperators<SignedInt8>.op_CheckedIncrement(SignedInt8 value)
 	{
 		var v = value._value;
 		v = checked((sbyte)(v + 1));
@@ -354,7 +354,7 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int8 IDecrementOperators<Int8>.op_CheckedDecrement(Int8 value)
+	static SignedInt8 IDecrementOperators<SignedInt8>.op_CheckedDecrement(SignedInt8 value)
 	{
 		var v = value._value;
 		v = checked((sbyte)(v - 1));
@@ -363,52 +363,52 @@ public readonly partial struct Int8 : IBinaryInteger<Int8>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int8 IShiftOperators<Int8, Int8>.op_UnsignedRightShift(Int8 value, int shiftAmount) => (sbyte)((byte)value._value >> shiftAmount);
+	static SignedInt8 IShiftOperators<SignedInt8, SignedInt8>.op_UnsignedRightShift(SignedInt8 value, int shiftAmount) => (sbyte)((byte)value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int8 IAdditionOperators<Int8, Int8, Int8>.op_CheckedAddition(Int8 left, Int8 right) => checked((sbyte)(left._value + right._value));
+	static SignedInt8 IAdditionOperators<SignedInt8, SignedInt8, SignedInt8>.op_CheckedAddition(SignedInt8 left, SignedInt8 right) => checked((sbyte)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int8 ISubtractionOperators<Int8, Int8, Int8>.op_CheckedSubtraction(Int8 left, Int8 right) => checked((sbyte)(left._value - right._value));
+	static SignedInt8 ISubtractionOperators<SignedInt8, SignedInt8, SignedInt8>.op_CheckedSubtraction(SignedInt8 left, SignedInt8 right) => checked((sbyte)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int8 IMultiplyOperators<Int8, Int8, Int8>.op_CheckedMultiply(Int8 left, Int8 right) => checked((sbyte)(left._value * right._value));
+	static SignedInt8 IMultiplyOperators<SignedInt8, SignedInt8, SignedInt8>.op_CheckedMultiply(SignedInt8 left, SignedInt8 right) => checked((sbyte)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int8 IDivisionOperators<Int8, Int8, Int8>.op_CheckedDivision(Int8 left, Int8 right) => checked((sbyte)(left._value / right._value));
+	static SignedInt8 IDivisionOperators<SignedInt8, SignedInt8, SignedInt8>.op_CheckedDivision(SignedInt8 left, SignedInt8 right) => checked((sbyte)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int8 IUnaryNegationOperators<Int8, Int8>.op_CheckedUnaryNegation(Int8 value) => checked((sbyte)(-value._value));
+	static SignedInt8 IUnaryNegationOperators<SignedInt8, SignedInt8>.op_CheckedUnaryNegation(SignedInt8 value) => checked((sbyte)(-value._value));
 
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="short"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="short"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct Int16 : IBinaryInteger<Int16>
+public readonly partial struct SignedInt16 : IBinaryInt<SignedInt16>
 {
 	private readonly short _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Int16(short v) => this._value = v;
+	private SignedInt16(short v) => this._value = v;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Int16(short v) => new(v);
+	public static implicit operator SignedInt16(short v) => new(v);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator short(Int16 v) => v._value;
+	public static implicit operator short(SignedInt16 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(Int16 other) => this == other;
+	public bool Equals(SignedInt16 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -424,7 +424,7 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(Int16 other) => this._value.CompareTo(other);
+	public int CompareTo(SignedInt16 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -442,7 +442,7 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 	public static DataType Type => DataType.RealInt16;
 
 	/// <inheritdoc/>
-	public static Int16 MachinePrecision => (short)1;
+	public static SignedInt16 MachinePrecision => (short)1;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(short);
@@ -451,87 +451,87 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static Int16 One => (short)1;
+	public static SignedInt16 One => (short)1;
 
 	/// <inheritdoc/>
-	public static Int16 Zero => (short)0;
+	public static SignedInt16 Zero => (short)0;
 	
 	/// <inheritdoc/>
-	public static Int16 AdditiveIdentity => (short)0;
+	public static SignedInt16 AdditiveIdentity => (short)0;
 
 	/// <inheritdoc/>
-	public static Int16 MultiplicativeIdentity => (short)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(Int16 value) => true;
+	public static SignedInt16 MultiplicativeIdentity => (short)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(Int16 value) => false;
+	public static bool IsReal(SignedInt16 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(Int16 value) => false;
+	public static bool IsComplex(SignedInt16 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(SignedInt16 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(Int16 value) => true;
+	public static bool IsFinite(SignedInt16 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(Int16 value) => false;
+	public static bool IsNaN(SignedInt16 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(Int16 value) => true;
+	public static bool IsInteger(SignedInt16 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(Int16 value) => value._value == (short)0;
+	public static bool IsZero(SignedInt16 value) => value._value == (short)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Conjugate(Int16 value) => value;
+	public static SignedInt16 Conjugate(SignedInt16 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 MinMagnitudeNumber(Int16 x, Int16 y) => short.MaxMagnitude(x, y) == short.Abs(x) ? x : y;
+	public static SignedInt16 MinMagnitudeNumber(SignedInt16 x, SignedInt16 y) => short.MaxMagnitude(x, y) == short.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 MaxMagnitudeNumber(Int16 x, Int16 y) => short.MinMagnitude(x, y) == short.Abs(x) ? x : y;
+	public static SignedInt16 MaxMagnitudeNumber(SignedInt16 x, SignedInt16 y) => short.MinMagnitude(x, y) == short.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(Int16 value) => short.IsNegative(value);
+	public static bool IsNegative(SignedInt16 value) => short.IsNegative(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(Int16 value) => short.IsPositive(value);
+	public static bool IsPositive(SignedInt16 value) => short.IsPositive(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Abs(Int16 value) => short.Abs(value);
+	public static SignedInt16 Abs(SignedInt16 value) => short.Abs(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 MaxMagnitude(Int16 x, Int16 y) => short.MaxMagnitude(x, y);
+	public static SignedInt16 MaxMagnitude(SignedInt16 x, SignedInt16 y) => short.MaxMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 MinMagnitude(Int16 x, Int16 y) => short.MinMagnitude(x, y);
+	public static SignedInt16 MinMagnitude(SignedInt16 x, SignedInt16 y) => short.MinMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 CopySign(Int16 value, Int16 sign) => short.CopySign(value, sign);
+	public static SignedInt16 CopySign(SignedInt16 value, SignedInt16 sign) => short.CopySign(value, sign);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Sign(Int16 value) => (short)short.Sign(value);
+	public static SignedInt16 Sign(SignedInt16 value) => (short)short.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out Int16 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out SignedInt16 result)
 	{
 		bool success = short.TryParse(s, provider, out var res);
 		result = res;
@@ -540,7 +540,7 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Int16 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out SignedInt16 result)
 	{
 		bool success = short.TryParse(s, provider, out var res);
 		result = res;
@@ -549,7 +549,7 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Int16 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out SignedInt16 result)
 	{
 		bool success = short.TryParse(s, style, provider, out var res);
 		result = res;
@@ -558,7 +558,7 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Int16 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out SignedInt16 result)
 	{
 		bool success = short.TryParse(s, style, provider, out var res);
 		result = res;
@@ -567,144 +567,144 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(Int16 value) => short.IsPow2(value);
+	public static bool IsPow2(SignedInt16 value) => short.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Log2(Int16 value) => short.Log2(value);
+	public static SignedInt16 Log2(SignedInt16 value) => short.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (Int16 Quotient, Int16 Remainder) DivRem(Int16 left, Int16 right) => short.DivRem(left, right);
+	public static (SignedInt16 Quotient, SignedInt16 Remainder) DivRem(SignedInt16 left, SignedInt16 right) => short.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 RotateLeft(Int16 value, int rotateAmount) => short.RotateLeft(value, rotateAmount);
+	public static SignedInt16 RotateLeft(SignedInt16 value, int rotateAmount) => short.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 RotateRight(Int16 value, int rotateAmount) => short.RotateRight(value, rotateAmount);
+	public static SignedInt16 RotateRight(SignedInt16 value, int rotateAmount) => short.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 PopCount(Int16 value) => short.PopCount(value);
+	public static SignedInt16 PopCount(SignedInt16 value) => short.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 LeadingZeroCount(Int16 value) => short.LeadingZeroCount(value);
+	public static SignedInt16 LeadingZeroCount(SignedInt16 value) => short.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 TrailingZeroCount(Int16 value) => short.TrailingZeroCount(value);
+	public static SignedInt16 TrailingZeroCount(SignedInt16 value) => short.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(Int16 value) => short.IsOddInteger(value);
+	public static bool IsOddInteger(SignedInt16 value) => short.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Max(Int16 x, Int16 y) => short.Max(x, y);
+	public static SignedInt16 Max(SignedInt16 x, SignedInt16 y) => short.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Min(Int16 x, Int16 y) => short.Min(x, y);
+	public static SignedInt16 Min(SignedInt16 x, SignedInt16 y) => short.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Parse(string s, IFormatProvider? provider) => short.Parse(s, provider);
+	public static SignedInt16 Parse(string s, IFormatProvider? provider) => short.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => short.Parse(s, provider);
+	public static SignedInt16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => short.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Parse(string s, NumberStyles style, IFormatProvider? provider) => short.Parse(s, style, provider);
+	public static SignedInt16 Parse(string s, NumberStyles style, IFormatProvider? provider) => short.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => short.Parse(s, style, provider);
+	public static SignedInt16 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => short.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(Int16 left, Int16 right) => (left._value < right._value);
+	public static bool operator <(SignedInt16 left, SignedInt16 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(Int16 left, Int16 right) => (left._value <= right._value);
+	public static bool operator <=(SignedInt16 left, SignedInt16 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(Int16 left, Int16 right) => (left._value > right._value);
+	public static bool operator >(SignedInt16 left, SignedInt16 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(Int16 left, Int16 right) => (left._value >= right._value);
+	public static bool operator >=(SignedInt16 left, SignedInt16 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(Int16 left, Int16 right) => (left._value == right._value);
+	public static bool operator ==(SignedInt16 left, SignedInt16 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(Int16 left, Int16 right) => (left._value != right._value);
+	public static bool operator !=(SignedInt16 left, SignedInt16 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator +(Int16 left, Int16 right) => (short)(left._value + right._value);
+	public static SignedInt16 operator +(SignedInt16 left, SignedInt16 right) => (short)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator -(Int16 left, Int16 right) => (short)(left._value - right._value);
+	public static SignedInt16 operator -(SignedInt16 left, SignedInt16 right) => (short)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator *(Int16 left, Int16 right) => (short)(left._value * right._value);
+	public static SignedInt16 operator *(SignedInt16 left, SignedInt16 right) => (short)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator /(Int16 left, Int16 right) => (short)(left._value / right._value);
+	public static SignedInt16 operator /(SignedInt16 left, SignedInt16 right) => (short)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator -(Int16 value) => (short)(-value._value);
+	public static SignedInt16 operator -(SignedInt16 value) => (short)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator +(Int16 value) => (short)(+value._value);
+	public static SignedInt16 operator +(SignedInt16 value) => (short)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator &(Int16 left, Int16 right) => (short)(left._value & right._value);
+	public static SignedInt16 operator &(SignedInt16 left, SignedInt16 right) => (short)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator |(Int16 left, Int16 right) => (short)(left._value | right._value);
+	public static SignedInt16 operator |(SignedInt16 left, SignedInt16 right) => (short)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator ^(Int16 left, Int16 right) => (short)(left._value ^ right._value);
+	public static SignedInt16 operator ^(SignedInt16 left, SignedInt16 right) => (short)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator ~(Int16 value) => (short)(~value._value);
+	public static SignedInt16 operator ~(SignedInt16 value) => (short)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator %(Int16 left, Int16 right) => (short)(left._value % right._value);
+	public static SignedInt16 operator %(SignedInt16 left, SignedInt16 right) => (short)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator <<(Int16 value, int shiftAmount) => (short)(value._value << shiftAmount);
+	public static SignedInt16 operator <<(SignedInt16 value, int shiftAmount) => (short)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator >>(Int16 value, int shiftAmount) => (short)(value._value >> shiftAmount);
+	public static SignedInt16 operator >>(SignedInt16 value, int shiftAmount) => (short)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator ++(Int16 value)
+	public static SignedInt16 operator ++(SignedInt16 value)
 	{
 		var v = value._value;
 		++v;
@@ -713,7 +713,7 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int16 operator --(Int16 value)
+	public static SignedInt16 operator --(SignedInt16 value)
 	{
 		var v = value._value;
 		--v;
@@ -722,7 +722,7 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int16 IIncrementOperators<Int16>.op_CheckedIncrement(Int16 value)
+	static SignedInt16 IIncrementOperators<SignedInt16>.op_CheckedIncrement(SignedInt16 value)
 	{
 		var v = value._value;
 		v = checked((short)(v + 1));
@@ -731,7 +731,7 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int16 IDecrementOperators<Int16>.op_CheckedDecrement(Int16 value)
+	static SignedInt16 IDecrementOperators<SignedInt16>.op_CheckedDecrement(SignedInt16 value)
 	{
 		var v = value._value;
 		v = checked((short)(v - 1));
@@ -740,52 +740,52 @@ public readonly partial struct Int16 : IBinaryInteger<Int16>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int16 IShiftOperators<Int16, Int16>.op_UnsignedRightShift(Int16 value, int shiftAmount) => (short)((ushort)value._value >> shiftAmount);
+	static SignedInt16 IShiftOperators<SignedInt16, SignedInt16>.op_UnsignedRightShift(SignedInt16 value, int shiftAmount) => (short)((ushort)value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int16 IAdditionOperators<Int16, Int16, Int16>.op_CheckedAddition(Int16 left, Int16 right) => checked((short)(left._value + right._value));
+	static SignedInt16 IAdditionOperators<SignedInt16, SignedInt16, SignedInt16>.op_CheckedAddition(SignedInt16 left, SignedInt16 right) => checked((short)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int16 ISubtractionOperators<Int16, Int16, Int16>.op_CheckedSubtraction(Int16 left, Int16 right) => checked((short)(left._value - right._value));
+	static SignedInt16 ISubtractionOperators<SignedInt16, SignedInt16, SignedInt16>.op_CheckedSubtraction(SignedInt16 left, SignedInt16 right) => checked((short)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int16 IMultiplyOperators<Int16, Int16, Int16>.op_CheckedMultiply(Int16 left, Int16 right) => checked((short)(left._value * right._value));
+	static SignedInt16 IMultiplyOperators<SignedInt16, SignedInt16, SignedInt16>.op_CheckedMultiply(SignedInt16 left, SignedInt16 right) => checked((short)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int16 IDivisionOperators<Int16, Int16, Int16>.op_CheckedDivision(Int16 left, Int16 right) => checked((short)(left._value / right._value));
+	static SignedInt16 IDivisionOperators<SignedInt16, SignedInt16, SignedInt16>.op_CheckedDivision(SignedInt16 left, SignedInt16 right) => checked((short)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int16 IUnaryNegationOperators<Int16, Int16>.op_CheckedUnaryNegation(Int16 value) => checked((short)(-value._value));
+	static SignedInt16 IUnaryNegationOperators<SignedInt16, SignedInt16>.op_CheckedUnaryNegation(SignedInt16 value) => checked((short)(-value._value));
 
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="int"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="int"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct Int32 : IBinaryInteger<Int32>
+public readonly partial struct SignedInt32 : IBinaryInt<SignedInt32>
 {
 	private readonly int _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Int32(int v) => this._value = v;
+	private SignedInt32(int v) => this._value = v;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Int32(int v) => new(v);
+	public static implicit operator SignedInt32(int v) => new(v);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator int(Int32 v) => v._value;
+	public static implicit operator int(SignedInt32 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(Int32 other) => this == other;
+	public bool Equals(SignedInt32 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -801,7 +801,7 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(Int32 other) => this._value.CompareTo(other);
+	public int CompareTo(SignedInt32 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -819,7 +819,7 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 	public static DataType Type => DataType.RealInt32;
 
 	/// <inheritdoc/>
-	public static Int32 MachinePrecision => (int)1;
+	public static SignedInt32 MachinePrecision => (int)1;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(int);
@@ -828,87 +828,87 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static Int32 One => (int)1;
+	public static SignedInt32 One => (int)1;
 
 	/// <inheritdoc/>
-	public static Int32 Zero => (int)0;
+	public static SignedInt32 Zero => (int)0;
 	
 	/// <inheritdoc/>
-	public static Int32 AdditiveIdentity => (int)0;
+	public static SignedInt32 AdditiveIdentity => (int)0;
 
 	/// <inheritdoc/>
-	public static Int32 MultiplicativeIdentity => (int)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(Int32 value) => true;
+	public static SignedInt32 MultiplicativeIdentity => (int)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(Int32 value) => false;
+	public static bool IsReal(SignedInt32 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(Int32 value) => false;
+	public static bool IsComplex(SignedInt32 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(SignedInt32 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(Int32 value) => true;
+	public static bool IsFinite(SignedInt32 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(Int32 value) => false;
+	public static bool IsNaN(SignedInt32 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(Int32 value) => true;
+	public static bool IsInteger(SignedInt32 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(Int32 value) => value._value == (int)0;
+	public static bool IsZero(SignedInt32 value) => value._value == (int)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Conjugate(Int32 value) => value;
+	public static SignedInt32 Conjugate(SignedInt32 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 MinMagnitudeNumber(Int32 x, Int32 y) => int.MaxMagnitude(x, y) == int.Abs(x) ? x : y;
+	public static SignedInt32 MinMagnitudeNumber(SignedInt32 x, SignedInt32 y) => int.MaxMagnitude(x, y) == int.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 MaxMagnitudeNumber(Int32 x, Int32 y) => int.MinMagnitude(x, y) == int.Abs(x) ? x : y;
+	public static SignedInt32 MaxMagnitudeNumber(SignedInt32 x, SignedInt32 y) => int.MinMagnitude(x, y) == int.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(Int32 value) => int.IsNegative(value);
+	public static bool IsNegative(SignedInt32 value) => int.IsNegative(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(Int32 value) => int.IsPositive(value);
+	public static bool IsPositive(SignedInt32 value) => int.IsPositive(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Abs(Int32 value) => int.Abs(value);
+	public static SignedInt32 Abs(SignedInt32 value) => int.Abs(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 MaxMagnitude(Int32 x, Int32 y) => int.MaxMagnitude(x, y);
+	public static SignedInt32 MaxMagnitude(SignedInt32 x, SignedInt32 y) => int.MaxMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 MinMagnitude(Int32 x, Int32 y) => int.MinMagnitude(x, y);
+	public static SignedInt32 MinMagnitude(SignedInt32 x, SignedInt32 y) => int.MinMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 CopySign(Int32 value, Int32 sign) => int.CopySign(value, sign);
+	public static SignedInt32 CopySign(SignedInt32 value, SignedInt32 sign) => int.CopySign(value, sign);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Sign(Int32 value) => (int)int.Sign(value);
+	public static SignedInt32 Sign(SignedInt32 value) => (int)int.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out Int32 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out SignedInt32 result)
 	{
 		bool success = int.TryParse(s, provider, out var res);
 		result = res;
@@ -917,7 +917,7 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Int32 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out SignedInt32 result)
 	{
 		bool success = int.TryParse(s, provider, out var res);
 		result = res;
@@ -926,7 +926,7 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Int32 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out SignedInt32 result)
 	{
 		bool success = int.TryParse(s, style, provider, out var res);
 		result = res;
@@ -935,7 +935,7 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Int32 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out SignedInt32 result)
 	{
 		bool success = int.TryParse(s, style, provider, out var res);
 		result = res;
@@ -944,144 +944,144 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(Int32 value) => int.IsPow2(value);
+	public static bool IsPow2(SignedInt32 value) => int.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Log2(Int32 value) => int.Log2(value);
+	public static SignedInt32 Log2(SignedInt32 value) => int.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (Int32 Quotient, Int32 Remainder) DivRem(Int32 left, Int32 right) => int.DivRem(left, right);
+	public static (SignedInt32 Quotient, SignedInt32 Remainder) DivRem(SignedInt32 left, SignedInt32 right) => int.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 RotateLeft(Int32 value, int rotateAmount) => int.RotateLeft(value, rotateAmount);
+	public static SignedInt32 RotateLeft(SignedInt32 value, int rotateAmount) => int.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 RotateRight(Int32 value, int rotateAmount) => int.RotateRight(value, rotateAmount);
+	public static SignedInt32 RotateRight(SignedInt32 value, int rotateAmount) => int.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 PopCount(Int32 value) => int.PopCount(value);
+	public static SignedInt32 PopCount(SignedInt32 value) => int.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 LeadingZeroCount(Int32 value) => int.LeadingZeroCount(value);
+	public static SignedInt32 LeadingZeroCount(SignedInt32 value) => int.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 TrailingZeroCount(Int32 value) => int.TrailingZeroCount(value);
+	public static SignedInt32 TrailingZeroCount(SignedInt32 value) => int.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(Int32 value) => int.IsOddInteger(value);
+	public static bool IsOddInteger(SignedInt32 value) => int.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Max(Int32 x, Int32 y) => int.Max(x, y);
+	public static SignedInt32 Max(SignedInt32 x, SignedInt32 y) => int.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Min(Int32 x, Int32 y) => int.Min(x, y);
+	public static SignedInt32 Min(SignedInt32 x, SignedInt32 y) => int.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Parse(string s, IFormatProvider? provider) => int.Parse(s, provider);
+	public static SignedInt32 Parse(string s, IFormatProvider? provider) => int.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => int.Parse(s, provider);
+	public static SignedInt32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => int.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Parse(string s, NumberStyles style, IFormatProvider? provider) => int.Parse(s, style, provider);
+	public static SignedInt32 Parse(string s, NumberStyles style, IFormatProvider? provider) => int.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => int.Parse(s, style, provider);
+	public static SignedInt32 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => int.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(Int32 left, Int32 right) => (left._value < right._value);
+	public static bool operator <(SignedInt32 left, SignedInt32 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(Int32 left, Int32 right) => (left._value <= right._value);
+	public static bool operator <=(SignedInt32 left, SignedInt32 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(Int32 left, Int32 right) => (left._value > right._value);
+	public static bool operator >(SignedInt32 left, SignedInt32 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(Int32 left, Int32 right) => (left._value >= right._value);
+	public static bool operator >=(SignedInt32 left, SignedInt32 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(Int32 left, Int32 right) => (left._value == right._value);
+	public static bool operator ==(SignedInt32 left, SignedInt32 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(Int32 left, Int32 right) => (left._value != right._value);
+	public static bool operator !=(SignedInt32 left, SignedInt32 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator +(Int32 left, Int32 right) => (int)(left._value + right._value);
+	public static SignedInt32 operator +(SignedInt32 left, SignedInt32 right) => (int)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator -(Int32 left, Int32 right) => (int)(left._value - right._value);
+	public static SignedInt32 operator -(SignedInt32 left, SignedInt32 right) => (int)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator *(Int32 left, Int32 right) => (int)(left._value * right._value);
+	public static SignedInt32 operator *(SignedInt32 left, SignedInt32 right) => (int)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator /(Int32 left, Int32 right) => (int)(left._value / right._value);
+	public static SignedInt32 operator /(SignedInt32 left, SignedInt32 right) => (int)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator -(Int32 value) => (int)(-value._value);
+	public static SignedInt32 operator -(SignedInt32 value) => (int)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator +(Int32 value) => (int)(+value._value);
+	public static SignedInt32 operator +(SignedInt32 value) => (int)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator &(Int32 left, Int32 right) => (int)(left._value & right._value);
+	public static SignedInt32 operator &(SignedInt32 left, SignedInt32 right) => (int)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator |(Int32 left, Int32 right) => (int)(left._value | right._value);
+	public static SignedInt32 operator |(SignedInt32 left, SignedInt32 right) => (int)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator ^(Int32 left, Int32 right) => (int)(left._value ^ right._value);
+	public static SignedInt32 operator ^(SignedInt32 left, SignedInt32 right) => (int)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator ~(Int32 value) => (int)(~value._value);
+	public static SignedInt32 operator ~(SignedInt32 value) => (int)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator %(Int32 left, Int32 right) => (int)(left._value % right._value);
+	public static SignedInt32 operator %(SignedInt32 left, SignedInt32 right) => (int)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator <<(Int32 value, int shiftAmount) => (int)(value._value << shiftAmount);
+	public static SignedInt32 operator <<(SignedInt32 value, int shiftAmount) => (int)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator >>(Int32 value, int shiftAmount) => (int)(value._value >> shiftAmount);
+	public static SignedInt32 operator >>(SignedInt32 value, int shiftAmount) => (int)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator ++(Int32 value)
+	public static SignedInt32 operator ++(SignedInt32 value)
 	{
 		var v = value._value;
 		++v;
@@ -1090,7 +1090,7 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int32 operator --(Int32 value)
+	public static SignedInt32 operator --(SignedInt32 value)
 	{
 		var v = value._value;
 		--v;
@@ -1099,7 +1099,7 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int32 IIncrementOperators<Int32>.op_CheckedIncrement(Int32 value)
+	static SignedInt32 IIncrementOperators<SignedInt32>.op_CheckedIncrement(SignedInt32 value)
 	{
 		var v = value._value;
 		v = checked((int)(v + 1));
@@ -1108,7 +1108,7 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int32 IDecrementOperators<Int32>.op_CheckedDecrement(Int32 value)
+	static SignedInt32 IDecrementOperators<SignedInt32>.op_CheckedDecrement(SignedInt32 value)
 	{
 		var v = value._value;
 		v = checked((int)(v - 1));
@@ -1117,52 +1117,52 @@ public readonly partial struct Int32 : IBinaryInteger<Int32>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int32 IShiftOperators<Int32, Int32>.op_UnsignedRightShift(Int32 value, int shiftAmount) => (int)((uint)value._value >> shiftAmount);
+	static SignedInt32 IShiftOperators<SignedInt32, SignedInt32>.op_UnsignedRightShift(SignedInt32 value, int shiftAmount) => (int)((uint)value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int32 IAdditionOperators<Int32, Int32, Int32>.op_CheckedAddition(Int32 left, Int32 right) => checked((int)(left._value + right._value));
+	static SignedInt32 IAdditionOperators<SignedInt32, SignedInt32, SignedInt32>.op_CheckedAddition(SignedInt32 left, SignedInt32 right) => checked((int)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int32 ISubtractionOperators<Int32, Int32, Int32>.op_CheckedSubtraction(Int32 left, Int32 right) => checked((int)(left._value - right._value));
+	static SignedInt32 ISubtractionOperators<SignedInt32, SignedInt32, SignedInt32>.op_CheckedSubtraction(SignedInt32 left, SignedInt32 right) => checked((int)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int32 IMultiplyOperators<Int32, Int32, Int32>.op_CheckedMultiply(Int32 left, Int32 right) => checked((int)(left._value * right._value));
+	static SignedInt32 IMultiplyOperators<SignedInt32, SignedInt32, SignedInt32>.op_CheckedMultiply(SignedInt32 left, SignedInt32 right) => checked((int)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int32 IDivisionOperators<Int32, Int32, Int32>.op_CheckedDivision(Int32 left, Int32 right) => checked((int)(left._value / right._value));
+	static SignedInt32 IDivisionOperators<SignedInt32, SignedInt32, SignedInt32>.op_CheckedDivision(SignedInt32 left, SignedInt32 right) => checked((int)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int32 IUnaryNegationOperators<Int32, Int32>.op_CheckedUnaryNegation(Int32 value) => checked((int)(-value._value));
+	static SignedInt32 IUnaryNegationOperators<SignedInt32, SignedInt32>.op_CheckedUnaryNegation(SignedInt32 value) => checked((int)(-value._value));
 
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="long"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="long"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct Int64 : IBinaryInteger<Int64>
+public readonly partial struct SignedInt64 : IBinaryInt<SignedInt64>
 {
 	private readonly long _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Int64(long v) => this._value = v;
+	private SignedInt64(long v) => this._value = v;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Int64(long v) => new(v);
+	public static implicit operator SignedInt64(long v) => new(v);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator long(Int64 v) => v._value;
+	public static implicit operator long(SignedInt64 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(Int64 other) => this == other;
+	public bool Equals(SignedInt64 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1178,7 +1178,7 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(Int64 other) => this._value.CompareTo(other);
+	public int CompareTo(SignedInt64 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1196,7 +1196,7 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 	public static DataType Type => DataType.RealInt64;
 
 	/// <inheritdoc/>
-	public static Int64 MachinePrecision => (long)1;
+	public static SignedInt64 MachinePrecision => (long)1;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(long);
@@ -1205,87 +1205,87 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static Int64 One => (long)1;
+	public static SignedInt64 One => (long)1;
 
 	/// <inheritdoc/>
-	public static Int64 Zero => (long)0;
+	public static SignedInt64 Zero => (long)0;
 	
 	/// <inheritdoc/>
-	public static Int64 AdditiveIdentity => (long)0;
+	public static SignedInt64 AdditiveIdentity => (long)0;
 
 	/// <inheritdoc/>
-	public static Int64 MultiplicativeIdentity => (long)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(Int64 value) => true;
+	public static SignedInt64 MultiplicativeIdentity => (long)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(Int64 value) => false;
+	public static bool IsReal(SignedInt64 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(Int64 value) => false;
+	public static bool IsComplex(SignedInt64 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(SignedInt64 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(Int64 value) => true;
+	public static bool IsFinite(SignedInt64 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(Int64 value) => false;
+	public static bool IsNaN(SignedInt64 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(Int64 value) => true;
+	public static bool IsInteger(SignedInt64 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(Int64 value) => value._value == (long)0;
+	public static bool IsZero(SignedInt64 value) => value._value == (long)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Conjugate(Int64 value) => value;
+	public static SignedInt64 Conjugate(SignedInt64 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 MinMagnitudeNumber(Int64 x, Int64 y) => long.MaxMagnitude(x, y) == long.Abs(x) ? x : y;
+	public static SignedInt64 MinMagnitudeNumber(SignedInt64 x, SignedInt64 y) => long.MaxMagnitude(x, y) == long.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 MaxMagnitudeNumber(Int64 x, Int64 y) => long.MinMagnitude(x, y) == long.Abs(x) ? x : y;
+	public static SignedInt64 MaxMagnitudeNumber(SignedInt64 x, SignedInt64 y) => long.MinMagnitude(x, y) == long.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(Int64 value) => long.IsNegative(value);
+	public static bool IsNegative(SignedInt64 value) => long.IsNegative(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(Int64 value) => long.IsPositive(value);
+	public static bool IsPositive(SignedInt64 value) => long.IsPositive(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Abs(Int64 value) => long.Abs(value);
+	public static SignedInt64 Abs(SignedInt64 value) => long.Abs(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 MaxMagnitude(Int64 x, Int64 y) => long.MaxMagnitude(x, y);
+	public static SignedInt64 MaxMagnitude(SignedInt64 x, SignedInt64 y) => long.MaxMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 MinMagnitude(Int64 x, Int64 y) => long.MinMagnitude(x, y);
+	public static SignedInt64 MinMagnitude(SignedInt64 x, SignedInt64 y) => long.MinMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 CopySign(Int64 value, Int64 sign) => long.CopySign(value, sign);
+	public static SignedInt64 CopySign(SignedInt64 value, SignedInt64 sign) => long.CopySign(value, sign);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Sign(Int64 value) => (long)long.Sign(value);
+	public static SignedInt64 Sign(SignedInt64 value) => (long)long.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out Int64 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out SignedInt64 result)
 	{
 		bool success = long.TryParse(s, provider, out var res);
 		result = res;
@@ -1294,7 +1294,7 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Int64 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out SignedInt64 result)
 	{
 		bool success = long.TryParse(s, provider, out var res);
 		result = res;
@@ -1303,7 +1303,7 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Int64 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out SignedInt64 result)
 	{
 		bool success = long.TryParse(s, style, provider, out var res);
 		result = res;
@@ -1312,7 +1312,7 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Int64 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out SignedInt64 result)
 	{
 		bool success = long.TryParse(s, style, provider, out var res);
 		result = res;
@@ -1321,144 +1321,144 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(Int64 value) => long.IsPow2(value);
+	public static bool IsPow2(SignedInt64 value) => long.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Log2(Int64 value) => long.Log2(value);
+	public static SignedInt64 Log2(SignedInt64 value) => long.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (Int64 Quotient, Int64 Remainder) DivRem(Int64 left, Int64 right) => long.DivRem(left, right);
+	public static (SignedInt64 Quotient, SignedInt64 Remainder) DivRem(SignedInt64 left, SignedInt64 right) => long.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 RotateLeft(Int64 value, int rotateAmount) => long.RotateLeft(value, rotateAmount);
+	public static SignedInt64 RotateLeft(SignedInt64 value, int rotateAmount) => long.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 RotateRight(Int64 value, int rotateAmount) => long.RotateRight(value, rotateAmount);
+	public static SignedInt64 RotateRight(SignedInt64 value, int rotateAmount) => long.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 PopCount(Int64 value) => long.PopCount(value);
+	public static SignedInt64 PopCount(SignedInt64 value) => long.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 LeadingZeroCount(Int64 value) => long.LeadingZeroCount(value);
+	public static SignedInt64 LeadingZeroCount(SignedInt64 value) => long.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 TrailingZeroCount(Int64 value) => long.TrailingZeroCount(value);
+	public static SignedInt64 TrailingZeroCount(SignedInt64 value) => long.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(Int64 value) => long.IsOddInteger(value);
+	public static bool IsOddInteger(SignedInt64 value) => long.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Max(Int64 x, Int64 y) => long.Max(x, y);
+	public static SignedInt64 Max(SignedInt64 x, SignedInt64 y) => long.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Min(Int64 x, Int64 y) => long.Min(x, y);
+	public static SignedInt64 Min(SignedInt64 x, SignedInt64 y) => long.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Parse(string s, IFormatProvider? provider) => long.Parse(s, provider);
+	public static SignedInt64 Parse(string s, IFormatProvider? provider) => long.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => long.Parse(s, provider);
+	public static SignedInt64 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => long.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Parse(string s, NumberStyles style, IFormatProvider? provider) => long.Parse(s, style, provider);
+	public static SignedInt64 Parse(string s, NumberStyles style, IFormatProvider? provider) => long.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => long.Parse(s, style, provider);
+	public static SignedInt64 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => long.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(Int64 left, Int64 right) => (left._value < right._value);
+	public static bool operator <(SignedInt64 left, SignedInt64 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(Int64 left, Int64 right) => (left._value <= right._value);
+	public static bool operator <=(SignedInt64 left, SignedInt64 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(Int64 left, Int64 right) => (left._value > right._value);
+	public static bool operator >(SignedInt64 left, SignedInt64 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(Int64 left, Int64 right) => (left._value >= right._value);
+	public static bool operator >=(SignedInt64 left, SignedInt64 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(Int64 left, Int64 right) => (left._value == right._value);
+	public static bool operator ==(SignedInt64 left, SignedInt64 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(Int64 left, Int64 right) => (left._value != right._value);
+	public static bool operator !=(SignedInt64 left, SignedInt64 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator +(Int64 left, Int64 right) => (long)(left._value + right._value);
+	public static SignedInt64 operator +(SignedInt64 left, SignedInt64 right) => (long)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator -(Int64 left, Int64 right) => (long)(left._value - right._value);
+	public static SignedInt64 operator -(SignedInt64 left, SignedInt64 right) => (long)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator *(Int64 left, Int64 right) => (long)(left._value * right._value);
+	public static SignedInt64 operator *(SignedInt64 left, SignedInt64 right) => (long)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator /(Int64 left, Int64 right) => (long)(left._value / right._value);
+	public static SignedInt64 operator /(SignedInt64 left, SignedInt64 right) => (long)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator -(Int64 value) => (long)(-value._value);
+	public static SignedInt64 operator -(SignedInt64 value) => (long)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator +(Int64 value) => (long)(+value._value);
+	public static SignedInt64 operator +(SignedInt64 value) => (long)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator &(Int64 left, Int64 right) => (long)(left._value & right._value);
+	public static SignedInt64 operator &(SignedInt64 left, SignedInt64 right) => (long)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator |(Int64 left, Int64 right) => (long)(left._value | right._value);
+	public static SignedInt64 operator |(SignedInt64 left, SignedInt64 right) => (long)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator ^(Int64 left, Int64 right) => (long)(left._value ^ right._value);
+	public static SignedInt64 operator ^(SignedInt64 left, SignedInt64 right) => (long)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator ~(Int64 value) => (long)(~value._value);
+	public static SignedInt64 operator ~(SignedInt64 value) => (long)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator %(Int64 left, Int64 right) => (long)(left._value % right._value);
+	public static SignedInt64 operator %(SignedInt64 left, SignedInt64 right) => (long)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator <<(Int64 value, int shiftAmount) => (long)(value._value << shiftAmount);
+	public static SignedInt64 operator <<(SignedInt64 value, int shiftAmount) => (long)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator >>(Int64 value, int shiftAmount) => (long)(value._value >> shiftAmount);
+	public static SignedInt64 operator >>(SignedInt64 value, int shiftAmount) => (long)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator ++(Int64 value)
+	public static SignedInt64 operator ++(SignedInt64 value)
 	{
 		var v = value._value;
 		++v;
@@ -1467,7 +1467,7 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int64 operator --(Int64 value)
+	public static SignedInt64 operator --(SignedInt64 value)
 	{
 		var v = value._value;
 		--v;
@@ -1476,7 +1476,7 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int64 IIncrementOperators<Int64>.op_CheckedIncrement(Int64 value)
+	static SignedInt64 IIncrementOperators<SignedInt64>.op_CheckedIncrement(SignedInt64 value)
 	{
 		var v = value._value;
 		v = checked((long)(v + 1));
@@ -1485,7 +1485,7 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int64 IDecrementOperators<Int64>.op_CheckedDecrement(Int64 value)
+	static SignedInt64 IDecrementOperators<SignedInt64>.op_CheckedDecrement(SignedInt64 value)
 	{
 		var v = value._value;
 		v = checked((long)(v - 1));
@@ -1494,52 +1494,52 @@ public readonly partial struct Int64 : IBinaryInteger<Int64>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int64 IShiftOperators<Int64, Int64>.op_UnsignedRightShift(Int64 value, int shiftAmount) => (long)((ulong)value._value >> shiftAmount);
+	static SignedInt64 IShiftOperators<SignedInt64, SignedInt64>.op_UnsignedRightShift(SignedInt64 value, int shiftAmount) => (long)((ulong)value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int64 IAdditionOperators<Int64, Int64, Int64>.op_CheckedAddition(Int64 left, Int64 right) => checked((long)(left._value + right._value));
+	static SignedInt64 IAdditionOperators<SignedInt64, SignedInt64, SignedInt64>.op_CheckedAddition(SignedInt64 left, SignedInt64 right) => checked((long)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int64 ISubtractionOperators<Int64, Int64, Int64>.op_CheckedSubtraction(Int64 left, Int64 right) => checked((long)(left._value - right._value));
+	static SignedInt64 ISubtractionOperators<SignedInt64, SignedInt64, SignedInt64>.op_CheckedSubtraction(SignedInt64 left, SignedInt64 right) => checked((long)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int64 IMultiplyOperators<Int64, Int64, Int64>.op_CheckedMultiply(Int64 left, Int64 right) => checked((long)(left._value * right._value));
+	static SignedInt64 IMultiplyOperators<SignedInt64, SignedInt64, SignedInt64>.op_CheckedMultiply(SignedInt64 left, SignedInt64 right) => checked((long)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int64 IDivisionOperators<Int64, Int64, Int64>.op_CheckedDivision(Int64 left, Int64 right) => checked((long)(left._value / right._value));
+	static SignedInt64 IDivisionOperators<SignedInt64, SignedInt64, SignedInt64>.op_CheckedDivision(SignedInt64 left, SignedInt64 right) => checked((long)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int64 IUnaryNegationOperators<Int64, Int64>.op_CheckedUnaryNegation(Int64 value) => checked((long)(-value._value));
+	static SignedInt64 IUnaryNegationOperators<SignedInt64, SignedInt64>.op_CheckedUnaryNegation(SignedInt64 value) => checked((long)(-value._value));
 
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="System.Int128"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="Int128"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct Int128 : IBinaryInteger<Int128>
+public readonly partial struct SignedInt128 : IBinaryInt<SignedInt128>
 {
-	private readonly System.Int128 _value;
+	private readonly Int128 _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Int128(System.Int128 v) => this._value = v;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Int128(System.Int128 v) => new(v);
+	private SignedInt128(Int128 v) => this._value = v;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator System.Int128(Int128 v) => v._value;
+	public static implicit operator SignedInt128(Int128 v) => new(v);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(Int128 other) => this == other;
+	public static implicit operator Int128(SignedInt128 v) => v._value;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool Equals(SignedInt128 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1555,7 +1555,7 @@ public readonly partial struct Int128 : IBinaryInteger<Int128>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(Int128 other) => this._value.CompareTo(other);
+	public int CompareTo(SignedInt128 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1573,269 +1573,269 @@ public readonly partial struct Int128 : IBinaryInteger<Int128>
 	public static DataType Type => DataType.RealInt128;
 
 	/// <inheritdoc/>
-	public static Int128 MachinePrecision => (System.Int128)1;
+	public static SignedInt128 MachinePrecision => (Int128)1;
 
 	/// <inheritdoc/>
-	public static unsafe int Size => sizeof(System.Int128);
+	public static unsafe int Size => sizeof(Int128);
 
 	/// <inheritdoc/>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static Int128 One => (System.Int128)1;
+	public static SignedInt128 One => (Int128)1;
 
 	/// <inheritdoc/>
-	public static Int128 Zero => (System.Int128)0;
+	public static SignedInt128 Zero => (Int128)0;
 	
 	/// <inheritdoc/>
-	public static Int128 AdditiveIdentity => (System.Int128)0;
+	public static SignedInt128 AdditiveIdentity => (Int128)0;
 
 	/// <inheritdoc/>
-	public static Int128 MultiplicativeIdentity => (System.Int128)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(Int128 value) => true;
+	public static SignedInt128 MultiplicativeIdentity => (Int128)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(Int128 value) => false;
+	public static bool IsReal(SignedInt128 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(Int128 value) => false;
+	public static bool IsComplex(SignedInt128 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(SignedInt128 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(Int128 value) => true;
+	public static bool IsFinite(SignedInt128 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(Int128 value) => false;
+	public static bool IsNaN(SignedInt128 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(Int128 value) => true;
+	public static bool IsInteger(SignedInt128 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(Int128 value) => value._value == (System.Int128)0;
+	public static bool IsZero(SignedInt128 value) => value._value == (Int128)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Conjugate(Int128 value) => value;
+	public static SignedInt128 Conjugate(SignedInt128 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 MinMagnitudeNumber(Int128 x, Int128 y) => System.Int128.MaxMagnitude(x, y) == System.Int128.Abs(x) ? x : y;
+	public static SignedInt128 MinMagnitudeNumber(SignedInt128 x, SignedInt128 y) => Int128.MaxMagnitude(x, y) == Int128.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 MaxMagnitudeNumber(Int128 x, Int128 y) => System.Int128.MinMagnitude(x, y) == System.Int128.Abs(x) ? x : y;
+	public static SignedInt128 MaxMagnitudeNumber(SignedInt128 x, SignedInt128 y) => Int128.MinMagnitude(x, y) == Int128.Abs(x) ? x : y;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(Int128 value) => System.Int128.IsNegative(value);
+	public static bool IsNegative(SignedInt128 value) => Int128.IsNegative(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(Int128 value) => System.Int128.IsPositive(value);
+	public static bool IsPositive(SignedInt128 value) => Int128.IsPositive(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Abs(Int128 value) => System.Int128.Abs(value);
+	public static SignedInt128 Abs(SignedInt128 value) => Int128.Abs(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 MaxMagnitude(Int128 x, Int128 y) => System.Int128.MaxMagnitude(x, y);
+	public static SignedInt128 MaxMagnitude(SignedInt128 x, SignedInt128 y) => Int128.MaxMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 MinMagnitude(Int128 x, Int128 y) => System.Int128.MinMagnitude(x, y);
+	public static SignedInt128 MinMagnitude(SignedInt128 x, SignedInt128 y) => Int128.MinMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 CopySign(Int128 value, Int128 sign) => System.Int128.CopySign(value, sign);
+	public static SignedInt128 CopySign(SignedInt128 value, SignedInt128 sign) => Int128.CopySign(value, sign);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Sign(Int128 value) => (System.Int128)System.Int128.Sign(value);
+	public static SignedInt128 Sign(SignedInt128 value) => (Int128)Int128.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out Int128 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out SignedInt128 result)
 	{
-		bool success = System.Int128.TryParse(s, provider, out var res);
+		bool success = Int128.TryParse(s, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Int128 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out SignedInt128 result)
 	{
-		bool success = System.Int128.TryParse(s, provider, out var res);
+		bool success = Int128.TryParse(s, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Int128 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out SignedInt128 result)
 	{
-		bool success = System.Int128.TryParse(s, style, provider, out var res);
+		bool success = Int128.TryParse(s, style, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Int128 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out SignedInt128 result)
 	{
-		bool success = System.Int128.TryParse(s, style, provider, out var res);
+		bool success = Int128.TryParse(s, style, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(Int128 value) => System.Int128.IsPow2(value);
+	public static bool IsPow2(SignedInt128 value) => Int128.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Log2(Int128 value) => System.Int128.Log2(value);
+	public static SignedInt128 Log2(SignedInt128 value) => Int128.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (Int128 Quotient, Int128 Remainder) DivRem(Int128 left, Int128 right) => System.Int128.DivRem(left, right);
+	public static (SignedInt128 Quotient, SignedInt128 Remainder) DivRem(SignedInt128 left, SignedInt128 right) => Int128.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 RotateLeft(Int128 value, int rotateAmount) => System.Int128.RotateLeft(value, rotateAmount);
+	public static SignedInt128 RotateLeft(SignedInt128 value, int rotateAmount) => Int128.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 RotateRight(Int128 value, int rotateAmount) => System.Int128.RotateRight(value, rotateAmount);
+	public static SignedInt128 RotateRight(SignedInt128 value, int rotateAmount) => Int128.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 PopCount(Int128 value) => System.Int128.PopCount(value);
+	public static SignedInt128 PopCount(SignedInt128 value) => Int128.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 LeadingZeroCount(Int128 value) => System.Int128.LeadingZeroCount(value);
+	public static SignedInt128 LeadingZeroCount(SignedInt128 value) => Int128.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 TrailingZeroCount(Int128 value) => System.Int128.TrailingZeroCount(value);
+	public static SignedInt128 TrailingZeroCount(SignedInt128 value) => Int128.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(Int128 value) => System.Int128.IsOddInteger(value);
+	public static bool IsOddInteger(SignedInt128 value) => Int128.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Max(Int128 x, Int128 y) => System.Int128.Max(x, y);
+	public static SignedInt128 Max(SignedInt128 x, SignedInt128 y) => Int128.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Min(Int128 x, Int128 y) => System.Int128.Min(x, y);
+	public static SignedInt128 Min(SignedInt128 x, SignedInt128 y) => Int128.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Parse(string s, IFormatProvider? provider) => System.Int128.Parse(s, provider);
+	public static SignedInt128 Parse(string s, IFormatProvider? provider) => Int128.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => System.Int128.Parse(s, provider);
+	public static SignedInt128 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => Int128.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Parse(string s, NumberStyles style, IFormatProvider? provider) => System.Int128.Parse(s, style, provider);
+	public static SignedInt128 Parse(string s, NumberStyles style, IFormatProvider? provider) => Int128.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => System.Int128.Parse(s, style, provider);
+	public static SignedInt128 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => Int128.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(Int128 left, Int128 right) => (left._value < right._value);
+	public static bool operator <(SignedInt128 left, SignedInt128 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(Int128 left, Int128 right) => (left._value <= right._value);
+	public static bool operator <=(SignedInt128 left, SignedInt128 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(Int128 left, Int128 right) => (left._value > right._value);
+	public static bool operator >(SignedInt128 left, SignedInt128 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(Int128 left, Int128 right) => (left._value >= right._value);
+	public static bool operator >=(SignedInt128 left, SignedInt128 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(Int128 left, Int128 right) => (left._value == right._value);
+	public static bool operator ==(SignedInt128 left, SignedInt128 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(Int128 left, Int128 right) => (left._value != right._value);
+	public static bool operator !=(SignedInt128 left, SignedInt128 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator +(Int128 left, Int128 right) => (System.Int128)(left._value + right._value);
+	public static SignedInt128 operator +(SignedInt128 left, SignedInt128 right) => (Int128)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator -(Int128 left, Int128 right) => (System.Int128)(left._value - right._value);
+	public static SignedInt128 operator -(SignedInt128 left, SignedInt128 right) => (Int128)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator *(Int128 left, Int128 right) => (System.Int128)(left._value * right._value);
+	public static SignedInt128 operator *(SignedInt128 left, SignedInt128 right) => (Int128)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator /(Int128 left, Int128 right) => (System.Int128)(left._value / right._value);
+	public static SignedInt128 operator /(SignedInt128 left, SignedInt128 right) => (Int128)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator -(Int128 value) => (System.Int128)(-value._value);
+	public static SignedInt128 operator -(SignedInt128 value) => (Int128)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator +(Int128 value) => (System.Int128)(+value._value);
+	public static SignedInt128 operator +(SignedInt128 value) => (Int128)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator &(Int128 left, Int128 right) => (System.Int128)(left._value & right._value);
+	public static SignedInt128 operator &(SignedInt128 left, SignedInt128 right) => (Int128)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator |(Int128 left, Int128 right) => (System.Int128)(left._value | right._value);
+	public static SignedInt128 operator |(SignedInt128 left, SignedInt128 right) => (Int128)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator ^(Int128 left, Int128 right) => (System.Int128)(left._value ^ right._value);
+	public static SignedInt128 operator ^(SignedInt128 left, SignedInt128 right) => (Int128)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator ~(Int128 value) => (System.Int128)(~value._value);
+	public static SignedInt128 operator ~(SignedInt128 value) => (Int128)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator %(Int128 left, Int128 right) => (System.Int128)(left._value % right._value);
+	public static SignedInt128 operator %(SignedInt128 left, SignedInt128 right) => (Int128)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator <<(Int128 value, int shiftAmount) => (System.Int128)(value._value << shiftAmount);
+	public static SignedInt128 operator <<(SignedInt128 value, int shiftAmount) => (Int128)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator >>(Int128 value, int shiftAmount) => (System.Int128)(value._value >> shiftAmount);
+	public static SignedInt128 operator >>(SignedInt128 value, int shiftAmount) => (Int128)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator ++(Int128 value)
+	public static SignedInt128 operator ++(SignedInt128 value)
 	{
 		var v = value._value;
 		++v;
@@ -1844,7 +1844,7 @@ public readonly partial struct Int128 : IBinaryInteger<Int128>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Int128 operator --(Int128 value)
+	public static SignedInt128 operator --(SignedInt128 value)
 	{
 		var v = value._value;
 		--v;
@@ -1853,70 +1853,70 @@ public readonly partial struct Int128 : IBinaryInteger<Int128>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int128 IIncrementOperators<Int128>.op_CheckedIncrement(Int128 value)
+	static SignedInt128 IIncrementOperators<SignedInt128>.op_CheckedIncrement(SignedInt128 value)
 	{
 		var v = value._value;
-		v = checked((System.Int128)(v + 1));
+		v = checked((Int128)(v + 1));
 		return v;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int128 IDecrementOperators<Int128>.op_CheckedDecrement(Int128 value)
+	static SignedInt128 IDecrementOperators<SignedInt128>.op_CheckedDecrement(SignedInt128 value)
 	{
 		var v = value._value;
-		v = checked((System.Int128)(v - 1));
+		v = checked((Int128)(v - 1));
 		return v;
 	}
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int128 IShiftOperators<Int128, Int128>.op_UnsignedRightShift(Int128 value, int shiftAmount) => (System.Int128)((System.UInt128)value._value >> shiftAmount);
+	static SignedInt128 IShiftOperators<SignedInt128, SignedInt128>.op_UnsignedRightShift(SignedInt128 value, int shiftAmount) => (Int128)((UInt128)value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int128 IAdditionOperators<Int128, Int128, Int128>.op_CheckedAddition(Int128 left, Int128 right) => checked((System.Int128)(left._value + right._value));
+	static SignedInt128 IAdditionOperators<SignedInt128, SignedInt128, SignedInt128>.op_CheckedAddition(SignedInt128 left, SignedInt128 right) => checked((Int128)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int128 ISubtractionOperators<Int128, Int128, Int128>.op_CheckedSubtraction(Int128 left, Int128 right) => checked((System.Int128)(left._value - right._value));
+	static SignedInt128 ISubtractionOperators<SignedInt128, SignedInt128, SignedInt128>.op_CheckedSubtraction(SignedInt128 left, SignedInt128 right) => checked((Int128)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int128 IMultiplyOperators<Int128, Int128, Int128>.op_CheckedMultiply(Int128 left, Int128 right) => checked((System.Int128)(left._value * right._value));
+	static SignedInt128 IMultiplyOperators<SignedInt128, SignedInt128, SignedInt128>.op_CheckedMultiply(SignedInt128 left, SignedInt128 right) => checked((Int128)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int128 IDivisionOperators<Int128, Int128, Int128>.op_CheckedDivision(Int128 left, Int128 right) => checked((System.Int128)(left._value / right._value));
+	static SignedInt128 IDivisionOperators<SignedInt128, SignedInt128, SignedInt128>.op_CheckedDivision(SignedInt128 left, SignedInt128 right) => checked((Int128)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Int128 IUnaryNegationOperators<Int128, Int128>.op_CheckedUnaryNegation(Int128 value) => checked((System.Int128)(-value._value));
+	static SignedInt128 IUnaryNegationOperators<SignedInt128, SignedInt128>.op_CheckedUnaryNegation(SignedInt128 value) => checked((Int128)(-value._value));
 
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="byte"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="byte"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct UInt8 : IBinaryInteger<UInt8>
+public readonly partial struct UnsignedInt8 : IBinaryInt<UnsignedInt8>
 {
 	private readonly byte _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private UInt8(byte v) => this._value = v;
+	private UnsignedInt8(byte v) => this._value = v;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator UInt8(byte v) => new(v);
+	public static implicit operator UnsignedInt8(byte v) => new(v);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator byte(UInt8 v) => v._value;
+	public static implicit operator byte(UnsignedInt8 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(UInt8 other) => this == other;
+	public bool Equals(UnsignedInt8 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1932,7 +1932,7 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(UInt8 other) => this._value.CompareTo(other);
+	public int CompareTo(UnsignedInt8 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1950,7 +1950,7 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 	public static DataType Type => DataType.RealUInt8;
 
 	/// <inheritdoc/>
-	public static UInt8 MachinePrecision => (byte)1;
+	public static UnsignedInt8 MachinePrecision => (byte)1;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(byte);
@@ -1959,87 +1959,87 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static UInt8 One => (byte)1;
+	public static UnsignedInt8 One => (byte)1;
 
 	/// <inheritdoc/>
-	public static UInt8 Zero => (byte)0;
+	public static UnsignedInt8 Zero => (byte)0;
 	
 	/// <inheritdoc/>
-	public static UInt8 AdditiveIdentity => (byte)0;
+	public static UnsignedInt8 AdditiveIdentity => (byte)0;
 
 	/// <inheritdoc/>
-	public static UInt8 MultiplicativeIdentity => (byte)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(UInt8 value) => true;
+	public static UnsignedInt8 MultiplicativeIdentity => (byte)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(UInt8 value) => false;
+	public static bool IsReal(UnsignedInt8 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(UInt8 value) => false;
+	public static bool IsComplex(UnsignedInt8 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(UnsignedInt8 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(UInt8 value) => true;
+	public static bool IsFinite(UnsignedInt8 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(UInt8 value) => false;
+	public static bool IsNaN(UnsignedInt8 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(UInt8 value) => true;
+	public static bool IsInteger(UnsignedInt8 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(UInt8 value) => value._value == (byte)0;
+	public static bool IsZero(UnsignedInt8 value) => value._value == (byte)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Conjugate(UInt8 value) => value;
+	public static UnsignedInt8 Conjugate(UnsignedInt8 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 MinMagnitudeNumber(UInt8 x, UInt8 y) => byte.Max(x, y);
+	public static UnsignedInt8 MinMagnitudeNumber(UnsignedInt8 x, UnsignedInt8 y) => byte.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 MaxMagnitudeNumber(UInt8 x, UInt8 y) => byte.Min(x, y);
+	public static UnsignedInt8 MaxMagnitudeNumber(UnsignedInt8 x, UnsignedInt8 y) => byte.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(UInt8 value) => false;
+	public static bool IsNegative(UnsignedInt8 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(UInt8 value) => value._value != 0;
+	public static bool IsPositive(UnsignedInt8 value) => value._value != 0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Abs(UInt8 value) => value;
+	public static UnsignedInt8 Abs(UnsignedInt8 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 MaxMagnitude(UInt8 x, UInt8 y) => byte.Max(x, y);
+	public static UnsignedInt8 MaxMagnitude(UnsignedInt8 x, UnsignedInt8 y) => byte.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 MinMagnitude(UInt8 x, UInt8 y) => byte.Min(x, y);
+	public static UnsignedInt8 MinMagnitude(UnsignedInt8 x, UnsignedInt8 y) => byte.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 CopySign(UInt8 value, UInt8 sign) => value;
+	public static UnsignedInt8 CopySign(UnsignedInt8 value, UnsignedInt8 sign) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Sign(UInt8 value) => (byte)byte.Sign(value);
+	public static UnsignedInt8 Sign(UnsignedInt8 value) => (byte)byte.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out UInt8 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out UnsignedInt8 result)
 	{
 		bool success = byte.TryParse(s, provider, out var res);
 		result = res;
@@ -2048,7 +2048,7 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UInt8 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UnsignedInt8 result)
 	{
 		bool success = byte.TryParse(s, provider, out var res);
 		result = res;
@@ -2057,7 +2057,7 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UInt8 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UnsignedInt8 result)
 	{
 		bool success = byte.TryParse(s, style, provider, out var res);
 		result = res;
@@ -2066,7 +2066,7 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UInt8 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UnsignedInt8 result)
 	{
 		bool success = byte.TryParse(s, style, provider, out var res);
 		result = res;
@@ -2075,144 +2075,144 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(UInt8 value) => byte.IsPow2(value);
+	public static bool IsPow2(UnsignedInt8 value) => byte.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Log2(UInt8 value) => byte.Log2(value);
+	public static UnsignedInt8 Log2(UnsignedInt8 value) => byte.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (UInt8 Quotient, UInt8 Remainder) DivRem(UInt8 left, UInt8 right) => byte.DivRem(left, right);
+	public static (UnsignedInt8 Quotient, UnsignedInt8 Remainder) DivRem(UnsignedInt8 left, UnsignedInt8 right) => byte.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 RotateLeft(UInt8 value, int rotateAmount) => byte.RotateLeft(value, rotateAmount);
+	public static UnsignedInt8 RotateLeft(UnsignedInt8 value, int rotateAmount) => byte.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 RotateRight(UInt8 value, int rotateAmount) => byte.RotateRight(value, rotateAmount);
+	public static UnsignedInt8 RotateRight(UnsignedInt8 value, int rotateAmount) => byte.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 PopCount(UInt8 value) => byte.PopCount(value);
+	public static UnsignedInt8 PopCount(UnsignedInt8 value) => byte.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 LeadingZeroCount(UInt8 value) => byte.LeadingZeroCount(value);
+	public static UnsignedInt8 LeadingZeroCount(UnsignedInt8 value) => byte.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 TrailingZeroCount(UInt8 value) => byte.TrailingZeroCount(value);
+	public static UnsignedInt8 TrailingZeroCount(UnsignedInt8 value) => byte.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(UInt8 value) => byte.IsOddInteger(value);
+	public static bool IsOddInteger(UnsignedInt8 value) => byte.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Max(UInt8 x, UInt8 y) => byte.Max(x, y);
+	public static UnsignedInt8 Max(UnsignedInt8 x, UnsignedInt8 y) => byte.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Min(UInt8 x, UInt8 y) => byte.Min(x, y);
+	public static UnsignedInt8 Min(UnsignedInt8 x, UnsignedInt8 y) => byte.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Parse(string s, IFormatProvider? provider) => byte.Parse(s, provider);
+	public static UnsignedInt8 Parse(string s, IFormatProvider? provider) => byte.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => byte.Parse(s, provider);
+	public static UnsignedInt8 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => byte.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Parse(string s, NumberStyles style, IFormatProvider? provider) => byte.Parse(s, style, provider);
+	public static UnsignedInt8 Parse(string s, NumberStyles style, IFormatProvider? provider) => byte.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => byte.Parse(s, style, provider);
+	public static UnsignedInt8 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => byte.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(UInt8 left, UInt8 right) => (left._value < right._value);
+	public static bool operator <(UnsignedInt8 left, UnsignedInt8 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(UInt8 left, UInt8 right) => (left._value <= right._value);
+	public static bool operator <=(UnsignedInt8 left, UnsignedInt8 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(UInt8 left, UInt8 right) => (left._value > right._value);
+	public static bool operator >(UnsignedInt8 left, UnsignedInt8 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(UInt8 left, UInt8 right) => (left._value >= right._value);
+	public static bool operator >=(UnsignedInt8 left, UnsignedInt8 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(UInt8 left, UInt8 right) => (left._value == right._value);
+	public static bool operator ==(UnsignedInt8 left, UnsignedInt8 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(UInt8 left, UInt8 right) => (left._value != right._value);
+	public static bool operator !=(UnsignedInt8 left, UnsignedInt8 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator +(UInt8 left, UInt8 right) => (byte)(left._value + right._value);
+	public static UnsignedInt8 operator +(UnsignedInt8 left, UnsignedInt8 right) => (byte)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator -(UInt8 left, UInt8 right) => (byte)(left._value - right._value);
+	public static UnsignedInt8 operator -(UnsignedInt8 left, UnsignedInt8 right) => (byte)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator *(UInt8 left, UInt8 right) => (byte)(left._value * right._value);
+	public static UnsignedInt8 operator *(UnsignedInt8 left, UnsignedInt8 right) => (byte)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator /(UInt8 left, UInt8 right) => (byte)(left._value / right._value);
+	public static UnsignedInt8 operator /(UnsignedInt8 left, UnsignedInt8 right) => (byte)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator -(UInt8 value) => (byte)(-value._value);
+	public static UnsignedInt8 operator -(UnsignedInt8 value) => (byte)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator +(UInt8 value) => (byte)(+value._value);
+	public static UnsignedInt8 operator +(UnsignedInt8 value) => (byte)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator &(UInt8 left, UInt8 right) => (byte)(left._value & right._value);
+	public static UnsignedInt8 operator &(UnsignedInt8 left, UnsignedInt8 right) => (byte)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator |(UInt8 left, UInt8 right) => (byte)(left._value | right._value);
+	public static UnsignedInt8 operator |(UnsignedInt8 left, UnsignedInt8 right) => (byte)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator ^(UInt8 left, UInt8 right) => (byte)(left._value ^ right._value);
+	public static UnsignedInt8 operator ^(UnsignedInt8 left, UnsignedInt8 right) => (byte)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator ~(UInt8 value) => (byte)(~value._value);
+	public static UnsignedInt8 operator ~(UnsignedInt8 value) => (byte)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator %(UInt8 left, UInt8 right) => (byte)(left._value % right._value);
+	public static UnsignedInt8 operator %(UnsignedInt8 left, UnsignedInt8 right) => (byte)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator <<(UInt8 value, int shiftAmount) => (byte)(value._value << shiftAmount);
+	public static UnsignedInt8 operator <<(UnsignedInt8 value, int shiftAmount) => (byte)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator >>(UInt8 value, int shiftAmount) => (byte)(value._value >> shiftAmount);
+	public static UnsignedInt8 operator >>(UnsignedInt8 value, int shiftAmount) => (byte)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator ++(UInt8 value)
+	public static UnsignedInt8 operator ++(UnsignedInt8 value)
 	{
 		var v = value._value;
 		++v;
@@ -2221,7 +2221,7 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt8 operator --(UInt8 value)
+	public static UnsignedInt8 operator --(UnsignedInt8 value)
 	{
 		var v = value._value;
 		--v;
@@ -2230,7 +2230,7 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt8 IIncrementOperators<UInt8>.op_CheckedIncrement(UInt8 value)
+	static UnsignedInt8 IIncrementOperators<UnsignedInt8>.op_CheckedIncrement(UnsignedInt8 value)
 	{
 		var v = value._value;
 		v = checked((byte)(v + 1));
@@ -2239,7 +2239,7 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt8 IDecrementOperators<UInt8>.op_CheckedDecrement(UInt8 value)
+	static UnsignedInt8 IDecrementOperators<UnsignedInt8>.op_CheckedDecrement(UnsignedInt8 value)
 	{
 		var v = value._value;
 		v = checked((byte)(v - 1));
@@ -2248,54 +2248,54 @@ public readonly partial struct UInt8 : IBinaryInteger<UInt8>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt8 IShiftOperators<UInt8, UInt8>.op_UnsignedRightShift(UInt8 value, int shiftAmount) => (byte)(value._value >> shiftAmount);
+	static UnsignedInt8 IShiftOperators<UnsignedInt8, UnsignedInt8>.op_UnsignedRightShift(UnsignedInt8 value, int shiftAmount) => (byte)(value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt8 IAdditionOperators<UInt8, UInt8, UInt8>.op_CheckedAddition(UInt8 left, UInt8 right) => checked((byte)(left._value + right._value));
+	static UnsignedInt8 IAdditionOperators<UnsignedInt8, UnsignedInt8, UnsignedInt8>.op_CheckedAddition(UnsignedInt8 left, UnsignedInt8 right) => checked((byte)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt8 ISubtractionOperators<UInt8, UInt8, UInt8>.op_CheckedSubtraction(UInt8 left, UInt8 right) => checked((byte)(left._value - right._value));
+	static UnsignedInt8 ISubtractionOperators<UnsignedInt8, UnsignedInt8, UnsignedInt8>.op_CheckedSubtraction(UnsignedInt8 left, UnsignedInt8 right) => checked((byte)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt8 IMultiplyOperators<UInt8, UInt8, UInt8>.op_CheckedMultiply(UInt8 left, UInt8 right) => checked((byte)(left._value * right._value));
+	static UnsignedInt8 IMultiplyOperators<UnsignedInt8, UnsignedInt8, UnsignedInt8>.op_CheckedMultiply(UnsignedInt8 left, UnsignedInt8 right) => checked((byte)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt8 IDivisionOperators<UInt8, UInt8, UInt8>.op_CheckedDivision(UInt8 left, UInt8 right) => checked((byte)(left._value / right._value));
+	static UnsignedInt8 IDivisionOperators<UnsignedInt8, UnsignedInt8, UnsignedInt8>.op_CheckedDivision(UnsignedInt8 left, UnsignedInt8 right) => checked((byte)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt8 IUnaryNegationOperators<UInt8, UInt8>.op_CheckedUnaryNegation(UInt8 value) => checked((byte)(-value._value));
+	static UnsignedInt8 IUnaryNegationOperators<UnsignedInt8, UnsignedInt8>.op_CheckedUnaryNegation(UnsignedInt8 value) => checked((byte)(-value._value));
 
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="ushort"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="ushort"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct UInt16 : IBinaryInteger<UInt16>
+public readonly partial struct UnsignedInt16 : IBinaryInt<UnsignedInt16>
 {
 	private readonly ushort _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private UInt16(ushort v) => this._value = v;
+	private UnsignedInt16(ushort v) => this._value = v;
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator UInt16(ushort v) => new(v);
+	public static implicit operator UnsignedInt16(ushort v) => new(v);
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator ushort(UInt16 v) => v._value;
+	public static implicit operator ushort(UnsignedInt16 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(UInt16 other) => this == other;
+	public bool Equals(UnsignedInt16 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2311,7 +2311,7 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(UInt16 other) => this._value.CompareTo(other);
+	public int CompareTo(UnsignedInt16 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2329,7 +2329,7 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 	public static DataType Type => DataType.RealUInt16;
 
 	/// <inheritdoc/>
-	public static UInt16 MachinePrecision => (ushort)1;
+	public static UnsignedInt16 MachinePrecision => (ushort)1;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(ushort);
@@ -2338,87 +2338,87 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static UInt16 One => (ushort)1;
+	public static UnsignedInt16 One => (ushort)1;
 
 	/// <inheritdoc/>
-	public static UInt16 Zero => (ushort)0;
+	public static UnsignedInt16 Zero => (ushort)0;
 	
 	/// <inheritdoc/>
-	public static UInt16 AdditiveIdentity => (ushort)0;
+	public static UnsignedInt16 AdditiveIdentity => (ushort)0;
 
 	/// <inheritdoc/>
-	public static UInt16 MultiplicativeIdentity => (ushort)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(UInt16 value) => true;
+	public static UnsignedInt16 MultiplicativeIdentity => (ushort)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(UInt16 value) => false;
+	public static bool IsReal(UnsignedInt16 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(UInt16 value) => false;
+	public static bool IsComplex(UnsignedInt16 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(UnsignedInt16 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(UInt16 value) => true;
+	public static bool IsFinite(UnsignedInt16 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(UInt16 value) => false;
+	public static bool IsNaN(UnsignedInt16 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(UInt16 value) => true;
+	public static bool IsInteger(UnsignedInt16 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(UInt16 value) => value._value == (ushort)0;
+	public static bool IsZero(UnsignedInt16 value) => value._value == (ushort)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Conjugate(UInt16 value) => value;
+	public static UnsignedInt16 Conjugate(UnsignedInt16 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 MinMagnitudeNumber(UInt16 x, UInt16 y) => ushort.Max(x, y);
+	public static UnsignedInt16 MinMagnitudeNumber(UnsignedInt16 x, UnsignedInt16 y) => ushort.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 MaxMagnitudeNumber(UInt16 x, UInt16 y) => ushort.Min(x, y);
+	public static UnsignedInt16 MaxMagnitudeNumber(UnsignedInt16 x, UnsignedInt16 y) => ushort.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(UInt16 value) => false;
+	public static bool IsNegative(UnsignedInt16 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(UInt16 value) => value._value != 0;
+	public static bool IsPositive(UnsignedInt16 value) => value._value != 0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Abs(UInt16 value) => value;
+	public static UnsignedInt16 Abs(UnsignedInt16 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 MaxMagnitude(UInt16 x, UInt16 y) => ushort.Max(x, y);
+	public static UnsignedInt16 MaxMagnitude(UnsignedInt16 x, UnsignedInt16 y) => ushort.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 MinMagnitude(UInt16 x, UInt16 y) => ushort.Min(x, y);
+	public static UnsignedInt16 MinMagnitude(UnsignedInt16 x, UnsignedInt16 y) => ushort.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 CopySign(UInt16 value, UInt16 sign) => value;
+	public static UnsignedInt16 CopySign(UnsignedInt16 value, UnsignedInt16 sign) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Sign(UInt16 value) => (ushort)ushort.Sign(value);
+	public static UnsignedInt16 Sign(UnsignedInt16 value) => (ushort)ushort.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out UInt16 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out UnsignedInt16 result)
 	{
 		bool success = ushort.TryParse(s, provider, out var res);
 		result = res;
@@ -2427,7 +2427,7 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UInt16 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UnsignedInt16 result)
 	{
 		bool success = ushort.TryParse(s, provider, out var res);
 		result = res;
@@ -2436,7 +2436,7 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UInt16 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UnsignedInt16 result)
 	{
 		bool success = ushort.TryParse(s, style, provider, out var res);
 		result = res;
@@ -2445,7 +2445,7 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UInt16 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UnsignedInt16 result)
 	{
 		bool success = ushort.TryParse(s, style, provider, out var res);
 		result = res;
@@ -2454,144 +2454,144 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(UInt16 value) => ushort.IsPow2(value);
+	public static bool IsPow2(UnsignedInt16 value) => ushort.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Log2(UInt16 value) => ushort.Log2(value);
+	public static UnsignedInt16 Log2(UnsignedInt16 value) => ushort.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (UInt16 Quotient, UInt16 Remainder) DivRem(UInt16 left, UInt16 right) => ushort.DivRem(left, right);
+	public static (UnsignedInt16 Quotient, UnsignedInt16 Remainder) DivRem(UnsignedInt16 left, UnsignedInt16 right) => ushort.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 RotateLeft(UInt16 value, int rotateAmount) => ushort.RotateLeft(value, rotateAmount);
+	public static UnsignedInt16 RotateLeft(UnsignedInt16 value, int rotateAmount) => ushort.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 RotateRight(UInt16 value, int rotateAmount) => ushort.RotateRight(value, rotateAmount);
+	public static UnsignedInt16 RotateRight(UnsignedInt16 value, int rotateAmount) => ushort.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 PopCount(UInt16 value) => ushort.PopCount(value);
+	public static UnsignedInt16 PopCount(UnsignedInt16 value) => ushort.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 LeadingZeroCount(UInt16 value) => ushort.LeadingZeroCount(value);
+	public static UnsignedInt16 LeadingZeroCount(UnsignedInt16 value) => ushort.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 TrailingZeroCount(UInt16 value) => ushort.TrailingZeroCount(value);
+	public static UnsignedInt16 TrailingZeroCount(UnsignedInt16 value) => ushort.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(UInt16 value) => ushort.IsOddInteger(value);
+	public static bool IsOddInteger(UnsignedInt16 value) => ushort.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Max(UInt16 x, UInt16 y) => ushort.Max(x, y);
+	public static UnsignedInt16 Max(UnsignedInt16 x, UnsignedInt16 y) => ushort.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Min(UInt16 x, UInt16 y) => ushort.Min(x, y);
+	public static UnsignedInt16 Min(UnsignedInt16 x, UnsignedInt16 y) => ushort.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Parse(string s, IFormatProvider? provider) => ushort.Parse(s, provider);
+	public static UnsignedInt16 Parse(string s, IFormatProvider? provider) => ushort.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => ushort.Parse(s, provider);
+	public static UnsignedInt16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => ushort.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Parse(string s, NumberStyles style, IFormatProvider? provider) => ushort.Parse(s, style, provider);
+	public static UnsignedInt16 Parse(string s, NumberStyles style, IFormatProvider? provider) => ushort.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => ushort.Parse(s, style, provider);
+	public static UnsignedInt16 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => ushort.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(UInt16 left, UInt16 right) => (left._value < right._value);
+	public static bool operator <(UnsignedInt16 left, UnsignedInt16 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(UInt16 left, UInt16 right) => (left._value <= right._value);
+	public static bool operator <=(UnsignedInt16 left, UnsignedInt16 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(UInt16 left, UInt16 right) => (left._value > right._value);
+	public static bool operator >(UnsignedInt16 left, UnsignedInt16 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(UInt16 left, UInt16 right) => (left._value >= right._value);
+	public static bool operator >=(UnsignedInt16 left, UnsignedInt16 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(UInt16 left, UInt16 right) => (left._value == right._value);
+	public static bool operator ==(UnsignedInt16 left, UnsignedInt16 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(UInt16 left, UInt16 right) => (left._value != right._value);
+	public static bool operator !=(UnsignedInt16 left, UnsignedInt16 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator +(UInt16 left, UInt16 right) => (ushort)(left._value + right._value);
+	public static UnsignedInt16 operator +(UnsignedInt16 left, UnsignedInt16 right) => (ushort)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator -(UInt16 left, UInt16 right) => (ushort)(left._value - right._value);
+	public static UnsignedInt16 operator -(UnsignedInt16 left, UnsignedInt16 right) => (ushort)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator *(UInt16 left, UInt16 right) => (ushort)(left._value * right._value);
+	public static UnsignedInt16 operator *(UnsignedInt16 left, UnsignedInt16 right) => (ushort)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator /(UInt16 left, UInt16 right) => (ushort)(left._value / right._value);
+	public static UnsignedInt16 operator /(UnsignedInt16 left, UnsignedInt16 right) => (ushort)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator -(UInt16 value) => (ushort)(-value._value);
+	public static UnsignedInt16 operator -(UnsignedInt16 value) => (ushort)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator +(UInt16 value) => (ushort)(+value._value);
+	public static UnsignedInt16 operator +(UnsignedInt16 value) => (ushort)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator &(UInt16 left, UInt16 right) => (ushort)(left._value & right._value);
+	public static UnsignedInt16 operator &(UnsignedInt16 left, UnsignedInt16 right) => (ushort)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator |(UInt16 left, UInt16 right) => (ushort)(left._value | right._value);
+	public static UnsignedInt16 operator |(UnsignedInt16 left, UnsignedInt16 right) => (ushort)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator ^(UInt16 left, UInt16 right) => (ushort)(left._value ^ right._value);
+	public static UnsignedInt16 operator ^(UnsignedInt16 left, UnsignedInt16 right) => (ushort)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator ~(UInt16 value) => (ushort)(~value._value);
+	public static UnsignedInt16 operator ~(UnsignedInt16 value) => (ushort)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator %(UInt16 left, UInt16 right) => (ushort)(left._value % right._value);
+	public static UnsignedInt16 operator %(UnsignedInt16 left, UnsignedInt16 right) => (ushort)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator <<(UInt16 value, int shiftAmount) => (ushort)(value._value << shiftAmount);
+	public static UnsignedInt16 operator <<(UnsignedInt16 value, int shiftAmount) => (ushort)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator >>(UInt16 value, int shiftAmount) => (ushort)(value._value >> shiftAmount);
+	public static UnsignedInt16 operator >>(UnsignedInt16 value, int shiftAmount) => (ushort)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator ++(UInt16 value)
+	public static UnsignedInt16 operator ++(UnsignedInt16 value)
 	{
 		var v = value._value;
 		++v;
@@ -2600,7 +2600,7 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt16 operator --(UInt16 value)
+	public static UnsignedInt16 operator --(UnsignedInt16 value)
 	{
 		var v = value._value;
 		--v;
@@ -2609,7 +2609,7 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt16 IIncrementOperators<UInt16>.op_CheckedIncrement(UInt16 value)
+	static UnsignedInt16 IIncrementOperators<UnsignedInt16>.op_CheckedIncrement(UnsignedInt16 value)
 	{
 		var v = value._value;
 		v = checked((ushort)(v + 1));
@@ -2618,7 +2618,7 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt16 IDecrementOperators<UInt16>.op_CheckedDecrement(UInt16 value)
+	static UnsignedInt16 IDecrementOperators<UnsignedInt16>.op_CheckedDecrement(UnsignedInt16 value)
 	{
 		var v = value._value;
 		v = checked((ushort)(v - 1));
@@ -2627,54 +2627,54 @@ public readonly partial struct UInt16 : IBinaryInteger<UInt16>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt16 IShiftOperators<UInt16, UInt16>.op_UnsignedRightShift(UInt16 value, int shiftAmount) => (ushort)(value._value >> shiftAmount);
+	static UnsignedInt16 IShiftOperators<UnsignedInt16, UnsignedInt16>.op_UnsignedRightShift(UnsignedInt16 value, int shiftAmount) => (ushort)(value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt16 IAdditionOperators<UInt16, UInt16, UInt16>.op_CheckedAddition(UInt16 left, UInt16 right) => checked((ushort)(left._value + right._value));
+	static UnsignedInt16 IAdditionOperators<UnsignedInt16, UnsignedInt16, UnsignedInt16>.op_CheckedAddition(UnsignedInt16 left, UnsignedInt16 right) => checked((ushort)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt16 ISubtractionOperators<UInt16, UInt16, UInt16>.op_CheckedSubtraction(UInt16 left, UInt16 right) => checked((ushort)(left._value - right._value));
+	static UnsignedInt16 ISubtractionOperators<UnsignedInt16, UnsignedInt16, UnsignedInt16>.op_CheckedSubtraction(UnsignedInt16 left, UnsignedInt16 right) => checked((ushort)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt16 IMultiplyOperators<UInt16, UInt16, UInt16>.op_CheckedMultiply(UInt16 left, UInt16 right) => checked((ushort)(left._value * right._value));
+	static UnsignedInt16 IMultiplyOperators<UnsignedInt16, UnsignedInt16, UnsignedInt16>.op_CheckedMultiply(UnsignedInt16 left, UnsignedInt16 right) => checked((ushort)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt16 IDivisionOperators<UInt16, UInt16, UInt16>.op_CheckedDivision(UInt16 left, UInt16 right) => checked((ushort)(left._value / right._value));
+	static UnsignedInt16 IDivisionOperators<UnsignedInt16, UnsignedInt16, UnsignedInt16>.op_CheckedDivision(UnsignedInt16 left, UnsignedInt16 right) => checked((ushort)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt16 IUnaryNegationOperators<UInt16, UInt16>.op_CheckedUnaryNegation(UInt16 value) => checked((ushort)(-value._value));
+	static UnsignedInt16 IUnaryNegationOperators<UnsignedInt16, UnsignedInt16>.op_CheckedUnaryNegation(UnsignedInt16 value) => checked((ushort)(-value._value));
 
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="uint"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="uint"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct UInt32 : IBinaryInteger<UInt32>
+public readonly partial struct UnsignedInt32 : IBinaryInt<UnsignedInt32>
 {
 	private readonly uint _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private UInt32(uint v) => this._value = v;
+	private UnsignedInt32(uint v) => this._value = v;
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator UInt32(uint v) => new(v);
+	public static implicit operator UnsignedInt32(uint v) => new(v);
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator uint(UInt32 v) => v._value;
+	public static implicit operator uint(UnsignedInt32 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(UInt32 other) => this == other;
+	public bool Equals(UnsignedInt32 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2690,7 +2690,7 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(UInt32 other) => this._value.CompareTo(other);
+	public int CompareTo(UnsignedInt32 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2708,7 +2708,7 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 	public static DataType Type => DataType.RealUInt32;
 
 	/// <inheritdoc/>
-	public static UInt32 MachinePrecision => (uint)1;
+	public static UnsignedInt32 MachinePrecision => (uint)1;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(uint);
@@ -2717,87 +2717,87 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static UInt32 One => (uint)1;
+	public static UnsignedInt32 One => (uint)1;
 
 	/// <inheritdoc/>
-	public static UInt32 Zero => (uint)0;
+	public static UnsignedInt32 Zero => (uint)0;
 	
 	/// <inheritdoc/>
-	public static UInt32 AdditiveIdentity => (uint)0;
+	public static UnsignedInt32 AdditiveIdentity => (uint)0;
 
 	/// <inheritdoc/>
-	public static UInt32 MultiplicativeIdentity => (uint)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(UInt32 value) => true;
+	public static UnsignedInt32 MultiplicativeIdentity => (uint)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(UInt32 value) => false;
+	public static bool IsReal(UnsignedInt32 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(UInt32 value) => false;
+	public static bool IsComplex(UnsignedInt32 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(UnsignedInt32 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(UInt32 value) => true;
+	public static bool IsFinite(UnsignedInt32 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(UInt32 value) => false;
+	public static bool IsNaN(UnsignedInt32 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(UInt32 value) => true;
+	public static bool IsInteger(UnsignedInt32 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(UInt32 value) => value._value == (uint)0;
+	public static bool IsZero(UnsignedInt32 value) => value._value == (uint)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Conjugate(UInt32 value) => value;
+	public static UnsignedInt32 Conjugate(UnsignedInt32 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 MinMagnitudeNumber(UInt32 x, UInt32 y) => uint.Max(x, y);
+	public static UnsignedInt32 MinMagnitudeNumber(UnsignedInt32 x, UnsignedInt32 y) => uint.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 MaxMagnitudeNumber(UInt32 x, UInt32 y) => uint.Min(x, y);
+	public static UnsignedInt32 MaxMagnitudeNumber(UnsignedInt32 x, UnsignedInt32 y) => uint.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(UInt32 value) => false;
+	public static bool IsNegative(UnsignedInt32 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(UInt32 value) => value._value != 0;
+	public static bool IsPositive(UnsignedInt32 value) => value._value != 0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Abs(UInt32 value) => value;
+	public static UnsignedInt32 Abs(UnsignedInt32 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 MaxMagnitude(UInt32 x, UInt32 y) => uint.Max(x, y);
+	public static UnsignedInt32 MaxMagnitude(UnsignedInt32 x, UnsignedInt32 y) => uint.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 MinMagnitude(UInt32 x, UInt32 y) => uint.Min(x, y);
+	public static UnsignedInt32 MinMagnitude(UnsignedInt32 x, UnsignedInt32 y) => uint.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 CopySign(UInt32 value, UInt32 sign) => value;
+	public static UnsignedInt32 CopySign(UnsignedInt32 value, UnsignedInt32 sign) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Sign(UInt32 value) => (uint)uint.Sign(value);
+	public static UnsignedInt32 Sign(UnsignedInt32 value) => (uint)uint.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out UInt32 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out UnsignedInt32 result)
 	{
 		bool success = uint.TryParse(s, provider, out var res);
 		result = res;
@@ -2806,7 +2806,7 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UInt32 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UnsignedInt32 result)
 	{
 		bool success = uint.TryParse(s, provider, out var res);
 		result = res;
@@ -2815,7 +2815,7 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UInt32 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UnsignedInt32 result)
 	{
 		bool success = uint.TryParse(s, style, provider, out var res);
 		result = res;
@@ -2824,7 +2824,7 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UInt32 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UnsignedInt32 result)
 	{
 		bool success = uint.TryParse(s, style, provider, out var res);
 		result = res;
@@ -2833,144 +2833,144 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(UInt32 value) => uint.IsPow2(value);
+	public static bool IsPow2(UnsignedInt32 value) => uint.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Log2(UInt32 value) => uint.Log2(value);
+	public static UnsignedInt32 Log2(UnsignedInt32 value) => uint.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (UInt32 Quotient, UInt32 Remainder) DivRem(UInt32 left, UInt32 right) => uint.DivRem(left, right);
+	public static (UnsignedInt32 Quotient, UnsignedInt32 Remainder) DivRem(UnsignedInt32 left, UnsignedInt32 right) => uint.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 RotateLeft(UInt32 value, int rotateAmount) => uint.RotateLeft(value, rotateAmount);
+	public static UnsignedInt32 RotateLeft(UnsignedInt32 value, int rotateAmount) => uint.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 RotateRight(UInt32 value, int rotateAmount) => uint.RotateRight(value, rotateAmount);
+	public static UnsignedInt32 RotateRight(UnsignedInt32 value, int rotateAmount) => uint.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 PopCount(UInt32 value) => uint.PopCount(value);
+	public static UnsignedInt32 PopCount(UnsignedInt32 value) => uint.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 LeadingZeroCount(UInt32 value) => uint.LeadingZeroCount(value);
+	public static UnsignedInt32 LeadingZeroCount(UnsignedInt32 value) => uint.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 TrailingZeroCount(UInt32 value) => uint.TrailingZeroCount(value);
+	public static UnsignedInt32 TrailingZeroCount(UnsignedInt32 value) => uint.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(UInt32 value) => uint.IsOddInteger(value);
+	public static bool IsOddInteger(UnsignedInt32 value) => uint.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Max(UInt32 x, UInt32 y) => uint.Max(x, y);
+	public static UnsignedInt32 Max(UnsignedInt32 x, UnsignedInt32 y) => uint.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Min(UInt32 x, UInt32 y) => uint.Min(x, y);
+	public static UnsignedInt32 Min(UnsignedInt32 x, UnsignedInt32 y) => uint.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Parse(string s, IFormatProvider? provider) => uint.Parse(s, provider);
+	public static UnsignedInt32 Parse(string s, IFormatProvider? provider) => uint.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => uint.Parse(s, provider);
+	public static UnsignedInt32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => uint.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Parse(string s, NumberStyles style, IFormatProvider? provider) => uint.Parse(s, style, provider);
+	public static UnsignedInt32 Parse(string s, NumberStyles style, IFormatProvider? provider) => uint.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => uint.Parse(s, style, provider);
+	public static UnsignedInt32 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => uint.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(UInt32 left, UInt32 right) => (left._value < right._value);
+	public static bool operator <(UnsignedInt32 left, UnsignedInt32 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(UInt32 left, UInt32 right) => (left._value <= right._value);
+	public static bool operator <=(UnsignedInt32 left, UnsignedInt32 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(UInt32 left, UInt32 right) => (left._value > right._value);
+	public static bool operator >(UnsignedInt32 left, UnsignedInt32 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(UInt32 left, UInt32 right) => (left._value >= right._value);
+	public static bool operator >=(UnsignedInt32 left, UnsignedInt32 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(UInt32 left, UInt32 right) => (left._value == right._value);
+	public static bool operator ==(UnsignedInt32 left, UnsignedInt32 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(UInt32 left, UInt32 right) => (left._value != right._value);
+	public static bool operator !=(UnsignedInt32 left, UnsignedInt32 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator +(UInt32 left, UInt32 right) => (uint)(left._value + right._value);
+	public static UnsignedInt32 operator +(UnsignedInt32 left, UnsignedInt32 right) => (uint)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator -(UInt32 left, UInt32 right) => (uint)(left._value - right._value);
+	public static UnsignedInt32 operator -(UnsignedInt32 left, UnsignedInt32 right) => (uint)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator *(UInt32 left, UInt32 right) => (uint)(left._value * right._value);
+	public static UnsignedInt32 operator *(UnsignedInt32 left, UnsignedInt32 right) => (uint)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator /(UInt32 left, UInt32 right) => (uint)(left._value / right._value);
+	public static UnsignedInt32 operator /(UnsignedInt32 left, UnsignedInt32 right) => (uint)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator -(UInt32 value) => (uint)(-value._value);
+	public static UnsignedInt32 operator -(UnsignedInt32 value) => (uint)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator +(UInt32 value) => (uint)(+value._value);
+	public static UnsignedInt32 operator +(UnsignedInt32 value) => (uint)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator &(UInt32 left, UInt32 right) => (uint)(left._value & right._value);
+	public static UnsignedInt32 operator &(UnsignedInt32 left, UnsignedInt32 right) => (uint)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator |(UInt32 left, UInt32 right) => (uint)(left._value | right._value);
+	public static UnsignedInt32 operator |(UnsignedInt32 left, UnsignedInt32 right) => (uint)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator ^(UInt32 left, UInt32 right) => (uint)(left._value ^ right._value);
+	public static UnsignedInt32 operator ^(UnsignedInt32 left, UnsignedInt32 right) => (uint)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator ~(UInt32 value) => (uint)(~value._value);
+	public static UnsignedInt32 operator ~(UnsignedInt32 value) => (uint)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator %(UInt32 left, UInt32 right) => (uint)(left._value % right._value);
+	public static UnsignedInt32 operator %(UnsignedInt32 left, UnsignedInt32 right) => (uint)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator <<(UInt32 value, int shiftAmount) => (uint)(value._value << shiftAmount);
+	public static UnsignedInt32 operator <<(UnsignedInt32 value, int shiftAmount) => (uint)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator >>(UInt32 value, int shiftAmount) => (uint)(value._value >> shiftAmount);
+	public static UnsignedInt32 operator >>(UnsignedInt32 value, int shiftAmount) => (uint)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator ++(UInt32 value)
+	public static UnsignedInt32 operator ++(UnsignedInt32 value)
 	{
 		var v = value._value;
 		++v;
@@ -2979,7 +2979,7 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt32 operator --(UInt32 value)
+	public static UnsignedInt32 operator --(UnsignedInt32 value)
 	{
 		var v = value._value;
 		--v;
@@ -2988,7 +2988,7 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt32 IIncrementOperators<UInt32>.op_CheckedIncrement(UInt32 value)
+	static UnsignedInt32 IIncrementOperators<UnsignedInt32>.op_CheckedIncrement(UnsignedInt32 value)
 	{
 		var v = value._value;
 		v = checked((uint)(v + 1));
@@ -2997,7 +2997,7 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt32 IDecrementOperators<UInt32>.op_CheckedDecrement(UInt32 value)
+	static UnsignedInt32 IDecrementOperators<UnsignedInt32>.op_CheckedDecrement(UnsignedInt32 value)
 	{
 		var v = value._value;
 		v = checked((uint)(v - 1));
@@ -3006,54 +3006,54 @@ public readonly partial struct UInt32 : IBinaryInteger<UInt32>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt32 IShiftOperators<UInt32, UInt32>.op_UnsignedRightShift(UInt32 value, int shiftAmount) => (uint)(value._value >> shiftAmount);
+	static UnsignedInt32 IShiftOperators<UnsignedInt32, UnsignedInt32>.op_UnsignedRightShift(UnsignedInt32 value, int shiftAmount) => (uint)(value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt32 IAdditionOperators<UInt32, UInt32, UInt32>.op_CheckedAddition(UInt32 left, UInt32 right) => checked((uint)(left._value + right._value));
+	static UnsignedInt32 IAdditionOperators<UnsignedInt32, UnsignedInt32, UnsignedInt32>.op_CheckedAddition(UnsignedInt32 left, UnsignedInt32 right) => checked((uint)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt32 ISubtractionOperators<UInt32, UInt32, UInt32>.op_CheckedSubtraction(UInt32 left, UInt32 right) => checked((uint)(left._value - right._value));
+	static UnsignedInt32 ISubtractionOperators<UnsignedInt32, UnsignedInt32, UnsignedInt32>.op_CheckedSubtraction(UnsignedInt32 left, UnsignedInt32 right) => checked((uint)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt32 IMultiplyOperators<UInt32, UInt32, UInt32>.op_CheckedMultiply(UInt32 left, UInt32 right) => checked((uint)(left._value * right._value));
+	static UnsignedInt32 IMultiplyOperators<UnsignedInt32, UnsignedInt32, UnsignedInt32>.op_CheckedMultiply(UnsignedInt32 left, UnsignedInt32 right) => checked((uint)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt32 IDivisionOperators<UInt32, UInt32, UInt32>.op_CheckedDivision(UInt32 left, UInt32 right) => checked((uint)(left._value / right._value));
+	static UnsignedInt32 IDivisionOperators<UnsignedInt32, UnsignedInt32, UnsignedInt32>.op_CheckedDivision(UnsignedInt32 left, UnsignedInt32 right) => checked((uint)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt32 IUnaryNegationOperators<UInt32, UInt32>.op_CheckedUnaryNegation(UInt32 value) => checked((uint)(-value._value));
+	static UnsignedInt32 IUnaryNegationOperators<UnsignedInt32, UnsignedInt32>.op_CheckedUnaryNegation(UnsignedInt32 value) => checked((uint)(-value._value));
 
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="ulong"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="ulong"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct UInt64 : IBinaryInteger<UInt64>
+public readonly partial struct UnsignedInt64 : IBinaryInt<UnsignedInt64>
 {
 	private readonly ulong _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private UInt64(ulong v) => this._value = v;
+	private UnsignedInt64(ulong v) => this._value = v;
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator UInt64(ulong v) => new(v);
+	public static implicit operator UnsignedInt64(ulong v) => new(v);
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator ulong(UInt64 v) => v._value;
+	public static implicit operator ulong(UnsignedInt64 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(UInt64 other) => this == other;
+	public bool Equals(UnsignedInt64 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3069,7 +3069,7 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(UInt64 other) => this._value.CompareTo(other);
+	public int CompareTo(UnsignedInt64 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3087,7 +3087,7 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 	public static DataType Type => DataType.RealUInt64;
 
 	/// <inheritdoc/>
-	public static UInt64 MachinePrecision => (ulong)1;
+	public static UnsignedInt64 MachinePrecision => (ulong)1;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(ulong);
@@ -3096,87 +3096,87 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static UInt64 One => (ulong)1;
+	public static UnsignedInt64 One => (ulong)1;
 
 	/// <inheritdoc/>
-	public static UInt64 Zero => (ulong)0;
+	public static UnsignedInt64 Zero => (ulong)0;
 	
 	/// <inheritdoc/>
-	public static UInt64 AdditiveIdentity => (ulong)0;
+	public static UnsignedInt64 AdditiveIdentity => (ulong)0;
 
 	/// <inheritdoc/>
-	public static UInt64 MultiplicativeIdentity => (ulong)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(UInt64 value) => true;
+	public static UnsignedInt64 MultiplicativeIdentity => (ulong)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(UInt64 value) => false;
+	public static bool IsReal(UnsignedInt64 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(UInt64 value) => false;
+	public static bool IsComplex(UnsignedInt64 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(UnsignedInt64 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(UInt64 value) => true;
+	public static bool IsFinite(UnsignedInt64 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(UInt64 value) => false;
+	public static bool IsNaN(UnsignedInt64 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(UInt64 value) => true;
+	public static bool IsInteger(UnsignedInt64 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(UInt64 value) => value._value == (ulong)0;
+	public static bool IsZero(UnsignedInt64 value) => value._value == (ulong)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Conjugate(UInt64 value) => value;
+	public static UnsignedInt64 Conjugate(UnsignedInt64 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 MinMagnitudeNumber(UInt64 x, UInt64 y) => ulong.Max(x, y);
+	public static UnsignedInt64 MinMagnitudeNumber(UnsignedInt64 x, UnsignedInt64 y) => ulong.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 MaxMagnitudeNumber(UInt64 x, UInt64 y) => ulong.Min(x, y);
+	public static UnsignedInt64 MaxMagnitudeNumber(UnsignedInt64 x, UnsignedInt64 y) => ulong.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(UInt64 value) => false;
+	public static bool IsNegative(UnsignedInt64 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(UInt64 value) => value._value != 0;
+	public static bool IsPositive(UnsignedInt64 value) => value._value != 0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Abs(UInt64 value) => value;
+	public static UnsignedInt64 Abs(UnsignedInt64 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 MaxMagnitude(UInt64 x, UInt64 y) => ulong.Max(x, y);
+	public static UnsignedInt64 MaxMagnitude(UnsignedInt64 x, UnsignedInt64 y) => ulong.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 MinMagnitude(UInt64 x, UInt64 y) => ulong.Min(x, y);
+	public static UnsignedInt64 MinMagnitude(UnsignedInt64 x, UnsignedInt64 y) => ulong.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 CopySign(UInt64 value, UInt64 sign) => value;
+	public static UnsignedInt64 CopySign(UnsignedInt64 value, UnsignedInt64 sign) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Sign(UInt64 value) => (ulong)ulong.Sign(value);
+	public static UnsignedInt64 Sign(UnsignedInt64 value) => (ulong)ulong.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out UInt64 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out UnsignedInt64 result)
 	{
 		bool success = ulong.TryParse(s, provider, out var res);
 		result = res;
@@ -3185,7 +3185,7 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UInt64 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UnsignedInt64 result)
 	{
 		bool success = ulong.TryParse(s, provider, out var res);
 		result = res;
@@ -3194,7 +3194,7 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UInt64 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UnsignedInt64 result)
 	{
 		bool success = ulong.TryParse(s, style, provider, out var res);
 		result = res;
@@ -3203,7 +3203,7 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UInt64 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UnsignedInt64 result)
 	{
 		bool success = ulong.TryParse(s, style, provider, out var res);
 		result = res;
@@ -3212,143 +3212,143 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(UInt64 value) => ulong.IsPow2(value);
+	public static bool IsPow2(UnsignedInt64 value) => ulong.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Log2(UInt64 value) => ulong.Log2(value);
+	public static UnsignedInt64 Log2(UnsignedInt64 value) => ulong.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (UInt64 Quotient, UInt64 Remainder) DivRem(UInt64 left, UInt64 right) => ulong.DivRem(left, right);
+	public static (UnsignedInt64 Quotient, UnsignedInt64 Remainder) DivRem(UnsignedInt64 left, UnsignedInt64 right) => ulong.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 RotateLeft(UInt64 value, int rotateAmount) => ulong.RotateLeft(value, rotateAmount);
+	public static UnsignedInt64 RotateLeft(UnsignedInt64 value, int rotateAmount) => ulong.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 RotateRight(UInt64 value, int rotateAmount) => ulong.RotateRight(value, rotateAmount);
+	public static UnsignedInt64 RotateRight(UnsignedInt64 value, int rotateAmount) => ulong.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 PopCount(UInt64 value) => ulong.PopCount(value);
+	public static UnsignedInt64 PopCount(UnsignedInt64 value) => ulong.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 LeadingZeroCount(UInt64 value) => ulong.LeadingZeroCount(value);
+	public static UnsignedInt64 LeadingZeroCount(UnsignedInt64 value) => ulong.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 TrailingZeroCount(UInt64 value) => ulong.TrailingZeroCount(value);
+	public static UnsignedInt64 TrailingZeroCount(UnsignedInt64 value) => ulong.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(UInt64 value) => ulong.IsOddInteger(value);
+	public static bool IsOddInteger(UnsignedInt64 value) => ulong.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Max(UInt64 x, UInt64 y) => ulong.Max(x, y);
+	public static UnsignedInt64 Max(UnsignedInt64 x, UnsignedInt64 y) => ulong.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Min(UInt64 x, UInt64 y) => ulong.Min(x, y);
+	public static UnsignedInt64 Min(UnsignedInt64 x, UnsignedInt64 y) => ulong.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Parse(string s, IFormatProvider? provider) => ulong.Parse(s, provider);
+	public static UnsignedInt64 Parse(string s, IFormatProvider? provider) => ulong.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => ulong.Parse(s, provider);
+	public static UnsignedInt64 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => ulong.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Parse(string s, NumberStyles style, IFormatProvider? provider) => ulong.Parse(s, style, provider);
+	public static UnsignedInt64 Parse(string s, NumberStyles style, IFormatProvider? provider) => ulong.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => ulong.Parse(s, style, provider);
+	public static UnsignedInt64 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => ulong.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(UInt64 left, UInt64 right) => (left._value < right._value);
+	public static bool operator <(UnsignedInt64 left, UnsignedInt64 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(UInt64 left, UInt64 right) => (left._value <= right._value);
+	public static bool operator <=(UnsignedInt64 left, UnsignedInt64 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(UInt64 left, UInt64 right) => (left._value > right._value);
+	public static bool operator >(UnsignedInt64 left, UnsignedInt64 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(UInt64 left, UInt64 right) => (left._value >= right._value);
+	public static bool operator >=(UnsignedInt64 left, UnsignedInt64 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(UInt64 left, UInt64 right) => (left._value == right._value);
+	public static bool operator ==(UnsignedInt64 left, UnsignedInt64 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(UInt64 left, UInt64 right) => (left._value != right._value);
+	public static bool operator !=(UnsignedInt64 left, UnsignedInt64 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator +(UInt64 left, UInt64 right) => (ulong)(left._value + right._value);
+	public static UnsignedInt64 operator +(UnsignedInt64 left, UnsignedInt64 right) => (ulong)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator -(UInt64 left, UInt64 right) => (ulong)(left._value - right._value);
+	public static UnsignedInt64 operator -(UnsignedInt64 left, UnsignedInt64 right) => (ulong)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator *(UInt64 left, UInt64 right) => (ulong)(left._value * right._value);
+	public static UnsignedInt64 operator *(UnsignedInt64 left, UnsignedInt64 right) => (ulong)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator /(UInt64 left, UInt64 right) => (ulong)(left._value / right._value);
+	public static UnsignedInt64 operator /(UnsignedInt64 left, UnsignedInt64 right) => (ulong)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator -(UInt64 left) => (ulong)(-(long)left._value);
+	public static UnsignedInt64 operator -(UnsignedInt64 left) => (ulong)(-(long)left._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator +(UInt64 value) => (ulong)(+value._value);
+	public static UnsignedInt64 operator +(UnsignedInt64 value) => (ulong)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator &(UInt64 left, UInt64 right) => (ulong)(left._value & right._value);
+	public static UnsignedInt64 operator &(UnsignedInt64 left, UnsignedInt64 right) => (ulong)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator |(UInt64 left, UInt64 right) => (ulong)(left._value | right._value);
+	public static UnsignedInt64 operator |(UnsignedInt64 left, UnsignedInt64 right) => (ulong)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator ^(UInt64 left, UInt64 right) => (ulong)(left._value ^ right._value);
+	public static UnsignedInt64 operator ^(UnsignedInt64 left, UnsignedInt64 right) => (ulong)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator ~(UInt64 value) => (ulong)(~value._value);
+	public static UnsignedInt64 operator ~(UnsignedInt64 value) => (ulong)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator %(UInt64 left, UInt64 right) => (ulong)(left._value % right._value);
+	public static UnsignedInt64 operator %(UnsignedInt64 left, UnsignedInt64 right) => (ulong)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator <<(UInt64 value, int shiftAmount) => (ulong)(value._value << shiftAmount);
+	public static UnsignedInt64 operator <<(UnsignedInt64 value, int shiftAmount) => (ulong)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator >>(UInt64 value, int shiftAmount) => (ulong)(value._value >> shiftAmount);
+	public static UnsignedInt64 operator >>(UnsignedInt64 value, int shiftAmount) => (ulong)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator ++(UInt64 value)
+	public static UnsignedInt64 operator ++(UnsignedInt64 value)
 	{
 		var v = value._value;
 		++v;
@@ -3357,7 +3357,7 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt64 operator --(UInt64 value)
+	public static UnsignedInt64 operator --(UnsignedInt64 value)
 	{
 		var v = value._value;
 		--v;
@@ -3366,7 +3366,7 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 IIncrementOperators<UInt64>.op_CheckedIncrement(UInt64 value)
+	static UnsignedInt64 IIncrementOperators<UnsignedInt64>.op_CheckedIncrement(UnsignedInt64 value)
 	{
 		var v = value._value;
 		v = checked((ulong)(v + 1));
@@ -3375,7 +3375,7 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 IDecrementOperators<UInt64>.op_CheckedDecrement(UInt64 value)
+	static UnsignedInt64 IDecrementOperators<UnsignedInt64>.op_CheckedDecrement(UnsignedInt64 value)
 	{
 		var v = value._value;
 		v = checked((ulong)(v - 1));
@@ -3384,53 +3384,53 @@ public readonly partial struct UInt64 : IBinaryInteger<UInt64>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 IShiftOperators<UInt64, UInt64>.op_UnsignedRightShift(UInt64 value, int shiftAmount) => (ulong)(value._value >> shiftAmount);
+	static UnsignedInt64 IShiftOperators<UnsignedInt64, UnsignedInt64>.op_UnsignedRightShift(UnsignedInt64 value, int shiftAmount) => (ulong)(value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 IAdditionOperators<UInt64, UInt64, UInt64>.op_CheckedAddition(UInt64 left, UInt64 right) => checked((ulong)(left._value + right._value));
+	static UnsignedInt64 IAdditionOperators<UnsignedInt64, UnsignedInt64, UnsignedInt64>.op_CheckedAddition(UnsignedInt64 left, UnsignedInt64 right) => checked((ulong)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 ISubtractionOperators<UInt64, UInt64, UInt64>.op_CheckedSubtraction(UInt64 left, UInt64 right) => checked((ulong)(left._value - right._value));
+	static UnsignedInt64 ISubtractionOperators<UnsignedInt64, UnsignedInt64, UnsignedInt64>.op_CheckedSubtraction(UnsignedInt64 left, UnsignedInt64 right) => checked((ulong)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 IMultiplyOperators<UInt64, UInt64, UInt64>.op_CheckedMultiply(UInt64 left, UInt64 right) => checked((ulong)(left._value * right._value));
+	static UnsignedInt64 IMultiplyOperators<UnsignedInt64, UnsignedInt64, UnsignedInt64>.op_CheckedMultiply(UnsignedInt64 left, UnsignedInt64 right) => checked((ulong)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 IDivisionOperators<UInt64, UInt64, UInt64>.op_CheckedDivision(UInt64 left, UInt64 right) => checked((ulong)(left._value / right._value));
+	static UnsignedInt64 IDivisionOperators<UnsignedInt64, UnsignedInt64, UnsignedInt64>.op_CheckedDivision(UnsignedInt64 left, UnsignedInt64 right) => checked((ulong)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt64 IUnaryNegationOperators<UInt64, UInt64>.op_CheckedUnaryNegation(UInt64 left) => checked((ulong)(-(long)left._value));
+	static UnsignedInt64 IUnaryNegationOperators<UnsignedInt64, UnsignedInt64>.op_CheckedUnaryNegation(UnsignedInt64 left) => checked((ulong)(-(long)left._value));
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="System.UInt128"/> that implements <see cref="IBinaryInteger{TSelf}"/>.
+/// The custom replacement of <see cref="UInt128"/> that implements <see cref="IBinaryInt{TSelf}"/>.
 /// </summary>
-public readonly partial struct UInt128 : IBinaryInteger<UInt128>
+public readonly partial struct UnsignedInt128 : IBinaryInt<UnsignedInt128>
 {
-	private readonly System.UInt128 _value;
+	private readonly UInt128 _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private UInt128(System.UInt128 v) => this._value = v;
-
-	/// <inheritdoc/>
-	[CLSCompliant(false)]
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator UInt128(System.UInt128 v) => new(v);
+	private UnsignedInt128(UInt128 v) => this._value = v;
 
 	/// <inheritdoc/>
 	[CLSCompliant(false)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator System.UInt128(UInt128 v) => v._value;
+	public static implicit operator UnsignedInt128(UInt128 v) => new(v);
+
+	/// <inheritdoc/>
+	[CLSCompliant(false)]
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator UInt128(UnsignedInt128 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(UInt128 other) => this == other;
+	public bool Equals(UnsignedInt128 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3446,7 +3446,7 @@ public readonly partial struct UInt128 : IBinaryInteger<UInt128>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(UInt128 other) => this._value.CompareTo(other);
+	public int CompareTo(UnsignedInt128 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3464,269 +3464,269 @@ public readonly partial struct UInt128 : IBinaryInteger<UInt128>
 	public static DataType Type => DataType.RealUInt128;
 
 	/// <inheritdoc/>
-	public static UInt128 MachinePrecision => (System.UInt128)1;
+	public static UnsignedInt128 MachinePrecision => (UInt128)1;
 
 	/// <inheritdoc/>
-	public static unsafe int Size => sizeof(System.UInt128);
+	public static unsafe int Size => sizeof(UInt128);
 
 	/// <inheritdoc/>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static UInt128 One => (System.UInt128)1;
+	public static UnsignedInt128 One => (UInt128)1;
 
 	/// <inheritdoc/>
-	public static UInt128 Zero => (System.UInt128)0;
+	public static UnsignedInt128 Zero => (UInt128)0;
 	
 	/// <inheritdoc/>
-	public static UInt128 AdditiveIdentity => (System.UInt128)0;
+	public static UnsignedInt128 AdditiveIdentity => (UInt128)0;
 
 	/// <inheritdoc/>
-	public static UInt128 MultiplicativeIdentity => (System.UInt128)1;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(UInt128 value) => true;
+	public static UnsignedInt128 MultiplicativeIdentity => (UInt128)1;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(UInt128 value) => false;
+	public static bool IsReal(UnsignedInt128 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(UInt128 value) => false;
+	public static bool IsComplex(UnsignedInt128 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsImaginaryNumber(UnsignedInt128 value) => false;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(UInt128 value) => true;
+	public static bool IsFinite(UnsignedInt128 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(UInt128 value) => false;
+	public static bool IsNaN(UnsignedInt128 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(UInt128 value) => true;
+	public static bool IsInteger(UnsignedInt128 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(UInt128 value) => value._value == (System.UInt128)0;
+	public static bool IsZero(UnsignedInt128 value) => value._value == (UInt128)0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Conjugate(UInt128 value) => value;
+	public static UnsignedInt128 Conjugate(UnsignedInt128 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 MinMagnitudeNumber(UInt128 x, UInt128 y) => System.UInt128.Max(x, y);
+	public static UnsignedInt128 MinMagnitudeNumber(UnsignedInt128 x, UnsignedInt128 y) => UInt128.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 MaxMagnitudeNumber(UInt128 x, UInt128 y) => System.UInt128.Min(x, y);
+	public static UnsignedInt128 MaxMagnitudeNumber(UnsignedInt128 x, UnsignedInt128 y) => UInt128.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(UInt128 value) => false;
+	public static bool IsNegative(UnsignedInt128 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(UInt128 value) => value._value != 0;
+	public static bool IsPositive(UnsignedInt128 value) => value._value != 0;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Abs(UInt128 value) => value;
+	public static UnsignedInt128 Abs(UnsignedInt128 value) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 MaxMagnitude(UInt128 x, UInt128 y) => System.UInt128.Max(x, y);
+	public static UnsignedInt128 MaxMagnitude(UnsignedInt128 x, UnsignedInt128 y) => UInt128.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 MinMagnitude(UInt128 x, UInt128 y) => System.UInt128.Min(x, y);
+	public static UnsignedInt128 MinMagnitude(UnsignedInt128 x, UnsignedInt128 y) => UInt128.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 CopySign(UInt128 value, UInt128 sign) => value;
+	public static UnsignedInt128 CopySign(UnsignedInt128 value, UnsignedInt128 sign) => value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Sign(UInt128 value) => (System.UInt128)System.UInt128.Sign(value);
+	public static UnsignedInt128 Sign(UnsignedInt128 value) => (UInt128)UInt128.Sign(value);
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out UInt128 result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out UnsignedInt128 result)
 	{
-		bool success = System.UInt128.TryParse(s, provider, out var res);
+		bool success = UInt128.TryParse(s, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UInt128 result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out UnsignedInt128 result)
 	{
-		bool success = System.UInt128.TryParse(s, provider, out var res);
+		bool success = UInt128.TryParse(s, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UInt128 result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out UnsignedInt128 result)
 	{
-		bool success = System.UInt128.TryParse(s, style, provider, out var res);
+		bool success = UInt128.TryParse(s, style, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UInt128 result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out UnsignedInt128 result)
 	{
-		bool success = System.UInt128.TryParse(s, style, provider, out var res);
+		bool success = UInt128.TryParse(s, style, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPow2(UInt128 value) => System.UInt128.IsPow2(value);
+	public static bool IsPow2(UnsignedInt128 value) => UInt128.IsPow2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Log2(UInt128 value) => System.UInt128.Log2(value);
+	public static UnsignedInt128 Log2(UnsignedInt128 value) => UInt128.Log2(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (UInt128 Quotient, UInt128 Remainder) DivRem(UInt128 left, UInt128 right) => System.UInt128.DivRem(left, right);
+	public static (UnsignedInt128 Quotient, UnsignedInt128 Remainder) DivRem(UnsignedInt128 left, UnsignedInt128 right) => UInt128.DivRem(left, right);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 RotateLeft(UInt128 value, int rotateAmount) => System.UInt128.RotateLeft(value, rotateAmount);
+	public static UnsignedInt128 RotateLeft(UnsignedInt128 value, int rotateAmount) => UInt128.RotateLeft(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 RotateRight(UInt128 value, int rotateAmount) => System.UInt128.RotateRight(value, rotateAmount);
+	public static UnsignedInt128 RotateRight(UnsignedInt128 value, int rotateAmount) => UInt128.RotateRight(value, rotateAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 PopCount(UInt128 value) => System.UInt128.PopCount(value);
+	public static UnsignedInt128 PopCount(UnsignedInt128 value) => UInt128.PopCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 LeadingZeroCount(UInt128 value) => System.UInt128.LeadingZeroCount(value);
+	public static UnsignedInt128 LeadingZeroCount(UnsignedInt128 value) => UInt128.LeadingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 TrailingZeroCount(UInt128 value) => System.UInt128.TrailingZeroCount(value);
+	public static UnsignedInt128 TrailingZeroCount(UnsignedInt128 value) => UInt128.TrailingZeroCount(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(UInt128 value) => System.UInt128.IsOddInteger(value);
+	public static bool IsOddInteger(UnsignedInt128 value) => UInt128.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Max(UInt128 x, UInt128 y) => System.UInt128.Max(x, y);
+	public static UnsignedInt128 Max(UnsignedInt128 x, UnsignedInt128 y) => UInt128.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Min(UInt128 x, UInt128 y) => System.UInt128.Min(x, y);
+	public static UnsignedInt128 Min(UnsignedInt128 x, UnsignedInt128 y) => UInt128.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Parse(string s, IFormatProvider? provider) => System.UInt128.Parse(s, provider);
+	public static UnsignedInt128 Parse(string s, IFormatProvider? provider) => UInt128.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => System.UInt128.Parse(s, provider);
+	public static UnsignedInt128 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => UInt128.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Parse(string s, NumberStyles style, IFormatProvider? provider) => System.UInt128.Parse(s, style, provider);
+	public static UnsignedInt128 Parse(string s, NumberStyles style, IFormatProvider? provider) => UInt128.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => System.UInt128.Parse(s, style, provider);
+	public static UnsignedInt128 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => UInt128.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(UInt128 left, UInt128 right) => (left._value < right._value);
+	public static bool operator <(UnsignedInt128 left, UnsignedInt128 right) => (left._value < right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(UInt128 left, UInt128 right) => (left._value <= right._value);
+	public static bool operator <=(UnsignedInt128 left, UnsignedInt128 right) => (left._value <= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(UInt128 left, UInt128 right) => (left._value > right._value);
+	public static bool operator >(UnsignedInt128 left, UnsignedInt128 right) => (left._value > right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(UInt128 left, UInt128 right) => (left._value >= right._value);
+	public static bool operator >=(UnsignedInt128 left, UnsignedInt128 right) => (left._value >= right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(UInt128 left, UInt128 right) => (left._value == right._value);
+	public static bool operator ==(UnsignedInt128 left, UnsignedInt128 right) => (left._value == right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(UInt128 left, UInt128 right) => (left._value != right._value);
+	public static bool operator !=(UnsignedInt128 left, UnsignedInt128 right) => (left._value != right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator +(UInt128 left, UInt128 right) => (System.UInt128)(left._value + right._value);
+	public static UnsignedInt128 operator +(UnsignedInt128 left, UnsignedInt128 right) => (UInt128)(left._value + right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator -(UInt128 left, UInt128 right) => (System.UInt128)(left._value - right._value);
+	public static UnsignedInt128 operator -(UnsignedInt128 left, UnsignedInt128 right) => (UInt128)(left._value - right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator *(UInt128 left, UInt128 right) => (System.UInt128)(left._value * right._value);
+	public static UnsignedInt128 operator *(UnsignedInt128 left, UnsignedInt128 right) => (UInt128)(left._value * right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator /(UInt128 left, UInt128 right) => (System.UInt128)(left._value / right._value);
+	public static UnsignedInt128 operator /(UnsignedInt128 left, UnsignedInt128 right) => (UInt128)(left._value / right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator -(UInt128 value) => (System.UInt128)(-value._value);
+	public static UnsignedInt128 operator -(UnsignedInt128 value) => (UInt128)(-value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator +(UInt128 value) => (System.UInt128)(+value._value);
+	public static UnsignedInt128 operator +(UnsignedInt128 value) => (UInt128)(+value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator &(UInt128 left, UInt128 right) => (System.UInt128)(left._value & right._value);
+	public static UnsignedInt128 operator &(UnsignedInt128 left, UnsignedInt128 right) => (UInt128)(left._value & right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator |(UInt128 left, UInt128 right) => (System.UInt128)(left._value | right._value);
+	public static UnsignedInt128 operator |(UnsignedInt128 left, UnsignedInt128 right) => (UInt128)(left._value | right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator ^(UInt128 left, UInt128 right) => (System.UInt128)(left._value ^ right._value);
+	public static UnsignedInt128 operator ^(UnsignedInt128 left, UnsignedInt128 right) => (UInt128)(left._value ^ right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator ~(UInt128 value) => (System.UInt128)(~value._value);
+	public static UnsignedInt128 operator ~(UnsignedInt128 value) => (UInt128)(~value._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator %(UInt128 left, UInt128 right) => (System.UInt128)(left._value % right._value);
+	public static UnsignedInt128 operator %(UnsignedInt128 left, UnsignedInt128 right) => (UInt128)(left._value % right._value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator <<(UInt128 value, int shiftAmount) => (System.UInt128)(value._value << shiftAmount);
+	public static UnsignedInt128 operator <<(UnsignedInt128 value, int shiftAmount) => (UInt128)(value._value << shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator >>(UInt128 value, int shiftAmount) => (System.UInt128)(value._value >> shiftAmount);
+	public static UnsignedInt128 operator >>(UnsignedInt128 value, int shiftAmount) => (UInt128)(value._value >> shiftAmount);
 
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator ++(UInt128 value)
+	public static UnsignedInt128 operator ++(UnsignedInt128 value)
 	{
 		var v = value._value;
 		++v;
@@ -3735,7 +3735,7 @@ public readonly partial struct UInt128 : IBinaryInteger<UInt128>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UInt128 operator --(UInt128 value)
+	public static UnsignedInt128 operator --(UnsignedInt128 value)
 	{
 		var v = value._value;
 		--v;
@@ -3744,44 +3744,44 @@ public readonly partial struct UInt128 : IBinaryInteger<UInt128>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt128 IIncrementOperators<UInt128>.op_CheckedIncrement(UInt128 value)
+	static UnsignedInt128 IIncrementOperators<UnsignedInt128>.op_CheckedIncrement(UnsignedInt128 value)
 	{
 		var v = value._value;
-		v = checked((System.UInt128)(v + 1));
+		v = checked((UInt128)(v + 1));
 		return v;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt128 IDecrementOperators<UInt128>.op_CheckedDecrement(UInt128 value)
+	static UnsignedInt128 IDecrementOperators<UnsignedInt128>.op_CheckedDecrement(UnsignedInt128 value)
 	{
 		var v = value._value;
-		v = checked((System.UInt128)(v - 1));
+		v = checked((UInt128)(v - 1));
 		return v;
 	}
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt128 IShiftOperators<UInt128, UInt128>.op_UnsignedRightShift(UInt128 value, int shiftAmount) => (System.UInt128)(value._value >> shiftAmount);
+	static UnsignedInt128 IShiftOperators<UnsignedInt128, UnsignedInt128>.op_UnsignedRightShift(UnsignedInt128 value, int shiftAmount) => (UInt128)(value._value >> shiftAmount);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt128 IAdditionOperators<UInt128, UInt128, UInt128>.op_CheckedAddition(UInt128 left, UInt128 right) => checked((System.UInt128)(left._value + right._value));
+	static UnsignedInt128 IAdditionOperators<UnsignedInt128, UnsignedInt128, UnsignedInt128>.op_CheckedAddition(UnsignedInt128 left, UnsignedInt128 right) => checked((UInt128)(left._value + right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt128 ISubtractionOperators<UInt128, UInt128, UInt128>.op_CheckedSubtraction(UInt128 left, UInt128 right) => checked((System.UInt128)(left._value - right._value));
+	static UnsignedInt128 ISubtractionOperators<UnsignedInt128, UnsignedInt128, UnsignedInt128>.op_CheckedSubtraction(UnsignedInt128 left, UnsignedInt128 right) => checked((UInt128)(left._value - right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt128 IMultiplyOperators<UInt128, UInt128, UInt128>.op_CheckedMultiply(UInt128 left, UInt128 right) => checked((System.UInt128)(left._value * right._value));
+	static UnsignedInt128 IMultiplyOperators<UnsignedInt128, UnsignedInt128, UnsignedInt128>.op_CheckedMultiply(UnsignedInt128 left, UnsignedInt128 right) => checked((UInt128)(left._value * right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt128 IDivisionOperators<UInt128, UInt128, UInt128>.op_CheckedDivision(UInt128 left, UInt128 right) => checked((System.UInt128)(left._value / right._value));
+	static UnsignedInt128 IDivisionOperators<UnsignedInt128, UnsignedInt128, UnsignedInt128>.op_CheckedDivision(UnsignedInt128 left, UnsignedInt128 right) => checked((UInt128)(left._value / right._value));
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UInt128 IUnaryNegationOperators<UInt128, UInt128>.op_CheckedUnaryNegation(UInt128 value) => checked((System.UInt128)(-value._value));
+	static UnsignedInt128 IUnaryNegationOperators<UnsignedInt128, UnsignedInt128>.op_CheckedUnaryNegation(UnsignedInt128 value) => checked((UInt128)(-value._value));
 
 }

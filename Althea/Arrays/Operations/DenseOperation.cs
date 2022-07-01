@@ -47,7 +47,7 @@ namespace Althea.Array
 		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
 		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>
 
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region vector
@@ -1126,7 +1126,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void SchurReorder<TInd, TSInd>(DenseMatrix<T, TS> schurForm!!, DenseMatrix<T, TS>? schurVectors, DenseVector<T, TS> values!!, DenseVector<T, TS>? valuesImag, TSInd select!!) where TInd : unmanaged, IBinaryInteger<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		public static void SchurReorder<TInd, TSInd>(DenseMatrix<T, TS> schurForm!!, DenseMatrix<T, TS>? schurVectors, DenseVector<T, TS> values!!, DenseVector<T, TS>? valuesImag, TSInd select!!) where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			CheckSchur(schurForm, values, valuesImag, schurForm, schurVectors, false);
 			if (select.Length != schurForm.NRows)

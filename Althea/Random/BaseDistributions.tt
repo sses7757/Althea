@@ -20,7 +20,7 @@ namespace Althea.Random
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
-	public interface IRank1Distribution<T, TSelf> : IRandomDistribution<TSelf>, ICheckValid where T : unmanaged, INumber<T> where TSelf : struct, IRank1Distribution<T, TSelf>
+	public interface IRank1Distribution<T, TSelf> : IRandomDistribution<TSelf>, ICheckValid where T : unmanaged, IBaseNumber<T> where TSelf : struct, IRank1Distribution<T, TSelf>
 	{
 		/// <summary>
 		/// Statically get the <see cref="DataType"/> of <paramref name="rank"/>.
@@ -35,7 +35,7 @@ namespace Althea.Random
 	var numberConstriant = "";
 	for (int j = 1; j <= i; j++)
 	{
-		numberConstriant += $"where T{j} : unmanaged, INumber<T{j}> ";
+		numberConstriant += $"where T{j} : unmanaged, IBaseNumber<T{j}> ";
 	}
 	numberConstriant = numberConstriant.Substring(0, numberConstriant.Length - 1);
 #>

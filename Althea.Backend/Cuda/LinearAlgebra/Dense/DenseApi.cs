@@ -142,7 +142,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		#region support
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? s, out IntPtr ptr, out int length, int stride = 1) where T : unmanaged, INumber<T>
+		private bool CheckPointer<T>(Storage<T>? s, out IntPtr ptr, out int length, int stride = 1) where T : unmanaged, IBaseNumber<T>
 		{
 			ptr = default; length = 0;
 			if (s is null)
@@ -160,7 +160,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointerLong<T>(Storage<T> s, out IntPtr ptr, out long length, int stride = 1) where T : unmanaged, INumber<T>
+		private bool CheckPointerLong<T>(Storage<T> s, out IntPtr ptr, out long length, int stride = 1) where T : unmanaged, IBaseNumber<T>
 		{
 			ptr = default; length = 0;
 			var p = s[0];
@@ -173,7 +173,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged, INumber<T>
+		private bool CheckPointer<T>(Storage<T>? A, long rows, long cols, long ld, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged, IBaseNumber<T>
 		{
 			ptr = default; r = c = l = 1;
 			if (A is null) // specific null input
@@ -193,7 +193,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			return true;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointer<T>(Storage<T>? A, MatrixOperation op, long rowsAfterOp, long colsAfterOp, long ld, out CuBlasOperation opCuda, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged, INumber<T>
+		private bool CheckPointer<T>(Storage<T>? A, MatrixOperation op, long rowsAfterOp, long colsAfterOp, long ld, out CuBlasOperation opCuda, out IntPtr ptr, out int r, out int c, out int l) where T : unmanaged, IBaseNumber<T>
 		{
 			ptr = default; r = c = l = 1; opCuda = op.Simplify<T>().ToCuda();
 			if (A is null) // specific null input
@@ -218,7 +218,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private bool CheckPointerLong<T>(Storage<T>? A, long cols, long ld, out IntPtr ptr) where T : unmanaged, INumber<T>
+		private bool CheckPointerLong<T>(Storage<T>? A, long cols, long ld, out IntPtr ptr) where T : unmanaged, IBaseNumber<T>
 		{
 			ptr = default;
 			if (A is null) // specific null input
@@ -337,7 +337,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">The output real index in <paramref name="x"/></param>
 		/// <returns>Support or not</returns>
-		protected internal unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>
+		protected internal unsafe bool HorizontalAbsoluteValueArgMax<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, IBaseNumber<T>
 		{
 			index = -1;
 			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
@@ -377,7 +377,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 		/// <param name="index">The output real index in <paramref name="x"/></param>
 		/// <returns>Support or not</returns>
-		protected internal unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, INumber<T>
+		protected internal unsafe bool HorizontalAbsoluteValueArgMin<T>(Storage<T> x, int strideX, out long index) where T : unmanaged, IBaseNumber<T>
 		{
 			index = -1;
 			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
@@ -418,7 +418,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="sum">Output the sum as a <see cref="double"/></param>
 		/// <returns>Support or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected internal unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>
+		protected internal unsafe bool HorizontalAbsoluteSum<T>(Storage<T> x, int strideX, out double sum) where T : unmanaged, IBaseNumber<T>
 		{
 			sum = 0;
 			if (!Const<T>.IsComplex || !Const<T>.DataType.CheckBaseSupport())
@@ -465,8 +465,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasIsamax,
-					DataType.RealDouble => &NativeMethods.cublasIdamax,
+					DataType.RealFloat32 => &NativeMethods.cublasIsamax,
+					DataType.RealFloat64 => &NativeMethods.cublasIdamax,
 					_ => null,
 				};
 			}
@@ -474,8 +474,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasIsamax_v2,
-					DataType.RealDouble => &NativeMethods.cublasIdamax_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasIsamax_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasIdamax_v2,
 					_ => null,
 				};
 			}
@@ -504,8 +504,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasIsamin,
-					DataType.RealDouble => &NativeMethods.cublasIdamin,
+					DataType.RealFloat32 => &NativeMethods.cublasIsamin,
+					DataType.RealFloat64 => &NativeMethods.cublasIdamin,
 					_ => null,
 				};
 			}
@@ -513,8 +513,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasIsamin_v2,
-					DataType.RealDouble => &NativeMethods.cublasIdamin_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasIsamin_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasIdamin_v2,
 					_ => null,
 				};
 			}
@@ -532,7 +532,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged, INumber<T>
+		private unsafe bool AbsSumOrNorm<T, Sum>(Storage<T> x, int strideX, out double sum) where T : unmanaged, IBaseNumber<T>
 		{
 			bool doSum = typeof(Sum) == typeof(bool);
 			sum = 0;
@@ -546,13 +546,13 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				funcS = Const<T>.DataType switch
 				{
-					DataType.RealSingle => doSum ? &NativeMethods.cublasSasum : &NativeMethods.cublasSnrm2,
+					DataType.RealFloat32 => doSum ? &NativeMethods.cublasSasum : &NativeMethods.cublasSnrm2,
 					DataType.ComplexSingle => doSum ? null : &NativeMethods.cublasScnrm2,
 					_ => null,
 				};
 				funcD = Const<T>.DataType switch
 				{
-					DataType.RealDouble => doSum ? &NativeMethods.cublasDasum : &NativeMethods.cublasDnrm2,
+					DataType.RealFloat64 => doSum ? &NativeMethods.cublasDasum : &NativeMethods.cublasDnrm2,
 					DataType.ComplexSingle => doSum ? null : &NativeMethods.cublasDznrm2,
 					_ => null,
 				};
@@ -561,13 +561,13 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				funcS = Const<T>.DataType switch
 				{
-					DataType.RealSingle => doSum ? &NativeMethods.cublasSasum_v2 : &NativeMethods.cublasSnrm2_v2,
+					DataType.RealFloat32 => doSum ? &NativeMethods.cublasSasum_v2 : &NativeMethods.cublasSnrm2_v2,
 					DataType.ComplexSingle => doSum ? null : &NativeMethods.cublasScnrm2_v2,
 					_ => null,
 				};
 				funcD = Const<T>.DataType switch
 				{
-					DataType.RealDouble => doSum ? &NativeMethods.cublasDasum_v2 : &NativeMethods.cublasDnrm2_v2,
+					DataType.RealFloat64 => doSum ? &NativeMethods.cublasDasum_v2 : &NativeMethods.cublasDnrm2_v2,
 					DataType.ComplexDouble => doSum ? null : &NativeMethods.cublasDznrm2_v2,
 					_ => null,
 				};
@@ -618,8 +618,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSdot,
-					DataType.RealDouble => &NativeMethods.cublasDdot,
+					DataType.RealFloat32 => &NativeMethods.cublasSdot,
+					DataType.RealFloat64 => &NativeMethods.cublasDdot,
 					DataType.ComplexSingle => conjX ? &NativeMethods.cublasCdotc : &NativeMethods.cublasCdotu,
 					DataType.ComplexDouble => conjX ? &NativeMethods.cublasZdotc : &NativeMethods.cublasZdotu,
 					_ => null,
@@ -629,8 +629,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSdot_v2,
-					DataType.RealDouble => &NativeMethods.cublasDdot_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSdot_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDdot_v2,
 					DataType.ComplexSingle => conjX ? &NativeMethods.cublasCdotc_v2 : &NativeMethods.cublasCdotu_v2,
 					DataType.ComplexDouble => conjX ? &NativeMethods.cublasZdotc_v2 : &NativeMethods.cublasZdotu_v2,
 					_ => null,
@@ -641,9 +641,9 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func(this.cublasHandle, n, px, strideX, py, strideY, &result).Check();
 			}
-			else if (Const<T>.DataType == DataType.RealHalf || Const<T>.DataType == DataType.ComplexHalf)
+			else if (Const<T>.DataType == DataType.RealFloat16 || Const<T>.DataType == DataType.ComplexHalf)
 			{
-				CudaDataType type = Const<T>.DataType == DataType.RealHalf ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
+				CudaDataType type = Const<T>.DataType == DataType.RealFloat16 ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
 				if (conjX)
 					NativeMethods.cublasDotcEx(this.cublasHandle, n, px, type, strideX, py, type, strideY, &result, type, type).Check();
 				else
@@ -671,8 +671,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSscal,
-					DataType.RealDouble => &NativeMethods.cublasDscal,
+					DataType.RealFloat32 => &NativeMethods.cublasSscal,
+					DataType.RealFloat64 => &NativeMethods.cublasDscal,
 					DataType.ComplexSingle => &NativeMethods.cublasCscal,
 					DataType.ComplexDouble => &NativeMethods.cublasZscal,
 					_ => null,
@@ -682,8 +682,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSscal_v2,
-					DataType.RealDouble => &NativeMethods.cublasDscal_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSscal_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDscal_v2,
 					DataType.ComplexSingle => &NativeMethods.cublasCscal_v2,
 					DataType.ComplexDouble => &NativeMethods.cublasZscal_v2,
 					_ => null,
@@ -693,9 +693,9 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func(this.cublasHandle, n, &scalar, px, strideX).Check();
 			}
-			else if (Const<T>.DataType == DataType.RealHalf || Const<T>.DataType == DataType.ComplexHalf)
+			else if (Const<T>.DataType == DataType.RealFloat16 || Const<T>.DataType == DataType.ComplexHalf)
 			{
-				CudaDataType type = Const<T>.DataType == DataType.RealHalf ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
+				CudaDataType type = Const<T>.DataType == DataType.RealFloat16 ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
 				NativeMethods.cublasScalEx(this.cublasHandle, n, &scalar, type, px, type, strideX, type).Check();
 			}
 			else
@@ -719,8 +719,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSaxpy,
-					DataType.RealDouble => &NativeMethods.cublasDaxpy,
+					DataType.RealFloat32 => &NativeMethods.cublasSaxpy,
+					DataType.RealFloat64 => &NativeMethods.cublasDaxpy,
 					DataType.ComplexSingle => &NativeMethods.cublasCaxpy,
 					DataType.ComplexDouble => &NativeMethods.cublasZaxpy,
 					_ => null,
@@ -730,8 +730,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSaxpy_v2,
-					DataType.RealDouble => &NativeMethods.cublasDaxpy_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSaxpy_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDaxpy_v2,
 					DataType.ComplexSingle => &NativeMethods.cublasCaxpy_v2,
 					DataType.ComplexDouble => &NativeMethods.cublasZaxpy_v2,
 					_ => null,
@@ -741,9 +741,9 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func(this.cublasHandle, n, &α, px, strideX, py, strideY).Check();
 			}
-			else if (Const<T>.DataType == DataType.RealHalf || Const<T>.DataType == DataType.ComplexHalf)
+			else if (Const<T>.DataType == DataType.RealFloat16 || Const<T>.DataType == DataType.ComplexHalf)
 			{
-				CudaDataType type = Const<T>.DataType == DataType.RealHalf ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
+				CudaDataType type = Const<T>.DataType == DataType.RealFloat16 ? CudaDataType.RealFloat16 : CudaDataType.ComplexFloat16;
 				NativeMethods.cublasAxpyEx(this.cublasHandle, n, &α, type, px, type, strideX, py, type, strideY, type).Check();
 			}
 			else
@@ -970,8 +970,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSgemv,
-					DataType.RealDouble => &NativeMethods.cublasDgemv,
+					DataType.RealFloat32 => &NativeMethods.cublasSgemv,
+					DataType.RealFloat64 => &NativeMethods.cublasDgemv,
 					DataType.ComplexSingle => &NativeMethods.cublasCgemv,
 					DataType.ComplexDouble => &NativeMethods.cublasZgemv,
 					_ => null,
@@ -981,8 +981,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSgemv_v2,
-					DataType.RealDouble => &NativeMethods.cublasDgemv_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSgemv_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDgemv_v2,
 					DataType.ComplexSingle => &NativeMethods.cublasCgemv_v2,
 					DataType.ComplexDouble => &NativeMethods.cublasZgemv_v2,
 					_ => null,
@@ -1008,8 +1008,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsymv,
-					DataType.RealDouble => &NativeMethods.cublasDsymv,
+					DataType.RealFloat32 => &NativeMethods.cublasSsymv,
+					DataType.RealFloat64 => &NativeMethods.cublasDsymv,
 					DataType.ComplexSingle => hermA ? &NativeMethods.cublasChemv : &NativeMethods.cublasCsymv,
 					DataType.ComplexDouble => hermA ? &NativeMethods.cublasZhemv : &NativeMethods.cublasZsymv,
 					_ => null,
@@ -1019,8 +1019,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsymv_v2,
-					DataType.RealDouble => &NativeMethods.cublasDsymv_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSsymv_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDsymv_v2,
 					DataType.ComplexSingle => hermA ? &NativeMethods.cublasChemv_v2 : &NativeMethods.cublasCsymv_v2,
 					DataType.ComplexDouble => hermA ? &NativeMethods.cublasZhemv_v2 : &NativeMethods.cublasZsymv_v2,
 					_ => null,
@@ -1050,8 +1050,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSger,
-					DataType.RealDouble => &NativeMethods.cublasDger,
+					DataType.RealFloat32 => &NativeMethods.cublasSger,
+					DataType.RealFloat64 => &NativeMethods.cublasDger,
 					DataType.ComplexSingle => conjY ? &NativeMethods.cublasCgerc : &NativeMethods.cublasCgerc,
 					DataType.ComplexDouble => conjY ? &NativeMethods.cublasZgerc : &NativeMethods.cublasZgerc,
 					_ => null,
@@ -1061,8 +1061,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSger_v2,
-					DataType.RealDouble => &NativeMethods.cublasDger_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSger_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDger_v2,
 					DataType.ComplexSingle => conjY ? &NativeMethods.cublasCgerc_v2 : &NativeMethods.cublasCgerc_v2,
 					DataType.ComplexDouble => conjY ? &NativeMethods.cublasZgerc_v2 : &NativeMethods.cublasZgerc_v2,
 					_ => null,
@@ -1089,8 +1089,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyr,
-					DataType.RealDouble => &NativeMethods.cublasDsyr,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyr,
+					DataType.RealFloat64 => &NativeMethods.cublasDsyr,
 					DataType.ComplexSingle => conjX ? &NativeMethods.cublasCher : &NativeMethods.cublasCsyr,
 					DataType.ComplexDouble => conjX ? &NativeMethods.cublasZher : &NativeMethods.cublasZsyr,
 					_ => null,
@@ -1100,8 +1100,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyr_v2,
-					DataType.RealDouble => &NativeMethods.cublasDsyr_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyr_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDsyr_v2,
 					DataType.ComplexSingle => conjX ? &NativeMethods.cublasCher_v2 : &NativeMethods.cublasCsyr_v2,
 					DataType.ComplexDouble => conjX ? &NativeMethods.cublasZher_v2 : &NativeMethods.cublasZsyr_v2,
 					_ => null,
@@ -1132,8 +1132,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyr2,
-					DataType.RealDouble => &NativeMethods.cublasSsyr2,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyr2,
+					DataType.RealFloat64 => &NativeMethods.cublasSsyr2,
 					DataType.ComplexSingle => conjugate ? &NativeMethods.cublasCher2 : &NativeMethods.cublasCsyr2,
 					DataType.ComplexDouble => conjugate ? &NativeMethods.cublasZher2 : &NativeMethods.cublasZsyr2,
 					_ => null,
@@ -1143,8 +1143,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyr2_v2,
-					DataType.RealDouble => &NativeMethods.cublasSsyr2_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyr2_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasSsyr2_v2,
 					DataType.ComplexSingle => conjugate ? &NativeMethods.cublasCher2_v2 : &NativeMethods.cublasCsyr2_v2,
 					DataType.ComplexDouble => conjugate ? &NativeMethods.cublasZher2_v2 : &NativeMethods.cublasZsyr2_v2,
 					_ => null,
@@ -1171,8 +1171,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasStrmv,
-					DataType.RealDouble => &NativeMethods.cublasDtrmv,
+					DataType.RealFloat32 => &NativeMethods.cublasStrmv,
+					DataType.RealFloat64 => &NativeMethods.cublasDtrmv,
 					DataType.ComplexSingle => &NativeMethods.cublasCtrmv,
 					DataType.ComplexDouble => &NativeMethods.cublasZtrmv,
 					_ => null,
@@ -1182,8 +1182,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasStrmv_v2,
-					DataType.RealDouble => &NativeMethods.cublasDtrmv_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasStrmv_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDtrmv_v2,
 					DataType.ComplexSingle => &NativeMethods.cublasCtrmv_v2,
 					DataType.ComplexDouble => &NativeMethods.cublasZtrmv_v2,
 					_ => null,
@@ -1217,8 +1217,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			delegate*<IntPtr, CuBlasSideMode, int, int, IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cublasSdgmm,
-				DataType.RealDouble => &NativeMethods.cublasDdgmm,
+				DataType.RealFloat32 => &NativeMethods.cublasSdgmm,
+				DataType.RealFloat64 => &NativeMethods.cublasDdgmm,
 				DataType.ComplexSingle => &NativeMethods.cublasCdgmm,
 				DataType.ComplexDouble => &NativeMethods.cublasZdgmm,
 				_ => null,
@@ -1271,8 +1271,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasStrsm,
-					DataType.RealDouble => &NativeMethods.cublasDtrsm,
+					DataType.RealFloat32 => &NativeMethods.cublasStrsm,
+					DataType.RealFloat64 => &NativeMethods.cublasDtrsm,
 					DataType.ComplexSingle => &NativeMethods.cublasCtrsm,
 					DataType.ComplexDouble => &NativeMethods.cublasZtrsm,
 					_ => null,
@@ -1282,8 +1282,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasStrsm_v2,
-					DataType.RealDouble => &NativeMethods.cublasDtrsm_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasStrsm_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDtrsm_v2,
 					DataType.ComplexSingle => &NativeMethods.cublasCtrsm_v2,
 					DataType.ComplexDouble => &NativeMethods.cublasZtrsm_v2,
 					_ => null,
@@ -1317,8 +1317,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasStrmm,
-					DataType.RealDouble => &NativeMethods.cublasDtrmm,
+					DataType.RealFloat32 => &NativeMethods.cublasStrmm,
+					DataType.RealFloat64 => &NativeMethods.cublasDtrmm,
 					DataType.ComplexSingle => &NativeMethods.cublasCtrmm,
 					DataType.ComplexDouble => &NativeMethods.cublasZtrmm,
 					_ => null,
@@ -1328,8 +1328,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasStrmm_v2,
-					DataType.RealDouble => &NativeMethods.cublasDtrmm_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasStrmm_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDtrmm_v2,
 					DataType.ComplexSingle => &NativeMethods.cublasCtrmm_v2,
 					DataType.ComplexDouble => &NativeMethods.cublasZtrmm_v2,
 					_ => null,
@@ -1366,8 +1366,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			delegate*<IntPtr, CuBlasOperation, CuBlasOperation, int, int, T*, IntPtr, int, T*, IntPtr, int, IntPtr, int, CudaBlasStatus> func;
 			func = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cublasSgeam,
-				DataType.RealDouble => &NativeMethods.cublasDgeam,
+				DataType.RealFloat32 => &NativeMethods.cublasSgeam,
+				DataType.RealFloat64 => &NativeMethods.cublasDgeam,
 				DataType.ComplexSingle => &NativeMethods.cublasCgeam,
 				DataType.ComplexDouble => &NativeMethods.cublasZgeam,
 				_ => null,
@@ -1392,8 +1392,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSgemm,
-					DataType.RealDouble => &NativeMethods.cublasDgemm,
+					DataType.RealFloat32 => &NativeMethods.cublasSgemm,
+					DataType.RealFloat64 => &NativeMethods.cublasDgemm,
 					DataType.ComplexSingle => this.ComplexGemmUseGemm3m ? &NativeMethods.cublasCgemm3m : &NativeMethods.cublasCgemm,
 					DataType.ComplexDouble => this.ComplexGemmUseGemm3m ? &NativeMethods.cublasZgemm3m : &NativeMethods.cublasZgemm,
 					_ => null,
@@ -1403,8 +1403,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSgemm_v2,
-					DataType.RealDouble => &NativeMethods.cublasDgemm_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSgemm_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDgemm_v2,
 					DataType.ComplexSingle => this.ComplexGemmUseGemm3m ? &NativeMethods.cublasCgemm3m : &NativeMethods.cublasCgemm_v2,
 					DataType.ComplexDouble => this.ComplexGemmUseGemm3m ? &NativeMethods.cublasZgemm3m : &NativeMethods.cublasZgemm_v2,
 					_ => null,
@@ -1448,8 +1448,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsymm,
-					DataType.RealDouble => &NativeMethods.cublasDsymm,
+					DataType.RealFloat32 => &NativeMethods.cublasSsymm,
+					DataType.RealFloat64 => &NativeMethods.cublasDsymm,
 					DataType.ComplexSingle => hermA ? &NativeMethods.cublasChemm : &NativeMethods.cublasCsymm,
 					DataType.ComplexDouble => hermA ? &NativeMethods.cublasZhemm : &NativeMethods.cublasZsymm,
 					_ => null,
@@ -1459,8 +1459,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsymm_v2,
-					DataType.RealDouble => &NativeMethods.cublasDsymm_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSsymm_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDsymm_v2,
 					DataType.ComplexSingle => hermA ? &NativeMethods.cublasChemm_v2 : &NativeMethods.cublasCsymm_v2,
 					DataType.ComplexDouble => hermA ? &NativeMethods.cublasZhemm_v2 : &NativeMethods.cublasZsymm_v2,
 					_ => null,
@@ -1484,8 +1484,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyrk,
-					DataType.RealDouble => &NativeMethods.cublasDsyrk,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyrk,
+					DataType.RealFloat64 => &NativeMethods.cublasDsyrk,
 					DataType.ComplexSingle => conjA ? &NativeMethods.cublasCherk : &NativeMethods.cublasCsyrk,
 					DataType.ComplexDouble => conjA ? &NativeMethods.cublasZherk : &NativeMethods.cublasZsyrk,
 					_ => null,
@@ -1495,8 +1495,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyrk_v2,
-					DataType.RealDouble => &NativeMethods.cublasDsyrk_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyrk_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDsyrk_v2,
 					DataType.ComplexSingle => conjA ? &NativeMethods.cublasCherk_v2 : &NativeMethods.cublasCsyrk_v2,
 					DataType.ComplexDouble => conjA ? &NativeMethods.cublasZherk_v2 : &NativeMethods.cublasZsyrk_v2,
 					_ => null,
@@ -1522,8 +1522,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyr2k,
-					DataType.RealDouble => &NativeMethods.cublasDsyr2k,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyr2k,
+					DataType.RealFloat64 => &NativeMethods.cublasDsyr2k,
 					DataType.ComplexSingle => conjugate ? &NativeMethods.cublasCher2k : &NativeMethods.cublasCsyr2k,
 					DataType.ComplexDouble => conjugate ? &NativeMethods.cublasZher2k : &NativeMethods.cublasZsyr2k,
 					_ => null,
@@ -1533,8 +1533,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyr2k_v2,
-					DataType.RealDouble => &NativeMethods.cublasDsyr2k_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyr2k_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDsyr2k_v2,
 					DataType.ComplexSingle => conjugate ? &NativeMethods.cublasCher2k_v2 : &NativeMethods.cublasCsyr2k_v2,
 					DataType.ComplexDouble => conjugate ? &NativeMethods.cublasZher2k_v2 : &NativeMethods.cublasZsyr2k_v2,
 					_ => null,
@@ -1560,8 +1560,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyrkx,
-					DataType.RealDouble => &NativeMethods.cublasDsyrkx,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyrkx,
+					DataType.RealFloat64 => &NativeMethods.cublasDsyrkx,
 					DataType.ComplexSingle => conjB ? &NativeMethods.cublasCherkx : &NativeMethods.cublasCsyrkx,
 					DataType.ComplexDouble => conjB ? &NativeMethods.cublasZherkx : &NativeMethods.cublasZsyrkx,
 					_ => null,
@@ -1571,8 +1571,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			{
 				func = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cublasSsyrkx_v2,
-					DataType.RealDouble => &NativeMethods.cublasDsyrkx_v2,
+					DataType.RealFloat32 => &NativeMethods.cublasSsyrkx_v2,
+					DataType.RealFloat64 => &NativeMethods.cublasDsyrkx_v2,
 					DataType.ComplexSingle => conjB ? &NativeMethods.cublasCherkx_v2 : &NativeMethods.cublasCsyrkx_v2,
 					DataType.ComplexDouble => conjB ? &NativeMethods.cublasZherkx_v2 : &NativeMethods.cublasZsyrkx_v2,
 					_ => null,
@@ -1680,12 +1680,12 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				delegate*<IntPtr, CuBlasOperation, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> solveFunc;
 				switch (Const<T>.DataType)
 				{
-					case DataType.RealSingle:
+					case DataType.RealFloat32:
 						bufFunc = &NativeMethods.cusolverDnSgetrf_bufferSize;
 						calFunc = &NativeMethods.cusolverDnSgetrf;
 						solveFunc = &NativeMethods.cusolverDnSgetrs;
 						break;
-					case DataType.RealDouble:
+					case DataType.RealFloat64:
 						bufFunc = &NativeMethods.cusolverDnDgetrf_bufferSize;
 						calFunc = &NativeMethods.cusolverDnDgetrf;
 						solveFunc = &NativeMethods.cusolverDnDgetrs;
@@ -1749,14 +1749,14 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				CuBlasOperation op = CuBlasOperation.Transpose;
 				switch (Const<T>.DataType)
 				{
-					case DataType.RealSingle:
+					case DataType.RealFloat32:
 						bufQRFunc = &NativeMethods.cusolverDnSgeqrf_bufferSize;
 						bufQmulFunc = &NativeMethods.cusolverDnSormqr_bufferSize;
 						calQRFunc = &NativeMethods.cusolverDnSgeqrf;
 						calQmulFunc = &NativeMethods.cusolverDnSormqr;
 						triSolveFunc = this.Cuda110OrAbove ? &NativeMethods.cublasStrsm : &NativeMethods.cublasStrsm_v2;
 						break;
-					case DataType.RealDouble:
+					case DataType.RealFloat64:
 						bufQRFunc = &NativeMethods.cusolverDnDgeqrf_bufferSize;
 						bufQmulFunc = &NativeMethods.cusolverDnDormqr_bufferSize;
 						calQRFunc = &NativeMethods.cusolverDnDgeqrf;
@@ -1829,13 +1829,13 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				delegate*<IntPtr, int, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calGetQFunc = null;
 				switch (Const<T>.DataType)
 				{
-					case DataType.RealSingle:
+					case DataType.RealFloat32:
 						bufQRFunc = &NativeMethods.cusolverDnSgeqrf_bufferSize;
 						bufGetQFunc = &NativeMethods.cusolverDnSorgqr_bufferSize;
 						calQRFunc = &NativeMethods.cusolverDnSgeqrf;
 						calGetQFunc = &NativeMethods.cusolverDnSorgqr;
 						break;
-					case DataType.RealDouble:
+					case DataType.RealFloat64:
 						bufQRFunc = &NativeMethods.cusolverDnDgeqrf_bufferSize;
 						bufGetQFunc = &NativeMethods.cusolverDnDorgqr_bufferSize;
 						calQRFunc = &NativeMethods.cusolverDnDgeqrf;
@@ -1914,16 +1914,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				delegate*<IntPtr, SolveVectorMode, CuBlasFillMode, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calFunc;
 				bufFunc = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSsyevd_bufferSize,
-					DataType.RealDouble => &NativeMethods.cusolverDnDsyevd_bufferSize,
+					DataType.RealFloat32 => &NativeMethods.cusolverDnSsyevd_bufferSize,
+					DataType.RealFloat64 => &NativeMethods.cusolverDnDsyevd_bufferSize,
 					DataType.ComplexSingle => &NativeMethods.cusolverDnCheevd_bufferSize,
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZheevd_bufferSize,
 					_ => null,
 				};
 				calFunc = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSsyevd,
-					DataType.RealDouble => &NativeMethods.cusolverDnDsyevd,
+					DataType.RealFloat32 => &NativeMethods.cusolverDnSsyevd,
+					DataType.RealFloat64 => &NativeMethods.cusolverDnDsyevd,
 					DataType.ComplexSingle => &NativeMethods.cusolverDnCheevd,
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZheevd,
 					_ => null,
@@ -1955,16 +1955,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 			delegate*<IntPtr, GeneralEigenType, SolveVectorMode, CuBlasFillMode, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, CudaSolverStatus> calFunc;
 			bufFunc = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cusolverDnSsygvd_bufferSize,
-				DataType.RealDouble => &NativeMethods.cusolverDnDsygvd_bufferSize,
+				DataType.RealFloat32 => &NativeMethods.cusolverDnSsygvd_bufferSize,
+				DataType.RealFloat64 => &NativeMethods.cusolverDnDsygvd_bufferSize,
 				DataType.ComplexSingle => &NativeMethods.cusolverDnChegvd_bufferSize,
 				DataType.ComplexDouble => &NativeMethods.cusolverDnZhegvd_bufferSize,
 				_ => null,
 			};
 			calFunc = Const<T>.DataType switch
 			{
-				DataType.RealSingle => &NativeMethods.cusolverDnSsygvd,
-				DataType.RealDouble => &NativeMethods.cusolverDnDsygvd,
+				DataType.RealFloat32 => &NativeMethods.cusolverDnSsygvd,
+				DataType.RealFloat64 => &NativeMethods.cusolverDnDsygvd,
 				DataType.ComplexSingle => &NativeMethods.cusolverDnChegvd,
 				DataType.ComplexDouble => &NativeMethods.cusolverDnZhegvd,
 				_ => null,
@@ -2031,16 +2031,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 				delegate*<IntPtr, sbyte, sbyte, int, int, IntPtr, int, IntPtr, IntPtr, int, IntPtr, int, IntPtr, int, IntPtr, IntPtr, CudaSolverStatus> calFunc;
 				bufFunc = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgesvd_bufferSize,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgesvd_bufferSize,
+					DataType.RealFloat32 => &NativeMethods.cusolverDnSgesvd_bufferSize,
+					DataType.RealFloat64 => &NativeMethods.cusolverDnDgesvd_bufferSize,
 					DataType.ComplexSingle => &NativeMethods.cusolverDnCgesvd_bufferSize,
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZgesvd_bufferSize,
 					_ => null,
 				};
 				calFunc = Const<T>.DataType switch
 				{
-					DataType.RealSingle => &NativeMethods.cusolverDnSgesvd,
-					DataType.RealDouble => &NativeMethods.cusolverDnDgesvd,
+					DataType.RealFloat32 => &NativeMethods.cusolverDnSgesvd,
+					DataType.RealFloat64 => &NativeMethods.cusolverDnDgesvd,
 					DataType.ComplexSingle => &NativeMethods.cusolverDnCgesvd,
 					DataType.ComplexDouble => &NativeMethods.cusolverDnZgesvd,
 					_ => null,

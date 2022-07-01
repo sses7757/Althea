@@ -12,7 +12,7 @@ namespace Althea.Array
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	public readonly ref struct DenseArrayWrapper<T, TS> where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+	public readonly ref struct DenseArrayWrapper<T, TS> where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		#region basic
 		private readonly TS m_values;
@@ -524,7 +524,7 @@ namespace Althea.Array
 	/// <remarks>The wrapper is quite large and therefore shall be passed by reference if possible.</remarks>
 	[StructLayout(LayoutKind.Explicit)]
 	public struct SparseArrayWrapper<TVal, TInd, TSVal, TSInd>
-		where TVal : unmanaged, INumber<TVal> where TInd : unmanaged, IBinaryInteger<TInd>
+		where TVal : unmanaged, IBaseNumber<TVal> where TInd : unmanaged, IBinaryInt<TInd>
 		where TSVal : class, IStorage<TVal, TSVal> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic

@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
-using Althea.Numerics;
 using Althea.Random;
 
 using LAD = Althea.Backend.CSharp.LinearAlgebra.Api;
@@ -35,13 +34,11 @@ namespace Althea.Backend.CSharp.Random
 		#region operations
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static unsafe bool Check<T, TS, TDist>(TS storage!!, TDist distribution, out IntPtr pointer, out int length, out T offset, out T scale)
-			where T : unmanaged, INumber<T>
+			where T : unmanaged, IBaseNumber<T>
 			where TS : class, IStorage<T, TS>
 			where TDist : struct, IRandomDistribution<TDist>
 		{
 			pointer = default; length = 0; offset = default; scale = default;
-			if (!NumberType<T>.IsPrimitive)
-				return false; // not support
 			if (storage is not PureStorage<T, CpuMemoryPointer> ps)
 				return false; // not support
 			if (distribution is not (UniformDistribution<T> or RandomBitsDistribution<T>))
@@ -53,7 +50,7 @@ namespace Althea.Backend.CSharp.Random
 			if (distribution is UniformDistribution<T> u)
 			{
 				offset = u.LowerBound; scale = u.UpperBound - offset;
-				if (!NumberType<T>.DataType.IsInteger())
+				if (!T.Type.IsInteger())
 				{
 					T s = scale;
 					if (typeof(T) == typeof(double))
@@ -83,7 +80,7 @@ namespace Althea.Backend.CSharp.Random
 		private const double ReciprocalH = 1.0 / (ushort.MaxValue + 1.0);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe void Generate<T>(IntPtr pointer, int length, T offset, T scale, long? seed) where T : unmanaged, INumber<T>
+		private static unsafe void Generate<T>(IntPtr pointer, int length, T offset, T scale, long? seed) where T : unmanaged, IBaseNumber<T>
 		{
 			void* p = pointer.ToPointer();
 			if (!seed.HasValue)
@@ -95,16 +92,16 @@ namespace Althea.Backend.CSharp.Random
 				return;
 			// else, random range
 			int len = length / T.Size;
-			DataType type = NumberType<T>.DataType;
+			DataType type = T.Type;
 			switch (type)
 			{
-				case DataType.RealSingle:
-					LAD.PointWiseCast((uint*)p, 1, (float*)p, 1, len);
-					LAD.VectorModify<float, float, LAD.U_MultiplyScalar>((float*)p, 1, (float*)p, 1, len, *(float*)&scale);
+				case DataType.RealFloat32:
+					LAD.VectorCastManaged((UnsignedInt32*)p, 1, (Float32*)p, 1, len);
+					LAD.VectorModify<Float32, LAD.U_MultiplyScalar>((Float32*)p, 1, (Float32*)p, 1, len, *(Float32*)&scale);
 					break;
-				case DataType.RealDouble:
-					LAD.PointWiseCast((ulong*)p, 1, (double*)p, 1, len);
-					LAD.VectorModify<double, double, LAD.U_MultiplyScalar>((double*)p, 1, (double*)p, 1, len, *(double*)&scale);
+				case DataType.RealFloat64:
+					LAD.VectorCastManaged((UnsignedInt64*)p, 1, (Float64*)p, 1, len);
+					LAD.VectorModify<Float64, LAD.U_MultiplyScalar>((Float64*)p, 1, (Float64*)p, 1, len, *(Float64*)&scale);
 					break;
 				case DataType.RealInt8:
 				case DataType.RealInt16:
@@ -114,14 +111,14 @@ namespace Althea.Backend.CSharp.Random
 				case DataType.RealUInt16:
 				case DataType.RealUInt32:
 				case DataType.RealUInt64:
-					LAD.VectorModify<T, T, LAD.U_Modulo>((T*)p, 1, (T*)p, 1, len, scale);
+					LAD.VectorModify<T, LAD.U_Modulo>((T*)p, 1, (T*)p, 1, len, scale);
 					break;
 			}
-			LAD.VectorModify<T, T, LAD.U_AddScalar>((T*)p, 1, (T*)p, 1, len, offset);
+			LAD.VectorModify<T, LAD.U_AddScalar>((T*)p, 1, (T*)p, 1, len, offset);
 		}
 
 		/// <inheritdoc/>
-		public bool FillWithRandom<T, TS, TDist>(TS storage, TDist distribution) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>
+		public bool FillWithRandom<T, TS, TDist>(TS storage, TDist distribution) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>
 		{
 			if (!Check(storage, distribution, out var ptr, out int len, out T offset, out T scale))
 				return false;

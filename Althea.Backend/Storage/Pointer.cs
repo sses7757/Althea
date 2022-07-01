@@ -61,7 +61,7 @@ namespace Althea.Backend.Storage
 		/// <param name="pointer">The allocated pointer on managed memory</param>
 		/// <param name="length">The length in <typeparamref name="T"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CpuMemoryPointer Create<T>(IntPtr pointer, long length) where T : unmanaged, INumber<T> => new(pointer, length * T.Size);
+		public static CpuMemoryPointer Create<T>(IntPtr pointer, long length) where T : unmanaged, IBaseNumber<T> => new(pointer, length * T.Size);
 		#endregion
 
 		#region equality
@@ -100,7 +100,7 @@ namespace Althea.Backend.Storage
 		internal TP AsGeneric<TP>() where TP : IPointer<TP> => Unsafe.As<CpuMemoryPointer, TP>(ref Unsafe.AsRef(in this));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe T* UnmangedPointer<T>(long offset = 0) where T : unmanaged, INumber<T> => (T*)this.Pointer.ToPointer() + offset;
+		internal unsafe T* UnmangedPointer<T>(long offset = 0) where T : unmanaged, IBaseNumber<T> => (T*)this.Pointer.ToPointer() + offset;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
@@ -109,10 +109,10 @@ namespace Althea.Backend.Storage
 		internal unsafe IntPtr OffsetPointer(long offset = 0) => (IntPtr)((byte*)this.Pointer.ToPointer() + offset);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged, INumber<T> => new(this.UnmangedPointer<T>(offset), length);
+		internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged, IBaseNumber<T> => new(this.UnmangedPointer<T>(offset), length);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Span<T> AsSpan<T, TP>(PointerSegment<TP> pointerSegment) where T : unmanaged, INumber<T> where TP : IPointer<TP> => this.AsSpan<T>(pointerSegment.OffsetInBytes / T.Size, (int)(pointerSegment.LengthInBytes / T.Size));
+		internal Span<T> AsSpan<T, TP>(PointerSegment<TP> pointerSegment) where T : unmanaged, IBaseNumber<T> where TP : IPointer<TP> => this.AsSpan<T>(pointerSegment.OffsetInBytes / T.Size, (int)(pointerSegment.LengthInBytes / T.Size));
 		#endregion
 	}
 
@@ -123,10 +123,10 @@ namespace Althea.Backend.Storage
 		internal static CpuMemoryPointer FromGeneric<TP>(this TP pointer) where TP : IPointer<TP> => Unsafe.As<TP, CpuMemoryPointer>(ref pointer);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe PointerSegment<CpuMemoryPointer> AsPointerSegment<T>(this Span<T> span, T* pointer) where T : unmanaged, INumber<T> => new(CpuMemoryPointer.Create<T>((IntPtr)pointer, span.Length));
+		internal static unsafe PointerSegment<CpuMemoryPointer> AsPointerSegment<T>(this Span<T> span, T* pointer) where T : unmanaged, IBaseNumber<T> => new(CpuMemoryPointer.Create<T>((IntPtr)pointer, span.Length));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe PointerSegment<CpuMemoryPointer> AsPointerSegment<T>(this ReadOnlySpan<T> span, T* pointer) where T : unmanaged, INumber<T> => new(CpuMemoryPointer.Create<T>((IntPtr)pointer, span.Length));
+		internal static unsafe PointerSegment<CpuMemoryPointer> AsPointerSegment<T>(this ReadOnlySpan<T> span, T* pointer) where T : unmanaged, IBaseNumber<T> => new(CpuMemoryPointer.Create<T>((IntPtr)pointer, span.Length));
 	}
 	#endregion
 }

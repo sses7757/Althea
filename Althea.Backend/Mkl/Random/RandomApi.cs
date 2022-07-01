@@ -68,7 +68,7 @@ namespace Althea.Backend.Mkl.Random
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointer<T, TS>(TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			pointer = default; length = 0;
 			if (s is null || !s.IsValid())
@@ -87,7 +87,7 @@ namespace Althea.Backend.Mkl.Random
 		const DistributionType INVALID = (DistributionType)(-1);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T, TS>(TS storage, IRandomDistribution distribution!!, out T* pointer, out long length, out DistributionType type) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static unsafe bool Check<T, TS>(TS storage, IRandomDistribution distribution!!, out T* pointer, out long length, out DistributionType type) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			pointer = default; length = 0;
 			type = INVALID;
@@ -154,8 +154,8 @@ namespace Althea.Backend.Mkl.Random
 			{
 				MultinomialDistribution<int> => storages.All(static s => s.DataType == DataType.RealInt32) ? DistributionType.Multinomial : INVALID,
 				MultinomialDistribution<uint> => storages.All(static s => s.DataType == DataType.RealUInt32) ? DistributionType.Multinomial : INVALID,
-				MultiNormalDistribution<float> => storages.All(static s => s.DataType == DataType.RealSingle) ? DistributionType.MultiNormal : INVALID,
-				MultiNormalDistribution<double> => storages.All(static s => s.DataType == DataType.RealDouble) ? DistributionType.MultiNormal : INVALID,
+				MultiNormalDistribution<float> => storages.All(static s => s.DataType == DataType.RealFloat32) ? DistributionType.MultiNormal : INVALID,
+				MultiNormalDistribution<double> => storages.All(static s => s.DataType == DataType.RealFloat64) ? DistributionType.MultiNormal : INVALID,
 				SimpleJointRandomDistribution => DistributionType.SimpleJoint,
 				_ => INVALID,
 			};
@@ -167,7 +167,7 @@ namespace Althea.Backend.Mkl.Random
 
 		#region methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe void Fill1D<T>(IntPtr p, int n, IRandomDistribution distribution, DistributionType type) where T : unmanaged, INumber<T>
+		private unsafe void Fill1D<T>(IntPtr p, int n, IRandomDistribution distribution, DistributionType type) where T : unmanaged, IBaseNumber<T>
 		{
 			T shape1, shape2, scale, displace, mean, sigma;
 			switch (type)
@@ -474,12 +474,12 @@ namespace Althea.Backend.Mkl.Random
 		internal static unsafe ulong* AsU8(this IntPtr v) => (ulong*)v;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe float AsF4<T>(this T v) where T : unmanaged, INumber<T> => *(float*)&v;
+		internal static unsafe float AsF4<T>(this T v) where T : unmanaged, IBaseNumber<T> => *(float*)&v;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe double AsF8<T>(this T v) where T : unmanaged, INumber<T> => *(double*)&v;
+		internal static unsafe double AsF8<T>(this T v) where T : unmanaged, IBaseNumber<T> => *(double*)&v;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe int AsI4<T>(this T v) where T : unmanaged, INumber<T> => *(int*)&v;
+		internal static unsafe int AsI4<T>(this T v) where T : unmanaged, IBaseNumber<T> => *(int*)&v;
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe uint AsU4<T>(this T v) where T : unmanaged, INumber<T> => *(uint*)&v;
+		internal static unsafe uint AsU4<T>(this T v) where T : unmanaged, IBaseNumber<T> => *(uint*)&v;
 	}
 }

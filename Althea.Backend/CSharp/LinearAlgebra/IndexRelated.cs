@@ -13,7 +13,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 	{
 		#region check
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointerIndexType<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointerIndexType<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!T.Type.IsInteger())
 			{
@@ -25,7 +25,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		#endregion
 
 		#region find
-		public virtual partial bool Sort<T, TS>(TS array, long stride) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>
+		public virtual partial bool Sort<T, TS>(TS array, long stride) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (!GetPointer(array, stride, out T* ptr, out int length, out int inc))
 				return false;
@@ -35,7 +35,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, Numerics.INumber<TOther> where TS2 : class, IStorage<TOther, TS2>
+		public virtual partial bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, IBaseNumber<TOther> where TS2 : class, IStorage<TOther, TS2>
 		{
 			if (!GetPointer(keys, strideKeys, out T* k, out int length, out int incK))
 				return false;
@@ -49,27 +49,17 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>
+		public virtual partial bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			minmax = default;
-			if (!GetPointer(array, stride, out T* ptr, out int length, out int inc))
+			if (!MinMax<T, TS, long>(array, stride, out minmax.Min))
 				return false;
-			if (inc == 1)
-			{
-				minmax.Min = VectorMinMaxReal<T, ulong>(ptr, length);
-				minmax.Max = VectorMinMaxReal<T, long>(ptr, length);
-			}
-			else
-			{
-				if (!VectorMinMaxManaged<T, ulong>(ptr, inc, length, out minmax.Min))
-					return false;
-				if (!VectorMinMaxManaged<T, long>(ptr, inc, length, out minmax.Max))
-					return false;
-			}
+			if (!MinMax<T, TS, int>(array, stride, out minmax.Max))
+				return false;
 			return true;
 		}
 
-		private static int BinarySearch<T>(T* x, int incx, int length, T value) where T : unmanaged, Numerics.INumber<T>
+		private static int BinarySearch<T>(T* x, int incx, int length, T value) where T : unmanaged, IBaseNumber<T>
 		{
 			int left = 0;
 			int right = (length - 1) * incx;
@@ -93,7 +83,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return ~left;
 		}
 
-		public virtual partial bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>
+		public virtual partial bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			find = -1;
 			if (!GetPointer(array, stride, out T* ptr, out int length, out int inc))
@@ -128,7 +118,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		#region bound
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int VectorBound<T, Lower>(T* x, int length, T value) where T : unmanaged, Numerics.INumber<T>
+		private static int VectorBound<T, Lower>(T* x, int length, T value) where T : unmanaged, IBaseNumber<T>
 		{
 			bool lower = typeof(Lower) == typeof(bool);
 			Vector<T> values = new(value);
@@ -167,7 +157,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int VectorBoundManaged<T, Lower>(T* x, int incx, int length, T value) where T : unmanaged, Numerics.INumber<T>
+		private static int VectorBoundManaged<T, Lower>(T* x, int incx, int length, T value) where T : unmanaged, IBaseNumber<T>
 		{
 			bool lower = typeof(Lower) == typeof(bool);
 			for (int i = 0, ix = 0; i < length; i++, ix += incx)
@@ -182,7 +172,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return lower ? -1 : length;
 		}
 
-		public virtual partial bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, Numerics.INumber<T> where TS : class, IStorage<T, TS>
+		public virtual partial bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			index = -1;
 			if (!GetPointer(array, stride, out T* x, out int length, out int inc))
@@ -209,7 +199,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorAllBoundsManaged<T, U, Lower>(T* x, int length, T start, T end, U* y) where T : unmanaged, Numerics.IBinaryInteger<T> where U : unmanaged, Numerics.IBinaryInteger<U>
+		private static void VectorAllBoundsManaged<T, U, Lower>(T* x, int length, T start, T end, U* y) where T : unmanaged, IBinaryInt<T> where U : unmanaged, IBinaryInt<U>
 		{
 			bool lower = typeof(Lower) == typeof(bool);
 			T value = start;
@@ -228,7 +218,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 		}
 
-		public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, Numerics.IBinaryInteger<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, Numerics.IBinaryInteger<TOut> where TSOut : class, IStorage<TOut, TSOut>
+		public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInt<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, IBinaryInt<TOut> where TSOut : class, IStorage<TOut, TSOut>
 		{
 			if (!GetPointerIndexType(array, 1, out T* x, out int lenx, out _))
 				return false;
@@ -249,7 +239,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) where T : unmanaged, Numerics.IBinaryInteger<T> where TOut : unmanaged, Numerics.IBinaryInteger<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>
+		public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) where T : unmanaged, IBinaryInt<T> where TOut : unmanaged, IBinaryInt<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>
 		{
 			if (!GetPointerIndexType(bounds, 1, out T* x, out int lenx, out _))
 				return false;
@@ -286,7 +276,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		#endregion
 
 		#region sparse vector
-		public virtual partial bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual partial bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (!GetPointer(x, 1, out T* px, out int length, out _))
 				return false;
@@ -329,7 +319,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool VectorSetValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual partial bool VectorSetValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (!GetPointer(x, 1, out T* px, out int length, out _))
 				return false;
@@ -374,7 +364,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool VectorGatherValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual partial bool VectorGatherValuesAt<T, TInd, TS1, TS2, TSInd>(TS1 x, TS2 values, TSInd positions) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (!GetPointer(x, 1, out T* px, out int length, out _))
 				return false;
@@ -419,7 +409,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y!!, long strideY) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual partial bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y!!, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (strideY != 1)
 				return false;
@@ -432,7 +422,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return this.VectorSetValuesAt<T, TInd, TS2, TS1, TSInd>(y, x.ValueStorages[0], x.IndexStorages[0]);
 		}
 
-		public virtual partial bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold) where T : unmanaged, Numerics.INumber<T> where TInd : unmanaged, Numerics.IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual partial bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (y.Format != new SparseFormat(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element, SparseFormat.Major.None))
 				return false;

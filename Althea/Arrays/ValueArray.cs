@@ -81,7 +81,7 @@ namespace Althea.Array
 	/// </remarks>
 	public interface IValueArray<T, TSelf> : ICheckValid, IDisposable, IPrintable<T>,
 		ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, System.Numerics.IEqualityOperators<TSelf, TSelf>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TSelf : class, IValueArray<T, TSelf>
 	{
 		#region basic

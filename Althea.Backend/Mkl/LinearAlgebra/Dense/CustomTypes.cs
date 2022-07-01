@@ -214,7 +214,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			return type switch
 			{
-				DataType.RealSingle or DataType.RealDouble or
+				DataType.RealFloat32 or DataType.RealFloat64 or
 				DataType.ComplexSingle or DataType.ComplexDouble => true,
 				_ => false,
 			};

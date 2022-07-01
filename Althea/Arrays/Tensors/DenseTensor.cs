@@ -25,7 +25,7 @@ namespace Althea.Array
 		IBaseTensor<T, DenseTensor<T, TS>>,
 		ITensorUnaryOperators<T, DenseTensor<T, TS>, DenseTensor<T, TS>>,
 		ITensorBinaryOperators<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic

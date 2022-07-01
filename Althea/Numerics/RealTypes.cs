@@ -12,24 +12,24 @@ namespace Althea.Numerics;
 /// <summary>
 /// The custom replacement of <see cref="double"/> that implements <see cref="IBinaryFloat{TSelf}"/>.
 /// </summary>
-public readonly partial struct Double : IBinaryFloat<Double>
+public readonly partial struct Float64 : IBinaryFloat<Float64>
 {
 	private readonly double _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Double(double v) => this._value = v;
+	private Float64(double v) => this._value = v;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Double(double v) => new(v);
+	public static implicit operator Float64(double v) => new(v);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator double(Double v) => v._value;
+	public static implicit operator double(Float64 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(Double other) => this == other;
+	public bool Equals(Float64 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,7 +45,7 @@ public readonly partial struct Double : IBinaryFloat<Double>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(Double other) => this._value.CompareTo(other);
+	public int CompareTo(Float64 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,10 +60,10 @@ public readonly partial struct Double : IBinaryFloat<Double>
 	public string ToString(string? format, IFormatProvider? formatProvider) => this._value.ToString(format, formatProvider);
 
 	/// <inheritdoc/>
-	public static DataType Type => DataType.RealDouble;
+	public static DataType Type => DataType.RealFloat64;
 
 	/// <inheritdoc/>
-	public static Double MachinePrecision => 2.220446049250313E-16;
+	public static Float64 MachinePrecision => 2.220446049250313E-16;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(double);
@@ -72,64 +72,64 @@ public readonly partial struct Double : IBinaryFloat<Double>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static Double One => 1.0;
+	public static Float64 One => 1.0;
 
 	/// <inheritdoc/>
-	public static Double Zero => 0.0;
+	public static Float64 Zero => 0.0;
 	
 	/// <inheritdoc/>
-	public static Double NegativeOne => -1.0;
+	public static Float64 NegativeOne => -1.0;
 
 	/// <inheritdoc/>
-	public static Double NegativeZero => -0.0;
+	public static Float64 NegativeZero => -0.0;
 
 	/// <inheritdoc/>
-	public static Double AdditiveIdentity => 0.0;
+	public static Float64 AdditiveIdentity => 0.0;
 
 	/// <inheritdoc/>
-	public static Double MultiplicativeIdentity => 1.0;
+	public static Float64 MultiplicativeIdentity => 1.0;
 
 	/// <inheritdoc/>
-	public static Double NaN => double.NaN;
+	public static Float64 NaN => double.NaN;
 	/// <inheritdoc/>
-	public static Double NegativeInfinity => double.NegativeInfinity;
+	public static Float64 NegativeInfinity => double.NegativeInfinity;
 	/// <inheritdoc/>
-	public static Double PositiveInfinity => double.PositiveInfinity;
+	public static Float64 PositiveInfinity => double.PositiveInfinity;
 	/// <inheritdoc/>
-	public static Double E => double.E;
+	public static Float64 E => double.E;
 	/// <inheritdoc/>
-	public static Double Epsilon => double.Epsilon;
+	public static Float64 Epsilon => double.Epsilon;
 	/// <inheritdoc/>
-	public static Double Pi => double.Pi;
+	public static Float64 Pi => double.Pi;
 	/// <inheritdoc/>
-	public static Double Tau => double.Tau;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(Double value) => true;
+	public static Float64 Tau => double.Tau;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(Double value) => false;
+	public static bool IsReal(Float64 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(Double value) => false;
+	public static bool IsComplex(Float64 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(Double value) => value._value == 0.0;
+	public static bool IsImaginaryNumber(Float64 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsZero(Float64 value) => value._value == 0.0;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Sign(Double value) => (double)double.Sign(value);
+	public static Float64 Sign(Float64 value) => (double)double.Sign(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Conjugate(Double value) => value;
+	public static Float64 Conjugate(Float64 value) => value;
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out Double result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out Float64 result)
 	{
 		bool success = double.TryParse(s, provider, out var res);
 		result = res;
@@ -138,7 +138,7 @@ public readonly partial struct Double : IBinaryFloat<Double>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Double result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Float64 result)
 	{
 		bool success = double.TryParse(s, provider, out var res);
 		result = res;
@@ -147,7 +147,7 @@ public readonly partial struct Double : IBinaryFloat<Double>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Double result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Float64 result)
 	{
 		bool success = double.TryParse(s, style, provider, out var res);
 		result = res;
@@ -156,7 +156,7 @@ public readonly partial struct Double : IBinaryFloat<Double>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Double result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Float64 result)
 	{
 		bool success = double.TryParse(s, style, provider, out var res);
 		result = res;
@@ -165,276 +165,276 @@ public readonly partial struct Double : IBinaryFloat<Double>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Ceiling(Double x) => double.Ceiling(x);
+	public static Float64 Ceiling(Float64 x) => double.Ceiling(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Floor(Double x) => double.Floor(x);
+	public static Float64 Floor(Float64 x) => double.Floor(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Round(Double x) => double.Round(x);
+	public static Float64 Round(Float64 x) => double.Round(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Round(Double x, int digits) => double.Round(x, digits);
+	public static Float64 Round(Float64 x, int digits) => double.Round(x, digits);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Round(Double x, MidpointRounding mode) => double.Round(x, mode);
+	public static Float64 Round(Float64 x, MidpointRounding mode) => double.Round(x, mode);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Round(Double x, int digits, MidpointRounding mode) => double.Round(x, digits, mode);
+	public static Float64 Round(Float64 x, int digits, MidpointRounding mode) => double.Round(x, digits, mode);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Truncate(Double x) => double.Truncate(x);
+	public static Float64 Truncate(Float64 x) => double.Truncate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double FusedMultiplyAdd(Double left, Double right, Double addend) => double.FusedMultiplyAdd(left, right, addend);
+	public static Float64 FusedMultiplyAdd(Float64 left, Float64 right, Float64 addend) => double.FusedMultiplyAdd(left, right, addend);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double ReciprocalEstimate(Double x) => double.ReciprocalEstimate(x);
+	public static Float64 ReciprocalEstimate(Float64 x) => double.ReciprocalEstimate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double ReciprocalSqrtEstimate(Double x) => double.ReciprocalSqrtEstimate(x);
+	public static Float64 ReciprocalSqrtEstimate(Float64 x) => double.ReciprocalSqrtEstimate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(Double value) => double.IsFinite(value);
+	public static bool IsFinite(Float64 value) => double.IsFinite(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(Double value) => double.IsNaN(value);
+	public static bool IsNaN(Float64 value) => double.IsNaN(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(Double value) => double.IsNegative(value);
+	public static bool IsNegative(Float64 value) => double.IsNegative(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(Double value) => double.IsPositive(value);
+	public static bool IsPositive(Float64 value) => double.IsPositive(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(Double value) => double.IsInteger(value);
+	public static bool IsInteger(Float64 value) => double.IsInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(Double value) => double.IsOddInteger(value);
+	public static bool IsOddInteger(Float64 value) => double.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Abs(Double value) => double.Abs(value);
+	public static Float64 Abs(Float64 value) => double.Abs(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double MaxMagnitude(Double x, Double y) => double.MaxMagnitude(x, y);
+	public static Float64 MaxMagnitude(Float64 x, Float64 y) => double.MaxMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double MaxMagnitudeNumber(Double x, Double y) => double.MaxMagnitudeNumber(x, y);
+	public static Float64 MaxMagnitudeNumber(Float64 x, Float64 y) => double.MaxMagnitudeNumber(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double MinMagnitude(Double x, Double y) => double.MinMagnitude(x, y);
+	public static Float64 MinMagnitude(Float64 x, Float64 y) => double.MinMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double MinMagnitudeNumber(Double x, Double y) => double.MinMagnitudeNumber(x, y);
+	public static Float64 MinMagnitudeNumber(Float64 x, Float64 y) => double.MinMagnitudeNumber(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double CopySign(Double value, Double sign) => double.CopySign(value, sign);
+	public static Float64 CopySign(Float64 value, Float64 sign) => double.CopySign(value, sign);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Max(Double x, Double y) => double.Max(x, y);
+	public static Float64 Max(Float64 x, Float64 y) => double.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Min(Double x, Double y) => double.Min(x, y);
+	public static Float64 Min(Float64 x, Float64 y) => double.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Parse(string s, IFormatProvider? provider) => double.Parse(s, provider);
+	public static Float64 Parse(string s, IFormatProvider? provider) => double.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Parse(string s, NumberStyles style, IFormatProvider? provider) => double.Parse(s, style, provider);
+	public static Float64 Parse(string s, NumberStyles style, IFormatProvider? provider) => double.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => double.Parse(s, provider);
+	public static Float64 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => double.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => double.Parse(s, style, provider);
+	public static Float64 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => double.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Acosh(Double x) => double.Acosh(x);
+	public static Float64 Acosh(Float64 x) => double.Acosh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Asinh(Double x) => double.Asinh(x);
+	public static Float64 Asinh(Float64 x) => double.Asinh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Atanh(Double x) => double.Atanh(x);
+	public static Float64 Atanh(Float64 x) => double.Atanh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Cosh(Double x) => double.Cosh(x);
+	public static Float64 Cosh(Float64 x) => double.Cosh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Sinh(Double x) => double.Sinh(x);
+	public static Float64 Sinh(Float64 x) => double.Sinh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Tanh(Double x) => double.Tanh(x);
+	public static Float64 Tanh(Float64 x) => double.Tanh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Log(Double x) => double.Log(x);
+	public static Float64 Log(Float64 x) => double.Log(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Log(Double x, Double newBase) => double.Log(x, newBase);
+	public static Float64 Log(Float64 x, Float64 newBase) => double.Log(x, newBase);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double LogP1(Double x) => double.LogP1(x);
+	public static Float64 LogP1(Float64 x) => double.LogP1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Log2(Double x) => double.Log2(x);
+	public static Float64 Log2(Float64 x) => double.Log2(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Log2P1(Double x) => double.Log2P1(x);
+	public static Float64 Log2P1(Float64 x) => double.Log2P1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Log10(Double x) => double.Log10(x);
+	public static Float64 Log10(Float64 x) => double.Log10(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Log10P1(Double x) => double.Log10P1(x);
+	public static Float64 Log10P1(Float64 x) => double.Log10P1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Pow(Double x, Double y) => double.Pow(x, y);
+	public static Float64 Pow(Float64 x, Float64 y) => double.Pow(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Cbrt(Double x) => double.Cbrt(x);
+	public static Float64 Cbrt(Float64 x) => double.Cbrt(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Sqrt(Double x) => double.Sqrt(x);
+	public static Float64 Sqrt(Float64 x) => double.Sqrt(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Acos(Double x) => double.Acos(x);
+	public static Float64 Acos(Float64 x) => double.Acos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Asin(Double x) => double.Asin(x);
+	public static Float64 Asin(Float64 x) => double.Asin(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Atan(Double x) => double.Atan(x);
+	public static Float64 Atan(Float64 x) => double.Atan(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Atan2(Double y, Double x) => double.Atan2(y, x);
+	public static Float64 Atan2(Float64 y, Float64 x) => double.Atan2(y, x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Cos(Double x) => double.Cos(x);
+	public static Float64 Cos(Float64 x) => double.Cos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Sin(Double x) => double.Sin(x);
+	public static Float64 Sin(Float64 x) => double.Sin(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (Double Sin, Double Cos) SinCos(Double x) => double.SinCos(x);
+	public static (Float64 Sin, Float64 Cos) SinCos(Float64 x) => double.SinCos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Tan(Double x) => double.Tan(x);
+	public static Float64 Tan(Float64 x) => double.Tan(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Exp(Double x) => double.Exp(x);
+	public static Float64 Exp(Float64 x) => double.Exp(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double ExpM1(Double x) => double.ExpM1(x);
+	public static Float64 ExpM1(Float64 x) => double.ExpM1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Exp2(Double x) => double.Exp2(x);
+	public static Float64 Exp2(Float64 x) => double.Exp2(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Exp2M1(Double x) => double.Exp2M1(x);
+	public static Float64 Exp2M1(Float64 x) => double.Exp2M1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Exp10(Double x) => double.Exp10(x);
+	public static Float64 Exp10(Float64 x) => double.Exp10(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double Exp10M1(Double x) => double.Exp10M1(x);
+	public static Float64 Exp10M1(Float64 x) => double.Exp10M1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(Double left, Double right) => left._value < right._value;
+	public static bool operator <(Float64 left, Float64 right) => left._value < right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(Double left, Double right) => left._value <= right._value;
+	public static bool operator <=(Float64 left, Float64 right) => left._value <= right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(Double left, Double right) => left._value > right._value;
+	public static bool operator >(Float64 left, Float64 right) => left._value > right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(Double left, Double right) => left._value >= right._value;
+	public static bool operator >=(Float64 left, Float64 right) => left._value >= right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(Double left, Double right) => left._value == right._value;
+	public static bool operator ==(Float64 left, Float64 right) => left._value == right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(Double left, Double right) => left._value != right._value;
+	public static bool operator !=(Float64 left, Float64 right) => left._value != right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double operator +(Double left, Double right) => left._value + right._value;
+	public static Float64 operator +(Float64 left, Float64 right) => left._value + right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double operator -(Double left, Double right) => left._value - right._value;
+	public static Float64 operator -(Float64 left, Float64 right) => left._value - right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double operator *(Double left, Double right) => left._value * right._value;
+	public static Float64 operator *(Float64 left, Float64 right) => left._value * right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double operator /(Double left, Double right) => left._value / right._value;
+	public static Float64 operator /(Float64 left, Float64 right) => left._value / right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double operator -(Double value) => -value._value;
+	public static Float64 operator -(Float64 value) => -value._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double operator +(Double value) => +value._value;
+	public static Float64 operator +(Float64 value) => +value._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double operator ++(Double value)
+	public static Float64 operator ++(Float64 value)
 	{
 		var v = value._value;
 		++v;
@@ -443,7 +443,7 @@ public readonly partial struct Double : IBinaryFloat<Double>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Double operator --(Double value)
+	public static Float64 operator --(Float64 value)
 	{
 		var v = value._value;
 		--v;
@@ -452,51 +452,51 @@ public readonly partial struct Double : IBinaryFloat<Double>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Double IIncrementOperators<Double>.op_CheckedIncrement(Double value) => ++value;
+	static Float64 IIncrementOperators<Float64>.op_CheckedIncrement(Float64 value) => ++value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Double IDecrementOperators<Double>.op_CheckedDecrement(Double value) => --value;
+	static Float64 IDecrementOperators<Float64>.op_CheckedDecrement(Float64 value) => --value;
 
 		/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Double IAdditionOperators<Double, Double, Double>.op_CheckedAddition(Double left, Double right) => checked(left._value + right._value);
+	static Float64 IAdditionOperators<Float64, Float64, Float64>.op_CheckedAddition(Float64 left, Float64 right) => checked(left._value + right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Double ISubtractionOperators<Double, Double, Double>.op_CheckedSubtraction(Double left, Double right) => checked(left._value - right._value);
+	static Float64 ISubtractionOperators<Float64, Float64, Float64>.op_CheckedSubtraction(Float64 left, Float64 right) => checked(left._value - right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Double IMultiplyOperators<Double, Double, Double>.op_CheckedMultiply(Double left, Double right) => checked(left._value * right._value);
+	static Float64 IMultiplyOperators<Float64, Float64, Float64>.op_CheckedMultiply(Float64 left, Float64 right) => checked(left._value * right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Double IDivisionOperators<Double, Double, Double>.op_CheckedDivision(Double left, Double right) => checked(left._value / right._value);
+	static Float64 IDivisionOperators<Float64, Float64, Float64>.op_CheckedDivision(Float64 left, Float64 right) => checked(left._value / right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Double IUnaryNegationOperators<Double, Double>.op_CheckedUnaryNegation(Double value) => checked(-value._value);
+	static Float64 IUnaryNegationOperators<Float64, Float64>.op_CheckedUnaryNegation(Float64 value) => checked(-value._value);
 }
 
 
 /// <summary>
 /// The custom replacement of <see cref="float"/> that implements <see cref="IBinaryFloat{TSelf}"/>.
 /// </summary>
-public readonly partial struct Single : IBinaryFloat<Single>
+public readonly partial struct Float32 : IBinaryFloat<Float32>
 {
 	private readonly float _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Single(float v) => this._value = v;
+	private Float32(float v) => this._value = v;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Single(float v) => new(v);
+	public static implicit operator Float32(float v) => new(v);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator float(Single v) => v._value;
+	public static implicit operator float(Float32 v) => v._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(Single other) => this == other;
+	public bool Equals(Float32 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -512,7 +512,7 @@ public readonly partial struct Single : IBinaryFloat<Single>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(Single other) => this._value.CompareTo(other);
+	public int CompareTo(Float32 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -527,10 +527,10 @@ public readonly partial struct Single : IBinaryFloat<Single>
 	public string ToString(string? format, IFormatProvider? formatProvider) => this._value.ToString(format, formatProvider);
 
 	/// <inheritdoc/>
-	public static DataType Type => DataType.RealSingle;
+	public static DataType Type => DataType.RealFloat32;
 
 	/// <inheritdoc/>
-	public static Single MachinePrecision => 1.1920928955078125E-07F;
+	public static Float32 MachinePrecision => 1.1920928955078125E-07F;
 
 	/// <inheritdoc/>
 	public static unsafe int Size => sizeof(float);
@@ -539,64 +539,64 @@ public readonly partial struct Single : IBinaryFloat<Single>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static Single One => 1.0F;
+	public static Float32 One => 1.0F;
 
 	/// <inheritdoc/>
-	public static Single Zero => 0.0F;
+	public static Float32 Zero => 0.0F;
 	
 	/// <inheritdoc/>
-	public static Single NegativeOne => -1.0F;
+	public static Float32 NegativeOne => -1.0F;
 
 	/// <inheritdoc/>
-	public static Single NegativeZero => -0.0F;
+	public static Float32 NegativeZero => -0.0F;
 
 	/// <inheritdoc/>
-	public static Single AdditiveIdentity => 0.0F;
+	public static Float32 AdditiveIdentity => 0.0F;
 
 	/// <inheritdoc/>
-	public static Single MultiplicativeIdentity => 1.0F;
+	public static Float32 MultiplicativeIdentity => 1.0F;
 
 	/// <inheritdoc/>
-	public static Single NaN => float.NaN;
+	public static Float32 NaN => float.NaN;
 	/// <inheritdoc/>
-	public static Single NegativeInfinity => float.NegativeInfinity;
+	public static Float32 NegativeInfinity => float.NegativeInfinity;
 	/// <inheritdoc/>
-	public static Single PositiveInfinity => float.PositiveInfinity;
+	public static Float32 PositiveInfinity => float.PositiveInfinity;
 	/// <inheritdoc/>
-	public static Single E => float.E;
+	public static Float32 E => float.E;
 	/// <inheritdoc/>
-	public static Single Epsilon => float.Epsilon;
+	public static Float32 Epsilon => float.Epsilon;
 	/// <inheritdoc/>
-	public static Single Pi => float.Pi;
+	public static Float32 Pi => float.Pi;
 	/// <inheritdoc/>
-	public static Single Tau => float.Tau;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(Single value) => true;
+	public static Float32 Tau => float.Tau;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(Single value) => false;
+	public static bool IsReal(Float32 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(Single value) => false;
+	public static bool IsComplex(Float32 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(Single value) => value._value == 0.0F;
+	public static bool IsImaginaryNumber(Float32 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsZero(Float32 value) => value._value == 0.0F;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Sign(Single value) => (float)float.Sign(value);
+	public static Float32 Sign(Float32 value) => (float)float.Sign(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Conjugate(Single value) => value;
+	public static Float32 Conjugate(Float32 value) => value;
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out Single result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out Float32 result)
 	{
 		bool success = float.TryParse(s, provider, out var res);
 		result = res;
@@ -605,7 +605,7 @@ public readonly partial struct Single : IBinaryFloat<Single>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Single result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Float32 result)
 	{
 		bool success = float.TryParse(s, provider, out var res);
 		result = res;
@@ -614,7 +614,7 @@ public readonly partial struct Single : IBinaryFloat<Single>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Single result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Float32 result)
 	{
 		bool success = float.TryParse(s, style, provider, out var res);
 		result = res;
@@ -623,7 +623,7 @@ public readonly partial struct Single : IBinaryFloat<Single>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Single result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Float32 result)
 	{
 		bool success = float.TryParse(s, style, provider, out var res);
 		result = res;
@@ -632,276 +632,276 @@ public readonly partial struct Single : IBinaryFloat<Single>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Ceiling(Single x) => float.Ceiling(x);
+	public static Float32 Ceiling(Float32 x) => float.Ceiling(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Floor(Single x) => float.Floor(x);
+	public static Float32 Floor(Float32 x) => float.Floor(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Round(Single x) => float.Round(x);
+	public static Float32 Round(Float32 x) => float.Round(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Round(Single x, int digits) => float.Round(x, digits);
+	public static Float32 Round(Float32 x, int digits) => float.Round(x, digits);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Round(Single x, MidpointRounding mode) => float.Round(x, mode);
+	public static Float32 Round(Float32 x, MidpointRounding mode) => float.Round(x, mode);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Round(Single x, int digits, MidpointRounding mode) => float.Round(x, digits, mode);
+	public static Float32 Round(Float32 x, int digits, MidpointRounding mode) => float.Round(x, digits, mode);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Truncate(Single x) => float.Truncate(x);
+	public static Float32 Truncate(Float32 x) => float.Truncate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single FusedMultiplyAdd(Single left, Single right, Single addend) => float.FusedMultiplyAdd(left, right, addend);
+	public static Float32 FusedMultiplyAdd(Float32 left, Float32 right, Float32 addend) => float.FusedMultiplyAdd(left, right, addend);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single ReciprocalEstimate(Single x) => float.ReciprocalEstimate(x);
+	public static Float32 ReciprocalEstimate(Float32 x) => float.ReciprocalEstimate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single ReciprocalSqrtEstimate(Single x) => float.ReciprocalSqrtEstimate(x);
+	public static Float32 ReciprocalSqrtEstimate(Float32 x) => float.ReciprocalSqrtEstimate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(Single value) => float.IsFinite(value);
+	public static bool IsFinite(Float32 value) => float.IsFinite(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(Single value) => float.IsNaN(value);
+	public static bool IsNaN(Float32 value) => float.IsNaN(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(Single value) => float.IsNegative(value);
+	public static bool IsNegative(Float32 value) => float.IsNegative(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(Single value) => float.IsPositive(value);
+	public static bool IsPositive(Float32 value) => float.IsPositive(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(Single value) => float.IsInteger(value);
+	public static bool IsInteger(Float32 value) => float.IsInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(Single value) => float.IsOddInteger(value);
+	public static bool IsOddInteger(Float32 value) => float.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Abs(Single value) => float.Abs(value);
+	public static Float32 Abs(Float32 value) => float.Abs(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single MaxMagnitude(Single x, Single y) => float.MaxMagnitude(x, y);
+	public static Float32 MaxMagnitude(Float32 x, Float32 y) => float.MaxMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single MaxMagnitudeNumber(Single x, Single y) => float.MaxMagnitudeNumber(x, y);
+	public static Float32 MaxMagnitudeNumber(Float32 x, Float32 y) => float.MaxMagnitudeNumber(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single MinMagnitude(Single x, Single y) => float.MinMagnitude(x, y);
+	public static Float32 MinMagnitude(Float32 x, Float32 y) => float.MinMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single MinMagnitudeNumber(Single x, Single y) => float.MinMagnitudeNumber(x, y);
+	public static Float32 MinMagnitudeNumber(Float32 x, Float32 y) => float.MinMagnitudeNumber(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single CopySign(Single value, Single sign) => float.CopySign(value, sign);
+	public static Float32 CopySign(Float32 value, Float32 sign) => float.CopySign(value, sign);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Max(Single x, Single y) => float.Max(x, y);
+	public static Float32 Max(Float32 x, Float32 y) => float.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Min(Single x, Single y) => float.Min(x, y);
+	public static Float32 Min(Float32 x, Float32 y) => float.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Parse(string s, IFormatProvider? provider) => float.Parse(s, provider);
+	public static Float32 Parse(string s, IFormatProvider? provider) => float.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Parse(string s, NumberStyles style, IFormatProvider? provider) => float.Parse(s, style, provider);
+	public static Float32 Parse(string s, NumberStyles style, IFormatProvider? provider) => float.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => float.Parse(s, provider);
+	public static Float32 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => float.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => float.Parse(s, style, provider);
+	public static Float32 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => float.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Acosh(Single x) => float.Acosh(x);
+	public static Float32 Acosh(Float32 x) => float.Acosh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Asinh(Single x) => float.Asinh(x);
+	public static Float32 Asinh(Float32 x) => float.Asinh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Atanh(Single x) => float.Atanh(x);
+	public static Float32 Atanh(Float32 x) => float.Atanh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Cosh(Single x) => float.Cosh(x);
+	public static Float32 Cosh(Float32 x) => float.Cosh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Sinh(Single x) => float.Sinh(x);
+	public static Float32 Sinh(Float32 x) => float.Sinh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Tanh(Single x) => float.Tanh(x);
+	public static Float32 Tanh(Float32 x) => float.Tanh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Log(Single x) => float.Log(x);
+	public static Float32 Log(Float32 x) => float.Log(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Log(Single x, Single newBase) => float.Log(x, newBase);
+	public static Float32 Log(Float32 x, Float32 newBase) => float.Log(x, newBase);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single LogP1(Single x) => float.LogP1(x);
+	public static Float32 LogP1(Float32 x) => float.LogP1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Log2(Single x) => float.Log2(x);
+	public static Float32 Log2(Float32 x) => float.Log2(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Log2P1(Single x) => float.Log2P1(x);
+	public static Float32 Log2P1(Float32 x) => float.Log2P1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Log10(Single x) => float.Log10(x);
+	public static Float32 Log10(Float32 x) => float.Log10(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Log10P1(Single x) => float.Log10P1(x);
+	public static Float32 Log10P1(Float32 x) => float.Log10P1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Pow(Single x, Single y) => float.Pow(x, y);
+	public static Float32 Pow(Float32 x, Float32 y) => float.Pow(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Cbrt(Single x) => float.Cbrt(x);
+	public static Float32 Cbrt(Float32 x) => float.Cbrt(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Sqrt(Single x) => float.Sqrt(x);
+	public static Float32 Sqrt(Float32 x) => float.Sqrt(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Acos(Single x) => float.Acos(x);
+	public static Float32 Acos(Float32 x) => float.Acos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Asin(Single x) => float.Asin(x);
+	public static Float32 Asin(Float32 x) => float.Asin(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Atan(Single x) => float.Atan(x);
+	public static Float32 Atan(Float32 x) => float.Atan(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Atan2(Single y, Single x) => float.Atan2(y, x);
+	public static Float32 Atan2(Float32 y, Float32 x) => float.Atan2(y, x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Cos(Single x) => float.Cos(x);
+	public static Float32 Cos(Float32 x) => float.Cos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Sin(Single x) => float.Sin(x);
+	public static Float32 Sin(Float32 x) => float.Sin(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (Single Sin, Single Cos) SinCos(Single x) => float.SinCos(x);
+	public static (Float32 Sin, Float32 Cos) SinCos(Float32 x) => float.SinCos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Tan(Single x) => float.Tan(x);
+	public static Float32 Tan(Float32 x) => float.Tan(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Exp(Single x) => float.Exp(x);
+	public static Float32 Exp(Float32 x) => float.Exp(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single ExpM1(Single x) => float.ExpM1(x);
+	public static Float32 ExpM1(Float32 x) => float.ExpM1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Exp2(Single x) => float.Exp2(x);
+	public static Float32 Exp2(Float32 x) => float.Exp2(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Exp2M1(Single x) => float.Exp2M1(x);
+	public static Float32 Exp2M1(Float32 x) => float.Exp2M1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Exp10(Single x) => float.Exp10(x);
+	public static Float32 Exp10(Float32 x) => float.Exp10(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single Exp10M1(Single x) => float.Exp10M1(x);
+	public static Float32 Exp10M1(Float32 x) => float.Exp10M1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(Single left, Single right) => left._value < right._value;
+	public static bool operator <(Float32 left, Float32 right) => left._value < right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(Single left, Single right) => left._value <= right._value;
+	public static bool operator <=(Float32 left, Float32 right) => left._value <= right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(Single left, Single right) => left._value > right._value;
+	public static bool operator >(Float32 left, Float32 right) => left._value > right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(Single left, Single right) => left._value >= right._value;
+	public static bool operator >=(Float32 left, Float32 right) => left._value >= right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(Single left, Single right) => left._value == right._value;
+	public static bool operator ==(Float32 left, Float32 right) => left._value == right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(Single left, Single right) => left._value != right._value;
+	public static bool operator !=(Float32 left, Float32 right) => left._value != right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single operator +(Single left, Single right) => left._value + right._value;
+	public static Float32 operator +(Float32 left, Float32 right) => left._value + right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single operator -(Single left, Single right) => left._value - right._value;
+	public static Float32 operator -(Float32 left, Float32 right) => left._value - right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single operator *(Single left, Single right) => left._value * right._value;
+	public static Float32 operator *(Float32 left, Float32 right) => left._value * right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single operator /(Single left, Single right) => left._value / right._value;
+	public static Float32 operator /(Float32 left, Float32 right) => left._value / right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single operator -(Single value) => -value._value;
+	public static Float32 operator -(Float32 value) => -value._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single operator +(Single value) => +value._value;
+	public static Float32 operator +(Float32 value) => +value._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single operator ++(Single value)
+	public static Float32 operator ++(Float32 value)
 	{
 		var v = value._value;
 		++v;
@@ -910,7 +910,7 @@ public readonly partial struct Single : IBinaryFloat<Single>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Single operator --(Single value)
+	public static Float32 operator --(Float32 value)
 	{
 		var v = value._value;
 		--v;
@@ -919,51 +919,51 @@ public readonly partial struct Single : IBinaryFloat<Single>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Single IIncrementOperators<Single>.op_CheckedIncrement(Single value) => ++value;
+	static Float32 IIncrementOperators<Float32>.op_CheckedIncrement(Float32 value) => ++value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Single IDecrementOperators<Single>.op_CheckedDecrement(Single value) => --value;
+	static Float32 IDecrementOperators<Float32>.op_CheckedDecrement(Float32 value) => --value;
 
 		/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Single IAdditionOperators<Single, Single, Single>.op_CheckedAddition(Single left, Single right) => checked(left._value + right._value);
+	static Float32 IAdditionOperators<Float32, Float32, Float32>.op_CheckedAddition(Float32 left, Float32 right) => checked(left._value + right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Single ISubtractionOperators<Single, Single, Single>.op_CheckedSubtraction(Single left, Single right) => checked(left._value - right._value);
+	static Float32 ISubtractionOperators<Float32, Float32, Float32>.op_CheckedSubtraction(Float32 left, Float32 right) => checked(left._value - right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Single IMultiplyOperators<Single, Single, Single>.op_CheckedMultiply(Single left, Single right) => checked(left._value * right._value);
+	static Float32 IMultiplyOperators<Float32, Float32, Float32>.op_CheckedMultiply(Float32 left, Float32 right) => checked(left._value * right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Single IDivisionOperators<Single, Single, Single>.op_CheckedDivision(Single left, Single right) => checked(left._value / right._value);
+	static Float32 IDivisionOperators<Float32, Float32, Float32>.op_CheckedDivision(Float32 left, Float32 right) => checked(left._value / right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Single IUnaryNegationOperators<Single, Single>.op_CheckedUnaryNegation(Single value) => checked(-value._value);
+	static Float32 IUnaryNegationOperators<Float32, Float32>.op_CheckedUnaryNegation(Float32 value) => checked(-value._value);
 }
 
 
 /// <summary>
-/// The custom replacement of <see cref="System.Half"/> that implements <see cref="IBinaryFloat{TSelf}"/>.
+/// The custom replacement of <see cref="Half"/> that implements <see cref="IBinaryFloat{TSelf}"/>.
 /// </summary>
-public readonly partial struct Half : IBinaryFloat<Half>
+public readonly partial struct Float16 : IBinaryFloat<Float16>
 {
-	private readonly System.Half _value;
+	private readonly Half _value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private Half(System.Half v) => this._value = v;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator Half(System.Half v) => new(v);
+	private Float16(Half v) => this._value = v;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static implicit operator System.Half(Half v) => v._value;
+	public static implicit operator Float16(Half v) => new(v);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool Equals(Half other) => this == other;
+	public static implicit operator Half(Float16 v) => v._value;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool Equals(Float16 other) => this == other;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -979,7 +979,7 @@ public readonly partial struct Half : IBinaryFloat<Half>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public int CompareTo(Half other) => this._value.CompareTo(other);
+	public int CompareTo(Float16 other) => this._value.CompareTo(other);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -994,381 +994,381 @@ public readonly partial struct Half : IBinaryFloat<Half>
 	public string ToString(string? format, IFormatProvider? formatProvider) => this._value.ToString(format, formatProvider);
 
 	/// <inheritdoc/>
-	public static DataType Type => DataType.RealHalf;
+	public static DataType Type => DataType.RealFloat16;
 
 	/// <inheritdoc/>
-	public static Half MachinePrecision => (System.Half)0.0009765625F;
+	public static Float16 MachinePrecision => (Half)0.0009765625F;
 
 	/// <inheritdoc/>
-	public static unsafe int Size => sizeof(System.Half);
+	public static unsafe int Size => sizeof(Half);
 
 	/// <inheritdoc/>
 	public static bool IsComplexType => false;
 
 	/// <inheritdoc/>
-	public static Half One => System.Half.One;
+	public static Float16 One => Half.One;
 
 	/// <inheritdoc/>
-	public static Half Zero => System.Half.Zero;
+	public static Float16 Zero => Half.Zero;
 	
 	/// <inheritdoc/>
-	public static Half NegativeOne => System.Half.NegativeOne;
+	public static Float16 NegativeOne => Half.NegativeOne;
 
 	/// <inheritdoc/>
-	public static Half NegativeZero => System.Half.NegativeZero;
+	public static Float16 NegativeZero => Half.NegativeZero;
 
 	/// <inheritdoc/>
-	public static Half AdditiveIdentity => System.Half.Zero;
+	public static Float16 AdditiveIdentity => Half.Zero;
 
 	/// <inheritdoc/>
-	public static Half MultiplicativeIdentity => System.Half.One;
+	public static Float16 MultiplicativeIdentity => Half.One;
 
 	/// <inheritdoc/>
-	public static Half NaN => System.Half.NaN;
+	public static Float16 NaN => Half.NaN;
 	/// <inheritdoc/>
-	public static Half NegativeInfinity => System.Half.NegativeInfinity;
+	public static Float16 NegativeInfinity => Half.NegativeInfinity;
 	/// <inheritdoc/>
-	public static Half PositiveInfinity => System.Half.PositiveInfinity;
+	public static Float16 PositiveInfinity => Half.PositiveInfinity;
 	/// <inheritdoc/>
-	public static Half E => System.Half.E;
+	public static Float16 E => Half.E;
 	/// <inheritdoc/>
-	public static Half Epsilon => System.Half.Epsilon;
+	public static Float16 Epsilon => Half.Epsilon;
 	/// <inheritdoc/>
-	public static Half Pi => System.Half.Pi;
+	public static Float16 Pi => Half.Pi;
 	/// <inheritdoc/>
-	public static Half Tau => System.Half.Tau;
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsReal(Half value) => true;
+	public static Float16 Tau => Half.Tau;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsComplex(Half value) => false;
+	public static bool IsReal(Float16 value) => true;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsImaginaryNumber(Half value) => false;
+	public static bool IsComplex(Float16 value) => false;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsZero(Half value) => value._value == System.Half.Zero;
+	public static bool IsImaginaryNumber(Float16 value) => false;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsZero(Float16 value) => value._value == Half.Zero;
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Sign(Half value) => (System.Half)System.Half.Sign(value);
+	public static Float16 Sign(Float16 value) => (Half)Half.Sign(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Conjugate(Half value) => value;
+	public static Float16 Conjugate(Float16 value) => value;
 
 	/// <inheritdoc/>
-	public static bool TryParse(string? s, IFormatProvider? provider, out Half result)
+	public static bool TryParse(string? s, IFormatProvider? provider, out Float16 result)
 	{
-		bool success = System.Half.TryParse(s, provider, out var res);
+		bool success = Half.TryParse(s, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Half result)
+	public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out Float16 result)
 	{
-		bool success = System.Half.TryParse(s, provider, out var res);
+		bool success = Half.TryParse(s, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Half result)
+	public static bool TryParse(string? s, NumberStyles style, IFormatProvider? provider, out Float16 result)
 	{
-		bool success = System.Half.TryParse(s, style, provider, out var res);
+		bool success = Half.TryParse(s, style, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Half result)
+	public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out Float16 result)
 	{
-		bool success = System.Half.TryParse(s, style, provider, out var res);
+		bool success = Half.TryParse(s, style, provider, out var res);
 		result = res;
 		return success;
 	}
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Ceiling(Half x) => System.Half.Ceiling(x);
+	public static Float16 Ceiling(Float16 x) => Half.Ceiling(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Floor(Half x) => System.Half.Floor(x);
+	public static Float16 Floor(Float16 x) => Half.Floor(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Round(Half x) => System.Half.Round(x);
+	public static Float16 Round(Float16 x) => Half.Round(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Round(Half x, int digits) => System.Half.Round(x, digits);
+	public static Float16 Round(Float16 x, int digits) => Half.Round(x, digits);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Round(Half x, MidpointRounding mode) => System.Half.Round(x, mode);
+	public static Float16 Round(Float16 x, MidpointRounding mode) => Half.Round(x, mode);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Round(Half x, int digits, MidpointRounding mode) => System.Half.Round(x, digits, mode);
+	public static Float16 Round(Float16 x, int digits, MidpointRounding mode) => Half.Round(x, digits, mode);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Truncate(Half x) => System.Half.Truncate(x);
+	public static Float16 Truncate(Float16 x) => Half.Truncate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half FusedMultiplyAdd(Half left, Half right, Half addend) => System.Half.FusedMultiplyAdd(left, right, addend);
+	public static Float16 FusedMultiplyAdd(Float16 left, Float16 right, Float16 addend) => Half.FusedMultiplyAdd(left, right, addend);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half ReciprocalEstimate(Half x) => System.Half.ReciprocalEstimate(x);
+	public static Float16 ReciprocalEstimate(Float16 x) => Half.ReciprocalEstimate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half ReciprocalSqrtEstimate(Half x) => System.Half.ReciprocalSqrtEstimate(x);
+	public static Float16 ReciprocalSqrtEstimate(Float16 x) => Half.ReciprocalSqrtEstimate(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsFinite(Half value) => System.Half.IsFinite(value);
+	public static bool IsFinite(Float16 value) => Half.IsFinite(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN(Half value) => System.Half.IsNaN(value);
+	public static bool IsNaN(Float16 value) => Half.IsNaN(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNegative(Half value) => System.Half.IsNegative(value);
+	public static bool IsNegative(Float16 value) => Half.IsNegative(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsPositive(Half value) => System.Half.IsPositive(value);
+	public static bool IsPositive(Float16 value) => Half.IsPositive(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsInteger(Half value) => System.Half.IsInteger(value);
+	public static bool IsInteger(Float16 value) => Half.IsInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsOddInteger(Half value) => System.Half.IsOddInteger(value);
+	public static bool IsOddInteger(Float16 value) => Half.IsOddInteger(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Abs(Half value) => System.Half.Abs(value);
+	public static Float16 Abs(Float16 value) => Half.Abs(value);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half MaxMagnitude(Half x, Half y) => System.Half.MaxMagnitude(x, y);
+	public static Float16 MaxMagnitude(Float16 x, Float16 y) => Half.MaxMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half MaxMagnitudeNumber(Half x, Half y) => System.Half.MaxMagnitudeNumber(x, y);
+	public static Float16 MaxMagnitudeNumber(Float16 x, Float16 y) => Half.MaxMagnitudeNumber(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half MinMagnitude(Half x, Half y) => System.Half.MinMagnitude(x, y);
+	public static Float16 MinMagnitude(Float16 x, Float16 y) => Half.MinMagnitude(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half MinMagnitudeNumber(Half x, Half y) => System.Half.MinMagnitudeNumber(x, y);
+	public static Float16 MinMagnitudeNumber(Float16 x, Float16 y) => Half.MinMagnitudeNumber(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half CopySign(Half value, Half sign) => System.Half.CopySign(value, sign);
+	public static Float16 CopySign(Float16 value, Float16 sign) => Half.CopySign(value, sign);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Max(Half x, Half y) => System.Half.Max(x, y);
+	public static Float16 Max(Float16 x, Float16 y) => Half.Max(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Min(Half x, Half y) => System.Half.Min(x, y);
+	public static Float16 Min(Float16 x, Float16 y) => Half.Min(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Parse(string s, IFormatProvider? provider) => System.Half.Parse(s, provider);
+	public static Float16 Parse(string s, IFormatProvider? provider) => Half.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Parse(string s, NumberStyles style, IFormatProvider? provider) => System.Half.Parse(s, style, provider);
+	public static Float16 Parse(string s, NumberStyles style, IFormatProvider? provider) => Half.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => System.Half.Parse(s, provider);
+	public static Float16 Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => Half.Parse(s, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => System.Half.Parse(s, style, provider);
+	public static Float16 Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => Half.Parse(s, style, provider);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Acosh(Half x) => System.Half.Acosh(x);
+	public static Float16 Acosh(Float16 x) => Half.Acosh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Asinh(Half x) => System.Half.Asinh(x);
+	public static Float16 Asinh(Float16 x) => Half.Asinh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Atanh(Half x) => System.Half.Atanh(x);
+	public static Float16 Atanh(Float16 x) => Half.Atanh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Cosh(Half x) => System.Half.Cosh(x);
+	public static Float16 Cosh(Float16 x) => Half.Cosh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Sinh(Half x) => System.Half.Sinh(x);
+	public static Float16 Sinh(Float16 x) => Half.Sinh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Tanh(Half x) => System.Half.Tanh(x);
+	public static Float16 Tanh(Float16 x) => Half.Tanh(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Log(Half x) => System.Half.Log(x);
+	public static Float16 Log(Float16 x) => Half.Log(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Log(Half x, Half newBase) => System.Half.Log(x, newBase);
+	public static Float16 Log(Float16 x, Float16 newBase) => Half.Log(x, newBase);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half LogP1(Half x) => System.Half.LogP1(x);
+	public static Float16 LogP1(Float16 x) => Half.LogP1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Log2(Half x) => System.Half.Log2(x);
+	public static Float16 Log2(Float16 x) => Half.Log2(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Log2P1(Half x) => System.Half.Log2P1(x);
+	public static Float16 Log2P1(Float16 x) => Half.Log2P1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Log10(Half x) => System.Half.Log10(x);
+	public static Float16 Log10(Float16 x) => Half.Log10(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Log10P1(Half x) => System.Half.Log10P1(x);
+	public static Float16 Log10P1(Float16 x) => Half.Log10P1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Pow(Half x, Half y) => System.Half.Pow(x, y);
+	public static Float16 Pow(Float16 x, Float16 y) => Half.Pow(x, y);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Cbrt(Half x) => System.Half.Cbrt(x);
+	public static Float16 Cbrt(Float16 x) => Half.Cbrt(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Sqrt(Half x) => System.Half.Sqrt(x);
+	public static Float16 Sqrt(Float16 x) => Half.Sqrt(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Acos(Half x) => System.Half.Acos(x);
+	public static Float16 Acos(Float16 x) => Half.Acos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Asin(Half x) => System.Half.Asin(x);
+	public static Float16 Asin(Float16 x) => Half.Asin(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Atan(Half x) => System.Half.Atan(x);
+	public static Float16 Atan(Float16 x) => Half.Atan(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Atan2(Half y, Half x) => System.Half.Atan2(y, x);
+	public static Float16 Atan2(Float16 y, Float16 x) => Half.Atan2(y, x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Cos(Half x) => System.Half.Cos(x);
+	public static Float16 Cos(Float16 x) => Half.Cos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Sin(Half x) => System.Half.Sin(x);
+	public static Float16 Sin(Float16 x) => Half.Sin(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static (Half Sin, Half Cos) SinCos(Half x) => System.Half.SinCos(x);
+	public static (Float16 Sin, Float16 Cos) SinCos(Float16 x) => Half.SinCos(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Tan(Half x) => System.Half.Tan(x);
+	public static Float16 Tan(Float16 x) => Half.Tan(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Exp(Half x) => System.Half.Exp(x);
+	public static Float16 Exp(Float16 x) => Half.Exp(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half ExpM1(Half x) => System.Half.ExpM1(x);
+	public static Float16 ExpM1(Float16 x) => Half.ExpM1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Exp2(Half x) => System.Half.Exp2(x);
+	public static Float16 Exp2(Float16 x) => Half.Exp2(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Exp2M1(Half x) => System.Half.Exp2M1(x);
+	public static Float16 Exp2M1(Float16 x) => Half.Exp2M1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Exp10(Half x) => System.Half.Exp10(x);
+	public static Float16 Exp10(Float16 x) => Half.Exp10(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half Exp10M1(Half x) => System.Half.Exp10M1(x);
+	public static Float16 Exp10M1(Float16 x) => Half.Exp10M1(x);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <(Half left, Half right) => left._value < right._value;
+	public static bool operator <(Float16 left, Float16 right) => left._value < right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator <=(Half left, Half right) => left._value <= right._value;
+	public static bool operator <=(Float16 left, Float16 right) => left._value <= right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >(Half left, Half right) => left._value > right._value;
+	public static bool operator >(Float16 left, Float16 right) => left._value > right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator >=(Half left, Half right) => left._value >= right._value;
+	public static bool operator >=(Float16 left, Float16 right) => left._value >= right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator ==(Half left, Half right) => left._value == right._value;
+	public static bool operator ==(Float16 left, Float16 right) => left._value == right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool operator !=(Half left, Half right) => left._value != right._value;
+	public static bool operator !=(Float16 left, Float16 right) => left._value != right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half operator +(Half left, Half right) => left._value + right._value;
+	public static Float16 operator +(Float16 left, Float16 right) => left._value + right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half operator -(Half left, Half right) => left._value - right._value;
+	public static Float16 operator -(Float16 left, Float16 right) => left._value - right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half operator *(Half left, Half right) => left._value * right._value;
+	public static Float16 operator *(Float16 left, Float16 right) => left._value * right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half operator /(Half left, Half right) => left._value / right._value;
+	public static Float16 operator /(Float16 left, Float16 right) => left._value / right._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half operator -(Half value) => -value._value;
+	public static Float16 operator -(Float16 value) => -value._value;
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half operator +(Half value) => +value._value;
+	public static Float16 operator +(Float16 value) => +value._value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half operator ++(Half value)
+	public static Float16 operator ++(Float16 value)
 	{
 		var v = value._value;
 		++v;
@@ -1377,7 +1377,7 @@ public readonly partial struct Half : IBinaryFloat<Half>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Half operator --(Half value)
+	public static Float16 operator --(Float16 value)
 	{
 		var v = value._value;
 		--v;
@@ -1386,25 +1386,25 @@ public readonly partial struct Half : IBinaryFloat<Half>
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Half IIncrementOperators<Half>.op_CheckedIncrement(Half value) => ++value;
+	static Float16 IIncrementOperators<Float16>.op_CheckedIncrement(Float16 value) => ++value;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Half IDecrementOperators<Half>.op_CheckedDecrement(Half value) => --value;
+	static Float16 IDecrementOperators<Float16>.op_CheckedDecrement(Float16 value) => --value;
 
 		/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Half IAdditionOperators<Half, Half, Half>.op_CheckedAddition(Half left, Half right) => checked(left._value + right._value);
+	static Float16 IAdditionOperators<Float16, Float16, Float16>.op_CheckedAddition(Float16 left, Float16 right) => checked(left._value + right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Half ISubtractionOperators<Half, Half, Half>.op_CheckedSubtraction(Half left, Half right) => checked(left._value - right._value);
+	static Float16 ISubtractionOperators<Float16, Float16, Float16>.op_CheckedSubtraction(Float16 left, Float16 right) => checked(left._value - right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Half IMultiplyOperators<Half, Half, Half>.op_CheckedMultiply(Half left, Half right) => checked(left._value * right._value);
+	static Float16 IMultiplyOperators<Float16, Float16, Float16>.op_CheckedMultiply(Float16 left, Float16 right) => checked(left._value * right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Half IDivisionOperators<Half, Half, Half>.op_CheckedDivision(Half left, Half right) => checked(left._value / right._value);
+	static Float16 IDivisionOperators<Float16, Float16, Float16>.op_CheckedDivision(Float16 left, Float16 right) => checked(left._value / right._value);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Half IUnaryNegationOperators<Half, Half>.op_CheckedUnaryNegation(Half value) => checked(-value._value);
+	static Float16 IUnaryNegationOperators<Float16, Float16>.op_CheckedUnaryNegation(Float16 value) => checked(-value._value);
 }

@@ -5,7 +5,6 @@ using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.Linq;
 using Althea.Storage;
 
 using Blas = Althea.LinearAlgebra.Dense.BlasApiSelector;
@@ -29,7 +28,7 @@ namespace Althea.Array
 		IVectorBinaryOperators<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseVector<T, TS>>,
 		IVectorBinaryOperators<T, SparseVector<T, TInd, TS, TSInd>, SparseVector<T, TInd, TS, TSInd>, SparseVector<T, TInd, TS, TSInd>>,
 		IVectorMatrixMultiplyOperators<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>
-		where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
@@ -280,8 +279,8 @@ namespace Althea.Array
 			T abs = T.Abs(this.defaultValue);
 			T defaultSum = abs * abs * (this.length - this.NStored).As<T>();
 			T norm = Blas.Norm<T, TS>(this.values, 1);
-			Numerics.Double n = (norm * norm + defaultSum).As<T, Numerics.Double>();
-			return Numerics.Double.Sqrt(n).As<Numerics.Double, T>();
+			double n = (norm * norm + defaultSum).AsDouble();
+			return Math.Sqrt(n).As<T>();
 		}
 
 		/// <inheritdoc/>

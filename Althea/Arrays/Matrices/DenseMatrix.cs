@@ -19,7 +19,7 @@ namespace Althea.Array
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	[StructLayout(LayoutKind.Sequential)]
 	public abstract class AbstractDenseMatrix<T, TS> : ICheckValid, IDisposable, IMatrixMetric, IDenseArray<T, TS>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic
@@ -123,7 +123,7 @@ namespace Althea.Array
 		IMatrixVectorMultiplyOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixUnaryOperators<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>>,
 		IMatrixBinaryOperators<T, DenseMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic
@@ -363,7 +363,7 @@ namespace Althea.Array
 		IMatrixUnaryOperators<T, DiagonalMatrix<T, TS>, DiagonalMatrix<T, TS>>,
 		IMatrixBinaryOperators<T, DiagonalMatrix<T, TS>, DiagonalMatrix<T, TS>, DiagonalMatrix<T, TS>>,
 		IMatrixBinaryOperators<T, DiagonalMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region basic

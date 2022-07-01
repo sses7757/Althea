@@ -10,7 +10,7 @@
 	//tex:Poisson distribution PDF: $$P_{\lambda}(k)=\frac{\lambda^k e^{-k}}{k!}$$
 	public readonly record struct PoissonDistribution<T>(decimal Lambda, long? RandomSeed = null) :
 		IIntegralDistribution<T, PoissonDistribution<T>>, IRank1Distribution<T, PoissonDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard Poisson distribution with λ = 1
@@ -30,7 +30,7 @@
 	/// <param name="RandomSeed"><inheritdoc/></param>
 	public readonly record struct BernoulliDistribution<T>(decimal Probability, long? RandomSeed = null) :
 		IBernoulliBasedDistribution<T, BernoulliDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard Bernoulli distribution with p = 0.5
@@ -47,7 +47,7 @@
 	//tex:Geometric distribution PDF: $P_p(k)=p(1-p)^k$
 	public readonly record struct GeometricDistribution<T>(decimal Probability, long? RandomSeed = null) :
 		IBernoulliBasedDistribution<T, GeometricDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard geometric distribution with p = 0.5
@@ -67,7 +67,7 @@
 	//tex:Binomial distribution PDF: $$P_{p,m}(k)=\binom{k}{m}p^k(1-p)^{m-k}$$
 	public readonly record struct BinomialDistribution<T>(decimal Probability, int NTrials, long? RandomSeed = null) :
 		IBernoulliBasedDistribution<T, BinomialDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard binomial distribution with p = 0.5 and m = 1
@@ -89,7 +89,7 @@
 	//tex:Negative binomial distribution PDF: $$P_{r,p}(k)=\frac{\Gamma(r+k)}{k!\Gamma(r)}p^{r}(1-p)^{k}$$
 	public readonly record struct NegativeBinomialDistribution<T>(decimal Probability, int SuccessCount, long? RandomSeed = null) :
 		IBernoulliBasedDistribution<T, NegativeBinomialDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard negative binomial distribution with p = 0.5 and r = 1
@@ -112,7 +112,7 @@
 	//tex:Hyper-geometric distribution PDF: $$P_{l,s,m}(k)=\frac{\binom{k}{m}\binom{s-k}{l-m}}{\binom{s}{l}}$$
 	public readonly record struct HypergeometricDistribution<T>(int TotalSize, int MarkSize, int SampleSize, long? RandomSeed = null) :
 		IIntegralDistribution<T, HypergeometricDistribution<T>>, IRank1Distribution<T, HypergeometricDistribution<T>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// Create a standard hyper-geometric distribution with s = 2 and m = l = 1

@@ -138,9 +138,9 @@ namespace Althea.Backend.Cuda
 		{
 			return type switch
 			{
-				DataType.RealHalf => CudaDataType.RealFloat16,
-				DataType.RealSingle => CudaDataType.RealFloat32,
-				DataType.RealDouble => CudaDataType.RealFloat64,
+				DataType.RealFloat16 => CudaDataType.RealFloat16,
+				DataType.RealFloat32 => CudaDataType.RealFloat32,
+				DataType.RealFloat64 => CudaDataType.RealFloat64,
 				DataType.ComplexHalf => CudaDataType.ComplexFloat16,
 				DataType.ComplexSingle => CudaDataType.ComplexFloat32,
 				DataType.ComplexDouble => CudaDataType.ComplexFloat64,

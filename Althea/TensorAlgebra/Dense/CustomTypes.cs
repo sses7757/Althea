@@ -14,7 +14,7 @@ namespace Althea.TensorAlgebra.Dense
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	public readonly ref struct DenseTensorWrapper<T, TS> where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+	public readonly ref struct DenseTensorWrapper<T, TS> where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		#region basic
 		private readonly TS m_values;

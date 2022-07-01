@@ -26,7 +26,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Permute<T, TS1, TS2>(DenseTensorWrapper<T, TS1> source, DenseArrayWrapper<T, TS2> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Permute<T, TS1, TS2>(DenseTensorWrapper<T, TS1> source, DenseArrayWrapper<T, TS2> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
@@ -45,7 +45,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="destination"/> is invalid or both <paramref name="left"/> and <paramref name="right"/> are invalid</exception>
 		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool OperationBinary<T, TS1, TS2, TS3>(BinaryOperation binary, DenseTensorWrapper<T, TS1> left, ReadOnlySpan<int> leftPerm, DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool OperationBinary<T, TS1, TS2, TS3>(BinaryOperation binary, DenseTensorWrapper<T, TS1> left, ReadOnlySpan<int> leftPerm, DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="reduceDimensions"/>:<br/>
@@ -62,7 +62,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Reduce<T, TS1, TS2>(ReduceOperation reduce, DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Reduce<T, TS1, TS2>(ReduceOperation reduce, DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and store the result to the <paramref name="destination"/> tensor:<br/>
@@ -80,6 +80,6 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="destination"/> or <paramref name="info"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
 		[AbstractApiMethod]
-		public abstract bool Contract<T, TS1, TS2, TS3>(DenseTensorWrapper<T, TS1> left, DenseTensorWrapper<T, TS2> right, DenseTensorWrapper<T, TS3> destination, TensorContractInfo info) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool Contract<T, TS1, TS2, TS3>(DenseTensorWrapper<T, TS1> left, DenseTensorWrapper<T, TS2> right, DenseTensorWrapper<T, TS3> destination, TensorContractInfo info) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 	}
 }

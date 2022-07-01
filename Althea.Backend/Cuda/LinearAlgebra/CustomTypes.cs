@@ -63,7 +63,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra
 		{
 			return type switch
 			{
-				DataType.RealSingle or DataType.RealDouble or
+				DataType.RealFloat32 or DataType.RealFloat64 or
 				DataType.ComplexSingle or DataType.ComplexDouble => true,
 				_ => false,
 			};
@@ -74,7 +74,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra
 		{
 			return type switch
 			{
-				DataType.RealSingle or DataType.RealDouble or DataType.RealHalf or
+				DataType.RealFloat32 or DataType.RealFloat64 or DataType.RealFloat16 or
 				DataType.ComplexSingle or DataType.ComplexDouble or DataType.ComplexHalf => true,
 				_ => false,
 			};
@@ -85,7 +85,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra
 		{
 			return type switch
 			{
-				DataType.RealSingle or DataType.RealDouble or DataType.RealHalf or BrainFloatConst.RealBrainFloat16 or
+				DataType.RealFloat32 or DataType.RealFloat64 or DataType.RealFloat16 or BrainFloatConst.RealBrainFloat16 or
 				DataType.ComplexSingle or DataType.ComplexDouble or DataType.ComplexHalf or BrainFloatConst.ComplexBrainFloat16 => true,
 				_ => false,
 			};

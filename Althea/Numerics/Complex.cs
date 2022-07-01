@@ -15,7 +15,7 @@ namespace Althea.Numerics;
 /// The base interface for complex numbers
 /// </summary>
 /// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
-public interface IComplexNumber<TSelf> : INumber<TSelf> where TSelf : unmanaged, IComplexNumber<TSelf>
+public interface IComplexNumber<TSelf> : IBaseNumber<TSelf> where TSelf : unmanaged, IComplexNumber<TSelf>
 {
 	/// <summary>
 	/// Abstract static get imaginary one for <typeparamref name="TSelf"/>
@@ -28,7 +28,7 @@ public interface IComplexNumber<TSelf> : INumber<TSelf> where TSelf : unmanaged,
 /// </summary>
 /// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
 /// <typeparam name="T">The type of corresponding real number</typeparam>
-public interface IComplexNumber<TSelf, T> : IComplexNumber<TSelf> where TSelf : unmanaged, IComplexNumber<TSelf, T> where T : unmanaged, INumber<T>
+public interface IComplexNumber<TSelf, T> : IComplexNumber<TSelf> where TSelf : unmanaged, IComplexNumber<TSelf, T> where T : unmanaged, IBaseNumber<T>
 {
 	/// <summary>
 	/// Get the real part of this complex number
@@ -107,9 +107,9 @@ public interface IComplexFloatNumber<TSelf, T> : IComplexNumber<TSelf, T>, IComp
 /// </summary>
 /// <typeparam name="TSelf">The actual type of implemented complex number struct/class</typeparam>
 /// <typeparam name="T">The type of corresponding real number</typeparam>
-public interface IComplexIntegerNumber<TSelf, T> : IComplexNumber<TSelf, T>, IBinaryInteger<TSelf>
+public interface IComplexIntegerNumber<TSelf, T> : IComplexNumber<TSelf, T>, IBinaryInt<TSelf>
 	where TSelf : unmanaged, IComplexIntegerNumber<TSelf, T>
-	where T : unmanaged, IBinaryInteger<T>
+	where T : unmanaged, IBinaryInt<T>
 {
 
 }
@@ -300,7 +300,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	{
 		real = imag = default;
 
-		Regex regex = new(regexPattern1);
+		Regex regex = MyRegex();
 		Match match = regex.Match(str);
 		bool success = match.Success;
 		if (!success)
@@ -324,7 +324,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 			return true;
 
 		SecondTry:
-		regex = new(regexPattern2);
+		regex = MyRegex1();
 		match = regex.Match(str);
 		success = match.Success;
 		if (!success)
@@ -637,7 +637,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		get => new(this.real, -this.imag);
 	}
 
-	static Complex<T> INumber<Complex<T>>.Conjugate(Complex<T> value) => value.Conjugate;
+	static Complex<T> IBaseNumber<Complex<T>>.Conjugate(Complex<T> value) => value.Conjugate;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1062,6 +1062,11 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		destination[charsWritten] = ')'; charsWritten++;
 		return true;
 	}
+
+	[RegexGenerator("((?:[-+]?\\d+(?:\\.\\d+)?|[-+]?\\d*\\.?\\d+)(?:[eE][\\+\\-]?\\d+)?)\\s*([\\+\\-]\\s*(?:(?:\\d+(?:\\.\\d+)?|\\d*\\.?\\d+)(?:[eE][\\+\\-]?\\d+)?)\\s?[iI])?")]
+	private static partial Regex MyRegex();
+	[RegexGenerator("((?:[-+]?\\d+(?:\\.\\d+)?|[-+]?\\d*\\.?\\d+)(?:[eE][\\+\\-]?\\d+)?\\s?[iI])\\s*((?:\\d+(?:\\.\\d+)?|\\d*\\.?\\d+)(?:[eE][\\+\\-]?\\d+)?)")]
+	private static partial Regex MyRegex1();
 	#endregion
 }
 
@@ -1070,7 +1075,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 /// </summary>
 /// <typeparam name="T">The data type of corresponding real number</typeparam>
 [StructLayout(LayoutKind.Sequential)]
-public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<ComplexInteger<T>, T> where T : unmanaged, IBinaryInteger<T>
+public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<ComplexInteger<T>, T> where T : unmanaged, IBinaryInt<T>
 {
 	#region basic
 	private readonly T real, imag;
@@ -1175,9 +1180,9 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 	public static bool TryParse(string? str, NumberStyles style, IFormatProvider? provider, out ComplexInteger<T> complex)
 	{
 		complex = default;
-		if (!Complex<Double>.TryParse(str, style, provider, out var c))
+		if (!Complex<Float64>.TryParse(str, style, provider, out var c))
 			return false;
-		if (Complex<Double>.Round(c) != c)
+		if (Complex<Float64>.Round(c) != c)
 			return false;
 		return NumberConvert.TryConvert(c, out complex);
 	}
@@ -1454,8 +1459,8 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get
 		{
-			NumberConvert.TryConvert(this, out Complex<Double> c);
-			return c.Magnitude.As<Double, T>();
+			NumberConvert.TryConvert(this, out Complex<Float64> c);
+			return c.Magnitude.As<Float64, T>();
 		}
 	}
 	/// <inheritdoc/>
@@ -1464,7 +1469,7 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get => new(this.real, -this.imag);
 	}
-	static ComplexInteger<T> INumber<ComplexInteger<T>>.Conjugate(ComplexInteger<T> value) => value.Conjugate;
+	static ComplexInteger<T> IBaseNumber<ComplexInteger<T>>.Conjugate(ComplexInteger<T> value) => value.Conjugate;
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

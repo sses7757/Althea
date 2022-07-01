@@ -12,7 +12,7 @@ using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 {
 	#region conjugate helper
-	internal readonly unsafe ref struct Conjugater1<T> where T : unmanaged, INumber<T>
+	internal readonly unsafe ref struct Conjugater1<T> where T : unmanaged, IBaseNumber<T>
 	{
 		private readonly T* ptr;
 		private readonly long n, inc;
@@ -40,7 +40,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 	}
 
-	internal readonly unsafe ref struct Conjugater2<T> where T : unmanaged, INumber<T>
+	internal readonly unsafe ref struct Conjugater2<T> where T : unmanaged, IBaseNumber<T>
 	{
 		private readonly T* ptr1, ptr2;
 		private readonly long len1, len2, inc1, inc2;
@@ -71,7 +71,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 	}
 
-	internal readonly unsafe ref struct ConjugaterMat1<T> where T : unmanaged, INumber<T>
+	internal readonly unsafe ref struct ConjugaterMat1<T> where T : unmanaged, IBaseNumber<T>
 	{
 		private readonly T* ptr;
 		private readonly long m, n, ld;
@@ -110,16 +110,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	internal static class Conjugater
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static Conjugater1<T> Create<T>(T* ptr, long n, long inc, ref MatrixOperation op) where T : unmanaged, INumber<T> => new(ptr, n, inc, ref op);
+		internal unsafe static Conjugater1<T> Create<T>(T* ptr, long n, long inc, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr, n, inc, ref op);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static Conjugater2<T> Create<T>(T* ptr1, long len1, long inc1, T* ptr2, long len2, long inc2, ref MatrixOperation op) where T : unmanaged, INumber<T> => new(ptr1, len1, inc1, ptr2, len2, inc2, ref op);
+		internal unsafe static Conjugater2<T> Create<T>(T* ptr1, long len1, long inc1, T* ptr2, long len2, long inc2, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr1, len1, inc1, ptr2, len2, inc2, ref op);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static ConjugaterMat1<T> Create<T>(T* ptr, long m, long n, long ld, ref MatrixOperation op) where T : unmanaged, INumber<T> => new(ptr, m, n, ld, ref op);
+		internal unsafe static ConjugaterMat1<T> Create<T>(T* ptr, long m, long n, long ld, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr, m, n, ld, ref op);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static void Conjugate<T>(T* ptr, long n, long inc) where T : unmanaged, INumber<T>
+		internal unsafe static void Conjugate<T>(T* ptr, long n, long inc) where T : unmanaged, IBaseNumber<T>
 		{
 			delegate*<long, T*, long, T*, long, void> func = typeof(T) == typeof(Complex<float>) ? &NM.vcConjI : typeof(T) == typeof(Complex<double>) ? &NM.vzConjI : null;
 			if (func == null)
@@ -128,7 +128,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static bool Scale<T>(T* ptr, long m, long n, long ld, T scalar) where T : unmanaged, INumber<T>
+		internal unsafe static bool Scale<T>(T* ptr, long m, long n, long ld, T scalar) where T : unmanaged, IBaseNumber<T>
 		{
 			var func = default(T) switch
 			{
@@ -143,7 +143,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static bool Conjugate<T>(T* ptr, long m, long n, long ld) where T : unmanaged, INumber<T>
+		internal unsafe static bool Conjugate<T>(T* ptr, long m, long n, long ld) where T : unmanaged, IBaseNumber<T>
 		{
 			var func = default(T) switch
 			{
@@ -158,7 +158,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static bool Transpose<T>(T* ptr, long m, long n, long ld, MatrixOperation op) where T : unmanaged, INumber<T>
+		internal unsafe static bool Transpose<T>(T* ptr, long m, long n, long ld, MatrixOperation op) where T : unmanaged, IBaseNumber<T>
 		{
 			if (m != ld)
 				return false;
@@ -282,7 +282,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc)> compiledQueue = new(16);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			pointer = default; length = 0;
 			if (s is null || !s.IsValid())
@@ -301,7 +301,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		// Ignore Spelling: ld
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression("ld")] string? ldName = null) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression("ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			pointer = default;
 			if (s is null || !s.IsValid())
@@ -323,7 +323,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void RealToComp<TComp>(TComp* real, TComp* comp, long n) where TComp : unmanaged, INumber<TComp>
+		internal static void RealToComp<TComp>(TComp* real, TComp* comp, long n) where TComp : unmanaged, IBaseNumber<TComp>
 		{
 			if (!NumberType<TComp>.IsComplex)
 				return;

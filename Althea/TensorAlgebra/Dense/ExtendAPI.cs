@@ -25,7 +25,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool OperationBinaryScalar<T, TS>(BinaryScalarOperation op, DenseArrayWrapper<T, TS> tensor, T value) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool OperationBinaryScalar<T, TS>(BinaryScalarOperation op, DenseArrayWrapper<T, TS> tensor, T value) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, fully reduce <paramref name="tensor"/> according to <paramref name="op"/>.
@@ -38,7 +38,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool FullReduce<T, TS>(ReduceOperation op, DenseArrayWrapper<T, TS> tensor, out T result) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool FullReduce<T, TS>(ReduceOperation op, DenseArrayWrapper<T, TS> tensor, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, fully reduce <paramref name="tensor"/> according to <paramref name="op"/> and return the index of reduction result.
@@ -52,7 +52,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="op"/> is not aggregation operation like <see cref="ReduceOperation.Maximum"/></exception>
 		[AbstractApiMethod]
-		public abstract bool ArgFullReduce<T, TS>(ReduceOperation op, DenseArrayWrapper<T, TS> tensor, out long index) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool ArgFullReduce<T, TS>(ReduceOperation op, DenseArrayWrapper<T, TS> tensor, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i] == <paramref name="B"/>[i]</c> for all <c>i</c>.
@@ -66,7 +66,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseEqual<T, TS1, TS2>(DenseArrayWrapper<T, TS1> A, DenseArrayWrapper<T, TS2> B, out bool equals) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool PointWiseEqual<T, TS1, TS2>(DenseArrayWrapper<T, TS1> A, DenseArrayWrapper<T, TS2> B, out bool equals) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, cast the given tensor from type <typeparamref name="TIn"/> to type <typeparamref name="TOut"/>.
@@ -80,28 +80,36 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseCast<TIn, TOut, TSIn, TSOut>(DenseArrayWrapper<TIn, TSIn> source, DenseArrayWrapper<TOut, TSOut> destination) where TIn : unmanaged, INumber<TIn> where TOut : unmanaged, INumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+		public abstract bool PointWiseCast<TIn, TOut, TSIn, TSOut>(DenseArrayWrapper<TIn, TSIn> source, DenseArrayWrapper<TOut, TSOut> destination) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
+	}
 
 
+	/// <summary>
+	/// The abstract interface for extended runtime dense tensor algebra API routines which involves runtime parsing <see cref="Expression"/>s.
+	/// </summary>
+	/// <remarks>Since <see cref="Expression"/> is a class (therefore introduces GC) and must be parsed before calculation, it is not recommended to use this API for non-critical situations.</remarks>
+	[AbstractRuntimeApi]
+	public interface IExpressionExtendAbstractApi : IAbstractRuntimeApi<IExpressionExtendAbstractApi>
+	{
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="outputs"/>[i] = <paramref name="op"/>(<paramref name="inputs"/>[i])</c>.
+		/// When implemented by a derived class, compute <c><paramref name="outputs"/>[i] = <paramref name="op"/>(<paramref name="inputs"/>[i], <paramref name="scalars"/>)</c>.
 		/// </summary>
-		/// <remarks>Since <see cref="Expression"/> is a class and must be parsed before calculation, it is not recommended to use this method for non-critical situations.</remarks>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="inputs">The input tensors to apply <paramref name="op"/></param>
+		/// <param name="scalars">The scalar inputs</param>
 		/// <param name="outputs">The output tensors to store the results</param>
 		/// <param name="op">The <see cref="Expression"/> to apply to each elements of <paramref name="inputs"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the tensors is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a point-wise operation whose input matches <paramref name="inputs"/> and output matches <paramref name="outputs"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a point-wise operation whose input matches (<paramref name="inputs"/>, <paramref name="scalars"/>) and output matches <paramref name="outputs"/></exception>
 		[AbstractApiMethod]
-		public abstract bool PointWiseOperate<T, TS1, TS2>(Expression op, in DenseArrayWrapper<T, TS1> inputs, in DenseArrayWrapper<T, TS2> outputs) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool PointWiseOperate<T, TS1, TS2>(Expression op, in DenseArrayWrapper<T, TS1> inputs, ReadOnlySpan<T> scalars, in DenseArrayWrapper<T, TS2> outputs) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c><paramref name="result"/> = <paramref name="op"/>(<paramref name="inputs"/>[i], result)</c> for all <c>i</c>.
+		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="inputs"/>[i], result)</c> for all <c>i</c>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
 		/// <typeparam name="TOut">The output data type</typeparam>
@@ -114,6 +122,6 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a reduction operation whose input matches <paramref name="inputs"/> + <typeparamref name="TOut"/> and output matches <typeparamref name="TOut"/></exception>
 		[AbstractApiMethod]
-		public abstract bool FullReduce<T, TOut, TS>(Expression op, in DenseArrayWrapper<T, TS> inputs, out TOut result) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool FullReduce<T, TOut, TS>(Expression op, in DenseArrayWrapper<T, TS> inputs, out TOut result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 	}
 }
