@@ -94,6 +94,17 @@ namespace Althea.Backend.CSharp.Storage
 			return true;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void MemoryCopy2D(void* srcPtr, void* dstPtr, long srcLD, long dstLD, long width, long height)
+		{
+			uint h = (uint)height;
+			byte* src = (byte*)srcPtr, dst = (byte*)dstPtr, end = src + srcLD * width;
+			for (; src < end; src += srcLD, dst += dstLD)
+			{
+				Unsafe.CopyBlockUnaligned(dst, src, h);
+			}
+		}
+
 		/// <inheritdoc/>
 		public virtual bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth)
 			where T : unmanaged, IBaseNumber<T>
@@ -107,18 +118,21 @@ namespace Althea.Backend.CSharp.Storage
 			copyWidth = Math.Min(copyWidth, width);
 			long srcOff = source.OffsetInBytes, dstOff = destination.OffsetInBytes;
 			CpuMemoryPointer src = source.Pointer.FromGeneric(), dst = destination.Pointer.FromGeneric();
-			uint hh = (uint)height;
 			unsafe
 			{
-				byte* srcPtr = (byte*)src.NativePointer(srcOff);
-				byte* dstPtr = (byte*)dst.NativePointer(dstOff);
-				byte* endSrc = srcPtr + (sourceLD * copyWidth);
-				for (; srcPtr < endSrc; srcPtr += sourceLD, dstPtr += destinationLD)
-				{
-					Unsafe.CopyBlockUnaligned(dstPtr, srcPtr, hh);
-				}
+				MemoryCopy2D(src.NativePointer(srcOff), dst.NativePointer(dstOff), sourceLD, destinationLD, width, height);
 			}
 			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static unsafe void StridedCopy<T>(T* src, T* dst, int srcInc, int dstInc, int count) where T : unmanaged, IBaseNumber<T>
+		{
+			T* end = src + srcInc * count;
+			for (; src < end; src += srcInc, dst += dstInc)
+			{
+				*dst = *src;
+			}
 		}
 
 		/// <inheritdoc/>
@@ -130,13 +144,10 @@ namespace Althea.Backend.CSharp.Storage
 			actualCopied = 0;
 			if (!CheckType<TP1>() || !CheckType<TP2>())
 				return false;
-			var srcSpan = source.Pointer.FromGeneric().AsSpan<T, TP1>(source);
-			var dstSpan = destination.Pointer.FromGeneric().AsSpan<T, TP2>(destination);
-			actualCopied = Math.Min((srcSpan.Length - 1) / strideSource + 1, (dstSpan.Length - 1) / strideDestination + 1);
-			int srcInc = (int)strideSource, dstInc = (int)strideDestination;
-			for (int i = 0; i < actualCopied; i++)
+			actualCopied = Math.Min((source.LengthInBytes / T.Size - 1) / strideSource + 1, (destination.LengthInBytes / T.Size - 1) / strideDestination + 1);
+			unsafe
 			{
-				dstSpan[i * dstInc] = srcSpan[i * srcInc];
+				StridedCopy((T*)source.Pointer.FromGeneric().OffsetPointer(source.OffsetInBytes), (T*)destination.Pointer.FromGeneric().OffsetPointer(destination.OffsetInBytes), (int)strideSource, (int)strideDestination, (int)actualCopied);
 			}
 			return true;
 		}

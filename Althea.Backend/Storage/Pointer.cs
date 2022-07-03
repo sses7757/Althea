@@ -104,7 +104,7 @@ namespace Althea.Backend.Storage
 		internal unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe IntPtr OffsetPointer(long offset = 0) => (IntPtr)((byte*)this.Pointer.ToPointer() + offset);
+		internal unsafe void* OffsetPointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged, IBaseNumber<T> => new(this.UnmangedPointer<T>(offset), length);

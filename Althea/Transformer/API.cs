@@ -15,6 +15,7 @@ namespace Althea.Transformer
 		/// <summary>
 		/// When implemented by a derived class, perform the (inverse) Fourier transform to the given <paramref name="input"/> array and write the result to the given <paramref name="output"/> array.
 		/// </summary>
+		/// <remarks>For real type <typeparamref name="T"/>, how the conjugate-even <paramref name="output"/>'s elements are stored may depend on the implementation.</remarks>
 		/// <typeparam name="T">Any unmanaged number type as the data type</typeparam>
 		/// <typeparam name="TS1">The input storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The output storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
