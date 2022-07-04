@@ -7121,6 +7121,120 @@
             <param name="length">The desired length to allocate</param>
             <returns>The allocated or rented array inside a disposable <see cref="T:Althea.Helpers.SpanHelper.TemporarySpan`1"/> or a empty one.</returns>
         </member>
+        <member name="M:Althea.Helpers.SpanHelper.ToStruct``2(System.Span{``0})">
+            <summary>
+            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+            </summary>
+            <typeparam name="T">The data type of span</typeparam>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> to copy from</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.ToStruct``2(System.ReadOnlySpan{``0})">
+            <summary>
+            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+            </summary>
+            <typeparam name="T">The data type of span</typeparam>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.ToStruct``2(System.ReadOnlySpan{``0},``1@)">
+            <summary>
+            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+            </summary>
+            <typeparam name="T">The data type of span</typeparam>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="struct">The output <typeparamref name="TStruct"/></param>
+            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.FromStruct``2(System.Span{``0},``1)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to <paramref name="span"/> byte by byte
+            </summary>
+            <typeparam name="T">The data type of span</typeparam>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="span">The span to copy to</param>
+            <param name="struct">The structure to copy</param>
+            <returns>The <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.Ref``1(System.Span{``0})">
+            <summary>
+            Returns a reference to the element of the span at index 0.
+            </summary>
+            <typeparam name="T">The type of items in the span.</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> from which the reference is retrieved.</param>
+            <returns>A reference to the element at index 0.</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.Ref``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Returns a reference to the element of the span at index 0.
+            </summary>
+            <typeparam name="T">The type of items in the span.</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> from which the reference is retrieved.</param>
+            <returns>A reference to the element at index 0.</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.UncheckAs``2(System.ReadOnlySpan{``0})">
+            <summary>
+            Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will change accordingly.
+            </summary>
+            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be converted</param>
+            <returns>The converted <see cref="T:System.ReadOnlySpan`1"/> with changed <see cref="P:System.ReadOnlySpan`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+            <exception cref="T:System.ArgumentException">If <c><paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.UncheckAs``2(System.Span{``0})">
+            <summary>
+            Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will change accordingly.
+            </summary>
+            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> to be converted</param>
+            <returns>The converted <see cref="T:System.Span`1"/> with changed <see cref="P:System.Span`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+            <exception cref="T:System.ArgumentException">If <c><paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.As``2(System.ReadOnlySpan{``0})">
+            <summary>
+            Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will change accordingly.
+            </summary>
+            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be casted</param>
+            <returns>The converted <see cref="T:System.ReadOnlySpan`1"/> with changed <see cref="P:System.ReadOnlySpan`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+            <exception cref="T:System.ArgumentException">If <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains references or pointers.</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.As``2(System.Span{``0})">
+            <summary>
+            Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will change accordingly.
+            </summary>
+            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> to be casted</param>
+            <returns>The converted <see cref="T:System.Span`1"/> with changed <see cref="P:System.Span`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.AsClassType``1(System.ReadOnlySpan{System.IntPtr})">
+            <summary>
+            Cast the given <paramref name="span"/> from <see cref="T:System.IntPtr"/> type to any class type <typeparamref name="T"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will not be changed.
+            </summary>
+            <typeparam name="T">Any class type as the output type</typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.IntPtr"/> to be casted</param>
+            <returns>The casted <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/></returns>
+            <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
+        </member>
+        <member name="M:Althea.Helpers.SpanHelper.AsClassType``1(System.Span{System.IntPtr})">
+            <summary>
+            Cast the given <paramref name="span"/> from <see cref="T:System.IntPtr"/> type to any class type <typeparamref name="T"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will not be changed.
+            </summary>
+            <typeparam name="T">Any class type as the output type</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> of <see cref="T:System.IntPtr"/> to be casted</param>
+            <returns>The casted <see cref="T:System.Span`1"/> of <typeparamref name="T"/></returns>
+            <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
+        </member>
         <member name="T:Althea.Helpers.ReflectionHelper">
             <summary>
             A static class that contains helper functions using reflections
@@ -13358,47 +13472,6 @@
             <param name="predicate">The <see cref="T:System.Predicate`1"/> used to find the element</param>
             <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
         </member>
-        <member name="M:Althea.Linq.SpanLinq.ToStruct``2(System.Span{``0})">
-            <summary>
-            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
-            </summary>
-            <typeparam name="T">The data type of span</typeparam>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to copy from</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ToStruct``2(System.ReadOnlySpan{``0})">
-            <summary>
-            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
-            </summary>
-            <typeparam name="T">The data type of span</typeparam>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <returns>The created <typeparamref name="TStruct"/></returns>
-            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ToStruct``2(System.ReadOnlySpan{``0},``1@)">
-            <summary>
-            Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
-            </summary>
-            <typeparam name="T">The data type of span</typeparam>
-            <typeparam name="TStruct">The output struct type</typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
-            <param name="struct">The output <typeparamref name="TStruct"/></param>
-            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FromStruct``2(System.Span{``0},``1)">
-            <summary>
-            Copy the values in <paramref name="struct"/> to <paramref name="span"/> byte by byte
-            </summary>
-            <typeparam name="T">The data type of span</typeparam>
-            <typeparam name="TStruct">The input struct type</typeparam>
-            <param name="span">The span to copy to</param>
-            <param name="struct">The structure to copy</param>
-            <returns>The <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
-        </member>
         <member name="M:Althea.Linq.SpanLinq.SetValue``1(System.Span{``0},``0)">
             <summary>
             Set the first element of <see cref="T:System.Span`1"/> to the given <paramref name="value"/>
@@ -13431,79 +13504,6 @@
             <param name="value3">The third value of type <typeparamref name="T"/></param>
             <returns>The <paramref name="span"/></returns>
             <exception cref="T:System.ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Ref``1(System.Span{``0})">
-            <summary>
-            Returns a reference to the element of the span at index 0.
-            </summary>
-            <typeparam name="T">The type of items in the span.</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> from which the reference is retrieved.</param>
-            <returns>A reference to the element at index 0.</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Ref``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Returns a reference to the element of the span at index 0.
-            </summary>
-            <typeparam name="T">The type of items in the span.</typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> from which the reference is retrieved.</param>
-            <returns>A reference to the element at index 0.</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.UncheckAs``2(System.ReadOnlySpan{``0})">
-            <summary>
-            Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will change accordingly.
-            </summary>
-            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
-            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be converted</param>
-            <returns>The converted <see cref="T:System.ReadOnlySpan`1"/> with changed <see cref="P:System.ReadOnlySpan`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
-            <exception cref="T:System.ArgumentException">If <c><paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.UncheckAs``2(System.Span{``0})">
-            <summary>
-            Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will change accordingly.
-            </summary>
-            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
-            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to be converted</param>
-            <returns>The converted <see cref="T:System.Span`1"/> with changed <see cref="P:System.Span`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
-            <exception cref="T:System.ArgumentException">If <c><paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.As``2(System.ReadOnlySpan{``0})">
-            <summary>
-            Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will change accordingly.
-            </summary>
-            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
-            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be casted</param>
-            <returns>The converted <see cref="T:System.ReadOnlySpan`1"/> with changed <see cref="P:System.ReadOnlySpan`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
-            <exception cref="T:System.ArgumentException">If <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains references or pointers.</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.As``2(System.Span{``0})">
-            <summary>
-            Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will change accordingly.
-            </summary>
-            <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
-            <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to be casted</param>
-            <returns>The converted <see cref="T:System.Span`1"/> with changed <see cref="P:System.Span`1.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AsClassType``1(System.ReadOnlySpan{System.IntPtr})">
-            <summary>
-            Cast the given <paramref name="span"/> from <see cref="T:System.IntPtr"/> type to any class type <typeparamref name="T"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.ReadOnlySpan`1.Length"/> will not be changed.
-            </summary>
-            <typeparam name="T">Any class type as the output type</typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.IntPtr"/> to be casted</param>
-            <returns>The casted <see cref="T:System.ReadOnlySpan`1"/> of <typeparamref name="T"/></returns>
-            <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AsClassType``1(System.Span{System.IntPtr})">
-            <summary>
-            Cast the given <paramref name="span"/> from <see cref="T:System.IntPtr"/> type to any class type <typeparamref name="T"/> by directly view the underlying memory in a different way, i.e., the <see cref="P:System.Span`1.Length"/> will not be changed.
-            </summary>
-            <typeparam name="T">Any class type as the output type</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> of <see cref="T:System.IntPtr"/> to be casted</param>
-            <returns>The casted <see cref="T:System.Span`1"/> of <typeparamref name="T"/></returns>
-            <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
         </member>
         <member name="M:Althea.Linq.SpanLinq.HashCodeOfSpan``1(System.Span{``0})">
             <summary>
@@ -25863,6 +25863,7 @@
             <summary>
             When implemented by a derived class, perform the (inverse) Fourier transform to the given <paramref name="input"/> array and write the result to the given <paramref name="output"/> array.
             </summary>
+            <remarks>For real type <typeparamref name="T"/>, how the conjugate-even <paramref name="output"/>'s elements are stored may depend on the implementation.</remarks>
             <typeparam name="T">Any unmanaged number type as the data type</typeparam>
             <typeparam name="TS1">The input storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TS2">The output storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -25907,6 +25908,7 @@
             <summary>
             Perform the (inverse) Fourier transform to the given <paramref name="input"/> array and write the result to the given <paramref name="output"/> array.
             </summary>
+            <remarks>For real type <typeparamref name="T"/>, how the conjugate-even <paramref name="output"/>'s elements are stored may depend on the implementation.</remarks>
             <typeparam name="T">Any unmanaged number type as the data type</typeparam>
             <typeparam name="TS1">The input storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TS2">The output storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>

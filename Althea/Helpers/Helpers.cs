@@ -1108,6 +1108,203 @@ namespace Althea.Helpers
 				return default;
 		}
 		#endregion
+
+		#region reference
+		/// <summary>
+		/// Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+		/// </summary>
+		/// <typeparam name="T">The data type of span</typeparam>
+		/// <typeparam name="TStruct">The output struct type</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> to copy from</param>
+		/// <returns>The created <typeparamref name="TStruct"/></returns>
+		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TStruct ToStruct<T, TStruct>(this Span<T> span) where T : unmanaged where TStruct : struct
+		{
+			return ToStruct<T, TStruct>((ReadOnlySpan<T>)span);
+		}
+
+		/// <summary>
+		/// Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+		/// </summary>
+		/// <typeparam name="T">The data type of span</typeparam>
+		/// <typeparam name="TStruct">The output struct type</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <returns>The created <typeparamref name="TStruct"/></returns>
+		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static TStruct ToStruct<T, TStruct>(this ReadOnlySpan<T> span) where T : unmanaged where TStruct : struct
+		{
+			span.ToStruct(out TStruct s);
+			return s;
+		}
+
+		/// <summary>
+		/// Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
+		/// </summary>
+		/// <typeparam name="T">The data type of span</typeparam>
+		/// <typeparam name="TStruct">The output struct type</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> to copy from</param>
+		/// <param name="struct">The output <typeparamref name="TStruct"/></param>
+		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe void ToStruct<T, TStruct>(this ReadOnlySpan<T> span, out TStruct @struct) where T : unmanaged where TStruct : struct
+		{
+			int size = Unsafe.SizeOf<TStruct>();
+			if (size > span.Length)
+				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
+			@struct = default;
+			fixed (void* t = &span.Ref())
+			{
+				Unsafe.CopyBlock(Unsafe.AsPointer(ref @struct), t, (uint)size);
+			}
+		}
+
+		/// <summary>
+		/// Copy the values in <paramref name="struct"/> to <paramref name="span"/> byte by byte
+		/// </summary>
+		/// <typeparam name="T">The data type of span</typeparam>
+		/// <typeparam name="TStruct">The input struct type</typeparam>
+		/// <param name="span">The span to copy to</param>
+		/// <param name="struct">The structure to copy</param>
+		/// <returns>The <paramref name="span"/></returns>
+		/// <exception cref="ArgumentException">If the size of <typeparamref name="TStruct"/> is larger than the size of <paramref name="span"/></exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe Span<T> FromStruct<T, TStruct>(this Span<T> span, TStruct @struct) where T : unmanaged where TStruct : struct
+		{
+			int size = Unsafe.SizeOf<TStruct>();
+			if (size > span.Length)
+				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
+			fixed (void* t = &span[0])
+			{
+				Unsafe.CopyBlock(t, Unsafe.AsPointer(ref @struct), (uint)size);
+			}
+			return span;
+		}
+
+		/// <summary>
+		/// Returns a reference to the element of the span at index 0.
+		/// </summary>
+		/// <typeparam name="T">The type of items in the span.</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> from which the reference is retrieved.</param>
+		/// <returns>A reference to the element at index 0.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T Ref<T>(this Span<T> span)
+		{
+			return ref MemoryMarshal.GetReference(span);
+		}
+
+		/// <summary>
+		/// Returns a reference to the element of the span at index 0.
+		/// </summary>
+		/// <typeparam name="T">The type of items in the span.</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> from which the reference is retrieved.</param>
+		/// <returns>A reference to the element at index 0.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref T Ref<T>(this ReadOnlySpan<T> span)
+		{
+			return ref MemoryMarshal.GetReference(span);
+		}
+
+		/// <summary>
+		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
+		/// </summary>
+		/// <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be converted</param>
+		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe static ReadOnlySpan<TTo> UncheckAs<TFrom, TTo>(this ReadOnlySpan<TFrom> span) where TFrom : unmanaged where TTo : unmanaged
+		{
+			if (sizeof(TTo) == sizeof(TFrom))
+			{
+				return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), span.Length);
+			}
+			long size = (long)span.Length * sizeof(TFrom);
+			if (size % sizeof(TTo) != 0)
+				throw new ArgumentException(ArithmeticError.CannotDivide);
+			return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), (int)(size / sizeof(TTo)));
+		}
+
+		/// <summary>
+		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> without checking by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will change accordingly.
+		/// </summary>
+		/// <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
+		/// <param name="span">The <see cref="Span{TFrom}"/> to be converted</param>
+		/// <returns>The converted <see cref="Span{TTo}"/> with changed <see cref="Span{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		/// <exception cref="ArgumentException">If <c><paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> * <typeparamref name="TFrom"/> / <typeparamref name="TTo"/></c> is not an integer</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe static Span<TTo> UncheckAs<TFrom, TTo>(this Span<TFrom> span) where TFrom : unmanaged where TTo : unmanaged
+		{
+			if (sizeof(TTo) == sizeof(TFrom))
+			{
+				return MemoryMarshal.CreateSpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), span.Length);
+			}
+			long size = (long)span.Length * sizeof(TFrom);
+			if (size % sizeof(TTo) != 0)
+				throw new ArgumentException(ArithmeticError.CannotDivide);
+			return MemoryMarshal.CreateSpan(ref Unsafe.As<TFrom, TTo>(ref span.Ref()), (int)(size / sizeof(TTo)));
+		}
+
+		/// <summary>
+		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will change accordingly.
+		/// </summary>
+		/// <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{TFrom}"/> to be casted</param>
+		/// <returns>The converted <see cref="ReadOnlySpan{TTo}"/> with changed <see cref="ReadOnlySpan{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		/// <exception cref="ArgumentException">If <typeparamref name="TFrom"/> or <typeparamref name="TTo"/> contains references or pointers.</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ReadOnlySpan<TTo> As<TFrom, TTo>(this ReadOnlySpan<TFrom> span) where TFrom : struct where TTo : struct
+		{
+			return MemoryMarshal.Cast<TFrom, TTo>(span);
+		}
+
+		/// <summary>
+		/// Cast the given <paramref name="span"/> from <typeparamref name="TFrom"/> to <typeparamref name="TTo"/> by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will change accordingly.
+		/// </summary>
+		/// <typeparam name="TFrom">The conversion from type, must be a struct</typeparam>
+		/// <typeparam name="TTo">The conversion to type, must be a struct</typeparam>
+		/// <param name="span">The <see cref="Span{TFrom}"/> to be casted</param>
+		/// <returns>The converted <see cref="Span{TTo}"/> with changed <see cref="Span{T}.Length"/> if <typeparamref name="TTo"/> is not <typeparamref name="TFrom"/></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Span<TTo> As<TFrom, TTo>(this Span<TFrom> span) where TFrom : struct where TTo : struct
+		{
+			return MemoryMarshal.Cast<TFrom, TTo>(span);
+		}
+
+		/// <summary>
+		/// Cast the given <paramref name="span"/> from <see cref="IntPtr"/> type to any class type <typeparamref name="T"/> by directly view the underlying memory in a different way, i.e., the <see cref="ReadOnlySpan{T}.Length"/> will not be changed.
+		/// </summary>
+		/// <typeparam name="T">Any class type as the output type</typeparam>
+		/// <param name="span">The <see cref="ReadOnlySpan{T}"/> of <see cref="IntPtr"/> to be casted</param>
+		/// <returns>The casted <see cref="ReadOnlySpan{T}"/> of <typeparamref name="T"/></returns>
+		/// <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
+		public static ReadOnlySpan<T> AsClassType<T>(this ReadOnlySpan<IntPtr> span) where T : class
+		{
+			if (span.IsEmpty)
+				return default;
+			else
+				return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<IntPtr, T>(ref span.Ref()), span.Length);
+		}
+
+		/// <summary>
+		/// Cast the given <paramref name="span"/> from <see cref="IntPtr"/> type to any class type <typeparamref name="T"/> by directly view the underlying memory in a different way, i.e., the <see cref="Span{T}.Length"/> will not be changed.
+		/// </summary>
+		/// <typeparam name="T">Any class type as the output type</typeparam>
+		/// <param name="span">The <see cref="Span{T}"/> of <see cref="IntPtr"/> to be casted</param>
+		/// <returns>The casted <see cref="Span{T}"/> of <typeparamref name="T"/></returns>
+		/// <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
+		public static Span<T> AsClassType<T>(this Span<IntPtr> span) where T : class
+		{
+			if (span.IsEmpty)
+				return default;
+			else
+				return MemoryMarshal.CreateSpan(ref Unsafe.As<IntPtr, T>(ref span.Ref()), span.Length);
+		}
+		#endregion
 	}
 
 

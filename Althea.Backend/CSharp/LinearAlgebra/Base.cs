@@ -87,7 +87,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	private static Vector<T> LoadVector<T>(void* r) where T : unmanaged => Unsafe.ReadUnaligned<Vector<T>>(r);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Vector256<T> LoadVector256<T>(T* r) where T : unmanaged => Unsafe.ReadUnaligned<Vector256<T>>(r);
+	internal static Vector256<T> LoadVector256<T>(T* r) where T : unmanaged => Unsafe.ReadUnaligned<Vector256<T>>(r);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<T> LoadVector256<T>(void* r) where T : unmanaged => Unsafe.ReadUnaligned<Vector256<T>>(r);
@@ -125,7 +125,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	private static void StoreVector<T>(Vector<T> v, void* r) where T : unmanaged => Unsafe.WriteUnaligned(r, v);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void StoreVector256<T>(Vector256<T> v, void* r) where T : unmanaged => Unsafe.WriteUnaligned(r, v);
+	internal static void StoreVector256<T>(Vector256<T> v, void* r) where T : unmanaged => Unsafe.WriteUnaligned(r, v);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void StoreVector<T>(Vector<T> v1, Vector<T> v2, T* r) where T : unmanaged
@@ -159,8 +159,8 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<float> ComplexSquareAbsNoOrder(Vector256<float> current1, Vector256<float> current2)
 	{
-		current1 = Avx.Multiply(current1, current1);
-		current2 = Avx.Multiply(current2, current2);
+		current1 *= current1;
+		current2 *= current2;
 		Vector256<float> squares = Avx.HorizontalAdd(current1, current2);
 		return squares;
 		// abs of {0, 1, 4, 5, 2, 3, 6, 7}-th complex
@@ -168,8 +168,8 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<double> ComplexSquareAbsNoOrder(Vector256<double> current1, Vector256<double> current2)
 	{
-		current1 = Avx.Multiply(current1, current1);
-		current2 = Avx.Multiply(current2, current2);
+		current1 *= current1;
+		current2 *= current2;
 		Vector256<double> squares = Avx.HorizontalAdd(current1, current2);
 		return squares;
 		// abs of {0, 2, 1, 3}-th complex
@@ -219,6 +219,20 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static void ComplexUnpack<T>(Vector256<T> a0, Vector256<T> a1, out Vector256<T> realA, out Vector256<T> imagA) where T : unmanaged
+	{
+		if (typeof(T) == typeof(float))
+		{
+			ComplexUnpack(*(Vector256<float>*)&a0, *(Vector256<float>*)&a1, out var re, out var im);
+			realA = *(Vector256<T>*)&re; imagA = *(Vector256<T>*)&im;
+		}
+		else
+		{
+			ComplexUnpack(*(Vector256<double>*)&a0, *(Vector256<double>*)&a1, out var re, out var im);
+			realA = *(Vector256<T>*)&re; imagA = *(Vector256<T>*)&im;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexUnpack(Vector256<float> a0, Vector256<float> a1, out Vector256<float> realA, out Vector256<float> imagA)
 	{
 		// {a[0].r, a[4].r, a[0].i, a[4].i, a[2].r, a[6].r, a[2].i, a[6].i}
@@ -252,6 +266,20 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static void ComplexPack<T>(Vector256<T> real, Vector256<T> imag, out Vector256<T> c0, out Vector256<T> c1) where T : unmanaged
+	{
+		if (typeof(T) == typeof(float))
+		{
+			ComplexPack(*(Vector256<float>*)&real, *(Vector256<float>*)&imag, out var a0, out var a1);
+			c0 = *(Vector256<T>*)&a0; c1 = *(Vector256<T>*)&a1;
+		}
+		else
+		{
+			ComplexPack(*(Vector256<double>*)&real, *(Vector256<double>*)&imag, out var a0, out var a1);
+			c0 = *(Vector256<T>*)&a0; c1 = *(Vector256<T>*)&a1;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexPack(Vector256<float> real, Vector256<float> imag, out Vector256<float> c0, out Vector256<float> c1)
 	{
 		c0 = Avx.UnpackLow(real, imag);
@@ -277,43 +305,21 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		bool conj = typeof(Conj) == typeof(bool);
 		// multiply
 		// the branch shall be eliminated by JIT
-		if (Fma.IsSupported)
+		var ArBr = realA * realB;
+		var AiBi = imagA * imagB;
+		var ArBi = realA * imagB;
+		var AiBr = imagA * realB;
+		realC += ArBr;
+		imagC += ArBi;
+		if (!conj)
 		{
-			if (!conj)
-			{
-				// get the output real parts
-				realC = Fma.MultiplySubtract(imagA, imagB, realC);
-				realC = Fma.MultiplySubtract(realA, realB, realC);
-				// get the output imaginary parts
-				imagC = Fma.MultiplyAdd(imagA, realB, imagC);
-				imagC = Fma.MultiplyAdd(realA, imagB, imagC);
-			}
-			else
-			{
-				realC = Fma.MultiplyAdd(imagA, imagB, realC);
-				realC = Fma.MultiplyAdd(realA, realB, realC);
-				imagC = Fma.MultiplySubtract(imagA, realB, imagC);
-				imagC = Fma.MultiplySubtract(realA, imagB, imagC);
-			}
+			realC -= AiBi;
+			imagC += AiBr;
 		}
 		else
 		{
-			var ArBr = Avx.Multiply(realA, realB);
-			var AiBi = Avx.Multiply(imagA, imagB);
-			var ArBi = Avx.Multiply(realA, imagB);
-			var AiBr = Avx.Multiply(imagA, realB);
-			realC = Avx.Add(realC, ArBr);
-			imagC = Avx.Add(imagC, ArBi);
-			if (!conj)
-			{
-				realC = Avx.Subtract(realC, AiBi);
-				imagC = Avx.Add(imagC, AiBr);
-			}
-			else
-			{
-				realC = Avx.Add(realC, AiBi);
-				imagC = Avx.Subtract(imagC, AiBr);
-			}
+			realC += AiBi;
+			imagC -= AiBr;
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -322,43 +328,131 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		bool conj = typeof(Conj) == typeof(bool);
 		// multiply
 		// the branch shall be eliminated by JIT
-		if (Fma.IsSupported)
+		var ArBr = realA * realB;
+		var AiBi = imagA * imagB;
+		var ArBi = realA * imagB;
+		var AiBr = imagA * realB;
+		realC += ArBr;
+		imagC += ArBi;
+		if (!conj)
 		{
-			if (!conj)
-			{
-				// get the output real parts
-				realC = Fma.MultiplySubtract(imagA, imagB, realC);
-				realC = Fma.MultiplySubtract(realA, realB, realC);
-				// get the output imaginary parts
-				imagC = Fma.MultiplyAdd(imagA, realB, imagC);
-				imagC = Fma.MultiplyAdd(realA, imagB, imagC);
-			}
-			else
-			{
-				realC = Fma.MultiplyAdd(imagA, imagB, realC);
-				realC = Fma.MultiplyAdd(realA, realB, realC);
-				imagC = Fma.MultiplySubtract(imagA, realB, imagC);
-				imagC = Fma.MultiplySubtract(realA, imagB, imagC);
-			}
+			realC -= AiBi;
+			imagC += AiBr;
 		}
 		else
 		{
-			var ArBr = Avx.Multiply(realA, realB);
-			var AiBi = Avx.Multiply(imagA, imagB);
-			var ArBi = Avx.Multiply(realA, imagB);
-			var AiBr = Avx.Multiply(imagA, realB);
-			realC = Avx.Add(realC, ArBr);
-			imagC = Avx.Add(imagC, ArBi);
-			if (!conj)
-			{
-				realC = Avx.Subtract(realC, AiBi);
-				imagC = Avx.Add(imagC, AiBr);
-			}
-			else
-			{
-				realC = Avx.Add(realC, AiBi);
-				imagC = Avx.Subtract(imagC, AiBr);
-			}
+			realC += AiBi;
+			imagC -= AiBr;
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static void UnpackComplexMultiply<T>(Vector256<T> realA, Vector256<T> imagA, Vector256<T> realB, Vector256<T> imagB, ref Vector256<T> realC, ref Vector256<T> imagC) where T : unmanaged
+	{
+		if (typeof(T) == typeof(float))
+		{
+			UnpackComplexMultiply<byte>(*(Vector256<float>*)&realA, *(Vector256<float>*)&imagA, *(Vector256<float>*)&realB, *(Vector256<float>*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<float>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<float>>(ref imagC));
+		}
+		else
+		{
+			UnpackComplexMultiply<byte>(*(Vector256<double>*)&realA, *(Vector256<double>*)&imagA, *(Vector256<double>*)&realB, *(Vector256<double>*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<double>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<double>>(ref imagC));
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void UnpackComplexMultiply<Conj>(Vector256<float> realA, Vector256<float> imagA, Vector256<float> realB, Vector256<float> imagB, ref Vector256<float> realC, ref Vector256<float> imagC)
+	{
+		bool conj = typeof(Conj) == typeof(bool);
+		// multiply
+		// the branch shall be eliminated by JIT
+		var ArBr = realA * realB;
+		var AiBi = imagA * imagB;
+		var ArBi = realA * imagB;
+		var AiBr = imagA * realB;
+		if (!conj)
+		{
+			realC = ArBr - AiBi;
+			imagC = ArBi + AiBr;
+		}
+		else
+		{
+			realC = ArBr + AiBi;
+			imagC = ArBi - AiBr;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void UnpackComplexMultiply<Conj>(Vector256<double> realA, Vector256<double> imagA, Vector256<double> realB, Vector256<double> imagB, ref Vector256<double> realC, ref Vector256<double> imagC)
+	{
+		bool conj = typeof(Conj) == typeof(bool);
+		// multiply
+		// the branch shall be eliminated by JIT
+		var ArBr = realA * realB;
+		var AiBi = imagA * imagB;
+		var ArBi = realA * imagB;
+		var AiBr = imagA * realB;
+		if (!conj)
+		{
+			realC = ArBr - AiBi;
+			imagC = ArBi + AiBr;
+		}
+		else
+		{
+			realC = ArBr + AiBi;
+			imagC = ArBi - AiBr;
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static void UnpackComplexMultiply<T>(Vector256<T> realA, Vector256<T> imagA, T realB, T imagB, ref Vector256<T> realC, ref Vector256<T> imagC) where T : unmanaged
+	{
+		if (typeof(T) == typeof(float))
+		{
+			UnpackComplexMultiply<byte>(*(Vector256<float>*)&realA, *(Vector256<float>*)&imagA, *(float*)&realB, *(float*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<float>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<float>>(ref imagC));
+		}
+		else
+		{
+			UnpackComplexMultiply<byte>(*(Vector256<double>*)&realA, *(Vector256<double>*)&imagA, *(double*)&realB, *(double*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<double>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<double>>(ref imagC));
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void UnpackComplexMultiply<Conj>(Vector256<float> realA, Vector256<float> imagA, float realB, float imagB, ref Vector256<float> realC, ref Vector256<float> imagC)
+	{
+		bool conj = typeof(Conj) == typeof(bool);
+		// multiply
+		// the branch shall be eliminated by JIT
+		var ArBr = realA * realB;
+		var AiBi = imagA * imagB;
+		var ArBi = realA * imagB;
+		var AiBr = imagA * realB;
+		if (!conj)
+		{
+			realC = ArBr - AiBi;
+			imagC = ArBi + AiBr;
+		}
+		else
+		{
+			realC = ArBr + AiBi;
+			imagC = ArBi - AiBr;
+		}
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static void UnpackComplexMultiply<Conj>(Vector256<double> realA, Vector256<double> imagA, double realB, double imagB, ref Vector256<double> realC, ref Vector256<double> imagC)
+	{
+		bool conj = typeof(Conj) == typeof(bool);
+		// multiply
+		// the branch shall be eliminated by JIT
+		var ArBr = realA * realB;
+		var AiBi = imagA * imagB;
+		var ArBi = realA * imagB;
+		var AiBr = imagA * realB;
+		if (!conj)
+		{
+			realC = ArBr - AiBi;
+			imagC = ArBi + AiBr;
+		}
+		else
+		{
+			realC = ArBr + AiBi;
+			imagC = ArBi - AiBr;
 		}
 	}
 
@@ -382,36 +476,20 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		bool packOutput = typeof(PackOut) == typeof(bool);
 		ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
 
-		Vector256<float> AiBi = Avx.Multiply(imagA, imagB);
-		Vector256<float> AiBr = Avx.Multiply(imagA, realB);
+		Vector256<float> AiBi = imagA * imagB;
+		Vector256<float> AiBr = imagA * realB;
 		Vector256<float> real, imag;
-		if (Fma.IsSupported)
+		var ArBr = realA * realB;
+		var ArBi = realA * imagB;
+		if (!conj)
 		{
-			if (!conj)
-			{
-				real = Fma.MultiplySubtract(realA, realB, AiBi);
-				imag = Fma.MultiplyAdd(realA, imagB, AiBr);
-			}
-			else
-			{
-				real = Fma.MultiplyAdd(realA, realB, AiBi);
-				imag = Fma.MultiplySubtract(realA, imagB, AiBr);
-			}
+			real = ArBr - AiBi;
+			imag = ArBi + AiBr;
 		}
 		else
 		{
-			var ArBr = Avx.Multiply(realA, realB);
-			var ArBi = Avx.Multiply(realA, imagB);
-			if (!conj)
-			{
-				real = Avx.Subtract(ArBr, AiBi);
-				imag = Avx.Add(ArBi, AiBr);
-			}
-			else
-			{
-				real = Avx.Add(ArBr, AiBi);
-				imag = Avx.Subtract(ArBi, AiBr);
-			}
+			real = ArBr + AiBi;
+			imag = ArBi - AiBr;
 		}
 		if (packOutput)
 		{
@@ -429,36 +507,20 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		bool packOutput = typeof(PackOut) == typeof(bool);
 		ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
 
-		Vector256<double> AiBi = Avx.Multiply(imagA, imagB);
-		Vector256<double> AiBr = Avx.Multiply(imagA, realB);
+		Vector256<double> AiBi = imagA * imagB;
+		Vector256<double> AiBr = imagA * realB;
 		Vector256<double> real, imag;
-		if (Fma.IsSupported)
+		var ArBr = realA * realB;
+		var ArBi = realA * imagB;
+		if (!conj)
 		{
-			if (!conj)
-			{
-				real = Fma.MultiplySubtract(realA, realB, AiBi);
-				imag = Fma.MultiplyAdd(realA, imagB, AiBr);
-			}
-			else
-			{
-				real = Fma.MultiplyAdd(realA, realB, AiBi);
-				imag = Fma.MultiplySubtract(realA, imagB, AiBr);
-			}
+			real = ArBr - AiBi;
+			imag = ArBi + AiBr;
 		}
 		else
 		{
-			var ArBr = Avx.Multiply(realA, realB);
-			var ArBi = Avx.Multiply(realA, imagB);
-			if (!conj)
-			{
-				real = Avx.Subtract(ArBr, AiBi);
-				imag = Avx.Add(ArBi, AiBr);
-			}
-			else
-			{
-				real = Avx.Add(ArBr, AiBi);
-				imag = Avx.Subtract(ArBi, AiBr);
-			}
+			real = ArBr + AiBi;
+			imag = ArBi - AiBr;
 		}
 		if (packOutput)
 		{
@@ -520,28 +582,20 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
 
 		// get the squares of the absolute values of b
-		b0 = Avx.Multiply(b0, b0);
-		b1 = Avx.Multiply(b1, b1);
+		b0 *= b0;
+		b1 *= b1;
 		Vector256<float> squareAbsB = Avx.HorizontalAdd(b0, b1);
 
-		Vector256<float> AiBi = Avx.Multiply(imagA, imagB);
-		Vector256<float> ArBi = Avx.Multiply(realA, imagB);
+		Vector256<float> AiBi = imagA * imagB;
+		Vector256<float> ArBi = realA * imagB;
 		Vector256<float> real, imag;
-		if (Fma.IsSupported)
-		{
-			real = Fma.MultiplySubtract(realA, realB, AiBi);
-			imag = Fma.MultiplyAdd(realA, imagB, ArBi);
-		}
-		else
-		{
-			real = Avx.Multiply(realA, realB);
-			real = Avx.Subtract(real, AiBi);
-			imag = Avx.Multiply(realA, imagB);
-			imag = Avx.Add(imag, ArBi);
-		}
+		real = realA * realB;
+		real -= AiBi;
+		imag = realA * imagB;
+		imag += ArBi;
 		// divide by the squares of the absolute values of b
-		real = Avx.Divide(real, squareAbsB);
-		imag = Avx.Divide(imag, squareAbsB);
+		real /= squareAbsB;
+		imag /= squareAbsB;
 
 		ComplexPack(real, imag, out c0, out c1);
 	}
@@ -551,28 +605,20 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
 
 		// get the squares of the absolute values of b
-		b0 = Avx.Multiply(b0, b0);
-		b1 = Avx.Multiply(b1, b1);
+		b0 *= b0;
+		b1 *= b1;
 		Vector256<double> squareAbsB = Avx.HorizontalAdd(b0, b1);
 
-		Vector256<double> imagProd = Avx.Multiply(imagA, imagB);
-		Vector256<double> ArBi = Avx.Multiply(realA, imagB);
+		Vector256<double> imagProd = imagA * imagB;
+		Vector256<double> ArBi = realA * imagB;
 		Vector256<double> real, imag;
-		if (Fma.IsSupported)
-		{
-			real = Fma.MultiplySubtract(realA, realB, imagProd);
-			imag = Fma.MultiplyAdd(realA, imagB, ArBi);
-		}
-		else
-		{
-			real = Avx.Multiply(realA, realB);
-			real = Avx.Subtract(real, imagProd);
-			imag = Avx.Multiply(realA, imagB);
-			imag = Avx.Add(imag, ArBi);
-		}
+		real = realA * realB;
+		real -= imagProd;
+		imag = realA * imagB;
+		imag += ArBi;
 		// divide by the squares of the absolute values of b
-		real = Avx.Divide(real, squareAbsB);
-		imag = Avx.Divide(imag, squareAbsB);
+		real /= squareAbsB;
+		imag /= squareAbsB;
 
 		ComplexPack(real, imag, out c0, out c1);
 	}
