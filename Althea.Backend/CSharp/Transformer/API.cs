@@ -44,67 +44,87 @@ public class Api : Althea.Transformer.IAbstractApi
 	#endregion
 
 	#region algorithm
-	// TODO: real to real
+	// Ignore Spelling: \mathrm
 
 	/// <summary>
-	/// Compute the fast (inverse) Fourier transformation of a real <paramref name="array"/> to a conjugate-even <paramref name="output"/> array.
+	/// Compute the fast (inverse) Fourier transformation of a real <paramref name="array"/> to a conjugate-even array.
 	/// </summary>
-	/// <remarks>If FFT will be performed, <paramref name="output"/> is stored as <c>f[0].Real, f[1].Real, ..., f[n/2].Real, f[1].Imag, ..., f[n/2 - 1].Imag</c> where <c>f</c> is the complex Fourier transformation result; otherwise, for IFFT, <paramref name="array"/> must be of such form.</remarks>
+	/// <remarks>If FFT will be performed, <paramref name="array"/> will be stored as <c>f[0].Real, f[1].Real, ..., f[n/2].Real, f[1].Imag, ..., f[n/2 - 1].Imag</c> where <c>f</c> is the complex Fourier transformation result; otherwise, for IFFT, <paramref name="array"/> must be of such form.</remarks>
 	/// <typeparam name="T">The actual real floating point type</typeparam>
-	/// <param name="array">The input array to be transformed whose size must be power of 2</param>
-	/// <param name="output">The output array to store the transformation result</param>
+	/// <param name="array">The array to be in-place transformed whose size must be power of 2</param>
 	/// <param name="forward">Whether to calculate the forward FFT or the inverse FFT</param>
-	/// <exception cref="ArgumentException">If <paramref name="array"/> and <paramref name="output"/> have different sizes or they overlap</exception>
 	/// <exception cref="NotSupportedException">If <paramref name="array"/>'s length is not a power of 2</exception>
 	/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a real type</exception>
-	public static unsafe void FFT<T>(ReadOnlySpan<T> array, Span<T> output, bool forward) where T : unmanaged, IBinaryFloat<T>
+	public static unsafe void FFT<T>(Span<T> array, bool forward) where T : unmanaged, IBinaryFloat<T>
 	{
-		if (array.Length < 1)
+		if (array.Length <= 1)
 			return;
-		if (array.Length == 1)
-		{
-			output[0] = array[0];
-			return;
-		}
 		if (T.IsComplexType)
 			throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotReal);
 		int n = array.Length;
-		if (output.Length != n)
-			throw new ArgumentException(Resources.ParameterError.NotSameSize);
-		if (array.Overlaps(output))
-			throw new ArgumentException(Resources.ParameterError.InvalidValue);
 		if (!int.IsPow2(n))
 			throw new NotSupportedException();
 		int bits = 32 - int.Log2(n);
 
-		array.CopyTo(output);
-		fixed (T* a = array, b = output)
+		fixed (T* a = array)
 		{
 			if (forward)
 			{
-				T* bre = b, bim = b + (n / 2 + 1);
 				// change array elements to final positions
 				for (int i = 0; i < n; ++i)
 				{
 					int rev = (int)((uint)i.ReverseBits() >> bits);
 					if (i < rev)
-						(b[i], b[rev]) = (b[rev], b[i]);
+						(a[i], a[rev]) = (a[rev], a[i]);
 				}
-				// combine ranges
-				for (int i = 1; i < n; i <<= 1)
+				T* end = a + n;
+				// first 2 iterations, w0 = 1, imaginary_1
 				{
+					T* aj0 = a, aj1 = a + 1;
+					for (; aj0 < end; aj0 += 2, aj1 += 2)
+					{
+						T x = *aj0, y = *aj1;
+						*aj0 = x + y; *aj1 = x - y;
+					}
+					aj0 = a; T* aj2 = a + 2;
+					for (; aj0 < end; aj0 += 4, aj2 += 4)
+					{
+						T x = *aj0, y = *aj2;
+						*aj0 = x + y; *aj2 = x - y;
+					}
+				}
+				// following iterations
+				for (int i = 4; i < n; i <<= 1)
+				{
+					// resulting array is conjugate-even every i * 2 elements
+					int iH = i >> 1, i2 = i << 1, i3H = i + iH;
 					var (sin, cos) = T.SinCos(T.Pi / i.As<T>());
-					// get 1st complex root of x^i == 0
 					Complex<T> wn = new(cos, sin);
-					for (int j = 0; j < n; j += i << 1)
-					{   // enumerate ranges
-						Complex<T> w0 = T.One;
-						Complex<T>* aj = a + j, aij = a + (i + j), end = aij;
-						for (; aj < end; aj++, aij++, w0 *= wn)
-						{   // combine
-							Complex<T> x = *aj, y = w0 * *aij;
-							*aj = x + y;
-							*aij = x - y;
+					T* aj = a;
+					for (; aj < end; aj += i2)
+					{
+						// conjugate-even real values
+						T x = aj[0], y = aj[i];
+						aj[0] = x + y; aj[i] = x - y;
+						// conjugate-even previous complex values
+						Complex<T> w0 = wn;
+						T* ak = aj + 1, akEnd = aj + iH;
+						for (; ak < akEnd; ak++, w0 *= wn)
+						{
+							Complex<T> xc = new(ak[0], ak[iH]);
+							Complex<T> yc = new(ak[i], ak[i3H]);
+							yc *= w0;
+							ak[0] = xc.Real + yc.Real; ak[i] = xc.Imaginary + yc.Imaginary;
+							// Complex(a[iH..], a[i3H..]) is in reverse order than defined conjugate-even order;
+							// therefore, here we have y.Imag - x.Imag
+							ak[iH] = xc.Real - yc.Real; ak[i3H] = yc.Imaginary - xc.Imaginary;
+						}
+						// reorder later half to defined conjugate-even order
+						ak = aj;
+						for (int k = 1; k < iH >> 1; k++)
+						{
+							(ak[k + iH], ak[i - k]) = (ak[i - k], ak[k + iH]);
+							(ak[k + i3H], ak[i2 - k]) = (ak[i2 - k], ak[k + i3H]);
 						}
 					}
 				}
@@ -113,6 +133,8 @@ public class Api : Althea.Transformer.IAbstractApi
 			{
 
 			}
+			T scale = T.ReciprocalSqrtEstimate(n.As<T>());
+			LA.VectorModify<T, LA.U_MultiplyScalar>(a, 1, a, 1, n, scale);
 		}
 	}
 
@@ -228,8 +250,7 @@ public class Api : Althea.Transformer.IAbstractApi
 				}
 			}
 			T scale = T.ReciprocalSqrtEstimate(n.As<T>());
-			for (int i = 0; i < n; ++i)
-				a[i] *= scale;
+			LA.VectorModify<T, LA.U_MultiplyScalar>((T*)a, 1, (T*)a, 1, n << 1, scale);
 		}
 	}
 
