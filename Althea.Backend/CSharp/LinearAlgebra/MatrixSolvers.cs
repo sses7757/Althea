@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Helpers;
-using Althea.Linq;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra;
@@ -2056,7 +2055,6 @@ public static unsafe class MatrixSolvers
 				diag_p1[ip] = A[i + ip * lda];
 				diag_0[ip] = A[i + i * lda];
 			}
-			// TODO: change k to n ... 1
 			// main loop
 			for (int k = 0; k < n;)
 			{

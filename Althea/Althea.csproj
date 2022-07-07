@@ -18,6 +18,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="LinearAlgebra\Dense\ExpressionExtendBlasAPI.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExpressionExtendBlasAPI.tt</DependentUpon>
+    </None>
     <None Include="Numerics\Conversions.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -68,6 +73,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
+    </Compile>
+    <Compile Update="LinearAlgebra\Dense\ExpressionExtendBlasAPI.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExpressionExtendBlasAPI.tt</DependentUpon>
     </Compile>
     <Compile Update="Numerics\Conversions.cs">
       <DesignTime>True</DesignTime>
@@ -209,6 +219,10 @@
     <None Update="Helpers\SwapSort.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SwapSort.cs</LastGenOutput>
+    </None>
+    <None Update="LinearAlgebra\Dense\ExpressionExtendBlasAPI.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExpressionExtendBlasAPI.cs</LastGenOutput>
     </None>
     <None Update="Numerics\Conversions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

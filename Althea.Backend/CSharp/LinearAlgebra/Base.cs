@@ -40,7 +40,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	#region helpers
 	#region load and simple op
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	internal static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = null; length = inc = 0;
 		if (s is null || !s.IsValid())
@@ -58,7 +58,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		return true;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int ldd) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	internal static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int ldd) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = null; mm = nn = ldd = 0;
 		if (s is null || !s.IsValid())

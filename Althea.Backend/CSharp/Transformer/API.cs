@@ -33,14 +33,85 @@ public class Api : Althea.Transformer.IAbstractApi
 	#endregion
 
 	#region operations
-	/// <inheritdoc/>
-	public virtual bool FourierTransform<T, TS1, TS2>(bool forward, DenseArrayWrapper<T, TS1> input, DenseArrayWrapper<T, TS2> output) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	private static readonly Dictionary<RuntimeTypeHandle, Delegate> ComplexFFTs = new();
+
+	private delegate void ComplexFFT<T>(Span<T> array, bool forward) where T : unmanaged, IBinaryFloat<T>;
 
 	/// <inheritdoc/>
-	public virtual bool FourierTransform<T, TS1, TS2>(DenseArrayWrapper<T, TS1> input, DenseArrayWrapper<Complex<T>, TS2> output) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<Complex<T>, TS2>;
+	public virtual unsafe bool FourierTransform<T, TS1, TS2>(bool forward, DenseArrayWrapper<T, TS1> input, DenseArrayWrapper<T, TS2> output) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	{
+		if (!input.Size.SequenceEqual(output.Size))
+			throw new ArgumentException(Resources.ParameterError.NotSameSize);
+		if (input.Rank != 1)
+			return false;
+		if (!LA.GetPointer(input.ValueStorage, input.Strides[0], out T* pi, out int n, out int inc1))
+			return false;
+		if (!LA.GetPointer(output.ValueStorage, output.Strides[0], out T* po, out _, out int inc2))
+			return false;
+		if (inc1 != 1 || inc2 != 1)
+			return false;
+		if (!int.IsPow2(n))
+			return false;
+
+		Buffer.MemoryCopy(pi, po, n * sizeof(T), n * sizeof(T));
+		if (T.IsComplexType)
+		{
+			var key = typeof(T).TypeHandle;
+			if (!ComplexFFTs.TryGetValue(key, out var func))
+			{
+				func = typeof(Api).GetMethod(nameof(FFT), 1, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, new[] { typeof(Span<T>), typeof(bool) }, null)?.CreateDelegate<ComplexFFT<T>>();
+				if (func is null)
+					return false;
+				ComplexFFTs.Add(key, func);
+			}
+			((ComplexFFT<T>)func).Invoke(new(po, n), forward);
+		}
+		else
+		{
+			FFTReal<T>(new(po, n), forward);
+		}
+		return true;
+	}
 
 	/// <inheritdoc/>
-	public virtual bool FourierTransform<T, TS1, TS2>(DenseArrayWrapper<Complex<T>, TS1> input, DenseArrayWrapper<T, TS2> output) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<Complex<T>, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual unsafe bool FourierTransform<T, TS1, TS2>(DenseArrayWrapper<T, TS1> input, DenseArrayWrapper<Complex<T>, TS2> output) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<Complex<T>, TS2>
+	{
+		if (!input.Size.SequenceEqual(output.Size))
+			throw new ArgumentException(Resources.ParameterError.NotSameSize);
+		if (input.Rank != 1)
+			return false;
+		if (!LA.GetPointer(input.ValueStorage, input.Strides[0], out T* pi, out int n, out int inc1))
+			return false;
+		if (!LA.GetPointer(output.ValueStorage, output.Strides[0], out Complex<T>* po, out _, out int inc2))
+			return false;
+		if (inc1 != 1 || inc2 != 1)
+			return false;
+		if (!int.IsPow2(n))
+			return false;
+
+		FFT(new ReadOnlySpan<T>(pi, n), new(po, n));
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public virtual unsafe bool FourierTransform<T, TS1, TS2>(DenseArrayWrapper<Complex<T>, TS1> input, DenseArrayWrapper<T, TS2> output) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<Complex<T>, TS1> where TS2 : class, IStorage<T, TS2>
+	{
+		if (!input.Size.SequenceEqual(output.Size))
+			throw new ArgumentException(Resources.ParameterError.NotSameSize);
+		if (input.Rank != 1)
+			return false;
+		if (!LA.GetPointer(input.ValueStorage, input.Strides[0], out Complex<T>* pi, out int n, out int inc1))
+			return false;
+		if (!LA.GetPointer(output.ValueStorage, output.Strides[0], out T* po, out _, out int inc2))
+			return false;
+		if (inc1 != 1 || inc2 != 1)
+			return false;
+		if (!int.IsPow2(n))
+			return false;
+
+		IFFT(new(pi, n), new Span<T>(po, n));
+		return true;
+	}
 	#endregion
 
 	#region algorithm
@@ -55,7 +126,7 @@ public class Api : Althea.Transformer.IAbstractApi
 	/// <param name="forward">Whether to calculate the forward FFT or the inverse FFT</param>
 	/// <exception cref="NotSupportedException">If <paramref name="array"/>'s length is not a power of 2</exception>
 	/// <exception cref="TypeMismatchException">If <typeparamref name="T"/> is not a real type</exception>
-	public static unsafe void FFT<T>(Span<T> array, bool forward) where T : unmanaged, IBinaryFloat<T>
+	public static unsafe void FFTReal<T>(Span<T> array, bool forward) where T : unmanaged, IBinaryFloat<T>
 	{
 		if (array.Length <= 1)
 			return;
@@ -97,7 +168,7 @@ public class Api : Althea.Transformer.IAbstractApi
 				for (int i = 4; i < n; i <<= 1)
 				{
 					// resulting array is conjugate-even every i * 2 elements
-					int iH = i >> 1, i2 = i << 1, i3H = i + iH;
+					int iH = i >> 1, i2 = i << 1, i3H = i + iH, iHH = i >> 2;
 					var (sin, cos) = T.SinCos(T.Pi / i.As<T>());
 					Complex<T> wn = new(cos, sin);
 					T* aj = a;
@@ -121,7 +192,7 @@ public class Api : Althea.Transformer.IAbstractApi
 						}
 						// reorder later half to defined conjugate-even order
 						ak = aj;
-						for (int k = 1; k < iH >> 1; k++)
+						for (int k = 1; k < iHH; k++)
 						{
 							(ak[k + iH], ak[i - k]) = (ak[i - k], ak[k + iH]);
 							(ak[k + i3H], ak[i2 - k]) = (ak[i2 - k], ak[k + i3H]);
@@ -131,7 +202,7 @@ public class Api : Althea.Transformer.IAbstractApi
 			}
 			else
 			{
-
+				// TODO: inverse real FFT
 			}
 			T scale = T.ReciprocalSqrtEstimate(n.As<T>());
 			LA.VectorModify<T, LA.U_MultiplyScalar>(a, 1, a, 1, n, scale);
