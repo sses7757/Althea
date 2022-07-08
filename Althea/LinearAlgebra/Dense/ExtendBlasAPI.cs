@@ -421,142 +421,158 @@ namespace Althea.LinearAlgebra.Dense
 	/// The abstract interface for dense linear algebra extend BLAS API routines which involves runtime parsing <see cref="Expression"/>s.
 	/// </summary>
 	/// <remarks>Since <see cref="Expression"/> is a class (therefore introduces GC) and must be parsed before calculation, it is not recommended to use this API for non-critical situations.</remarks>
-	public interface IExpressionExtendBlasAbstractApi2 : IAbstractRuntimeApi<IExpressionExtendBlasAbstractApi2>
+	public partial interface IExpressionExtendBlasAbstractApi : IAbstractRuntimeApi<IExpressionExtendBlasAbstractApi>
 	{
-		#region expression extended
+		#region expression extended for general types
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="outputs"/>[i] = <paramref name="op"/>(<paramref name="inputs"/>[i], <paramref name="scalars"/>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TIn">Any unmanaged number struct as the input data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number struct as the output data type</typeparam>
+		/// <typeparam name="TScalar">Any unmanaged number struct as the scalar data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="Expression{TDelegate}"/> of <see cref="Func{TIn, TScalar, TOut}"/> to apply to each elements of <paramref name="inputs"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <param name="inputs">The input vectors and strides to apply <paramref name="op"/></param>
 		/// <param name="scalars">The scalar inputs</param>
 		/// <param name="outputs">The output vectors and strides to store the results</param>
-		/// <param name="op">The <see cref="Expression"/> to apply to each elements of <paramref name="inputs"/></param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the vectors is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a point-wise operation whose input matches (<paramref name="inputs"/>, <paramref name="scalars"/>) and output matches <paramref name="outputs"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorsOperate<T, TS1, TS2>(Expression op, ReadOnlySpan<(TS1 Vector, long Stride)> inputs, ReadOnlySpan<T> scalars, ReadOnlySpan<(TS2 Vector, long Stride)> outputs) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralVectorsPointwise<TIn, TOut, TScalar, TSIn, TSOut>(Expression<Func<TIn[], TScalar[], TOut[]>> op, ReadOnlySpan<(TSIn Vector, long Stride)> inputs, ReadOnlySpan<TScalar> scalars, ReadOnlySpan<(TSOut Vector, long Stride)> outputs) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TScalar : unmanaged, IBaseNumber<TScalar> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in <paramref name="inputs"/> and write the result to <paramref name="outputs"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TIn">Any unmanaged number struct as the input data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number struct as the output data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="Expression{TDelegate}"/> of <see cref="Func{TIn, TOut, TOut}"/> to apply to each elements of <paramref name="inputs"/> and the partial scan results</param>
 		/// <param name="inputs">The input vectors and strides to apply <paramref name="op"/></param>
 		/// <param name="outputs">The output vectors and strides to store the results</param>
 		/// <param name="inclusive">Whether to scan <paramref name="inputs"/> inclusively (the first elements are the first elements of <paramref name="inputs"/>) or exclusively (the first element is the identity element of <paramref name="op"/>)</param>
-		/// <param name="op">The <see cref="Expression"/> to apply to the partial scan result and each elements of <paramref name="inputs"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the vectors is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="op"/> is not an aggregation operation whose input matches (<paramref name="inputs"/>, <paramref name="outputs"/>) and output matches <paramref name="outputs"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorsScan<T, TS1, TS2>(Expression op, bool inclusive, ReadOnlySpan<(TS1 Vector, long Stride)> inputs, ReadOnlySpan<(TS2 Vector, long Stride)> outputs) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralVectorsScan<TIn, TOut, TSIn, TSOut>(Expression<Func<TIn[], TOut[], TOut[]>> op, bool inclusive, ReadOnlySpan<(TSIn Vector, long Stride)> inputs, ReadOnlySpan<(TSOut Vector, long Stride)> outputs) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="inputs"/>[i], result)</c> for all <c>i</c>.
+		/// When implemented by a derived class, compute <c><paramref name="results"/> = <paramref name="op"/>(<paramref name="inputs"/>[i], result)</c> for all <c>i</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TIn">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number struct as the output data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="Expression{TDelegate}"/> of <see cref="Func{TIn, TOut, TOut}"/> to apply to each elements of <paramref name="inputs"/> and partial reduction results</param>
 		/// <param name="inputs">The input vectors and strides to apply <paramref name="op"/></param>
-		/// <param name="op">The <see cref="Expression"/> to apply to elements of <paramref name="inputs"/></param>
-		/// <param name="result">Output the reduction result of <paramref name="inputs"/> under <paramref name="op"/></param>
+		/// <param name="results">Output the reduction results of <paramref name="inputs"/> under <paramref name="op"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the vectors is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a reduction operation whose input matches <paramref name="inputs"/> + <typeparamref name="TOut"/> and output matches <typeparamref name="TOut"/></exception>
+		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a reduction operation whose input matches (<paramref name="inputs"/>, <paramref name="results"/>) and output matches <paramref name="results"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorsReduce<T, TOut, TS>(Expression op, ReadOnlySpan<(TS Vector, long Stride)> inputs, out TOut result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralVectorsReduce<TIn, TOut, TSIn>(Expression op, ReadOnlySpan<(TSIn Vector, long Stride)> inputs, Span<TOut> results) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="outputs"/>[i] = <paramref name="op"/>(<paramref name="inputs"/>[i], <paramref name="scalars"/>)</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="inputs">The input matrices to apply <paramref name="op"/></param>
+		/// <typeparam name="TIn">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number struct as the output data type</typeparam>
+		/// <typeparam name="TScalar">Any unmanaged number struct as the scalar data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="Expression{TDelegate}"/> of <see cref="Func{TIn, TScalar, TOut}"/> to apply to each elements of <paramref name="inputs"/></param>
+		/// <param name="rows">The number of rows of all matrices</param>
+		/// <param name="cols">The number of columns of all matrices</param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <param name="inputs">The input matrices and leading dimensions to apply <paramref name="op"/></param>
 		/// <param name="scalars">The scalar inputs</param>
-		/// <param name="outputs">The output matrices to store the results</param>
-		/// <param name="op">The <see cref="Expression"/> to apply to each elements of <paramref name="inputs"/></param>
+		/// <param name="outputs">The output matrices and leading dimensions to store the results</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the matrices is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the leading dimensions or <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a point-wise operation whose input matches (<paramref name="inputs"/>, <paramref name="scalars"/>) and output matches <paramref name="outputs"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatricesOperate<T, TS1, TS2>(Expression op, ReadOnlySpan<(TS1 Matrix, long Rows, long Cols, long LeadDim)> inputs, ReadOnlySpan<T> scalars, ReadOnlySpan<(TS2 Matrix, long Rows, long Cols, long LeadDim)> outputs) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatricesPointwise<TIn, TOut, TScalar, TSIn, TSOut>(Expression<Func<TIn[], TScalar[], TOut[]>> op, long rows, long cols, ReadOnlySpan<(TSIn Matrix, long LeadDim)> inputs, ReadOnlySpan<TIn> scalars, ReadOnlySpan<(TSOut Matrix, long LeadDim)> outputs) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TScalar : unmanaged, IBaseNumber<TScalar> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TIn, TSOut>;
 
 		/// <summary>
-		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in <paramref name="inputs"/> and write the result to <paramref name="outputs"/>.
+		/// When implemented by a derived class, perform inclusive partial aggregate (scan) <paramref name="op"/> of the elements in <paramref name="inputs"/> and write the result to <paramref name="outputs"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TIn">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number struct as the output data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="Expression{TDelegate}"/> of <see cref="Func{TIn, TOut, TOut}"/> to apply to each elements of <paramref name="inputs"/> and the partial scan results</param>
+		/// <param name="rows">The number of rows of all matrices</param>
+		/// <param name="cols">The number of columns of all matrices</param>
 		/// <param name="inputs">The input matrices to apply <paramref name="op"/></param>
 		/// <param name="outputs">The output matrices to store the results</param>
-		/// <param name="inclusive">Whether to scan <paramref name="inputs"/> inclusively (the first elements are the first elements of <paramref name="inputs"/>) or exclusively (the first element is the identity element of <paramref name="op"/>)</param>
-		/// <param name="op">The <see cref="Expression"/> to apply to the partial scan result and each elements of <paramref name="inputs"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the matrices is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the leading dimensions or <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="op"/> is not an aggregation operation whose input matches (<paramref name="inputs"/>, <paramref name="outputs"/>) and output matches <paramref name="outputs"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatricesScan<T, TS1, TS2>(Expression op, bool inclusive, ReadOnlySpan<(TS1 Matrix, long Rows, long Cols, long LeadDim)> inputs, ReadOnlySpan<(TS2 Matrix, long Rows, long Cols, long LeadDim)> outputs) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatricesScan<TIn, TOut, TSIn, TSOut>(Expression<Func<TIn[], TOut[], TOut[]>> op, long rows, long cols, ReadOnlySpan<(TSIn Matrix, long LeadDim)> inputs, ReadOnlySpan<(TSOut Matrix, long LeadDim)> outputs) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TIn, TSOut>;
 
 		/// <summary>
-		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="inputs"/>[i], result)</c> for all <c>i</c>.
+		/// When implemented by a derived class, compute <c><paramref name="results"/> = <paramref name="op"/>(<paramref name="inputs"/>[i], <paramref name="results"/>)</c> for all <c>i</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TIn">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number struct as the output data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="Expression{TDelegate}"/> of <see cref="Func{TIn, TOut, TOut}"/> to apply to each elements of <paramref name="inputs"/> and the partial scan results</param>
+		/// <param name="rows">The number of rows of all matrices</param>
+		/// <param name="cols">The number of columns of all matrices</param>
 		/// <param name="inputs">The input matrices to apply <paramref name="op"/></param>
-		/// <param name="op">The <see cref="Expression"/> to apply to elements of <paramref name="inputs"/></param>
-		/// <param name="result">Output the reduction result of <paramref name="inputs"/> under <paramref name="op"/></param>
+		/// <param name="results">Output the reduction results of <paramref name="inputs"/> under <paramref name="op"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the matrices is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a reduction operation whose input matches (<paramref name="inputs"/>, <typeparamref name="TOut"/>) and output matches <typeparamref name="TOut"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the leading dimensions or <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a reduction operation whose input matches (<paramref name="inputs"/>, <paramref name="results"/>) and output matches <paramref name="results"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatricesReduce<T, TOut, TS>(Expression op, ReadOnlySpan<(TS Matrix, long Rows, long Cols, long LeadDim)> inputs, out TOut result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralMatricesReduce<TIn, TOut, TSIn>(Expression<Func<TIn[], TOut[], TOut[]>> op, long rows, long cols, ReadOnlySpan<(TSIn Matrix, long LeadDim)> inputs, Span<TOut> results) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute reduction <c><paramref name="outputs"/>[i] = <paramref name="op"/>(<paramref name="inputs"/>[j, i], <paramref name="outputs"/>[i])</c> for all <c>i, j</c>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number struct as the data type</typeparam>
-		/// <typeparam name="TOut">The output data type</typeparam>
-		/// <typeparam name="TS">The actual input storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TSOut">The actual output storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TIn">Any unmanaged number struct as the data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number struct as the output data type</typeparam>
+		/// <typeparam name="TSIn">The actual input storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <typeparam name="TSOut">The actual output storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="Expression{TDelegate}"/> of <see cref="Func{TIn, TOut, TOut}"/> to apply to each elements of <paramref name="inputs"/> and the partial reduction results</param>
+		/// <param name="rows">The number of rows of all matrices</param>
+		/// <param name="cols">The number of columns of all matrices</param>
 		/// <param name="inputs">The input matrices to apply <paramref name="op"/></param>
-		/// <param name="op">The <see cref="Expression"/> to apply to elements of <paramref name="inputs"/></param>
 		/// <param name="outputs">The output reduction result vectors of <paramref name="op"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the matrices is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a reduction operation whose input matches (<paramref name="inputs"/>, <typeparamref name="TOut"/>) and output matches <typeparamref name="TOut"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the leading dimensions or <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a reduction operation whose input matches (<paramref name="inputs"/>, <paramref name="outputs"/>) and output matches <paramref name="outputs"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatricesColumnReduce<T, TOut, TS, TSOut>(Expression op, ReadOnlySpan<(TS Matrix, long Rows, long Cols, long LeadDim)> inputs, ReadOnlySpan<(TSOut Vector, long Stride)> outputs) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, IBaseNumber<TOut> where TSOut : class, IStorage<TOut, TSOut>;
+		public abstract bool GeneralMatricesColumnReduce<TIn, TOut, TSIn, TSOut>(Expression<Func<TIn[], TOut[], TOut[]>> op, long rows, long cols, ReadOnlySpan<(TSIn Matrix, long LeadDim)> inputs, ReadOnlySpan<(TSOut Vector, long Stride)> outputs) where TIn : unmanaged, IBaseNumber<TIn> where TSIn : class, IStorage<TIn, TSIn> where TOut : unmanaged, IBaseNumber<TOut> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="inputs"/> and write the result to columns <paramref name="outputs"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS1">The input actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TS2">The output actual storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <typeparam name="TIn">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number struct as the output data type</typeparam>
+		/// <typeparam name="TSIn">The input actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <typeparam name="TSOut">The output actual storage type that implements <see cref="IStorage{TIn, TSelf}"/></typeparam>
+		/// <param name="op">The <see cref="Expression{TDelegate}"/> of <see cref="Func{TIn, TOut, TOut}"/> to apply to each elements of <paramref name="inputs"/> and the partial scan results</param>
+		/// <param name="rows">The number of rows of all matrices</param>
+		/// <param name="cols">The number of columns of all matrices</param>
 		/// <param name="inputs">The input matrices whose columns will be applied by <paramref name="op"/></param>
 		/// <param name="outputs">The output matrices to store the results</param>
-		/// <param name="inclusive">Whether to scan <paramref name="inputs"/> inclusively (the first elements are the first elements of <paramref name="inputs"/>) or exclusively (the first element is the identity element of <paramref name="op"/>)</param>
-		/// <param name="op">The <see cref="Expression"/> to apply to the partial scan result and each elements of <paramref name="inputs"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If any of the matrices is invalid</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="op"/> is not an aggregation operation whose input matches (<paramref name="inputs"/>, <paramref name="outputs"/>) and output matches <paramref name="outputs"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the leading dimensions or <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+		/// <exception cref="ArgumentException">If <paramref name="op"/> is not a reduction operation whose input matches (<paramref name="inputs"/>, <paramref name="outputs"/>) and output matches <paramref name="outputs"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatricesColumnScan<T, TS1, TS2>(Expression op, bool inclusive, ReadOnlySpan<(TS1 Matrix, long Rows, long Cols, long LeadDim)> inputs, ReadOnlySpan<(TS2 Matrix, long Rows, long Cols, long LeadDim)> outputs) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatricesColumnScan<TIn, TOut, TSIn, TSOut>(Expression<Func<TIn[], TOut[], TOut[]>> op, long rows, long cols, ReadOnlySpan<(TSIn Matrix, long LeadDim)> inputs, ReadOnlySpan<(TSOut Vector, long Stride)> outputs) where TIn : unmanaged, IBaseNumber<TIn> where TSIn : class, IStorage<TIn, TSIn> where TOut : unmanaged, IBaseNumber<TOut> where TSOut : class, IStorage<TOut, TSOut>;
 		#endregion
 	}
 }
