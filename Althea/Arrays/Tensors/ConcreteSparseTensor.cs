@@ -401,7 +401,7 @@ namespace Althea.Array
 			var (startOffsetInd, countInd) = this.GetFirstDimOffsets(n, restIndices, offsets, lengths, allLengths, null);
 			if (countInd == 0)
 				return new();
-			var outInds = this.indices.MakeReference(startOffsetInd, countInd).ApplyToClone(i => ExtBlas.PointWiseAddScalar(i, 1, (-startOffsetInd).As<TInd>()));
+			var outInds = this.indices.MakeReference(startOffsetInd, countInd).ApplyToClone(i => ExtBlas.PointwiseAddScalar(i, 1, (-startOffsetInd).As<TInd>()));
 			return new(allLengths[..n], this.BlockSize, this.Storage.MakeReference(startOffsetInd * this.blockLength, countInd * this.blockLength), outInds, this.DefaultValue, -1, this.Labels[..n]);
 		}
 
@@ -414,7 +414,7 @@ namespace Althea.Array
 				return;
 			this.Storage.MakeReference(startOffsetInd * this.blockLength, countInd * this.blockLength).CopyTo<T, TS, TS>(overwrite.Storage);
 			this.indices.MakeReference(startOffsetInd, countInd).CopyTo<TInd, TSInd, TSInd>(overwrite.IndexStorage);
-			ExtBlas.PointWiseAddScalar(overwrite.IndexStorage, 1, (-startOffsetInd).As<TInd>());
+			ExtBlas.PointwiseAddScalar(overwrite.IndexStorage, 1, (-startOffsetInd).As<TInd>());
 		}
 
 		/// <inheritdoc/>
@@ -427,7 +427,7 @@ namespace Althea.Array
 			value.Storage.CopyTo<T, TS, TS>(this.Storage.MakeReference(startOffsetInd * this.blockLength, countInd * this.blockLength));
 			var inds = this.indices.MakeReference(startOffsetInd, countInd);
 			value.IndexStorage.CopyTo<TInd, TSInd, TSInd>(inds);
-			ExtBlas.PointWiseAddScalar(inds, 1, (startOffsetInd).As<TInd>());
+			ExtBlas.PointwiseAddScalar(inds, 1, (startOffsetInd).As<TInd>());
 		}
 		*/
 

@@ -26794,7 +26794,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendBlasAbstractApi.PointWiseEquals&lt;T, TS1, TS2&gt;(TS1 x, long strideX, TS2 y, long strideY, out bool equals)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="108">
+                  <Method Name="bool IExtendBlasAbstractApi.PointwiseEquals&lt;T, TS1, TS2&gt;(TS1 x, long strideX, TS2 y, long strideY, out bool equals)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="108">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -26803,7 +26803,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendBlasAbstractApi.PointWiseMultiply&lt;T, TS1, TS2&gt;(TS1 x, long strideX, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="124">
+                  <Method Name="bool IExtendBlasAbstractApi.PointwiseMultiply&lt;T, TS1, TS2&gt;(TS1 x, long strideX, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="124">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -26812,7 +26812,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendBlasAbstractApi.PointWiseDivide&lt;T, TS1, TS2&gt;(TS1 x, long strideX, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="140">
+                  <Method Name="bool IExtendBlasAbstractApi.PointwiseDivide&lt;T, TS1, TS2&gt;(TS1 x, long strideX, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="140">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -26821,7 +26821,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendBlasAbstractApi.PointWisePower&lt;T, TS&gt;(TS x, long stride, T p)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="154">
+                  <Method Name="bool IExtendBlasAbstractApi.PointwisePower&lt;T, TS&gt;(TS x, long stride, T p)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="154">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -26830,7 +26830,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendBlasAbstractApi.PointWiseConjugate&lt;T, TS&gt;(TS x, long stride)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="167">
+                  <Method Name="bool IExtendBlasAbstractApi.PointwiseConjugate&lt;T, TS&gt;(TS x, long stride)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="167">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -26839,7 +26839,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendBlasAbstractApi.PointWiseAddScalar&lt;T, TS&gt;(TS x, long stride, T scalar)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="181">
+                  <Method Name="bool IExtendBlasAbstractApi.PointwiseAddScalar&lt;T, TS&gt;(TS x, long stride, T scalar)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="181">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -26848,7 +26848,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendBlasAbstractApi.PointWiseCast&lt;TIn, TOut, TSIn, TSOut&gt;(TSIn source, long strideSource, TSOut destination, long strideDestination)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="198">
+                  <Method Name="bool IExtendBlasAbstractApi.PointwiseCast&lt;TIn, TOut, TSIn, TSOut&gt;(TSIn source, long strideSource, TSOut destination, long strideDestination)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="198">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -26857,7 +26857,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendBlasAbstractApi.PointWiseTruncate&lt;T, TS&gt;(TS x, long stride, double threshold)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="211">
+                  <Method Name="bool IExtendBlasAbstractApi.PointwiseTruncate&lt;T, TS&gt;(TS x, long stride, double threshold)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="211">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -27547,7 +27547,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IComputationAbstractApi.VectorSparsePointWiseMultiplyDense&lt;T, TInd, TS1, TS2, TSInd&gt;(ISparseArray&lt;T, TInd, TS1, TSInd&gt; x, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Sparse\ComputationAPI.cs" Line="105">
+                  <Method Name="bool IComputationAbstractApi.VectorSparsePointwiseMultiplyDense&lt;T, TInd, TS1, TS2, TSInd&gt;(ISparseArray&lt;T, TInd, TS1, TSInd&gt; x, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Sparse\ComputationAPI.cs" Line="105">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -27556,7 +27556,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IComputationAbstractApi.VectorSparsePointWiseDivideDense&lt;T, TInd, TS1, TS2, TSInd&gt;(ISparseArray&lt;T, TInd, TS1, TSInd&gt; x, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Sparse\ComputationAPI.cs" Line="121">
+                  <Method Name="bool IComputationAbstractApi.VectorSparsePointwiseDivideDense&lt;T, TInd, TS1, TS2, TSInd&gt;(ISparseArray&lt;T, TInd, TS1, TSInd&gt; x, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Sparse\ComputationAPI.cs" Line="121">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -39165,7 +39165,7 @@
                   <Metric Name="ExecutableLines" Value="0" />
                 </Metrics>
                 <Members>
-                  <Method Name="bool IExtendAbstractApi.PointWiseBinary&lt;T, TS&gt;(DenseArrayWrapper&lt;T, TS&gt; tensor, T value, BinaryOperation op)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="25">
+                  <Method Name="bool IExtendAbstractApi.PointwiseBinary&lt;T, TS&gt;(DenseArrayWrapper&lt;T, TS&gt; tensor, T value, BinaryOperation op)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="25">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -39183,7 +39183,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendAbstractApi.PointWiseAggregation&lt;T, TS&gt;(DenseArrayWrapper&lt;T, TS&gt; tensor, UnaryOperation op, BinaryOperation reduce, out T result)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="51">
+                  <Method Name="bool IExtendAbstractApi.PointwiseAggregation&lt;T, TS&gt;(DenseArrayWrapper&lt;T, TS&gt; tensor, UnaryOperation op, BinaryOperation reduce, out T result)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="51">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -39192,7 +39192,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                   </Method>
-                  <Method Name="bool IExtendAbstractApi.PointWiseArgAggregation&lt;T, TS&gt;(DenseArrayWrapper&lt;T, TS&gt; tensor, UnaryOperation op, BinaryOperation reduce, out long index)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="66">
+                  <Method Name="bool IExtendAbstractApi.PointwiseArgAggregation&lt;T, TS&gt;(DenseArrayWrapper&lt;T, TS&gt; tensor, UnaryOperation op, BinaryOperation reduce, out long index)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="66">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />

@@ -102,7 +102,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorSparsePointWiseMultiplyDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract bool VectorSparsePointwiseMultiplyDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 
 		/// <summary>
 		/// When implemented by a derived class, point-wise divide a sparse vector by a dense vector: <c><paramref name="x"/> *= <paramref name="y"/></c>.
@@ -118,7 +118,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is null or invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorSparsePointWiseDivideDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract bool VectorSparsePointwiseDivideDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>;
 		#endregion
 
 		#region vector and matrix

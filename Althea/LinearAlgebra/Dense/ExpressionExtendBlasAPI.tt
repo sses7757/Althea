@@ -15,7 +15,7 @@ using Althea.Storage;
 
 namespace Althea.LinearAlgebra.Dense
 {
-	public partial interface IExpressionExtendBlasAbstractApi
+	public partial interface IDynamicExtendBlasAbstractApi
 	{
 <#
 for (int i = 1; i <= 4; i++)

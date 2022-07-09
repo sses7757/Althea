@@ -272,13 +272,13 @@ namespace Althea.Array
 
 		#region point-wise operations
 		/// <inheritdoc/>
-		public void FillWith(T value) => ExtTen.OperationBinaryScalar<T, TS>(BinaryScalarOperation.Fill, new(this), value);
+		public void FillWith(T value) => ExtTen.PointwiseBinaryScalar<T, TS>(BinaryScalarOperation.Fill, new(this), value);
 
 		/// <inheritdoc/>
-		public void AddScalar(T value) => ExtTen.OperationBinaryScalar<T, TS>(BinaryScalarOperation.Add, new(this), value);
+		public void AddScalar(T value) => ExtTen.PointwiseBinaryScalar<T, TS>(BinaryScalarOperation.Add, new(this), value);
 
 		/// <inheritdoc/>
-		public void Scale(T value) => ExtTen.OperationBinaryScalar<T, TS>(BinaryScalarOperation.Multiply, new(this), value);
+		public void Scale(T value) => ExtTen.PointwiseBinaryScalar<T, TS>(BinaryScalarOperation.Multiply, new(this), value);
 
 		/// <inheritdoc/>
 		public void Conjugate() => Ten.Permute<T, TS, TS>(new(this, UnaryOperation.Conjugate), new(this), stackalloc int[this.rank].FillWithRange(0));

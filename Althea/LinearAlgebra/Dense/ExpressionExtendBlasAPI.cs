@@ -9,7 +9,7 @@ using Althea.Storage;
 
 namespace Althea.LinearAlgebra.Dense
 {
-	public partial interface IExpressionExtendBlasAbstractApi
+	public partial interface IDynamicExtendBlasAbstractApi
 	{
 		#region vector operations for 1 input(s), 1 output(s) and 0 scalar(s)
 		/// <summary>

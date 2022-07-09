@@ -421,7 +421,7 @@ namespace Althea.LinearAlgebra.Dense
 	/// The abstract interface for dense linear algebra extend BLAS API routines which involves runtime parsing <see cref="Expression"/>s.
 	/// </summary>
 	/// <remarks>Since <see cref="Expression"/> is a class (therefore introduces GC) and must be parsed before calculation, it is not recommended to use this API for non-critical situations.</remarks>
-	public partial interface IExpressionExtendBlasAbstractApi : IAbstractRuntimeApi<IExpressionExtendBlasAbstractApi>
+	public partial interface IDynamicExtendBlasAbstractApi : IAbstractRuntimeApi<IDynamicExtendBlasAbstractApi>
 	{
 		#region expression extended for general types
 		/// <summary>
