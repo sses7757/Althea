@@ -1,6 +1,5 @@
 ﻿using Althea.Backend.CSharp.Storage;
 using Althea.LinearAlgebra;
-using Althea.Numerics;
 
 using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 
@@ -24,10 +23,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklFillModeChar, long, T*, long, T*, MklLapackInfo> func = default(T) switch
 			{
-				float => &NM.LAPACKE_ssyev,
-				double => &NM.LAPACKE_dsyev,
-				Complex<float> => &NM.LAPACKE_cheev,
-				Complex<double> => &NM.LAPACKE_zheev,
+				Float32 => &NM.LAPACKE_ssyev,
+				Float64 => &NM.LAPACKE_dsyev,
+				Complex<Float32> => &NM.LAPACKE_cheev,
+				Complex<Float64> => &NM.LAPACKE_zheev,
 				_ => null
 			};
 			if (func == null)
@@ -57,10 +56,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
 			delegate*<MklMatrixLayout, GeneralEigenType, MklVectorModeChar, MklFillModeChar, long, T*, long, T*, long, T*, MklLapackInfo> func = default(T) switch
 			{
-				float => &NM.LAPACKE_ssygv,
-				double => &NM.LAPACKE_dsygv,
-				Complex<float> => &NM.LAPACKE_chegv,
-				Complex<double> => &NM.LAPACKE_zhegv,
+				Float32 => &NM.LAPACKE_ssygv,
+				Float64 => &NM.LAPACKE_dsygv,
+				Complex<Float32> => &NM.LAPACKE_chegv,
+				Complex<Float64> => &NM.LAPACKE_zhegv,
 				_ => null
 			};
 			if (func == null)
@@ -99,14 +98,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valsOut));
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, T*, T*, long, T*, long, MklLapackInfo> funcRe = default(T) switch
 			{
-				float => &NM.LAPACKE_sgeev,
-				double => &NM.LAPACKE_dgeev,
+				Float32 => &NM.LAPACKE_sgeev,
+				Float64 => &NM.LAPACKE_dgeev,
 				_ => null
 			};
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, T*, long, T*, long, MklLapackInfo> funcIm = default(T) switch
 			{
-				Complex<float> => &NM.LAPACKE_cgeev,
-				Complex<double> => &NM.LAPACKE_zgeev,
+				Complex<Float32> => &NM.LAPACKE_cgeev,
+				Complex<Float64> => &NM.LAPACKE_zgeev,
 				_ => null
 			};
 			if (funcRe == null && funcIm == null)
@@ -156,14 +155,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valsOut));
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, long, T*, T*, T*, T*, long, T*, long, MklLapackInfo> funcRe = default(T) switch
 			{
-				float => &NM.LAPACKE_sggev,
-				double => &NM.LAPACKE_dggev,
+				Float32 => &NM.LAPACKE_sggev,
+				Float64 => &NM.LAPACKE_dggev,
 				_ => null
 			};
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklVectorModeChar, long, T*, long, T*, long, T*, T*, T*, long, T*, long, MklLapackInfo> funcIm = default(T) switch
 			{
-				Complex<float> => &NM.LAPACKE_cggev,
-				Complex<double> => &NM.LAPACKE_zggev,
+				Complex<Float32> => &NM.LAPACKE_cggev,
+				Complex<Float64> => &NM.LAPACKE_zggev,
 				_ => null
 			};
 			if (funcRe == null && funcIm == null)
@@ -209,10 +208,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(fullV));
 			delegate*<MklMatrixLayout, MklSvdModeChar, MklSvdModeChar, long, long, T*, long, T*, T*, long, T*, long, T*, MklLapackInfo> func = default(T) switch
 			{
-				float => &NM.LAPACKE_sgesvd,
-				double => &NM.LAPACKE_dgesvd,
-				Complex<float> => &NM.LAPACKE_cgesvd,
-				Complex<double> => &NM.LAPACKE_zgesvd,
+				Float32 => &NM.LAPACKE_sgesvd,
+				Float64 => &NM.LAPACKE_dgesvd,
+				Complex<Float32> => &NM.LAPACKE_cgesvd,
+				Complex<Float64> => &NM.LAPACKE_zgesvd,
 				_ => null
 			};
 			if (func == null)
@@ -251,14 +250,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, delegate* unmanaged<void*, void*, long>, long, T*, long, out long, T*, T*, T*, long, MklLapackInfo> funcRe = default(T) switch
 			{
-				float => &NM.LAPACKE_sgees,
-				double => &NM.LAPACKE_dgees,
+				Float32 => &NM.LAPACKE_sgees,
+				Float64 => &NM.LAPACKE_dgees,
 				_ => null
 			};
 			delegate*<MklMatrixLayout, MklVectorModeChar, MklSortModeChar, delegate* unmanaged<void*, long>, long, T*, long, out long, T*, T*, long, MklLapackInfo> funcIm = default(T) switch
 			{
-				Complex<float> => &NM.LAPACKE_cgees,
-				Complex<double> => &NM.LAPACKE_zgees,
+				Complex<Float32> => &NM.LAPACKE_cgees,
+				Complex<Float64> => &NM.LAPACKE_zgees,
 				_ => null
 			};
 			if (funcRe == null && funcIm == null)
@@ -303,14 +302,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			}
 			delegate*<MklMatrixLayout, MklSchurReorderConditionNumberModeChar, MklVectorModeChar, long*, long, T*, long, T*, long, T*, T*, out long, void*, void*, MklLapackInfo> funcRe = default(T) switch
 			{
-				float => &NM.LAPACKE_strsen,
-				double => &NM.LAPACKE_dtrsen,
+				Float32 => &NM.LAPACKE_strsen,
+				Float64 => &NM.LAPACKE_dtrsen,
 				_ => null
 			};
 			delegate*<MklMatrixLayout, MklSchurReorderConditionNumberModeChar, MklVectorModeChar, long*, long, T*, long, T*, long, T*, out long, void*, void*, MklLapackInfo> funcIm = default(T) switch
 			{
-				Complex<float> => &NM.LAPACKE_ctrsen,
-				Complex<double> => &NM.LAPACKE_ztrsen,
+				Complex<Float32> => &NM.LAPACKE_ctrsen,
+				Complex<Float64> => &NM.LAPACKE_ztrsen,
 				_ => null
 			};
 			if (funcRe == null && funcIm == null)
@@ -339,10 +338,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			delegate*<MklMatrixLayout, long, long, T*, long, long*, T*, long, MklLapackInfo> func = default(T) switch
 			{
-				float => &NM.LAPACKE_sgesv,
-				double => &NM.LAPACKE_dgesv,
-				Complex<float> => &NM.LAPACKE_cgesv,
-				Complex<double> => &NM.LAPACKE_zgesv,
+				Float32 => &NM.LAPACKE_sgesv,
+				Float64 => &NM.LAPACKE_dgesv,
+				Complex<Float32> => &NM.LAPACKE_cgesv,
+				Complex<Float64> => &NM.LAPACKE_zgesv,
 				_ => null
 			};
 			if (func == null)
@@ -372,18 +371,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			delegate*<MklMatrixLayout, long, long, T*, long, T*, MklLapackInfo> facFunc = default(T) switch
 			{
-				float => &NM.LAPACKE_sgeqrf,
-				double => &NM.LAPACKE_dgeqrf,
-				Complex<float> => &NM.LAPACKE_cgeqrf,
-				Complex<double> => &NM.LAPACKE_zgeqrf,
+				Float32 => &NM.LAPACKE_sgeqrf,
+				Float64 => &NM.LAPACKE_dgeqrf,
+				Complex<Float32> => &NM.LAPACKE_cgeqrf,
+				Complex<Float64> => &NM.LAPACKE_zgeqrf,
 				_ => null
 			};
 			delegate*<MklMatrixLayout, long, long, long, T*, long, T*, MklLapackInfo> getQFunc = default(T) switch
 			{
-				float => &NM.LAPACKE_sorgqr,
-				double => &NM.LAPACKE_dorgqr,
-				Complex<float> => &NM.LAPACKE_cungqr,
-				Complex<double> => &NM.LAPACKE_zungqr,
+				Float32 => &NM.LAPACKE_sorgqr,
+				Float64 => &NM.LAPACKE_dorgqr,
+				Complex<Float32> => &NM.LAPACKE_cungqr,
+				Complex<Float64> => &NM.LAPACKE_zungqr,
 				_ => null
 			};
 			if (facFunc == null)
@@ -404,10 +403,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			delegate*<MklMatrixLayout, MklOperationChar, long, long, long, T*, long, T*, long, MklLapackInfo> func = default(T) switch
 			{
-				float => &NM.LAPACKE_sgels,
-				double => &NM.LAPACKE_dgels,
-				Complex<float> => &NM.LAPACKE_cgels,
-				Complex<double> => &NM.LAPACKE_zgels,
+				Float32 => &NM.LAPACKE_sgels,
+				Float64 => &NM.LAPACKE_dgels,
+				Complex<Float32> => &NM.LAPACKE_cgels,
+				Complex<Float64> => &NM.LAPACKE_zgels,
 				_ => null
 			};
 			if (func == null)

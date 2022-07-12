@@ -7121,6 +7121,15 @@
             <param name="length">The desired length to allocate</param>
             <returns>The allocated or rented array inside a disposable <see cref="T:Althea.Helpers.SpanHelper.TemporarySpan`1"/> or a empty one.</returns>
         </member>
+        <member name="M:Althea.Helpers.SpanHelper.As``2(``0@)">
+            <summary>
+            Cast the given struct <paramref name="value"/>'s reference to type <typeparamref name="TTo"/> directly.
+            </summary>
+            <typeparam name="TFrom">The from type to convert</typeparam>
+            <typeparam name="TTo">The destination type to convert</typeparam>
+            <param name="value">The read-only reference to the value</param>
+            <returns>The reference to <paramref name="value"/> with type <typeparamref name="TTo"/>.</returns>
+        </member>
         <member name="M:Althea.Helpers.SpanHelper.ToStruct``2(System.Span{``0})">
             <summary>
             Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
@@ -22761,7 +22770,7 @@
             The abstract interface for runtime random API routines 
             </summary>
         </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``3(``1,``2)">
+        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``3(``1,``2@)">
             <summary>
             When implemented by a derived class, fill the given <paramref name="storage"/> with random numbers generated from the given <paramref name="distribution"/>
             </summary>
@@ -22774,7 +22783,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
         </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``5(``2,``3,``4)">
+        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``5(``2,``3,``4@)">
             <summary>
             When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
             </summary>
@@ -22789,7 +22798,7 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
         </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``7(``3,``4,``5,``6)">
+        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``7(``3,``4,``5,``6@)">
             <summary>
             When implemented by a derived class, fill the given storages with random numbers generated from the given <paramref name="distribution"/>
             </summary>
@@ -22807,13 +22816,13 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
         </member>
-        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``1(``0,Althea.Storage.IStorage[])">
+        <member name="M:Althea.Random.IAbstractApi.FillWithRandom``1(System.ReadOnlySpan{Althea.Storage.IStorage},``0@)">
             <summary>
             When implemented by a derived class, fill the given <paramref name="storages"/> with random numbers generated from the given <paramref name="distribution"/>
             </summary>
             <typeparam name="TDist">The distribution type that implements <see cref="T:Althea.Random.IRandomDistribution`1"/></typeparam>
+            <param name="storages">The span of <see cref="T:Althea.Storage.IStorage"/>s to be filled with random numbers</param>
             <param name="distribution">The <typeparamref name="TDist"/> indicating which distribution to use. Its data type and rank must be the same as <paramref name="storages"/>'.</param>
-            <param name="storages">The array of <see cref="T:Althea.Storage.IStorage"/>s to be filled with random numbers</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If any of <paramref name="storages"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is of wrong rank or its data types are not the data types of <paramref name="storages"/></exception>
@@ -23586,10 +23595,11 @@
             ref var dist = ref Unsafe.As&lt;byte, <see cref="T:Althea.Random.MultiNormalDistribution`1"/>&gt;(ref data[0]);
             </code></example>
         </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.ToCholeskyStore">
+        <member name="M:Althea.Random.MultiNormalDistribution`1.GetCholesky(System.Span{`0})">
             <summary>
-            Change the <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/>'s store mode to store the upper column-major Cholesky factorization
+            Compute the <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/>'s upper column-major Cholesky factorization and store to <paramref name="cholesky"/>
             </summary>
+            <returns>Success or not</returns>
         </member>
         <member name="M:Althea.Random.MultiNormalDistribution`1.ToString">
             <inheritdoc/>
@@ -23615,6 +23625,11 @@
             </summary>
             <typeparam name="T">Any unmanaged integral type</typeparam>
         </member>
+        <member name="P:Althea.Random.MultinomialDistribution`1.NTrials">
+            <summary>
+            The number of trials <c>m</c>
+            </summary>
+        </member>
         <member name="P:Althea.Random.MultinomialDistribution`1.Rank">
             <inheritdoc/>
         </member>
@@ -23633,18 +23648,19 @@
             <param name="rank">The rank, must be positive</param>
             <returns>The size of the <see cref="T:System.Span`1"/> to be created by invoker in bytes</returns>
         </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.Create(System.Span{System.Byte},System.ReadOnlySpan{`0},System.Nullable{System.Int64})">
+        <member name="M:Althea.Random.MultinomialDistribution`1.Create(System.Span{System.Byte},System.Int32,System.ReadOnlySpan{System.Decimal},System.Nullable{System.Int64})">
             <summary>
             Create a multi-normal distribution of given <paramref name="probs"/>.
             </summary>
             <param name="data">The <see cref="T:System.Span`1"/> of <see cref="T:System.Byte"/> used to store the actual <see cref="T:Althea.Random.MultinomialDistribution`1"/>, must has length ≥ <see cref="M:Althea.Random.MultinomialDistribution`1.DataSize(System.Int32)"/></param>
+            <param name="trials">The number of trials</param>
             <param name="probs">The probability values of all dimensions</param>
             <param name="seed">The random seed</param>
             <exception cref="T:System.ArgumentException">If the size(s) is/are invalid</exception>
             <example><code>
-            <see cref="T:System.Span`1"/> data = stackalloc byte[<see cref="T:Althea.Random.MultiNormalDistribution`1"/>.DataSize(rank)];
-            <see cref="M:Althea.Random.MultiNormalDistribution`1.Create(System.Span{System.Byte},System.ReadOnlySpan{`0},System.ReadOnlySpan{`0},System.Boolean,System.Nullable{System.Int64})"/>(data, means, covar, originalCovar, seed);
-            ref var dist = ref Unsafe.As&lt;byte, <see cref="T:Althea.Random.MultiNormalDistribution`1"/>&gt;(ref data[0]);
+            <see cref="T:System.Span`1"/> data = stackalloc byte[<see cref="T:Althea.Random.MultinomialDistribution`1"/>.DataSize(rank)];
+            <see cref="M:Althea.Random.MultinomialDistribution`1.Create(System.Span{System.Byte},System.Int32,System.ReadOnlySpan{System.Decimal},System.Nullable{System.Int64})"/>(data,trials, probabilities, seed);
+            ref var dist = ref Unsafe.As&lt;byte, <see cref="T:Althea.Random.MultinomialDistribution`1"/>&gt;(ref data[0]);
             </code></example>
         </member>
         <member name="M:Althea.Random.MultinomialDistribution`1.ToString">
@@ -23670,7 +23686,7 @@
             The selector class for runtime random API routines 
             </summary>
         </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``3(``1,``2)">
+        <member name="M:Althea.Random.ApiSelector.FillWithRandom``3(``1,``2@)">
             <summary>
             Fill the given <paramref name="storage"/> with random numbers generated from the given <paramref name="distribution"/>
             </summary>
@@ -23683,7 +23699,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is not of rank-1 or its data type is not <typeparamref name="T"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``5(``2,``3,``4)">
+        <member name="M:Althea.Random.ApiSelector.FillWithRandom``5(``2,``3,``4@)">
             <summary>
             Fill the given storages with random numbers generated from the given <paramref name="distribution"/>
             </summary>
@@ -23698,7 +23714,7 @@
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``7(``3,``4,``5,``6)">
+        <member name="M:Althea.Random.ApiSelector.FillWithRandom``7(``3,``4,``5,``6@)">
             <summary>
             Fill the given storages with random numbers generated from the given <paramref name="distribution"/>
             </summary>
@@ -23716,13 +23732,13 @@
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.Random.ApiSelector.FillWithRandom``1(``0,Althea.Storage.IStorage[])">
+        <member name="M:Althea.Random.ApiSelector.FillWithRandom``1(System.ReadOnlySpan{Althea.Storage.IStorage},``0@)">
             <summary>
             Fill the given <paramref name="storages"/> with random numbers generated from the given <paramref name="distribution"/>
             </summary>
             <typeparam name="TDist">The distribution type that implements <see cref="T:Althea.Random.IRandomDistribution`1"/></typeparam>
+            <param name="storages">The span of <see cref="T:Althea.Storage.IStorage"/>s to be filled with random numbers</param>
             <param name="distribution">The <typeparamref name="TDist"/> indicating which distribution to use. Its data type and rank must be the same as <paramref name="storages"/>'.</param>
-            <param name="storages">The array of <see cref="T:Althea.Storage.IStorage"/>s to be filled with random numbers</param>
             <exception cref="T:System.ArgumentNullException">If any of <paramref name="storages"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="distribution"/> is of wrong rank or its data types are not the data types of <paramref name="storages"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>

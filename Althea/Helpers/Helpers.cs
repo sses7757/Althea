@@ -1111,6 +1111,16 @@ namespace Althea.Helpers
 
 		#region reference
 		/// <summary>
+		/// Cast the given struct <paramref name="value"/>'s reference to type <typeparamref name="TTo"/> directly.
+		/// </summary>
+		/// <typeparam name="TFrom">The from type to convert</typeparam>
+		/// <typeparam name="TTo">The destination type to convert</typeparam>
+		/// <param name="value">The read-only reference to the value</param>
+		/// <returns>The reference to <paramref name="value"/> with type <typeparamref name="TTo"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ref TTo As<TFrom, TTo>(in TFrom value) where TFrom : struct where TTo : struct => ref Unsafe.As<TFrom, TTo>(ref Unsafe.AsRef(in value));
+
+		/// <summary>
 		/// Convert the given <paramref name="span"/> to a new <typeparamref name="TStruct"/> by copying the values byte by byte
 		/// </summary>
 		/// <typeparam name="T">The data type of span</typeparam>

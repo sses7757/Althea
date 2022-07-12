@@ -1,8 +1,6 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using Althea.LinearAlgebra;
-using Althea.Numerics;
 
 using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 using NMC = Althea.Backend.Mkl.LinearAlgebra.Dense.CustomNativeMethods;
@@ -21,158 +19,158 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				UnaryOperationSupplement.Exp => default(T) switch
 				{
-					float => &NM.vsExp,
-					double => &NM.vdExp,
-					Complex<float> => &NM.vcExp,
-					Complex<double> => &NM.vzExp,
+					Float32 => &NM.vsExp,
+					Float64 => &NM.vdExp,
+					Complex<Float32> => &NM.vcExp,
+					Complex<Float64> => &NM.vzExp,
 					_ => null,
 				},
 				UnaryOperationSupplement.Exp2 => default(T) switch
 				{
-					float => &NM.vsExp2,
-					double => &NM.vdExp2,
+					Float32 => &NM.vsExp2,
+					Float64 => &NM.vdExp2,
 					_ => null,
 				},
 				UnaryOperationSupplement.Exp10 => default(T) switch
 				{
-					float => &NM.vsExp10,
-					double => &NM.vdExp10,
+					Float32 => &NM.vsExp10,
+					Float64 => &NM.vdExp10,
 					_ => null,
 				},
 				UnaryOperationSupplement.ExpM1 => default(T) switch
 				{
-					float => &NM.vsExpm1,
-					double => &NM.vdExpm1,
+					Float32 => &NM.vsExpm1,
+					Float64 => &NM.vdExpm1,
 					_ => null,
 				},
 				UnaryOperationSupplement.Ln => default(T) switch
 				{
-					float => &NM.vsLn,
-					double => &NM.vdLn,
-					Complex<float> => &NM.vcLn,
-					Complex<double> => &NM.vzLn,
+					Float32 => &NM.vsLn,
+					Float64 => &NM.vdLn,
+					Complex<Float32> => &NM.vcLn,
+					Complex<Float64> => &NM.vzLn,
 					_ => null,
 				},
 				UnaryOperationSupplement.Log2 => default(T) switch
 				{
-					float => &NM.vsLog2,
-					double => &NM.vdLog2,
+					Float32 => &NM.vsLog2,
+					Float64 => &NM.vdLog2,
 					_ => null,
 				},
 				UnaryOperationSupplement.Log10 => default(T) switch
 				{
-					float => &NM.vsLog10,
-					double => &NM.vdLog10,
-					Complex<float> => &NM.vcLog10,
-					Complex<double> => &NM.vzLog10,
+					Float32 => &NM.vsLog10,
+					Float64 => &NM.vdLog10,
+					Complex<Float32> => &NM.vcLog10,
+					Complex<Float64> => &NM.vzLog10,
 					_ => null,
 				},
 				UnaryOperationSupplement.Log1p => default(T) switch
 				{
-					float => &NM.vsLog1p,
-					double => &NM.vdLog1p,
+					Float32 => &NM.vsLog1p,
+					Float64 => &NM.vdLog1p,
 					_ => null,
 				},
 				UnaryOperationSupplement.LogBinary => default(T) switch
 				{
-					float => &NM.vsLogb,
-					double => &NM.vdLogb,
+					Float32 => &NM.vsLogb,
+					Float64 => &NM.vdLogb,
 					_ => null,
 				},
 				UnaryOperationSupplement.Cos => default(T) switch
 				{
-					float => &NM.vsCos,
-					double => &NM.vdCos,
-					Complex<float> => &NM.vcCos,
-					Complex<double> => &NM.vzCos,
+					Float32 => &NM.vsCos,
+					Float64 => &NM.vdCos,
+					Complex<Float32> => &NM.vcCos,
+					Complex<Float64> => &NM.vzCos,
 					_ => null,
 				},
 				UnaryOperationSupplement.Sin => default(T) switch
 				{
-					float => &NM.vsSin,
-					double => &NM.vdSin,
-					Complex<float> => &NM.vcSin,
-					Complex<double> => &NM.vzSin,
+					Float32 => &NM.vsSin,
+					Float64 => &NM.vdSin,
+					Complex<Float32> => &NM.vcSin,
+					Complex<Float64> => &NM.vzSin,
 					_ => null,
 				},
 				UnaryOperationSupplement.Tan => default(T) switch
 				{
-					float => &NM.vsTan,
-					double => &NM.vdTan,
-					Complex<float> => &NM.vcTan,
-					Complex<double> => &NM.vzTan,
+					Float32 => &NM.vsTan,
+					Float64 => &NM.vdTan,
+					Complex<Float32> => &NM.vcTan,
+					Complex<Float64> => &NM.vzTan,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcCos => default(T) switch
 				{
-					float => &NM.vsAcos,
-					double => &NM.vdAcos,
-					Complex<float> => &NM.vcAcos,
-					Complex<double> => &NM.vzAcos,
+					Float32 => &NM.vsAcos,
+					Float64 => &NM.vdAcos,
+					Complex<Float32> => &NM.vcAcos,
+					Complex<Float64> => &NM.vzAcos,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcSin => default(T) switch
 				{
-					float => &NM.vsAsin,
-					double => &NM.vdAsin,
-					Complex<float> => &NM.vcAsin,
-					Complex<double> => &NM.vzAsin,
+					Float32 => &NM.vsAsin,
+					Float64 => &NM.vdAsin,
+					Complex<Float32> => &NM.vcAsin,
+					Complex<Float64> => &NM.vzAsin,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcTan => default(T) switch
 				{
-					float => &NM.vsAtan,
-					double => &NM.vdAtan,
-					Complex<float> => &NM.vcAtan,
-					Complex<double> => &NM.vzAtan,
+					Float32 => &NM.vsAtan,
+					Float64 => &NM.vdAtan,
+					Complex<Float32> => &NM.vcAtan,
+					Complex<Float64> => &NM.vzAtan,
 					_ => null,
 				},
 				UnaryOperationSupplement.Cosh => default(T) switch
 				{
-					float => &NM.vsCosh,
-					double => &NM.vdCosh,
-					Complex<float> => &NM.vcCosh,
-					Complex<double> => &NM.vzCosh,
+					Float32 => &NM.vsCosh,
+					Float64 => &NM.vdCosh,
+					Complex<Float32> => &NM.vcCosh,
+					Complex<Float64> => &NM.vzCosh,
 					_ => null,
 				},
 				UnaryOperationSupplement.Sinh => default(T) switch
 				{
-					float => &NM.vsSinh,
-					double => &NM.vdSinh,
-					Complex<float> => &NM.vcSinh,
-					Complex<double> => &NM.vzSinh,
+					Float32 => &NM.vsSinh,
+					Float64 => &NM.vdSinh,
+					Complex<Float32> => &NM.vcSinh,
+					Complex<Float64> => &NM.vzSinh,
 					_ => null,
 				},
 				UnaryOperationSupplement.Tanh => default(T) switch
 				{
-					float => &NM.vsTanh,
-					double => &NM.vdTanh,
-					Complex<float> => &NM.vcTanh,
-					Complex<double> => &NM.vzTanh,
+					Float32 => &NM.vsTanh,
+					Float64 => &NM.vdTanh,
+					Complex<Float32> => &NM.vcTanh,
+					Complex<Float64> => &NM.vzTanh,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcCosh => default(T) switch
 				{
-					float => &NM.vsAcosh,
-					double => &NM.vdAcosh,
-					Complex<float> => &NM.vcAcosh,
-					Complex<double> => &NM.vzAcosh,
+					Float32 => &NM.vsAcosh,
+					Float64 => &NM.vdAcosh,
+					Complex<Float32> => &NM.vcAcosh,
+					Complex<Float64> => &NM.vzAcosh,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcSinh => default(T) switch
 				{
-					float => &NM.vsAsinh,
-					double => &NM.vdAsinh,
-					Complex<float> => &NM.vcAsinh,
-					Complex<double> => &NM.vzAsinh,
+					Float32 => &NM.vsAsinh,
+					Float64 => &NM.vdAsinh,
+					Complex<Float32> => &NM.vcAsinh,
+					Complex<Float64> => &NM.vzAsinh,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcTanh => default(T) switch
 				{
-					float => &NM.vsAtanh,
-					double => &NM.vdAtanh,
-					Complex<float> => &NM.vcAtanh,
-					Complex<double> => &NM.vzAtanh,
+					Float32 => &NM.vsAtanh,
+					Float64 => &NM.vdAtanh,
+					Complex<Float32> => &NM.vcAtanh,
+					Complex<Float64> => &NM.vzAtanh,
 					_ => null,
 				},
 				_ => null,
@@ -181,158 +179,158 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				UnaryOperationSupplement.Exp => default(T) switch
 				{
-					float => &NM.vsExpI,
-					double => &NM.vdExpI,
-					Complex<float> => &NM.vcExpI,
-					Complex<double> => &NM.vzExpI,
+					Float32 => &NM.vsExpI,
+					Float64 => &NM.vdExpI,
+					Complex<Float32> => &NM.vcExpI,
+					Complex<Float64> => &NM.vzExpI,
 					_ => null,
 				},
 				UnaryOperationSupplement.Exp2 => default(T) switch
 				{
-					float => &NM.vsExp2I,
-					double => &NM.vdExp2I,
+					Float32 => &NM.vsExp2I,
+					Float64 => &NM.vdExp2I,
 					_ => null,
 				},
 				UnaryOperationSupplement.Exp10 => default(T) switch
 				{
-					float => &NM.vsExp10I,
-					double => &NM.vdExp10I,
+					Float32 => &NM.vsExp10I,
+					Float64 => &NM.vdExp10I,
 					_ => null,
 				},
 				UnaryOperationSupplement.ExpM1 => default(T) switch
 				{
-					float => &NM.vsExpm1I,
-					double => &NM.vdExpm1I,
+					Float32 => &NM.vsExpm1I,
+					Float64 => &NM.vdExpm1I,
 					_ => null,
 				},
 				UnaryOperationSupplement.Ln => default(T) switch
 				{
-					float => &NM.vsLnI,
-					double => &NM.vdLnI,
-					Complex<float> => &NM.vcLnI,
-					Complex<double> => &NM.vzLnI,
+					Float32 => &NM.vsLnI,
+					Float64 => &NM.vdLnI,
+					Complex<Float32> => &NM.vcLnI,
+					Complex<Float64> => &NM.vzLnI,
 					_ => null,
 				},
 				UnaryOperationSupplement.Log2 => default(T) switch
 				{
-					float => &NM.vsLog2I,
-					double => &NM.vdLog2I,
+					Float32 => &NM.vsLog2I,
+					Float64 => &NM.vdLog2I,
 					_ => null,
 				},
 				UnaryOperationSupplement.Log10 => default(T) switch
 				{
-					float => &NM.vsLog10I,
-					double => &NM.vdLog10I,
-					Complex<float> => &NM.vcLog10I,
-					Complex<double> => &NM.vzLog10I,
+					Float32 => &NM.vsLog10I,
+					Float64 => &NM.vdLog10I,
+					Complex<Float32> => &NM.vcLog10I,
+					Complex<Float64> => &NM.vzLog10I,
 					_ => null,
 				},
 				UnaryOperationSupplement.Log1p => default(T) switch
 				{
-					float => &NM.vsLog1pI,
-					double => &NM.vdLog1pI,
+					Float32 => &NM.vsLog1pI,
+					Float64 => &NM.vdLog1pI,
 					_ => null,
 				},
 				UnaryOperationSupplement.LogBinary => default(T) switch
 				{
-					float => &NM.vsLogbI,
-					double => &NM.vdLogbI,
+					Float32 => &NM.vsLogbI,
+					Float64 => &NM.vdLogbI,
 					_ => null,
 				},
 				UnaryOperationSupplement.Cos => default(T) switch
 				{
-					float => &NM.vsCosI,
-					double => &NM.vdCosI,
-					Complex<float> => &NM.vcCosI,
-					Complex<double> => &NM.vzCosI,
+					Float32 => &NM.vsCosI,
+					Float64 => &NM.vdCosI,
+					Complex<Float32> => &NM.vcCosI,
+					Complex<Float64> => &NM.vzCosI,
 					_ => null,
 				},
 				UnaryOperationSupplement.Sin => default(T) switch
 				{
-					float => &NM.vsSinI,
-					double => &NM.vdSinI,
-					Complex<float> => &NM.vcSinI,
-					Complex<double> => &NM.vzSinI,
+					Float32 => &NM.vsSinI,
+					Float64 => &NM.vdSinI,
+					Complex<Float32> => &NM.vcSinI,
+					Complex<Float64> => &NM.vzSinI,
 					_ => null,
 				},
 				UnaryOperationSupplement.Tan => default(T) switch
 				{
-					float => &NM.vsTanI,
-					double => &NM.vdTanI,
-					Complex<float> => &NM.vcTanI,
-					Complex<double> => &NM.vzTanI,
+					Float32 => &NM.vsTanI,
+					Float64 => &NM.vdTanI,
+					Complex<Float32> => &NM.vcTanI,
+					Complex<Float64> => &NM.vzTanI,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcCos => default(T) switch
 				{
-					float => &NM.vsAcosI,
-					double => &NM.vdAcosI,
-					Complex<float> => &NM.vcAcosI,
-					Complex<double> => &NM.vzAcosI,
+					Float32 => &NM.vsAcosI,
+					Float64 => &NM.vdAcosI,
+					Complex<Float32> => &NM.vcAcosI,
+					Complex<Float64> => &NM.vzAcosI,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcSin => default(T) switch
 				{
-					float => &NM.vsAsinI,
-					double => &NM.vdAsinI,
-					Complex<float> => &NM.vcAsinI,
-					Complex<double> => &NM.vzAsinI,
+					Float32 => &NM.vsAsinI,
+					Float64 => &NM.vdAsinI,
+					Complex<Float32> => &NM.vcAsinI,
+					Complex<Float64> => &NM.vzAsinI,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcTan => default(T) switch
 				{
-					float => &NM.vsAtanI,
-					double => &NM.vdAtanI,
-					Complex<float> => &NM.vcAtanI,
-					Complex<double> => &NM.vzAtanI,
+					Float32 => &NM.vsAtanI,
+					Float64 => &NM.vdAtanI,
+					Complex<Float32> => &NM.vcAtanI,
+					Complex<Float64> => &NM.vzAtanI,
 					_ => null,
 				},
 				UnaryOperationSupplement.Cosh => default(T) switch
 				{
-					float => &NM.vsCoshI,
-					double => &NM.vdCoshI,
-					Complex<float> => &NM.vcCoshI,
-					Complex<double> => &NM.vzCoshI,
+					Float32 => &NM.vsCoshI,
+					Float64 => &NM.vdCoshI,
+					Complex<Float32> => &NM.vcCoshI,
+					Complex<Float64> => &NM.vzCoshI,
 					_ => null,
 				},
 				UnaryOperationSupplement.Sinh => default(T) switch
 				{
-					float => &NM.vsSinhI,
-					double => &NM.vdSinhI,
-					Complex<float> => &NM.vcSinhI,
-					Complex<double> => &NM.vzSinhI,
+					Float32 => &NM.vsSinhI,
+					Float64 => &NM.vdSinhI,
+					Complex<Float32> => &NM.vcSinhI,
+					Complex<Float64> => &NM.vzSinhI,
 					_ => null,
 				},
 				UnaryOperationSupplement.Tanh => default(T) switch
 				{
-					float => &NM.vsTanhI,
-					double => &NM.vdTanhI,
-					Complex<float> => &NM.vcTanhI,
-					Complex<double> => &NM.vzTanhI,
+					Float32 => &NM.vsTanhI,
+					Float64 => &NM.vdTanhI,
+					Complex<Float32> => &NM.vcTanhI,
+					Complex<Float64> => &NM.vzTanhI,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcCosh => default(T) switch
 				{
-					float => &NM.vsAcoshI,
-					double => &NM.vdAcoshI,
-					Complex<float> => &NM.vcAcoshI,
-					Complex<double> => &NM.vzAcoshI,
+					Float32 => &NM.vsAcoshI,
+					Float64 => &NM.vdAcoshI,
+					Complex<Float32> => &NM.vcAcoshI,
+					Complex<Float64> => &NM.vzAcoshI,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcSinh => default(T) switch
 				{
-					float => &NM.vsAsinhI,
-					double => &NM.vdAsinhI,
-					Complex<float> => &NM.vcAsinhI,
-					Complex<double> => &NM.vzAsinhI,
+					Float32 => &NM.vsAsinhI,
+					Float64 => &NM.vdAsinhI,
+					Complex<Float32> => &NM.vcAsinhI,
+					Complex<Float64> => &NM.vzAsinhI,
 					_ => null,
 				},
 				UnaryOperationSupplement.ArcTanh => default(T) switch
 				{
-					float => &NM.vsAtanhI,
-					double => &NM.vdAtanhI,
-					Complex<float> => &NM.vcAtanhI,
-					Complex<double> => &NM.vzAtanhI,
+					Float32 => &NM.vsAtanhI,
+					Float64 => &NM.vdAtanhI,
+					Complex<Float32> => &NM.vcAtanhI,
+					Complex<Float64> => &NM.vzAtanhI,
 					_ => null,
 				},
 				_ => null,
@@ -353,7 +351,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				Unsafe.InitBlockUnaligned(px, 0, (uint)(n * sizeof(T)));
 				return true;
 			}
-			return NMC.vecFillVal(NumberType<T>.DataType, n, &scalar, px, incx).Check();
+			return NMC.vecFillVal(T.Type, n, &scalar, px, incx).Check();
 		}
 
 		private static bool PowerScalar<T>(long n, T scalar, T* px, long strideX, T* py, long strideY) where T : unmanaged, IBaseNumber<T>
@@ -366,14 +364,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				simpleFunc = default(T) switch
 				{
-					float => &NM.vsInv,
-					double => &NM.vdInv,
+					Float32 => &NM.vsInv,
+					Float64 => &NM.vdInv,
 					_ => null,
 				};
 				simpleFuncI = default(T) switch
 				{
-					float => &NM.vsInvI,
-					double => &NM.vdInvI,
+					Float32 => &NM.vsInvI,
+					Float64 => &NM.vdInvI,
 					_ => null,
 				};
 			}
@@ -381,18 +379,18 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				simpleFunc = default(T) switch
 				{
-					float => &NM.vsSqrt,
-					double => &NM.vdSqrt,
-					Complex<float> => &NM.vcSqrt,
-					Complex<double> => &NM.vzSqrt,
+					Float32 => &NM.vsSqrt,
+					Float64 => &NM.vdSqrt,
+					Complex<Float32> => &NM.vcSqrt,
+					Complex<Float64> => &NM.vzSqrt,
 					_ => null,
 				};
 				simpleFuncI = default(T) switch
 				{
-					float => &NM.vsSqrtI,
-					double => &NM.vdSqrtI,
-					Complex<float> => &NM.vcSqrtI,
-					Complex<double> => &NM.vzSqrtI,
+					Float32 => &NM.vsSqrtI,
+					Float64 => &NM.vdSqrtI,
+					Complex<Float32> => &NM.vcSqrtI,
+					Complex<Float64> => &NM.vzSqrtI,
 					_ => null,
 				};
 			}
@@ -400,14 +398,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				simpleFunc = default(T) switch
 				{
-					float => &NM.vsInvSqrt,
-					double => &NM.vdInvSqrt,
+					Float32 => &NM.vsInvSqrt,
+					Float64 => &NM.vdInvSqrt,
 					_ => null,
 				};
 				simpleFuncI = default(T) switch
 				{
-					float => &NM.vsInvSqrtI,
-					double => &NM.vdInvSqrtI,
+					Float32 => &NM.vsInvSqrtI,
+					Float64 => &NM.vdInvSqrtI,
 					_ => null,
 				};
 			}
@@ -415,14 +413,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				simpleFunc = default(T) switch
 				{
-					float => &NM.vsCbrt,
-					double => &NM.vdCbrt,
+					Float32 => &NM.vsCbrt,
+					Float64 => &NM.vdCbrt,
 					_ => null,
 				};
 				simpleFuncI = default(T) switch
 				{
-					float => &NM.vsCbrtI,
-					double => &NM.vdCbrtI,
+					Float32 => &NM.vsCbrtI,
+					Float64 => &NM.vdCbrtI,
 					_ => null,
 				};
 			}
@@ -430,14 +428,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				simpleFunc = default(T) switch
 				{
-					float => &NM.vsInvCbrt,
-					double => &NM.vdInvCbrt,
+					Float32 => &NM.vsInvCbrt,
+					Float64 => &NM.vdInvCbrt,
 					_ => null,
 				};
 				simpleFuncI = default(T) switch
 				{
-					float => &NM.vsInvCbrtI,
-					double => &NM.vdInvCbrtI,
+					Float32 => &NM.vsInvCbrtI,
+					Float64 => &NM.vdInvCbrtI,
 					_ => null,
 				};
 			}
@@ -445,14 +443,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				simpleFunc = default(T) switch
 				{
-					float => &NM.vsPow2o3,
-					double => &NM.vdPow2o3,
+					Float32 => &NM.vsPow2o3,
+					Float64 => &NM.vdPow2o3,
 					_ => null,
 				};
 				simpleFuncI = default(T) switch
 				{
-					float => &NM.vsPow2o3I,
-					double => &NM.vdPow2o3I,
+					Float32 => &NM.vsPow2o3I,
+					Float64 => &NM.vdPow2o3I,
 					_ => null,
 				};
 			}
@@ -460,14 +458,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				simpleFunc = default(T) switch
 				{
-					float => &NM.vsPow3o2,
-					double => &NM.vdPow3o2,
+					Float32 => &NM.vsPow3o2,
+					Float64 => &NM.vdPow3o2,
 					_ => null,
 				};
 				simpleFuncI = default(T) switch
 				{
-					float => &NM.vsPow3o2I,
-					double => &NM.vdPow3o2I,
+					Float32 => &NM.vsPow3o2I,
+					Float64 => &NM.vdPow3o2I,
 					_ => null,
 				};
 			}
@@ -483,10 +481,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				NM.vPowx<T>? func = default(T) switch
 				{
-					float => new NM.vPowx<float>(NM.vsPowx) as NM.vPowx<T>,
-					double => new NM.vPowx<double>(NM.vdPowx) as NM.vPowx<T>,
-					Complex<float> => new NM.vPowx<Complex<float>>(NM.vcPowx) as NM.vPowx<T>,
-					Complex<double> => new NM.vPowx<Complex<double>>(NM.vzPowx) as NM.vPowx<T>,
+					Float32 => new NM.vPowx<Float32>(NM.vsPowx) as NM.vPowx<T>,
+					Float64 => new NM.vPowx<Float64>(NM.vdPowx) as NM.vPowx<T>,
+					Complex<Float32> => new NM.vPowx<Complex<Float32>>(NM.vcPowx) as NM.vPowx<T>,
+					Complex<Float64> => new NM.vPowx<Complex<Float64>>(NM.vzPowx) as NM.vPowx<T>,
 					_ => null,
 				};
 				func?.Invoke(n, px, scalar, py);
@@ -496,10 +494,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				NM.vPowxI<T>? func = default(T) switch
 				{
-					float => new NM.vPowxI<float>(NM.vsPowxI) as NM.vPowxI<T>,
-					double => new NM.vPowxI<double>(NM.vdPowxI) as NM.vPowxI<T>,
-					Complex<float> => new NM.vPowxI<Complex<float>>(NM.vcPowxI) as NM.vPowxI<T>,
-					Complex<double> => new NM.vPowxI<Complex<double>>(NM.vzPowxI) as NM.vPowxI<T>,
+					Float32 => new NM.vPowxI<Float32>(NM.vsPowxI) as NM.vPowxI<T>,
+					Float64 => new NM.vPowxI<Float64>(NM.vdPowxI) as NM.vPowxI<T>,
+					Complex<Float32> => new NM.vPowxI<Complex<Float32>>(NM.vcPowxI) as NM.vPowxI<T>,
+					Complex<Float64> => new NM.vPowxI<Complex<Float64>>(NM.vzPowxI) as NM.vPowxI<T>,
 					_ => null,
 				};
 				func?.Invoke(n, px, strideX, scalar, py, strideY);
@@ -528,16 +526,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				UnaryOperation.Conjugate => default(T) switch
 				{
-					Complex<float> => &NM.vcConj,
-					Complex<double> => &NM.vzConj,
+					Complex<Float32> => &NM.vcConj,
+					Complex<Float64> => &NM.vzConj,
 					_ => null,
 				},
 				UnaryOperation.AbsoluteValue => default(T) switch
 				{
-					float => &NM.vsAbs,
-					double => &NM.vdAbs,
-					Complex<float> => &NM.vcAbs,
-					Complex<double> => &NM.vzAbs,
+					Float32 => &NM.vsAbs,
+					Float64 => &NM.vdAbs,
+					Complex<Float32> => &NM.vcAbs,
+					Complex<Float64> => &NM.vzAbs,
 					_ => null,
 				},
 				_ => null,
@@ -546,16 +544,16 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				UnaryOperation.Conjugate => default(T) switch
 				{
-					Complex<float> => &NM.vcConjI,
-					Complex<double> => &NM.vzConjI,
+					Complex<Float32> => &NM.vcConjI,
+					Complex<Float64> => &NM.vzConjI,
 					_ => null,
 				},
 				UnaryOperation.AbsoluteValue => default(T) switch
 				{
-					float => &NM.vsAbsI,
-					double => &NM.vdAbsI,
-					Complex<float> => &NM.vcAbsI,
-					Complex<double> => &NM.vzAbsI,
+					Float32 => &NM.vsAbsI,
+					Float64 => &NM.vdAbsI,
+					Complex<Float32> => &NM.vcAbsI,
+					Complex<Float64> => &NM.vzAbsI,
 					_ => null,
 				},
 				_ => null,
@@ -590,7 +588,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				BinaryScalarOperation.Truncate => &NMC.vecClip,
 				_ => null,
 			};
-			return func != null && func(NumberType<T>.DataType, n, &scalar, px, strideX, py, strideY).Check();
+			return func != null && func(T.Type, n, &scalar, px, strideX, py, strideY).Check();
 		}
 
 		/// <inheritdoc/>
@@ -604,9 +602,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			T reduce = T.Zero;
 			if (op == ReduceOperation.AddAbsolute)
 			{
-				if (typeof(T) == typeof(float))
+				if (typeof(T) == typeof(Float32))
 					*(float*)&reduce = NM.cblas_sasum(n, px, strideX);
-				else if (typeof(T) == typeof(double))
+				else if (typeof(T) == typeof(Float64))
 					*(double*)&reduce = NM.cblas_dasum(n, px, strideX);
 			}
 			if (reduce != T.Zero)
@@ -633,12 +631,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			CustomStatus status = CustomStatus.NotSupported;
 			if (func is not null)
 			{
-				status = func(NumberType<T>.DataType, n, px, strideX, &reduce);
+				status = func(T.Type, n, px, strideX, &reduce);
 				result = reduce;
 			}
 			if (funcInd is not null)
 			{
-				status = funcInd(NumberType<T>.DataType, n, px, strideX, out long index);
+				status = funcInd(T.Type, n, px, strideX, out long index);
 				result = px[index];
 				if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
 					result = T.Abs(result);
@@ -649,7 +647,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// <inheritdoc/>
 		public virtual bool GeneralVectorArgReduce<T, TS>(ReduceOperation op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
-			if ((op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum) && (typeof(T) == typeof(float) || typeof(T) == typeof(double)))
+			if ((op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum) && (typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64)))
 			{
 				return op == ReduceOperation.AbsoluteMaximum ? this.AbsoluteValueArgMax<T, TS>(x, strideX, out index) : this.AbsoluteValueArgMin<T, TS>(x, strideX, out index);
 			}
@@ -666,7 +664,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				ReduceOperation.AbsoluteMininum => &NMC.vecArgAbsMin,
 				_ => null,
 			};
-			return funcInd != null && funcInd(NumberType<T>.DataType, n, px, strideX, out index).Check();
+			return funcInd != null && funcInd(T.Type, n, px, strideX, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -683,58 +681,58 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				BinaryOperation.Add => default(T) switch
 				{
-					float => &NM.vsAdd,
-					double => &NM.vdAdd,
-					Complex<float> => &NM.vcAdd,
-					Complex<double> => &NM.vzAdd,
+					Float32 => &NM.vsAdd,
+					Float64 => &NM.vdAdd,
+					Complex<Float32> => &NM.vcAdd,
+					Complex<Float64> => &NM.vzAdd,
 					_ => null
 				},
 				BinaryOperation.Multiply => default(T) switch
 				{
-					float => &NM.vsMul,
-					double => &NM.vdMul,
-					Complex<float> => &NM.vcMul,
-					Complex<double> => &NM.vzMul,
+					Float32 => &NM.vsMul,
+					Float64 => &NM.vdMul,
+					Complex<Float32> => &NM.vcMul,
+					Complex<Float64> => &NM.vzMul,
 					_ => null
 				},
 				BinaryOperation.Divide => default(T) switch
 				{
-					float => &NM.vsDiv,
-					double => &NM.vdDiv,
-					Complex<float> => &NM.vcDiv,
-					Complex<double> => &NM.vzDiv,
+					Float32 => &NM.vsDiv,
+					Float64 => &NM.vdDiv,
+					Complex<Float32> => &NM.vcDiv,
+					Complex<Float64> => &NM.vzDiv,
 					_ => null
 				},
 				BinaryOperation.Power => default(T) switch
 				{
-					float => &NM.vsPow,
-					double => &NM.vdPow,
-					Complex<float> => &NM.vcPow,
-					Complex<double> => &NM.vzPow,
+					Float32 => &NM.vsPow,
+					Float64 => &NM.vdPow,
+					Complex<Float32> => &NM.vcPow,
+					Complex<Float64> => &NM.vzPow,
 					_ => null
 				},
 				BinaryOperation.Maximum => default(T) switch
 				{
-					float => &NM.vsFmax,
-					double => &NM.vdFmax,
+					Float32 => &NM.vsFmax,
+					Float64 => &NM.vdFmax,
 					_ => null
 				},
 				BinaryOperation.Mininum => default(T) switch
 				{
-					float => &NM.vsFmin,
-					double => &NM.vdFmin,
+					Float32 => &NM.vsFmin,
+					Float64 => &NM.vdFmin,
 					_ => null
 				},
 				BinaryOperation.AbsoluteMaximum => default(T) switch
 				{
-					float => &NM.vsMaxMag,
-					double => &NM.vdMaxMag,
+					Float32 => &NM.vsMaxMag,
+					Float64 => &NM.vdMaxMag,
 					_ => null
 				},
 				BinaryOperation.AbsoluteMininum => default(T) switch
 				{
-					float => &NM.vsMinMag,
-					double => &NM.vdMinMag,
+					Float32 => &NM.vsMinMag,
+					Float64 => &NM.vdMinMag,
 					_ => null
 				},
 				_ => null
@@ -743,58 +741,58 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				BinaryOperation.Add => default(T) switch
 				{
-					float => &NM.vsAddI,
-					double => &NM.vdAddI,
-					Complex<float> => &NM.vcAddI,
-					Complex<double> => &NM.vzAddI,
+					Float32 => &NM.vsAddI,
+					Float64 => &NM.vdAddI,
+					Complex<Float32> => &NM.vcAddI,
+					Complex<Float64> => &NM.vzAddI,
 					_ => null
 				},
 				BinaryOperation.Multiply => default(T) switch
 				{
-					float => &NM.vsMulI,
-					double => &NM.vdMulI,
-					Complex<float> => &NM.vcMulI,
-					Complex<double> => &NM.vzMulI,
+					Float32 => &NM.vsMulI,
+					Float64 => &NM.vdMulI,
+					Complex<Float32> => &NM.vcMulI,
+					Complex<Float64> => &NM.vzMulI,
 					_ => null
 				},
 				BinaryOperation.Divide => default(T) switch
 				{
-					float => &NM.vsDivI,
-					double => &NM.vdDivI,
-					Complex<float> => &NM.vcDivI,
-					Complex<double> => &NM.vzDivI,
+					Float32 => &NM.vsDivI,
+					Float64 => &NM.vdDivI,
+					Complex<Float32> => &NM.vcDivI,
+					Complex<Float64> => &NM.vzDivI,
 					_ => null
 				},
 				BinaryOperation.Power => default(T) switch
 				{
-					float => &NM.vsPowI,
-					double => &NM.vdPowI,
-					Complex<float> => &NM.vcPowI,
-					Complex<double> => &NM.vzPowI,
+					Float32 => &NM.vsPowI,
+					Float64 => &NM.vdPowI,
+					Complex<Float32> => &NM.vcPowI,
+					Complex<Float64> => &NM.vzPowI,
 					_ => null
 				},
 				BinaryOperation.Maximum => default(T) switch
 				{
-					float => &NM.vsFmaxI,
-					double => &NM.vdFmaxI,
+					Float32 => &NM.vsFmaxI,
+					Float64 => &NM.vdFmaxI,
 					_ => null
 				},
 				BinaryOperation.Mininum => default(T) switch
 				{
-					float => &NM.vsFminI,
-					double => &NM.vdFminI,
+					Float32 => &NM.vsFminI,
+					Float64 => &NM.vdFminI,
 					_ => null
 				},
 				BinaryOperation.AbsoluteMaximum => default(T) switch
 				{
-					float => &NM.vsMaxMagI,
-					double => &NM.vdMaxMagI,
+					Float32 => &NM.vsMaxMagI,
+					Float64 => &NM.vdMaxMagI,
 					_ => null
 				},
 				BinaryOperation.AbsoluteMininum => default(T) switch
 				{
-					float => &NM.vsMinMagI,
-					double => &NM.vdMinMagI,
+					Float32 => &NM.vsMinMagI,
+					Float64 => &NM.vdMinMagI,
 					_ => null
 				},
 				_ => null
@@ -818,7 +816,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (ny < n)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(y));
 			delegate*<DataType, bool, long, T*, long, T*, long, CustomStatus> func = op == BinaryOperation.Add ? &NMC.vecParSum : op == BinaryOperation.Multiply ? &NMC.vecParProd : null;
-			return func != null && func(NumberType<T>.DataType, inclusive, n, px, strideX, py, strideY).Check();
+			return func != null && func(T.Type, inclusive, n, px, strideX, py, strideY).Check();
 		}
 
 		/// <inheritdoc/>
@@ -829,7 +827,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(destination, strideDestination, out TOut* py, out long ny))
 				return false;
 			n = Math.Min(n, ny);
-			return NMC.vecDataConvert(NumberType<TIn>.DataType, NumberType<TOut>.DataType, true, n, px, strideSource, py, strideDestination).Check();
+			return NMC.vecDataConvert(TIn.Type, TOut.Type, true, n, px, strideSource, py, strideDestination).Check();
 		}
 
 		/// <inheritdoc/>
@@ -842,7 +840,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (ny != n)
 				return true;
-			return NMC.vecsEq(NumberType<T>.DataType, n, px, strideX, py, strideY, out equals).Check();
+			return NMC.vecsEq(T.Type, n, px, strideX, py, strideY, out equals).Check();
 		}
 		#endregion
 
@@ -856,7 +854,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(C, ma * mb, na * nb, ldc, out T* pC))
 				return false;
-			return NMC.matKron(NumberType<T>.DataType, &α, pA, lda, ma, na, pB, ldb, mb, nb, &β, pC, ldc).Check();
+			return NMC.matKron(T.Type, &α, pA, lda, ma, na, pB, ldb, mb, nb, &β, pC, ldc).Check();
 		}
 		#endregion
 
@@ -899,7 +897,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(B, rows, cols, ldb, out T* pB))
 				return false;
 			if (op == BinaryScalarOperation.Fill)
-				return NMC.matFillVal(NumberType<T>.DataType, rows, cols, &scalar, pB, ldb).Check();
+				return NMC.matFillVal(T.Type, rows, cols, &scalar, pB, ldb).Check();
 			delegate*<DataType, long, long, T*, T*, long, T*, long, CustomStatus> func = op switch
 			{
 				BinaryScalarOperation.Add => &NMC.matAddScalar,
@@ -907,7 +905,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				BinaryScalarOperation.Truncate => &NMC.matClip,
 				_ => null,
 			};
-			return func != null && func(NumberType<T>.DataType, rows, cols, &scalar, pA, lda, pB, ldb).Check();
+			return func != null && func(T.Type, rows, cols, &scalar, pA, lda, pB, ldb).Check();
 		}
 
 		/// <inheritdoc/>
@@ -948,12 +946,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			CustomStatus status = CustomStatus.NotSupported;
 			if (func is not null)
 			{
-				status = func(NumberType<T>.DataType, rows, cols, pA, lda, &reduce);
+				status = func(T.Type, rows, cols, pA, lda, &reduce);
 				result = reduce;
 			}
 			if (funcInd is not null)
 			{
-				status = funcInd(NumberType<T>.DataType, rows, cols, pA, lda, out long index);
+				status = funcInd(T.Type, rows, cols, pA, lda, out long index);
 				result = pA[index];
 				if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
 					result = T.Abs(result);
@@ -979,7 +977,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				ReduceOperation.AbsoluteMininum => &NMC.matArgAbsMin,
 				_ => null,
 			};
-			return funcInd != null && funcInd(NumberType<T>.DataType, rows, cols, pA, lda, out index).Check();
+			return funcInd != null && funcInd(T.Type, rows, cols, pA, lda, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1000,7 +998,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				ReduceOperation.Norm => &NMC.matColsNorm,
 				_ => null
 			};
-			return func != null && func(NumberType<T>.DataType, rows, cols, pA, lda, px, strideX).Check();
+			return func != null && func(T.Type, rows, cols, pA, lda, px, strideX).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1016,7 +1014,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				BinaryOperation.Multiply => &NMC.matColsParProd,
 				_ => null
 			};
-			return func != null && func(NumberType<T>.DataType, inclusive, rows, cols, pA, lda, pB, ldb).Check();
+			return func != null && func(T.Type, inclusive, rows, cols, pA, lda, pB, ldb).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1029,7 +1027,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(B, rows, cols, ldb, out T* pB))
 				return false;
-			return NMC.matsEq(NumberType<T>.DataType, rows, cols, pA, lda, pB, ldb, out equals).Check();
+			return NMC.matsEq(T.Type, rows, cols, pA, lda, pB, ldb, out equals).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1041,7 +1039,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(destination, rows, cols, ldd, out TOut* pB))
 				return false;
-			return NMC.matDataConvert(NumberType<TIn>.DataType, NumberType<TOut>.DataType, true, rows, cols, pA, lds, pB, ldd).Check();
+			return NMC.matDataConvert(TIn.Type, TOut.Type, true, rows, cols, pA, lds, pB, ldd).Check();
 		}
 		#endregion
 
@@ -1059,10 +1057,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 					return true;
 				case UnaryOperation.Conjugate:
 					T one = T.One;
-					return NMC.triMatMulCopy(NumberType<T>.DataType, upper, !unitDiag, MatrixOperation.Conjugate, rows, cols, &one, pA, lda, pB, ldb).Check();
+					return NMC.triMatMulCopy(T.Type, upper, !unitDiag, MatrixOperation.Conjugate, rows, cols, &one, pA, lda, pB, ldb).Check();
 				case UnaryOperation.Negate:
 					T negOne = -T.One;
-					return NMC.triMatMulCopy(NumberType<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &negOne, pA, lda, pB, ldb).Check();
+					return NMC.triMatMulCopy(T.Type, upper, !unitDiag, MatrixOperation.None, rows, cols, &negOne, pA, lda, pB, ldb).Check();
 				default:
 					return false;
 			}
@@ -1077,9 +1075,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			return op switch
 			{
-				BinaryScalarOperation.Add => NMC.triMatAddCopy(NumberType<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
-				BinaryScalarOperation.Multiply => NMC.triMatMulCopy(NumberType<T>.DataType, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
-				BinaryScalarOperation.Fill => NMC.triMatFillVal(NumberType<T>.DataType, upper, unitDiag, rows, cols, &scalar, pB, ldb).Check(),
+				BinaryScalarOperation.Add => NMC.triMatAddCopy(T.Type, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
+				BinaryScalarOperation.Multiply => NMC.triMatMulCopy(T.Type, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
+				BinaryScalarOperation.Fill => NMC.triMatFillVal(T.Type, upper, unitDiag, rows, cols, &scalar, pB, ldb).Check(),
 				_ => false,
 			};
 		}
@@ -1095,7 +1093,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			T one = T.One;
 			if (op == BinaryOperation.Add)
-				return NMC.triMatAdd(NumberType<T>.DataType, unitDiag, upper, MatrixOperation.None, MatrixOperation.None, rows, cols, &one, pA, lda, &one, pB, ldb, pC, ldc).Check();
+				return NMC.triMatAdd(T.Type, unitDiag, upper, MatrixOperation.None, MatrixOperation.None, rows, cols, &one, pA, lda, &one, pB, ldb, pC, ldc).Check();
 			else
 				return false;
 		}
@@ -1142,12 +1140,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				if (triFunc != null)
 				{
-					status = triFunc(NumberType<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, &reduce);
+					status = triFunc(T.Type, upper, unitDiagOrHerm, rows, cols, pA, lda, &reduce);
 					result = reduce;
 				}
 				if (funcInd != null)
 				{
-					status = funcInd(NumberType<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, out long index);
+					status = funcInd(T.Type, upper, unitDiagOrHerm, rows, cols, pA, lda, out long index);
 					result = pA[index];
 					if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
 						result = T.Abs(result);
@@ -1157,12 +1155,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			{
 				if (symFunc != null)
 				{
-					status = symFunc(NumberType<T>.DataType, upper, false, rows, pA, lda, &reduce);
+					status = symFunc(T.Type, upper, false, rows, pA, lda, &reduce);
 					result = reduce;
 				}
 				if (funcInd != null)
 				{
-					status = funcInd(NumberType<T>.DataType, upper, false, rows, cols, pA, lda, out long index);
+					status = funcInd(T.Type, upper, false, rows, cols, pA, lda, out long index);
 					result = pA[index];
 					if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
 						result = T.Abs(result);
@@ -1189,7 +1187,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				ReduceOperation.AbsoluteMininum => &NMC.triMatArgAbsMin,
 				_ => null,
 			};
-			return funcInd != null && funcInd(NumberType<T>.DataType, upper, triangular && unitDiagOrHerm, rows, cols, pA, lda, out index).Check();
+			return funcInd != null && funcInd(T.Type, upper, triangular && unitDiagOrHerm, rows, cols, pA, lda, out index).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1227,9 +1225,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				_ => null
 			};
 			if (triangular)
-				return triFunc != null && triFunc(NumberType<T>.DataType, upper, unitDiagOrHerm, rows, cols, pA, lda, px, strideX).Check();
+				return triFunc != null && triFunc(T.Type, upper, unitDiagOrHerm, rows, cols, pA, lda, px, strideX).Check();
 			else
-				return symFunc != null && symFunc(NumberType<T>.DataType, upper, unitDiagOrHerm, rows, pA, lda, px, strideX).Check();
+				return symFunc != null && symFunc(T.Type, upper, unitDiagOrHerm, rows, pA, lda, px, strideX).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1253,9 +1251,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				_ => null
 			};
 			if (triangular)
-				return triFunc != null && triFunc(NumberType<T>.DataType, inclusive, upper, unitDiagOrHerm, rows, cols, pA, lda, pB, ldb).Check();
+				return triFunc != null && triFunc(T.Type, inclusive, upper, unitDiagOrHerm, rows, cols, pA, lda, pB, ldb).Check();
 			else
-				return symFunc != null && symFunc(NumberType<T>.DataType, inclusive, upper, unitDiagOrHerm, rows, pA, lda, pB, ldb).Check();
+				return symFunc != null && symFunc(T.Type, inclusive, upper, unitDiagOrHerm, rows, pA, lda, pB, ldb).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1266,7 +1264,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(B, rows, cols, ldb, out T* pB))
 				return false;
-			return NMC.triMatsEq(NumberType<T>.DataType, upper, ignoreDiag, rows, cols, pA, lda, pB, ldb, out equals).Check();
+			return NMC.triMatsEq(T.Type, upper, ignoreDiag, rows, cols, pA, lda, pB, ldb, out equals).Check();
 		}
 
 		/// <inheritdoc/>
@@ -1276,7 +1274,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (!GetPointer(destination, rows, cols, ldd, out TOut* pB))
 				return false;
-			return NMC.triMatDataConvert(NumberType<TIn>.DataType, NumberType<TOut>.DataType, true, upper, ignoreDiag, rows, cols, pA, lds, pB, ldd).Check();
+			return NMC.triMatDataConvert(TIn.Type, TOut.Type, true, upper, ignoreDiag, rows, cols, pA, lds, pB, ldd).Check();
 		}
 		#endregion
 	}

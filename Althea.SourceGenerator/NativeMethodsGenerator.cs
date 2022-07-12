@@ -155,13 +155,13 @@ namespace {ns.Name}
 						newParams = newParams.Substring(0, newParams.Length - 1)
 											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
 											 .Replace("in " + typeNames[typeNames.Length - 1], "T");
-						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, INumber<T>;";
+						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, IBaseNumber<T>;";
 						generated += Environment.NewLine + Environment.NewLine;
 						newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
 						newParams = newParams.Substring(0, newParams.Length - 1)
 											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
 											 .Replace("in " + typeNames[typeNames.Length - 1], "in T");
-						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}_comp<T>{newParams} where T : unmanaged, INumber<T>;";
+						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}_comp<T>{newParams} where T : unmanaged, IBaseNumber<T>;";
 						generated += Environment.NewLine + Environment.NewLine;
 					}
 					else if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains(", " + typeNames[typeNames.Length - 1]))
@@ -172,7 +172,7 @@ namespace {ns.Name}
 						newParams = newParams.Substring(0, newParams.Length - 1)
 											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
 											 .Replace("in " + typeNames[typeNames.Length - 1], "T");
-						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, INumber<T>;";
+						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, IBaseNumber<T>;";
 						generated += Environment.NewLine + Environment.NewLine;
 					}
 				}
@@ -204,7 +204,7 @@ namespace {ns.Name}
 					}
 					if (attr.ArgumentList.Arguments.Count >= 1)
 					{
-						typeNames = new[] { "float", "double", "Complex<float>", "Complex<double>" };
+						typeNames = new[] { "Float32", "Float64", "Complex<Float32>", "Complex<Float64>" };
 						typeChars = new[] { "s", "d", "c", "z" };
 						typeInputModifer = new[] { "", "", "", "" };
 						typeReturn = typeNames;
@@ -242,7 +242,7 @@ namespace {ns.Name}
 						}
 						if (retReal)
 						{
-							typeReturn = new[] { "float", "double", "float", "double" };
+							typeReturn = new[] { "Float32", "Float64", "Float32", "Float64" };
 							typeChars = upper ? new[] { "S", "D", "SC", "DZ" } : new[] { "s", "d", "sc", "dz" };
 						}
 					}

@@ -53,17 +53,17 @@ namespace Althea.Backend.CSharp.Random
 				if (!T.Type.IsInteger())
 				{
 					T s = scale;
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 					{
 						double r = ReciprocalD * (*(double*)&s);
 						scale = *(T*)&r;
 					}
-					else if (typeof(T) == typeof(float))
+					else if (typeof(T) == typeof(Float32))
 					{
 						float r = (float)(ReciprocalS * (*(float*)&s));
 						scale = *(T*)&r;
 					}
-					else if (typeof(T) == typeof(Half))
+					else if (typeof(T) == typeof(Float16))
 					{
 						Half r = (Half)(ReciprocalH * ((double)*(Half*)&s));
 						scale = *(T*)&r;

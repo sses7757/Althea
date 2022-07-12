@@ -18,17 +18,17 @@ namespace Althea.Random
 	/// <param name="Mean2">The second mean value (μ<sub>2</sub>)</param>
 	/// <param name="StandardDeviation1">The first standard deviation (σ<sub>1</sub>)</param>
 	/// <param name="StandardDeviation2">The second standard deviation (σ<sub>2</sub>)</param>
-	/// <param name="Covariance">The covariance between two random variates (ρ)</param>
+	/// <param name="Correlation">The correlation coefficient between two random variates (ρ)</param>
 	/// <param name="RandomSeed"><inheritdoc/></param>
 	//tex:Two-dimensional normal distribution PDF: $$P_{\mu_1,\mu_2,\sigma_1,\sigma_2,\rho}(x,y) = \frac{1}{2\pi\sigma_1\sigma_2\sqrt{1-\rho^2}}\exp{\left[-\frac{1}{2\left(1-\rho^2\right)}\left(\frac{{(x-\mu_1)}^2}{\sigma_1^2}-\frac{2\rho(x-\mu_1)(y-\mu_2)}{\sigma_1\sigma_2}+\frac{{(y-\mu_2)}^2}{\sigma_2^2}\right)\right]}$$
-	public readonly record struct BinormalDistribution<T>(T Mean1, T Mean2, T StandardDeviation1, T StandardDeviation2, T Covariance, long? RandomSeed = null) :
+	public readonly record struct BinormalDistribution<T>(T Mean1, T Mean2, T StandardDeviation1, T StandardDeviation2, T Correlation, long? RandomSeed = null) :
 		IFloatingPointDistribution<T, BinormalDistribution<T>>, IRank2Distribution<T, T, BinormalDistribution<T>>
 		where T : unmanaged, IBinaryFloat<T>
 	{
 		/// <summary>
 		/// Create a new bi-normal distribution with μ<sub>1</sub> = μ<sub>2</sub> = 0 and σ<sub>1</sub> = σ<sub>2</sub> = 1
 		/// </summary>
-		public BinormalDistribution(T covariance, long? seed = null) : this(T.Zero, T.Zero, T.One, T.One, covariance, seed) { }
+		public BinormalDistribution(T correlation, long? seed = null) : this(T.Zero, T.Zero, T.One, T.One, correlation, seed) { }
 
 		bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, BinormalDistribution<T>>)this).IsValid() && this.StandardDeviation1 > T.Zero && this.StandardDeviation2 > T.Zero && this.Covariance >= -T.One && this.Covariance <= T.One;
 
@@ -114,7 +114,7 @@ namespace Althea.Random
 		public static void Create(Span<byte> data, ReadOnlySpan<T> means, ReadOnlySpan<T> covar, bool originalCovar, long? seed)
 		{
 			int rank = means.Length;
-			if (rank < 3)
+			if (rank < 2)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(means));
 			if (covar.Length != rank * rank)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(covar));
@@ -153,22 +153,27 @@ namespace Althea.Random
 		}
 
 		/// <summary>
-		/// Change the <see cref="CovarianceMatrix"/>'s store mode to store the upper column-major Cholesky factorization
+		/// Compute the <see cref="CovarianceMatrix"/>'s upper column-major Cholesky factorization and store to <paramref name="cholesky"/>
 		/// </summary>
-		public void ToCholeskyStore()
+		/// <returns>Success or not</returns>
+		public readonly bool GetCholesky(Span<T> cholesky)
 		{
 			if (!this.OriginalCovarianceStored)
-				return;
+				return false;
 			int n = this.Means.Length;
-			Span<T> a = stackalloc T[this.CovarianceMatrix.Length], diag = stackalloc T[n];
-			this.CovarianceMatrix.CopyTo(a);
-			CholeskyInternal(a, diag, n);
+			if (cholesky.Length < n * n)
+				return false;
+			Span<T> diag = stackalloc T[n];
+			this.CovarianceMatrix.CopyTo(cholesky);
+			if (!CholeskyInternal(cholesky, diag, n))
+				return false;
 			for (int i = 0; i < n; i++)
 			{
-				a[i + i * n] = diag[i];
+				cholesky[i + i * n] = diag[i];
 				if (i != n - 1)
-					a[(i + 1 + i * n)..((i + 1) * n)].Fill(T.Zero);
+					cholesky[(i + 1 + i * n)..((i + 1) * n)].Fill(T.Zero);
 			}
+			return true;
 		}
 
 		private static void GetCholeskyInverse(Span<T> a, Span<T> diag)
@@ -276,9 +281,14 @@ namespace Althea.Random
 		where T : unmanaged, IBinaryInt<T>
 	{
 		#region basic
-		private readonly int rank;
+		private readonly int rank, trails;
 		private readonly bool hasSeed;
 		private readonly long seed;
+
+		/// <summary>
+		/// The number of trials <c>m</c>
+		/// </summary>
+		public int NTrials => this.trails;
 
 		/// <inheritdoc/>
 		public int Rank => this.rank;
@@ -289,17 +299,17 @@ namespace Althea.Random
 		/// <summary>
 		/// The probabilities values of all dimensions
 		/// </summary>
-		public ReadOnlySpan<T> Probabilities => this.P_Probabilities;
+		public ReadOnlySpan<decimal> Probabilities => this.P_Probabilities;
 
-		private Span<T> P_Probabilities => SpanHelper.CreateSpanFromReadOnly<long, T>(in this.seed, 1, this.rank);
+		private Span<decimal> P_Probabilities => SpanHelper.CreateSpanFromReadOnly<long, decimal>(in this.seed, 1, this.rank);
 
 		static DataType IRandomDistribution<MultinomialDistribution<T>>.DataTypeAt(int rank) => T.Type;
 
 		bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, MultinomialDistribution<T>>)this).IsValid() && this.rank >= 3;
 
-		private unsafe MultinomialDistribution(int rank, long? seed)
+		private unsafe MultinomialDistribution(int rank, int m, long? seed)
 		{
-			this.rank = rank;
+			this.rank = rank; this.trails = m;
 			this.hasSeed = seed.HasValue; this.seed = seed ?? 0;
 		}
 
@@ -315,16 +325,19 @@ namespace Althea.Random
 		/// Create a multi-normal distribution of given <paramref name="probs"/>.
 		/// </summary>
 		/// <param name="data">The <see cref="Span{T}"/> of <see cref="byte"/> used to store the actual <see cref="MultinomialDistribution{T}"/>, must has length ≥ <see cref="DataSize(int)"/></param>
+		/// <param name="trials">The number of trials</param>
 		/// <param name="probs">The probability values of all dimensions</param>
 		/// <param name="seed">The random seed</param>
 		/// <exception cref="ArgumentException">If the size(s) is/are invalid</exception>
 		/// <example><code>
-		/// <see cref="Span{T}"/> data = stackalloc byte[<see cref="MultiNormalDistribution{T}"/>.DataSize(rank)];
-		/// <see cref="MultiNormalDistribution{T}.Create"/>(data, means, covar, originalCovar, seed);
-		/// ref var dist = ref Unsafe.As&lt;byte, <see cref="MultiNormalDistribution{T}"/>&gt;(ref data[0]);
+		/// <see cref="Span{T}"/> data = stackalloc byte[<see cref="MultinomialDistribution{T}"/>.DataSize(rank)];
+		/// <see cref="MultinomialDistribution{T}.Create"/>(data,trials, probabilities, seed);
+		/// ref var dist = ref Unsafe.As&lt;byte, <see cref="MultinomialDistribution{T}"/>&gt;(ref data[0]);
 		/// </code></example>
-		public static void Create(Span<byte> data, ReadOnlySpan<T> probs, long? seed)
+		public static void Create(Span<byte> data, int trials, ReadOnlySpan<decimal> probs, long? seed)
 		{
+			if (trials <= 0)
+				throw new ArgumentOutOfRangeException(nameof(trials), trials, Resources.ParameterError.MustPositive);
 			int rank = probs.Length;
 			if (rank < 3)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(probs));
@@ -333,7 +346,7 @@ namespace Althea.Random
 			if (data.Length < DataSize(rank))
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(data));
 			ref var dist = ref Unsafe.As<byte, MultinomialDistribution<T>>(ref data[0]);
-			dist = new(rank, seed);
+			dist = new(rank, trials, seed);
 			probs.CopyTo(dist.P_Probabilities);
 		}
 		#endregion

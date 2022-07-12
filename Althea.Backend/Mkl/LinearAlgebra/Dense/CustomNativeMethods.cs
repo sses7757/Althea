@@ -2,7 +2,6 @@
 using System.Runtime.InteropServices;
 
 using Althea.LinearAlgebra;
-using Althea.Numerics;
 
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense

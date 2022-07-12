@@ -4,7 +4,6 @@ using System.Threading;
 using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
-using Althea.Numerics;
 
 using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 
@@ -26,7 +25,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (op == MatrixOperation.Conjugate)
 			{
 				op = MatrixOperation.None;
-				this.conj = typeof(T) == typeof(Complex<float>) ? &NM.vcConjI : typeof(T) == typeof(Complex<double>) ? &NM.vzConjI : null;
+				this.conj = typeof(T) == typeof(Complex<Float32>) ? &NM.vcConjI : typeof(T) == typeof(Complex<Float64>) ? &NM.vzConjI : null;
 				if (this.conj is not null)
 					this.conj(n, ptr, inc, ptr, inc);
 			}
@@ -54,7 +53,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (op == MatrixOperation.Conjugate)
 			{
 				op = MatrixOperation.None;
-				this.conj = typeof(T) == typeof(Complex<float>) ? &NM.vcConjI : typeof(T) == typeof(Complex<double>) ? &NM.vzConjI : null;
+				this.conj = typeof(T) == typeof(Complex<Float32>) ? &NM.vcConjI : typeof(T) == typeof(Complex<Float64>) ? &NM.vzConjI : null;
 				if (this.conj is not null)
 					this.conj(len1, ptr1, inc1, ptr1, inc1);
 			}
@@ -86,10 +85,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				op = MatrixOperation.None;
 				this.func = default(T) switch
 				{
-					float => new NM.MKL_imatcopy<float>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
-					double => new NM.MKL_imatcopy<double>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
-					Complex<float> => new NM.MKL_imatcopy<Complex<float>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
-					Complex<double> => new NM.MKL_imatcopy<Complex<double>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
+					Float32 => new NM.MKL_imatcopy<Float32>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
+					Float64 => new NM.MKL_imatcopy<Float64>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
+					Complex<Float32> => new NM.MKL_imatcopy<Complex<Float32>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
+					Complex<Float64> => new NM.MKL_imatcopy<Complex<Float64>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
 					_ => null
 				};
 				this.func?.Invoke(MklMatrixLayoutChar.ColMajor, MklOperationChar.Conjugate, this.m, this.n, T.One, this.ptr, this.ld);
@@ -121,7 +120,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal unsafe static void Conjugate<T>(T* ptr, long n, long inc) where T : unmanaged, IBaseNumber<T>
 		{
-			delegate*<long, T*, long, T*, long, void> func = typeof(T) == typeof(Complex<float>) ? &NM.vcConjI : typeof(T) == typeof(Complex<double>) ? &NM.vzConjI : null;
+			delegate*<long, T*, long, T*, long, void> func = typeof(T) == typeof(Complex<Float32>) ? &NM.vcConjI : typeof(T) == typeof(Complex<Float64>) ? &NM.vzConjI : null;
 			if (func == null)
 				return;
 			func(n, ptr, inc, ptr, inc);
@@ -132,10 +131,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			var func = default(T) switch
 			{
-				float => new NM.MKL_imatcopy<float>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
-				double => new NM.MKL_imatcopy<double>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
-				Complex<float> => new NM.MKL_imatcopy<Complex<float>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
-				Complex<double> => new NM.MKL_imatcopy<Complex<double>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
+				Float32 => new NM.MKL_imatcopy<Float32>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
+				Float64 => new NM.MKL_imatcopy<Float64>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<Float32> => new NM.MKL_imatcopy<Complex<Float32>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<Float64> => new NM.MKL_imatcopy<Complex<Float64>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
 				_ => null
 			};
 			func?.Invoke(MklMatrixLayoutChar.ColMajor, MklOperationChar.NoneTranspose, m, n, scalar, ptr, ld);
@@ -147,10 +146,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			var func = default(T) switch
 			{
-				float => new NM.MKL_imatcopy<float>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
-				double => new NM.MKL_imatcopy<double>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
-				Complex<float> => new NM.MKL_imatcopy<Complex<float>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
-				Complex<double> => new NM.MKL_imatcopy<Complex<double>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
+				Float32 => new NM.MKL_imatcopy<Float32>(NM.MKL_Simatcopy) as NM.MKL_imatcopy<T>,
+				Float64 => new NM.MKL_imatcopy<Float64>(NM.MKL_Dimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<Float32> => new NM.MKL_imatcopy<Complex<Float32>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<Float64> => new NM.MKL_imatcopy<Complex<Float64>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
 				_ => null
 			};
 			func?.Invoke(MklMatrixLayoutChar.ColMajor, MklOperationChar.Conjugate, m, n, T.One, ptr, ld);
@@ -164,8 +163,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			var func = default(T) switch
 			{
-				Complex<float> => new NM.MKL_imatcopy<Complex<float>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
-				Complex<double> => new NM.MKL_imatcopy<Complex<double>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<Float32> => new NM.MKL_imatcopy<Complex<Float32>>(NM.MKL_Cimatcopy) as NM.MKL_imatcopy<T>,
+				Complex<Float64> => new NM.MKL_imatcopy<Complex<Float64>>(NM.MKL_Zimatcopy) as NM.MKL_imatcopy<T>,
 				_ => null
 			};
 			func?.Invoke(MklMatrixLayoutChar.ColMajor, op.ToMklChar(), m, n, T.One, ptr, ld);
@@ -275,11 +274,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		/// </summary>
 		public int GemmJitThreshold { get; set; } = 100;
 
-		private readonly Dictionary<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc), int> candidates = new(128);
-		private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc)> candidatesQueue = new(128);
+		private readonly Dictionary<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc), int> candidates = new(128);
+		private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc)> candidatesQueue = new(128);
 
-		private readonly Dictionary<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc), (IntPtr jitter, ReaderWriterLockSlim locker)> compiled = new(16);
-		private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<double> α, Complex<double> β, long lda, long ldb, long ldc)> compiledQueue = new(16);
+		private readonly Dictionary<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc), (IntPtr jitter, ReaderWriterLockSlim locker)> compiled = new(16);
+		private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc)> compiledQueue = new(16);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
@@ -325,13 +324,13 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static void RealToComp<TComp>(TComp* real, TComp* comp, long n) where TComp : unmanaged, IBaseNumber<TComp>
 		{
-			if (!NumberType<TComp>.IsComplex)
+			if (!TComp.IsComplexType)
 				return;
 			Unsafe.InitBlockUnaligned(comp, 0, (uint)(n * sizeof(TComp)));
-			if (typeof(TComp) == typeof(Complex<float>))
-				Storage.Api.PointerStridedCopy((float*)real, 1, (float*)comp, 2, n);
+			if (typeof(TComp) == typeof(Complex<Float32>))
+				Storage.Api.PointerStridedCopy((Float32*)real, 1, (Float32*)comp, 2, n);
 			else
-				Storage.Api.PointerStridedCopy((double*)real, 1, (double*)comp, 2, n);
+				Storage.Api.PointerStridedCopy((Float64*)real, 1, (Float64*)comp, 2, n);
 		}
 		#endregion
 	}

@@ -1,10 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Threading;
 
-using Althea.Backend.Mkl.LinearAlgebra.Dense;
-using Althea.Storage;
+using Althea.Backend.Storage;
+using Althea.Helpers;
 using Althea.Linq;
-using Althea.Numerics;
 using Althea.Random;
 
 
@@ -68,7 +67,7 @@ namespace Althea.Backend.Mkl.Random
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		private static bool GetPointer<T, TS>(TS s, out T* pointer, out int length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			pointer = default; length = 0;
 			if (s is null || !s.IsValid())
@@ -78,7 +77,10 @@ namespace Althea.Backend.Mkl.Random
 			ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
 			if (pointer == default)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
-			length = ps.Length;
+			long len = ps.Length;
+			if (len > int.MaxValue)
+				return false;
+			length = (int)len;
 			return true;
 		}
 		#endregion
@@ -87,12 +89,14 @@ namespace Althea.Backend.Mkl.Random
 		const DistributionType INVALID = (DistributionType)(-1);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T, TS>(TS storage, IRandomDistribution distribution!!, out T* pointer, out long length, out DistributionType type) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		private static unsafe bool Check<T, TS, TDist>(TS storage, in TDist distribution, out T* pointer, out int length, out DistributionType type) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRandomDistribution<TDist>
 		{
 			pointer = default; length = 0;
 			type = INVALID;
 			if (storage is null || !storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
+			if (!distribution.IsValid())
+				throw new ArgumentNullException(nameof(distribution));
 			if (distribution.Rank != 1)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(distribution));
 			if (!GetPointer(storage, out pointer, out length))
@@ -100,21 +104,21 @@ namespace Althea.Backend.Mkl.Random
 
 			type = distribution switch
 			{
-				UniformDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) || typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Uniform : INVALID,
+				UniformDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) || typeof(T) == typeof(SignedInt32) || typeof(T) == typeof(UnsignedInt32) ? DistributionType.Uniform : INVALID,
 				RandomBitsDistribution<T> => T.Size == sizeof(int) || T.Size == sizeof(long) ? DistributionType.RandomBits : INVALID,
 
-				BetaDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Beta : INVALID,
-				CauchyDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Cauchy : INVALID,
-				ChiSquareDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.ChiSquare : INVALID,
-				ExponentialDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Exponential : INVALID,
-				GammaDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Gamma : INVALID,
-				GumbelDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Gumbel : INVALID,
-				LaplaceDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Laplace : INVALID,
-				LogNormalDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.LogNormal : INVALID,
+				BetaDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Beta : INVALID,
+				CauchyDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Cauchy : INVALID,
+				ChiSquareDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.ChiSquare : INVALID,
+				ExponentialDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Exponential : INVALID,
+				GammaDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Gamma : INVALID,
+				GumbelDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Gumbel : INVALID,
+				LaplaceDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Laplace : INVALID,
+				LogNormalDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.LogNormal : INVALID,
 				NegativeBinomialDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.NegativeBinomial : INVALID,
-				NormalDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Normal : INVALID,
-				RayleighDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Rayleigh : INVALID,
-				WeibullDistribution<T> => typeof(T) == typeof(float) || typeof(T) == typeof(double) ? DistributionType.Weibull : INVALID,
+				NormalDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Normal : INVALID,
+				RayleighDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Rayleigh : INVALID,
+				WeibullDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Weibull : INVALID,
 
 				BernoulliDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Bernoulli : INVALID,
 				BinomialDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Binomial : INVALID,
@@ -127,334 +131,280 @@ namespace Althea.Backend.Mkl.Random
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool Check(ReadOnlySpan<IStorage> storages, IRandomDistribution distribution!!, Span<IntPtr> pointers, Span<int> lengths, out DistributionType type)
+		private static unsafe bool Check<TDist>(ReadOnlySpan<IStorage> storages, in TDist distribution, Span<IntPtr> pointers, Span<int> lengths, out DistributionType type) where TDist : struct, IRandomDistribution<TDist>
 		{
+			if (!distribution.IsValid())
+				throw new ArgumentNullException(nameof(distribution));
 			if (storages.Any(static s => s is null || !s.IsValid()))
 				throw new ArgumentNullException(nameof(storages));
-			if (distribution.Count != storages.Length)
-				throw new ArgumentException(Resources.Parameter.WrongSize, nameof(distribution));
+			if (distribution.Rank != storages.Length)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(storages));
 
-			type = (DistributionType)(-1);
-			for (int i = 0; i < storages.Length; i++)
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			static bool GetPointers<T>(ReadOnlySpan<IStorage> storages, Span<IntPtr> pointers, Span<int> lengths) where T : unmanaged, IBaseNumber<T>
 			{
-				var ss = storages[i][0];
-				if (storages[i].Count != 1 || ss.Pointer is not IMemoryPointer p)
-					return false; // not support
-				if (!storages[i].DataType.IsReal())
-					return false; // not support
-				int sizeT = storages[i].DataType.Bytes();
-				if (ss.LengthInBytes / sizeT > int.MaxValue)
-					return false; // not support
-				var pointer = (IntPtr)(p.Pointer.ToInt64() + ss.OffsetInBytes);
-				var length = (int)(ss.LengthInBytes / sizeT);
-				pointers[i] = pointer; lengths[i] = length;
+				if (!storages.All(static s => s is PureStorage<T, CpuMemoryPointer>))
+					return false;
+				for (int i = 0; i < storages.Length; i++)
+				{
+					var s = storages[i];
+					if (!GetPointer((PureStorage<T, CpuMemoryPointer>)s, out T* ptr, out var len))
+						return false;
+					pointers[i] = (IntPtr)ptr; lengths[i] = (int)len;
+				}
+				return true;
 			}
 
+			type = INVALID;
 			type = distribution switch
 			{
-				MultinomialDistribution<int> => storages.All(static s => s.DataType == DataType.RealInt32) ? DistributionType.Multinomial : INVALID,
-				MultinomialDistribution<uint> => storages.All(static s => s.DataType == DataType.RealUInt32) ? DistributionType.Multinomial : INVALID,
-				MultiNormalDistribution<float> => storages.All(static s => s.DataType == DataType.RealFloat32) ? DistributionType.MultiNormal : INVALID,
-				MultiNormalDistribution<double> => storages.All(static s => s.DataType == DataType.RealFloat64) ? DistributionType.MultiNormal : INVALID,
-				SimpleJointRandomDistribution => DistributionType.SimpleJoint,
+				MultinomialDistribution<SignedInt32> => GetPointers<SignedInt32>(storages, pointers, lengths) ? DistributionType.Multinomial : INVALID,
+				MultinomialDistribution<UnsignedInt32> => GetPointers<UnsignedInt32>(storages, pointers, lengths) ? DistributionType.Multinomial : INVALID,
+				MultiNormalDistribution<Float32> => GetPointers<Float32>(storages, pointers, lengths) ? DistributionType.MultiNormal : INVALID,
+				MultiNormalDistribution<Float64> => GetPointers<Float64>(storages, pointers, lengths) ? DistributionType.MultiNormal : INVALID,
+				BinormalDistribution<Float32> => GetPointers<Float32>(storages, pointers, lengths) ? DistributionType.Binormal : INVALID,
+				BinormalDistribution<Float64> => GetPointers<Float64>(storages, pointers, lengths) ? DistributionType.Binormal : INVALID,
 				_ => INVALID,
 			};
-			if (type != DistributionType.SimpleJoint && type != INVALID && !lengths.AllSame())
+			if (!lengths.AllSame())
 				type = INVALID;
-			return type >= 0;
+			return type != INVALID;
 		}
 		#endregion
 
 		#region methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe void Fill1D<T>(IntPtr p, int n, IRandomDistribution distribution, DistributionType type) where T : unmanaged, IBaseNumber<T>
+		private unsafe void Fill1D<T, TDist>(T* ptr, int n, in TDist distribution, DistributionType type) where T : unmanaged, IBaseNumber<T> where TDist : struct, IRandomDistribution<TDist>
 		{
+			IntPtr p = (IntPtr)ptr;
 			T shape1, shape2, scale, displace, mean, sigma;
 			switch (type)
 			{
 				case DistributionType.Uniform:
-					var uniform = (UniformDistribution<T>)distribution;
+					ref var uniform = ref SpanHelper.As<TDist, UniformDistribution<T>>(distribution);
 					T lb = uniform.LowerBound, ub = uniform.UpperBound;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsF4(), lb.AsF4(), ub.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsF8(), lb.AsF8(), ub.AsF8()).Check();
-					if (typeof(T) == typeof(int) || (typeof(T) == typeof(uint) && ub.AsU4() <= int.MaxValue))
+					if (typeof(T) == typeof(SignedInt32) || (typeof(T) == typeof(UnsignedInt32) && ub.AsU4() <= int.MaxValue))
 						NativeMethods.viRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsI4(), lb.AsI4(), ub.AsI4()).Check();
 					break;
 				case DistributionType.RandomBits:
-					if (sizeof(T) == sizeof(int))
+					if (sizeof(T) == sizeof(SignedInt32))
 						NativeMethods.viRngUniformBits32(MklRngMethodUniformBits.Standard, this.Stream, n, p.AsU4()).Check();
-					if (sizeof(T) == sizeof(long))
+					if (sizeof(T) == sizeof(SignedInt64))
 						NativeMethods.viRngUniformBits64(MklRngMethodUniformBits.Standard, this.Stream, n, p.AsU8()).Check();
 					break;
 
 				case DistributionType.Beta:
-					var beta = (BetaDistribution<T>)distribution;
+					ref var beta = ref SpanHelper.As<TDist, BetaDistribution<T>>(distribution);
 					shape1 = beta.ShapeFactor; shape2 = beta.ShapeFactorOther; scale = beta.ScaleFactor; displace = beta.Displacement;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngBeta(MklRngMethodBeta.CJA, this.Stream, n, p.AsF4(), shape1.AsF4(), shape2.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngBeta(MklRngMethodBeta.CJA, this.Stream, n, p.AsF8(), shape1.AsF8(), shape2.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Cauchy:
-					var cauchy = (CauchyDistribution<T>)distribution;
+					ref var cauchy =ref SpanHelper.As<TDist, CauchyDistribution<T>>(distribution);
 					scale = cauchy.ScaleFactor; displace = cauchy.Displacement;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngCauchy(MklRngMethodCauchy.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngCauchy(MklRngMethodCauchy.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.ChiSquare:
-					var chi2 = (ChiSquareDistribution<T>)distribution;
-					if (typeof(T) == typeof(float))
+					ref var chi2 = ref SpanHelper.As<TDist, ChiSquareDistribution<T>>(distribution);
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngChiSquare(MklRngMethodChiSquare.Chi2Gamma, this.Stream, n, p.AsF4(), chi2.DegreeOfFreedom).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngChiSquare(MklRngMethodChiSquare.Chi2Gamma, this.Stream, n, p.AsF8(), chi2.DegreeOfFreedom).Check();
 					break;
 				case DistributionType.Exponential:
-					var exp = (ExponentialDistribution<T>)distribution;
+					ref var exp = ref SpanHelper.As<TDist, ExponentialDistribution<T>>(distribution);
 					scale = exp.ScaleFactor; displace = exp.Displacement;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngExponential(MklRngMethodExponential.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngExponential(MklRngMethodExponential.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Gamma:
-					var gamma = (GammaDistribution<T>)distribution;
+					ref var gamma = ref SpanHelper.As<TDist, GammaDistribution<T>>(distribution);
 					shape1 = gamma.ShapeFactor; scale = gamma.ScaleFactor; displace = gamma.Displacement;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngGamma(MklRngMethodGamma.GNorm, this.Stream, n, p.AsF4(), shape1.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngGamma(MklRngMethodGamma.GNorm, this.Stream, n, p.AsF8(), shape1.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Gumbel:
-					var gumbel = (GumbelDistribution<T>)distribution;
+					ref var gumbel = ref SpanHelper.As<TDist, GumbelDistribution<T>>(distribution);
 					scale = gumbel.ScaleFactor; displace = gumbel.Displacement;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngGumbel(MklRngMethodGumbel.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngGumbel(MklRngMethodGumbel.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Laplace:
-					var laplace = (LaplaceDistribution<T>)distribution;
+					ref var laplace = ref SpanHelper.As<TDist, LaplaceDistribution<T>>(distribution);
 					scale = laplace.ScaleFactor; displace = laplace.Displacement;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngLaplace(MklRngMethodLaplace.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngLaplace(MklRngMethodLaplace.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.LogNormal:
-					var lognormal = (LogNormalDistribution<T>)distribution;
-					scale = lognormal.ScaleFactor; displace = lognormal.Displacement; mean = lognormal.Mean; sigma = lognormal.StandardDeviation;
-					if (typeof(T) == typeof(float))
+					ref var lognormal = ref SpanHelper.As<TDist, LogNormalDistribution<T>>(distribution);
+					scale = T.One; displace = T.Zero; mean = lognormal.Displacement; sigma = lognormal.ScaleFactor;
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF4(), mean.AsF4(), sigma.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF4(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Normal:
-					var normal = (NormalDistribution<T>)distribution;
-					mean = normal.Mean; sigma = normal.StandardDeviation;
-					if (typeof(T) == typeof(float))
+					ref var normal = ref SpanHelper.As<TDist, NormalDistribution<T>>(distribution);
+					mean = normal.Displacement; sigma = normal.ScaleFactor;
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF4(), mean.AsF4(), sigma.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF4()).Check();
 					break;
 				case DistributionType.Rayleigh:
-					var rayleigh = (RayleighDistribution<T>)distribution;
+					ref var rayleigh = ref SpanHelper.As<TDist, RayleighDistribution<T>>(distribution);
 					scale = rayleigh.ScaleFactor; displace = rayleigh.Displacement;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngRayleigh(MklRngMethodRayleigh.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngRayleigh(MklRngMethodRayleigh.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Weibull:
-					var weibull = (WeibullDistribution<T>)distribution;
+					ref var weibull = ref SpanHelper.As<TDist, WeibullDistribution<T>>(distribution);
 					shape1 = weibull.ShapeFactor; scale = weibull.ScaleFactor; displace = weibull.Displacement;
-					if (typeof(T) == typeof(float))
+					if (typeof(T) == typeof(Float32))
 						NativeMethods.vsRngWeibull(MklRngMethodWeibull.ICDF, this.Stream, n, p.AsF4(), shape1.AsF4(), displace.AsF4(), scale.AsF4()).Check();
-					if (typeof(T) == typeof(double))
+					if (typeof(T) == typeof(Float64))
 						NativeMethods.vdRngWeibull(MklRngMethodWeibull.ICDF, this.Stream, n, p.AsF8(), shape1.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 
 				case DistributionType.Bernoulli:
-					NativeMethods.viRngBernoulli(MklRngMethodBernoulli.ICDF, this.Stream, n, p.AsI4(), ((BernoulliDistribution<T>)distribution).Probability).Check();
+					NativeMethods.viRngBernoulli(MklRngMethodBernoulli.ICDF, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, BernoulliDistribution<T>>(distribution).Probability).Check();
 					break;
 				case DistributionType.Binomial:
-					NativeMethods.viRngBinomial(MklRngMethodBinomial.BTPE, this.Stream, n, p.AsI4(), ((BinomialDistribution<T>)distribution).NTrials, ((BinomialDistribution<T>)distribution).Probability).Check();
+					NativeMethods.viRngBinomial(MklRngMethodBinomial.BTPE, this.Stream, n, p.AsI4(), SpanHelper.As<TDist, BinomialDistribution<T>>(distribution).NTrials, (double)SpanHelper.As<TDist, BinomialDistribution<T>>(distribution).Probability).Check();
 					break;
 				case DistributionType.NegativeBinomial:
-					NativeMethods.viRngNegbinomial(MklRngMethodNegativeBinomial.NBar, this.Stream, n, p.AsI4(), ((NegativeBinomialDistribution<T>)distribution).SuccessCount, ((NegativeBinomialDistribution<T>)distribution).Probability).Check();
+					NativeMethods.viRngNegbinomial(MklRngMethodNegativeBinomial.NBar, this.Stream, n, p.AsI4(), SpanHelper.As<TDist, NegativeBinomialDistribution<T>>(distribution).SuccessCount, (double)SpanHelper.As<TDist, NegativeBinomialDistribution<T>>(distribution).Probability).Check();
 					break;
 				case DistributionType.Geometric:
-					NativeMethods.viRngGeometric(MklRngMethodGeometric.ICDF, this.Stream, n, p.AsI4(), ((GeometricDistribution<T>)distribution).Probability).Check();
+					NativeMethods.viRngGeometric(MklRngMethodGeometric.ICDF, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, GeometricDistribution<T>>(distribution).Probability).Check();
 					break;
 				case DistributionType.Hypergeometric:
-					var hyper = (HypergeometricDistribution<T>)distribution;
-					NativeMethods.viRngHypergeometric(MklRngMethodHypergeometric.H2PE, this.Stream, n, p.AsI4(), hyper.LostSize, hyper.SampleSize, hyper.MarkSize).Check();
+					ref var hyper = ref SpanHelper.As<TDist, HypergeometricDistribution<T>>(distribution);
+					NativeMethods.viRngHypergeometric(MklRngMethodHypergeometric.H2PE, this.Stream, n, p.AsI4(), hyper.TotalSize, hyper.SampleSize, hyper.MarkSize).Check();
 					break;
 				case DistributionType.Poisson:
-					NativeMethods.viRngPoisson(MklRngMethodPoisson.PTPE, this.Stream, n, p.AsI4(), ((PoissonDistribution<T>)distribution).Lambda).Check();
-					break;
-
-				default:
+					NativeMethods.viRngPoisson(MklRngMethodPoisson.PTPE, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, PoissonDistribution<T>>(distribution).Lambda).Check();
 					break;
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe void FillND(IRandomDistribution distribution, Span<IntPtr> pointers, int length)
+		private unsafe void FillND<TDist>(in TDist distribution, Span<IntPtr> pointers, int length) where TDist : struct, IRandomDistribution<TDist>
 		{
 			void* p = Unsafe.AsPointer(ref pointers[0]);
-			MklRngMatrixStorage storage = default; MklLapackInfo info;
-			if (distribution is MultinomialDistribution<int> nomialI)
+			if (distribution is MultinomialDistribution<SignedInt32> or MultinomialDistribution<UnsignedInt32>)
 			{
-				NativeMethods.viRngMultinomial(MklRngMethodMultinomial.MultiPoisson, this.Stream, length, (int**)p, nomialI.NTrials, nomialI.Rank, in nomialI.Probabilities[0]).Check();
+				ref var nomial = ref SpanHelper.As<TDist, MultinomialDistribution<SignedInt32>>(distribution);
+				Span<double> prob = stackalloc double[nomial.Rank];
+				nomial.Probabilities.CopyTo(prob, static d => (double)d);
+				NativeMethods.viRngMultinomial(MklRngMethodMultinomial.MultiPoisson, this.Stream, length, (int**)p, nomial.NTrials, nomial.Rank, in prob[0]).Check();
 			}
-			else if (distribution is MultinomialDistribution<uint> nomialU)
+			else if (distribution is BinormalDistribution<Float32> binormal)
 			{
-				NativeMethods.viRngMultinomial(MklRngMethodMultinomial.MultiPoisson, this.Stream, length, (int**)p, nomialU.NTrials, nomialU.Rank, in nomialU.Probabilities[0]).Check();
+				Span<byte> data = stackalloc byte[MultiNormalDistribution<Float32>.DataSize(2)];
+				MultiNormalDistribution<Float32>.Create(data, stackalloc Float32[] { binormal.Mean1, binormal.Mean2 },
+					stackalloc Float32[]
+					{
+						binormal.StandardDeviation1, 0f,
+						binormal.StandardDeviation2 * binormal.Correlation,
+						binormal.StandardDeviation2 * MathF.Sqrt(1.0f - binormal.Correlation * binormal.Correlation)
+					}, false, binormal.RandomSeed);
+				FillND(Unsafe.As<byte, MultiNormalDistribution<Float32>>(ref data[0]), pointers, length);
+				return;
 			}
-			else if (distribution is MultiNormalDistribution<float> normalS)
+			else if (distribution is MultiNormalDistribution<Float32>)
 			{
-				ReadOnlySpan<float> matrix;
-				int rank = normalS.Rank;
-				switch (normalS.CovarianceStorage)
+				ref var normal = ref SpanHelper.As<TDist, MultiNormalDistribution<Float32>>(distribution);
+				int rank = normal.Rank;
+				ReadOnlySpan<Float32> sigma;
+				if (normal.OriginalCovarianceStored)
 				{
-					case MultiNormalDistribution<float>.StorageType.Original:
-						storage = MklRngMatrixStorage.Full;
-						// factorize
-						float[] tempFull = new float[rank * rank];
-						normalS.Covariance.CopyTo(tempFull);
-						info = NativeMethods.LAPACKE_spotrf(MklMatrixLayout.ColMajor, MklFillModeChar.Upper, rank, tempFull, rank);
-						Althea.LinearAlgebra.SolveMethodKind.Cholesky.CheckLapackInfo(info);
-						matrix = tempFull;
-						break;
-					case MultiNormalDistribution<float>.StorageType.Diagonal:
-						storage = MklRngMatrixStorage.Diagonal;
-						// sqrt
-						float[] tempDiag = new float[rank];
-						normalS.Covariance.CopyTo(tempDiag, static c => MathF.Sqrt(c));
-						matrix = tempDiag;
-						break;
-					case MultiNormalDistribution<float>.StorageType.CholeskyFull:
-						storage = MklRngMatrixStorage.Full;
-						matrix = normalS.Covariance;
-						break;
-					case MultiNormalDistribution<float>.StorageType.CholeskyDiagonal:
-						storage = MklRngMatrixStorage.Diagonal;
-						matrix = normalS.Covariance;
-						break;
-					default:
-						matrix = default;
-						break;
+					Span<Float32> temp = stackalloc Float32[rank * rank];
+					normal.GetCholesky(temp);
+					sigma = SpanHelper.CreateReadOnlySpan(in temp[0], temp.Length);
 				}
-				NativeMethods.vsRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (float**)p, rank, storage, in normalS.Mean[0], in matrix[0]);
-			}
-			else if (distribution is MultiNormalDistribution<double> normalD)
-			{
-				ReadOnlySpan<double> matrix;
-				int rank = normalD.Rank;
-				switch (normalD.CovarianceStorage)
+				else
 				{
-					case MultiNormalDistribution<double>.StorageType.Original:
-						storage = MklRngMatrixStorage.Full;
-						// factorize
-						double[] tempFull = new double[rank * rank];
-						normalD.Covariance.CopyTo(tempFull);
-						info = NativeMethods.LAPACKE_dpotrf(MklMatrixLayout.ColMajor, MklFillModeChar.Upper, rank, tempFull, rank);
-						Althea.LinearAlgebra.SolveMethodKind.Cholesky.CheckLapackInfo(info);
-						matrix = tempFull;
-						break;
-					case MultiNormalDistribution<double>.StorageType.Diagonal:
-						storage = MklRngMatrixStorage.Diagonal;
-						// sqrt
-						double[] tempDiag = new double[rank];
-						normalD.Covariance.CopyTo(tempDiag, static c => Math.Sqrt(c));
-						matrix = tempDiag;
-						break;
-					case MultiNormalDistribution<double>.StorageType.CholeskyFull:
-						storage = MklRngMatrixStorage.Full;
-						matrix = normalD.Covariance;
-						break;
-					case MultiNormalDistribution<double>.StorageType.CholeskyDiagonal:
-						storage = MklRngMatrixStorage.Diagonal;
-						matrix = normalD.Covariance;
-						break;
-					default:
-						matrix = default;
-						break;
+					sigma = normal.CovarianceMatrix;
 				}
-				NativeMethods.vdRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (double**)p, rank, storage, in normalD.Mean[0], in matrix[0]);
+				NativeMethods.vsRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (float**)p, rank, MklRngMatrixStorage.Full, in SpanHelper.As<Float32, float>(in normal.Means[0]), in SpanHelper.As<Float32, float>(in sigma[0])).Check();
+			}
+			else if (distribution is MultiNormalDistribution<Float64>)
+			{
+				ref var normal = ref SpanHelper.As<TDist, MultiNormalDistribution<Float64>>(distribution);
+				int rank = normal.Rank;
+				ReadOnlySpan<Float64> sigma;
+				if (normal.OriginalCovarianceStored)
+				{
+					Span<Float64> temp = stackalloc Float64[rank * rank];
+					normal.GetCholesky(temp);
+					sigma = SpanHelper.CreateReadOnlySpan(in temp[0], temp.Length);
+				}
+				else
+				{
+					sigma = normal.CovarianceMatrix;
+				}
+				NativeMethods.vdRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (double**)p, rank, MklRngMatrixStorage.Full, in SpanHelper.As<Float64, double>(in normal.Means[0]), in SpanHelper.As<Float64, double>(in sigma[0])).Check();
 			}
 		}
 
-		protected override unsafe bool FillWithRandom_<T>(Storage<T> storage, IRandomDistribution distribution)
+		/// <inheritdoc/>
+		public virtual unsafe bool FillWithRandom<T, TS, TDist>(TS storage, in TDist distribution) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>
 		{
-			if (!Check(storage, distribution, out var p, out int n, out var type))
+			if (!Check(storage, distribution, out T* ptr, out var len, out var type))
 				return false;
-			this.Fill1D<T>(p, n, distribution, type);
+			Fill1D(ptr, len, distribution, type);
 			return true;
 		}
 
-		protected override bool FillWithRandom_<T1, T2>(Storage<T1> storage1, Storage<T2> storage2, IRandomDistribution distribution)
+		/// <inheritdoc/>
+		public virtual bool FillWithRandom<T1, T2, TS1, TS2, TDist>(TS1 storage1, TS2 storage2, in TDist distribution) where T1 : unmanaged, IBaseNumber<T1> where T2 : unmanaged, IBaseNumber<T2> where TS1 : class, IStorage<T1, TS1> where TS2 : class, IStorage<T2, TS2> where TDist : struct, IRank2Distribution<T1, T2, TDist>
 		{
 			Span<IStorage> storages = stackalloc IntPtr[2].AsClassType<IStorage>().SetValue(storage1, storage2);
-			Span<IntPtr> pointers = stackalloc IntPtr[2];
-			Span<int> lengths = stackalloc int[2];
-			if (!Check(storages, distribution, pointers, lengths, out var type))
+			Span<IntPtr> ptrs = stackalloc IntPtr[2]; Span<int> lens = stackalloc int[2];
+			if (!Check(storages, distribution, ptrs, lens, out _))
 				return false;
-			if (type == DistributionType.SimpleJoint)
-			{
-				var joint = (SimpleJointRandomDistribution)distribution;
-				if (!Check(storage1, joint[0], out var p1, out var n1, out var type1))
-					return false;
-				if (!Check(storage2, joint[1], out var p2, out var n2, out var type2))
-					return false;
-				this.Fill1D<T1>(p1, n1, joint[0], type1);
-				this.Fill1D<T2>(p2, n2, joint[1], type2);
-				return true;
-			}
-			this.FillND(distribution, pointers, lengths[0]);
+			FillND(distribution, ptrs, lens[0]);
 			return true;
 		}
 
-		protected override bool FillWithRandom_<T1, T2, T3>(Storage<T1> storage1, Storage<T2> storage2, Storage<T3> storage3, IRandomDistribution distribution)
+		/// <inheritdoc/>
+		public virtual bool FillWithRandom<T1, T2, T3, TS1, TS2, TS3, TDist>(TS1 storage1, TS2 storage2, TS3 storage3, in TDist distribution) where T1 : unmanaged, IBaseNumber<T1> where T2 : unmanaged, IBaseNumber<T2> where T3 : unmanaged, IBaseNumber<T3> where TS1 : class, IStorage<T1, TS1> where TS2 : class, IStorage<T2, TS2> where TS3 : class, IStorage<T3, TS3> where TDist : struct, IRank3Distribution<T1, T2, T3, TDist>
 		{
 			Span<IStorage> storages = stackalloc IntPtr[3].AsClassType<IStorage>().SetValue(storage1, storage2, storage3);
-			Span<IntPtr> pointers = stackalloc IntPtr[3];
-			Span<int> lengths = stackalloc int[3];
-			if (!Check(storages, distribution, pointers, lengths, out var type))
+			Span<IntPtr> ptrs = stackalloc IntPtr[3]; Span<int> lens = stackalloc int[3];
+			if (!Check(storages, distribution, ptrs, lens, out _))
 				return false;
-			if (type == DistributionType.SimpleJoint)
-			{
-				var joint = (SimpleJointRandomDistribution)distribution;
-				if (!Check(storage1, joint[0], out var p1, out var n1, out var type1))
-					return false;
-				if (!Check(storage2, joint[1], out var p2, out var n2, out var type2))
-					return false;
-				if (!Check(storage3, joint[2], out var p3, out var n3, out var type3))
-					return false;
-				this.Fill1D<T1>(p1, n1, joint[0], type1);
-				this.Fill1D<T2>(p2, n2, joint[1], type2);
-				this.Fill1D<T3>(p3, n3, joint[2], type3);
-				return true;
-			}
-			this.FillND(distribution, pointers, lengths[0]);
+			FillND(distribution, ptrs, lens[0]);
 			return true;
 		}
 
-		protected override bool FillWithRandom_(IRandomDistribution distribution, params IStorage[] storages)
+		/// <inheritdoc/>
+		public virtual bool FillWithRandom<TDist>(ReadOnlySpan<IStorage> storages, in TDist distribution) where TDist : struct, IRandomDistribution<TDist>
 		{
-			Span<IntPtr> pointers = stackalloc IntPtr[storages.Length];
-			Span<int> lengths = stackalloc int[storages.Length];
-			if (!Check(storages, distribution, pointers, lengths, out var type))
+			Span<IntPtr> ptrs = stackalloc IntPtr[distribution.Rank]; Span<int> lens = stackalloc int[distribution.Rank];
+			if (!Check(storages, distribution, ptrs, lens, out _))
 				return false;
-			if (type == DistributionType.SimpleJoint)
-			{
-				return false;
-			}
-			this.FillND(distribution, pointers, lengths[0]);
+			FillND(distribution, ptrs, lens[0]);
 			return true;
 		}
 		#endregion

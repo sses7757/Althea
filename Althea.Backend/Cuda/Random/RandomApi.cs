@@ -123,7 +123,7 @@ namespace Althea.Backend.Cuda.Random
 			{
 				if (uniform.RandomSeed.HasValue)
 					NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)uniform.RandomSeed.Value).Check();
-				if (typeof(T) == typeof(float))
+				if (typeof(T) == typeof(Float32))
 					NativeMethods.curandGenerateUniform(this.generator, p, length).Check();
 				else
 					NativeMethods.curandGenerateUniformDouble(this.generator, p, length).Check();
@@ -138,7 +138,7 @@ namespace Althea.Backend.Cuda.Random
 				if (normal.RandomSeed.HasValue)
 					NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)normal.RandomSeed.Value).Check();
 				T mean = normal.Mean, stdDev = normal.StandardDeviation;
-				if (typeof(T) == typeof(float))
+				if (typeof(T) == typeof(Float32))
 					NativeMethods.curandGenerateNormal(this.generator, p, length, *(float*)&mean, *(float*)&stdDev).Check();
 				else
 					NativeMethods.curandGenerateNormalDouble(this.generator, p, length, *(double*)&mean, *(double*)&stdDev).Check();
@@ -148,7 +148,7 @@ namespace Althea.Backend.Cuda.Random
 				if (logNormal.RandomSeed.HasValue)
 					NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)logNormal.RandomSeed.Value).Check();
 				T mean = logNormal.Mean, stdDev = logNormal.StandardDeviation;
-				if (typeof(T) == typeof(float))
+				if (typeof(T) == typeof(Float32))
 					NativeMethods.curandGenerateLogNormal(this.generator, p, length, *(float*)&mean, *(float*)&stdDev).Check();
 				else
 					NativeMethods.curandGenerateLogNormalDouble(this.generator, p, length, *(double*)&mean, *(double*)&stdDev).Check();

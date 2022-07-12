@@ -309,17 +309,17 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 					long result = -1;
 					double resultD = 0;
 					// invoke method
-					if (ts.IsAssignableTo(typeof(IComplex<float>)))
+					if (ts.IsAssignableTo(typeof(IComplex<Float32>)))
 					{
-						return !max.HasValue ? HorizontalAbsoluteSum(s.As<float>(), ii, out resultD) :
-								   max.Value ? HorizontalAbsoluteValueArgMax(s.As<float>(), ii, out result) :
-											   HorizontalAbsoluteValueArgMin(s.As<float>(), ii, out result);
+						return !max.HasValue ? HorizontalAbsoluteSum(s.As<Float32>(), ii, out resultD) :
+								   max.Value ? HorizontalAbsoluteValueArgMax(s.As<Float32>(), ii, out result) :
+											   HorizontalAbsoluteValueArgMin(s.As<Float32>(), ii, out result);
 					}
-					if (ts.IsAssignableTo(typeof(IComplex<double>)))
+					if (ts.IsAssignableTo(typeof(IComplex<Float64>)))
 					{
-						return !max.HasValue ? HorizontalAbsoluteSum(s.As<double>(), ii, out resultD) :
-								   max.Value ? HorizontalAbsoluteValueArgMax(s.As<double>(), ii, out result) :
-											   HorizontalAbsoluteValueArgMin(s.As<double>(), ii, out result);
+						return !max.HasValue ? HorizontalAbsoluteSum(s.As<Float64>(), ii, out resultD) :
+								   max.Value ? HorizontalAbsoluteValueArgMax(s.As<Float64>(), ii, out result) :
+											   HorizontalAbsoluteValueArgMin(s.As<Float64>(), ii, out result);
 					}
 				}
 			}
