@@ -298,14 +298,6 @@ namespace Althea.Numerics
 		public static bool IsUnsignedInteger(this DataType dataType) => (DataTypeClassification)((int)dataType >> 8) == DataTypeClassification.UnsignedInteger;
 
 		/// <summary>
-		/// Get the number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.
-		/// </summary>
-		/// <param name="dataType">The <see cref="DataType"/> to get</param>
-		/// <returns>The number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static int Bytes(this DataType dataType) => (int)dataType >> 16;
-
-		/// <summary>
 		/// Get the corresponding real type of input <paramref name="type"/>
 		/// </summary>
 		/// <param name="type">input <see cref="DataType"/></param>
@@ -320,6 +312,28 @@ namespace Althea.Numerics
 		/// <returns>the corresponding complex type</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static DataType ComplexCorrespond(this DataType type) => (DataType)((((uint)type >> 8) << 8) + (uint)DataTypeTuple.Complex);
+
+		/// <summary>
+		/// Get the <see cref="DataTypeClassification"/> of <paramref name="dataType"/>.
+		/// </summary>
+		/// <param name="dataType">The <see cref="DataType"/> to get</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DataTypeClassification Class(this DataType dataType) => (DataTypeClassification)((int)dataType >> 8);
+
+		/// <summary>
+		/// Get the <see cref="DataTypeTuple"/> of <paramref name="dataType"/>.
+		/// </summary>
+		/// <param name="dataType">The <see cref="DataType"/> to get</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DataTypeTuple Tuple(this DataType dataType) => (DataTypeTuple)((((uint)dataType >> 8) << 8);
+
+		/// <summary>
+		/// Get the number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.
+		/// </summary>
+		/// <param name="dataType">The <see cref="DataType"/> to get</param>
+		/// <returns>The number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static int Bytes(this DataType dataType) => (int)dataType >> 16;
 		#endregion
 
 		#region to DataType

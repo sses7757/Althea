@@ -4,7 +4,6 @@ using System.Text;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.Numerics;
 
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense

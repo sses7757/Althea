@@ -1,5 +1,4 @@
 ﻿using Althea.Array;
-using Althea.Numerics;
 
 
 namespace Althea.Backend.Mkl.Transformer
