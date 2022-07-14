@@ -628,9 +628,6 @@ namespace Althea.Backend.Mkl.Random
 
 namespace Althea.Backend.Mkl
 {
-	/// <summary>
-	/// The static class for checking <see cref="MklRngStatus"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>
