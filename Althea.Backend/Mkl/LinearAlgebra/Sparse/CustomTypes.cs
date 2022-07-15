@@ -40,7 +40,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
         NotSupported = 6,
     }
 
-    internal enum Op
+    internal enum MatrixOp
     {
         None = 10,
         Trans = 11,
@@ -88,8 +88,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
         FullMultiply = 90,
         CountNonzeros = 91,
         FinalizeMultiply = 92,
-        FullMultiplyNoValidation = 93,
-        FinalizeMultiplyNoValidation = 94
+        FullMultiplyNoValues = 93,
+        FinalizeMultiplyNoValues = 94
     }
 
     internal readonly record struct MatrixDescr(MatrixType Type, MatrixFillMode Mode, MatrixDiagType Diag);

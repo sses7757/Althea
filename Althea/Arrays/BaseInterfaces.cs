@@ -4,7 +4,7 @@
 namespace Althea.Array
 {
 	/// <summary>
-	/// The interface of (column-major) dense arrays.
+	/// The interface of abstract arrays.
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	public interface IArray<T> where T : unmanaged, IBaseNumber<T>

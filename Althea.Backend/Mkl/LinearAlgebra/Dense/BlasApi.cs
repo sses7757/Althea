@@ -31,7 +31,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotComplex);
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
-			delegate*<long, T*, long, long> func = default(T) switch
+			delegate*<MklInt, T*, MklInt, ulong> func = default(T) switch
 			{
 				Complex<Float32> => max ? &NM.cblas_icamax : &NM.cblas_icamin,
 				Complex<Float64> => max ? &NM.cblas_izamax : &NM.cblas_izamin,
@@ -39,7 +39,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func is null)
 				return false;
-			index = func(n, px, strideX) - 1;
+			index = (long)func(n, px, strideX) - 1;
 			return true;
 		}
 
@@ -76,14 +76,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			index = -1;
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
-			delegate*<long, T*, long, long> func = null;
+			delegate*<MklInt, T*, MklInt, ulong> func = null;
 			if (typeof(T) == typeof(Float32))
 				func = &NM.cblas_isamax;
 			if (typeof(T) == typeof(Float64))
 				func = &NM.cblas_idamax;
 			if (func != null)
 			{
-				index = func(n, px, strideX);
+				index = (long)func(n, px, strideX);
 				return true;
 			}
 			return NMC.vecArgAbsMax(T.Type, n, px, strideX, out index).Check();
@@ -95,7 +95,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			index = -1;
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
-			delegate*<long, T*, long, long> func = default(T) switch
+			delegate*<MklInt, T*, MklInt, ulong> func = default(T) switch
 			{
 				Float32 => &NM.cblas_isamin,
 				Float64 => &NM.cblas_idamin,
@@ -103,7 +103,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func != null)
 			{
-				index = func(n, px, strideX);
+				index = (long)func(n, px, strideX);
 				return true;
 			}
 			return NMC.vecArgAbsMin(T.Type, n, px, strideX, out index).Check();
@@ -297,7 +297,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (β != T.Zero || (px == py && (strideX != strideY || m != n)))
 				return false;
 			op = op.Simplify<T>();
-			delegate*<MklMatrixLayout, MklFillMode, MklOperation, MklBlasDiagType, long, T*, long, T*, long, void> func = default(T) switch
+			delegate*<MklMatrixLayout, MklFillMode, MklOperation, MklBlasDiagType, MklInt, T*, MklInt, T*, MklInt, void> func = default(T) switch
 			{
 				Float32 => &NM.cblas_strmv,
 				Float64 => &NM.cblas_dtrmv,

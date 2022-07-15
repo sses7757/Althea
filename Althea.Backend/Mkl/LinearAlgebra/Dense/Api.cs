@@ -14,11 +14,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	internal readonly unsafe ref struct Conjugater1<T> where T : unmanaged, IBaseNumber<T>
 	{
 		private readonly T* ptr;
-		private readonly long n, inc;
-		private readonly delegate*<long, T*, long, T*, long, void> conj;
+		private readonly MklInt n, inc;
+		private readonly delegate*<MklInt, T*, MklInt, T*, MklInt, void> conj;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Conjugater1(T* ptr, long n, long inc, ref MatrixOperation op)
+		internal Conjugater1(T* ptr, MklInt n, MklInt inc, ref MatrixOperation op)
 		{
 			this.ptr = ptr; this.n = n; this.inc = inc;
 			this.conj = null;
@@ -42,11 +42,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	internal readonly unsafe ref struct Conjugater2<T> where T : unmanaged, IBaseNumber<T>
 	{
 		private readonly T* ptr1, ptr2;
-		private readonly long len1, len2, inc1, inc2;
-		private readonly delegate*<long, T*, long, T*, long, void> conj;
+		private readonly MklInt len1, len2, inc1, inc2;
+		private readonly delegate*<MklInt, T*, MklInt, T*, MklInt, void> conj;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal Conjugater2(T* ptr1, long len1, long inc1, T* ptr2, long len2, long inc2, ref MatrixOperation op)
+		internal Conjugater2(T* ptr1, MklInt len1, MklInt inc1, T* ptr2, MklInt len2, MklInt inc2, ref MatrixOperation op)
 		{
 			this.ptr1 = ptr1; this.ptr2 = ptr2; this.len1 = len1; this.len2 = len2; this.inc1 = inc1; this.inc2 = inc2;
 			this.conj = null;
@@ -73,11 +73,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	internal readonly unsafe ref struct ConjugaterMat1<T> where T : unmanaged, IBaseNumber<T>
 	{
 		private readonly T* ptr;
-		private readonly long m, n, ld;
+		private readonly MklInt m, n, ld;
 		private readonly NM.MKL_imatcopy<T>? func;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal ConjugaterMat1(T* ptr, long m, long n, long ld, ref MatrixOperation op)
+		internal ConjugaterMat1(T* ptr, MklInt m, MklInt n, MklInt ld, ref MatrixOperation op)
 		{
 			this.ptr = ptr; this.m = m; this.n = n; this.ld = ld;
 			if (op == MatrixOperation.Conjugate)
@@ -109,25 +109,25 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	internal static class Conjugater
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static Conjugater1<T> Create<T>(T* ptr, long n, long inc, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr, n, inc, ref op);
+		internal unsafe static Conjugater1<T> Create<T>(T* ptr, MklInt n, MklInt inc, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr, n, inc, ref op);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static Conjugater2<T> Create<T>(T* ptr1, long len1, long inc1, T* ptr2, long len2, long inc2, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr1, len1, inc1, ptr2, len2, inc2, ref op);
+		internal unsafe static Conjugater2<T> Create<T>(T* ptr1, MklInt len1, MklInt inc1, T* ptr2, MklInt len2, MklInt inc2, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr1, len1, inc1, ptr2, len2, inc2, ref op);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static ConjugaterMat1<T> Create<T>(T* ptr, long m, long n, long ld, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr, m, n, ld, ref op);
+		internal unsafe static ConjugaterMat1<T> Create<T>(T* ptr, MklInt m, MklInt n, MklInt ld, ref MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr, m, n, ld, ref op);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static void Conjugate<T>(T* ptr, long n, long inc) where T : unmanaged, IBaseNumber<T>
+		internal unsafe static void Conjugate<T>(T* ptr, MklInt n, MklInt inc) where T : unmanaged, IBaseNumber<T>
 		{
-			delegate*<long, T*, long, T*, long, void> func = typeof(T) == typeof(Complex<Float32>) ? &NM.vcConjI : typeof(T) == typeof(Complex<Float64>) ? &NM.vzConjI : null;
+			delegate*<MklInt, T*, MklInt, T*, MklInt, void> func = typeof(T) == typeof(Complex<Float32>) ? &NM.vcConjI : typeof(T) == typeof(Complex<Float64>) ? &NM.vzConjI : null;
 			if (func == null)
 				return;
 			func(n, ptr, inc, ptr, inc);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static bool Scale<T>(T* ptr, long m, long n, long ld, T scalar) where T : unmanaged, IBaseNumber<T>
+		internal unsafe static bool Scale<T>(T* ptr, MklInt m, MklInt n, MklInt ld, T scalar) where T : unmanaged, IBaseNumber<T>
 		{
 			var func = default(T) switch
 			{
@@ -142,7 +142,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static bool Conjugate<T>(T* ptr, long m, long n, long ld) where T : unmanaged, IBaseNumber<T>
+		internal unsafe static bool Conjugate<T>(T* ptr, MklInt m, MklInt n, MklInt ld) where T : unmanaged, IBaseNumber<T>
 		{
 			var func = default(T) switch
 			{
@@ -157,7 +157,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal unsafe static bool Transpose<T>(T* ptr, long m, long n, long ld, MatrixOperation op) where T : unmanaged, IBaseNumber<T>
+		internal unsafe static bool Transpose<T>(T* ptr, MklInt m, MklInt n, MklInt ld, MatrixOperation op) where T : unmanaged, IBaseNumber<T>
 		{
 			if (m != ld)
 				return false;
@@ -194,11 +194,27 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		/// <summary>
+		/// Statically get or set the MKL VML error callback function.
+		/// </summary>
+		public static VmlErrorCallbackDelegate? VmlErrorCallback
+		{
+			get => NativeMethodsTemplate.vmlGetErrorCallBack();
+			set
+			{
+				if (value is null)
+					NativeMethodsTemplate.vmlClearErrorCallBack();
+				else
+					NativeMethodsTemplate.vmlSetErrorCallBack(value);
+			}
+		}
+
+		/// <summary>
 		/// Statically get whether the MKL back-end is valid or not.
 		/// </summary>
 		public static bool Valid { get; }
 
-		void IDisposable.Dispose()
+		/// <inheritdoc/>
+		public void Dispose()
 		{
 			foreach (var kv in this.compiled)
 			{
@@ -219,26 +235,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		/// <inheritdoc/>
 		public bool Disposed { get; set; } = false;
-
-		/// <summary>
-		/// Get the default <see cref="Api"/>.
-		/// </summary>
-		internal protected static readonly Api Default = new();
-
-		/// <summary>
-		/// Statically get or set the MKL VML error callback function.
-		/// </summary>
-		public static VmlErrorCallbackDelegate? VmlErrorCallback
-		{
-			get => NativeMethodsTemplate.vmlGetErrorCallBack();
-			set
-			{
-				if (value is null)
-					NativeMethodsTemplate.vmlClearErrorCallBack();
-				else
-					NativeMethodsTemplate.vmlSetErrorCallBack(value);
-			}
-		}
 
 		/// <summary>
 		/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").
@@ -288,6 +284,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentNullException(sName);
 			if (stride <= 0)
 				throw new ArgumentOutOfRangeException(strideName, stride, Resources.ParameterError.MustPositive);
+			if (stride > MklInt.MaxValue)
+				return false;
 			if (s is not PureStorage<T, CpuMemoryPointer> ps)
 				return false; // not support
 			ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
@@ -295,6 +293,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
 			length = ps.Length;
 			length = (length - 1) / stride + 1;
+			if (length > MklInt.MaxValue || length < 0)
+				return false;
 			return true;
 		}
 
@@ -311,6 +311,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new ArgumentOutOfRangeException(nName, n, Resources.ParameterError.MustPositive);
 			if (ld < m)
 				throw new ArgumentOutOfRangeException(ldName, ld, Resources.ParameterError.InvalidValue);
+			if (m > MklInt.MaxValue || n > MklInt.MaxValue || ld > MklInt.MaxValue)
+				return false;
 			if (s is not PureStorage<T, CpuMemoryPointer> ps)
 				return false; // not support
 			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);

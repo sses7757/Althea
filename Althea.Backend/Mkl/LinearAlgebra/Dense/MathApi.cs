@@ -13,8 +13,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#region vector math
 		private static bool AdditionalUnary<T>(UnaryOperationSupplement op, long n, T* px, long strideX, T* py, long strideY) where T : unmanaged, IBaseNumber<T>
 		{
-			delegate*<long, T*, T*, void> func;
-			delegate*<long, T*, long, T*, long, void> funcI;
+			delegate*<MklInt, T*, T*, void> func;
+			delegate*<MklInt, T*, MklInt, T*, MklInt, void> funcI;
 			func = op switch
 			{
 				UnaryOperationSupplement.Exp => default(T) switch
@@ -358,8 +358,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			if (scalar == T.Zero)
 				return FillWithValue(py, strideY, n, T.One);
-			delegate*<long, T*, T*, void> simpleFunc = null;
-			delegate*<long, T*, long, T*, long, void> simpleFuncI = null;
+			delegate*<MklInt, T*, T*, void> simpleFunc = null;
+			delegate*<MklInt, T*, MklInt, T*, MklInt, void> simpleFuncI = null;
 			if (scalar == -T.One)
 			{
 				simpleFunc = default(T) switch
@@ -520,8 +520,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(y, strideY, out T* py, out long ny))
 				return false;
 			n = Math.Min(n, ny);
-			delegate*<long, T*, T*, void> func;
-			delegate*<long, T*, long, T*, long, void> funcI;
+			delegate*<MklInt, T*, T*, void> func;
+			delegate*<MklInt, T*, MklInt, T*, MklInt, void> funcI;
 			func = op switch
 			{
 				UnaryOperation.Conjugate => default(T) switch
@@ -677,7 +677,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(z, strideZ, out T* pz, out long nz))
 				return false;
 			n = Math.Min(n, Math.Min(ny, nz));
-			delegate*<long, T*, T*, T*, void> func = op switch
+			delegate*<MklInt, T*, T*, T*, void> func = op switch
 			{
 				BinaryOperation.Add => default(T) switch
 				{
@@ -737,7 +737,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				},
 				_ => null
 			};
-			delegate*<long, T*, long, T*, long, T*, long, void> funcI = op switch
+			delegate*<MklInt, T*, MklInt, T*, MklInt, T*, MklInt, void> funcI = op switch
 			{
 				BinaryOperation.Add => default(T) switch
 				{
