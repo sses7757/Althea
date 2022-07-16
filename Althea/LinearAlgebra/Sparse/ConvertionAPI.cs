@@ -19,7 +19,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="TInd">Any integral-typed unmanaged number as the index type</typeparam>
 		/// <typeparam name="TS">The concrete storage type of data type <typeparamref name="T"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TSInd">The concrete storage type of data type <typeparamref name="TInd"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="x">The input vector as a <typeparamref name="TS"/> whose values will be set</param>
+		/// <param name="x">The output vector as a <typeparamref name="TS"/> whose values will be set</param>
 		/// <param name="positions">The given positions as a <typeparamref name="TSInd"/></param>
 		/// <param name="value">The value to set</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
@@ -35,9 +35,9 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <typeparam name="TS1">The first concrete storage type of data type <typeparamref name="T"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TS2">The first concrete storage type of data type <typeparamref name="T"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TSInd">The concrete storage type of data type <typeparamref name="TInd"/> that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="x">The input vector as a <typeparamref name="TS1"/> whose values will be set</param>
+		/// <param name="x">The output vector as a <typeparamref name="TS1"/> whose values will be set</param>
 		/// <param name="positions">The given positions as a <typeparamref name="TSInd"/></param>
-		/// <param name="values">The values to set as a <typeparamref name="TS2"/></param>
+		/// <param name="values">The input values to set as a <typeparamref name="TS2"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="positions"/> is null or invalid</exception>
 		[AbstractApiMethod]

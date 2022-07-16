@@ -1,5 +1,7 @@
 #pragma once
 
+#define CPU
+
 // platform specific INLINE and export DLL
 #if defined(_MSC_VER)
 #define DLLEXP extern "C" __declspec(dllexport)
@@ -11,11 +13,17 @@
 #pragma warning Unknown dynamic link import/export semantics.
 #endif
 
+#ifdef MKL_ILP64
+#define MKL_INT long long
+#else
+#define MKL_INT int
+#endif // MKL_ILP64
+
 
 // CUDA includes
-
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+
 // math and complex
 #include <math.h>
 #include "complex.h"
@@ -46,9 +54,9 @@
 // nvcc -o SupplementOMP.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj -openmp"
 #undef THRUST_DEVICE_SYSTEM
 #ifdef CPU
-#include <thrust/system/omp/execution_policy.h>
-#define THRUST_PAR thrust::omp::par
-#define ERROR_RETURN void
+#include <thrust/system/tbb/execution_policy.h>
+#define THRUST_PAR thrust::tbb::par
+#define ERROR_RETURN int
 #define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP
 #else
 #define THRUST_PAR thrust::cuda::par
