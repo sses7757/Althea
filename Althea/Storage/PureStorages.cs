@@ -48,19 +48,13 @@ namespace Althea.Storage
 		protected PureStorage(PointerSegment<TP> pointer) : base(pointer)
 		{ }
 
-		/// <summary>
-		/// Statically get an empty <see cref="PureStorage{T, TP}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public static PureStorage<T, TP> Empty => new ReferencePureStorage<T, TP>(null);
 
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
 
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="PureStorage{T, TP}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(TP.Location);
 
 #pragma warning disable CS8619
@@ -72,19 +66,13 @@ namespace Althea.Storage
 			return this.IsValid() ? 1 : 0;
 		}
 
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer.LengthInBytes;
 
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, PureStorage<T, TP>>)this).Length;
 
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		void IStorage.Dispose(bool invokedByUser)
@@ -101,10 +89,7 @@ namespace Althea.Storage
 		/// </summary>
 		~PureStorage() => ((IStorage)this).Dispose(false);
 
-		/// <summary>
-		/// Check whether this <see cref="PureStorage{T, TP}"/> is a valid one or not
-		/// </summary>
-		/// <returns>The validness of this <see cref="PureStorage{T, TP}"/></returns>
+		/// <inheritdoc/>
 		public bool IsValid() => !this.Disposed && this.Pointer.IsValid();
 		#endregion
 
@@ -123,13 +108,7 @@ namespace Althea.Storage
 			return other is PureStorageBase<TP> s && this.Pointer.OverlapWith(s.Pointer);
 		}
 
-		/// <summary>
-		/// Make a referenced <see cref="PureStorage{T, TP}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="PureStorage{T, TP}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="PureStorage{T, TP}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		/// <inheritdoc/>
 		public PureStorage<T, TP> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferencePureStorage<T, TP> @ref)
@@ -160,15 +139,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="PureStorage{T, TP}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="PureStorage{T, TP}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 1</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static PureStorage<T, TP> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 1)
@@ -198,33 +169,16 @@ namespace Althea.Storage
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<PureStorage<T, TP>, long>.AdditiveIdentity => 0;
 
-		/// <summary>
-		/// Indicates whether the current <see cref="PureStorage{T, TP}"/> is equal to the <paramref name="other"/> <see cref="PureStorage{T, TP}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="PureStorage{T, TP}"/> to compare to</param>
-		/// <returns>true if the current <see cref="PureStorage{T, TP}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		/// <inheritdoc/>
 		public bool Equals(PureStorage<T, TP>? other) => other is not null && this.Pointer == other.Pointer;
 
-		/// <summary>
-		/// Get the hash code of this <see cref="PureStorage{T, TP}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="PureStorage{T, TP}"/></returns>
+		/// <inheritdoc/>
 		public override int GetHashCode() => this.Pointer.GetHashCode();
 
-		/// <summary>
-		/// Check whether this <see cref="PureStorage{T, TP}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as PureStorage<T, TP>);
 
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="PureStorage{T, TP}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="PureStorage{T, TP}"/></param>
-		/// <param name="right">The right operand of type <see cref="PureStorage{T, TP}"/></param>
-		/// <returns>The distance between two <see cref="PureStorage{T, TP}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		/// <inheritdoc/>
 		public static long operator -(PureStorage<T, TP> left, PureStorage<T, TP> right)
 		{
 			long diffBytes = IStorage<T, PureStorage<T, TP>>.StorageDiffBytes(left, right);
@@ -233,24 +187,16 @@ namespace Althea.Storage
 			return diffBytes / T.Size;
 		}
 
-		/// <summary>
-		/// <see cref="PureStorage{T, TP}"/> addition operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static PureStorage<T, TP> operator +(PureStorage<T, TP> left, long right) => left.MakeReference(right);
 
-		/// <summary>
-		/// <see cref="PureStorage{T, TP}"/> subtraction operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static PureStorage<T, TP> operator -(PureStorage<T, TP> left, long right) => left.MakeReference(-right);
 
-		/// <summary>
-		/// <see cref="PureStorage{T, TP}"/> equality operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static bool operator ==(PureStorage<T, TP> left, PureStorage<T, TP> right) => left.Equals(right);
 
-		/// <summary>
-		/// <see cref="PureStorage{T, TP}"/> inequality operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static bool operator !=(PureStorage<T, TP> left, PureStorage<T, TP> right) => !left.Equals(right);
 		static PureStorage<T, TP> System.Numerics.IAdditionOperators<PureStorage<T, TP>, long, PureStorage<T, TP>>.op_CheckedAddition(PureStorage<T, TP> left, long right) => left + right;
 		static PureStorage<T, TP> System.Numerics.ISubtractionOperators<PureStorage<T, TP>, long, PureStorage<T, TP>>.op_CheckedSubtraction(PureStorage<T, TP> left, long right) => left - right;
@@ -344,14 +290,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP : notnull, IPointer<TP>
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferencePureStorage{T, TP}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
 
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferencePureStorage{T, TP}"/> in bytes
-		/// </summary>
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes => this.Pointer.OffsetInBytes;
 
 		/// <summary>

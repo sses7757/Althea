@@ -237,7 +237,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, statically create a new <typeparamref name="TSelf"/> of given lengths.
 		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
+		/// <param name="lengths">The given lengths of all underlying pointers in <typeparamref name="T"/></param>
 		/// <returns>The created new <typeparamref name="TSelf"/></returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>

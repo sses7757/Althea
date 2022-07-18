@@ -2,7 +2,6 @@
 using System.Text.Json.Serialization;
 
 using Althea.Helpers;
-using Althea.Linq;
 
 
 namespace Althea.Storage
@@ -15,9 +14,7 @@ namespace Althea.Storage
 		#region basic
 		private readonly IntPtr data;
 
-		/// <summary>
-		/// Get the length of underly memory in bytes
-		/// </summary>
+		/// <inheritdoc/>
 		public long LengthInBytes { get; }
 
 		/// <summary>
@@ -41,9 +38,7 @@ namespace Althea.Storage
 			this.LengthInBytes = length;
 		}
 
-		/// <summary>
-		/// Check whether this pointer is valid or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool IsValid() => this.LengthInBytes > 0;
 
 		static StorageLocation IPointer<ManagedPointer>.Location => new(LocationType.CpuRam, 0);
@@ -52,33 +47,19 @@ namespace Althea.Storage
 		#endregion
 
 		#region equality
-		/// <summary>
-		/// Check whether this <see cref="ManagedPointer"/> is the same as the <paramref name="other"/> one
-		/// </summary>
-		/// <param name="other">The other <see cref="ManagedPointer"/> to compare</param>
-		/// <returns><c>this == <paramref name="other"/></c></returns>
+		/// <inheritdoc/>
 		public bool Equals(ManagedPointer other) => this.data == other.data;
 
-		/// <summary>
-		/// Check whether this <see cref="ManagedPointer"/> is the same as the other <paramref name="obj"/>
-		/// </summary>
-		/// <param name="obj">The other object to compare</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => obj is ManagedPointer p && this.Equals(p);
 
-		/// <summary>
-		/// Equality operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static bool operator ==(ManagedPointer left, ManagedPointer right) => left.Equals(right);
 
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static bool operator !=(ManagedPointer left, ManagedPointer right) => left.Equals(right);
 
-		/// <summary>
-		/// Get the hash code of this <see cref="ManagedPointer"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public override int GetHashCode() => this.data.GetHashCode();
 		#endregion
 

@@ -35,7 +35,7 @@ struct aboveThreshold_functor
 
 // dense vector prune to sparse vector -- get buffer size
 template <typename T>
-inline size_t vecPruneBuffer(const size_t N)
+inline ptrdiff_t vecPruneBuffer(const size_t N)
 {
 	size_t res = sizeof(MKL_INT) * N; // max size for possible indices
 	res += sizeof(T) * N; // size for temporary values
@@ -43,9 +43,9 @@ inline size_t vecPruneBuffer(const size_t N)
 }
 
 DLLEXP
-size_t vecPruneBuffer(const size_t N, const Datatype::DataType type)
+ptrdiff_t vecPruneBuffer(const Datatype::DataType type, const size_t N)
 {
-	AUTO_ALLTYPE_FUNC(vecPruneBuffer, type, size_t, N);
+	AUTO_ALLTYPE_FUNC(vecPruneBuffer, type, ptrdiff_t, N);
 }
 
 // dense vector prune to sparse vector -- get non-zeros
@@ -80,6 +80,51 @@ DLLEXP
 size_t vecPruneNnz(const Datatype::DataType type, const void* a, const void* threshold, const size_t N, void* buffer)
 {
 	AUTO_ALLTYPE_FUNC(vectorPruneNonZeros, type, size_t, a, threshold, N, buffer);
+}
+
+// dense vector prune to sparse vector -- no buffer
+template <typename T>
+inline ptrdiff_t vectorPruneDirect(const void* av, const void* threshold, const size_t N, MKL_INT* idxOut, void* valOutv, const bool safeOut, const size_t outN)
+{
+	const T* a = (const T*)av;
+	const T thre = std::abs(*((const T*)threshold));
+
+	// create result container
+	T* valOut = (T*)valOutv;
+
+	// make zip
+	auto zipBegin = thrust::make_zip_iterator(thrust::make_tuple(thrust::make_counting_iterator(0), a));
+	auto resultBegin = thrust::make_zip_iterator(thrust::make_tuple(idxOut, valOut));
+
+	// copy_if to get sparse indexes
+	auto tempBegin = thrust::make_zip_iterator(thrust::make_tuple(thrust::make_discard_iterator((size_t)0), thrust::make_discard_iterator((T)0)));
+	if constexpr (std::is_scalar<T>::value)
+	{
+		if (safeOut)
+		{
+			auto diff = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, tempBegin, aboveThreshold_functor<T, T>(thre)) - tempBegin;
+			if (diff > outN)
+				return diff - outN;
+		}
+		thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, aboveThreshold_functor<T, T>(thre));
+	}
+	else
+	{
+		if (safeOut)
+		{
+			auto diff = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, tempBegin, aboveThreshold_functor<T, typename T::value_type>(std::abs(thre))) - tempBegin;
+			if (diff > outN)
+				return diff - outN;
+		}
+		thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, aboveThreshold_functor<T, typename T::value_type>(std::abs(thre)));
+	}
+	return 0;
+}
+
+DLLEXP
+ptrdiff_t vecPruneDirect(const Datatype::DataType type, const void* a, const void* threshold, const size_t N, MKL_INT* idxOut, void* valOut, const bool safe, const size_t nnz)
+{
+	AUTO_ALLTYPE_FUNC(vectorPruneDirect, type, ptrdiff_t, a, threshold, N, idxOut, valOut, safe, nnz);
 }
 
 // dense vector prune to sparse vector -- calculate

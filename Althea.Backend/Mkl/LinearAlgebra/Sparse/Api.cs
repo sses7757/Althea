@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 
 using Althea.Array;
+using Althea.Backend.CSharp.Storage;
 using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
@@ -148,10 +149,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			return true;
 		}
 
+		private static readonly SparseFormat VectorFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element);
+
 		/// <inheritdoc/>
 		public virtual bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x!!, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			if (strideY != 1 || x.Format != new SparseFormat(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element))
+			if (strideY != 1 || x.Format != VectorFormat)
 				return false;
 			if (x.IndexStorages.Length != 1 || x.ValueStorages.Length != 1)
 				return false;
@@ -159,7 +162,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				return false;
 			if (!GetPointer(y, out T* py, out var n2))
 				return false;
-			if (n2 < n)
+			if (n2 < n || x.Size[0] != n2)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
 
 			var func = default(T) switch
@@ -178,9 +181,45 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public virtual bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold = 0) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, T threshold = default) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>
 		{
-
+			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt))
+				return false;
+			if (strideX != 1 || y.Format != VectorFormat || y.DefaultValue != T.Zero)
+				return false;
+			if (!GetPointer(x, out T* px, out var n))
+				return false;
+			if (y.Size.IsEmpty || y.Size[0] == 0)
+			{	// create y
+				if (y.ValueStorages.Length is not 0 and not 1 || y.IndexStorages.Length is not 0 and not 1)
+					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(y));
+				if ((!y.ValueStorages.IsEmpty && !y.ValueStorages[0].IsValid()) || (!y.IndexStorages.IsEmpty && !y.IndexStorages[0].IsValid()))
+					return false;
+				long bufSize = NMC.vecPruneBuffer(T.Type, n);
+				if (bufSize < 0)
+					return false;
+				using var buf = Buffers.Create<byte>(bufSize);
+				long nnz = NMC.vecPruneNnz(T.Type, px, &threshold, n, buf);
+				var valOut = PureStorage<T, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
+				var idxOut = PureStorage<TInd, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
+				_ = NMC.vecPruneCal(T.Type, n, buf, nnz, (MklInt*)idxOut.Pointer.Pointer.Pointer, (void*)valOut.Pointer.Pointer.Pointer);
+				y.SetValues(n, valOut as TS2, idxOut as TSInd);
+			}
+			else
+			{   // in-place modify y
+				if (y.Size[0] != x.Length)
+					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(y));
+				if (y.ValueStorages.Length != 1 || y.IndexStorages.Length != 1)
+					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(y));
+				if (y.ValueStorages.Length != 1 || y.IndexStorages.Length != 1)
+					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(y));
+				if (!GetPointer(y.ValueStorages[0], y.IndexStorages[0], out T* valOut, out TInd* idxOut, out var nnz))
+					return false;
+				long diff = NMC.vecPruneDirect(T.Type, px, &threshold, n, (MklInt*)idxOut, valOut, true, nnz);
+				if (diff != 0) // cannot extend existing pointers
+					return false;
+			}
+			return true;
 		}
 		#endregion
 	}

@@ -196,7 +196,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		internal static extern int vecSetValAt(DataType type, void* a, void* value, MklInt* pos, long posN);
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern long vecPruneBuffer(long n, DataType type);
+		internal static extern long vecPruneDirect(DataType type, void* a, void* threshold, long n, MklInt* idxOut, void* valOut, bool safe, long nnz);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern long vecPruneBuffer(DataType type, long n);
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern long vecPruneNnz(DataType type, void* a, void* threshold, long n, void* buffer);

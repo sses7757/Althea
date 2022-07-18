@@ -43,6 +43,7 @@
 #include <thrust/scan.h>
 #include <thrust/sort.h>
 #include <thrust/equal.h>
+#include <thrust/iterator/discard_iterator.h>
 
 // self-defined data type
 #include "datatype.h"

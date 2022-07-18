@@ -535,15 +535,15 @@ namespace Althea.Array
 		}
 
 		[FieldOffset(0)]
-		private readonly FixedBuffer_128<long> size;
+		private FixedBuffer_128<long> size;
 		[FieldOffset(128 - sizeof(long))]
 		private int rank;
 		[FieldOffset(128)]
-		private readonly FixedClassBuffer_8<TSVal> valueStorage;
+		private FixedClassBuffer_8<TSVal> valueStorage;
 		[FieldOffset(128 + 64)]
-		private readonly FixedClassBuffer_8<TSInd> indexStorage;
+		private FixedClassBuffer_8<TSInd> indexStorage;
 		[FieldOffset(128 * 2)]
-		private readonly FixedBuffer_128<TInd> blockSize;
+		private FixedBuffer_128<TInd> blockSize;
 		[FieldOffset(128 * 3 - sizeof(long))]
 		private int vals;
 		[FieldOffset(128 * 3 - sizeof(int))]
@@ -553,7 +553,7 @@ namespace Althea.Array
 		[FieldOffset(128 * 3 + sizeof(int))]
 		private TVal defaultVal;
 
-		private const byte MAX_RANK = 15;
+		private const byte MAX_RANK = 15, MAX_STORAGES = 8;
 
 		/// <summary>
 		/// The default value of this sparse array
@@ -576,58 +576,77 @@ namespace Althea.Array
 		/// <summary>
 		/// The size of this sparse array
 		/// </summary>
-		public ReadOnlySpan<long> Size
+		public ReadOnlySpan<long> Size => this.size.AsSpan(this.rank);
+		#endregion
+
+		#region create and set
+		/// <summary>
+		/// Set the <see cref="Size"/>, <see cref="ValueStorages"/>, <see cref="IndexStorages"/> (and <see cref="BlockSize"/>) of this <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> while inputs are all of length 1.
+		/// </summary>
+		/// <param name="size">The <see cref="Size"/> to set</param>
+		/// <param name="values">The <see cref="ValueStorages"/> to set</param>
+		/// <param name="indices">The <see cref="IndexStorages"/> to set</param>
+		/// <param name="blockSize">The <see cref="BlockSize"/> to set, default empty means no block or element block</param>
+		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
+		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
+		/// <exception cref="ArgumentException">If <paramref name="blockSize"/> is not empty while its length is not the same as <paramref name="size"/></exception>
+		public void SetValues(long size, TSVal? values!!, TSInd? indices!!, TInd blockSize = default)
 		{
-			get => this.size.AsSpan(this.rank);
-			set
-			{
-				this.rank = value.Length;
-				if (this.rank > MAX_RANK)
-					throw new NotSupportedException(Resources.ParameterError.WrongSize);
-				this.size.CopyFromSpan(value);
-			}
+			this.rank = 1;
+			this.size[0] = size;
+			this.blockSize[0] = blockSize == default ? TInd.One : blockSize;
+			this.vals = 1;
+			this.valueStorage[0] = values;
+			this.inds = 1;
+			this.indexStorage[0] = indices;
+		}
+
+		/// <summary>
+		/// Set the <see cref="Size"/>, <see cref="ValueStorages"/>, <see cref="IndexStorages"/> (and <see cref="BlockSize"/>) of this <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/>.
+		/// </summary>
+		/// <param name="size">The <see cref="Size"/> to set</param>
+		/// <param name="values">The <see cref="ValueStorages"/> to set</param>
+		/// <param name="indexes">The <see cref="IndexStorages"/> to set</param>
+		/// <param name="blockSize">The <see cref="BlockSize"/> to set, default empty means no block or element block</param>
+		/// <exception cref="ArgumentNullException">if any of the inputs is empty</exception>
+		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
+		/// <exception cref="ArgumentException">If <paramref name="blockSize"/> is not empty while its length is not the same as <paramref name="size"/></exception>
+		public void SetValues(ReadOnlySpan<long> size, ReadOnlySpan<TSVal> values, ReadOnlySpan<TSInd> indexes, ReadOnlySpan<TInd> blockSize = default)
+		{
+			if (size.IsEmpty)
+				throw new ArgumentNullException(nameof(size));
+			if (values.IsEmpty)
+				throw new ArgumentNullException(nameof(values));
+			if (indexes.IsEmpty)
+				throw new ArgumentNullException(nameof(indexes));
+			if (size.Length > MAX_RANK || values.Length > MAX_STORAGES || indexes.Length > MAX_STORAGES)
+				throw new NotSupportedException(Resources.ParameterError.WrongSize);
+			if (!blockSize.IsEmpty && blockSize.Length != size.Length)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(blockSize));
+			this.rank = size.Length;
+			this.size.CopyFromSpan(size);
+			if (!blockSize.IsEmpty)
+				this.blockSize.CopyFromSpan(blockSize);
+			this.vals = values.Length;
+			values.CopyTo(this.valueStorage.AsSpan(this.vals));
+			this.inds = indexes.Length;
+			indexes.CopyTo(this.indexStorage.AsSpan(this.inds));
 		}
 
 		/// <summary>
 		/// The value array(s) of this sparse array
 		/// </summary>
-		public ReadOnlySpan<TSVal> ValueStorages
-		{
-			get => this.valueStorage.AsSpan(this.vals);
-			set
-			{
-				this.vals = value.Length;
-				value.CopyTo(this.valueStorage.AsSpan(this.vals));
-			}
-		}
+		public ReadOnlySpan<TSVal> ValueStorages => this.valueStorage.AsSpan(this.vals);
 
 		/// <summary>
 		/// The index array(s) of this sparse array
 		/// </summary>
-		public ReadOnlySpan<TSInd> IndexStorages
-		{
-			get => this.indexStorage.AsSpan(this.inds);
-			set
-			{
-				this.inds = value.Length;
-				value.CopyTo(this.indexStorage.AsSpan(this.inds));
-			}
-		}
+		public ReadOnlySpan<TSInd> IndexStorages => this.indexStorage.AsSpan(this.inds);
 
 		/// <summary>
 		/// The constant block size of this sparse array, can be empty if it is not a <see cref="SparseFormat.Blocking.Simple"/>
 		/// </summary>
-		public ReadOnlySpan<TInd> BlockSize
-		{
-			get => this.blockSize.AsSpan(this.rank);
-			set
-			{
-				if (value.Length != this.rank)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(value));
-				this.rank = value.Length;
-				this.blockSize.CopyFromSpan(value);
-			}
-		}
+		public ReadOnlySpan<TInd> BlockSize => this.blockSize.AsSpan(this.rank);
 
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with only meta information.
@@ -637,7 +656,8 @@ namespace Althea.Array
 			this = default;
 			this.defaultVal = defaultValue;
 			this.format = format;
-			this.Size = size;
+			this.rank = size.Length;
+			this.size.CopyFromSpan(size);
 		}
 
 		/// <summary>
@@ -649,10 +669,7 @@ namespace Althea.Array
 			SparseArrayWrapper<TVal, TInd, TSVal, TSInd> wrapper = default;
 			wrapper.DefaultValue = array.DefaultValue;
 			wrapper.Format = array.Format;
-			wrapper.Size = array.Size;
-			wrapper.ValueStorages = array.ValueStorages;
-			wrapper.IndexStorages = array.IndexStorages;
-			wrapper.BlockSize = array.BlockSize;
+			wrapper.SetValues(array.Size, array.ValueStorages, array.IndexStorages, array.BlockSize);
 			return wrapper;
 		}
 

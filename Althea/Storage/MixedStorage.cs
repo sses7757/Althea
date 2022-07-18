@@ -74,20 +74,14 @@ namespace Althea.Storage
 		/// Create an empty <see cref="MixedStorage{T, TP1, TP2}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 		/// </summary>
 		protected MixedStorage() : base() { }
-
-		/// <summary>
-		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2}"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2> Empty => new ReferenceMixedStorage<T, TP1, TP2>(null);
-
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="DataType"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
-
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location,  });
 		
 		#pragma warning disable CS8619
@@ -105,20 +99,14 @@ namespace Althea.Storage
 				_ => throw new ArgumentOutOfRangeException(nameof(i)),
 			};
 		}
-
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes;
-
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2>>)this).Length;
 		
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -138,10 +126,8 @@ namespace Althea.Storage
 		/// The deconstructor invoked by GC
 		/// </summary>
 		~MixedStorage() => this.Dispose();
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2}"/> is a valid one or not
-		/// </summary>
+		
+		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid());
 		#endregion
@@ -161,14 +147,8 @@ namespace Althea.Storage
 		{
 			return other is MixedStorageBase<TP1, TP2> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2);
 		}
-
-		/// <summary>
-		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="MixedStorage{T, TP1, TP2}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="MixedStorage{T, TP1, TP2}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		
+		/// <inheritdoc/>
 		public MixedStorage<T, TP1, TP2> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2> @ref)
@@ -207,15 +187,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 2</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 2)
@@ -244,34 +216,17 @@ namespace Althea.Storage
 
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2>, long>.AdditiveIdentity => 0;
-
-		/// <summary>
-		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2}"/> to compare to</param>
-		/// <returns>true if the current <see cref="MixedStorage{T, TP1, TP2}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		
+		/// <inheritdoc/>
 		public bool Equals(MixedStorage<T, TP1, TP2>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-
-		/// <summary>
-		/// Get the hash code of this <see cref="MixedStorage{T, TP1, TP2}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
+		
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2>);
-
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="MixedStorage{T, TP1, TP2}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="MixedStorage{T, TP1, TP2}"/></param>
-		/// <param name="right">The right operand of type <see cref="MixedStorage{T, TP1, TP2}"/></param>
-		/// <returns>The distance between two <see cref="MixedStorage{T, TP1, TP2}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		
+		/// <inheritdoc/>
 		public static long operator -(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2>>.StorageDiffBytes(left, right);
@@ -279,25 +234,17 @@ namespace Althea.Storage
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / T.Size;
 		}
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2}"/> addition operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2> operator +(MixedStorage<T, TP1, TP2> left, long right) => left.MakeReference(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2}"/> subtraction operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2> operator -(MixedStorage<T, TP1, TP2> left, long right) => left.MakeReference(-right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2}"/> equality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator ==(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right) => left.Equals(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2}"/> inequality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right) => !left.Equals(right);
 
 		static MixedStorage<T, TP1, TP2> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2>, long, MixedStorage<T, TP1, TP2>>.op_CheckedAddition(MixedStorage<T, TP1, TP2> left, long right) => left + right;
@@ -310,11 +257,8 @@ namespace Althea.Storage
 		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2>>.Length), nameof(Pointer1), nameof(Pointer2) };
 
 		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="MixedStorage{T, TP1, TP2}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
+		
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.ToString(this);
 		
 		static JsonConverter<MixedStorage<T, TP1, TP2>> IStorage<T, MixedStorage<T, TP1, TP2>>.JsonConverter => new JsonConverter();
@@ -417,14 +361,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceMixedStorage{T, TP1, TP2}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
-
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceMixedStorage{T, TP1, TP2}"/> in bytes compared to <see cref="Reference"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes { get; }
 
 		/// <summary>
@@ -544,20 +484,14 @@ namespace Althea.Storage
 		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 		/// </summary>
 		protected MixedStorage() : base() { }
-
-		/// <summary>
-		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2, TP3}"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3>(null);
-
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="DataType"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
-
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location,  });
 		
 		#pragma warning disable CS8619
@@ -576,20 +510,14 @@ namespace Althea.Storage
 				_ => throw new ArgumentOutOfRangeException(nameof(i)),
 			};
 		}
-
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes;
-
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).Length;
 		
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -610,10 +538,8 @@ namespace Althea.Storage
 		/// The deconstructor invoked by GC
 		/// </summary>
 		~MixedStorage() => this.Dispose();
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> is a valid one or not
-		/// </summary>
+		
+		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid());
 		#endregion
@@ -634,14 +560,8 @@ namespace Althea.Storage
 		{
 			return other is MixedStorageBase<TP1, TP2, TP3> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3);
 		}
-
-		/// <summary>
-		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		
+		/// <inheritdoc/>
 		public MixedStorage<T, TP1, TP2, TP3> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3> @ref)
@@ -680,15 +600,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 3</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 3)
@@ -717,34 +629,17 @@ namespace Althea.Storage
 
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3>, long>.AdditiveIdentity => 0;
-
-		/// <summary>
-		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3}"/> to compare to</param>
-		/// <returns>true if the current <see cref="MixedStorage{T, TP1, TP2, TP3}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		
+		/// <inheritdoc/>
 		public bool Equals(MixedStorage<T, TP1, TP2, TP3>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-
-		/// <summary>
-		/// Get the hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
+		
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3>);
-
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="MixedStorage{T, TP1, TP2, TP3}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="MixedStorage{T, TP1, TP2, TP3}"/></param>
-		/// <param name="right">The right operand of type <see cref="MixedStorage{T, TP1, TP2, TP3}"/></param>
-		/// <returns>The distance between two <see cref="MixedStorage{T, TP1, TP2, TP3}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		
+		/// <inheritdoc/>
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.StorageDiffBytes(left, right);
@@ -752,25 +647,17 @@ namespace Althea.Storage
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / T.Size;
 		}
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3}"/> addition operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3> operator +(MixedStorage<T, TP1, TP2, TP3> left, long right) => left.MakeReference(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3}"/> subtraction operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3> operator -(MixedStorage<T, TP1, TP2, TP3> left, long right) => left.MakeReference(-right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3}"/> equality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right) => left.Equals(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3}"/> inequality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right) => !left.Equals(right);
 
 		static MixedStorage<T, TP1, TP2, TP3> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3>, long, MixedStorage<T, TP1, TP2, TP3>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3> left, long right) => left + right;
@@ -783,11 +670,8 @@ namespace Althea.Storage
 		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Length), nameof(Pointer1), nameof(Pointer2) };
 
 		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
+		
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.ToString(this);
 		
 		static JsonConverter<MixedStorage<T, TP1, TP2, TP3>> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.JsonConverter => new JsonConverter();
@@ -908,14 +792,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
-
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3}"/> in bytes compared to <see cref="Reference"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes { get; }
 
 		/// <summary>
@@ -1055,20 +935,14 @@ namespace Althea.Storage
 		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 		/// </summary>
 		protected MixedStorage() : base() { }
-
-		/// <summary>
-		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>(null);
-
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="DataType"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
-
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location,  });
 		
 		#pragma warning disable CS8619
@@ -1088,20 +962,14 @@ namespace Althea.Storage
 				_ => throw new ArgumentOutOfRangeException(nameof(i)),
 			};
 		}
-
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes;
-
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).Length;
 		
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1123,10 +991,8 @@ namespace Althea.Storage
 		/// The deconstructor invoked by GC
 		/// </summary>
 		~MixedStorage() => this.Dispose();
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> is a valid one or not
-		/// </summary>
+		
+		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid());
 		#endregion
@@ -1148,14 +1014,8 @@ namespace Althea.Storage
 		{
 			return other is MixedStorageBase<TP1, TP2, TP3, TP4> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4);
 		}
-
-		/// <summary>
-		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		
+		/// <inheritdoc/>
 		public MixedStorage<T, TP1, TP2, TP3, TP4> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4> @ref)
@@ -1194,15 +1054,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 4</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 4)
@@ -1231,34 +1083,17 @@ namespace Althea.Storage
 
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4>, long>.AdditiveIdentity => 0;
-
-		/// <summary>
-		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> to compare to</param>
-		/// <returns>true if the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		
+		/// <inheritdoc/>
 		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-
-		/// <summary>
-		/// Get the hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
+		
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4>);
-
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></param>
-		/// <param name="right">The right operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></param>
-		/// <returns>The distance between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		
+		/// <inheritdoc/>
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.StorageDiffBytes(left, right);
@@ -1266,25 +1101,17 @@ namespace Althea.Storage
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / T.Size;
 		}
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> addition operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> operator +(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left.MakeReference(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> subtraction operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4> operator -(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left.MakeReference(-right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> equality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right) => left.Equals(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> inequality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right) => !left.Equals(right);
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4>, long, MixedStorage<T, TP1, TP2, TP3, TP4>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left + right;
@@ -1297,11 +1124,8 @@ namespace Althea.Storage
 		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Length), nameof(Pointer1), nameof(Pointer2) };
 
 		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
+		
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.ToString(this);
 		
 		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.JsonConverter => new JsonConverter();
@@ -1440,14 +1264,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
-
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4}"/> in bytes compared to <see cref="Reference"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes { get; }
 
 		/// <summary>
@@ -1607,20 +1427,14 @@ namespace Althea.Storage
 		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 		/// </summary>
 		protected MixedStorage() : base() { }
-
-		/// <summary>
-		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(null);
-
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="DataType"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
-
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location,  });
 		
 		#pragma warning disable CS8619
@@ -1641,20 +1455,14 @@ namespace Althea.Storage
 				_ => throw new ArgumentOutOfRangeException(nameof(i)),
 			};
 		}
-
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes;
-
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).Length;
 		
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1677,10 +1485,8 @@ namespace Althea.Storage
 		/// The deconstructor invoked by GC
 		/// </summary>
 		~MixedStorage() => this.Dispose();
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> is a valid one or not
-		/// </summary>
+		
+		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid());
 		#endregion
@@ -1703,14 +1509,8 @@ namespace Althea.Storage
 		{
 			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5);
 		}
-
-		/// <summary>
-		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		
+		/// <inheritdoc/>
 		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5> @ref)
@@ -1749,15 +1549,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 5</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 5)
@@ -1786,34 +1578,17 @@ namespace Althea.Storage
 
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, long>.AdditiveIdentity => 0;
-
-		/// <summary>
-		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> to compare to</param>
-		/// <returns>true if the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		
+		/// <inheritdoc/>
 		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-
-		/// <summary>
-		/// Get the hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
+		
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5>);
-
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></param>
-		/// <param name="right">The right operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></param>
-		/// <returns>The distance between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		
+		/// <inheritdoc/>
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.StorageDiffBytes(left, right);
@@ -1821,25 +1596,17 @@ namespace Althea.Storage
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / T.Size;
 		}
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> addition operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left.MakeReference(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> subtraction operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left.MakeReference(-right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> equality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right) => left.Equals(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> inequality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right) => !left.Equals(right);
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left + right;
@@ -1852,11 +1619,8 @@ namespace Althea.Storage
 		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Length), nameof(Pointer1), nameof(Pointer2) };
 
 		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
+		
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.ToString(this);
 		
 		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.JsonConverter => new JsonConverter();
@@ -2013,14 +1777,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
-
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> in bytes compared to <see cref="Reference"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes { get; }
 
 		/// <summary>
@@ -2200,20 +1960,14 @@ namespace Althea.Storage
 		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 		/// </summary>
 		protected MixedStorage() : base() { }
-
-		/// <summary>
-		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(null);
-
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="DataType"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
-
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location,  });
 		
 		#pragma warning disable CS8619
@@ -2235,20 +1989,14 @@ namespace Althea.Storage
 				_ => throw new ArgumentOutOfRangeException(nameof(i)),
 			};
 		}
-
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes;
-
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).Length;
 		
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2272,10 +2020,8 @@ namespace Althea.Storage
 		/// The deconstructor invoked by GC
 		/// </summary>
 		~MixedStorage() => this.Dispose();
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> is a valid one or not
-		/// </summary>
+		
+		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid());
 		#endregion
@@ -2299,14 +2045,8 @@ namespace Althea.Storage
 		{
 			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6);
 		}
-
-		/// <summary>
-		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		
+		/// <inheritdoc/>
 		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> @ref)
@@ -2345,15 +2085,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 6</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 6)
@@ -2382,34 +2114,17 @@ namespace Althea.Storage
 
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, long>.AdditiveIdentity => 0;
-
-		/// <summary>
-		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> to compare to</param>
-		/// <returns>true if the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		
+		/// <inheritdoc/>
 		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-
-		/// <summary>
-		/// Get the hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
+		
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>);
-
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></param>
-		/// <param name="right">The right operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></param>
-		/// <returns>The distance between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		
+		/// <inheritdoc/>
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.StorageDiffBytes(left, right);
@@ -2417,25 +2132,17 @@ namespace Althea.Storage
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / T.Size;
 		}
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> addition operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left.MakeReference(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> subtraction operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left.MakeReference(-right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> equality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right) => left.Equals(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> inequality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right) => !left.Equals(right);
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left + right;
@@ -2448,11 +2155,8 @@ namespace Althea.Storage
 		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Length), nameof(Pointer1), nameof(Pointer2) };
 
 		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
+		
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.ToString(this);
 		
 		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.JsonConverter => new JsonConverter();
@@ -2627,14 +2331,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
-
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> in bytes compared to <see cref="Reference"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes { get; }
 
 		/// <summary>
@@ -2834,20 +2534,14 @@ namespace Althea.Storage
 		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 		/// </summary>
 		protected MixedStorage() : base() { }
-
-		/// <summary>
-		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(null);
-
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="DataType"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
-
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location,  });
 		
 		#pragma warning disable CS8619
@@ -2870,20 +2564,14 @@ namespace Althea.Storage
 				_ => throw new ArgumentOutOfRangeException(nameof(i)),
 			};
 		}
-
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes;
-
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).Length;
 		
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2908,10 +2596,8 @@ namespace Althea.Storage
 		/// The deconstructor invoked by GC
 		/// </summary>
 		~MixedStorage() => this.Dispose();
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> is a valid one or not
-		/// </summary>
+		
+		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid());
 		#endregion
@@ -2936,14 +2622,8 @@ namespace Althea.Storage
 		{
 			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7);
 		}
-
-		/// <summary>
-		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		
+		/// <inheritdoc/>
 		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> @ref)
@@ -2982,15 +2662,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 7</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 7)
@@ -3019,34 +2691,17 @@ namespace Althea.Storage
 
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, long>.AdditiveIdentity => 0;
-
-		/// <summary>
-		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> to compare to</param>
-		/// <returns>true if the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		
+		/// <inheritdoc/>
 		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-
-		/// <summary>
-		/// Get the hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
+		
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>);
-
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></param>
-		/// <param name="right">The right operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></param>
-		/// <returns>The distance between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		
+		/// <inheritdoc/>
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.StorageDiffBytes(left, right);
@@ -3054,25 +2709,17 @@ namespace Althea.Storage
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / T.Size;
 		}
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> addition operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left.MakeReference(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> subtraction operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left.MakeReference(-right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> equality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right) => left.Equals(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> inequality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right) => !left.Equals(right);
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left + right;
@@ -3085,11 +2732,8 @@ namespace Althea.Storage
 		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Length), nameof(Pointer1), nameof(Pointer2) };
 
 		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
+		
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.ToString(this);
 		
 		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.JsonConverter => new JsonConverter();
@@ -3282,14 +2926,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
-
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> in bytes compared to <see cref="Reference"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes { get; }
 
 		/// <summary>
@@ -3509,20 +3149,14 @@ namespace Althea.Storage
 		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 		/// </summary>
 		protected MixedStorage() : base() { }
-
-		/// <summary>
-		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(null);
-
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="DataType"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
-
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location,  });
 		
 		#pragma warning disable CS8619
@@ -3546,20 +3180,14 @@ namespace Althea.Storage
 				_ => throw new ArgumentOutOfRangeException(nameof(i)),
 			};
 		}
-
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes + this.Pointer8.LengthInBytes;
-
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).Length;
 		
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3585,10 +3213,8 @@ namespace Althea.Storage
 		/// The deconstructor invoked by GC
 		/// </summary>
 		~MixedStorage() => this.Dispose();
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> is a valid one or not
-		/// </summary>
+		
+		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid());
 		#endregion
@@ -3614,14 +3240,8 @@ namespace Althea.Storage
 		{
 			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7) && this.Pointer8.OverlapWith(s.Pointer8);
 		}
-
-		/// <summary>
-		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		
+		/// <inheritdoc/>
 		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> @ref)
@@ -3660,15 +3280,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 8</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 8)
@@ -3697,34 +3309,17 @@ namespace Althea.Storage
 
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, long>.AdditiveIdentity => 0;
-
-		/// <summary>
-		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> to compare to</param>
-		/// <returns>true if the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		
+		/// <inheritdoc/>
 		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-
-		/// <summary>
-		/// Get the hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
+		
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>);
-
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></param>
-		/// <param name="right">The right operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></param>
-		/// <returns>The distance between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		
+		/// <inheritdoc/>
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.StorageDiffBytes(left, right);
@@ -3732,25 +3327,17 @@ namespace Althea.Storage
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / T.Size;
 		}
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> addition operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left.MakeReference(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> subtraction operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left.MakeReference(-right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> equality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right) => left.Equals(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> inequality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right) => !left.Equals(right);
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left + right;
@@ -3763,11 +3350,8 @@ namespace Althea.Storage
 		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Length), nameof(Pointer1), nameof(Pointer2) };
 
 		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
+		
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.ToString(this);
 		
 		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.JsonConverter => new JsonConverter();
@@ -3978,14 +3562,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
-
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> in bytes compared to <see cref="Reference"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes { get; }
 
 		/// <summary>
@@ -4225,20 +3805,14 @@ namespace Althea.Storage
 		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 		/// </summary>
 		protected MixedStorage() : base() { }
-
-		/// <summary>
-		/// Statically get an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(null);
-
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="DataType"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
-
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location, TP9.Location,  });
 		
 		#pragma warning disable CS8619
@@ -4263,20 +3837,14 @@ namespace Althea.Storage
 				_ => throw new ArgumentOutOfRangeException(nameof(i)),
 			};
 		}
-
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes + this.Pointer8.LengthInBytes + this.Pointer9.LengthInBytes;
-
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).Length;
 		
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -4303,10 +3871,8 @@ namespace Althea.Storage
 		/// The deconstructor invoked by GC
 		/// </summary>
 		~MixedStorage() => this.Dispose();
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> is a valid one or not
-		/// </summary>
+		
+		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid() || this.Pointer9.IsValid());
 		#endregion
@@ -4333,14 +3899,8 @@ namespace Althea.Storage
 		{
 			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7) && this.Pointer8.OverlapWith(s.Pointer8) && this.Pointer9.OverlapWith(s.Pointer9);
 		}
-
-		/// <summary>
-		/// Make a referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		
+		/// <inheritdoc/>
 		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> @ref)
@@ -4379,15 +3939,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of given lengths on different locations in <see cref="IStorage.LocationDescription"/>.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
-		/// <exception cref="ArgumentException">If <paramref name="lengths"/> is not of size 9</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) &lt; 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 9)
@@ -4416,34 +3968,17 @@ namespace Althea.Storage
 
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, long>.AdditiveIdentity => 0;
-
-		/// <summary>
-		/// Indicates whether the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> is equal to the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> to compare to</param>
-		/// <returns>true if the current <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		
+		/// <inheritdoc/>
 		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-
-		/// <summary>
-		/// Get the hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
+		
+		/// <inheritdoc/>
 		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>);
-
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></param>
-		/// <param name="right">The right operand of type <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></param>
-		/// <returns>The distance between two <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		
+		/// <inheritdoc/>
 		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right)
 		{
 			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.StorageDiffBytes(left, right);
@@ -4451,25 +3986,17 @@ namespace Althea.Storage
 				throw new InvalidOperationException(ArithmeticError.CannotDivide);
 			return diffBytes / T.Size;
 		}
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> addition operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left.MakeReference(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> subtraction operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left.MakeReference(-right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> equality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right) => left.Equals(right);
-
-		/// <summary>
-		/// <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> inequality operator
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right) => !left.Equals(right);
 
 		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> System.Numerics.IAdditionOperators<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, long, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.op_CheckedAddition(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left + right;
@@ -4482,11 +4009,8 @@ namespace Althea.Storage
 		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Length), nameof(Pointer1), nameof(Pointer2) };
 
 		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
+		
+		/// <inheritdoc/>
 		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.ToString(this);
 		
 		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.JsonConverter => new JsonConverter();
@@ -4715,14 +4239,10 @@ namespace Althea.Storage
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
 	{
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
-
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> in bytes compared to <see cref="Reference"/>
-		/// </summary>
+		
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes { get; }
 
 		/// <summary>

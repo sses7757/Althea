@@ -244,14 +244,10 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public bool Equals(DirectMappingStrategy other) => this.lineSizeLog2 == other.lineSizeLog2 && this.lineInfo.SequenceEqual(other.lineInfo);
 
-		/// <summary>
-		/// Equality operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static bool operator ==(DirectMappingStrategy left, DirectMappingStrategy right) => left.Equals(right);
 
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static bool operator !=(DirectMappingStrategy left, DirectMappingStrategy right) => !left.Equals(right);
 
 		/// <inheritdoc/>
@@ -346,19 +342,13 @@ namespace Althea.Storage
 		protected CachedStorage(PointerSegment<TPl> memory) : base(memory)
 		{ }
 
-		/// <summary>
-		/// Statically get an empty <see cref="CachedStorage{T, TS, TPh, TPl}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public static CachedStorage<T, TS, TPh, TPl> Empty => new ReferenceCachedStorage<T, TS, TPh, TPl>(null);
 
-		/// <summary>
-		/// Statically get the data type of this storage as a <see cref="Numerics.DataType"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public static DataType DataType => T.Type;
 
-		/// <summary>
-		/// Statically get the description of the storage locations of this <see cref="CachedStorage{T, TS, TPh, TPl}"/> as a <see cref="CombinationOfLocations"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(stackalloc bool[] { true, false }.CreateCombinationType(), stackalloc StorageLocation[] { TPh.Location, TPl.Location });
 
 #pragma warning disable CS8619
@@ -389,19 +379,13 @@ namespace Althea.Storage
 			return this.Cache.MoveBy(offset, partialLength);
 		}
 
-		/// <summary>
-		/// Get the total length of the presenting array in bytes
-		/// </summary>
+		/// <inheritdoc/>
 		public long LengthInBytes => this.Memory.LengthInBytes;
 
-		/// <summary>
-		/// Get the total length of the presenting array in <typeparamref name="T"/>
-		/// </summary>
+		/// <inheritdoc/>
 		public long Length => ((IStorage<T, CachedStorage<T, TS, TPh, TPl>>)this).Length;
 
-		/// <summary>
-		/// Get a <see cref="bool"/> indicating whether this storage is disposed or not
-		/// </summary>
+		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -422,10 +406,7 @@ namespace Althea.Storage
 		/// </summary>
 		~CachedStorage() => this.Dispose();
 
-		/// <summary>
-		/// Check whether this <see cref="CachedStorage{T, TS, TPh, TPl}"/> is a valid one or not
-		/// </summary>
-		/// <returns>The validness of this <see cref="CachedStorage{T, TS, TPh, TPl}"/></returns>
+		/// <inheritdoc/>
 		public bool IsValid() => !this.Disposed && this.Memory.IsValid();
 		#endregion
 
@@ -444,13 +425,7 @@ namespace Althea.Storage
 			return other is CachedStorageBase<TS, TPh, TPl> s && this.Memory.OverlapWith(s.Memory);
 		}
 
-		/// <summary>
-		/// Make a referenced <see cref="CachedStorage{T, TS, TPh, TPl}"/> with the starting pointer moving <paramref name="offset"/> and <see cref="IStorage{T, TSelf}.Length"/> changing to <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="offset">The offset in <typeparamref name="T"/> to the starting pointer of this <see cref="CachedStorage{T, TS, TPh, TPl}"/> as a <see cref="long"/></param>
-		/// <param name="newLength">The new length in <typeparamref name="T"/> as a <see cref="long"/>, default 0 means automatically calculate from <paramref name="offset"/></param>
-		/// <returns>A referenced <see cref="CachedStorage{T, TS, TPh, TPl}"/> of this one</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> is out of boundary</exception>
+		/// <inheritdoc/>
 		public CachedStorage<T, TS, TPh, TPl> MakeReference(long offset = 0, long newLength = 0)
 		{
 			if (offset == 0 && newLength == 0 && this is ReferenceCachedStorage<T, TS, TPh, TPl> @ref)
@@ -488,15 +463,7 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <summary>
-		/// Statically <b>allocate</b> and create a new <see cref="CachedStorage{T, TS, TPh, TPl}"/> of given lengths.
-		/// </summary>
-		/// <param name="lengths">The given lengths in <typeparamref name="T"/></param>
-		/// <returns>The created new <see cref="CachedStorage{T, TS, TPh, TPl}"/></returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="lengths"/> is null or empty</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lengths"/> has length(s) ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		/// <inheritdoc/>
 		public static CachedStorage<T, TS, TPh, TPl> Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 1)
@@ -525,33 +492,16 @@ namespace Althea.Storage
 		#region operators
 		static long System.Numerics.IAdditiveIdentity<CachedStorage<T, TS, TPh, TPl>, long>.AdditiveIdentity => 0;
 
-		/// <summary>
-		/// Indicates whether the current <see cref="CachedStorage{T, TS, TPh, TPl}"/> is equal to the <paramref name="other"/> <see cref="CachedStorage{T, TS, TPh, TPl}"/> of the same type.
-		/// </summary>
-		/// <param name="other">The other <see cref="CachedStorage{T, TS, TPh, TPl}"/> to compare to</param>
-		/// <returns>true if the current <see cref="CachedStorage{T, TS, TPh, TPl}"/> is equal to the <paramref name="other"/>; otherwise, false.</returns>
+		/// <inheritdoc/>
 		public bool Equals(CachedStorage<T, TS, TPh, TPl>? other) => other is not null && this.Memory == other.Memory;
 
-		/// <summary>
-		/// Get the hash code of this <see cref="CachedStorage{T, TS, TPh, TPl}"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="CachedStorage{T, TS, TPh, TPl}"/></returns>
+		/// <inheritdoc/>
 		public override int GetHashCode() => this.Memory.GetHashCode();
 
-		/// <summary>
-		/// Check whether this <see cref="CachedStorage{T, TS, TPh, TPl}"/> equals the other <paramref name="obj"/> or not
-		/// </summary>
-		/// <param name="obj">The other object to compare to</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		/// <inheritdoc/>
 		public override bool Equals(object? obj) => this.Equals(obj as CachedStorage<T, TS, TPh, TPl>);
 
-		/// <summary>
-		/// Statically get the distance in <typeparamref name="T"/> between two <see cref="CachedStorage{T, TS, TPh, TPl}"/>s
-		/// </summary>
-		/// <param name="left">The left operand of type <see cref="CachedStorage{T, TS, TPh, TPl}"/></param>
-		/// <param name="right">The right operand of type <see cref="CachedStorage{T, TS, TPh, TPl}"/></param>
-		/// <returns>The distance between two <see cref="CachedStorage{T, TS, TPh, TPl}"/>s in <typeparamref name="T"/> as a <see cref="long"/>.</returns>
-		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different origin.</exception>
+		/// <inheritdoc/>
 		public static long operator -(CachedStorage<T, TS, TPh, TPl> left, CachedStorage<T, TS, TPh, TPl> right)
 		{
 			long diffBytes = IStorage<T, CachedStorage<T, TS, TPh, TPl>>.StorageDiffBytes(left, right);
@@ -560,24 +510,16 @@ namespace Althea.Storage
 			return diffBytes / T.Size;
 		}
 
-		/// <summary>
-		/// <see cref="CachedStorage{T, TS, TPh, TPl}"/> addition operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static CachedStorage<T, TS, TPh, TPl> operator +(CachedStorage<T, TS, TPh, TPl> left, long right) => left.MakeReference(right);
 
-		/// <summary>
-		/// <see cref="CachedStorage{T, TS, TPh, TPl}"/> subtraction operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static CachedStorage<T, TS, TPh, TPl> operator -(CachedStorage<T, TS, TPh, TPl> left, long right) => left.MakeReference(-right);
 
-		/// <summary>
-		/// <see cref="CachedStorage{T, TS, TPh, TPl}"/> equality operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static bool operator ==(CachedStorage<T, TS, TPh, TPl> left, CachedStorage<T, TS, TPh, TPl> right) => left.Equals(right);
 
-		/// <summary>
-		/// <see cref="CachedStorage{T, TS, TPh, TPl}"/> inequality operator
-		/// </summary>
+		/// <inheritdoc/>
 		public static bool operator !=(CachedStorage<T, TS, TPh, TPl> left, CachedStorage<T, TS, TPh, TPl> right) => !left.Equals(right);
 		static CachedStorage<T, TS, TPh, TPl> System.Numerics.IAdditionOperators<CachedStorage<T, TS, TPh, TPl>, long, CachedStorage<T, TS, TPh, TPl>>.op_CheckedAddition(CachedStorage<T, TS, TPh, TPl> left, long right) => left + right;
 		static CachedStorage<T, TS, TPh, TPl> System.Numerics.ISubtractionOperators<CachedStorage<T, TS, TPh, TPl>, long, CachedStorage<T, TS, TPh, TPl>>.op_CheckedSubtraction(CachedStorage<T, TS, TPh, TPl> left, long right) => left - right;
@@ -649,24 +591,16 @@ namespace Althea.Storage
 		where TPh : notnull, IPointer<TPh>
 		where TPl : notnull, IPointer<TPl>
 	{
-		/// <summary>
-		/// Get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		protected internal override TS Strategy { get; }
 
-		/// <summary>
-		/// Get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		protected internal override PointerSegment<TPh> Cache { get; }
 
-		/// <summary>
-		/// Get the offset of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/> compared to the start of its cache line in bytes.
-		/// </summary>
+		/// <inheritdoc/>
 		protected override long InsideLineOffset => 0;
 
-		/// <summary>
-		/// Get the index of the cache line of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/>.
-		/// </summary>
+		/// <inheritdoc/>
 		protected override long CacheLineOffset => 0;
 
 		internal ActualCachedStorage(TPl memory) : base(memory)
@@ -700,36 +634,24 @@ namespace Althea.Storage
 		where TPh : notnull, IPointer<TPh>
 		where TPl : notnull, IPointer<TPl>
 	{
-		/// <summary>
-		/// Get the cache strategy of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		protected internal override TS Strategy => this.RealRef?.Strategy ?? default;
 
-		/// <summary>
-		/// Get the high speed cache <see cref="PointerSegment{T}"/> of this <see cref="CachedStorageBase{TS, TPh, TPl}"/>
-		/// </summary>
+		/// <inheritdoc/>
 		protected internal override PointerSegment<TPh> Cache => this.RealRef?.Cache ?? default;
 
-		/// <summary>
-		/// Get the reference <see cref="IStorage"/> of this <see cref="ReferenceCachedStorage{T, TS, TPh, TPl}"/>
-		/// </summary>w
+		/// <inheritdoc/>
 		public IStorage? Reference { get; }
 
 		private CachedStorageBase<TS, TPh, TPl>? RealRef => this.Reference as CachedStorageBase<TS, TPh, TPl>;
 
-		/// <summary>
-		/// Get the total offset of this <see cref="ReferenceCachedStorage{T, TS, TPh, TPl}"/> in bytes
-		/// </summary>
+		/// <inheritdoc/>
 		public long TotalOffsetInBytes => this.Memory.OffsetInBytes;
 
-		/// <summary>
-		/// Get the offset of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/> compared to the start of its cache line in bytes.
-		/// </summary>
+		/// <inheritdoc/>
 		protected override long InsideLineOffset { get; }
 
-		/// <summary>
-		/// Get the index of the cache line of the first block of <see cref="CachedStorageBase{TS, TPh, TPl}.Memory"/>.
-		/// </summary>
+		/// <inheritdoc/>
 		protected override long CacheLineOffset { get; }
 
 		/// <summary>
