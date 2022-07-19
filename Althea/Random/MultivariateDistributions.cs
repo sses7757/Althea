@@ -30,7 +30,7 @@ namespace Althea.Random
 		/// </summary>
 		public BinormalDistribution(T correlation, long? seed = null) : this(T.Zero, T.Zero, T.One, T.One, correlation, seed) { }
 
-		bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, BinormalDistribution<T>>)this).IsValid() && this.StandardDeviation1 > T.Zero && this.StandardDeviation2 > T.Zero && this.Covariance >= -T.One && this.Covariance <= T.One;
+		bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, BinormalDistribution<T>>)this).IsValid() && this.StandardDeviation1 > T.Zero && this.StandardDeviation2 > T.Zero && this.Correlation >= -T.One && this.Correlation <= T.One;
 
 		static DataType IRandomDistribution<BinormalDistribution<T>>.DataTypeAt(int rank) => IRank2Distribution<T, T, BinormalDistribution<T>>.DataTypeAt(rank);
 	}

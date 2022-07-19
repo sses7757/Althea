@@ -581,6 +581,23 @@ namespace Althea.Array
 
 		#region create and set
 		/// <summary>
+		/// Set the <see cref="ValueStorages"/>, <see cref="IndexStorages"/> of this <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/>.
+		/// </summary>
+		/// <param name="values">The <see cref="ValueStorages"/> to set</param>
+		/// <param name="indices1">The first <see cref="IndexStorages"/> to set</param>
+		/// <param name="indices2">The second <see cref="IndexStorages"/> to set</param>
+		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
+		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
+		public void SetValues(TSVal values!!, TSInd indices1!!, TSInd indices2!!)
+		{
+			this.vals = 1;
+			this.valueStorage[0] = values;
+			this.inds = 2;
+			this.indexStorage[0] = indices1;
+			this.indexStorage[1] = indices2;
+		}
+
+		/// <summary>
 		/// Set the <see cref="Size"/>, <see cref="ValueStorages"/>, <see cref="IndexStorages"/> (and <see cref="BlockSize"/>) of this <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> while inputs are all of length 1.
 		/// </summary>
 		/// <param name="size">The <see cref="Size"/> to set</param>
@@ -590,7 +607,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
 		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
 		/// <exception cref="ArgumentException">If <paramref name="blockSize"/> is not empty while its length is not the same as <paramref name="size"/></exception>
-		public void SetValues(long size, TSVal? values!!, TSInd? indices!!, TInd blockSize = default)
+		public void SetValues(long size, TSVal values!!, TSInd indices!!, TInd blockSize = default)
 		{
 			this.rank = 1;
 			this.size[0] = size;

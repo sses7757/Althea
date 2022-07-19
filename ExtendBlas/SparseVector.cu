@@ -184,13 +184,19 @@ void vecSpMulDivDn(const Datatype::DataType type, void* sparse, const MKL_INT* i
 
 #pragma region sparse vector add sparse vector
 // sparse vector add another sparse vector -- get buffer size
-DLLEXP
-size_t vecSpAddBuffer(const size_t nnzA, const size_t nnzB, const Datatype::DataType type)
+template <typename T>
+inline ptrdiff_t vectorSpAddBuffer(const size_t nnzA, const size_t nnzB)
 {
 	size_t N = nnzA + nnzB;
 	size_t res = sizeof(MKL_INT) * N; // size for temporary indices
-	res += Datatype::size(type) * N; // size for temporary values
+	res += sizeof(T) * N; // size for temporary values
 	return res;
+}
+
+DLLEXP
+ptrdiff_t vecSpAddBuffer(const Datatype::DataType type, const size_t nnzA, const size_t nnzB)
+{
+	AUTO_ALLTYPE_FUNC(vectorSpAddBuffer, type, ptrdiff_t, nnzA, nnzB);
 }
 
 template <typename T>

@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Althea.Backend.Mkl.LinearAlgebra;
 using Althea.Backend.Storage;
 
 using MklDn = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
@@ -26,7 +27,7 @@ namespace Althea.Backend.Mkl.Storage
 				Unsafe.CopyBlockUnaligned(destination, source, (uint)count);
 				return true;
 			}
-			delegate*<long, T*, long, T*, long, void> func = default(T) switch
+			delegate*<MklInt, T*, MklInt, T*, MklInt, void> func = default(T) switch
 			{
 				Float32 => &MklDn.cblas_scopy,
 				Float64 => &MklDn.cblas_dcopy,

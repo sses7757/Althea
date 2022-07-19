@@ -91,7 +91,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="y"/> or <paramref name="y"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> is out of range or <paramref name="threshold"/> &lt; 0</exception>
 		[AbstractApiMethod]
-		public abstract bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, T threshold = default) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>;
+		public abstract bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold = 0) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>;
 		#endregion
 
 		#region vector and matrix
@@ -252,7 +252,14 @@ namespace Althea.LinearAlgebra.Sparse
 		[AbstractApiMethod]
 		public abstract bool MatrixSparseReshape<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 		#endregion
+	}
 
+	/// <summary>
+	/// The abstract interface for runtime index related operation API routines 
+	/// </summary>
+	[AbstractRuntimeApi]
+	public interface IIndexOperationAbstractApi : IAbstractRuntimeApi<IIndexOperationAbstractApi>
+	{
 		#region index only
 		/// <summary>
 		/// When implemented by a derived class, sort the values of the given <paramref name="array"/>.

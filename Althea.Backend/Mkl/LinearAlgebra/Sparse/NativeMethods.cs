@@ -15,19 +15,19 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		[NativeMethod(6)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_sgthr(MklInt nnz, Float32* y, Float32* x, MklInt* indx);
+		internal static extern void cblas_sgthr(MklInt nnz, void* y, void* x, MklInt* indx);
 
 		[NativeMethod(6)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_sgthrz(MklInt nnz, Float32* y, Float32* x, MklInt* indx);
+		internal static extern void cblas_sgthrz(MklInt nnz, void* y, void* x, MklInt* indx);
 
 		[NativeMethod(6)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern void cblas_ssctr(MklInt nnz, Float32* x, MklInt* indx, Float32* y);
+		internal static extern void cblas_ssctr(MklInt nnz, void* x, MklInt* indx, void* y);
 
 		[NativeMethod(6, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern Float32 cblas_sdoti(MklInt nnz, Float32* x, MklInt* indx, Float32* y);
+		internal static extern Float32 cblas_sdoti(MklInt nnz, void* x, MklInt* indx, void* y);
 
 		[NativeMethod(6, false, false, false, false)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -206,5 +206,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int vecPruneCal(DataType type, long n, void* buffer, long nnz, MklInt* indexOut, void* valueOut);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern void spVecIdxToCooIdxs(MklInt* index, MklInt* rowIdx, MklInt* colIdx, long N, long ld);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern void cooIdxsToSpVecIdx(MklInt* index, MklInt* rowIdx, MklInt* colIdx, long N, long ld);
 	}
 }

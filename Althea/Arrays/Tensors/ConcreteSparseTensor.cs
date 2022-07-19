@@ -8,7 +8,7 @@ using Althea.Linq;
 using Althea.Storage;
 
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
-using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
+using SpIdx = Althea.LinearAlgebra.Sparse.IndexOperationApiSelector;
 
 
 namespace Althea.Array
@@ -59,7 +59,7 @@ namespace Althea.Array
 		private bool GetOffsets(long presentIndex, Span<long> offsets)
 		{
 			var ind = (presentIndex).As<TInd>();
-			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
+			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
 			offsets[0] = find;
 			if (offsets.Length > 1)
 				offsets[1] = presentIndex;
@@ -306,7 +306,7 @@ namespace Althea.Array
 		{
 			long insideBlockOffset = presentIndex % this.blockLength;
 			var ind = (presentIndex / this.blockLength).As<TInd>();
-			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
+			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
 			offsets[0] = find * this.blockLength + insideBlockOffset;
 			if (offsets.Length > 1)
 				offsets[1] = find;

@@ -1,7 +1,5 @@
 #pragma once
 
-#define CPU
-
 // platform specific INLINE and export DLL
 #if defined(_MSC_VER)
 #define DLLEXP extern "C" __declspec(dllexport)

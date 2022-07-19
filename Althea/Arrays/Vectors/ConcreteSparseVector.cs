@@ -8,7 +8,7 @@ using Althea.LinearAlgebra.Dense;
 using Althea.Storage;
 
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
-using SpConv = Althea.LinearAlgebra.Sparse.ConversionApiSelector;
+using SpIdx = Althea.LinearAlgebra.Sparse.IndexOperationApiSelector;
 
 
 namespace Althea.Array
@@ -61,7 +61,7 @@ namespace Althea.Array
 		{
 			var ind = (index).As<TInd>();
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
-			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
+			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
 			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
 				return ~find;
 			else
@@ -74,8 +74,8 @@ namespace Althea.Array
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckRange(this, start, count, sub);
 			if (sub is not null && sub.Format != this.Format)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(sub));
-			long indexStart = SpConv.IndexBound(this.IndexStorage, 1, (start).As<TInd>(), true);
-			long indexCount = SpConv.IndexBound(this.IndexStorage, 1, (start + count).As<TInd>(), true);
+			long indexStart = SpIdx.IndexBound(this.IndexStorage, 1, (start).As<TInd>(), true);
+			long indexCount = SpIdx.IndexBound(this.IndexStorage, 1, (start + count).As<TInd>(), true);
 			if (sub is not null)
 			{
 				if (sub.IndexStorage.Length != indexCount || sub.NStored != indexCount)
@@ -305,7 +305,7 @@ namespace Althea.Array
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
 			var (blockIndex, insideBlockOffset) = long.DivRem(index, this.BS);
 			var ind = (blockIndex).As<TInd>();
-			long find = SpConv.IndexBound(this.IndexStorage, 1, ind, true);
+			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
 			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
 				return ~(find * this.BS);
 			else
@@ -324,8 +324,8 @@ namespace Althea.Array
 			if (count % this.BS != 0)
 				throw new ArgumentException(Resources.SparseError.CannotCutSimpleBlocking, nameof(start));
 			start /= this.BS; count /= this.BS;
-			indexStart = SpConv.IndexBound(this.IndexStorage, 1, (start).As<TInd>(), true);
-			indexCount = SpConv.IndexBound(this.IndexStorage, 1, (start + count).As<TInd>(), true);
+			indexStart = SpIdx.IndexBound(this.IndexStorage, 1, (start).As<TInd>(), true);
+			indexCount = SpIdx.IndexBound(this.IndexStorage, 1, (start + count).As<TInd>(), true);
 			indexCount -= indexStart;
 			return (indexStart, indexCount);
 		}

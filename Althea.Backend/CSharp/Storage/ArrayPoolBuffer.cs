@@ -109,5 +109,8 @@ namespace Althea.Backend.CSharp.Storage
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static VecBuffer<T> Create<T>(T* ptr) where T : unmanaged => new(ptr);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static VecBuffer<T> Create<T>(T* ptr, long size) where T : unmanaged => ptr == null ? new(size * sizeof(T)) : new(ptr);
 	}
 }

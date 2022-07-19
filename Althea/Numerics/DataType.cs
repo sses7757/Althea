@@ -325,7 +325,7 @@ namespace Althea.Numerics
 		/// </summary>
 		/// <param name="dataType">The <see cref="DataType"/> to get</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DataTypeTuple Tuple(this DataType dataType) => (DataTypeTuple)((((uint)dataType >> 8) << 8);
+		public static DataTypeTuple Tuple(this DataType dataType) => (DataTypeTuple)(((uint)dataType >> 8) << 8);
 
 		/// <summary>
 		/// Get the number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.
