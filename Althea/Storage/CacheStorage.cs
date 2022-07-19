@@ -463,30 +463,40 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static CachedStorage<T, TS, TPh, TPl> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="CachedStorage{T, TS, TPh, TPl}"/> of given <paramref name="length"/>.
+		/// </summary>
+		/// <param name="length">The length of low-performance pointer in <typeparamref name="T"/></param>
+		/// <returns>The created new <see cref="CachedStorage{T, TS, TPh, TPl}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static CachedStorage<T, TS, TPh, TPl> Create(long length)
+		{
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive);
+			return new ActualCachedStorage<T, TS, TPh, TPl>(length);
+		}
+
+		static CachedStorage<T, TS, TPh, TPl> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 1)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths[0] <= 0)
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
-			return new ActualCachedStorage<T, TS, TPh, TPl>(lengths[0]);
+			return Create(lengths[0]);
 		}
 
-		static CachedStorage<T, TS, TPh, TPl> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.CreateAlike<TOut, TOther>(TOther storage)
+		static CachedStorage<T, TS, TPh, TPl> IStorage<T, CachedStorage<T, TS, TPh, TPl>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as CachedStorage<TOut, TS, TPh, TPl> ?? throw new ArgumentException(ParameterError.UnexpectedType, nameof(storage)));
+			return CreateAlike(storage as CachedStorage<T2, TS, TPh, TPl> ?? throw new ArgumentException(ParameterError.UnexpectedType, nameof(storage)));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="CachedStorage{T, TS, TPh, TPl}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="CachedStorage{T, TS, TPh, TPl}"/> that likes <paramref name="storage"/></returns>
-		public static CachedStorage<T, TS, TPh, TPl> CreateAlike<TOut>(CachedStorage<TOut, TS, TPh, TPl> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			return Create(stackalloc long[] { storage.Cache.LengthInBytes / TOut.Size, storage.Length });
-		}
+		public static CachedStorage<T, TS, TPh, TPl> CreateAlike<T2>(CachedStorage<T2, TS, TPh, TPl> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Length);
 		#endregion
 
 		#region operators

@@ -187,31 +187,43 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2}"/> of given lengths.
+		/// </summary>
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, TP1, TP2> Create(long length1, long length2)
+		{
+			if (length1 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+			if (length2 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+			return new ActualMixedStorage<T, TP1, TP2>(length1,  length2);
+		}
+
+		static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 2)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, TP1, TP2>(lengths[0],  lengths[1]);
+			return Create(lengths[0], lengths[1]);
 		}
 
-		static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, TP1, TP2> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, TP1, TP2> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, TP1, TP2>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, });
-		}
+		public static MixedStorage<T, TP1, TP2> CreateAlike<T2>(MixedStorage<T2, TP1, TP2> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators
@@ -600,31 +612,46 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of given lengths.
+		/// </summary>
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, TP1, TP2, TP3> Create(long length1, long length2, long length3)
+		{
+			if (length1 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+			if (length2 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+			if (length3 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+			return new ActualMixedStorage<T, TP1, TP2, TP3>(length1, length2,  length3);
+		}
+
+		static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 3)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, TP1, TP2, TP3>(lengths[0], lengths[1],  lengths[2]);
+			return Create(lengths[0], lengths[1], lengths[2]);
 		}
 
-		static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, TP1, TP2, TP3> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, TP1, TP2, TP3>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, });
-		}
+		public static MixedStorage<T, TP1, TP2, TP3> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators
@@ -1054,31 +1081,49 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of given lengths.
+		/// </summary>
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, TP1, TP2, TP3, TP4> Create(long length1, long length2, long length3, long length4)
+		{
+			if (length1 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+			if (length2 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+			if (length3 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+			if (length4 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(length1, length2, length3,  length4);
+		}
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 4)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(lengths[0], lengths[1], lengths[2],  lengths[3]);
+			return Create(lengths[0], lengths[1], lengths[2], lengths[3]);
 		}
 
-		static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, TP1, TP2, TP3, TP4> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, });
-		}
+		public static MixedStorage<T, TP1, TP2, TP3, TP4> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators
@@ -1549,31 +1594,52 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of given lengths.
+		/// </summary>
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Create(long length1, long length2, long length3, long length4, long length5)
+		{
+			if (length1 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+			if (length2 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+			if (length3 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+			if (length4 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+			if (length5 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(length1, length2, length3, length4,  length5);
+		}
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 5)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(lengths[0], lengths[1], lengths[2], lengths[3],  lengths[4]);
+			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4]);
 		}
 
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, });
-		}
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators
@@ -2085,31 +2151,55 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of given lengths.
+		/// </summary>
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Create(long length1, long length2, long length3, long length4, long length5, long length6)
+		{
+			if (length1 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+			if (length2 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+			if (length3 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+			if (length4 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+			if (length5 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+			if (length6 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(length1, length2, length3, length4, length5,  length6);
+		}
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 6)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4],  lengths[5]);
+			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5]);
 		}
 
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, storage.Pointer6.LengthInBytes / TOut.Size, });
-		}
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators
@@ -2662,31 +2752,58 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of given lengths.
+		/// </summary>
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7)
+		{
+			if (length1 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+			if (length2 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+			if (length3 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+			if (length4 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+			if (length5 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+			if (length6 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
+			if (length7 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(length1, length2, length3, length4, length5, length6,  length7);
+		}
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 7)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5],  lengths[6]);
+			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6]);
 		}
 
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, storage.Pointer6.LengthInBytes / TOut.Size, storage.Pointer7.LengthInBytes / TOut.Size, });
-		}
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators
@@ -3280,31 +3397,61 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of given lengths.
+		/// </summary>
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8)
+		{
+			if (length1 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+			if (length2 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+			if (length3 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+			if (length4 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+			if (length5 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+			if (length6 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
+			if (length7 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
+			if (length8 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive);
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(length1, length2, length3, length4, length5, length6, length7,  length8);
+		}
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 8)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6],  lengths[7]);
+			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6], lengths[7]);
 		}
 
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, storage.Pointer6.LengthInBytes / TOut.Size, storage.Pointer7.LengthInBytes / TOut.Size, storage.Pointer8.LengthInBytes / TOut.Size, });
-		}
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size, storage.Pointer8.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators
@@ -3939,31 +4086,64 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of given lengths.
+		/// </summary>
+		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+		/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
+		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9)
+		{
+			if (length1 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+			if (length2 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+			if (length3 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+			if (length4 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+			if (length5 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+			if (length6 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
+			if (length7 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
+			if (length8 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive);
+			if (length9 <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.MustPositive);
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(length1, length2, length3, length4, length5, length6, length7, length8,  length9);
+		}
+
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 9)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6], lengths[7],  lengths[8]);
+			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6], lengths[7], lengths[8]);
 		}
 
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> CreateAlike<TOut>(MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>.LocationDescription;
-			return Create(stackalloc long[] { storage.Pointer1.LengthInBytes / TOut.Size, storage.Pointer2.LengthInBytes / TOut.Size, storage.Pointer3.LengthInBytes / TOut.Size, storage.Pointer4.LengthInBytes / TOut.Size, storage.Pointer5.LengthInBytes / TOut.Size, storage.Pointer6.LengthInBytes / TOut.Size, storage.Pointer7.LengthInBytes / TOut.Size, storage.Pointer8.LengthInBytes / TOut.Size, storage.Pointer9.LengthInBytes / TOut.Size, });
-		}
+		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size, storage.Pointer8.LengthInBytes / T2.Size, storage.Pointer9.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators

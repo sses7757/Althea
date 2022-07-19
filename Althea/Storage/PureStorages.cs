@@ -139,31 +139,40 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static PureStorage<T, TP> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="PureStorage{T, TP}"/> of given <paramref name="length"/>.
+		/// </summary>
+		/// <param name="length">The length of underlying pointer in <typeparamref name="T"/></param>
+		/// <returns>The created new <see cref="PureStorage{T, TP}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static PureStorage<T, TP> Create(long length)
+		{
+			if (length <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length), ParameterError.MustPositive);
+			return new ActualPureStorage<T, TP>(length);
+		}
+
+		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != 1)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths[0] <= 0)
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.MustPositive);
-			return new ActualPureStorage<T, TP>(lengths[0]);
+			return Create(lengths[0]);
 		}
 
-		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.CreateAlike<TOut, TOther>(TOther storage)
+		static PureStorage<T, TP> IStorage<T, PureStorage<T, TP>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as PureStorage<TOut, TP> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as PureStorage<T2, TP> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="PureStorage{T, TP}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="PureStorage{T, TP}"/> that likes <paramref name="storage"/></returns>
-		public static PureStorage<T, TP> CreateAlike<TOut>(PureStorage<TOut, TP> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = PureStorage<TOut, TP>.LocationDescription;
-			return Create(stackalloc long[] { storage.Length });
-		}
+		public static PureStorage<T, TP> CreateAlike<T2>(PureStorage<T2, TP> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Length);
 		#endregion
 
 		#region operators

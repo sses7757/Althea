@@ -24601,14 +24601,21 @@
             <returns>The referenced <see cref="T:Althea.Storage.CachedStorage`4"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.CachedStorage`4.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.CachedStorage`4.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.CachedStorage`4.Create(System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.CachedStorage`4"/> of given <paramref name="length"/>.
+            </summary>
+            <param name="length">The length of low-performance pointer in <typeparamref name="T"/></param>
+            <returns>The created new <see cref="T:Althea.Storage.CachedStorage`4"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.CachedStorage`4.CreateAlike``1(Althea.Storage.CachedStorage{``0,`1,`2,`3})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.CachedStorage`4"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.CachedStorage`4"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.CachedStorage`4.Equals(Althea.Storage.CachedStorage{`0,`1,`2,`3})">
@@ -24828,9 +24835,9 @@
             <summary>
             When implemented by a derived class, statically allocate and creates a new <typeparamref name="TSelf"/> alike <paramref name="storage"/>.
             </summary>
-            <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+            <typeparam name="TFrom">Any unmanaged number as the original data type</typeparam>
             <typeparam name="TOther">Any storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="TFrom"/> to mimic.</param>
             <returns>A new <typeparamref name="TSelf"/> that likes <paramref name="storage"/></returns>
             <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
             <exception cref="T:System.InvalidCastException">If an actual storage <typeparamref name="TOther"/> cannot be created alike <typeparamref name="TSelf"/></exception>
@@ -25578,14 +25585,22 @@
             <returns>The referenced <see cref="T:Althea.Storage.MixedStorage`3"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.MixedStorage`3.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`3.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.MixedStorage`3.Create(System.Int64,System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.MixedStorage`3"/> of given lengths.
+            </summary>
+            <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+            <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+            <returns>The created new <see cref="T:Althea.Storage.MixedStorage`3"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.MixedStorage`3.CreateAlike``1(Althea.Storage.MixedStorage{``0,`1,`2})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.MixedStorage`3"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.MixedStorage`3"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.MixedStorage`3.Equals(Althea.Storage.MixedStorage{`0,`1,`2})">
@@ -25764,14 +25779,23 @@
             <returns>The referenced <see cref="T:Althea.Storage.MixedStorage`4"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.MixedStorage`4.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`4.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.MixedStorage`4.Create(System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.MixedStorage`4"/> of given lengths.
+            </summary>
+            <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+            <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+            <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+            <returns>The created new <see cref="T:Althea.Storage.MixedStorage`4"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.MixedStorage`4.CreateAlike``1(Althea.Storage.MixedStorage{``0,`1,`2,`3})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.MixedStorage`4"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.MixedStorage`4"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.MixedStorage`4.Equals(Althea.Storage.MixedStorage{`0,`1,`2,`3})">
@@ -25962,14 +25986,24 @@
             <returns>The referenced <see cref="T:Althea.Storage.MixedStorage`5"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.MixedStorage`5.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`5.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.MixedStorage`5.Create(System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.MixedStorage`5"/> of given lengths.
+            </summary>
+            <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+            <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+            <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+            <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+            <returns>The created new <see cref="T:Althea.Storage.MixedStorage`5"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.MixedStorage`5.CreateAlike``1(Althea.Storage.MixedStorage{``0,`1,`2,`3,`4})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.MixedStorage`5"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.MixedStorage`5"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.MixedStorage`5.Equals(Althea.Storage.MixedStorage{`0,`1,`2,`3,`4})">
@@ -26172,14 +26206,25 @@
             <returns>The referenced <see cref="T:Althea.Storage.MixedStorage`6"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.MixedStorage`6.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`6.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.MixedStorage`6.Create(System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.MixedStorage`6"/> of given lengths.
+            </summary>
+            <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+            <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+            <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+            <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+            <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+            <returns>The created new <see cref="T:Althea.Storage.MixedStorage`6"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.MixedStorage`6.CreateAlike``1(Althea.Storage.MixedStorage{``0,`1,`2,`3,`4,`5})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.MixedStorage`6"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.MixedStorage`6"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.MixedStorage`6.Equals(Althea.Storage.MixedStorage{`0,`1,`2,`3,`4,`5})">
@@ -26394,14 +26439,26 @@
             <returns>The referenced <see cref="T:Althea.Storage.MixedStorage`7"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.MixedStorage`7.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`7.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.MixedStorage`7.Create(System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.MixedStorage`7"/> of given lengths.
+            </summary>
+            <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+            <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+            <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+            <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+            <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+            <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+            <returns>The created new <see cref="T:Althea.Storage.MixedStorage`7"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.MixedStorage`7.CreateAlike``1(Althea.Storage.MixedStorage{``0,`1,`2,`3,`4,`5,`6})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.MixedStorage`7"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.MixedStorage`7"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.MixedStorage`7.Equals(Althea.Storage.MixedStorage{`0,`1,`2,`3,`4,`5,`6})">
@@ -26628,14 +26685,27 @@
             <returns>The referenced <see cref="T:Althea.Storage.MixedStorage`8"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.MixedStorage`8.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`8.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.MixedStorage`8.Create(System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.MixedStorage`8"/> of given lengths.
+            </summary>
+            <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+            <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+            <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+            <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+            <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+            <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+            <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+            <returns>The created new <see cref="T:Althea.Storage.MixedStorage`8"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.MixedStorage`8.CreateAlike``1(Althea.Storage.MixedStorage{``0,`1,`2,`3,`4,`5,`6,`7})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.MixedStorage`8"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.MixedStorage`8"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.MixedStorage`8.Equals(Althea.Storage.MixedStorage{`0,`1,`2,`3,`4,`5,`6,`7})">
@@ -26874,14 +26944,28 @@
             <returns>The referenced <see cref="T:Althea.Storage.MixedStorage`9"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.MixedStorage`9.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`9.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.MixedStorage`9.Create(System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.MixedStorage`9"/> of given lengths.
+            </summary>
+            <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+            <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+            <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+            <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+            <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+            <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+            <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+            <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+            <returns>The created new <see cref="T:Althea.Storage.MixedStorage`9"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.MixedStorage`9.CreateAlike``1(Althea.Storage.MixedStorage{``0,`1,`2,`3,`4,`5,`6,`7,`8})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.MixedStorage`9"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.MixedStorage`9"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.MixedStorage`9.Equals(Althea.Storage.MixedStorage{`0,`1,`2,`3,`4,`5,`6,`7,`8})">
@@ -27132,14 +27216,29 @@
             <returns>The referenced <see cref="T:Althea.Storage.MixedStorage`10"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.MixedStorage`10.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`10.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.MixedStorage`10.Create(System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.MixedStorage`10"/> of given lengths.
+            </summary>
+            <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+            <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+            <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+            <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+            <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+            <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+            <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+            <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+            <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
+            <returns>The created new <see cref="T:Althea.Storage.MixedStorage`10"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.MixedStorage`10.CreateAlike``1(Althea.Storage.MixedStorage{``0,`1,`2,`3,`4,`5,`6,`7,`8,`9})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.MixedStorage`10"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.MixedStorage`10"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.MixedStorage`10.Equals(Althea.Storage.MixedStorage{`0,`1,`2,`3,`4,`5,`6,`7,`8,`9})">
@@ -27302,14 +27401,21 @@
             <returns>The referenced <see cref="T:Althea.Storage.PureStorage`2"/> of data type <typeparamref name="TOut"/></returns>
             <exception cref="T:System.InvalidCastException">If the <see cref="P:Althea.Storage.PureStorage`2.LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
         </member>
-        <member name="M:Althea.Storage.PureStorage`2.Create(System.ReadOnlySpan{System.Int64})">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.PureStorage`2.Create(System.Int64)">
+            <summary>
+            Statically create a new <see cref="T:Althea.Storage.PureStorage`2"/> of given <paramref name="length"/>.
+            </summary>
+            <param name="length">The length of underlying pointer in <typeparamref name="T"/></param>
+            <returns>The created new <see cref="T:Althea.Storage.PureStorage`2"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
+            <exception cref="T:System.OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+            <exception cref="T:System.InvalidOperationException">If underlying creation fails due to other reasons</exception>
         </member>
         <member name="M:Althea.Storage.PureStorage`2.CreateAlike``1(Althea.Storage.PureStorage{``0,`1})">
             <summary>
             Statically allocate and creates a new <see cref="T:Althea.Storage.PureStorage`2"/> alike <paramref name="storage"/>.
             </summary>
-            <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+            <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
             <returns>A new <see cref="T:Althea.Storage.PureStorage`2"/> that likes <paramref name="storage"/></returns>
         </member>
         <member name="M:Althea.Storage.PureStorage`2.Equals(Althea.Storage.PureStorage{`0,`1})">

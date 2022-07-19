@@ -220,31 +220,44 @@ namespace Althea.Storage
 		#endregion
 
 		#region create
-		/// <inheritdoc/>
-		public static MixedStorage<T, <#=pointerTypes#>> Create(ReadOnlySpan<long> lengths)
+		/// <summary>
+		/// Statically create a new <see cref="MixedStorage{T, <#=pointerTypes#>}"/> of given lengths.
+		/// </summary>
+<# for (int j = 1; j <= i; j++) { #>
+		/// <param name="length<#=j#>">The length in <typeparamref name="T"/> of the <#=ordinal[j - 1]#> location</param>
+<# } #>
+		/// <returns>The created new <see cref="MixedStorage{T, <#=pointerTypes#>}"/></returns>
+		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static MixedStorage<T, <#=pointerTypes#>> Create(<# for (int j = 1; j < i; j++) { #>long length<#=j#>, <# } #>long length<#=i#>)
+		{
+<# for (int j = 1; j <= i; j++) { #>
+			if (length<#=j#> <= 0)
+				throw new ArgumentOutOfRangeException(nameof(length<#=j#>), ParameterError.MustPositive);
+<# } #>
+			return new ActualMixedStorage<T, <#=pointerTypes#>>(<# for (int j = 1; j < i; j++) { #>length<#=j#>, <# } #> length<#=i#>);
+		}
+
+		static MixedStorage<T, <#=pointerTypes#>> IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.Create(ReadOnlySpan<long> lengths)
 		{
 			if (lengths.Length != <#=i#>)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			if (lengths.Any(static l => l < 0))
-				throw new ArgumentOutOfRangeException(nameof(lengths), ParameterError.CannotNegative);
-			return new ActualMixedStorage<T, <#=pointerTypes#>>(<# for (int j = 0; j < i - 1; j++) { #>lengths[<#=j#>], <# } #> lengths[<#=i - 1#>]);
+			return Create(<# for (int j = 0; j < i - 1; j++) { #>lengths[<#=j#>], <# } #>lengths[<#=i - 1#>]);
 		}
 
-		static MixedStorage<T, <#=pointerTypes#>> IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.CreateAlike<TOut, TOther>(TOther storage)
+		static MixedStorage<T, <#=pointerTypes#>> IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.CreateAlike<T2, TS2>(TS2 storage)
 		{
-			return CreateAlike(storage as MixedStorage<TOut, <#=pointerTypes#>> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+			return CreateAlike(storage as MixedStorage<T2, <#=pointerTypes#>> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
 		}
 
 		/// <summary>
 		/// Statically allocate and creates a new <see cref="MixedStorage{T, <#=pointerTypes#>}"/> alike <paramref name="storage"/>.
 		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="TOut"/> to mimic.</param>
+		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
 		/// <returns>A new <see cref="MixedStorage{T, <#=pointerTypes#>}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, <#=pointerTypes#>> CreateAlike<TOut>(MixedStorage<TOut, <#=pointerTypes#>> storage) where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			var descr = MixedStorage<TOut, <#=pointerTypes#>>.LocationDescription;
-			return Create(stackalloc long[] { <# for (int j = 1; j <= i; j++) { #>storage.Pointer<#=j#>.LengthInBytes / TOut.Size, <# } #>});
-		}
+		public static MixedStorage<T, <#=pointerTypes#>> CreateAlike<T2>(MixedStorage<T2, <#=pointerTypes#>> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(<# for (int j = 1; j < i; j++) { #>storage.Pointer<#=j#>.LengthInBytes / T2.Size, <# } #>storage.Pointer<#=i#>.LengthInBytes / T2.Size);
 		#endregion
 
 		#region operators
