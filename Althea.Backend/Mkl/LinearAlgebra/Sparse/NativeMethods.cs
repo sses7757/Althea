@@ -41,31 +41,31 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		#region level 2 and 3
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_create_coo(out IntPtr A, int indexing, MklInt rows, MklInt cols, MklInt nnz, MklInt* row_indx, MklInt* col_indx, Float32* values);
+		internal static extern MklSparseBlasError mkl_sparse_s_create_coo(out IntPtr A, int indexing, MklInt rows, MklInt cols, MklInt nnz, MklInt* row_indx, MklInt* col_indx, void* values);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_create_csr(out IntPtr A, int indexing, MklInt rows, MklInt cols, MklInt nnz, MklInt* row_start, MklInt* row_end, MklInt* col_indx, Float32* values);
+		internal static extern MklSparseBlasError mkl_sparse_s_create_csr(out IntPtr A, int indexing, MklInt rows, MklInt cols, MklInt* row_start, MklInt* row_end, MklInt* col_indx, void* values);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_create_csc(out IntPtr A, int indexing, MklInt rows, MklInt cols, MklInt nnz, MklInt* col_start, MklInt* col_end, MklInt* row_indx, Float32* values);
+		internal static extern MklSparseBlasError mkl_sparse_s_create_csc(out IntPtr A, int indexing, MklInt rows, MklInt cols, MklInt* col_start, MklInt* col_end, MklInt* row_indx, void* values);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_create_bsr(out IntPtr A, int indexing, MatrixMajor block_layout, MklInt rows, MklInt cols, MklInt nnz, MklInt block_size, MklInt* row_start, MklInt* row_end, MklInt* col_indx, Float32* values);
+		internal static extern MklSparseBlasError mkl_sparse_s_create_bsr(out IntPtr A, int indexing, MatrixMajor block_layout, MklInt rows, MklInt cols, MklInt block_size, MklInt* row_start, MklInt* row_end, MklInt* col_indx, void* values);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_export_csr(IntPtr A, out int indexing, out MklInt rows, out MklInt cols, out MklInt nnz, out MklInt* row_start, out MklInt* row_end, out MklInt* col_indx, out Float32* values);
+		internal static extern MklSparseBlasError mkl_sparse_s_export_csr(IntPtr A, out int indexing, out MklInt rows, out MklInt cols,out MklInt* row_start, out MklInt* row_end, out MklInt* col_indx, out void* values);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_export_csc(IntPtr A, out int indexing, out MklInt rows, out MklInt cols, out MklInt nnz, out MklInt* col_start, out MklInt* col_end, out MklInt* row_indx, out Float32* values);
+		internal static extern MklSparseBlasError mkl_sparse_s_export_csc(IntPtr A, out int indexing, out MklInt rows, out MklInt cols, out MklInt* col_start, out MklInt* col_end, out MklInt* row_indx, out void* values);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_export_bsr(IntPtr A, out int indexing, out MatrixMajor block_layout, out MklInt rows, out MklInt cols, out MklInt nnz, out MklInt block_size, out MklInt* row_start, out MklInt* row_end, out MklInt* col_indx, out Float32* values);
+		internal static extern MklSparseBlasError mkl_sparse_s_export_bsr(IntPtr A, out int indexing, out MatrixMajor block_layout, out MklInt rows, out MklInt cols, out MklInt block_size, out MklInt* row_start, out MklInt* row_end, out MklInt* col_indx, out void* values);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -89,7 +89,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_spmmd(MatrixOp transA, IntPtr A, IntPtr B, MatrixMajor dense_layout, Float32* C, MklInt ldc);
+		internal static extern MklSparseBlasError mkl_sparse_s_spmmd(MatrixOp transA, IntPtr A, IntPtr B, MatrixMajor dense_layout, void* C, MklInt ldc);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -107,7 +107,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		#region QR solve
 		[NativeMethod(11, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_qr(MatrixOp trans, IntPtr A, MatrixDescr descr, MatrixMajor dense_layout, MklInt nrhs, Float32* x, MklInt ldx, Float32* b, MklInt ldb);
+		internal static extern MklSparseBlasError mkl_sparse_s_qr(MatrixOp trans, IntPtr A, MatrixDescr descr, MatrixMajor dense_layout, MklInt nrhs, void* x, MklInt ldx, void* b, MklInt ldb);
 
 		////[NativeMethod(11, false, false, false, true)]
 		////[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]

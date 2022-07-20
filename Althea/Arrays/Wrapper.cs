@@ -299,16 +299,6 @@ namespace Althea.Array
 		/// </summary>
 		public Major MajorType => this.major;
 
-		/// <summary>
-		/// Statically get a <see cref="SparseFormat"/> representing any format.
-		/// </summary>
-		public static SparseFormat Any => new(Type.Any, Blocking.Any, Major.Any);
-
-		/// <summary>
-		/// Statically get a <see cref="SparseFormat"/> representing none of the format.
-		/// </summary>
-		public static SparseFormat None => default;
-
 		internal SparseFormat(int data)
 		{
 			this = default;
@@ -382,6 +372,67 @@ namespace Althea.Array
 		/// Get the complementary <see cref="SparseFormat"/> of the <paramref name="value"/> <see cref="SparseFormat"/>.
 		/// </summary>
 		public static SparseFormat operator ~(SparseFormat value) => new(~value.type, ~value.blocking, ~value.major);
+		#endregion
+
+		#region constants
+		/// <summary>
+		/// Any format
+		/// </summary>
+		public static readonly SparseFormat Any = new(Type.Any, Blocking.Any, Major.Any);
+
+		/// <summary>
+		/// None of the formats
+		/// </summary>
+		public static readonly SparseFormat None = default;
+
+		/// <summary>
+		/// The element-blocked coordinated format for vectors
+		/// </summary>
+		public static readonly SparseFormat VectorCooFormat = new(Type.Coordinated, Blocking.Element);
+		/// <summary>
+		/// The simple-blocked coordinated format for vectors
+		/// </summary>
+		public static readonly SparseFormat VectorBooFormat = new(Type.Coordinated, Blocking.Simple);
+		/// <summary>
+		/// The element-blocked column-major coordinated format for matrices
+		/// </summary>
+		public static readonly SparseFormat MatrixCocFormat = new(Type.Coordinated, Blocking.Element, Major.Column);
+		/// <summary>
+		/// The element-blocked row-major coordinated format for matrices
+		/// </summary>
+		public static readonly SparseFormat MatrixCorFormat = new(Type.Coordinated, Blocking.Element, Major.Row);
+		/// <summary>
+		/// The element-blocked column-major compressed format for matrices
+		/// </summary>
+		public static readonly SparseFormat MatrixCscFormat = new(Type.Compressed, Blocking.Element, Major.Column);
+		/// <summary>
+		/// The element-blocked row-major compressed format for matrices
+		/// </summary>
+		public static readonly SparseFormat MatrixCsrFormat = new(Type.Compressed, Blocking.Element, Major.Row);
+		/// <summary>
+		/// The simple-blocked column-major compressed format for matrices
+		/// </summary>
+		public static readonly SparseFormat MatrixBscFormat = new(Type.Compressed, Blocking.Simple, Major.Column);
+		/// <summary>
+		/// The simple-blocked row-major compressed format for matrices
+		/// </summary>
+		public static readonly SparseFormat MatrixBsrFormat = new(Type.Compressed, Blocking.Simple, Major.Row);
+		/// <summary>
+		/// The element-blocked column-major coordinated format for tensors
+		/// </summary>
+		public static readonly SparseFormat TensorCocFormat = new(Type.Coordinated, Blocking.Element, Major.Column);
+		/// <summary>
+		/// The element-blocked row-major coordinated format for tensors
+		/// </summary>
+		public static readonly SparseFormat TensorCorFormat = new(Type.Coordinated, Blocking.Element, Major.Row);
+		/// <summary>
+		/// The simple-blocked column-major coordinated format for tensors
+		/// </summary>
+		public static readonly SparseFormat TensorBocFormat = new(Type.Coordinated, Blocking.Simple, Major.Column);
+		/// <summary>
+		/// The simple-blocked row-major coordinated format for tensors
+		/// </summary>
+		public static readonly SparseFormat TensorBorFormat = new(Type.Coordinated, Blocking.Simple, Major.Row);
 		#endregion
 
 		#region methods

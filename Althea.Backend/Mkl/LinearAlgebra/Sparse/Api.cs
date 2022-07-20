@@ -90,17 +90,22 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TInd, TS, TSInd>(ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		internal static bool GetPointer<T, TInd, TS, TSInd>(ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			pointer = default; pointerRow = pointerCol = default; nnz = 0;
 			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt))
 				return false;
 			if (matrix is null)
 				throw new ArgumentNullException(matrixName);
+			if (matrix.Size.Length != 2 || matrix.Size[0] <= 0 || matrix.Size[1] <= 0)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, matrixName);
 			if ((matrix.Format.Class & (SparseFormat.Type.Coordinated | SparseFormat.Type.Compressed)) == 0 ||
 				(matrix.Format.BlockType & (SparseFormat.Blocking.Element | SparseFormat.Blocking.Simple)) == 0 ||
 				(matrix.Format.MajorType & (SparseFormat.Major.Column | SparseFormat.Major.Row)) == 0)
 				return false;
+			if (matrix.Format.BlockType == SparseFormat.Blocking.Simple &&
+				(matrix.BlockSize.Length != 2 || matrix.BlockSize[0] <= TInd.Zero || matrix.BlockSize[1] <= TInd.Zero))
+				throw new ArgumentException(Resources.ParameterError.WrongSize, matrixName);
 			if (matrix.ValueStorages.Length != 1 || matrix.ValueStorages[0] is not PureStorage<T, CpuMemoryPointer> ps)
 				return false;
 			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
@@ -175,14 +180,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			return true;
 		}
 
-		private static readonly SparseFormat VectorFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element);
-
 		/// <inheritdoc/>
 		public virtual bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x!!, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (x.Size.Length != 1)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(x));
-			if (strideY != 1 || x.Format != VectorFormat)
+			if (strideY != 1 || x.Format != SparseFormat.VectorCooFormat)
 				return false;
 			if (x.IndexStorages.Length != 1 || x.ValueStorages.Length != 1)
 				return false;
@@ -213,7 +216,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		{
 			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt))
 				return false;
-			if (strideX != 1 || y.Format != VectorFormat || y.DefaultValue != T.Zero)
+			if (strideX != 1 || y.Format != SparseFormat.VectorCooFormat || y.DefaultValue != T.Zero)
 				return false;
 			if (!GetPointer(x, out T* px, out var n))
 				return false;
@@ -229,8 +232,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 					return false;
 				using var buf = Buffers.Create<byte>(bufSize);
 				long nnz = NMC.vecPruneNnz(T.Type, px, &thre, n, buf);
-				var valOut = PureStorage<T, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
-				var idxOut = PureStorage<TInd, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
+				var valOut = PureStorage<T, CpuMemoryPointer>.Create(nnz);
+				var idxOut = PureStorage<TInd, CpuMemoryPointer>.Create(nnz);
 				_ = NMC.vecPruneCal(T.Type, n, buf, nnz, (MklInt*)idxOut.Pointer.Pointer.Pointer, (void*)valOut.Pointer.Pointer.Pointer);
 				y.SetValues(n, valOut as TS2 ?? TS2.Empty, idxOut as TSInd ?? TSInd.Empty); // never empty
 			}
@@ -253,8 +256,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		#endregion
 
 		#region vector matrix conversion
-		private static readonly SparseFormat CooFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element, SparseFormat.Major.Column);
-
 		/// <inheritdoc/>
 		public virtual bool SparseVectorToMatrix<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> vector!!, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
 		{
@@ -262,7 +263,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				return false;
 			if (typeof(TInd1) != typeof(TInd2))
 				return false;
-			if (vector.Format != VectorFormat || (target.Format & CooFormat) != CooFormat)
+			if (vector.Format != SparseFormat.VectorCooFormat || (target.Format & SparseFormat.MatrixCocFormat) == SparseFormat.None)
 				return false;
 			if (vector.Size.Length != 1)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(vector));
@@ -287,7 +288,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			}
 			else
 			{
-				var s = PureStorage<T, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
+				var s = PureStorage<T, CpuMemoryPointer>.Create(nnz);
 				pVal = (T*)s.Pointer.Pointer.Pointer;
 				valOut = s as TS2 ?? TS2.Empty; // never empty
 			}
@@ -301,17 +302,17 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			}
 			else
 			{
-				var s = PureStorage<TInd2, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
+				var s = PureStorage<TInd2, CpuMemoryPointer>.Create(nnz);
 				pRow = (TInd2*)s.Pointer.Pointer.Pointer;
 				rowIdxOut = s as TSInd2 ?? TSInd2.Empty; // never empty
-				s = PureStorage<TInd2, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
+				s = PureStorage<TInd2, CpuMemoryPointer>.Create(nnz);
 				pCol = (TInd2*)s.Pointer.Pointer.Pointer;
 				colIdxOut = s as TSInd2 ?? TSInd2.Empty; // never empty
 			}
 			Buffer.MemoryCopy(px, pVal, nnz * sizeof(T), nnz * sizeof(T));
 			NMC.spVecIdxToCooIdxs((MklInt*)pp, (MklInt*)pRow, (MklInt*)pCol, nnz, vector.Size[0]);
 			target.SetValues(valOut, rowIdxOut, colIdxOut);
-			target.Format = CooFormat;
+			target.Format = SparseFormat.MatrixCocFormat;
 			return true;
 		}
 
@@ -322,7 +323,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				return false;
 			if (typeof(TInd1) != typeof(TInd2))
 				return false;
-			if ((target.Format & VectorFormat) != VectorFormat || matrix.Format != CooFormat)
+			if ((target.Format & SparseFormat.VectorCooFormat) == SparseFormat.None || matrix.Format != SparseFormat.MatrixCocFormat)
 				return false;
 			if (target.Size.Length is not 0 and not 1)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));
@@ -345,7 +346,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			}
 			else
 			{
-				var s = PureStorage<T, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
+				var s = PureStorage<T, CpuMemoryPointer>.Create(nnz);
 				pVal = (T*)s.Pointer.Pointer.Pointer;
 				valOut = s as TS2 ?? TS2.Empty; // never empty
 			}
@@ -357,23 +358,53 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			}
 			else
 			{
-				var s = PureStorage<TInd2, CpuMemoryPointer>.Create(stackalloc long[] { nnz });
+				var s = PureStorage<TInd2, CpuMemoryPointer>.Create(nnz);
 				pIdx = (TInd2*)s.Pointer.Pointer.Pointer;
 				idxOut = s as TSInd2 ?? TSInd2.Empty; // never empty
 			}
 			Buffer.MemoryCopy(pm, pVal, nnz * sizeof(T), nnz * sizeof(T));
 			NMC.cooIdxsToSpVecIdx((MklInt*)pIdx, (MklInt*)pr, (MklInt*)pc, nnz, matrix.Size[0]);
 			target.SetValues(matrix.Size.Prod(), valOut, idxOut);
-			target.Format = VectorFormat;
+			target.Format = SparseFormat.VectorCooFormat;
 			return true;
 		}
 		#endregion
 
 		#region matrix conversion
+		private static readonly SparseFormat CompressedFormat = SparseFormat.MatrixCscFormat | SparseFormat.MatrixCsrFormat | SparseFormat.MatrixBscFormat | SparseFormat.MatrixBsrFormat;
+		private static readonly SparseFormat SupportInputFormat = SparseFormat.MatrixCocFormat | SparseFormat.MatrixCorFormat | SparseFormat.MatrixCsrFormat | SparseFormat.MatrixCscFormat | SparseFormat.MatrixBsrFormat;
+
 		/// <inheritdoc/>
 		public virtual bool MatrixSparseFormatConvert<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
 		{
+			if ((target.Format & CompressedFormat) == SparseFormat.None || (source.Format & SupportInputFormat) == SparseFormat.None)
+				return false;
+			if (typeof(TInd1) != typeof(TInd2))
+				return false;
+			if (!source.BlockSize.IsEmpty && source.BlockSize[0] != source.BlockSize[1])
+				return false; // not supported by MKL
+			if (!target.ValueStorages.IsEmpty || !target.IndexStorages.IsEmpty)
+				return false; // not supported by MKL
+			if (target.Size.Length is not 0 and not 2)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));
+			if (target.Format.BlockType == SparseFormat.Blocking.Simple && (target.BlockSize.Length != 2 || target.BlockSize[0] <= TInd2.Zero || target.BlockSize[1] <= TInd2.Zero))
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));
+			if (target.Format.BlockType == SparseFormat.Blocking.Simple && target.BlockSize[0] != target.BlockSize[1])
+				return false; // not supported by MKL
 
+			using var handleSrc = SparseMatrixHandle.TryCreate(source, out bool success);
+			if (!success)
+				return false;
+			IntPtr handleDst;
+			bool targetRow = (target.Format.MajorType & SparseFormat.Major.Row) != 0;
+			bool targetCsr = (target.Format.BlockType & SparseFormat.Blocking.Element) != 0;
+			if (targetCsr)
+				NM.mkl_sparse_convert_csr(handleSrc, targetRow ? MatrixOp.None : MatrixOp.Trans, out handleDst).Check();
+			else
+				NM.mkl_sparse_convert_bsr(handleSrc, target.BlockSize[0].AsInt64(), targetRow ? MatrixMajor.Row : MatrixMajor.Column, targetRow ? MatrixOp.None : MatrixOp.Trans, out handleDst).Check();
+			using var dst = new SparseMatrixHandle(handleDst, targetCsr ? SparseFormat.MatrixCsrFormat : SparseFormat.MatrixBsrFormat, !targetRow);
+			dst.Deconstruct(ref target);
+			return true;
 		}
 
 		bool IConversionAbstractApi.SparseMatrixGetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, MatrixSliceWrapper slice, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> sub) => false;
