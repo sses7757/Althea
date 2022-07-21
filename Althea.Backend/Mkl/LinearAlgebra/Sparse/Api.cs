@@ -230,7 +230,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				long bufSize = NMC.vecPruneBuffer(T.Type, n);
 				if (bufSize < 0)
 					return false;
-				using var buf = Buffers.Create<byte>(bufSize);
+				using var buf = ArrayPoolBuffers.Create<byte>(bufSize);
 				long nnz = NMC.vecPruneNnz(T.Type, px, &thre, n, buf);
 				var valOut = PureStorage<T, CpuMemoryPointer>.Create(nnz);
 				var idxOut = PureStorage<TInd, CpuMemoryPointer>.Create(nnz);

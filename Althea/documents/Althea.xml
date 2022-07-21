@@ -4454,16 +4454,6 @@
             Get the <see cref="T:Althea.Array.SparseFormat.Major"/> of this <see cref="T:Althea.Array.SparseFormat"/>.
             </summary>
         </member>
-        <member name="P:Althea.Array.SparseFormat.Any">
-            <summary>
-            Statically get a <see cref="T:Althea.Array.SparseFormat"/> representing any format.
-            </summary>
-        </member>
-        <member name="P:Althea.Array.SparseFormat.None">
-            <summary>
-            Statically get a <see cref="T:Althea.Array.SparseFormat"/> representing none of the format.
-            </summary>
-        </member>
         <member name="M:Althea.Array.SparseFormat.#ctor(Althea.Array.SparseFormat.Type,Althea.Array.SparseFormat.Blocking,Althea.Array.SparseFormat.Major)">
             <summary>
             The full constructor of a <see cref="T:Althea.Array.SparseFormat"/>.
@@ -4523,6 +4513,76 @@
         <member name="M:Althea.Array.SparseFormat.op_OnesComplement(Althea.Array.SparseFormat)">
             <summary>
             Get the complementary <see cref="T:Althea.Array.SparseFormat"/> of the <paramref name="value"/> <see cref="T:Althea.Array.SparseFormat"/>.
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.Any">
+            <summary>
+            Any format
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.None">
+            <summary>
+            None of the formats
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.VectorCooFormat">
+            <summary>
+            The element-blocked coordinated format for vectors
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.VectorBooFormat">
+            <summary>
+            The simple-blocked coordinated format for vectors
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.MatrixCocFormat">
+            <summary>
+            The element-blocked column-major coordinated format for matrices
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.MatrixCorFormat">
+            <summary>
+            The element-blocked row-major coordinated format for matrices
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.MatrixCscFormat">
+            <summary>
+            The element-blocked column-major compressed format for matrices
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.MatrixCsrFormat">
+            <summary>
+            The element-blocked row-major compressed format for matrices
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.MatrixBscFormat">
+            <summary>
+            The simple-blocked column-major compressed format for matrices
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.MatrixBsrFormat">
+            <summary>
+            The simple-blocked row-major compressed format for matrices
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.TensorCocFormat">
+            <summary>
+            The element-blocked column-major coordinated format for tensors
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.TensorCorFormat">
+            <summary>
+            The element-blocked row-major coordinated format for tensors
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.TensorBocFormat">
+            <summary>
+            The simple-blocked column-major coordinated format for tensors
+            </summary>
+        </member>
+        <member name="F:Althea.Array.SparseFormat.TensorBorFormat">
+            <summary>
+            The simple-blocked row-major coordinated format for tensors
             </summary>
         </member>
         <member name="P:Althea.Array.SparseFormat.WithoutBlocking">
@@ -4630,8 +4690,34 @@
         </member>
         <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(`2,`3,`3)">
             <summary>
-            Set the <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> of this <see cref="T:Althea.Array.SparseArrayWrapper`4"/>.
+            Set the <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> of this <see cref="T:Althea.Array.SparseArrayWrapper`4"/> for 1-value 2-index storages.
             </summary>
+            <param name="values">The <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/> to set</param>
+            <param name="indices1">The first <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> to set</param>
+            <param name="indices2">The second <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> to set</param>
+            <exception cref="T:System.ArgumentNullException">if any of the input storages is null</exception>
+            <exception cref="T:System.NotSupportedException">If the lengths exceeds the internal limits</exception>
+        </member>
+        <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(System.Int64,System.Int64,`2,`3,`3)">
+            <summary>
+            Set the <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> of this <see cref="T:Althea.Array.SparseArrayWrapper`4"/> for a matrix.
+            </summary>
+            <param name="rows">The first value of <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/></param>
+            <param name="cols">The second value of <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/></param>
+            <param name="values">The <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/> to set</param>
+            <param name="indices1">The first <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> to set</param>
+            <param name="indices2">The second <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> to set</param>
+            <exception cref="T:System.ArgumentNullException">if any of the input storages is null</exception>
+            <exception cref="T:System.NotSupportedException">If the lengths exceeds the internal limits</exception>
+        </member>
+        <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(System.Int64,System.Int64,`1,`1,`2,`3,`3)">
+            <summary>
+            Set the <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.BlockSize"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> of this <see cref="T:Althea.Array.SparseArrayWrapper`4"/> for a matrix.
+            </summary>
+            <param name="rows">The first value of <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/></param>
+            <param name="cols">The second value of <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/></param>
+            <param name="blockRows">The first value of <see cref="P:Althea.Array.SparseArrayWrapper`4.BlockSize"/></param>
+            <param name="blockCols">The second value of <see cref="P:Althea.Array.SparseArrayWrapper`4.BlockSize"/></param>
             <param name="values">The <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/> to set</param>
             <param name="indices1">The first <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> to set</param>
             <param name="indices2">The second <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> to set</param>
@@ -24572,10 +24658,8 @@
         <member name="P:Althea.Storage.CachedStorage`4.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.CachedStorage`4.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.CachedStorage`4.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.CachedStorage`4.IsValid">
             <inheritdoc/>
@@ -24673,6 +24757,11 @@
             <param name="length">The length to create in <typeparamref name="T"/></param>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualCachedStorage`4.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferenceCachedStorage`4">
             <summary>
@@ -25554,10 +25643,8 @@
         <member name="P:Althea.Storage.MixedStorage`3.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`3.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.MixedStorage`3.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.MixedStorage`3.IsValid">
             <inheritdoc/>
@@ -25646,6 +25733,11 @@
             <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualMixedStorage`3.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferenceMixedStorage`3">
             <summary>
@@ -25748,10 +25840,8 @@
         <member name="P:Althea.Storage.MixedStorage`4.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`4.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.MixedStorage`4.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.MixedStorage`4.IsValid">
             <inheritdoc/>
@@ -25843,6 +25933,11 @@
             <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualMixedStorage`4.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferenceMixedStorage`4">
             <summary>
@@ -25955,10 +26050,8 @@
         <member name="P:Althea.Storage.MixedStorage`5.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`5.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.MixedStorage`5.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.MixedStorage`5.IsValid">
             <inheritdoc/>
@@ -26053,6 +26146,11 @@
             <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualMixedStorage`5.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferenceMixedStorage`5">
             <summary>
@@ -26175,10 +26273,8 @@
         <member name="P:Althea.Storage.MixedStorage`6.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`6.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.MixedStorage`6.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.MixedStorage`6.IsValid">
             <inheritdoc/>
@@ -26276,6 +26372,11 @@
             <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualMixedStorage`6.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferenceMixedStorage`6">
             <summary>
@@ -26408,10 +26509,8 @@
         <member name="P:Althea.Storage.MixedStorage`7.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`7.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.MixedStorage`7.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.MixedStorage`7.IsValid">
             <inheritdoc/>
@@ -26512,6 +26611,11 @@
             <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualMixedStorage`7.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferenceMixedStorage`7">
             <summary>
@@ -26654,10 +26758,8 @@
         <member name="P:Althea.Storage.MixedStorage`8.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`8.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.MixedStorage`8.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.MixedStorage`8.IsValid">
             <inheritdoc/>
@@ -26761,6 +26863,11 @@
             <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualMixedStorage`8.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferenceMixedStorage`8">
             <summary>
@@ -26913,10 +27020,8 @@
         <member name="P:Althea.Storage.MixedStorage`9.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`9.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.MixedStorage`9.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.MixedStorage`9.IsValid">
             <inheritdoc/>
@@ -27023,6 +27128,11 @@
             <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualMixedStorage`9.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferenceMixedStorage`9">
             <summary>
@@ -27185,10 +27295,8 @@
         <member name="P:Althea.Storage.MixedStorage`10.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.MixedStorage`10.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.MixedStorage`10.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.MixedStorage`10.IsValid">
             <inheritdoc/>
@@ -27299,6 +27407,11 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
         </member>
+        <member name="M:Althea.Storage.ActualMixedStorage`10.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
+        </member>
         <member name="T:Althea.Storage.ReferenceMixedStorage`10">
             <summary>
             The reference storage class for a mixed storage on 9 locations.
@@ -27379,10 +27492,8 @@
         <member name="P:Althea.Storage.PureStorage`2.Disposed">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Storage.PureStorage`2.Finalize">
-            <summary>
-            The deconstructor invoked by GC
-            </summary>
+        <member name="M:Althea.Storage.PureStorage`2.Dispose(System.Boolean)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Storage.PureStorage`2.IsValid">
             <inheritdoc/>
@@ -27459,6 +27570,11 @@
             <param name="length">The length to create in <typeparamref name="T"/></param>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
             <exception cref="T:System.OutOfMemoryException">If <paramref name="length"/> is too large to be allocated</exception>
+        </member>
+        <member name="M:Althea.Storage.ActualPureStorage`2.Finalize">
+            <summary>
+            The deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="T:Althea.Storage.ReferencePureStorage`2">
             <summary>

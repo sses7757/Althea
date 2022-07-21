@@ -388,23 +388,16 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualCachedStorage<T, TS, TPh, TPl>)
+			if (this is not ReferenceCachedStorage<T, TS, TPh, TPl>)
 			{
 				Mem.Free(this.Cache.Pointer);
 				Mem.Free(this.Memory.Pointer);
 			}
 			this.Disposed = true;
 		}
-
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~CachedStorage() => this.Dispose();
 
 		/// <inheritdoc/>
 		public bool IsValid() => !this.Disposed && this.Memory.IsValid();
@@ -629,6 +622,11 @@ namespace Althea.Storage
 		{
 			// do nothing
 		}
+
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualCachedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>

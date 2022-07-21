@@ -99,7 +99,7 @@ namespace Althea.Backend.CSharp.Storage
 		public static implicit operator T*(VecBuffer<T> buffer) => buffer.ptr;
 	}
 
-	internal static unsafe class Buffers
+	internal static unsafe class ArrayPoolBuffers
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static MatBuffer<T> Create<T>(T* ptr, long ld, long n) where T : unmanaged => new(ptr, ld, n);

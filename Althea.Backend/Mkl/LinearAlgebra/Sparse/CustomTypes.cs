@@ -2,6 +2,7 @@
 
 using Althea.Array;
 using Althea.Backend.Mkl.LinearAlgebra.Sparse;
+using Althea.Backend.Storage;
 
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
@@ -133,8 +134,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			success = false;
 			if (!Api.GetPointer(source, out T* pv, out TInd* pr, out var pc, out var nnz))
 				return default;
+			SparseFormat format = source.Format;
 			IntPtr handle;
-			if ((source.Format & CooFormat) != SparseFormat.None)
+			if ((format & CooFormat) != SparseFormat.None)
 			{
 				delegate*<out IntPtr, int, MklInt, MklInt, MklInt, MklInt*, MklInt*, T*, MklSparseBlasError> createFunc = default(T) switch
 				{
@@ -148,11 +150,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 					return default;
 				createFunc(out handle, 0, source.Size[0], source.Size[1], nnz, (MklInt*)pr, (MklInt*)pc, pv).Check();
 			}
-			else if ((source.Format & (SparseFormat.MatrixCscFormat | SparseFormat.MatrixCsrFormat)) != SparseFormat.None)
+			else if ((format & (SparseFormat.MatrixCscFormat | SparseFormat.MatrixCsrFormat)) != SparseFormat.None)
 			{
 				delegate*<out IntPtr, int, MklInt, MklInt, MklInt*, MklInt*, MklInt*, T*, MklSparseBlasError> createFunc;
 				MklInt* pStarts, pInds;
-				if (source.Format == SparseFormat.MatrixCsrFormat)
+				if (format == SparseFormat.MatrixCsrFormat)
 				{
 					createFunc = default(T) switch
 					{
@@ -195,7 +197,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				createFunc(out handle, 0, MatrixMajor.Row, source.Size[0], source.Size[1], source.BlockSize[0].AsInt64(), (MklInt*)pr, (MklInt*)pr + 1, (MklInt*)pc, pv).Check();
 			}
 			success = true;
-			return new(handle, source.Format);
+			return new(handle, format);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -203,7 +205,77 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 			where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 		{
-
+			if ((this.format & (SparseFormat.MatrixCscFormat | SparseFormat.MatrixCsrFormat)) != SparseFormat.None)
+			{
+				delegate*<IntPtr, out int, out MklInt, out MklInt, out MklInt*, out MklInt*, out MklInt*, out void*, MklSparseBlasError> createFunc;
+				if (format == SparseFormat.MatrixCsrFormat)
+				{
+					createFunc = default(T) switch
+					{
+						Float32 => &NativeMethods.mkl_sparse_s_export_csr,
+						Float64 => &NativeMethods.mkl_sparse_d_export_csr,
+						Complex<Float32> => &NativeMethods.mkl_sparse_c_export_csr,
+						Complex<Float64> => &NativeMethods.mkl_sparse_z_export_csr,
+						_ => null
+					};
+				}
+				else
+				{
+					createFunc = default(T) switch
+					{
+						Float32 => &NativeMethods.mkl_sparse_s_export_csc,
+						Float64 => &NativeMethods.mkl_sparse_d_export_csc,
+						Complex<Float32> => &NativeMethods.mkl_sparse_c_export_csc,
+						Complex<Float64> => &NativeMethods.mkl_sparse_z_export_csc,
+						_ => null
+					};
+				}
+				createFunc(this.handle, out _, out var rows, out var cols, out var pStarts, out _, out var pInds, out var pv).Check();
+				if ((format == SparseFormat.MatrixCsrFormat) != this.transposed)
+				{
+					var temp = pStarts; pStarts = pInds; pInds = temp;
+				}
+				if (this.transposed)
+					(rows, cols) = (cols, rows);
+				long nnz = pStarts[rows] - pStarts[0], rowSize, colSize;
+				if ((format == SparseFormat.MatrixCsrFormat) == this.transposed)
+				{
+					rowSize = rows; colSize = nnz;
+				}
+				else
+				{
+					rowSize = nnz; colSize = rows;
+				}
+				TS vals = new Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pv, nnz * sizeof(T))) as TS ?? TS.Empty;
+				TSInd rowInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
+				TSInd colInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
+				target.SetValues(rows, cols, vals, rowInds, colInds);
+			}
+			else // BSR
+			{
+				delegate*<IntPtr, out int, out MatrixMajor, out MklInt, out MklInt, out MklInt, out MklInt*, out MklInt*, out MklInt*, out void*, MklSparseBlasError> createFunc = default(T) switch
+				{
+					Float32 => &NativeMethods.mkl_sparse_s_export_bsr,
+					Float64 => &NativeMethods.mkl_sparse_d_export_bsr,
+					Complex<Float32> => &NativeMethods.mkl_sparse_c_export_bsr,
+					Complex<Float64> => &NativeMethods.mkl_sparse_z_export_bsr,
+					_ => null
+				};
+				createFunc(handle, out _, out _, out var rows, out var cols, out var bs, out var pStarts, out _, out var pInds, out var pv).Check();
+				long nnz = (pStarts[rows] - pStarts[0]), rowSize = rows / bs, colSize = nnz;
+				nnz *= bs * bs;
+				if (this.transposed)
+				{
+					(rows, cols) = (cols, rows);
+					(rowSize, colSize) = (colSize, rowSize);
+					var temp = pStarts; pStarts = pInds; pInds = temp;
+				}
+				TS vals = new Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pv, nnz * sizeof(T))) as TS ?? TS.Empty;
+				TSInd rowInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
+				TSInd colInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
+				TInd blockSize = ((long)bs).As<TInd>();
+				target.SetValues(rows, cols, blockSize, blockSize, vals, rowInds, colInds);
+			}
 		}
 	}
 	#endregion

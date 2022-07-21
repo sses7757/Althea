@@ -632,7 +632,7 @@ namespace Althea.Array
 
 		#region create and set
 		/// <summary>
-		/// Set the <see cref="ValueStorages"/>, <see cref="IndexStorages"/> of this <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/>.
+		/// Set the <see cref="ValueStorages"/>, <see cref="IndexStorages"/> of this <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> for 1-value 2-index storages.
 		/// </summary>
 		/// <param name="values">The <see cref="ValueStorages"/> to set</param>
 		/// <param name="indices1">The first <see cref="IndexStorages"/> to set</param>
@@ -646,6 +646,41 @@ namespace Althea.Array
 			this.inds = 2;
 			this.indexStorage[0] = indices1;
 			this.indexStorage[1] = indices2;
+		}
+
+		/// <summary>
+		/// Set the <see cref="Size"/>, <see cref="ValueStorages"/>, <see cref="IndexStorages"/> of this <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> for a matrix.
+		/// </summary>
+		/// <param name="rows">The first value of <see cref="Size"/></param>
+		/// <param name="cols">The second value of <see cref="Size"/></param>
+		/// <param name="values">The <see cref="ValueStorages"/> to set</param>
+		/// <param name="indices1">The first <see cref="IndexStorages"/> to set</param>
+		/// <param name="indices2">The second <see cref="IndexStorages"/> to set</param>
+		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
+		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
+		public void SetValues(long rows, long cols, TSVal values!!, TSInd indices1!!, TSInd indices2!!)
+		{
+			this.rank = 2;
+			this.size[0] = rows; this.size[1] = cols;
+			this.SetValues(values, indices1, indices2);
+		}
+
+		/// <summary>
+		/// Set the <see cref="Size"/>, <see cref="BlockSize"/>, <see cref="ValueStorages"/>, <see cref="IndexStorages"/> of this <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> for a matrix.
+		/// </summary>
+		/// <param name="rows">The first value of <see cref="Size"/></param>
+		/// <param name="cols">The second value of <see cref="Size"/></param>
+		/// <param name="blockRows">The first value of <see cref="BlockSize"/></param>
+		/// <param name="blockCols">The second value of <see cref="BlockSize"/></param>
+		/// <param name="values">The <see cref="ValueStorages"/> to set</param>
+		/// <param name="indices1">The first <see cref="IndexStorages"/> to set</param>
+		/// <param name="indices2">The second <see cref="IndexStorages"/> to set</param>
+		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
+		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
+		public void SetValues(long rows, long cols, TInd blockRows, TInd blockCols, TSVal values!!, TSInd indices1!!, TSInd indices2!!)
+		{
+			this.blockSize[0] = blockRows; this.blockSize[1] = blockCols;
+			this.SetValues(rows, cols, values, indices1, indices2);
 		}
 
 		/// <summary>

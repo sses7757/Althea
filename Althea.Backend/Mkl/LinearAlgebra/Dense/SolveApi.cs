@@ -31,8 +31,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppV = allowDestroy && pV == null ? Buffers.Create(pA, lda, n) : Buffers.Create(pV, ldvec, n);
-			using var ppx = T.IsComplexType ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
+			using var ppV = allowDestroy && pV == null ? ArrayPoolBuffers.Create(pA, lda, n) : ArrayPoolBuffers.Create(pV, ldvec, n);
+			using var ppx = T.IsComplexType ? ArrayPoolBuffers.Create<T>(n * sizeof(T) / 2) : ArrayPoolBuffers.Create(px);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
 			func(MklMatrixLayout.ColMajor, pV == null ? MklVectorModeChar.Vector : MklVectorModeChar.NoVector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppx).Check(SolveMethodKind.Eigenvalue);
 			RealToComp(ppx, px, n);
@@ -64,9 +64,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppV = allowDestroy && pV == null ? Buffers.Create(pA, lda, n) : Buffers.Create(pV, ldvec, n);
-			using var ppLU = allowDestroy && pLU == null ? Buffers.Create(pB, ldb, n) : Buffers.Create(pLU, ldLU, n);
-			using var ppx = T.IsComplexType ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
+			using var ppV = allowDestroy && pV == null ? ArrayPoolBuffers.Create(pA, lda, n) : ArrayPoolBuffers.Create(pV, ldvec, n);
+			using var ppLU = allowDestroy && pLU == null ? ArrayPoolBuffers.Create(pB, ldb, n) : ArrayPoolBuffers.Create(pLU, ldLU, n);
+			using var ppx = T.IsComplexType ? ArrayPoolBuffers.Create<T>(n * sizeof(T) / 2) : ArrayPoolBuffers.Create(px);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppV, ppV.ld, n, n);
 			Storage.Api.PointerMemoryCopy2D(pB, ldb, ppLU, ppLU.ld, n, n);
 			func(MklMatrixLayout.ColMajor, type, vecOut is null ? MklVectorModeChar.NoVector : MklVectorModeChar.Vector, upper ? MklFillModeChar.Upper : MklFillModeChar.Lower, n, ppV, ppV.ld, ppLU, ppLU.ld, ppx).Check(SolveMethodKind.GeneralEigen);
@@ -110,7 +110,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (funcRe == null && funcIm == null)
 				return false;
-			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, n, n);
+			using var ppA = allowDestroy ? ArrayPoolBuffers.Create(pA, lda, n) : ArrayPoolBuffers.Create<T>(null, n, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, n, n);
 			MklLapackInfo info;
 			if (funcRe != null)
@@ -167,8 +167,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (funcRe == null && funcIm == null)
 				return false;
-			using var ppA = allowDestroy ? Buffers.Create<T>(pA, lda, n) : Buffers.Create<T>(null, n, n);
-			using var ppB = allowDestroy ? Buffers.Create<T>(pB, ldb, n) : Buffers.Create<T>(null, n, n);
+			using var ppA = allowDestroy ? ArrayPoolBuffers.Create<T>(pA, lda, n) : ArrayPoolBuffers.Create<T>(null, n, n);
+			using var ppB = allowDestroy ? ArrayPoolBuffers.Create<T>(pB, ldb, n) : ArrayPoolBuffers.Create<T>(null, n, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, n, n);
 			Storage.Api.PointerMemoryCopy2D(pB, ldb, ppB, ppB.ld, n, n);
 			MklLapackInfo info;
@@ -216,10 +216,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
+			using var ppA = allowDestroy ? ArrayPoolBuffers.Create(pA, lda, n) : ArrayPoolBuffers.Create<T>(null, m, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, m, n);
-			using var ppx = T.IsComplexType ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create(px);
-			using var pSurperb = T.IsComplexType ? Buffers.Create<T>(n * sizeof(T) / 2) : Buffers.Create<T>(n * sizeof(T));
+			using var ppx = T.IsComplexType ? ArrayPoolBuffers.Create<T>(n * sizeof(T) / 2) : ArrayPoolBuffers.Create(px);
+			using var pSurperb = T.IsComplexType ? ArrayPoolBuffers.Create<T>(n * sizeof(T) / 2) : ArrayPoolBuffers.Create<T>(n * sizeof(T));
 			func(MklMatrixLayout.ColMajor,
 				pU == pA ? MklSvdModeChar.Overwrite : fullU ? MklSvdModeChar.All : pU == null ? MklSvdModeChar.None : MklSvdModeChar.Store,
 				pV == pA ? MklSvdModeChar.Overwrite : fullV ? MklSvdModeChar.All : pV == null ? MklSvdModeChar.None : MklSvdModeChar.Store,
@@ -346,8 +346,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ipiv = Buffers.Create<MklInt>(n * sizeof(MklInt));
-			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, n, n);
+			using var ipiv = ArrayPoolBuffers.Create<MklInt>(n * sizeof(MklInt));
+			using var ppA = allowDestroy ? ArrayPoolBuffers.Create(pA, lda, n) : ArrayPoolBuffers.Create<T>(null, n, n);
 			func(MklMatrixLayout.ColMajor, n, nrhs, ppA, ppA.ld, ipiv, pB, ldb).Check(SolveMethodKind.LU);
 			return true;
 		}
@@ -387,7 +387,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (facFunc == null)
 				return false;
-			using var tau = Buffers.Create<T>(mn * sizeof(T));
+			using var tau = ArrayPoolBuffers.Create<T>(mn * sizeof(T));
 			facFunc(MklMatrixLayout.ColMajor, m, n, pA, lda, tau).Check(SolveMethodKind.QR);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, pQ, ldq, m, mn);
 			getQFunc(MklMatrixLayout.ColMajor, m, full ? m : mn, mn, pQ, ldq, tau).Check(SolveMethodKind.QR);
@@ -411,7 +411,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			};
 			if (func == null)
 				return false;
-			using var ppA = allowDestroy ? Buffers.Create(pA, lda, n) : Buffers.Create<T>(null, m, n);
+			using var ppA = allowDestroy ? ArrayPoolBuffers.Create(pA, lda, n) : ArrayPoolBuffers.Create<T>(null, m, n);
 			Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, m, n);
 			func(MklMatrixLayout.ColMajor, MklOperationChar.NoneTranspose, m, n, nrhs, ppA, ppA.ld, pB, ldb).Check(SolveMethodKind.QR);
 			return true;

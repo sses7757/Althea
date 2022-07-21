@@ -75,19 +75,15 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
 
-		void IStorage.Dispose(bool invokedByUser)
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualPureStorage<T, TP>)
+			if (this is not ReferencePureStorage<T, TP>)
 			{
 				Mem.Free(this.Pointer.Pointer);
 			}
 			this.Disposed = true;
 		}
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~PureStorage() => ((IStorage)this).Dispose(false);
 
 		/// <inheritdoc/>
 		public bool IsValid() => !this.Disposed && this.Pointer.IsValid();
@@ -288,6 +284,11 @@ namespace Althea.Storage
 		{
 			// do nothing
 		}
+
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualPureStorage() => this.Dispose(false);
 	}
 
 	/// <summary>

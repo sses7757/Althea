@@ -108,11 +108,11 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualMixedStorage<T, TP1, TP2>)
+			if (this is not ReferenceMixedStorage<T, TP1, TP2>)
 			{
 				Mem.Free(this.Pointer1.Pointer);
 				Mem.Free(this.Pointer2.Pointer);
@@ -120,13 +120,6 @@ namespace Althea.Storage
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~MixedStorage() => this.Dispose();
-		
 		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid());
@@ -361,6 +354,11 @@ namespace Althea.Storage
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
+		
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualMixedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>
@@ -531,11 +529,11 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualMixedStorage<T, TP1, TP2, TP3>)
+			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3>)
 			{
 				Mem.Free(this.Pointer1.Pointer);
 				Mem.Free(this.Pointer2.Pointer);
@@ -544,13 +542,6 @@ namespace Althea.Storage
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~MixedStorage() => this.Dispose();
-		
 		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid());
@@ -806,6 +797,11 @@ namespace Althea.Storage
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
+		
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualMixedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>
@@ -998,11 +994,11 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4>)
+			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>)
 			{
 				Mem.Free(this.Pointer1.Pointer);
 				Mem.Free(this.Pointer2.Pointer);
@@ -1012,13 +1008,6 @@ namespace Althea.Storage
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~MixedStorage() => this.Dispose();
-		
 		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid());
@@ -1295,6 +1284,11 @@ namespace Althea.Storage
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
+		
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualMixedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>
@@ -1509,11 +1503,11 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>)
+			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>)
 			{
 				Mem.Free(this.Pointer1.Pointer);
 				Mem.Free(this.Pointer2.Pointer);
@@ -1524,13 +1518,6 @@ namespace Althea.Storage
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~MixedStorage() => this.Dispose();
-		
 		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid());
@@ -1828,6 +1815,11 @@ namespace Althea.Storage
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
+		
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualMixedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>
@@ -2064,11 +2056,11 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>)
+			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>)
 			{
 				Mem.Free(this.Pointer1.Pointer);
 				Mem.Free(this.Pointer2.Pointer);
@@ -2080,13 +2072,6 @@ namespace Althea.Storage
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~MixedStorage() => this.Dispose();
-		
 		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid());
@@ -2405,6 +2390,11 @@ namespace Althea.Storage
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
+		
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualMixedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>
@@ -2663,11 +2653,11 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>)
+			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>)
 			{
 				Mem.Free(this.Pointer1.Pointer);
 				Mem.Free(this.Pointer2.Pointer);
@@ -2680,13 +2670,6 @@ namespace Althea.Storage
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~MixedStorage() => this.Dispose();
-		
 		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid());
@@ -3026,6 +3009,11 @@ namespace Althea.Storage
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
+		
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualMixedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>
@@ -3306,11 +3294,11 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>)
+			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>)
 			{
 				Mem.Free(this.Pointer1.Pointer);
 				Mem.Free(this.Pointer2.Pointer);
@@ -3324,13 +3312,6 @@ namespace Althea.Storage
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~MixedStorage() => this.Dispose();
-		
 		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid());
@@ -3691,6 +3672,11 @@ namespace Althea.Storage
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
+		
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualMixedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>
@@ -3993,11 +3979,11 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public bool Disposed { get; private set; } = false;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void Dispose()
+		
+		/// <inheritdoc/>
+		public virtual void Dispose(bool invokedByUser)
 		{
-			if (this is ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>)
+			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>)
 			{
 				Mem.Free(this.Pointer1.Pointer);
 				Mem.Free(this.Pointer2.Pointer);
@@ -4012,13 +3998,6 @@ namespace Althea.Storage
 			this.Disposed = true;
 		}
 
-		void IStorage.Dispose(bool invokedByUser) => this.Dispose();
-
-		/// <summary>
-		/// The deconstructor invoked by GC
-		/// </summary>
-		~MixedStorage() => this.Dispose();
-		
 		/// <inheritdoc/>
 		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
 		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid() || this.Pointer9.IsValid());
@@ -4400,6 +4379,11 @@ namespace Althea.Storage
 			if (this.Length == 0)
 				throw new ArgumentException(ParameterError.CannotAllZero);
 		}
+		
+		/// <summary>
+		/// The deconstructor to be invoked by GC
+		/// </summary>
+		~ActualMixedStorage() => this.Dispose(false);
 	}
 
 	/// <summary>

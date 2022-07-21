@@ -386,7 +386,7 @@ public class Api : Althea.Transformer.IAbstractApi
 		if (!int.IsPow2(n))
 			throw new NotSupportedException();
 
-		using var buffer = Storage.Buffers.Create<Complex<T>>(n * T.Size * 2);
+		using var buffer = Storage.ArrayPoolBuffers.Create<Complex<T>>(n * T.Size * 2);
 		fixed (Complex<T>* src = array)
 		fixed (T* dst = output)
 		{

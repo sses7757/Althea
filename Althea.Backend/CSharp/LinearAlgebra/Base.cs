@@ -822,7 +822,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		{
 			pV = pA; ldv = ld;
 		}
-		using var buffer = Buffers.Create<T>((nn + (pV == null ? nn * nn : 0)) * sizeof(T));
+		using var buffer = ArrayPoolBuffers.Create<T>((nn + (pV == null ? nn * nn : 0)) * sizeof(T));
 		if (pV == null)
 		{
 			pV = (T*)buffer + nn; ldv = nn;
@@ -867,7 +867,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		if (pU == null)
 			ldv = nn;
 		int info;
-		using var buffer = Buffers.Create<T>((pU == null ? 3 : T.IsComplexType ? 2 : 0) * nn * sizeof(T));
+		using var buffer = ArrayPoolBuffers.Create<T>((pU == null ? 3 : T.IsComplexType ? 2 : 0) * nn * sizeof(T));
 		SpanMatrix<T> matA = new(new(pA, ld * nn), ld);
 		SpanMatrix<T> matU = new(new(pU == null ? (T*)buffer : pU, ldv * nn), ldv);
 		MatrixSolvers.MatrixToHessenberg(matA, matU);
@@ -907,7 +907,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 
 		SpanMatrix<T> matA = new(new(pA, ld * nn), ld),
 					  matU = new(new(pU, ldvec * nn), ldvec);
-		using var buffer = T.IsComplexType ? Buffers.Create<T>(3 * nn * sizeof(T)) : default;
+		using var buffer = T.IsComplexType ? ArrayPoolBuffers.Create<T>(3 * nn * sizeof(T)) : default;
 		MatrixSolvers.ReorderSchurForm<T, TInd>(new(ps, nn), matA, matU, new(px, nn), new(pxIm, pxIm == null ? 0 : nn), new((T*)buffer, (T*)buffer == null ? 0 : 3 * nn));
 		return true;
 	}
@@ -920,7 +920,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		if (!SchurCheck(n, A, lda, rightVec, ldvr, valsOut, valsOutImag, out T* pA, out T* pU, out T* px, out T* pxIm, out int nn, out int ld, out int ldv))
 			return false;
 
-		using var buffer = Buffers.Create<T>(((allowDestroy ? 0 : nn * nn) + (pU == null ? 0 : 9 * nn)) * sizeof(T));
+		using var buffer = ArrayPoolBuffers.Create<T>(((allowDestroy ? 0 : nn * nn) + (pU == null ? 0 : 9 * nn)) * sizeof(T));
 		T* temp = buffer;
 		if (!allowDestroy)
 		{
@@ -947,7 +947,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		if (!GetPointer(B, n, nrhs, ldb, out T* pB, out _, out int nr, out int ldr))
 			return false;
 
-		using var buffer = Buffers.Create<T>(((allowDestroy ? 0 : nn * nn) + nn) * sizeof(T));
+		using var buffer = ArrayPoolBuffers.Create<T>(((allowDestroy ? 0 : nn * nn) + nn) * sizeof(T));
 		T* temp = buffer;
 		if (!allowDestroy)
 		{
@@ -970,7 +970,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		if (!GetPointer(Q, m, full ? m : Math.Min(m, n), ldq, out T* pQ, out _, out _, out int ldqq))
 			return false;
 
-		using var buffer = Buffers.Create<T>(nn * sizeof(T));
+		using var buffer = ArrayPoolBuffers.Create<T>(nn * sizeof(T));
 		SpanMatrix<T> matA = new(new(pA, ldaa * nn), ldaa),
 					  matQ = new(new(pQ, ldqq * nn), ldqq);
 		MatrixSolvers.QrFactorize(matA, new(buffer, nn));
@@ -990,7 +990,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		if (!GetPointer(B, n, nrhs, ldb, out T* pB, out _, out int nr, out int ldr))
 			return false;
 
-		using var buffer = Buffers.Create<T>(((allowDestroy ? 0 : mm * nn) + mm) * sizeof(T));
+		using var buffer = ArrayPoolBuffers.Create<T>(((allowDestroy ? 0 : mm * nn) + mm) * sizeof(T));
 		T* temp = buffer;
 		if (!allowDestroy)
 		{
