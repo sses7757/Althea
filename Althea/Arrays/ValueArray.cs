@@ -45,7 +45,8 @@ namespace Althea.Array
 		/// </summary>
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage"/></typeparam>
 		/// <param name="storage">The storage to be disposed</param>
-		public static void SafeDispose<TS>(this TS? storage) where TS : class, IStorage
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		public static void SafeDispose<TS>(this TS? storage, bool invokedByUser = true) where TS : class, IStorage
 		{
 			if (storage is null || storage.Disposed)
 				return;
@@ -58,12 +59,12 @@ namespace Althea.Array
 					if (refCount.count == 0)
 					{
 						ReferenceCountings.Remove(storageRoot);
-						storageRoot.Dispose();
+						storageRoot.Dispose(invokedByUser);
 					}
 				}
 				else
 				{
-					storage.Dispose();
+					storage.Dispose(invokedByUser);
 				}
 			}
 		}

@@ -50,7 +50,7 @@ namespace Althea.Backend.CSharp.Storage
 			valid = pointer.IsValid();
 			if (!valid || !CheckType<TP>())
 				return false;
-			var ptr = pointer.FromGeneric();
+			var ptr = pointer.FromGenericCpu();
 			Marshal.FreeHGlobal(ptr.Pointer);
 			return true;
 		}
@@ -60,7 +60,7 @@ namespace Althea.Backend.CSharp.Storage
 		{
 			if (!CheckType<TP>())
 				return false;
-			var span = pointer.Pointer.FromGeneric().AsSpan<UnsignedInt8, TP>(pointer);
+			var span = pointer.Pointer.FromGenericCpu().AsSpan<UnsignedInt8, TP>(pointer);
 			span.Fill(value);
 			return true;
 		}
@@ -72,7 +72,7 @@ namespace Althea.Backend.CSharp.Storage
 		{
 			if (!CheckType<TP>())
 				return false;
-			var span = pointer.Pointer.FromGeneric().AsSpan<T, TP>(pointer);
+			var span = pointer.Pointer.FromGenericCpu().AsSpan<T, TP>(pointer);
 			span.Fill(value);
 			return true;
 		}
@@ -86,8 +86,8 @@ namespace Althea.Backend.CSharp.Storage
 			actualCopied = 0;
 			if (!CheckType<TP1>() || !CheckType<TP2>())
 				return false;
-			var srcSpan = source.Pointer.FromGeneric().AsSpan<UnsignedInt8, TP1>(source);
-			var dstSpan = destination.Pointer.FromGeneric().AsSpan<UnsignedInt8, TP2>(destination);
+			var srcSpan = source.Pointer.FromGenericCpu().AsSpan<UnsignedInt8, TP1>(source);
+			var dstSpan = destination.Pointer.FromGenericCpu().AsSpan<UnsignedInt8, TP2>(destination);
 			int copy = Math.Min(srcSpan.Length, dstSpan.Length);
 			srcSpan[..copy].CopyTo(dstSpan[..copy]);
 			actualCopied = copy;
@@ -97,11 +97,10 @@ namespace Althea.Backend.CSharp.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static unsafe void MemoryCopy2D(void* srcPtr, void* dstPtr, long srcLD, long dstLD, long width, long height)
 		{
-			uint h = (uint)height;
 			byte* src = (byte*)srcPtr, dst = (byte*)dstPtr, end = src + srcLD * width;
 			for (; src < end; src += srcLD, dst += dstLD)
 			{
-				Unsafe.CopyBlockUnaligned(dst, src, h);
+				Buffer.MemoryCopy(src, dst, height, height);
 			}
 		}
 
@@ -117,7 +116,7 @@ namespace Althea.Backend.CSharp.Storage
 			copyWidth = Math.Min((source.LengthInBytes + (sourceLD - height)) / sourceLD, (destination.LengthInBytes + (destinationLD - height)) / destinationLD);
 			copyWidth = Math.Min(copyWidth, width);
 			long srcOff = source.OffsetInBytes, dstOff = destination.OffsetInBytes;
-			CpuMemoryPointer src = source.Pointer.FromGeneric(), dst = destination.Pointer.FromGeneric();
+			CpuMemoryPointer src = source.Pointer.FromGenericCpu(), dst = destination.Pointer.FromGenericCpu();
 			unsafe
 			{
 				MemoryCopy2D(src.NativePointer(srcOff), dst.NativePointer(dstOff), sourceLD, destinationLD, width, height);
@@ -147,7 +146,7 @@ namespace Althea.Backend.CSharp.Storage
 			actualCopied = Math.Min((source.LengthInBytes / T.Size - 1) / strideSource + 1, (destination.LengthInBytes / T.Size - 1) / strideDestination + 1);
 			unsafe
 			{
-				StridedCopy((T*)source.Pointer.FromGeneric().OffsetPointer(source.OffsetInBytes), (T*)destination.Pointer.FromGeneric().OffsetPointer(destination.OffsetInBytes), (int)strideSource, (int)strideDestination, (int)actualCopied);
+				StridedCopy((T*)source.Pointer.FromGenericCpu().OffsetPointer(source.OffsetInBytes), (T*)destination.Pointer.FromGenericCpu().OffsetPointer(destination.OffsetInBytes), (int)strideSource, (int)strideDestination, (int)actualCopied);
 			}
 			return true;
 		}

@@ -62,7 +62,7 @@ namespace Althea.Array
 
 		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => SpanHelper.CreateReadOnlySpan(in this.values, 1);
 		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => SpanHelper.CreateReadOnlySpan(in this.indices, 1);
-		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => default;
+		ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => default;
 
 		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.indices?.IsValid() ?? false);
 
@@ -188,10 +188,24 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void Dispose()
 		{
-			this.values.SafeDispose();
-			this.indices.SafeDispose();
+			this.Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, actually unmanaged resources held by this object.
+		/// </summary>
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected virtual void Dispose(bool invokedByUser)
+		{
+			this.values.SafeDispose(invokedByUser);
+			this.indices.SafeDispose(invokedByUser);
+		}
+
+		/// <summary>
+		/// Deconstructor to be invoked by GC
+		/// </summary>
+		~SparseTensor() => this.Dispose(false);
 
 		/// <summary>
 		/// Create an empty sparse tensor.

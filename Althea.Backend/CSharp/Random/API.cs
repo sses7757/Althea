@@ -33,7 +33,7 @@ namespace Althea.Backend.CSharp.Random
 
 		#region operations
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T, TS, TDist>(TS storage!!, TDist distribution, out IntPtr pointer, out int length, out T offset, out T scale)
+		private static unsafe bool Check<T, TS, TDist>(TS storage!!, in TDist distribution, out IntPtr pointer, out int length, out T offset, out T scale)
 			where T : unmanaged, IBaseNumber<T>
 			where TS : class, IStorage<T, TS>
 			where TDist : struct, IRandomDistribution<TDist>
@@ -118,7 +118,7 @@ namespace Althea.Backend.CSharp.Random
 		}
 
 		/// <inheritdoc/>
-		public bool FillWithRandom<T, TS, TDist>(TS storage, TDist distribution) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>
+		public bool FillWithRandom<T, TS, TDist>(TS storage, in TDist distribution) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>
 		{
 			if (!Check(storage, distribution, out var ptr, out int len, out T offset, out T scale))
 				return false;
@@ -126,9 +126,9 @@ namespace Althea.Backend.CSharp.Random
 			return true;
 		}
 
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, TS1, TS2, TDist>(TS1 storage1, TS2 storage2, TDist distribution) => false;
-		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, TS1, TS2, TS3, TDist>(TS1 storage1, TS2 storage2, TS3 storage3, TDist distribution) => false;
-		bool Althea.Random.IAbstractApi.FillWithRandom<TDist>(TDist distribution, params IStorage[] storages) => false;
+		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, TS1, TS2, TDist>(TS1 storage1, TS2 storage2, in TDist distribution) => false;
+		bool Althea.Random.IAbstractApi.FillWithRandom<T1, T2, T3, TS1, TS2, TS3, TDist>(TS1 storage1, TS2 storage2, TS3 storage3, in TDist distribution) => false;
+		bool Althea.Random.IAbstractApi.FillWithRandom<TDist>(ReadOnlySpan<IStorage> storages, in TDist distribution) => false;
 		#endregion
 	}
 }

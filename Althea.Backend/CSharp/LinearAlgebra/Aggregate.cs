@@ -8,6 +8,8 @@ using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
 
+using static Althea.Backend.Storage.CpuMemoryPointerChecker;
+
 
 namespace Althea.Backend.CSharp.LinearAlgebra
 {
@@ -642,8 +644,8 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				Vector<U> leftA = Vector<U>.Zero, leftB = Vector<U>.Zero;
 				// the following two lines shall be unrolled by JIT at runtime
-				Unsafe.CopyBlockUnaligned(&leftA, x + offset, (uint)(lengthLeft * sizeof(T)));
-				Unsafe.CopyBlockUnaligned(&leftB, y + offset, (uint)(lengthLeft * sizeof(T)));
+				Buffer.MemoryCopy( x + offset, &leftA,lengthLeft * sizeof(T), lengthLeft * sizeof(T));
+				Buffer.MemoryCopy(y + offset, &leftB, lengthLeft * sizeof(T), lengthLeft * sizeof(T));
 				dotLeft = Vector.Dot(leftA, leftB);
 				// this implementation has some performance loss compare to the direct dot
 				// but it is suitable for all generic type T that Vector<U> supports

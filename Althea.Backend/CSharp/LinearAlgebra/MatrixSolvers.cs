@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 
 using Althea.Helpers;
 
+using static Althea.Backend.Storage.CpuMemoryPointerChecker;
+
 
 namespace Althea.Backend.CSharp.LinearAlgebra;
 
@@ -749,7 +751,7 @@ public static unsafe class MatrixSolvers
 				Api.VectorsBinary<T, Api.B_AddScaled>(temp, 1, A + ld, 1, temp, 1, T.Conjugate(h3), n);
 				Api.VectorModify<T, Api.U_MultiplyScalar>(A + ld, 1, A + ld, 1, n, h2);
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + ld, 1, A, 1, A + ld, 1, h3, n);
-				Unsafe.CopyBlockUnaligned(A, temp, (uint)(n * sizeof(T)));
+				Buffer.MemoryCopy(temp, A, n * sizeof(T), n * sizeof(T));
 			}
 			else
 			{
@@ -822,8 +824,8 @@ public static unsafe class MatrixSolvers
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + 2 * ld, 1, A, 1, A + 2 * ld, 1, h5, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + 2 * ld, 1, A + ld, 1, A + 2 * ld, 1, h6, n);
 
-				Unsafe.CopyBlockUnaligned(A, temp1, (uint)(n * sizeof(T)));
-				Unsafe.CopyBlockUnaligned(A + ld, temp2, (uint)(n * sizeof(T)));
+				Buffer.MemoryCopy(temp1, A, n * sizeof(T), n * sizeof(T));
+				Buffer.MemoryCopy(temp2, A + ld, n * sizeof(T), n * sizeof(T));
 			}
 			else
 			{
@@ -943,8 +945,8 @@ public static unsafe class MatrixSolvers
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + 2 * ld, 1, A, 1, A + 2 * ld, 1, q7, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(A + 2 * ld, 1, A + ld, 1, A + 2 * ld, 1, q8, n);
 
-				Unsafe.CopyBlockUnaligned(A, temp1, (uint)(n * sizeof(T)));
-				Unsafe.CopyBlockUnaligned(A + ld, temp2, (uint)(n * sizeof(T)));
+				Buffer.MemoryCopy(temp1, A, n * sizeof(T), n * sizeof(T));
+				Buffer.MemoryCopy(temp2, A + ld, n * sizeof(T), n * sizeof(T));
 			}
 			else
 			{
@@ -1084,9 +1086,9 @@ public static unsafe class MatrixSolvers
 				Api.VectorsBinary<T, Api.B_AddScaled>(AAAA, 1, AA, 1, AAAA, 1, qE, n);
 				Api.VectorsBinary<T, Api.B_AddScaled>(AAAA, 1, AAA, 1, AAAA, 1, qF, n);
 
-				Unsafe.CopyBlockUnaligned(A, temp1, (uint)(n * sizeof(T)));
-				Unsafe.CopyBlockUnaligned(AA, temp2, (uint)(n * sizeof(T)));
-				Unsafe.CopyBlockUnaligned(AAA, temp3, (uint)(n * sizeof(T)));
+				Buffer.MemoryCopy(temp1, A, n * sizeof(T), n * sizeof(T));
+				Buffer.MemoryCopy(temp2, AA, n * sizeof(T), n * sizeof(T));
+				Buffer.MemoryCopy(temp3, AAA, n * sizeof(T), n * sizeof(T));
 			}
 			else
 			{
@@ -1274,7 +1276,7 @@ public static unsafe class MatrixSolvers
 				int len = m - i;
 				// get u from A's column i and copy to work space
 				T* u = work, Aii = A + (i + i * ld);
-				Unsafe.CopyBlockUnaligned(work, Aii, (uint)(len * sizeof(T)));
+				Buffer.MemoryCopy(Aii, work, len * sizeof(T), len * sizeof(T));
 				// prepare matrix A[i.., i..]
 				if (m > n && i == mn)
 				{   // H_n for full-sized Q, all fill with identity matrix
@@ -1630,7 +1632,7 @@ public static unsafe class MatrixSolvers
 				// get Householder reflector and store in A's column i
 				// Householder reflector u is generated from A[i+1..,i]
 				T* u = ldq == 0 ? Q + 1 : Q + (1 + i * ldq);
-				Unsafe.CopyBlockUnaligned(u, A + (i + 1 + i * lda), (uint)(len * sizeof(T)));
+				Buffer.MemoryCopy(A + (i + 1 + i * lda), u,  len * sizeof(T), len * sizeof(T));
 				T normSqrU = NormSq(u, len), normU = T.Sqrt(normSqrU);
 				normU = T.CopySign(normU, u[0]);
 				// get tau and
@@ -2108,9 +2110,9 @@ public static unsafe class MatrixSolvers
 					if (k != 0)
 					{
 						if (noComplex)
-							Unsafe.CopyBlockUnaligned(V + ((zeroColCount + k) * ldv), A + (i * lda), (uint)(k * sizeof(T)));
+							Buffer.MemoryCopy(A + (i * lda), V + ((zeroColCount + k) * ldv), k * sizeof(T), k * sizeof(T));
 						else
-							Unsafe.CopyBlockUnaligned(V + ((zeroColCount + k) * ldv), A + ((i + 1) * lda), (uint)((k + 1) * sizeof(T)));
+							Buffer.MemoryCopy(A + ((i + 1) * lda), V + ((zeroColCount + k) * ldv), (k + 1) * sizeof(T), (k + 1) * sizeof(T));
 					}
 					zeroColCount++;
 				}
@@ -2123,7 +2125,7 @@ public static unsafe class MatrixSolvers
 						zeroColCount *= 2;
 					for (int i = 0; i < zeroColCount; i++)
 					{
-						Unsafe.CopyBlockUnaligned(V + (i * ldv), Q + (i * ldq), (uint)(n * sizeof(T)));
+						Buffer.MemoryCopy(Q + (i * ldq), V + (i * ldv),  n * sizeof(T), n * sizeof(T));
 					}
 					for (int i = zeroColCount; i < l; i++)
 					{
@@ -2172,9 +2174,9 @@ public static unsafe class MatrixSolvers
 					temp[0] = alpha[0] * Vre[0];
 					if (!noComplex)
 						tempIm[0] = alphaIm[0] * Vre[0];
-					Unsafe.CopyBlockUnaligned(Vre, temp, (uint)(kk * sizeof(T)));
+					Buffer.MemoryCopy(temp, Vre, kk * sizeof(T), kk * sizeof(T));
 					if (!noComplex)
-						Unsafe.CopyBlockUnaligned(Vim, tempIm, (uint)(kk * sizeof(T)));
+						Buffer.MemoryCopy(tempIm, Vim, kk * sizeof(T), kk * sizeof(T));
 				}
 				for (int j = kk - 1; j > 0; j--)
 				{
@@ -2213,7 +2215,7 @@ public static unsafe class MatrixSolvers
 				for (int i = 0; i < zeroColCount; i++)
 				{
 					MatMulVec(Q, ldq, V + (k + i) * ldv, temp, n, k + i + 1);
-					Unsafe.CopyBlockUnaligned(V + (k + i) * ldv, temp, (uint)(n * sizeof(T)));
+					Buffer.MemoryCopy(temp, V + (k + i) * ldv, n * sizeof(T), n * sizeof(T));
 				}
 				for (int i = zeroColCount + k; i < l; i++)
 				{

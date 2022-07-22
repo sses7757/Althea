@@ -247,12 +247,12 @@ namespace Althea.Array
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
-		private readonly FixedBuffer_128<TInd> blockSize;
+		private readonly FixedBuffer_128<long> blockSize;
 
-		private readonly int blockLength;
+		private readonly long blockLength;
 
 		/// <inheritdoc/>
-		public ReadOnlySpan<TInd> BlockSize => this.blockSize.AsSpan(this.Rank);
+		public ReadOnlySpan<long> BlockSize => this.blockSize.AsSpan(this.Rank);
 
 		private static readonly SparseFormat format = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, SparseFormat.Major.Column);
 
@@ -275,16 +275,14 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoordinateBlockSparseTensor(ReadOnlySpan<long> size, ReadOnlySpan<TInd> blockSize, TS values!!, TSInd indices!!, T defaultValue = default, long nnz = -1, ReadOnlySpan<char> labels = default) : base(size, values, indices, defaultValue, nnz, labels)
+		public CoordinateBlockSparseTensor(ReadOnlySpan<long> size, ReadOnlySpan<long> blockSize, TS values!!, TSInd indices!!, T defaultValue = default, long nnz = -1, ReadOnlySpan<char> labels = default) : base(size, values, indices, defaultValue, nnz, labels)
 		{
 			try
 			{
 				if (blockSize.Length != this.Rank)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(blockSize));
 				this.blockSize.CopyFromSpan(blockSize);
-				Span<int> bs = stackalloc int[this.Rank];
-				blockSize.CopyTo(bs, static a => a.AsInt32());
-				this.blockLength = bs.Prod();
+				this.blockLength = blockSize.Prod();
 				if (values.Length != indices.Length * this.blockLength)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
 				if (this.NStored % this.blockLength != 0)
@@ -328,8 +326,9 @@ namespace Althea.Array
 			long nnz = this.NStored;
 			if (nnz + this.blockLength > this.MaxStored)
 				return false;
-			using var temp = this.blockLength.CheckStackLimit<T>();
-			Span<T> values = temp.IsEmpty ? stackalloc T[this.blockLength] : temp.Data;
+			int bl = (int)this.blockLength;
+			using var temp = bl.CheckStackLimit<T>();
+			Span<T> values = temp.IsEmpty ? stackalloc T[bl] : temp.Data;
 			values.Fill(this.DefaultValue); values[(int)(offsetVal % this.blockLength)] = value;
 			this.Storage.TryInsert(offsetVal, values);
 			this.IndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (offsetInd * this.blockLength).As<TInd>() });
@@ -452,10 +451,8 @@ namespace Althea.Array
 			Span<TInd> indices = tempInd.IsEmpty ? stackalloc TInd[nnz] : tempInd.Data;
 			this.IndexStorage.ToManaged(indices);
 
-			Span<long> bs = stackalloc long[this.Rank];
-			this.BlockSize.CopyTo(bs, static b => b.AsInt64());
 			Span<long> bsp = stackalloc long[this.Rank + 1];
-			bs.AccumulateProd(bsp);
+			this.BlockSize.AccumulateProd(bsp);
 			Span<long> position = stackalloc long[this.Rank];
 			StringBuilder sb = new();
 			for (int i = 0; i < nnz; i++)
@@ -464,10 +461,10 @@ namespace Althea.Array
 					position[k] = (i % bsp[k]) / bsp[k - 1];
 				sb.Append("Tensor[");
 				for (int k = 0; k < this.Rank; k++)
-					sb.Append($"{position[k] * bs[k]}..{(position[k] + 1) * bs[k]}, ");
+					sb.Append($"{position[k] * this.blockSize[k]}..{(position[k] + 1) * this.blockSize[k]}, ");
 				sb.Remove(sb.Length - 2, 2);
 				sb.AppendLine("] = ");
-				using var block = new DenseTensor<T, TS>(this.Storage + i * this.blockLength, bs);
+				using var block = new DenseTensor<T, TS>(this.Storage + i * this.blockLength, this.BlockSize);
 				sb.AppendLine(block.Print(ps));
 			}
 			if (nnz < this.NStored)
@@ -477,7 +474,7 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(int Format, T Default, long[] Length, TInd[] BlockSize, long NonZeros, TS Values, TSInd Indices);
+		private record struct Repr(int Format, T Default, long[] Length, long[] BlockSize, long NonZeros, TS Values, TSInd Indices);
 
 		private CoordinateBlockSparseTensor(Repr repr) : this(repr.Length, repr.BlockSize, repr.Values, repr.Indices, repr.Default, repr.NonZeros) { }
 
@@ -507,7 +504,7 @@ namespace Althea.Array
 				return false;
 			var size = wrapper.Size;
 			var blockSize = wrapper.BlockSize;
-			long blockLength = blockSize.Prod().AsInt64();
+			long blockLength = blockSize.Prod();
 			var indices = wrapper.IndexStorages[0];
 			var values = wrapper.ValueStorages[0];
 			if (values.Length != indices.Length * blockLength)

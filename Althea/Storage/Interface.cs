@@ -189,14 +189,14 @@ namespace Althea.Storage
 				throw;
 			}
 		}
-		
+
 		/// <summary>
 		/// If this storage have enough space after the presenting length, insert the <paramref name="values"/> to the <paramref name="offset"/> position.
 		/// </summary>
 		/// <param name="offset">The starting offset in <typeparamref name="T"/> of the <paramref name="values"/> insertion</param>
 		/// <param name="values">The values to be inserted</param>
 		/// <returns>True if the <paramref name="values"/> are successfully inserted, false otherwise.</returns>
-		virtual bool TryInsert(long offset, ReadOnlySpan<T> values)
+		public virtual bool TryInsert(long offset, ReadOnlySpan<T> values)
 		{
 			if (values.IsEmpty)
 				return false;

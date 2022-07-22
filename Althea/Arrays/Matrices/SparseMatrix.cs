@@ -49,7 +49,7 @@ namespace Althea.Array
 		ReadOnlySpan<long> IArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.rows, 2);
 		ReadOnlySpan<TS> ISparseArray<T, TInd, TS, TSInd>.ValueStorages => SpanHelper.CreateReadOnlySpan(in this.values, 1);
 		ReadOnlySpan<TSInd> ISparseArray<T, TInd, TS, TSInd>.IndexStorages => SpanHelper.CreateReadOnlySpan(in this.rowIndices, 2);
-		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => default;
+		ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => default;
 
 		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.rowIndices?.IsValid() ?? false) && (this.colIndices?.IsValid() ?? false);
 
@@ -129,11 +129,25 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void Dispose()
 		{
-			this.values.SafeDispose();
-			this.rowIndices.SafeDispose();
-			this.colIndices.SafeDispose();
+			this.Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, actually unmanaged resources held by this object.
+		/// </summary>
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected virtual void Dispose(bool invokedByUser)
+		{
+			this.values.SafeDispose(invokedByUser);
+			this.rowIndices.SafeDispose(invokedByUser);
+			this.colIndices.SafeDispose(invokedByUser);
+		}
+
+		/// <summary>
+		/// Deconstructor to be invoked by GC
+		/// </summary>
+		~SparseMatrix() => this.Dispose(false);
 
 		/// <summary>
 		/// Create an empty sparse matrix.

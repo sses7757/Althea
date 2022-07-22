@@ -1,11 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
 
 using Althea.Array;
-using Althea.Backend.CSharp.Storage;
 using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
 using Althea.Linq;
+
+using static Althea.Backend.Storage.CpuMemoryPointerChecker;
 
 using NM = Althea.Backend.Mkl.LinearAlgebra.Sparse.NativeMethods;
 using NMC = Althea.Backend.Mkl.LinearAlgebra.Sparse.CustomNativeMethods;
@@ -45,82 +46,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		private readonly Dictionary<(object matrix, MatrixOp trans), IntPtr> svCache = new();
 		private readonly Dictionary<(object matrix, MatrixOp trans, long cols), IntPtr> mmCache = new();
 		private readonly Dictionary<(object matrix, MatrixOp trans, long cols), IntPtr> smCache = new();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-		{
-			pointer = default; length = 0;
-			if (s is null || !s.IsValid())
-				throw new ArgumentNullException(sName);
-			if (s is not PureStorage<T, CpuMemoryPointer> ps)
-				return false; // not support
-			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
-			if (pointer == default)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
-			length = ps.Length;
-			if (length > MklInt.MaxValue || length < 0)
-				return false;
-			return true;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TInd, TS, TSInd>(TS s, TSInd sInd, out T* pointer, out TInd* pointerInd, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("sInd")] string? sIndName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
-		{
-			pointer = default; pointerInd = default; length = 0;
-			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt))
-				return false;
-			if (s is null || !s.IsValid())
-				throw new ArgumentNullException(sName);
-			if (sInd is null || !sInd.IsValid())
-				throw new ArgumentNullException(sIndName);
-			if (s is not PureStorage<T, CpuMemoryPointer> ps || sInd is not PureStorage<TInd, CpuMemoryPointer> psInd)
-				return false; // not support
-			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
-			if (pointer == default)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
-			pointerInd = psInd.Pointer.Pointer.UnmangedPointer<TInd>(psInd.Pointer.OffsetInBytes);
-			if (pointerInd == default)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, sIndName);
-			length = ps.Length;
-			if (length > MklInt.MaxValue || length < 0)
-				return false;
-			if (psInd.Length != length)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, sIndName);
-			return true;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool GetPointer<T, TInd, TS, TSInd>(ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
-		{
-			pointer = default; pointerRow = pointerCol = default; nnz = 0;
-			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt))
-				return false;
-			if (matrix is null)
-				throw new ArgumentNullException(matrixName);
-			if (matrix.Size.Length != 2 || matrix.Size[0] <= 0 || matrix.Size[1] <= 0)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, matrixName);
-			if ((matrix.Format.Class & (SparseFormat.Type.Coordinated | SparseFormat.Type.Compressed)) == 0 ||
-				(matrix.Format.BlockType & (SparseFormat.Blocking.Element | SparseFormat.Blocking.Simple)) == 0 ||
-				(matrix.Format.MajorType & (SparseFormat.Major.Column | SparseFormat.Major.Row)) == 0)
-				return false;
-			if (matrix.Format.BlockType == SparseFormat.Blocking.Simple &&
-				(matrix.BlockSize.Length != 2 || matrix.BlockSize[0] <= TInd.Zero || matrix.BlockSize[1] <= TInd.Zero))
-				throw new ArgumentException(Resources.ParameterError.WrongSize, matrixName);
-			if (matrix.ValueStorages.Length != 1 || matrix.ValueStorages[0] is not PureStorage<T, CpuMemoryPointer> ps)
-				return false;
-			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
-			if (pointer == default)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, matrixName);
-			nnz = ps.Length;
-			if (matrix.IndexStorages.Length != 2 || matrix.IndexStorages[0] is not PureStorage<TInd, CpuMemoryPointer> psRow || matrix.IndexStorages[1] is not PureStorage<TInd, CpuMemoryPointer> psCol)
-				return false;
-			pointerRow = psRow.Pointer.Pointer.UnmangedPointer<TInd>(psRow.Pointer.OffsetInBytes);
-			pointerCol = psCol.Pointer.Pointer.UnmangedPointer<TInd>(psCol.Pointer.OffsetInBytes);
-			if (pointerRow == null || pointerCol == null)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, matrixName);
-			return true;
-		}
-
 		#endregion
 
 		#region vector conversion
@@ -387,7 +312,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				return false; // not supported by MKL
 			if (target.Size.Length is not 0 and not 2)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));
-			if (target.Format.BlockType == SparseFormat.Blocking.Simple && (target.BlockSize.Length != 2 || target.BlockSize[0] <= TInd2.Zero || target.BlockSize[1] <= TInd2.Zero))
+			if (target.Format.BlockType == SparseFormat.Blocking.Simple && (target.BlockSize.Length != 2 || target.BlockSize[0] <= 0 || target.BlockSize[1] <= 0))
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));
 			if (target.Format.BlockType == SparseFormat.Blocking.Simple && target.BlockSize[0] != target.BlockSize[1])
 				return false; // not supported by MKL
@@ -401,7 +326,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			if (targetCsr)
 				NM.mkl_sparse_convert_csr(handleSrc, targetRow ? MatrixOp.None : MatrixOp.Trans, out handleDst).Check();
 			else
-				NM.mkl_sparse_convert_bsr(handleSrc, target.BlockSize[0].AsInt64(), targetRow ? MatrixMajor.Row : MatrixMajor.Column, targetRow ? MatrixOp.None : MatrixOp.Trans, out handleDst).Check();
+				NM.mkl_sparse_convert_bsr(handleSrc, target.BlockSize[0], targetRow ? MatrixMajor.Row : MatrixMajor.Column, targetRow ? MatrixOp.None : MatrixOp.Trans, out handleDst).Check();
 			using var dst = new SparseMatrixHandle(handleDst, targetCsr ? SparseFormat.MatrixCsrFormat : SparseFormat.MatrixBsrFormat, !targetRow);
 			dst.Deconstruct(ref target);
 			return true;
@@ -418,6 +343,27 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		bool IConversionAbstractApi.MatrixSparsePrune<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, double threshold, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) => false;
 
 		bool IConversionAbstractApi.MatrixSparseReshape<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) => false;
+		#endregion
+
+		#region vector computation
+		/// <inheritdoc/>
+		public virtual bool VectorSparseAddToDense<T, TInd, TS1, TS2, TSInd>(T α, ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			if (x.Size.Length != 1)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(x));
+			if (strideY != 1 || x.Format != SparseFormat.VectorCooFormat)
+				return false;
+			if (x.IndexStorages.Length != 1 || x.ValueStorages.Length != 1)
+				return false;
+			if (!GetPointer(x.ValueStorages[0], x.IndexStorages[0], out T* px, out TInd* pp, out var n))
+				return false;
+			if (!GetPointer(y, strideY, out T* py, out var n2))
+				return false;
+			if (n2 < n || x.Size[0] != n2)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
+
+
+		}
 		#endregion
 	}
 }

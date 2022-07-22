@@ -194,7 +194,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				};
 				if (createFunc is null)
 					return default;
-				createFunc(out handle, 0, MatrixMajor.Row, source.Size[0], source.Size[1], source.BlockSize[0].AsInt64(), (MklInt*)pr, (MklInt*)pr + 1, (MklInt*)pc, pv).Check();
+				createFunc(out handle, 0, MatrixMajor.Row, source.Size[0], source.Size[1], source.BlockSize[0], (MklInt*)pr, (MklInt*)pr + 1, (MklInt*)pc, pv).Check();
 			}
 			success = true;
 			return new(handle, format);
@@ -262,8 +262,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 					_ => null
 				};
 				createFunc(handle, out _, out _, out var rows, out var cols, out var bs, out var pStarts, out _, out var pInds, out var pv).Check();
-				long nnz = (pStarts[rows] - pStarts[0]), rowSize = rows / bs, colSize = nnz;
-				nnz *= bs * bs;
+				long blockSize = bs;
+				long nnz = (pStarts[rows] - pStarts[0]), rowSize = rows / blockSize, colSize = nnz;
+				nnz *= blockSize * blockSize;
 				if (this.transposed)
 				{
 					(rows, cols) = (cols, rows);
@@ -273,7 +274,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				TS vals = new Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pv, nnz * sizeof(T))) as TS ?? TS.Empty;
 				TSInd rowInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
 				TSInd colInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
-				TInd blockSize = ((long)bs).As<TInd>();
 				target.SetValues(rows, cols, blockSize, blockSize, vals, rowInds, colInds);
 			}
 		}

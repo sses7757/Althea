@@ -3,8 +3,11 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Array;
+using Althea.Backend.Storage;
 using Althea.Helpers;
 using Althea.Linq;
+
+using static Althea.Backend.Storage.CpuMemoryPointerChecker;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra
@@ -424,7 +427,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		public virtual partial bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			if (y.Format != new SparseFormat(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element, SparseFormat.Major.None))
+			if ((y.Format & SparseFormat.VectorCooFormat) == SparseFormat.None)
 				return false;
 			if (sizeof(TInd) != 4 && sizeof(TInd) != 8)
 				return false;
@@ -434,11 +437,6 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(y));
 			if (!GetPointer(x, strideX, out T* px, out int length, out int inc))
 				return false;
-			if (y.Size.IsEmpty)
-			{
-				long len = length;
-				y.Size = SpanHelper.CreateReadOnlySpan(in len, 1);
-			}
 
 			T thre = Math.Abs(threshold).As<T>();
 			int nnz = 0;
@@ -490,6 +488,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					}
 				}
 			}
+			TS2 vals = new Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)py, nnz * sizeof(T))) as TS2 ?? TS2.Empty;
+			TSInd inds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pp, nnz * sizeof(TInd))) as TSInd ?? TSInd.Empty;
+			y.SetValues(length, vals, inds);
 			return true;
 		}
 		#endregion

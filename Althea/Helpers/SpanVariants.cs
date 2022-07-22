@@ -386,14 +386,14 @@ namespace Althea.Helpers
 		/// </summary>
 		/// <returns>An array of type <typeparamref name="T"/> holding the same values as this <see cref="SpanList{T}"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly T[] ToArray()
+		public readonly unsafe T[] ToArray()
 		{
 			if (this._size == 0)
 			{
 				return System.Array.Empty<T>();
 			}
 			T[] array = new T[this._size];
-			Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(array)), ref Unsafe.As<T, byte>(ref this._span[0]), (uint)this._size);
+			Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(array)), ref Unsafe.As<T, byte>(ref this._span[0]), (uint)this._size);
 			return array;
 		}
 
@@ -885,9 +885,9 @@ namespace Althea.Helpers
 			for (int i = 0; i < this._cols; i++)
 			{
 				T[] column = new T[this._rows];
-				Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
-								 ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
-								 size);
+				Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
+										  ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
+										  size);
 			}
 			return array;
 		}
@@ -916,9 +916,9 @@ namespace Althea.Helpers
 					throw new ArgumentNullException(nameof(array));
 				if (column.Length != this._rows)
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(array));
-				Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
-								 ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
-								 size);
+				Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
+										  ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
+										  size);
 			}
 		}
 		#endregion

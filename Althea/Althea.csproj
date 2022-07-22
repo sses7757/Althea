@@ -23,6 +23,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ExpressionExtendBlasAPI.tt</DependentUpon>
     </None>
+    <None Include="LinearAlgebra\Sparse\ExtendIndexAPI.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExtendIndexAPI.tt</DependentUpon>
+    </None>
     <None Include="Numerics\Conversions.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -78,6 +83,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ExpressionExtendBlasAPI.tt</DependentUpon>
+    </Compile>
+    <Compile Update="LinearAlgebra\Sparse\ExtendIndexAPI.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ExtendIndexAPI.tt</DependentUpon>
     </Compile>
     <Compile Update="Numerics\Conversions.cs">
       <DesignTime>True</DesignTime>
@@ -223,6 +233,10 @@
     <None Update="LinearAlgebra\Dense\ExpressionExtendBlasAPI.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ExpressionExtendBlasAPI.cs</LastGenOutput>
+    </None>
+    <None Update="LinearAlgebra\Sparse\ExtendIndexAPI.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ExtendIndexAPI.cs</LastGenOutput>
     </None>
     <None Update="Numerics\Conversions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

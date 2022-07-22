@@ -101,9 +101,23 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void Dispose()
 		{
-			this.values.SafeDispose();
+			this.Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, actually unmanaged resources held by this object.
+		/// </summary>
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected virtual void Dispose(bool invokedByUser)
+		{
+			this.values.SafeDispose(invokedByUser);
+		}
+
+		/// <summary>
+		/// Deconstructor to be invoked by GC
+		/// </summary>
+		~AbstractDenseMatrix() => this.Dispose(false);
 
 		/// <summary>
 		/// When implemented by a derived class, copy the values from this dense matrix to a new <typeparamref name="TS"/> with all values stored in compact mode that <see cref="AbstractDenseMatrix{T, TS}.LeadDim"/> == <see cref="AbstractDenseMatrix{T, TS}.NRows"/>.
@@ -429,17 +443,23 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void Dispose()
 		{
-			this.values.SafeDispose();
+			this.Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
 		/// <summary>
-		/// Deconstructor to be invoked by GC.
+		/// When implemented by a derived class, actually unmanaged resources held by this object.
 		/// </summary>
-		~DiagonalMatrix()
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected virtual void Dispose(bool invokedByUser)
 		{
-			this.Dispose();
+			this.values.SafeDispose(invokedByUser);
 		}
+
+		/// <summary>
+		/// Deconstructor to be invoked by GC
+		/// </summary>
+		~DiagonalMatrix() => this.Dispose(false);
 
 		/// <summary>
 		/// Copy the values from this <see cref="DiagonalMatrix{T, TS}"/> to a new <typeparamref name="TS"/> with all values stored in compact mode that <see cref="Stride"/> == 1.

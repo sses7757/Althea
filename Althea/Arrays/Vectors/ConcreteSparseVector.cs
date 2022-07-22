@@ -234,11 +234,9 @@ namespace Althea.Array
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
-		private readonly TInd blockSize;
+		private readonly long blockSize;
 
-		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockSize, 1);
-
-		private int BS => this.blockSize.AsInt32();
+		ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockSize, 1);
 
 		private readonly static SparseFormat format = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, SparseFormat.Major.None);
 
@@ -246,7 +244,7 @@ namespace Althea.Array
 		public override SparseFormat Format => format;
 
 		/// <inheritdoc/>
-		public override TSInd IndexStorage => this.indices.MakeReference(0, this.NStored / this.BS); 
+		public override TSInd IndexStorage => this.indices.MakeReference(0, this.NStored / this.blockSize); 
 
 		/// <summary>
 		/// Create a new <see cref="BlockSparseVector{T, TInd, TS, TSInd}"/> with given parameters.
@@ -260,18 +258,18 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public BlockSparseVector(long length, TS values!!, TSInd indices!!, TInd blockSize, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
+		public BlockSparseVector(long length, TS values!!, TSInd indices!!, long blockSize, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
 		{
 			this.blockSize = blockSize;
 			try
 			{
-				if (blockSize <= TInd.Zero)
+				if (blockSize <= 0)
 					throw new ArgumentOutOfRangeException(nameof(blockSize), Resources.ParameterError.MustPositive);
-				if (length % this.BS != 0)
+				if (length % blockSize != 0)
 					throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(blockSize));
-				if (values.Length != indices.Length * this.BS)
+				if (values.Length != indices.Length * blockSize)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
-				if (this.NStored % this.BS != 0)
+				if (this.NStored % blockSize != 0)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(nnz));
 			}
 			catch (Exception)
@@ -303,13 +301,13 @@ namespace Althea.Array
 		protected override long GetValueOffset(long index)
 		{
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
-			var (blockIndex, insideBlockOffset) = long.DivRem(index, this.BS);
+			var (blockIndex, insideBlockOffset) = long.DivRem(index, this.blockSize);
 			var ind = (blockIndex).As<TInd>();
 			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
 			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
-				return ~(find * this.BS);
+				return ~(find * this.blockSize);
 			else
-				return find * this.BS + insideBlockOffset;
+				return find * this.blockSize + insideBlockOffset;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -319,11 +317,11 @@ namespace Althea.Array
 			if (sub is not null && (sub is not BlockSparseVector<T, TInd, TS, TSInd> vec || vec.blockSize != this.blockSize))
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(sub));
 			long indexStart, indexCount;
-			if (start % this.BS != 0)
+			if (start % this.blockSize != 0)
 				throw new ArgumentException(Resources.SparseError.CannotCutSimpleBlocking, nameof(start));
-			if (count % this.BS != 0)
+			if (count % this.blockSize != 0)
 				throw new ArgumentException(Resources.SparseError.CannotCutSimpleBlocking, nameof(start));
-			start /= this.BS; count /= this.BS;
+			start /= this.blockSize; count /= this.blockSize;
 			indexStart = SpIdx.IndexBound(this.IndexStorage, 1, (start).As<TInd>(), true);
 			indexCount = SpIdx.IndexBound(this.IndexStorage, 1, (start + count).As<TInd>(), true);
 			indexCount -= indexStart;
@@ -334,15 +332,16 @@ namespace Althea.Array
 		protected override bool TryInsert(long index, long offsetVal, T value)
 		{
 			offsetVal = ~offsetVal;
-			long nnz = this.NStored + this.BS;
-			if (nnz + this.BS > this.MaxStored)
+			long nnz = this.NStored + this.blockSize;
+			if (nnz + this.blockSize > this.MaxStored)
 				return false;
-			long offsetInd = offsetVal / this.BS;
-			using var temp = this.BS.CheckStackLimit<T>();
-			Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
-			values.Fill(this.DefaultValue); values[(int)(index % this.BS)] = value;
+			long offsetInd = offsetVal / this.blockSize;
+			int bs = (int)this.blockSize;
+			using var temp = bs.CheckStackLimit<T>();
+			Span<T> values = temp.IsEmpty ? stackalloc T[bs] : temp.Data;
+			values.Fill(this.DefaultValue); values[(int)(index % this.blockSize)] = value;
 			this.Storage.TryInsert(offsetVal, values);
-			this.IndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (index / this.BS).As<TInd>() });
+			this.IndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (index / this.blockSize).As<TInd>() });
 			this.NStored = nnz + 1;
 			return true;
 		}
@@ -353,10 +352,10 @@ namespace Althea.Array
 			var (indexStart, indexCount) = this.GetSliceInfo(start, count);
 			if (indexStart == 0 && indexCount == this.IndexStorage.Length)
 				return new(count, this.Storage.Clone(), this.IndexStorage.Clone(), this.blockSize, this.DefaultValue);
-			var newVals = this.Storage.MakeReference(indexStart * this.BS, indexCount * this.BS);
+			var newVals = this.Storage.MakeReference(indexStart * this.blockSize, indexCount * this.blockSize);
 			var newInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			if (start == 0)
-				newInds = newInds.ApplyToClone((org, ind) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (-start / this.BS).As<TInd>(), org, 1, ind, 1));
+				newInds = newInds.ApplyToClone((org, ind) => ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (-start / this.blockSize).As<TInd>(), org, 1, ind, 1));
 			return new(count, newVals, newInds, this.blockSize, this.DefaultValue);
 		}
 
@@ -369,12 +368,12 @@ namespace Althea.Array
 				this.CopyTo(overwrite);
 				return;
 			}
-			var refVals = this.Storage.MakeReference(indexStart * this.BS, indexCount * this.BS);
+			var refVals = this.Storage.MakeReference(indexStart * this.blockSize, indexCount * this.blockSize);
 			refVals.CopyTo<T, TS, TS>(overwrite.Storage);
 			var refInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			refInds.CopyTo<TInd, TSInd, TSInd>(overwrite.IndexStorage);
 			if (start != 0)
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (-start / this.BS).As<TInd>(), overwrite.IndexStorage, 1, overwrite.IndexStorage, 1);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (-start / this.blockSize).As<TInd>(), overwrite.IndexStorage, 1, overwrite.IndexStorage, 1);
 		}
 
 		/// <inheritdoc/>
@@ -395,12 +394,12 @@ namespace Althea.Array
 				value.CopyTo(this);
 				return;
 			}
-			var refVals = this.Storage.MakeReference(indexStart * this.BS, indexCount * this.BS);
+			var refVals = this.Storage.MakeReference(indexStart * this.blockSize, indexCount * this.blockSize);
 			value.Storage.CopyTo<T, TS, TS>(refVals);
 			var refInds = this.IndexStorage.MakeReference(indexStart, indexCount);
 			value.IndexStorage.CopyTo<TInd, TSInd, TSInd>(refInds);
 			if (start != 0)
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (start / this.BS).As<TInd>(), refInds, 1, refInds, 1);
+				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, (start / this.blockSize).As<TInd>(), refInds, 1, refInds, 1);
 		}
 		#endregion
 
@@ -410,7 +409,7 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(int Format, T Default, long Length, long NonZeros, TS Values, TSInd Indices, TInd BlockSize);
+		private record struct Repr(int Format, T Default, long Length, long NonZeros, TS Values, TSInd Indices, long BlockSize);
 
 		private BlockSparseVector(Repr repr) : this(repr.Length, repr.Values, repr.Indices, repr.BlockSize, repr.Default, repr.NonZeros) { }
 
@@ -441,11 +440,11 @@ namespace Althea.Array
 			var blockSize = wrapper.BlockSize[0];
 			var values = wrapper.ValueStorages[0];
 			var indices = wrapper.IndexStorages[0];
-			if (blockSize <= TInd.Zero || length % blockSize.AsInt64() != 0)
+			if (blockSize <= 0 || length % blockSize != 0)
 				return false;
 			if (values is null || indices is null)
 				return false;
-			if (values.Length != indices.Length * blockSize.AsInt64())
+			if (values.Length != indices.Length * blockSize)
 				return false;
 			vector = new BlockSparseVector<T, TInd, TS, TSInd>(length, values, indices, blockSize, wrapper.DefaultValue);
 			return true;
@@ -469,7 +468,7 @@ namespace Althea.Array
 			using var tempInd = length.CheckStackLimit<TInd>();
 			Span<TInd> indices = tempInd.IsEmpty ? stackalloc TInd[length] : tempInd.Data;
 			this.Storage.ToManaged(values);
-			int bs = this.blockSize.AsInt32();
+			int bs = (int)this.blockSize;
 			this.IndexStorage.ToManagedStride(1, indices, bs);
 			for (int i = 0; i < length; i++)
 			{

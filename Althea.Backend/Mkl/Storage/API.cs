@@ -24,7 +24,7 @@ namespace Althea.Backend.Mkl.Storage
 			// shortcut
 			if (strideSource == 1 && strideDestination == 1)
 			{
-				Unsafe.CopyBlockUnaligned(destination, source, (uint)count);
+				Buffer.MemoryCopy(source, destination, count, count);
 				return true;
 			}
 			delegate*<MklInt, T*, MklInt, T*, MklInt, void> func = default(T) switch
@@ -48,7 +48,7 @@ namespace Althea.Backend.Mkl.Storage
 			if (!CheckType<TP1>() || !CheckType<TP2>())
 				return false;
 			long srcOff = source.OffsetInBytes, dstOff = destination.OffsetInBytes;
-			CpuMemoryPointer src = source.Pointer.FromGeneric(), dst = destination.Pointer.FromGeneric();
+			CpuMemoryPointer src = source.Pointer.FromGenericCpu(), dst = destination.Pointer.FromGenericCpu();
 			actualCopied = Math.Min(((src.LengthInBytes - srcOff) / sizeof(T) - 1) / strideSource + 1, ((dst.LengthInBytes - dstOff) / sizeof(T) - 1) / strideDestination + 1);
 			return PointerStridedCopy((T*)src.NativePointer(srcOff), strideSource, (T*)dst.NativePointer(dstOff), strideDestination, actualCopied);
 		}
@@ -80,7 +80,7 @@ namespace Althea.Backend.Mkl.Storage
 			// shortcut
 			if (scale == T.One && op == Althea.LinearAlgebra.MatrixOperation.None && sourceLD == destinationLD && sourceLD == height && height * width <= uint.MaxValue)
 			{
-				Unsafe.CopyBlockUnaligned(destination, source, (uint)(height * width));
+				Buffer.MemoryCopy(source, destination, height * width, height * width);
 				return true;
 			}
 			MklDn.MKL_omatcopy<T>? func = default(T) switch
@@ -104,7 +104,7 @@ namespace Althea.Backend.Mkl.Storage
 			copyWidth = Math.Min((source.LengthInBytes + (sourceLD - height)) / sourceLD, (destination.LengthInBytes + (destinationLD - height)) / destinationLD);
 			copyWidth = Math.Min(copyWidth, width);
 			long srcOff = source.OffsetInBytes, dstOff = destination.OffsetInBytes;
-			CpuMemoryPointer src = source.Pointer.FromGeneric(), dst = destination.Pointer.FromGeneric();
+			CpuMemoryPointer src = source.Pointer.FromGenericCpu(), dst = destination.Pointer.FromGenericCpu();
 			return PointerMemoryCopy2D((T*)src.NativePointer(srcOff), sourceLD, (T*)dst.NativePointer(dstOff), destinationLD, height, width);
 		}
 	}

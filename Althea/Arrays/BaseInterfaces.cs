@@ -104,7 +104,7 @@ namespace Althea.Array
 		/// <summary>
 		/// When implemented by a derived class, get the constant block size of this sparse array, can be empty if it is not a <see cref="SparseFormat.Blocking.Simple"/>
 		/// </summary>
-		ReadOnlySpan<TInd> BlockSize { get; }
+		ReadOnlySpan<long> BlockSize { get; }
 		#endregion
 	}
 

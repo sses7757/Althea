@@ -286,7 +286,7 @@
         <member name="P:Althea.Array.CoordinateBlockSparseMatrix`4.ColIndexStorage">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.CoordinateBlockSparseMatrix`4.#ctor(System.Boolean,System.Int64,System.Int64,`1,`1,`2,`3,`3,`0,System.Int64)">
+        <member name="M:Althea.Array.CoordinateBlockSparseMatrix`4.#ctor(System.Boolean,System.Int64,System.Int64,System.Int64,System.Int64,`2,`3,`3,`0,System.Int64)">
             <summary>
             Create a new <see cref="T:Althea.Array.CoordinateBlockSparseMatrix`4"/> with given parameters.
             </summary>
@@ -346,7 +346,7 @@
         <member name="P:Althea.Array.CompressBlockSparseMatrix`4.Format">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.CompressBlockSparseMatrix`4.#ctor(System.Boolean,System.Int64,System.Int64,`1,`1,`2,`3,`3,`0,System.Int64)">
+        <member name="M:Althea.Array.CompressBlockSparseMatrix`4.#ctor(System.Boolean,System.Int64,System.Int64,System.Int64,System.Int64,`2,`3,`3,`0,System.Int64)">
             <summary>
             Create a new <see cref="T:Althea.Array.CompressBlockSparseMatrix`4"/> with given parameters.
             </summary>
@@ -434,6 +434,17 @@
         </member>
         <member name="M:Althea.Array.AbstractDenseMatrix`2.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.AbstractDenseMatrix`2.Dispose(System.Boolean)">
+            <summary>
+            When implemented by a derived class, actually unmanaged resources held by this object.
+            </summary>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+        </member>
+        <member name="M:Althea.Array.AbstractDenseMatrix`2.Finalize">
+            <summary>
+            Deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="M:Althea.Array.AbstractDenseMatrix`2.ToCompact">
             <summary>
@@ -607,9 +618,15 @@
         <member name="M:Althea.Array.DiagonalMatrix`2.Dispose">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Array.DiagonalMatrix`2.Dispose(System.Boolean)">
+            <summary>
+            When implemented by a derived class, actually unmanaged resources held by this object.
+            </summary>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+        </member>
         <member name="M:Althea.Array.DiagonalMatrix`2.Finalize">
             <summary>
-            Deconstructor to be invoked by GC.
+            Deconstructor to be invoked by GC
             </summary>
         </member>
         <member name="M:Althea.Array.DiagonalMatrix`2.ToCompact">
@@ -1226,6 +1243,17 @@
         </member>
         <member name="M:Althea.Array.SparseMatrix`4.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.SparseMatrix`4.Dispose(System.Boolean)">
+            <summary>
+            When implemented by a derived class, actually unmanaged resources held by this object.
+            </summary>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+        </member>
+        <member name="M:Althea.Array.SparseMatrix`4.Finalize">
+            <summary>
+            Deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="M:Althea.Array.SparseMatrix`4.#ctor">
             <summary>
@@ -2886,7 +2914,7 @@
         <member name="P:Althea.Array.CoordinateBlockSparseTensor`4.IndexStorage">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.CoordinateBlockSparseTensor`4.#ctor(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{`1},`2,`3,`0,System.Int64,System.ReadOnlySpan{System.Char})">
+        <member name="M:Althea.Array.CoordinateBlockSparseTensor`4.#ctor(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},`2,`3,`0,System.Int64,System.ReadOnlySpan{System.Char})">
             <summary>
             Create a new <see cref="T:Althea.Array.CoordinateBlockSparseTensor`4"/> with given parameters.
             </summary>
@@ -2983,6 +3011,17 @@
         </member>
         <member name="M:Althea.Array.DenseTensor`2.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseTensor`2.Dispose(System.Boolean)">
+            <summary>
+            When implemented by a derived class, actually unmanaged resources held by this object.
+            </summary>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+        </member>
+        <member name="M:Althea.Array.DenseTensor`2.Finalize">
+            <summary>
+            Deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="M:Althea.Array.DenseTensor`2.Equals(Althea.Array.DenseTensor{`0,`1})">
             <inheritdoc/>
@@ -3177,6 +3216,17 @@
         </member>
         <member name="M:Althea.Array.SparseTensor`4.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.SparseTensor`4.Dispose(System.Boolean)">
+            <summary>
+            When implemented by a derived class, actually unmanaged resources held by this object.
+            </summary>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+        </member>
+        <member name="M:Althea.Array.SparseTensor`4.Finalize">
+            <summary>
+            Deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="M:Althea.Array.SparseTensor`4.#ctor">
             <summary>
@@ -3553,12 +3603,13 @@
             <param name="storage">The storage to be managed</param>
             <returns>Returns the <paramref name="storage"/> itself.</returns>
         </member>
-        <member name="M:Althea.Array.ArrayStorageManager.SafeDispose``1(``0)">
+        <member name="M:Althea.Array.ArrayStorageManager.SafeDispose``1(``0,System.Boolean)">
             <summary>
             Safely dispose the given <paramref name="storage"/> by checking references before invoking <see cref="M:System.IDisposable.Dispose"/>.
             </summary>
             <typeparam name="TS">The actual storage type that implements <see cref="T:Althea.Storage.IStorage"/></typeparam>
             <param name="storage">The storage to be disposed</param>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
         </member>
         <member name="T:Althea.Array.IValueArray`2">
             <summary>
@@ -3568,7 +3619,7 @@
             <typeparam name="TSelf">The concrete type that implements this <see cref="T:Althea.Array.IValueArray`2"/></typeparam>
             <remarks>
             All inherited classes shall be of column major if not specified.<br/>
-            All inherited classes shall use <see cref="M:Althea.Array.ArrayStorageManager.AddToManager``1(``0)"/> in constructors and <see cref="M:Althea.Array.ArrayStorageManager.SafeDispose``1(``0)"/> in <see cref="M:System.IDisposable.Dispose"/> rather than fininalizers to improve GC performance.
+            All inherited classes shall use <see cref="M:Althea.Array.ArrayStorageManager.AddToManager``1(``0)"/> in constructors and <see cref="M:Althea.Array.ArrayStorageManager.SafeDispose``1(``0,System.Boolean)"/> in <see cref="M:System.IDisposable.Dispose"/> rather than fininalizers to improve GC performance.
             </remarks>
         </member>
         <member name="P:Althea.Array.IValueArray`2.Size">
@@ -3749,7 +3800,7 @@
         <member name="P:Althea.Array.BlockSparseVector`4.IndexStorage">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.BlockSparseVector`4.#ctor(System.Int64,`2,`3,`1,`0,System.Int64)">
+        <member name="M:Althea.Array.BlockSparseVector`4.#ctor(System.Int64,`2,`3,System.Int64,`0,System.Int64)">
             <summary>
             Create a new <see cref="T:Althea.Array.BlockSparseVector`4"/> with given parameters.
             </summary>
@@ -3838,6 +3889,17 @@
         </member>
         <member name="M:Althea.Array.DenseVector`2.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseVector`2.Dispose(System.Boolean)">
+            <summary>
+            When implemented by a derived class, actually unmanaged resources held by this object.
+            </summary>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+        </member>
+        <member name="M:Althea.Array.DenseVector`2.Finalize">
+            <summary>
+            Deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="M:Althea.Array.DenseVector`2.Equals(Althea.Array.DenseVector{`0,`1})">
             <inheritdoc/>
@@ -3995,6 +4057,17 @@
         </member>
         <member name="M:Althea.Array.SparseVector`4.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.SparseVector`4.Dispose(System.Boolean)">
+            <summary>
+            When implemented by a derived class, actually unmanaged resources held by this object.
+            </summary>
+            <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+        </member>
+        <member name="M:Althea.Array.SparseVector`4.Finalize">
+            <summary>
+            Deconstructor to be invoked by GC
+            </summary>
         </member>
         <member name="M:Althea.Array.SparseVector`4.#ctor">
             <summary>
@@ -4710,7 +4783,7 @@
             <exception cref="T:System.ArgumentNullException">if any of the input storages is null</exception>
             <exception cref="T:System.NotSupportedException">If the lengths exceeds the internal limits</exception>
         </member>
-        <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(System.Int64,System.Int64,`1,`1,`2,`3,`3)">
+        <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(System.Int64,System.Int64,System.Int64,System.Int64,`2,`3,`3)">
             <summary>
             Set the <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.BlockSize"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> of this <see cref="T:Althea.Array.SparseArrayWrapper`4"/> for a matrix.
             </summary>
@@ -4724,7 +4797,7 @@
             <exception cref="T:System.ArgumentNullException">if any of the input storages is null</exception>
             <exception cref="T:System.NotSupportedException">If the lengths exceeds the internal limits</exception>
         </member>
-        <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(System.Int64,`2,`3,`1)">
+        <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(System.Int64,`2,`3,System.Int64)">
             <summary>
             Set the <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> (and <see cref="P:Althea.Array.SparseArrayWrapper`4.BlockSize"/>) of this <see cref="T:Althea.Array.SparseArrayWrapper`4"/> while inputs are all of length 1.
             </summary>
@@ -4736,7 +4809,7 @@
             <exception cref="T:System.NotSupportedException">If the lengths exceeds the internal limits</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="blockSize"/> is not empty while its length is not the same as <paramref name="size"/></exception>
         </member>
-        <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{`2},System.ReadOnlySpan{`3},System.ReadOnlySpan{`1})">
+        <member name="M:Althea.Array.SparseArrayWrapper`4.SetValues(System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{`2},System.ReadOnlySpan{`3},System.ReadOnlySpan{System.Int64})">
             <summary>
             Set the <see cref="P:Althea.Array.SparseArrayWrapper`4.Size"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.ValueStorages"/>, <see cref="P:Althea.Array.SparseArrayWrapper`4.IndexStorages"/> (and <see cref="P:Althea.Array.SparseArrayWrapper`4.BlockSize"/>) of this <see cref="T:Althea.Array.SparseArrayWrapper`4"/>.
             </summary>
@@ -6698,6 +6771,136 @@
             Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/>
             </summary>
             <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_256`1"/></returns>
+        </member>
+        <member name="T:Althea.Helpers.FixedBuffer_120`1">
+            <summary>
+            The fixed buffer struct of type <typeparamref name="T"/> and size in bytes = 120
+            </summary>
+            <typeparam name="T">Any unmanaged number that implements <see cref="T:System.IEquatable`1"/></typeparam>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.ToArray">
+            <summary>
+            Create a new array of <typeparamref name="T"/> containing the elements of this fixed buffer
+            </summary>
+            <returns>The array containing the elements of this fixed buffer</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.As``1">
+            <summary>
+            Change data type of this fixed buffer from <typeparamref name="T"/> to <typeparamref name="TOut"/>
+            </summary>
+            <typeparam name="TOut">The output data type, any unmanaged number</typeparam>
+            <returns>The fixed buffer with same byte values as this one whose data type is <typeparamref name="TOut"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.CopyFromSpan(System.ReadOnlySpan{`0},System.Int32)">
+            <summary>
+            Copy the data from the given <paramref name="span"/> to this fixed buffer
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy from</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.CopyToSpan(System.Span{`0},System.Int32)">
+            <summary>
+            Copy the data from this fixed buffer to the given <paramref name="span"/>
+            </summary>
+            <param name="span">The given <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <param name="offset">The offset to start copying in <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="span"/> is too large</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="offset"/> is out of boundary</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.ToStruct``1(System.Int32)">
+            <summary>
+            Convert this fixed buffer to a new <typeparamref name="TStruct"/> by copying the values from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The output struct type</typeparam>
+            <param name="copyStart">The start position to copy in bytes</param>
+            <returns>The created <typeparamref name="TStruct"/></returns>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.FromStruct``1(``0,System.Int32)">
+            <summary>
+            Copy the values in <paramref name="struct"/> to this fixed buffer from <paramref name="copyStart"/> byte by byte
+            </summary>
+            <typeparam name="TStruct">The input struct type</typeparam>
+            <param name="struct">The structure to copy</param>
+            <param name="copyStart">The start position to copy of this fixed buffer in bytes</param>
+            <exception cref="T:System.InvalidOperationException">If the size of <typeparamref name="TStruct"/> is larger than the size of this fixed buffer minus <paramref name="copyStart"/></exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.AsSpan(System.Int32)">
+            <summary>
+            Create a <see cref="T:System.Span`1"/> from this fixed buffer
+            </summary>
+            <returns>The <see cref="T:System.Span`1"/> referring to this fixed buffer</returns>
+            <param name="size">The size of the span, default 0 means all</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_120`1.NonDefaults">
+            <summary>
+            Get the number of values whose value is not default(<typeparamref name="T"/>)
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_120`1.Count">
+            <summary>
+            The number of elements in this fixed buffer
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.FixedBuffer_120`1.Item(System.Int32)">
+            <summary>
+            Basic indexer of this fixed buffer
+            </summary>
+            <param name="index">The index</param>
+            <returns>The value at <paramref name="index"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.GetEnumerator">
+            <summary>
+            Returns an enumerator that iterates through the collection.
+            </summary>
+            <returns>An enumerator that can be used to iterate through the collection.</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.Contains(`0)">
+            <summary>
+            Check whether the this fixed buffer contains the given <paramref name="value"/> 
+            </summary>
+            <param name="value">The value to find</param>
+            <returns>Whether the this fixed buffer contains the given <paramref name="value"/> </returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.Equals(Althea.Helpers.FixedBuffer_120{`0})">
+            <summary>
+            Whether this == <paramref name="other"/>
+            </summary>
+            <param name="other">another <see cref="T:Althea.Helpers.FixedBuffer_120`1"/> to compare</param>
+            <returns>this == <paramref name="other"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.Equals(System.Object)">
+            <summary>
+            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
+            </summary>
+            <param name="obj">another object to compare</param>
+            <returns>this == <paramref name="obj"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.GetHashCode">
+            <summary>
+            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Helpers.FixedBuffer_120`1"/>.
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.op_Equality(Althea.Helpers.FixedBuffer_120{`0},Althea.Helpers.FixedBuffer_120{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.op_Inequality(Althea.Helpers.FixedBuffer_120{`0},Althea.Helpers.FixedBuffer_120{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.FixedBuffer_120`1.ToString">
+            <summary>
+            Return the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_120`1"/>
+            </summary>
+            <returns>the string representation of this <see cref="T:Althea.Helpers.FixedBuffer_120`1"/></returns>
         </member>
         <member name="T:Althea.Helpers.ExtensionHelper">
             <summary>
@@ -16103,18 +16306,6 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="keys"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideKeys"/> or <paramref name="strideValues"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.MinMax``2(``1,System.Int64,System.ValueTuple{``0,``0}@)">
-            <summary>
-            When implemented by a derived class, find the minimum and maximum values of the given <paramref name="array"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="array">The storage of the integer-typed array</param>
-            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
-            <param name="minmax">Output the minimum and maximum values</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-        </member>
         <member name="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.IndexOf``2(``1,System.Int64,System.Boolean,``0,System.Int64@)">
             <summary>
             When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <paramref name="array"/>.
@@ -16147,9 +16338,9 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)">
             <summary>
-            When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.
+            When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> <paramref name="array"/> and store the result to <paramref name="target"/>.
             </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the index type</typeparam>
             <typeparam name="TS">The input concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
             <typeparam name="TSOut">The output concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -16169,7 +16360,7 @@
             </summary>
             <typeparam name="T">Any integral-typed unmanaged number as the bound index type</typeparam>
             <typeparam name="TS">The input concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
+            <typeparam name="TOut">Any unmanaged number as the output index type</typeparam>
             <typeparam name="TSOut">The output concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="bounds">The storage of the bound index array, usually generated from <see cref="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)"/></param>
             <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
@@ -16178,6 +16369,99 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="target"/>'s length is too short</exception>
+        </member>
+        <member name="T:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi">
+            <summary>
+            The abstract interface for runtime extended index related operation API routines 
+            </summary>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi.Sort``6(``1,System.Int64,``3,System.Int64,``5,System.Int64)">
+            <summary>
+            When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the key type</typeparam>
+            <typeparam name="TS">The concrete storage type for keys that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T1">Any unmanaged number as the first value type</typeparam>
+            <typeparam name="TS1">The concrete storage type for first values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T2">Any unmanaged number as the second value type</typeparam>
+            <typeparam name="TS2">The concrete storage type for second values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="keys">The storage of the key array to be sorted</param>
+            <param name="strideKeys">The stride between consecutive elements in <paramref name="keys"/></param>
+            <param name="values1">The storage of the first value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues1">The stride between consecutive elements in <paramref name="values1"/></param>
+            <param name="values2">The storage of the second value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues2">The stride between consecutive elements in <paramref name="values2"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi.Sort``8(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64)">
+            <summary>
+            When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the key type</typeparam>
+            <typeparam name="TS">The concrete storage type for keys that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T1">Any unmanaged number as the first value type</typeparam>
+            <typeparam name="TS1">The concrete storage type for first values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T2">Any unmanaged number as the second value type</typeparam>
+            <typeparam name="TS2">The concrete storage type for second values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T3">Any unmanaged number as the third value type</typeparam>
+            <typeparam name="TS3">The concrete storage type for third values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="keys">The storage of the key array to be sorted</param>
+            <param name="strideKeys">The stride between consecutive elements in <paramref name="keys"/></param>
+            <param name="values1">The storage of the first value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues1">The stride between consecutive elements in <paramref name="values1"/></param>
+            <param name="values2">The storage of the second value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues2">The stride between consecutive elements in <paramref name="values2"/></param>
+            <param name="values3">The storage of the third value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues3">The stride between consecutive elements in <paramref name="values3"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi.Sort``10(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64,``9,System.Int64)">
+            <summary>
+            When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the key type</typeparam>
+            <typeparam name="TS">The concrete storage type for keys that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T1">Any unmanaged number as the first value type</typeparam>
+            <typeparam name="TS1">The concrete storage type for first values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T2">Any unmanaged number as the second value type</typeparam>
+            <typeparam name="TS2">The concrete storage type for second values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T3">Any unmanaged number as the third value type</typeparam>
+            <typeparam name="TS3">The concrete storage type for third values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T4">Any unmanaged number as the fourth value type</typeparam>
+            <typeparam name="TS4">The concrete storage type for fourth values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="keys">The storage of the key array to be sorted</param>
+            <param name="strideKeys">The stride between consecutive elements in <paramref name="keys"/></param>
+            <param name="values1">The storage of the first value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues1">The stride between consecutive elements in <paramref name="values1"/></param>
+            <param name="values2">The storage of the second value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues2">The stride between consecutive elements in <paramref name="values2"/></param>
+            <param name="values3">The storage of the third value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues3">The stride between consecutive elements in <paramref name="values3"/></param>
+            <param name="values4">The storage of the fourth value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues4">The stride between consecutive elements in <paramref name="values4"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi.Sort``4(``2,System.Int64,System.ReadOnlySpan{``3},System.ReadOnlySpan{System.Int64})">
+            <summary>
+            When implemented by a derived class, sort the elements of the given integer-typed <paramref name="key"/> with <paramref name="values"/>.
+            </summary>
+            <typeparam name="TKey">Any unmanaged number as the key type</typeparam>
+            <typeparam name="TSKey">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TVal">Any unmanaged number as the value type</typeparam>
+            <typeparam name="TSVal">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="key">The storage of the key array to be sorted</param>
+            <param name="values">The storages of the value arrays to be sorted</param>
+            <param name="strideKey">The stride between consecutive elements in <paramref name="key"/></param>
+            <param name="strideValues">The strides between consecutive elements of each <paramref name="values"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="key"/> or any of <paramref name="values"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideKey"/> or  any of <paramref name="strideValues"/> ≤ 0</exception>
         </member>
         <member name="T:Althea.LinearAlgebra.Sparse.ComputationApiSelector">
             <summary>
@@ -16791,18 +17075,6 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideKeys"/> or <paramref name="strideValues"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.MinMax``2(``1,System.Int64)">
-            <summary>
-            Find the minimum and maximum values of the given <paramref name="array"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number as the data type</typeparam>
-            <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="array">The storage of the integer-typed array</param>
-            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
-            <returns>Output the minimum and maximum values.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
         <member name="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.IndexOf``2(``1,System.Int64,System.Boolean,``0)">
             <summary>
             Find the zero-based index of the target <paramref name="value"/> in the given <paramref name="array"/>.
@@ -16835,9 +17107,9 @@
         </member>
         <member name="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)">
             <summary>
-            Find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.
+            Find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> <paramref name="array"/> and store the result to <paramref name="target"/>.
             </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the index type</typeparam>
             <typeparam name="TS">The input concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
             <typeparam name="TSOut">The output concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
@@ -16857,7 +17129,7 @@
             </summary>
             <typeparam name="T">Any integral-typed unmanaged number as the bound index type</typeparam>
             <typeparam name="TS">The input concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
+            <typeparam name="TOut">Any unmanaged number as the output index type</typeparam>
             <typeparam name="TSOut">The output concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="bounds">The storage of the bound index array, usually generated from <see cref="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)"/></param>
             <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
@@ -16865,6 +17137,99 @@
             <param name="lowerBound">Whether to fill the <paramref name="target"/> with <paramref name="bounds"/> regarded as lower bounds or upper bounds</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="target"/>'s length is too short</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="T:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector">
+            <summary>
+            The selector class for runtime extended index related operation API routines 
+            </summary>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector.Sort``6(``1,System.Int64,``3,System.Int64,``5,System.Int64)">
+            <summary>
+            Sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the key type</typeparam>
+            <typeparam name="TS">The concrete storage type for keys that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T1">Any unmanaged number as the first value type</typeparam>
+            <typeparam name="TS1">The concrete storage type for first values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T2">Any unmanaged number as the second value type</typeparam>
+            <typeparam name="TS2">The concrete storage type for second values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="keys">The storage of the key array to be sorted</param>
+            <param name="strideKeys">The stride between consecutive elements in <paramref name="keys"/></param>
+            <param name="values1">The storage of the first value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues1">The stride between consecutive elements in <paramref name="values1"/></param>
+            <param name="values2">The storage of the second value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues2">The stride between consecutive elements in <paramref name="values2"/></param>
+            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector.Sort``8(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64)">
+            <summary>
+            Sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the key type</typeparam>
+            <typeparam name="TS">The concrete storage type for keys that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T1">Any unmanaged number as the first value type</typeparam>
+            <typeparam name="TS1">The concrete storage type for first values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T2">Any unmanaged number as the second value type</typeparam>
+            <typeparam name="TS2">The concrete storage type for second values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T3">Any unmanaged number as the third value type</typeparam>
+            <typeparam name="TS3">The concrete storage type for third values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="keys">The storage of the key array to be sorted</param>
+            <param name="strideKeys">The stride between consecutive elements in <paramref name="keys"/></param>
+            <param name="values1">The storage of the first value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues1">The stride between consecutive elements in <paramref name="values1"/></param>
+            <param name="values2">The storage of the second value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues2">The stride between consecutive elements in <paramref name="values2"/></param>
+            <param name="values3">The storage of the third value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues3">The stride between consecutive elements in <paramref name="values3"/></param>
+            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector.Sort``10(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64,``9,System.Int64)">
+            <summary>
+            Sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the key type</typeparam>
+            <typeparam name="TS">The concrete storage type for keys that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T1">Any unmanaged number as the first value type</typeparam>
+            <typeparam name="TS1">The concrete storage type for first values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T2">Any unmanaged number as the second value type</typeparam>
+            <typeparam name="TS2">The concrete storage type for second values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T3">Any unmanaged number as the third value type</typeparam>
+            <typeparam name="TS3">The concrete storage type for third values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="T4">Any unmanaged number as the fourth value type</typeparam>
+            <typeparam name="TS4">The concrete storage type for fourth values that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="keys">The storage of the key array to be sorted</param>
+            <param name="strideKeys">The stride between consecutive elements in <paramref name="keys"/></param>
+            <param name="values1">The storage of the first value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues1">The stride between consecutive elements in <paramref name="values1"/></param>
+            <param name="values2">The storage of the second value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues2">The stride between consecutive elements in <paramref name="values2"/></param>
+            <param name="values3">The storage of the third value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues3">The stride between consecutive elements in <paramref name="values3"/></param>
+            <param name="values4">The storage of the fourth value array to be sorted with <paramref name="keys"/></param>
+            <param name="strideValues4">The stride between consecutive elements in <paramref name="values4"/></param>
+            <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector.Sort``4(``2,System.Int64,System.ReadOnlySpan{``3},System.ReadOnlySpan{System.Int64})">
+            <summary>
+            Sort the elements of the given integer-typed <paramref name="key"/> with <paramref name="values"/>.
+            </summary>
+            <typeparam name="TKey">Any unmanaged number as the key type</typeparam>
+            <typeparam name="TSKey">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <typeparam name="TVal">Any unmanaged number as the value type</typeparam>
+            <typeparam name="TSVal">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="key">The storage of the key array to be sorted</param>
+            <param name="values">The storages of the value arrays to be sorted</param>
+            <param name="strideKey">The stride between consecutive elements in <paramref name="key"/></param>
+            <param name="strideValues">The strides between consecutive elements of each <paramref name="values"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="key"/> or any of <paramref name="values"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideKey"/> or  any of <paramref name="strideValues"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="T:Althea.Linq.SpanLinq">
@@ -29511,6 +29876,11 @@
         <member name="P:Althea.IBackends.LinearAlgebraSparseIndexOperation">
             <summary>
             The API implementation of <see cref="T:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi"/>.
+            </summary>
+        </member>
+        <member name="P:Althea.IBackends.LinearAlgebraSparseExtendIndexOperation">
+            <summary>
+            The API implementation of <see cref="T:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi"/>.
             </summary>
         </member>
         <member name="P:Althea.IBackends.Random">

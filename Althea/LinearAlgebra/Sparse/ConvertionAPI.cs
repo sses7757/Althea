@@ -292,19 +292,6 @@ namespace Althea.LinearAlgebra.Sparse
 		public abstract bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, IBaseNumber<TOther> where TS2 : class, IStorage<TOther, TS2>;
 
 		/// <summary>
-		/// When implemented by a derived class, find the minimum and maximum values of the given <paramref name="array"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="array">The storage of the integer-typed array</param>
-		/// <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
-		/// <param name="minmax">Output the minimum and maximum values</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
-		[AbstractApiMethod]
-		public abstract bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <paramref name="array"/>.
 		/// </summary>
 		/// <typeparam name="T">Any unmanaged number as the index type</typeparam>
@@ -337,9 +324,9 @@ namespace Althea.LinearAlgebra.Sparse
 		public abstract bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
-		/// When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> integer-typed <paramref name="array"/> and store the result to <paramref name="target"/>.
+		/// When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> <paramref name="array"/> and store the result to <paramref name="target"/>.
 		/// </summary>
-		/// <typeparam name="T">Any integral-typed unmanaged number as the index type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the index type</typeparam>
 		/// <typeparam name="TS">The input concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
 		/// <typeparam name="TSOut">The output concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
@@ -353,14 +340,14 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
 		[AbstractApiMethod]
-		public abstract bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInt<T> where TOut : unmanaged, IBinaryInt<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
+		public abstract bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBaseNumber<T> where TOut : unmanaged, IBinaryInt<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
 
 		/// <summary>
 		/// When implemented by a derived class, reverse the operation of <see cref="IndexGetAllBounds"/> to get the sorted <paramref name="target"/> array from the given <paramref name="bounds"/>.
 		/// </summary>
 		/// <typeparam name="T">Any integral-typed unmanaged number as the bound index type</typeparam>
 		/// <typeparam name="TS">The input concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
+		/// <typeparam name="TOut">Any unmanaged number as the output index type</typeparam>
 		/// <typeparam name="TSOut">The output concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="bounds">The storage of the bound index array, usually generated from <see cref="IndexGetAllBounds"/></param>
 		/// <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
@@ -370,7 +357,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start = default) where T : unmanaged, IBinaryInt<T> where TOut : unmanaged, IBinaryInt<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
+		public abstract bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start = default) where T : unmanaged, IBinaryInt<T> where TOut : unmanaged, IBaseNumber<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
 		#endregion
 	}
 }

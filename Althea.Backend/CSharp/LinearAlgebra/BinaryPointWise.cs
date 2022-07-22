@@ -6,6 +6,8 @@ using System.Runtime.Intrinsics.X86;
 using Althea.LinearAlgebra;
 using Althea.Linq;
 
+using static Althea.Backend.Storage.CpuMemoryPointerChecker;
+
 
 namespace Althea.Backend.CSharp.LinearAlgebra
 {
@@ -1125,7 +1127,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				throw new InvalidOperationException();
 			else if (typeof(TIn) == typeof(TOut) && px != py)
 			{
-				Unsafe.CopyBlockUnaligned(py, px, (uint)(length * sizeof(TIn)));
+				Buffer.MemoryCopy(px, py, length * sizeof(TIn), length * sizeof(TIn));
 				return true;
 			}
 			// normal case

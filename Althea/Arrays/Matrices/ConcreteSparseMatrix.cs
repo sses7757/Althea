@@ -73,7 +73,7 @@ namespace Althea.Array
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override bool GetOffsets(long row, long col, Span<long> offsets)
 		{
-			TInd x = (row).As<TInd>(), y = (col).As<TInd>();
+			TInd x = row.As<TInd>(), y = col.As<TInd>();
 			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
 			if (!this.rowMajor)
 			{
@@ -103,8 +103,8 @@ namespace Althea.Array
 			if (nnz + 1 > this.MaxStored)
 				return false;
 			this.Storage.TryInsert(offset, stackalloc T[] { value });
-			this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { (row).As<TInd>() });
-			this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { (col).As<TInd>() });
+			this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { row.As<TInd>() });
+			this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { col.As<TInd>() });
 			this.NStored = nnz + 1;
 			return true;
 		}
@@ -260,7 +260,7 @@ namespace Althea.Array
 				offsets[0] = 0;
 				return false;
 			}
-			TInd x = (row).As<TInd>(), y = (col).As<TInd>();
+			TInd x = row.As<TInd>(), y = col.As<TInd>();
 			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
 			if (!this.rowMajor)
 			{
@@ -289,12 +289,12 @@ namespace Althea.Array
 			this.Storage.TryInsert(offset, stackalloc T[] { value });
 			if (this.rowMajor)
 			{
-				this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { (col).As<TInd>() });
+				this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { col.As<TInd>() });
 				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.rowIndices + (row + 1), 1, this.rowIndices + (row + 1), 1);
 			}
 			else
 			{
-				this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { (row).As<TInd>() });
+				this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { row.As<TInd>() });
 				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.colIndices + (col + 1), 1, this.colIndices + (col + 1), 1);
 			}
 			this.NStored = nnz + 1;
@@ -334,7 +334,7 @@ namespace Althea.Array
 			if (this.rowMajor)
 			{
 				this.ColIndexStorage.ToManaged(colInd);
-				int rows = (int)SpIdx.IndexBound(this.rowIndices, 1, (nnz).As<TInd>(), true);
+				int rows = (int)SpIdx.IndexBound(this.rowIndices, 1, nnz.As<TInd>(), true);
 				using var temp = rows.CheckStackLimit<TInd>();
 				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[rows] : temp.Data;
 				this.rowIndices.ToManaged(tempInd);
@@ -342,13 +342,13 @@ namespace Althea.Array
 				{
 					int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
 					int end = tempInd[i].AsInt32();
-					rowInd[start..end].Fill((i).As<TInd>());
+					rowInd[start..end].Fill(i.As<TInd>());
 				}
 			}
 			else
 			{
 				this.RowIndexStorage.ToManaged(rowInd);
-				int cols = (int)SpIdx.IndexBound(this.colIndices, 1, (nnz).As<TInd>(), true);
+				int cols = (int)SpIdx.IndexBound(this.colIndices, 1, nnz.As<TInd>(), true);
 				using var temp = cols.CheckStackLimit<TInd>();
 				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[cols] : temp.Data;
 				this.colIndices.ToManaged(tempInd);
@@ -356,7 +356,7 @@ namespace Althea.Array
 				{
 					int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
 					int end = tempInd[i].AsInt32();
-					colInd[start..end].Fill((i).As<TInd>());
+					colInd[start..end].Fill(i.As<TInd>());
 				}
 			}
 			return values.ToSparseMatrixString<T, TInd>(rowInd, colInd, ps.Precision) + (nnz == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - nnz));
@@ -432,13 +432,11 @@ namespace Althea.Array
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
-		private readonly TInd blockRows, blockCols;
+		private readonly long blockRows, blockCols;
 
-		private int BR => this.blockRows.AsInt32();
-		private int BC => this.blockCols.AsInt32();
-		private int BS => (this.blockRows * this.blockCols).AsInt32();
+		private int BS => checked((int)(this.blockRows * this.blockCols));
 
-		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockRows, 2);
+		ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockRows, 2);
 
 		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, (SparseFormat.Major)byte.MaxValue);
 
@@ -448,10 +446,10 @@ namespace Althea.Array
 		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
 
 		/// <inheritdoc/>
-		public override TSInd RowIndexStorage => this.rowIndices.MakeReference(0, this.NStored / this.BR);
+		public override TSInd RowIndexStorage => this.rowIndices.MakeReference(0, this.NStored / this.blockRows);
 
 		/// <inheritdoc/>
-		public override TSInd ColIndexStorage => this.colIndices.MakeReference(0, this.NStored / this.BC);
+		public override TSInd ColIndexStorage => this.colIndices.MakeReference(0, this.NStored / this.blockCols);
 
 		/// <summary>
 		/// Create a new <see cref="CoordinateBlockSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
@@ -469,7 +467,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short or its length</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoordinateBlockSparseMatrix(bool rowMajor, long rows, long cols, TInd blockRows, TInd blockCols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		public CoordinateBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
 		{
 			this.rowMajor = rowMajor;
 			this.blockRows = blockRows; this.blockCols = blockCols;
@@ -479,9 +477,9 @@ namespace Althea.Array
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowIndices));
 				if (colIndices.Length != values.Length)
 					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colIndices));
-				if (rows % this.BR != 0)
+				if (rows % this.blockRows != 0)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockRows));
-				if (cols % this.BC != 0)
+				if (cols % this.blockCols != 0)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockCols));
 				if (values.Length != rowIndices.Length * this.BS)
 					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
@@ -506,8 +504,8 @@ namespace Althea.Array
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override bool GetOffsets(long row, long col, Span<long> offsets)
 		{
-			long rowOfBlock = row % this.BR, colOfBlock = col % this.BC;
-			TInd x = (row / this.BR).As<TInd>(), y = (col / this.BC).As<TInd>();
+			long rowOfBlock = row % this.blockRows, colOfBlock = col % this.blockCols;
+			TInd x = (row / this.blockRows).As<TInd>(), y = (col / this.blockCols).As<TInd>();
 			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
 			if (!this.rowMajor)
 			{
@@ -515,7 +513,7 @@ namespace Althea.Array
 				(xInd, yInd) = (yInd, xInd);
 				(rowOfBlock, colOfBlock) = (colOfBlock, rowOfBlock);
 			}
-			long insideBlockOffset = colOfBlock + (this.rowMajor ? this.BC : this.BR) * rowOfBlock;
+			long insideBlockOffset = colOfBlock + (this.rowMajor ? this.blockCols : this.blockRows) * rowOfBlock;
 			long find = SpIdx.IndexBound(xInd, 1, x, true);
 			if ((xInd + find).ToManaged<TInd, TSInd>() != x)
 			{
@@ -547,8 +545,8 @@ namespace Althea.Array
 			values.Fill(this.DefaultValue);
 			values[(int)(offsetVal % this.BS)] = value;
 			this.Storage.TryInsert(offsetVal, values);
-			this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (row).As<TInd>() });
-			this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (col).As<TInd>() });
+			this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { row.As<TInd>() });
+			this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { col.As<TInd>() });
 			this.NStored = nnz + 1;
 			return true;
 		}
@@ -578,7 +576,8 @@ namespace Althea.Array
 		{
 			var ps = settings ?? Settings.PrintSetting;
 			int nnz = (int)Math.Min(this.NStored / this.BS, ps.ArrayLength);
-			int br = Math.Min(this.BR, ps.MatrixRow), bc = Math.Min(this.BR, ps.MatrixColumn);
+			int brThis = (int)this.blockRows, bcThis = (int)this.blockCols;
+			int br = Math.Min(brThis, ps.MatrixRow), bc = Math.Min(bcThis, ps.MatrixColumn);
 			using var tempVal = (br * bc).CheckStackLimit<T>();
 			using var tempInd1 = nnz.CheckStackLimit<TInd>();
 			using var tempInd2 = nnz.CheckStackLimit<TInd>();
@@ -590,16 +589,16 @@ namespace Althea.Array
 			StringBuilder sb = new();
 			for (int i = 0; i < nnz; i++)
 			{
-				sb.AppendLine($"Matrix[{rowInd[i] * this.blockRows}..{(rowInd[i] + TInd.One) * this.blockRows}, {colInd[i] * this.blockCols}..{(colInd[i] + TInd.One) * this.blockCols}] = ");
+				sb.AppendLine($"Matrix[{rowInd[i].AsInt32() * brThis}..{(rowInd[i].AsInt32() + 1) * brThis}, {colInd[i].AsInt32() * bcThis}..{(colInd[i].AsInt32() + 1) * bcThis}] = ");
 				if (this.rowMajor)
 				{
-					(this.Storage + i * this.BS).ToManaged2D(this.BC, values, bc, br);
-					sb.AppendLine(values.ToMatrixString(bc, true, this.BR - br, ps.Precision));
+					(this.Storage + i * this.BS).ToManaged2D(this.blockCols, values, bc, br);
+					sb.AppendLine(values.ToMatrixString(bc, true, this.blockRows - br, ps.Precision));
 				}
 				else
 				{
-					(this.Storage + i * this.BS).ToManaged2D(this.BR, values, br, bc);
-					sb.AppendLine(values.ToMatrixString(br, false, this.BR - br, ps.Precision));
+					(this.Storage + i * this.BS).ToManaged2D(this.blockRows, values, br, bc);
+					sb.AppendLine(values.ToMatrixString(br, false, this.blockRows - br, ps.Precision));
 				}
 			}
 			if (nnz < this.NStored / this.BS)
@@ -609,7 +608,7 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(bool RowMajor, long NRows, long NCols, long NonZeros, TInd RowBlockSize, TInd ColBlockSize, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
+		private record struct Repr(bool RowMajor, long NRows, long NCols, long NonZeros, long RowBlockSize, long ColBlockSize, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
 
 		private CoordinateBlockSparseMatrix(Repr repr) : this(repr.RowMajor, repr.NRows, repr.NCols, repr.RowBlockSize, repr.ColBlockSize, repr.Values, repr.RowIndices, repr.ColIndices, repr.Default, repr.NonZeros) { }
 
@@ -636,13 +635,12 @@ namespace Althea.Array
 			if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 2 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
 				return false;
 			long rows = wrapper.Size[0], cols = wrapper.Size[1];
-			TInd blockRows = wrapper.BlockSize[0], blockCols = wrapper.BlockSize[1];
-			int br = blockRows.AsInt32(), bc = blockCols.AsInt32();
+			long blockRows = wrapper.BlockSize[0], blockCols = wrapper.BlockSize[1];
 			TS values = wrapper.ValueStorages[0];
 			TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
 			if (values.Length > rows * cols)
 				return false;
-			if (rowIndices.Length != colIndices.Length || values.Length != rowIndices.Length * br * bc)
+			if (rowIndices.Length != colIndices.Length || values.Length != rowIndices.Length * blockRows * blockCols)
 				return false;
 			matrix = new CoordinateBlockSparseMatrix<T, TInd, TS, TSInd>(wrapper.Format.MajorType == SparseFormat.Major.Row, rows, cols, blockRows, blockCols, values, rowIndices, colIndices, wrapper.DefaultValue);
 			return true;
@@ -669,23 +667,21 @@ namespace Althea.Array
 		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
-		private readonly TInd blockRows, blockCols;
+		private readonly long blockRows, blockCols;
 
-		private int BR => this.blockRows.AsInt32();
-		private int BC => this.blockCols.AsInt32();
-		private int BS => (this.blockRows * this.blockCols).AsInt32();
+		private int BS => checked((int)(this.blockRows * this.blockCols));
 
-		ReadOnlySpan<TInd> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockRows, 2);
+		ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockRows, 2);
 
 		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Compressed, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
 
 		private readonly bool rowMajor;
 
 		/// <inheritdoc/>
-		public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : this.rowIndices.MakeReference(0, this.NStored / this.BR);
+		public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : this.rowIndices.MakeReference(0, this.NStored / this.blockRows);
 
 		/// <inheritdoc/>
-		public override TSInd ColIndexStorage => this.rowMajor ? this.colIndices.MakeReference(0, this.NStored / this.BC) : this.colIndices.MakeReference();
+		public override TSInd ColIndexStorage => this.rowMajor ? this.colIndices.MakeReference(0, this.NStored / this.blockCols) : this.colIndices.MakeReference();
 
 		/// <inheritdoc/>
 		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
@@ -706,21 +702,21 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CompressBlockSparseMatrix(bool rowMajor, long rows, long cols, TInd blockRows, TInd blockCols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		public CompressBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
 		{
 			this.rowMajor = rowMajor;
 			this.blockRows = blockRows; this.blockCols = blockCols;
 			try
 			{
-				if (rows % this.BR != 0)
+				if (rows % this.blockRows != 0)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockRows));
-				if (cols % this.BC != 0)
+				if (cols % this.blockCols != 0)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockCols));
 				if (this.NStored % this.BS != 0)
 					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(nnz));
-				if (rowMajor && (colIndices.Length * this.BS != values.Length || (rowIndices.Length - 1) * this.BR != rows))
+				if (rowMajor && (colIndices.Length * this.BS != values.Length || (rowIndices.Length - 1) * this.blockRows != rows))
 					throw new ArgumentException(Resources.ParameterError.WrongSize);
-				if (!rowMajor && (rowIndices.Length * this.BS != values.Length || (colIndices.Length - 1) * this.BC != cols))
+				if (!rowMajor && (rowIndices.Length * this.BS != values.Length || (colIndices.Length - 1) * this.blockCols != cols))
 					throw new ArgumentException(Resources.ParameterError.WrongSize);
 			}
 			catch (Exception)
@@ -748,8 +744,8 @@ namespace Althea.Array
 					offsets[1] = 0;
 				return false;
 			}
-			long rowOfBlock = row % this.BR, colOfBlock = col % this.BC;
-			TInd x = (row).As<TInd>(), y = (col).As<TInd>();
+			long rowOfBlock = row % this.blockRows, colOfBlock = col % this.blockCols;
+			TInd x = row.As<TInd>(), y = col.As<TInd>();
 			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
 			if (!this.rowMajor)
 			{
@@ -758,7 +754,7 @@ namespace Althea.Array
 				(xInd, yInd) = (yInd, xInd);
 				(rowOfBlock, colOfBlock) = (colOfBlock, rowOfBlock);
 			}
-			long insideBlockOffset = colOfBlock + (this.rowMajor ? this.BC : this.BR) * rowOfBlock;
+			long insideBlockOffset = colOfBlock + (this.rowMajor ? this.blockCols : this.blockRows) * rowOfBlock;
 			long rowStart = (xInd + row).ToManaged<TInd, TSInd>().AsInt64(),
 				rowEnd = (xInd + (row + 1)).ToManaged<TInd, TSInd>().AsInt64();
 			long find = SpIdx.IndexBound(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
@@ -786,12 +782,12 @@ namespace Althea.Array
 			this.Storage.TryInsert(offsetVal, values);
 			if (this.rowMajor)
 			{
-				this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (col / this.BC).As<TInd>() });
+				this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (col / this.blockCols).As<TInd>() });
 				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.rowIndices + (row + 1), 1, this.rowIndices + (row + 1), 1);
 			}
 			else
 			{
-				this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (row / this.BR).As<TInd>() });
+				this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (row / this.blockRows).As<TInd>() });
 				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.colIndices + (col + 1), 1, this.colIndices + (col + 1), 1);
 			}
 			this.NStored = nnz + this.BS;
@@ -823,8 +819,7 @@ namespace Althea.Array
 		{
 			var ps = settings ?? Settings.PrintSetting;
 			int nnz = (int)Math.Min(this.NStored / this.BS, ps.ArrayLength);
-			int br = Math.Min(this.BR, ps.MatrixRow), bc = Math.Min(this.BC, ps.MatrixColumn);
-			int bs = br * bc;
+			int br = Math.Min((int)this.blockRows, ps.MatrixRow), bc = Math.Min((int)this.blockCols, ps.MatrixColumn);
 			using var tempVal = (br * bc).CheckStackLimit<T>();
 			using var tempInd1 = nnz.CheckStackLimit<TInd>();
 			using var tempInd2 = nnz.CheckStackLimit<TInd>();
@@ -834,7 +829,7 @@ namespace Althea.Array
 			if (this.rowMajor)
 			{
 				this.ColIndexStorage.ToManaged(colInd);
-				int rows = (int)SpIdx.IndexBound(this.rowIndices, 1, (nnz).As<TInd>(), true);
+				int rows = (int)SpIdx.IndexBound(this.rowIndices, 1, nnz.As<TInd>(), true);
 				using var temp = rows.CheckStackLimit<TInd>();
 				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[rows] : temp.Data;
 				this.rowIndices.ToManaged(tempInd);
@@ -842,13 +837,13 @@ namespace Althea.Array
 				{
 					int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
 					int end = tempInd[i].AsInt32();
-					rowInd[start..end].Fill((i).As<TInd>());
+					rowInd[start..end].Fill(i.As<TInd>());
 				}
 			}
 			else
 			{
 				this.RowIndexStorage.ToManaged(rowInd);
-				int cols = (int)SpIdx.IndexBound(this.colIndices, 1, (nnz).As<TInd>(), true);
+				int cols = (int)SpIdx.IndexBound(this.colIndices, 1, nnz.As<TInd>(), true);
 				using var temp = cols.CheckStackLimit<TInd>();
 				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[cols] : temp.Data;
 				this.colIndices.ToManaged(tempInd);
@@ -856,22 +851,22 @@ namespace Althea.Array
 				{
 					int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
 					int end = tempInd[i].AsInt32();
-					colInd[start..end].Fill((i).As<TInd>());
+					colInd[start..end].Fill(i.As<TInd>());
 				}
 			}
 			StringBuilder sb = new();
 			for (int i = 0; i < nnz; i++)
 			{
-				sb.AppendLine($"[{rowInd[i] * this.blockRows}..{(rowInd[i] + TInd.One) * this.blockRows}, {colInd[i] * this.blockCols}..{(colInd[i] + TInd.One) * this.blockCols}] = ");
+				sb.AppendLine($"[{rowInd[i].AsInt64() * this.blockRows}..{(rowInd[i].AsInt64() + 1) * this.blockRows}, {colInd[i].AsInt64() * this.blockCols}..{(colInd[i].AsInt64() + 1) * this.blockCols}] = ");
 				if (this.rowMajor)
 				{
-					(this.Storage + i * this.BS).ToManaged2D(this.BC, values, bc, br);
-					sb.AppendLine(values.ToMatrixString(bc, true, this.BR - br, ps.Precision));
+					(this.Storage + i * this.BS).ToManaged2D(this.blockCols, values, bc, br);
+					sb.AppendLine(values.ToMatrixString(bc, true, this.blockRows - br, ps.Precision));
 				}
 				else
 				{
-					(this.Storage + i * this.BS).ToManaged2D(this.BR, values, br, bc);
-					sb.AppendLine(values.ToMatrixString(br, false, this.BR - br, ps.Precision));
+					(this.Storage + i * this.BS).ToManaged2D(this.blockRows, values, br, bc);
+					sb.AppendLine(values.ToMatrixString(br, false, this.blockRows - br, ps.Precision));
 				}
 			}
 			if (nnz < this.NStored / this.BS)
@@ -881,7 +876,7 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(bool RowMajor, long NRows, long NCols, long NonZeros, TInd BlockRows, TInd BlockCols, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
+		private record struct Repr(bool RowMajor, long NRows, long NCols, long NonZeros, long BlockRows, long BlockCols, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
 
 		private CompressBlockSparseMatrix(Repr repr) : this(repr.RowMajor, repr.NRows, repr.NCols, repr.BlockRows, repr.BlockCols, repr.Values, repr.RowIndices, repr.ColIndices, repr.Default, repr.NonZeros) { }
 
@@ -909,20 +904,19 @@ namespace Althea.Array
 				return false;
 			bool rowMajor = wrapper.Format.MajorType == SparseFormat.Major.Row;
 			long rows = wrapper.Size[0], cols = wrapper.Size[1];
-			TInd blockRows = wrapper.BlockSize[0], blockCols = wrapper.BlockSize[1];
-			int br = blockRows.AsInt32(), bc = blockCols.AsInt32();
+			long blockRows = wrapper.BlockSize[0], blockCols = wrapper.BlockSize[1];
 			TS values = wrapper.ValueStorages[0];
 			TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
 			if (values.Length > rows * cols)
 				return false;
 			if (rowMajor)
 			{
-				if (values.Length != colIndices.Length * br * bc || rows != (rowIndices.Length - 1) * br)
+				if (values.Length != colIndices.Length * blockRows * blockCols || rows != (rowIndices.Length - 1) * blockRows)
 					return false;
 			}
 			else
 			{
-				if (values.Length != rowIndices.Length * br * bc || cols != (colIndices.Length - 1) * bc)
+				if (values.Length != rowIndices.Length * blockRows * blockCols || cols != (colIndices.Length - 1) * blockCols)
 					return false;
 			}
 			matrix = new CompressBlockSparseMatrix<T, TInd, TS, TSInd>(rowMajor, rows, cols, blockRows, blockCols, values, rowIndices, colIndices, wrapper.DefaultValue);

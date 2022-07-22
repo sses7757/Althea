@@ -101,9 +101,23 @@ namespace Althea.Array
 		/// <inheritdoc/>
 		public void Dispose()
 		{
-			this.values.SafeDispose();
+			this.Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		/// <summary>
+		/// When implemented by a derived class, actually unmanaged resources held by this object.
+		/// </summary>
+		/// <param name="invokedByUser">Whether this method is invoked by user or by GC</param>
+		protected virtual void Dispose(bool invokedByUser)
+		{
+			this.values.SafeDispose(invokedByUser);
+		}
+
+		/// <summary>
+		/// Deconstructor to be invoked by GC
+		/// </summary>
+		~DenseVector() => this.Dispose(false);
 		#endregion
 
 		#region equality

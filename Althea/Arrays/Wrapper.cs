@@ -573,35 +573,20 @@ namespace Althea.Array
 	/// <typeparam name="TInd">Any unmanaged integer number as the index data type</typeparam>
 	/// <typeparam name="TSInd">The storage type used by the index array(s)</typeparam>
 	/// <remarks>The wrapper is quite large and therefore shall be passed by reference if possible.</remarks>
-	[StructLayout(LayoutKind.Explicit)]
+	[StructLayout(LayoutKind.Sequential)]
 	public struct SparseArrayWrapper<TVal, TInd, TSVal, TSInd>
 		where TVal : unmanaged, IBaseNumber<TVal> where TInd : unmanaged, IBinaryInt<TInd>
 		where TSVal : class, IStorage<TVal, TSVal> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		#region basic
-		static SparseArrayWrapper()
-		{
-			if (TInd.Size > sizeof(long))
-				throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
-		}
-
-		[FieldOffset(0)]
-		private FixedBuffer_128<long> size;
-		[FieldOffset(128 - sizeof(long))]
+		private FixedBuffer_120<long> size;
 		private int rank;
-		[FieldOffset(128)]
-		private FixedClassBuffer_8<TSVal> valueStorage;
-		[FieldOffset(128 + 64)]
-		private FixedClassBuffer_8<TSInd> indexStorage;
-		[FieldOffset(128 * 2)]
-		private FixedBuffer_128<TInd> blockSize;
-		[FieldOffset(128 * 3 - sizeof(long))]
-		private int vals;
-		[FieldOffset(128 * 3 - sizeof(int))]
-		private int inds;
-		[FieldOffset(128 * 3)]
 		private SparseFormat format;
-		[FieldOffset(128 * 3 + sizeof(int))]
+		private FixedClassBuffer_8<TSVal> valueStorage;
+		private FixedClassBuffer_8<TSInd> indexStorage;
+		private FixedBuffer_120<long> blockSize;
+		private int vals;
+		private int inds;
 		private TVal defaultVal;
 
 		private const byte MAX_RANK = 15, MAX_STORAGES = 8;
@@ -677,7 +662,7 @@ namespace Althea.Array
 		/// <param name="indices2">The second <see cref="IndexStorages"/> to set</param>
 		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
 		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
-		public void SetValues(long rows, long cols, TInd blockRows, TInd blockCols, TSVal values!!, TSInd indices1!!, TSInd indices2!!)
+		public void SetValues(long rows, long cols, long blockRows, long blockCols, TSVal values!!, TSInd indices1!!, TSInd indices2!!)
 		{
 			this.blockSize[0] = blockRows; this.blockSize[1] = blockCols;
 			this.SetValues(rows, cols, values, indices1, indices2);
@@ -693,11 +678,11 @@ namespace Althea.Array
 		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
 		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
 		/// <exception cref="ArgumentException">If <paramref name="blockSize"/> is not empty while its length is not the same as <paramref name="size"/></exception>
-		public void SetValues(long size, TSVal values!!, TSInd indices!!, TInd blockSize = default)
+		public void SetValues(long size, TSVal values!!, TSInd indices!!, long blockSize = default)
 		{
 			this.rank = 1;
 			this.size[0] = size;
-			this.blockSize[0] = blockSize == default ? TInd.One : blockSize;
+			this.blockSize[0] = blockSize == 0 ? 1 : blockSize;
 			this.vals = 1;
 			this.valueStorage[0] = values;
 			this.inds = 1;
@@ -714,7 +699,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentNullException">if any of the inputs is empty</exception>
 		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
 		/// <exception cref="ArgumentException">If <paramref name="blockSize"/> is not empty while its length is not the same as <paramref name="size"/></exception>
-		public void SetValues(ReadOnlySpan<long> size, ReadOnlySpan<TSVal> values, ReadOnlySpan<TSInd> indexes, ReadOnlySpan<TInd> blockSize = default)
+		public void SetValues(ReadOnlySpan<long> size, ReadOnlySpan<TSVal> values, ReadOnlySpan<TSInd> indexes, ReadOnlySpan<long> blockSize = default)
 		{
 			if (size.IsEmpty)
 				throw new ArgumentNullException(nameof(size));
@@ -749,7 +734,7 @@ namespace Althea.Array
 		/// <summary>
 		/// The constant block size of this sparse array, can be empty if it is not a <see cref="SparseFormat.Blocking.Simple"/>
 		/// </summary>
-		public ReadOnlySpan<TInd> BlockSize => this.blockSize.AsSpan(this.rank);
+		public ReadOnlySpan<long> BlockSize => this.blockSize.AsSpan(this.rank);
 
 		/// <summary>
 		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with only meta information.

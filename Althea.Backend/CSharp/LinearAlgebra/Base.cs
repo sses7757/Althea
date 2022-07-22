@@ -4,12 +4,13 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 using Althea.Array;
-using Althea.Backend.CSharp.Storage;
 using Althea.Backend.Storage;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.LinearAlgebra.Sparse;
+
+using static Althea.Backend.Storage.CpuMemoryPointerChecker;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra;
@@ -39,47 +40,6 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 
 	#region helpers
 	#region load and simple op
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static bool GetPointer<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-	{
-		pointer = null; length = inc = 0;
-		if (s is null || !s.IsValid())
-			throw new ArgumentNullException(nameof(s));
-		if (stride <= 0)
-			throw new ArgumentOutOfRangeException(nameof(stride), stride, Resources.ParameterError.MustPositive);
-		if (s is not PureStorage<T, CpuMemoryPointer> ps)
-			return false; // not support
-		pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
-		if (pointer == default)
-			return false; // not support
-		length = (int)ps.Length;
-		inc = (int)stride;
-		length = (length - 1) / inc + 1;
-		return true;
-	}
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static bool GetPointer<T, TS>(TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int ldd) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-	{
-		pointer = null; mm = nn = ldd = 0;
-		if (s is null || !s.IsValid())
-			return true;
-		if (m <= 0)
-			throw new ArgumentOutOfRangeException(nameof(m), m, Resources.ParameterError.MustPositive);
-		if (n <= 0)
-			throw new ArgumentOutOfRangeException(nameof(n), n, Resources.ParameterError.MustPositive);
-		if (ld < m)
-			throw new ArgumentOutOfRangeException(nameof(ld), ld, Resources.ParameterError.InvalidValue);
-		if (s is not PureStorage<T, CpuMemoryPointer> ps)
-			return false; // not support
-		pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
-		if (pointer == default)
-			return false; // not support
-		if (ps.Length < (n - 1) * ld + m)
-			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(s));
-		mm = (int)m; nn = (int)n; ldd = (int)ld;
-		return true;
-	}
-
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector<T> LoadVector<T>(T* r) where T : unmanaged => Unsafe.ReadUnaligned<Vector<T>>(r);
 
@@ -796,13 +756,13 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	{
 		if (m == ldd && m == lds)
 		{
-			Unsafe.CopyBlockUnaligned(dst, src, (uint)(m * n * sizeof(T)));
+			Buffer.MemoryCopy(src, dst, m * n * sizeof(T), m * n * sizeof(T));
 		}
 		else
 		{
 			for (int i = 0; i < n; i++)
 			{
-				Unsafe.CopyBlockUnaligned(dst + i * ldd, src + i * lds, (uint)(m * sizeof(T)));
+				Buffer.MemoryCopy(src + i * lds, dst + i * ldd, m * sizeof(T), m * sizeof(T));
 			}
 		}
 	}

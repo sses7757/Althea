@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 
-namespace Althea.Backend.CSharp.Storage
+namespace Althea.Backend.Storage
 {
 	internal readonly unsafe ref struct MatBuffer<T> where T : unmanaged
 	{

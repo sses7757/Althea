@@ -4,7 +4,10 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 using Althea.Array;
+using Althea.Backend.Storage;
 using Althea.Helpers;
+
+using static Althea.Backend.Storage.CpuMemoryPointerChecker;
 
 using LA = Althea.Backend.CSharp.LinearAlgebra.Api;
 
@@ -44,9 +47,9 @@ public class Api : Althea.Transformer.IAbstractApi
 			throw new ArgumentException(Resources.ParameterError.NotSameSize);
 		if (input.Rank != 1)
 			return false;
-		if (!LA.GetPointer(input.ValueStorage, input.Strides[0], out T* pi, out int n, out int inc1))
+		if (!GetPointer(input.ValueStorage, input.Strides[0], out T* pi, out int n, out int inc1))
 			return false;
-		if (!LA.GetPointer(output.ValueStorage, output.Strides[0], out T* po, out _, out int inc2))
+		if (!GetPointer(output.ValueStorage, output.Strides[0], out T* po, out _, out int inc2))
 			return false;
 		if (inc1 != 1 || inc2 != 1)
 			return false;
@@ -80,9 +83,9 @@ public class Api : Althea.Transformer.IAbstractApi
 			throw new ArgumentException(Resources.ParameterError.NotSameSize);
 		if (input.Rank != 1)
 			return false;
-		if (!LA.GetPointer(input.ValueStorage, input.Strides[0], out T* pi, out int n, out int inc1))
+		if (!GetPointer(input.ValueStorage, input.Strides[0], out T* pi, out int n, out int inc1))
 			return false;
-		if (!LA.GetPointer(output.ValueStorage, output.Strides[0], out Complex<T>* po, out _, out int inc2))
+		if (!GetPointer(output.ValueStorage, output.Strides[0], out Complex<T>* po, out _, out int inc2))
 			return false;
 		if (inc1 != 1 || inc2 != 1)
 			return false;
@@ -100,9 +103,9 @@ public class Api : Althea.Transformer.IAbstractApi
 			throw new ArgumentException(Resources.ParameterError.NotSameSize);
 		if (input.Rank != 1)
 			return false;
-		if (!LA.GetPointer(input.ValueStorage, input.Strides[0], out Complex<T>* pi, out int n, out int inc1))
+		if (!GetPointer(input.ValueStorage, input.Strides[0], out Complex<T>* pi, out int n, out int inc1))
 			return false;
-		if (!LA.GetPointer(output.ValueStorage, output.Strides[0], out T* po, out _, out int inc2))
+		if (!GetPointer(output.ValueStorage, output.Strides[0], out T* po, out _, out int inc2))
 			return false;
 		if (inc1 != 1 || inc2 != 1)
 			return false;
@@ -386,11 +389,11 @@ public class Api : Althea.Transformer.IAbstractApi
 		if (!int.IsPow2(n))
 			throw new NotSupportedException();
 
-		using var buffer = Storage.ArrayPoolBuffers.Create<Complex<T>>(n * T.Size * 2);
+		using var buffer = ArrayPoolBuffers.Create<Complex<T>>(n * T.Size * 2);
 		fixed (Complex<T>* src = array)
 		fixed (T* dst = output)
 		{
-			Unsafe.CopyBlockUnaligned(buffer, src, (uint)(n * T.Size * 2));
+			Buffer.MemoryCopy(src, buffer, n * sizeof(T) * 2 n * sizeof(T) * 2);
 			FFT(new Span<Complex<T>>(buffer, n), false);
 			Storage.Api.StridedCopy((T*)(void*)buffer, dst, 2, 1, n);
 		}

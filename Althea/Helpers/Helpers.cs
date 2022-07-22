@@ -1166,7 +1166,7 @@ namespace Althea.Helpers
 			@struct = default;
 			fixed (void* t = &span.Ref())
 			{
-				Unsafe.CopyBlock(Unsafe.AsPointer(ref @struct), t, (uint)size);
+				Buffer.MemoryCopy(t, Unsafe.AsPointer(ref @struct), size, size);
 			}
 		}
 
@@ -1185,9 +1185,9 @@ namespace Althea.Helpers
 			int size = Unsafe.SizeOf<TStruct>();
 			if (size > span.Length)
 				throw new ArgumentException(ParameterError.WrongSize, nameof(span));
-			fixed (void* t = &span[0])
+			fixed (void* t = &span.Ref())
 			{
-				Unsafe.CopyBlock(t, Unsafe.AsPointer(ref @struct), (uint)size);
+				Buffer.MemoryCopy(Unsafe.AsPointer(ref @struct), t, size, size);
 			}
 			return span;
 		}
