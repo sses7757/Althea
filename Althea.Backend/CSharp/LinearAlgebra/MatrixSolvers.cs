@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 using Althea.Helpers;
 
-using static Althea.Backend.Storage.CpuMemoryPointerChecker;
+using static Althea.Backend.CSharp.MemoryPointerChecker;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra;

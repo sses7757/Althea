@@ -1,6 +1,8 @@
 ﻿using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
 
+using static Althea.Backend.Mkl.MemoryPointerChecker;
+
 using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 
 

@@ -8,7 +8,7 @@ using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Linq;
 
-using static Althea.Backend.Storage.CpuMemoryPointerChecker;
+using static Althea.Backend.CSharp.MemoryPointerChecker;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra

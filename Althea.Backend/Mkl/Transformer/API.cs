@@ -1,8 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using Althea.Array;
 
-using Althea.Array;
-using Althea.Backend.Storage;
-using Althea.Linq;
+using static Althea.Backend.Mkl.MemoryPointerChecker;
 
 
 namespace Althea.Backend.Mkl.Transformer
@@ -33,26 +31,6 @@ namespace Althea.Backend.Mkl.Transformer
 		public bool CacheFftPlan { get; set; } = false;
 
 		private readonly Dictionary<(DataType type, bool? inplace, bool forward, double scale, long length), DftiDescriptor> cache = new();
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS s, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("size")] string? sizeName = null, [CallerArgumentExpression("outerSize")] string? outerSizeName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-		{
-			pointer = default; length = size.Prod();
-			if (s is null || !s.IsValid())
-				throw new ArgumentNullException(sName);
-			if (size.Any(static s => s <= 0))
-				throw new ArgumentOutOfRangeException(sizeName, size.ToArray(), Resources.ParameterError.MustPositive);
-			if (outerSize.Any(static s => s <= 0))
-				throw new ArgumentOutOfRangeException(outerSizeName, outerSize.ToArray(), Resources.ParameterError.MustPositive);
-			if (!outerSize.SequenceLargerEqualThan(size))
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, outerSizeName);
-			if (s is not PureStorage<T, CpuMemoryPointer> ps)
-				return false; // not support
-			ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
-			if (pointer == default)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
-			return true;
-		}
 		#endregion
 
 		#region operations

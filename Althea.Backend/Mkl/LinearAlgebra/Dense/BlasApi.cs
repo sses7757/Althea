@@ -4,6 +4,8 @@ using System.Threading;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 
+using static Althea.Backend.Mkl.MemoryPointerChecker;
+
 using NM = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethods;
 using NMC = Althea.Backend.Mkl.LinearAlgebra.Dense.CustomNativeMethods;
 using NMT = Althea.Backend.Mkl.LinearAlgebra.Dense.NativeMethodsTemplate;
@@ -871,7 +873,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				return false;
 			if (lenx < (leftA == opA.CanInPlace() ? n : m))
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
-			delegate*<MklMatrixLayout, MklBlasSideMode, long, long, T*, long, long, T*, long, long, T*, long, long, long, void> func = default(T) switch
+			delegate*<MklMatrixLayout, MklBlasSideMode, MklInt, MklInt, T*, MklInt, MklInt, T*, MklInt, MklInt, T*, MklInt, MklInt, MklInt, void> func = default(T) switch
 			{
 				Float32 => &NM.cblas_sdgmm_batch_strided,
 				Float64 => &NM.cblas_ddgmm_batch_strided,

@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
 
-namespace Althea.Backend.Mkl.LinearAlgebra
+namespace Althea.Backend.Mkl
 {
 	internal readonly struct MklInt
 	{

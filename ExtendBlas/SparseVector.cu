@@ -261,7 +261,7 @@ size_t vecSpAddNnz(const Datatype::DataType type,
 
 // sparse vector add another sparse vector -- calculate
 template <typename T>
-inline void vectorSparseAddCalculate(const void* buffer, size_t nnzAB, size_t nnzC, MKL_INT* C_indexOut, void* C_valueOut)
+inline int vectorSparseAddCalculate(const void* buffer, size_t nnzAB, size_t nnzC, MKL_INT* C_indexOut, void* C_valueOut)
 {
 	// cast
 	T* C_value = (T*)C_valueOut;
@@ -271,12 +271,13 @@ inline void vectorSparseAddCalculate(const void* buffer, size_t nnzAB, size_t nn
 
 	// sum values with the same index
 	thrust::reduce_by_key(THRUST_PAR, temp_index, temp_index + nnzAB, temp_value, C_indexOut, C_value, thrust::equal_to<int>(), plus_functor<T>());
+	return 0;
 }
 
 DLLEXP
-void vecSpAddCal(const Datatype::DataType type, const void* buffer, size_t nnzAB, size_t nnzC, MKL_INT* C_index, void* C_value)
+int vecSpAddCal(const Datatype::DataType type, const void* buffer, size_t nnzAB, size_t nnzC, MKL_INT* C_index, void* C_value)
 {
-	AUTO_ALLTYPE_FUNC(vectorSparseAddCalculate, type, void, buffer, nnzAB, nnzC, C_index, C_value);
+	AUTO_ALLTYPE_FUNC(vectorSparseAddCalculate, type, int, buffer, nnzAB, nnzC, C_index, C_value);
 }
 #pragma endregion
 

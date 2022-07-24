@@ -10,7 +10,7 @@ using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
 using Althea.LinearAlgebra.Sparse;
 
-using static Althea.Backend.Storage.CpuMemoryPointerChecker;
+using static Althea.Backend.CSharp.MemoryPointerChecker;
 
 
 namespace Althea.Backend.CSharp.LinearAlgebra;

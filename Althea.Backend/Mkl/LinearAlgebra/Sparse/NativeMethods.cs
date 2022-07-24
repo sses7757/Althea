@@ -25,17 +25,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void cblas_ssctr(MklInt nnz, void* x, MklInt* indx, void* y);
 
-		[NativeMethod(6, false, false, false, true)]
+		// Ignore Spelling: sdoti ddoti
+		[CustomNativeMethod(6, "Float32", "sdoti")]
+		[CustomNativeMethod(6, "Float64", "ddoti")]
+		[CustomNativeMethod(6, "Complex<Float32>", "cdotui_sub", "", "Complex<Float32>", true)]
+		[CustomNativeMethod(6, "Complex<Float32>", "cdotci_sub", "", "Complex<Float32>", true)]
+		[CustomNativeMethod(6, "Complex<Float64>", "zdotui_sub", "", "Complex<Float64>", true)]
+		[CustomNativeMethod(6, "Complex<Float64>", "zdotci_sub", "", "Complex<Float64>", true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern Float32 cblas_sdoti(MklInt nnz, void* x, MklInt* indx, void* y);
-
-		[NativeMethod(6, false, false, false, false)]
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern Float32 cblas_cdotci_sub(MklInt nnz, Complex<Float32>* x, MklInt* indx, Complex<Float32>* y, out Complex<Float32> dot);
-
-		[NativeMethod(6, false, false, false, false)]
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern Float32 cblas_cdotui_sub(MklInt nnz, Complex<Float32>* x, MklInt* indx, Complex<Float32>* y, out Complex<Float32> dot);
+		internal static extern Float32 cblas_sdoti(MklInt n, Float32* x, MklInt* indx, Float32* y);
 		#endregion
 
 		#region level 2 and 3
@@ -108,14 +106,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		[NativeMethod(11, false, false, false, true)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklSparseBlasError mkl_sparse_s_qr(MatrixOp trans, IntPtr A, MatrixDescr descr, MatrixMajor dense_layout, MklInt nrhs, void* x, MklInt ldx, void* b, MklInt ldb);
-
-		////[NativeMethod(11, false, false, false, true)]
-		////[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		////internal static extern MklSparseBlasError mkl_sparse_s_qr_factorize(IntPtr A, Float32* alt_values = null);
-
-		////[NativeMethod(11, false, false, false, true)]
-		////[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		////internal static extern MklSparseBlasError mkl_sparse_s_qr_solve(MatrixOp trans, IntPtr A, Float32* alt_values, MatrixMajor dense_layout, MklInt nrhs, Float32* x, MklInt ldx, Float32* b, MklInt ldb);
 		#endregion
 	}
 
@@ -124,6 +114,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 	/// </summary>
 	public static unsafe partial class NativeMethods
 	{
+		#region level 1
+		internal delegate T cblas_doti<T>(MklInt nnz, T* x, MklInt* indx, T* y) where T : unmanaged;
+
+		internal delegate void cblas_doti_comp<T>(MklInt nnz, T* x, MklInt* indx, T* y, out T dot) where T : unmanaged;
+		#endregion
+
 		#region level 2 and 3
 		internal delegate MklSparseBlasError mkl_sparse__export_csr<T>(IntPtr A, out int indexing, out MklInt rows, out MklInt cols, out MklInt nnz, out MklInt* row_start, out MklInt* row_end, out MklInt* col_indx, out T* values) where T : unmanaged, IBaseNumber<T>;
 
@@ -212,5 +208,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern void cooIdxsToSpVecIdx(MklInt* index, MklInt* rowIdx, MklInt* colIdx, long N, long ld);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern long vecSpAddBuffer(DataType type, MklInt nnzA, MklInt nnzB);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern long vecSpAddNnz(DataType type, MklInt* indA, void* valA, MklInt nnzA, MklInt* indB, void* valB, MklInt nnzB, void* alpha, void* buffer);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int vecSpAddCal(DataType type, void* buffer, long nnzAB, long nnzC, MklInt* C_index, void* C_value);
 	}
 }

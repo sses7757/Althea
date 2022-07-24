@@ -6,6 +6,8 @@ using Althea.Helpers;
 using Althea.Linq;
 using Althea.Random;
 
+using static Althea.Backend.Mkl.MemoryPointerChecker;
+
 
 namespace Althea.Backend.Mkl.Random
 {
@@ -64,32 +66,13 @@ namespace Althea.Backend.Mkl.Random
 
 		/// <inheritdoc/>
 		public bool Disposed { get; set; } = false;
-
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool GetPointer<T, TS>(TS s, out T* pointer, out int length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-		{
-			pointer = default; length = 0;
-			if (s is null || !s.IsValid())
-				throw new ArgumentNullException(sName);
-			if (s is not PureStorage<T, CpuMemoryPointer> ps)
-				return false; // not support
-			ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
-			if (pointer == default)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
-			long len = ps.Length;
-			if (len > int.MaxValue)
-				return false;
-			length = (int)len;
-			return true;
-		}
 		#endregion
 
 		#region get distribution
 		const DistributionType INVALID = (DistributionType)(-1);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T, TS, TDist>(TS storage, in TDist distribution, out T* pointer, out int length, out DistributionType type) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRandomDistribution<TDist>
+		private static unsafe bool Check<T, TS, TDist>(TS storage, in TDist distribution, out T* pointer, out long length, out DistributionType type) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRandomDistribution<TDist>
 		{
 			pointer = default; length = 0;
 			type = INVALID;
@@ -174,7 +157,7 @@ namespace Althea.Backend.Mkl.Random
 
 		#region methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private unsafe void Fill1D<T, TDist>(T* ptr, int n, in TDist distribution, DistributionType type) where T : unmanaged, IBaseNumber<T> where TDist : struct, IRandomDistribution<TDist>
+		private unsafe void Fill1D<T, TDist>(T* ptr, long n, in TDist distribution, DistributionType type) where T : unmanaged, IBaseNumber<T> where TDist : struct, IRandomDistribution<TDist>
 		{
 			IntPtr p = (IntPtr)ptr;
 			T shape1, shape2, scale, displace, mean, sigma;

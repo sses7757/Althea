@@ -7,7 +7,7 @@ using Althea.Array;
 using Althea.Backend.Storage;
 using Althea.Helpers;
 
-using static Althea.Backend.Storage.CpuMemoryPointerChecker;
+using static Althea.Backend.CSharp.MemoryPointerChecker;
 
 using LA = Althea.Backend.CSharp.LinearAlgebra.Api;
 
