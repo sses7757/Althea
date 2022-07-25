@@ -153,6 +153,24 @@ namespace Althea
 			/// <returns>A new <see cref="ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind</returns>
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ApiEnumerator GetEnumerator() => new();
+
+			/// <summary>
+			/// Get all current <typeparamref name="TApi"/>s.
+			/// </summary>
+			public IEnumerable<TApi> CurrentApis
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get
+				{
+					List<TApi> apis = new(ApiManager.Count<TApi>());
+					var enumerator = GetEnumerator();
+					do
+					{
+						apis.Add(enumerator.Current);
+					} while (enumerator.MoveNext());
+					return apis;
+				}
+			}
 		}
 
 		/// <summary>

@@ -83,7 +83,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_s_add(MatrixOp transA, Float32 alpha, IntPtr A, IntPtr B, ref IntPtr C);
+		internal static extern MklSparseBlasError mkl_sparse_s_add(MatrixOp transA, Float32 alpha, IntPtr A, IntPtr B, out IntPtr C);
 
 		[NativeMethod(11)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -143,17 +143,17 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		internal static extern MklSparseBlasError mkl_sparse_order(IntPtr matrix);
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_spmm(MatrixOp transA, IntPtr A, IntPtr B, ref IntPtr C);
+		internal static extern MklSparseBlasError mkl_sparse_spmm(MatrixOp transA, IntPtr A, IntPtr B, out IntPtr C);
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklSparseBlasError mkl_sparse_sp2m(MatrixOp transA, MatrixDescr descrA, IntPtr A, MatrixOp transB, MatrixDescr descrB, IntPtr B, Request request, ref IntPtr C);
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_syrk(MatrixOp transA, IntPtr A, ref IntPtr C);
+		internal static extern MklSparseBlasError mkl_sparse_syrk(MatrixOp transA, IntPtr A, out IntPtr C);
 
 		// C = op(A) * B * (op(A))^{T for real or H for complex}
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklSparseBlasError mkl_sparse_sypr(MatrixOp transA, IntPtr A, IntPtr B, MatrixDescr descrB, ref IntPtr C, Request request);
+		internal static extern MklSparseBlasError mkl_sparse_sypr(MatrixOp transA, IntPtr A, IntPtr B, MatrixDescr descrB, out IntPtr C, Request request);
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklSparseBlasError mkl_sparse_set_mv_hint(IntPtr A, MatrixOp transA, MatrixDescr descrA, MklInt expected_calls);
@@ -217,5 +217,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int vecSpAddCal(DataType type, void* buffer, long nnzAB, long nnzC, MklInt* C_index, void* C_value);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int spVecOuterCheck(DataType type);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int spVecOuter(DataType type, void* valA, MklInt* indA, long nnzA, void* valB, MklInt* indB, long nnzB, void* valC, MklInt* rowC, MklInt* colC, bool conj);
 	}
 }

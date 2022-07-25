@@ -402,6 +402,10 @@ namespace Althea.Array
 		/// </summary>
 		public static readonly SparseFormat MatrixCorFormat = new(Type.Coordinated, Blocking.Element, Major.Row);
 		/// <summary>
+		/// The element-blocked column-major or row-major coordinated format for matrices
+		/// </summary>
+		public static readonly SparseFormat MatrixCooFormat = new(Type.Coordinated, Blocking.Element, Major.Column | Major.Row);
+		/// <summary>
 		/// The element-blocked column-major compressed format for matrices
 		/// </summary>
 		public static readonly SparseFormat MatrixCscFormat = new(Type.Compressed, Blocking.Element, Major.Column);
@@ -470,6 +474,11 @@ namespace Althea.Array
 		/// Get a <see cref="SparseFormat"/> whose <see cref="Major"/> is <see cref="Major.Row"/>.
 		/// </summary>
 		public readonly SparseFormat WithRowMajor => new(this.type, this.blocking, Major.Row);
+
+		/// <summary>
+		/// Get a <see cref="SparseFormat"/> whose <see cref="Major"/> is <see cref="Major.Row"/> if this is <see cref="Major.Column"/>, or <see cref="Major.Column"/> is this is <see cref="Major.Row"/>, or unchanged otherwise.
+		/// </summary>
+		public readonly SparseFormat WithTransposedMajor => this.major == Major.Column ? new(this.type, this.blocking, Major.Row) : this.major == Major.Row ? new(this.type, this.blocking, Major.Column) : this;
 
 		/// <summary>
 		/// Get whether this <see cref="SparseFormat"/> is an atomic format, i.e. a specific format, or not.

@@ -121,6 +121,6 @@
     <value>The initialization procedure of selected backend implementation cannot be performed.</value>
   </data>
   <data name="NotAvailable" xml:space="preserve">
-    <value>There is no suitable backend implementation currently available.</value>
+    <value>There is no suitable backend implementation currently available. The tested APIs are: </value>
   </data>
 </root>

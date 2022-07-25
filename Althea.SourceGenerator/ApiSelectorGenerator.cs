@@ -197,7 +197,7 @@ namespace {ns.Name}
 				if (api.{method.Identifier}{orgTypeParams}({allParamsInvoke}))
 					return {returnParam.Identifier};
 			}}
-			throw new InvalidOperationException(BackendError.NotAvailable);
+			throw new InvalidOperationException(BackendError.NotAvailable + string.Join("", "", ApiEnumerable.CurrentApis));
 		}}";
 						methodMain += body;
 					}
@@ -211,7 +211,7 @@ namespace {ns.Name}
 				if (api.{method.Identifier}{orgTypeParams}({allParamsInvoke}))
 					return;
 			}}
-			throw new InvalidOperationException(BackendError.NotAvailable);
+			throw new InvalidOperationException(BackendError.NotAvailable + string.Join("", "", ApiEnumerable.CurrentApis));
 		}}";
 						methodMain += body;
 					}

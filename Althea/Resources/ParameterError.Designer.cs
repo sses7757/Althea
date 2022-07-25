@@ -133,6 +133,15 @@ namespace Althea.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The given parameter has invalid / incorrect rank. 的本地化字符串。
+        /// </summary>
+        public static string InvalidRank {
+            get {
+                return ResourceManager.GetString("InvalidRank", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The given parameter has invalid value. 的本地化字符串。
         /// </summary>
         public static string InvalidValue {

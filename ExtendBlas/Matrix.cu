@@ -420,7 +420,18 @@ struct sparseVectorsOuter_functor
 };
 
 template<typename T>
-void sparseVectorsOuter(
+int sparseVectorsOuterCheck()
+{
+	return 0;
+}
+
+DLLEXP int spVecOuterCheck(const Datatype::DataType type)
+{
+	AUTO_ALLTYPE_FUNC(sparseVectorsOuterCheck, type, int);
+}
+
+template<typename T>
+int sparseVectorsOuter(
 	const void* valAv, const MKL_INT* indA, const size_t nnzA,
 	const void* valBv, const MKL_INT* indB, const size_t nnzB,
 	void* valCv, MKL_INT* rowC, MKL_INT* colC, const bool conj)
@@ -435,14 +446,16 @@ void sparseVectorsOuter(
 		SPARSE_VECTOR_OUTER_CODE(true);
 	else
 		SPARSE_VECTOR_OUTER_CODE(false);
+
+	return 0;
 }
 
-DLLEXP void spVecOuter(const Datatype::DataType type,
+DLLEXP int spVecOuter(const Datatype::DataType type,
 	const void* valA, const MKL_INT* indA, const size_t nnzA,
 	const void* valB, const MKL_INT* indB, const size_t nnzB,
 	void* valC, MKL_INT* rowC, MKL_INT* colC, const bool conj)
 {
-	AUTO_ALLTYPE_FUNC(sparseVectorsOuter, type, void, valA, indA, nnzA, valB, indB, nnzB, valC, rowC, colC, conj);
+	AUTO_ALLTYPE_FUNC(sparseVectorsOuter, type, int, valA, indA, nnzA, valB, indB, nnzB, valC, rowC, colC, conj);
 }
 #pragma endregion
 

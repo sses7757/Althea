@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 
 using Althea.Array;
 using Althea.Backend.Storage;
@@ -156,14 +157,48 @@ namespace Althea.Backend.Mkl
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe bool GetPointer<T, TInd, TS, TSInd>(ISparseArray<T, TInd, TS, TSInd> vector, out T* pointer, out MklInt* pointerInd, out long nnz, [CallerArgumentExpression("vector")] string? vectorName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			pointer = default; pointerInd = default; nnz = 0;
+			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt) || vector.DefaultValue != T.Zero)
+				return false;
+			if (vector is null)
+				throw new ArgumentNullException(vectorName);
+			if (vector.Size.Length != 1)
+				throw new ArgumentException(Resources.ParameterError.InvalidRank, vectorName);
+			if (vector.Size[0] <= 0)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, vectorName);
+			if (vector.Format != SparseFormat.VectorCooFormat)
+				return false;
+			if (vector.ValueStorages.Length != 1 || vector.ValueStorages[0] is not PureStorage<T, CpuMemoryPointer> ps)
+				return false;
+			if (vector.IndexStorages.Length != 1 || vector.IndexStorages[0] is not PureStorage<TInd, CpuMemoryPointer> psInd)
+				return false;
+			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
+			if (pointer == default)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, vectorName);
+			pointerInd = (MklInt*)psInd.Pointer.Pointer.UnmangedPointer<TInd>(psInd.Pointer.OffsetInBytes);
+			if (pointerInd == default)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, vectorName);
+			nnz = ps.Length;
+			if (nnz > MklInt.MaxValue || nnz < 0)
+				return false;
+			if (psInd.Length != nnz)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, vectorName);
+			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe bool GetPointer<T, TInd, TS, TSInd>(ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out MklInt* pointerRow, out MklInt* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			pointer = default; pointerRow = pointerCol = default; nnz = 0;
-			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt))
+			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt) || matrix.DefaultValue != T.Zero)
 				return false;
 			if (matrix is null)
 				throw new ArgumentNullException(matrixName);
-			if (matrix.Size.Length != 2 || matrix.Size[0] <= 0 || matrix.Size[1] <= 0)
+			if (matrix.Size.Length != 2)
+				throw new ArgumentException(Resources.ParameterError.InvalidRank, matrixName);
+			if (matrix.Size[0] <= 0 || matrix.Size[1] <= 0)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, matrixName);
 			if ((matrix.Format.Class & (SparseFormat.Type.Coordinated | SparseFormat.Type.Compressed)) == 0 ||
 				(matrix.Format.BlockType & (SparseFormat.Blocking.Element | SparseFormat.Blocking.Simple)) == 0 ||

@@ -3,6 +3,9 @@
 using Althea.Array;
 using Althea.Backend.Mkl.LinearAlgebra.Sparse;
 using Althea.Backend.Storage;
+using Althea.LinearAlgebra;
+
+using static Althea.Backend.Mkl.MemoryPointerChecker;
 
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
@@ -48,6 +51,17 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		None = 10,
 		Trans = 11,
 		ConjTrans = 12
+	}
+
+	internal static class CustomEnumExtensions
+	{
+		public static MatrixOp ToOp(this MatrixOperation op) => op switch
+		{
+			MatrixOperation.None => MatrixOp.None,
+			MatrixOperation.Transpose => MatrixOp.Trans,
+			MatrixOperation.ConjugateTranspose => MatrixOp.ConjTrans,
+			_ => MatrixOp.None
+		};
 	}
 
 	internal enum MatrixType
@@ -103,17 +117,17 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 	{
 		private readonly IntPtr handle;
 		private readonly SparseFormat format;
-		private readonly bool transposed;
+		private readonly MatrixOperation op;
+
+		public readonly bool IsEmpty => this.handle == default;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator IntPtr(SparseMatrixHandle handle) => handle.handle;
 
-		private static readonly SparseFormat CooFormat = SparseFormat.MatrixCocFormat | SparseFormat.MatrixCorFormat;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SparseMatrixHandle(IntPtr handle, SparseFormat format, bool transposed = false)
+		public SparseMatrixHandle(IntPtr handle, SparseFormat format, MatrixOperation op = MatrixOperation.None)
 		{
-			this.handle = handle; this.format = format; this.transposed = transposed;
+			this.handle = handle; this.format = format; this.op = op;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -127,16 +141,20 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe SparseMatrixHandle TryCreate<T, TInd, TS, TSInd>(ISparseArray<T, TInd, TS, TSInd> source, out bool success)
+		public static unsafe SparseMatrixHandle TryCreate<T, TInd, TS, TSInd>(ISparseArray<T, TInd, TS, TSInd>? source, out bool success)
 			where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 			where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			success = false;
-			if (!Api.GetPointer(source, out T* pv, out TInd* pr, out var pc, out var nnz))
+			if (source is null)
+				return default;
+			if (!source.BlockSize.IsEmpty && source.BlockSize[0] != source.BlockSize[1])
+				return default; // not supported by MKL
+			if (!GetPointer(source, out T* pv, out var pr, out var pc, out var nnz))
 				return default;
 			SparseFormat format = source.Format;
 			IntPtr handle;
-			if ((format & CooFormat) != SparseFormat.None)
+			if ((format & SparseFormat.MatrixCooFormat) != SparseFormat.None)
 			{
 				delegate*<out IntPtr, int, MklInt, MklInt, MklInt, MklInt*, MklInt*, T*, MklSparseBlasError> createFunc = default(T) switch
 				{
@@ -205,6 +223,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 			where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 		{
+			bool transposed = !this.op.CanInPlace(), conjugate = this.op.HasConjugate();
+			T* pVals; long nnz;
 			if ((this.format & (SparseFormat.MatrixCscFormat | SparseFormat.MatrixCsrFormat)) != SparseFormat.None)
 			{
 				delegate*<IntPtr, out int, out MklInt, out MklInt, out MklInt*, out MklInt*, out MklInt*, out void*, MklSparseBlasError> createFunc;
@@ -231,14 +251,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 					};
 				}
 				createFunc(this.handle, out _, out var rows, out var cols, out var pStarts, out _, out var pInds, out var pv).Check();
-				if ((format == SparseFormat.MatrixCsrFormat) != this.transposed)
+				if ((format == SparseFormat.MatrixCsrFormat) != transposed)
 				{
 					var temp = pStarts; pStarts = pInds; pInds = temp;
 				}
-				if (this.transposed)
+				if (transposed)
 					(rows, cols) = (cols, rows);
-				long nnz = pStarts[rows] - pStarts[0], rowSize, colSize;
-				if ((format == SparseFormat.MatrixCsrFormat) == this.transposed)
+				nnz = pStarts[rows] - pStarts[0];
+				long rowSize, colSize;
+				if ((format == SparseFormat.MatrixCsrFormat) == transposed)
 				{
 					rowSize = rows; colSize = nnz;
 				}
@@ -250,6 +271,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				TSInd rowInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
 				TSInd colInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
 				target.SetValues(rows, cols, vals, rowInds, colInds);
+				target.Format = transposed ? format : format.WithTransposedMajor;
+				pVals = (T*)pv;
 			}
 			else // BSR
 			{
@@ -263,9 +286,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				};
 				createFunc(handle, out _, out _, out var rows, out var cols, out var bs, out var pStarts, out _, out var pInds, out var pv).Check();
 				long blockSize = bs;
-				long nnz = (pStarts[rows] - pStarts[0]), rowSize = rows / blockSize, colSize = nnz;
+				nnz = (pStarts[rows] - pStarts[0]);
+				long rowSize = rows / blockSize, colSize = nnz;
 				nnz *= blockSize * blockSize;
-				if (this.transposed)
+				if (transposed)
 				{
 					(rows, cols) = (cols, rows);
 					(rowSize, colSize) = (colSize, rowSize);
@@ -275,7 +299,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				TSInd rowInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
 				TSInd colInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
 				target.SetValues(rows, cols, blockSize, blockSize, vals, rowInds, colInds);
+				target.Format = transposed ? format : format.WithTransposedMajor;
+				pVals = (T*)pv;
 			}
+			if (conjugate)
+				Dense.Conjugater.Conjugate(pVals, nnz, 1);
+			target.DefaultValue = T.Zero;
 		}
 	}
 	#endregion
@@ -288,11 +317,14 @@ namespace Althea.Backend.Mkl
 		/// <summary>
 		/// Check the given <see cref="MklSparseBlasError"/>
 		/// </summary>
+		/// <returns>Whether <paramref name="error"/> is <see cref="MklSparseBlasError.NotSupported"/> or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this MklSparseBlasError error)
+		public static bool Check(this MklSparseBlasError error)
 		{
 			if (error == MklSparseBlasError.Success)
-				return;
+				return false;
+			if (error == MklSparseBlasError.NotSupported)
+				return true;
 			throw new StatusException(error);
 		}
 	}

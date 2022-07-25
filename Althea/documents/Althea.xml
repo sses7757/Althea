@@ -4618,6 +4618,11 @@
             The element-blocked row-major coordinated format for matrices
             </summary>
         </member>
+        <member name="F:Althea.Array.SparseFormat.MatrixCooFormat">
+            <summary>
+            The element-blocked column-major or row-major coordinated format for matrices
+            </summary>
+        </member>
         <member name="F:Althea.Array.SparseFormat.MatrixCscFormat">
             <summary>
             The element-blocked column-major compressed format for matrices
@@ -4885,6 +4890,11 @@
             Get a <see cref="T:Althea.AbstractApiSelector`1.ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind
             </summary>
             <returns>A new <see cref="T:Althea.AbstractApiSelector`1.ApiEnumerator"/> that enumerates through all API instances of <typeparamref name="TApi"/> kind</returns>
+        </member>
+        <member name="P:Althea.AbstractApiSelector`1.ApiEnumerableClass.CurrentApis">
+            <summary>
+            Get all current <typeparamref name="TApi"/>s.
+            </summary>
         </member>
         <member name="F:Althea.AbstractApiSelector`1.ApiEnumerable">
             <summary>
@@ -24329,7 +24339,7 @@
         </member>
         <member name="P:Althea.Resources.BackendError.NotAvailable">
             <summary>
-              查找类似 There is no suitable backend implementation currently available. 的本地化字符串。
+              查找类似 There is no suitable backend implementation currently available. The tested APIs are:  的本地化字符串。
             </summary>
         </member>
         <member name="T:Althea.Resources.FileError">
@@ -24528,6 +24538,11 @@
         <member name="P:Althea.Resources.ParameterError.EnumNotFlag">
             <summary>
               查找类似 The given enum parameter must be a bit flag. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Resources.ParameterError.InvalidRank">
+            <summary>
+              查找类似 The given parameter has invalid / incorrect rank. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Resources.ParameterError.InvalidValue">
