@@ -219,7 +219,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly unsafe void Deconstruct<T, TInd, TS, TSInd>(ref SparseArrayWrapper<T, TInd, TS, TSInd> target)
+		public readonly unsafe MklSparseBlasError Deconstruct<T, TInd, TS, TSInd>(ref SparseArrayWrapper<T, TInd, TS, TSInd> target)
 			where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 			where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 		{
@@ -228,7 +228,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			if ((this.format & (SparseFormat.MatrixCscFormat | SparseFormat.MatrixCsrFormat)) != SparseFormat.None)
 			{
 				delegate*<IntPtr, out int, out MklInt, out MklInt, out MklInt*, out MklInt*, out MklInt*, out void*, MklSparseBlasError> createFunc;
-				if (format == SparseFormat.MatrixCsrFormat)
+				MklInt rows, cols; MklInt* pStarts, pInds; void* pv;
+				if ((format & SparseFormat.MatrixCsrFormat) != SparseFormat.None)
 				{
 					createFunc = default(T) switch
 					{
@@ -238,8 +239,13 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 						Complex<Float64> => &NativeMethods.mkl_sparse_z_export_csr,
 						_ => null
 					};
+					if (createFunc is null)
+						goto CSC;
+					if (createFunc(this.handle, out _, out rows, out cols, out pStarts, out _, out pInds, out pv) != MklSparseBlasError.Success)
+						goto CSC;
+					goto CS_END;
 				}
-				else
+				CSC:
 				{
 					createFunc = default(T) switch
 					{
@@ -249,8 +255,12 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 						Complex<Float64> => &NativeMethods.mkl_sparse_z_export_csc,
 						_ => null
 					};
+					if (createFunc is null)
+						goto BSR;
+					if (createFunc(this.handle, out _, out rows, out cols, out pStarts, out _, out pInds, out pv) != MklSparseBlasError.Success)
+						goto BSR;
 				}
-				createFunc(this.handle, out _, out var rows, out var cols, out var pStarts, out _, out var pInds, out var pv).Check();
+				CS_END:
 				if ((format == SparseFormat.MatrixCsrFormat) != transposed)
 				{
 					var temp = pStarts; pStarts = pInds; pInds = temp;
@@ -273,8 +283,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				target.SetValues(rows, cols, vals, rowInds, colInds);
 				target.Format = transposed ? format : format.WithTransposedMajor;
 				pVals = (T*)pv;
+				goto END;
 			}
-			else // BSR
+			BSR:
 			{
 				delegate*<IntPtr, out int, out MatrixMajor, out MklInt, out MklInt, out MklInt, out MklInt*, out MklInt*, out MklInt*, out void*, MklSparseBlasError> createFunc = default(T) switch
 				{
@@ -284,7 +295,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 					Complex<Float64> => &NativeMethods.mkl_sparse_z_export_bsr,
 					_ => null
 				};
-				createFunc(handle, out _, out _, out var rows, out var cols, out var bs, out var pStarts, out _, out var pInds, out var pv).Check();
+				if (createFunc is null)
+					return MklSparseBlasError.NotSupported;
+				var err = createFunc(handle, out _, out _, out var rows, out var cols, out var bs, out var pStarts, out _, out var pInds, out var pv);
+				if (err != MklSparseBlasError.Success)
+					return err;
 				long blockSize = bs;
 				nnz = (pStarts[rows] - pStarts[0]);
 				long rowSize = rows / blockSize, colSize = nnz;
@@ -302,9 +317,11 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				target.Format = transposed ? format : format.WithTransposedMajor;
 				pVals = (T*)pv;
 			}
+			END:
 			if (conjugate)
 				Dense.Conjugater.Conjugate(pVals, nnz, 1);
 			target.DefaultValue = T.Zero;
+			return MklSparseBlasError.Success;
 		}
 	}
 	#endregion

@@ -664,6 +664,39 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			}
 			return true;
 		}
+
+		/// <inheritdoc/>
+		public virtual bool MatrixSparseMultiplySparse<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(MatrixOperation opA, MatrixOperation opB, T α, ISparseArray<T, TInd1, TS1, TSInd1> A!!, ISparseArray<T, TInd2, TS2, TSInd2> B!!, T β, ISparseArray<T, TInd3, TS3, TSInd3>? C, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS3 : class, IStorage<T, TS3> where TSInd3 : class, IStorage<TInd3, TSInd3>
+		{
+			if (target.Format != SparseFormat.Any)
+				return false; // not supported
+			if (!TInd3.Type.IsInteger() || sizeof(TInd3) != sizeof(MklInt))
+				return false; // not supported
+			if (target.ValueStorages.Length != 0 || target.IndexStorages.Length != 0)
+				return false; // not supported
+			if (β != T.Zero)
+				return false; // not supported
+			if (α == T.Zero)
+				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+
+			opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
+			if ((opA == MatrixOperation.Conjugate && opB == MatrixOperation.None) || (opA == MatrixOperation.None && opB == MatrixOperation.Conjugate))
+				return false;
+			using var descrA = SparseMatrixHandle.TryCreate(A, out bool success);
+			if (!success)
+				return false;
+			using var descrB = SparseMatrixHandle.TryCreate(B, out success);
+			if (!success)
+				return false;
+			IntPtr outC = default;
+			if (NM.mkl_sparse_sp2m(opA.ToOp(), GeneralMatrix, descrA, opB.ToOp(), GeneralMatrix, descrB, Request.FullMultiply, ref outC).Check())
+				return false;
+			NM.mkl_sparse_order(outC).Check();
+			using var descrC = new SparseMatrixHandle(outC, SparseFormat.Any, opA == MatrixOperation.Conjugate ? opA : MatrixOperation.None);
+			if (descrC.Deconstruct(ref target).Check())
+				return false;
+			return true;
+		}
 		#endregion
 	}
 }
