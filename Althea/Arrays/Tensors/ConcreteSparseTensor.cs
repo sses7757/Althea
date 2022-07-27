@@ -59,7 +59,7 @@ namespace Althea.Array
 		private bool GetOffsets(long presentIndex, Span<long> offsets)
 		{
 			var ind = (presentIndex).As<TInd>();
-			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
+			long find = SpIdx.BoundOf(this.IndexStorage, 1, ind, true);
 			offsets[0] = find;
 			if (offsets.Length > 1)
 				offsets[1] = presentIndex;
@@ -304,7 +304,7 @@ namespace Althea.Array
 		{
 			long insideBlockOffset = presentIndex % this.blockLength;
 			var ind = (presentIndex / this.blockLength).As<TInd>();
-			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
+			long find = SpIdx.BoundOf(this.IndexStorage, 1, ind, true);
 			offsets[0] = find * this.blockLength + insideBlockOffset;
 			if (offsets.Length > 1)
 				offsets[1] = find;

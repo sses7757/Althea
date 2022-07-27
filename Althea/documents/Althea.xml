@@ -4698,6 +4698,11 @@
             Get a <see cref="T:Althea.Array.SparseFormat"/> whose <see cref="T:Althea.Array.SparseFormat.Major"/> is <see cref="F:Althea.Array.SparseFormat.Major.Row"/>.
             </summary>
         </member>
+        <member name="P:Althea.Array.SparseFormat.WithTransposedMajor">
+            <summary>
+            Get a <see cref="T:Althea.Array.SparseFormat"/> whose <see cref="T:Althea.Array.SparseFormat.Major"/> is <see cref="F:Althea.Array.SparseFormat.Major.Row"/> if this is <see cref="F:Althea.Array.SparseFormat.Major.Column"/>, or <see cref="F:Althea.Array.SparseFormat.Major.Column"/> is this is <see cref="F:Althea.Array.SparseFormat.Major.Row"/>, or unchanged otherwise.
+            </summary>
+        </member>
         <member name="P:Althea.Array.SparseFormat.IsAtomic">
             <summary>
             Get whether this <see cref="T:Althea.Array.SparseFormat"/> is an atomic format, i.e. a specific format, or not.
@@ -15988,6 +15993,30 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
         </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.IComputationAbstractApi.MatrixSparseMultiplySparse``8(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,``0,Althea.Array.ISparseArray{``0,``1,``3,``6},Althea.Array.ISparseArray{``0,``2,``4,``7},``0,``5,System.Int64)">
+            <summary>
+            When implemented by a derived class, perform the sparse matrices multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TInd1">Any integral-typed unmanaged number as the first input index type</typeparam>
+            <typeparam name="TInd2">Any integral-typed unmanaged number as the second input index type</typeparam>
+            <typeparam name="TS1">The concrete storage type for first input value array</typeparam>
+            <typeparam name="TS2">The concrete storage type for second input value array</typeparam>
+            <typeparam name="TS3">The concrete storage type for output value array</typeparam>
+            <typeparam name="TSInd1">The concrete storage type of first input index array</typeparam>
+            <typeparam name="TSInd2">The concrete storage type of second input index array</typeparam>
+            <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="T:Althea.LinearAlgebra.MatrixOperation"/></param>
+            <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="T:Althea.LinearAlgebra.MatrixOperation"/></param>
+            <param name="α">The scalar to multiply to <paramref name="A"/></param>
+            <param name="A">The first input sparse matrix</param>
+            <param name="B">The second input sparse matrix</param>
+            <param name="β">The scalar to multiply to <paramref name="C"/></param>
+            <param name="C">The input/output dense matrix's storage as a <see cref="T:Althea.Storage.IStorage`2"/></param>
+            <param name="ldc">The leading dimension of <paramref name="C"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
+        </member>
         <member name="M:Althea.LinearAlgebra.Sparse.IComputationAbstractApi.MatrixDenseMultiplySparse``6(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,``0,``2,System.Int64,Althea.Array.ISparseArray{``0,``1,``3,``5},``0,``4,System.Int64)">
             <summary>
             When implemented by a derived class, perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
@@ -16320,18 +16349,32 @@
             <summary>
             When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
             <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
-            <param name="array">The storage of the integer-typed array</param>
+            <param name="array">The storage of the input array</param>
             <param name="value">The target value to find</param>
             <param name="find">Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/> if it is found; otherwise, output a negative number</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.IndexBound``2(``1,System.Int64,``0,System.Boolean,System.Int64@)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.FillWithRange``2(``1,System.Int64,``0,``0)">
+            <summary>
+            When implemented by a derived class, fill the given <paramref name="array"/> with <c>[<paramref name="start"/>, <paramref name="start"/> + <paramref name="step"/>, <paramref name="start"/> + 2 * <paramref name="step"/>, ...]</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
+            <param name="array">The storage of the array to be filled</param>
+            <param name="start">The start value to fill</param>
+            <param name="step">The difference between two consecutive elements of <paramref name="array"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="step"/> is 0</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.BoundOf``2(``1,System.Int64,``0,System.Boolean,System.Int64@)">
             <summary>
             When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> <paramref name="array"/>.
             </summary>
@@ -16345,40 +16388,6 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)">
-            <summary>
-            When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> <paramref name="array"/> and store the result to <paramref name="target"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number as the index type</typeparam>
-            <typeparam name="TS">The input concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
-            <typeparam name="TSOut">The output concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
-            <param name="target">The storage of the result indices, must has length larger than <paramref name="end"/> - <paramref name="start"/></param>
-            <param name="start">The inclusive start value to find</param>
-            <param name="end">The exclusive end value to find</param>
-            <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <remarks>If not found, the corresponding index in <paramref name="target"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="P:Althea.Storage.IStorage`2.Length">Length</see> otherwise.</remarks>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.IndexGenerateFromBounds``4(``2,``3,System.Boolean,``1)">
-            <summary>
-            When implemented by a derived class, reverse the operation of <see cref="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)"/> to get the sorted <paramref name="target"/> array from the given <paramref name="bounds"/>.
-            </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the bound index type</typeparam>
-            <typeparam name="TS">The input concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TOut">Any unmanaged number as the output index type</typeparam>
-            <typeparam name="TSOut">The output concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="bounds">The storage of the bound index array, usually generated from <see cref="M:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)"/></param>
-            <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
-            <param name="start">The start value to fill in <paramref name="target"/></param>
-            <param name="lowerBound">Whether to fill the <paramref name="target"/> with <paramref name="bounds"/> regarded as lower bounds or upper bounds</param>
-            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="target"/>'s length is too short</exception>
         </member>
         <member name="T:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi">
             <summary>
@@ -16757,6 +16766,30 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.ComputationApiSelector.MatrixSparseMultiplySparse``8(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,``0,Althea.Array.ISparseArray{``0,``1,``3,``6},Althea.Array.ISparseArray{``0,``2,``4,``7},``0,``5,System.Int64)">
+            <summary>
+            Perform the sparse matrices multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TInd1">Any integral-typed unmanaged number as the first input index type</typeparam>
+            <typeparam name="TInd2">Any integral-typed unmanaged number as the second input index type</typeparam>
+            <typeparam name="TS1">The concrete storage type for first input value array</typeparam>
+            <typeparam name="TS2">The concrete storage type for second input value array</typeparam>
+            <typeparam name="TS3">The concrete storage type for output value array</typeparam>
+            <typeparam name="TSInd1">The concrete storage type of first input index array</typeparam>
+            <typeparam name="TSInd2">The concrete storage type of second input index array</typeparam>
+            <param name="opA">The simple operation to matrix <paramref name="A"/> as a <see cref="T:Althea.LinearAlgebra.MatrixOperation"/></param>
+            <param name="opB">The simple operation to matrix <paramref name="B"/> as a <see cref="T:Althea.LinearAlgebra.MatrixOperation"/></param>
+            <param name="α">The scalar to multiply to <paramref name="A"/></param>
+            <param name="A">The first input sparse matrix</param>
+            <param name="B">The second input sparse matrix</param>
+            <param name="β">The scalar to multiply to <paramref name="C"/></param>
+            <param name="C">The input/output dense matrix's storage as a <see cref="T:Althea.Storage.IStorage`2"/></param>
+            <param name="ldc">The leading dimension of <paramref name="C"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If both <paramref name="α"/> and <paramref name="β"/> are 0</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
         <member name="M:Althea.LinearAlgebra.Sparse.ComputationApiSelector.MatrixDenseMultiplySparse``6(Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,``0,``2,System.Int64,Althea.Array.ISparseArray{``0,``1,``3,``5},``0,``4,System.Int64)">
             <summary>
             Perform the dense matrix and sparse matrix multiplication: <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> * <paramref name="C"/></c>.
@@ -17089,18 +17122,32 @@
             <summary>
             Find the zero-based index of the target <paramref name="value"/> in the given <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
             <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
             <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
-            <param name="array">The storage of the integer-typed array</param>
+            <param name="array">The storage of the input array</param>
             <param name="value">The target value to find</param>
             <returns>Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/> if it is found; otherwise, output a negative number.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.IndexBound``2(``1,System.Int64,``0,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.FillWithRange``2(``1,System.Int64,``0,``0)">
+            <summary>
+            Fill the given <paramref name="array"/> with <c>[<paramref name="start"/>, <paramref name="start"/> + <paramref name="step"/>, <paramref name="start"/> + 2 * <paramref name="step"/>, ...]</c>.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+            <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
+            <param name="array">The storage of the array to be filled</param>
+            <param name="start">The start value to fill</param>
+            <param name="step">The difference between two consecutive elements of <paramref name="array"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="step"/> is 0</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.BoundOf``2(``1,System.Int64,``0,System.Boolean)">
             <summary>
             Find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> <paramref name="array"/>.
             </summary>
@@ -17113,40 +17160,6 @@
             <returns>Output the zero-based index of the target bound in <paramref name="array"/>.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)">
-            <summary>
-            Find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> <paramref name="array"/> and store the result to <paramref name="target"/>.
-            </summary>
-            <typeparam name="T">Any unmanaged number as the index type</typeparam>
-            <typeparam name="TS">The input concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
-            <typeparam name="TSOut">The output concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
-            <param name="target">The storage of the result indices, must has length larger than <paramref name="end"/> - <paramref name="start"/></param>
-            <param name="start">The inclusive start value to find</param>
-            <param name="end">The exclusive end value to find</param>
-            <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
-            <remarks>If not found, the corresponding index in <paramref name="target"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="P:Althea.Storage.IStorage`2.Length">Length</see> otherwise.</remarks>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
-            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.IndexGenerateFromBounds``4(``2,``3,System.Boolean,``1)">
-            <summary>
-            Reverse the operation of <see cref="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)"/> to get the sorted <paramref name="target"/> array from the given <paramref name="bounds"/>.
-            </summary>
-            <typeparam name="T">Any integral-typed unmanaged number as the bound index type</typeparam>
-            <typeparam name="TS">The input concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <typeparam name="TOut">Any unmanaged number as the output index type</typeparam>
-            <typeparam name="TSOut">The output concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="bounds">The storage of the bound index array, usually generated from <see cref="M:Althea.LinearAlgebra.Sparse.IndexOperationApiSelector.IndexGetAllBounds``4(``2,``3,``0,``0,System.Boolean)"/></param>
-            <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
-            <param name="start">The start value to fill in <paramref name="target"/></param>
-            <param name="lowerBound">Whether to fill the <paramref name="target"/> with <paramref name="bounds"/> regarded as lower bounds or upper bounds</param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="target"/>'s length is too short</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
         <member name="T:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector">

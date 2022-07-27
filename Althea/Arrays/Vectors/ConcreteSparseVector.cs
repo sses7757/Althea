@@ -61,7 +61,7 @@ namespace Althea.Array
 		{
 			var ind = (index).As<TInd>();
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
-			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
+			long find = SpIdx.BoundOf(this.IndexStorage, 1, ind, true);
 			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
 				return ~find;
 			else
@@ -74,8 +74,8 @@ namespace Althea.Array
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckRange(this, start, count, sub);
 			if (sub is not null && sub.Format != this.Format)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(sub));
-			long indexStart = SpIdx.IndexBound(this.IndexStorage, 1, (start).As<TInd>(), true);
-			long indexCount = SpIdx.IndexBound(this.IndexStorage, 1, (start + count).As<TInd>(), true);
+			long indexStart = SpIdx.BoundOf(this.IndexStorage, 1, (start).As<TInd>(), true);
+			long indexCount = SpIdx.BoundOf(this.IndexStorage, 1, (start + count).As<TInd>(), true);
 			if (sub is not null)
 			{
 				if (sub.IndexStorage.Length != indexCount || sub.NStored != indexCount)
@@ -303,7 +303,7 @@ namespace Althea.Array
 			IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>.CheckIndex(this, index);
 			var (blockIndex, insideBlockOffset) = long.DivRem(index, this.blockSize);
 			var ind = (blockIndex).As<TInd>();
-			long find = SpIdx.IndexBound(this.IndexStorage, 1, ind, true);
+			long find = SpIdx.BoundOf(this.IndexStorage, 1, ind, true);
 			if ((this.IndexStorage + find).ToManaged<TInd, TSInd>() != ind)
 				return ~(find * this.blockSize);
 			else
@@ -322,8 +322,8 @@ namespace Althea.Array
 			if (count % this.blockSize != 0)
 				throw new ArgumentException(Resources.SparseError.CannotCutSimpleBlocking, nameof(start));
 			start /= this.blockSize; count /= this.blockSize;
-			indexStart = SpIdx.IndexBound(this.IndexStorage, 1, (start).As<TInd>(), true);
-			indexCount = SpIdx.IndexBound(this.IndexStorage, 1, (start + count).As<TInd>(), true);
+			indexStart = SpIdx.BoundOf(this.IndexStorage, 1, (start).As<TInd>(), true);
+			indexCount = SpIdx.BoundOf(this.IndexStorage, 1, (start + count).As<TInd>(), true);
 			indexCount -= indexStart;
 			return (indexStart, indexCount);
 		}

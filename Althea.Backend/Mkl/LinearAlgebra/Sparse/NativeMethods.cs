@@ -223,5 +223,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int spVecOuter(DataType type, void* valA, MklInt* indA, long nnzA, void* valB, MklInt* indB, long nnzB, void* valC, MklInt* rowC, MklInt* colC, bool conj);
+
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int CooMatKron(DataType type, void* valA, MklInt* rowA, MklInt* colA, long nnzA, void* valB, MklInt* rowB, MklInt* colB, long nnzB, long rowsB, long colsB, void* valC, MklInt* rowC, MklInt* colC);
 	}
 }

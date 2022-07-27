@@ -294,11 +294,11 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> in the given <paramref name="array"/>.
 		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the index type</typeparam>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 		/// <param name="sorted">Whether <paramref name="array"/> is sorted or not</param>
 		/// <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
-		/// <param name="array">The storage of the integer-typed array</param>
+		/// <param name="array">The storage of the input array</param>
 		/// <param name="value">The target value to find</param>
 		/// <param name="find">Output the zero-based index of the target <paramref name="value"/> in <paramref name="array"/> if it is found; otherwise, output a negative number</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
@@ -306,6 +306,21 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
 		public abstract bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+
+		/// <summary>
+		/// When implemented by a derived class, fill the given <paramref name="array"/> with <c>[<paramref name="start"/>, <paramref name="start"/> + <paramref name="step"/>, <paramref name="start"/> + 2 * <paramref name="step"/>, ...]</c>.
+		/// </summary>
+		/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+		/// <typeparam name="TS">The concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+		/// <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
+		/// <param name="array">The storage of the array to be filled</param>
+		/// <param name="start">The start value to fill</param>
+		/// <param name="step">The difference between two consecutive elements of <paramref name="array"/></param>
+		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="step"/> is 0</exception>
+		[AbstractApiMethod]
+		public abstract bool FillWithRange<T, TS>(TS array, long stride, T start, T step) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> <paramref name="array"/>.
@@ -321,43 +336,7 @@ namespace Althea.LinearAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
-
-		/// <summary>
-		/// When implemented by a derived class, find the zero-based indices from <paramref name="start"/> to <paramref name="end"/> as (inclusive) lower / (exclusive) upper bounds in the given <b>sorted</b> <paramref name="array"/> and store the result to <paramref name="target"/>.
-		/// </summary>
-		/// <typeparam name="T">Any unmanaged number as the index type</typeparam>
-		/// <typeparam name="TS">The input concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TOut">Any integral-typed unmanaged number as the output index type</typeparam>
-		/// <typeparam name="TSOut">The output concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
-		/// <param name="target">The storage of the result indices, must has length larger than <paramref name="end"/> - <paramref name="start"/></param>
-		/// <param name="start">The inclusive start value to find</param>
-		/// <param name="end">The exclusive end value to find</param>
-		/// <param name="lowerBound">Whether to find the index of the first element in <paramref name="array"/> who is not less than the given value or the first who is larger than the given value</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <remarks>If not found, the corresponding index in <paramref name="target"/> shall be -1 if <paramref name="lowerBound"/> is true or <paramref name="array"/>.<see cref="IStorage{T, TSelf}.Length">Length</see> otherwise.</remarks>
-		/// <exception cref="ArgumentNullException">If <paramref name="array"/> or <paramref name="target"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short or <paramref name="end"/> is less than <paramref name="start"/></exception>
-		[AbstractApiMethod]
-		public abstract bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBaseNumber<T> where TOut : unmanaged, IBinaryInt<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
-
-		/// <summary>
-		/// When implemented by a derived class, reverse the operation of <see cref="IndexGetAllBounds"/> to get the sorted <paramref name="target"/> array from the given <paramref name="bounds"/>.
-		/// </summary>
-		/// <typeparam name="T">Any integral-typed unmanaged number as the bound index type</typeparam>
-		/// <typeparam name="TS">The input concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <typeparam name="TOut">Any unmanaged number as the output index type</typeparam>
-		/// <typeparam name="TSOut">The output concrete storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-		/// <param name="bounds">The storage of the bound index array, usually generated from <see cref="IndexGetAllBounds"/></param>
-		/// <param name="target">The storage of the result indices, must has length ≥ the last element in <paramref name="bounds"/></param>
-		/// <param name="start">The start value to fill in <paramref name="target"/></param>
-		/// <param name="lowerBound">Whether to fill the <paramref name="target"/> with <paramref name="bounds"/> regarded as lower bounds or upper bounds</param>
-		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
-		/// <exception cref="ArgumentNullException">If <paramref name="bounds"/> or <paramref name="target"/> is null or invalid</exception>
-		/// <exception cref="ArgumentException">If <paramref name="target"/>'s length is too short</exception>
-		[AbstractApiMethod]
-		public abstract bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start = default) where T : unmanaged, IBinaryInt<T> where TOut : unmanaged, IBaseNumber<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
+		public abstract bool BoundOf<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 		#endregion
 	}
 }

@@ -500,7 +500,7 @@ struct cooMatrixSortByColumn_functor
 };
 
 template<typename T>
-void CooMatricesKronecker(
+int CooMatricesKronecker(
 	const void* valAv, const MKL_INT* rowA, const MKL_INT* colA, const size_t nnzA,
 	const void* valBv, const MKL_INT* rowB, const MKL_INT* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
 	void* valCv, MKL_INT* rowC, MKL_INT* colC)
@@ -515,13 +515,14 @@ void CooMatricesKronecker(
 	// sort column wise
 	auto rowColC = thrust::make_zip_iterator(thrust::make_tuple(rowC, colC));
 	thrust::sort_by_key(THRUST_PAR, rowColC, rowColC + nnzC, valC, cooMatrixSortByColumn_functor());
+	return 0;
 }
 
-DLLEXP void COOMatKron(const Datatype::DataType type,
+DLLEXP int CooMatKron(const Datatype::DataType type,
 	const void* valA, const MKL_INT* rowA, const MKL_INT* colA, const size_t nnzA,
 	const void* valB, const MKL_INT* rowB, const MKL_INT* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
 	void* valC, MKL_INT* rowC, MKL_INT* colC)
 {
-	AUTO_ALLTYPE_FUNC(CooMatricesKronecker, type, void, valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, rowsB, colsB, valC, rowC, colC);
+	AUTO_ALLTYPE_FUNC(CooMatricesKronecker, type, int, valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, rowsB, colsB, valC, rowC, colC);
 }
 #pragma endregion

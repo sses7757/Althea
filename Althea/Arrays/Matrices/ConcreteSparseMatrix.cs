@@ -80,15 +80,15 @@ namespace Althea.Array
 				(x, y) = (y, x);
 				(xInd, yInd) = (yInd, xInd);
 			}
-			long find = SpIdx.IndexBound(xInd, 1, x, true);
+			long find = SpIdx.BoundOf(xInd, 1, x, true);
 			if ((xInd + find).ToManaged<TInd, TSInd>() != x)
 			{
 				offsets[0] = find;
 				return false;
 			}
-			long lower = SpIdx.IndexBound(xInd, 1, x, true);
-			long upper = SpIdx.IndexBound(xInd, 1, x, false);
-			find = SpIdx.IndexBound(yInd.MakeReference(lower, upper - lower), 1, y, true);
+			long lower = SpIdx.BoundOf(xInd, 1, x, true);
+			long upper = SpIdx.BoundOf(xInd, 1, x, false);
+			find = SpIdx.BoundOf(yInd.MakeReference(lower, upper - lower), 1, y, true);
 			bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
 			find += lower;
 			offsets[0] = find;
@@ -270,7 +270,7 @@ namespace Althea.Array
 			}
 			long rowStart = (xInd + row).ToManaged<TInd, TSInd>().AsInt64(),
 				rowEnd = (xInd + (row + 1)).ToManaged<TInd, TSInd>().AsInt64();
-			long find = SpIdx.IndexBound(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
+			long find = SpIdx.BoundOf(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
 			bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
 			find += rowStart;
 			offsets[0] = find;
@@ -334,7 +334,7 @@ namespace Althea.Array
 			if (this.rowMajor)
 			{
 				this.ColIndexStorage.ToManaged(colInd);
-				int rows = (int)SpIdx.IndexBound(this.rowIndices, 1, nnz.As<TInd>(), true);
+				int rows = (int)SpIdx.BoundOf(this.rowIndices, 1, nnz.As<TInd>(), true);
 				using var temp = rows.CheckStackLimit<TInd>();
 				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[rows] : temp.Data;
 				this.rowIndices.ToManaged(tempInd);
@@ -348,7 +348,7 @@ namespace Althea.Array
 			else
 			{
 				this.RowIndexStorage.ToManaged(rowInd);
-				int cols = (int)SpIdx.IndexBound(this.colIndices, 1, nnz.As<TInd>(), true);
+				int cols = (int)SpIdx.BoundOf(this.colIndices, 1, nnz.As<TInd>(), true);
 				using var temp = cols.CheckStackLimit<TInd>();
 				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[cols] : temp.Data;
 				this.colIndices.ToManaged(tempInd);
@@ -514,7 +514,7 @@ namespace Althea.Array
 				(rowOfBlock, colOfBlock) = (colOfBlock, rowOfBlock);
 			}
 			long insideBlockOffset = colOfBlock + (this.rowMajor ? this.blockCols : this.blockRows) * rowOfBlock;
-			long find = SpIdx.IndexBound(xInd, 1, x, true);
+			long find = SpIdx.BoundOf(xInd, 1, x, true);
 			if ((xInd + find).ToManaged<TInd, TSInd>() != x)
 			{
 				offsets[0] = find * this.BS + insideBlockOffset;
@@ -522,9 +522,9 @@ namespace Althea.Array
 					offsets[1] = find;
 				return false;
 			}
-			long lower = SpIdx.IndexBound(xInd, 1, x, true);
-			long upper = SpIdx.IndexBound(xInd, 1, x, false);
-			find = SpIdx.IndexBound(yInd.MakeReference(lower, upper - lower), 1, y, true);
+			long lower = SpIdx.BoundOf(xInd, 1, x, true);
+			long upper = SpIdx.BoundOf(xInd, 1, x, false);
+			find = SpIdx.BoundOf(yInd.MakeReference(lower, upper - lower), 1, y, true);
 			bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
 			find += lower;
 			offsets[0] = find * this.BS + insideBlockOffset;
@@ -757,7 +757,7 @@ namespace Althea.Array
 			long insideBlockOffset = colOfBlock + (this.rowMajor ? this.blockCols : this.blockRows) * rowOfBlock;
 			long rowStart = (xInd + row).ToManaged<TInd, TSInd>().AsInt64(),
 				rowEnd = (xInd + (row + 1)).ToManaged<TInd, TSInd>().AsInt64();
-			long find = SpIdx.IndexBound(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
+			long find = SpIdx.BoundOf(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
 			bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
 			find += rowStart;
 			offsets[0] = find * this.BS + insideBlockOffset;
@@ -829,7 +829,7 @@ namespace Althea.Array
 			if (this.rowMajor)
 			{
 				this.ColIndexStorage.ToManaged(colInd);
-				int rows = (int)SpIdx.IndexBound(this.rowIndices, 1, nnz.As<TInd>(), true);
+				int rows = (int)SpIdx.BoundOf(this.rowIndices, 1, nnz.As<TInd>(), true);
 				using var temp = rows.CheckStackLimit<TInd>();
 				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[rows] : temp.Data;
 				this.rowIndices.ToManaged(tempInd);
@@ -843,7 +843,7 @@ namespace Althea.Array
 			else
 			{
 				this.RowIndexStorage.ToManaged(rowInd);
-				int cols = (int)SpIdx.IndexBound(this.colIndices, 1, nnz.As<TInd>(), true);
+				int cols = (int)SpIdx.BoundOf(this.colIndices, 1, nnz.As<TInd>(), true);
 				using var temp = cols.CheckStackLimit<TInd>();
 				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[cols] : temp.Data;
 				this.colIndices.ToManaged(tempInd);
