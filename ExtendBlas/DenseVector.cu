@@ -1600,33 +1600,6 @@ __ALLTYPE_FUNC(valType, keys, vals, N, strideKey, strideVal);
 }
 
 DLLEXP
-ERROR_RETURN intMinMax(const int* v, const size_t N, int& min, int& max)
-{
-	auto result = thrust::minmax_element(THRUST_PAR, v, v + N);
-#ifdef CPU
-	max = *result.first;
-	max = *result.second;
-#else
-	cudaError err = cudaMemcpy(&min, result.first, sizeof(int), cudaMemcpyDeviceToHost);
-	if (err != 0) return err;
-	err = cudaMemcpy(&max, result.second, sizeof(int), cudaMemcpyDeviceToHost);
-	return err;
-#endif // CPU
-}
-
-DLLEXP
-ERROR_RETURN intMax(const int* v, const size_t N, int& max)
-{
-	const int* result = thrust::max_element(THRUST_PAR, v, v + N);
-#ifdef CPU
-	max = *result;
-#else
-	cudaError err = cudaMemcpy(&max, result, sizeof(int), cudaMemcpyDeviceToHost);
-	return err;
-#endif // CPU
-}
-
-DLLEXP
 int vecSortBy(const Datatype::DataType keyType, const Datatype::DataType valType, void* keys, void* vals, const size_t N, const unsigned int strideKey, const unsigned int strideVal)
 {
 	AUTO_REALTYPE_FUNC(vectorSortBy, keyType, int, valType, keys, vals, N, strideKey, strideVal);
@@ -1707,7 +1680,7 @@ inline int vectorFillRange(void* vec, const size_t N, const unsigned int stride,
 }
 
 DLLEXP
-int vecFill(const Datatype::DataType type, void* v, const size_t N, const unsigned int stride, const void* start, const void* step)
+int vecFillRange(const Datatype::DataType type, void* v, const size_t N, const unsigned int stride, const void* start, const void* step)
 {
 	AUTO_ALLTYPE_FUNC(vectorFillRange, type, int, v, N, stride, start, step);
 }

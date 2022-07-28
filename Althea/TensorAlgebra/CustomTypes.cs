@@ -728,10 +728,7 @@ namespace Althea.TensorAlgebra
 		#endregion
 
 		#region other
-		/// <summary>
-		/// Returns the string representation of this <see cref="StorableContractInfo"/>
-		/// </summary>
-		/// <returns>The string representation of this <see cref="StorableContractInfo"/></returns>
+		/// <inheritdoc/>
 		public override string ToString()
 		{
 			return ((TensorContractInfo)this).ToString();

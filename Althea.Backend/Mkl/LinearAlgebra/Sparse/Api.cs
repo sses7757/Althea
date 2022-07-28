@@ -835,7 +835,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		#endregion
 
 		#region unsupported computation
-		bool IComputationAbstractApi.VectorSparseDotSparse<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(bool conjX, ISparseArray<T, TInd1, TS1, TSInd1> x, ISparseArray<T, TInd2, TS2, TSInd2> y, out T dot) => false;
+		bool IComputationAbstractApi.VectorSparseDotSparse<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(bool conjX, ISparseArray<T, TInd1, TS1, TSInd1> x, ISparseArray<T, TInd2, TS2, TSInd2> y, out T dot) { dot = default; return false; }
 		bool IComputationAbstractApi.VectorSparsePointwiseMultiplyDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) => false;
 		bool IComputationAbstractApi.VectorSparsePointwiseDivideDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) => false;
 		bool IComputationAbstractApi.MatrixDenseMultiplyVectorSparse<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation op, T α, long m, TS2 M, long ldm, ISparseArray<T, TInd, TS1, TSInd> x, T β, TS3 y, long strideY) => false;
@@ -850,7 +850,45 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		{
 			if (!GetPointer(array, stride, out T* ptr, out var n))
 				return false;
+			return NMC.vecSort(T.Type, ptr, n, (int)stride) == 0;
+		}
 
+		/// <inheritdoc/>
+		public virtual bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, IBaseNumber<TOther> where TS2 : class, IStorage<TOther, TS2>
+		{
+			if (!GetPointer(keys, strideKeys, out T* pk, out var n))
+				return false;
+			if (!GetPointer(values, strideValues, out TOther* pv, out var n2))
+				return false;
+			if (n2 != n)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
+			return NMC.vecSortBy(T.Type, TOther.Type, pk, pv, n, (int)strideKeys, (int)strideValues) == 0;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		{
+			find = -1;
+			if (!GetPointer(array, stride, out T* ptr, out var n))
+				return false;
+			return NMC.vecFind(T.Type, sorted, ptr, n, (int)stride, &value, out find) == 0;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool BoundOf<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		{
+			index = -1;
+			if (!GetPointer(array, stride, out T* ptr, out var n))
+				return false;
+			return NMC.vecBound(T.Type, lowerBound, ptr, n, (int)stride, &value, out index) == 0;
+		}
+
+		/// <inheritdoc/>
+		public virtual bool FillWithRange<T, TS>(TS array, long stride, T start, T step) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		{
+			if (!GetPointer(array, stride, out T* ptr, out var n))
+				return false;
+			return NMC.vecFillRange(T.Type, ptr, n, (int)stride, &start, &step) == 0;
 		}
 		#endregion
 	}
