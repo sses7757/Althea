@@ -2,25 +2,30 @@
 
 using Althea.Array;
 using Althea.Storage;
+using Althea.Numerics;
 
 
 namespace Althea.GeneralSolvers.Krylov.Array
 {
 	internal class DenseVector<T, TS> : Althea.Array.DenseVector<T, TS>, IKrylovVector<T, DenseVector<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region create
 		public DenseVector(Althea.Array.DenseVector<T, TS> baseVector) : base(baseVector)
 		{
-			// do nothing
+#pragma warning disable CA1816
+			GC.SuppressFinalize(this);
+#pragma warning restore CA1816
 		}
 		#endregion
 
 		#region Krylov
 		DenseVector<T, TS> ICreateAlike<DenseVector<T, TS>>.CreateAlike() => new(base.CreateAlike());
 
-		object ICloneable.Clone() => ((ICloneable<DenseVector<T, TS>>)this).Clone();
+		public DenseVector<T, TS> Clone() => ((ICloneable<DenseVector<T, TS>>)this).Clone();
+
+		object ICloneable.Clone() => this.Clone();
 
 		static DenseVector<T, TS> IKrylovVector<T, DenseVector<T, TS>>.Empty => new(Empty);
 

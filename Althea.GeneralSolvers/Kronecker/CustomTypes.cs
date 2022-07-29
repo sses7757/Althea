@@ -15,7 +15,7 @@ namespace Althea.GeneralSolvers.Kronecker
 		IMatrixAddOperations<T, TMat, TMat, TMat>, IMatrixMultiplyOperations<T, TMat, TMat, TMat>
 		where TMat : class, IConvertibleMatrix<T, TMat, TVec>, IDisposable
 		where TVec : class, IConvertibleVector<T, TVec, TMat>, IDisposable
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, convert this matrix to a vector of type <typeparamref name="TVec"/>
@@ -33,7 +33,7 @@ namespace Althea.GeneralSolvers.Kronecker
 	public interface IConvertibleVector<T, TVec, TMat> : IVectorMetric, IDisposable
 		where TMat : class, IConvertibleMatrix<T, TMat, TVec>, IDisposable
 		where TVec : class, IConvertibleVector<T, TVec, TMat>, IDisposable
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 	{
 		/// <summary>
 		/// When implemented by a derived class, convert this vector to a matrix of type <typeparamref name="TMat"/>

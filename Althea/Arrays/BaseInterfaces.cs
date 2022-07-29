@@ -1,4 +1,6 @@
-﻿using Althea.Linq;
+﻿using System.Text.Json;
+
+using Althea.Linq;
 
 
 namespace Althea.Array
@@ -52,6 +54,15 @@ namespace Althea.Array
 		/// When implemented by a derived class, get the value array of this dense array.
 		/// </summary>
 		TS Storage { get; }
+
+		/// <summary>
+		/// The <see cref="JsonSerializerOptions"/> for <typeparamref name="TS"/>.
+		/// </summary>
+		protected static JsonSerializerOptions JsonSerializeOptions { get; } = new()
+		{
+			Converters = { TS.JsonConverter },
+			WriteIndented = true,
+		};
 		#endregion
 	}
 
@@ -105,6 +116,15 @@ namespace Althea.Array
 		/// When implemented by a derived class, get the constant block size of this sparse array, can be empty if it is not a <see cref="SparseFormat.Blocking.Simple"/>
 		/// </summary>
 		ReadOnlySpan<long> BlockSize { get; }
+
+		/// <summary>
+		/// The <see cref="JsonSerializerOptions"/> for <typeparamref name="TS"/>.
+		/// </summary>
+		protected static JsonSerializerOptions JsonSerializeOptions { get; } = new()
+		{
+			Converters = { TS.JsonConverter, TSInd.JsonConverter },
+			WriteIndented = true,
+		};
 		#endregion
 	}
 

@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -22,7 +23,7 @@ namespace Althea.Array
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public abstract class SparseMatrix<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
+	public abstract partial class SparseMatrix<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
 		IBaseMatrix<T, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixVectorMultiplyOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixUnaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
@@ -79,9 +80,11 @@ namespace Althea.Array
 		public virtual TSInd ColIndexStorage => this.colIndices.MakeReference(0, this.nnz);
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public long Length => this.rows * this.cols;
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public long NStored
 		{
 			get => this.nnz;
@@ -432,18 +435,6 @@ namespace Althea.Array
 		#endregion
 
 		#region string
-		/// <summary>
-		/// The <see cref="JsonSerializerOptions"/> used for <see cref="JsonSerialize"/> and <see cref="JsonDeserialize(string)"/>.
-		/// </summary>
-		protected static JsonSerializerOptions JsonOptions => new()
-		{
-			Converters = { TS.JsonConverter, TSInd.JsonConverter },
-			WriteIndented = true,
-		};
-
-		/// <inheritdoc/>
-		public abstract string JsonSerialize();
-
 		static string IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.StringMain => nameof(SparseMatrix<T, TInd, TS, TSInd>);
 
 		static IEnumerable<string> IMainPropertyFormattable<SparseMatrix<T, TInd, TS, TSInd>>.PropertyNames => new[] { "DataType", "IndexType", "Format", "DefaultValue", "Size", "BlockSize", "Non-zeros", "Values", "RowIndices", "ColumnIndices" };
@@ -458,6 +449,8 @@ namespace Althea.Array
 		#endregion
 
 		#region protected static
+		static JsonSerializerOptions IValueArray<T, SparseMatrix<T, TInd, TS, TSInd>>.JsonSerializeOptions => ISparseArray<T, TInd, TS, TSInd>.JsonSerializeOptions;
+
 		/// <summary>
 		/// Encapsulates a method that statically create a new sparse matrix from the given <paramref name="wrapper"/>.
 		/// </summary>
@@ -486,31 +479,6 @@ namespace Althea.Array
 					return mat;
 			}
 			wrapper.DisposeAll();
-			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
-		}
-
-		/// <summary>
-		/// Encapsulates a method that statically deserialize the given <paramref name="json"/> to a new sparse matrix.
-		/// </summary>
-		/// <param name="json">The JSON string to create from.</param>
-		/// <param name="matrix">A created <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> from the given <paramref name="json"/></param>
-		/// <returns>Success or not.</returns>
-		protected delegate bool TryDeserialize(string json, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix);
-
-		/// <summary>
-		/// The list used to store the JSON deserializers for sub-classes.
-		/// </summary>
-		/// <remarks>Any sub-class that inherits <see cref="SparseMatrix{T, TInd, TS, TSInd}"/> SHALL add its own <see cref="TryDeserialize"/> implementation to this list.</remarks>
-		protected static readonly List<TryDeserialize> Deserializers = new();
-
-		/// <inheritdoc/>
-		public static SparseMatrix<T, TInd, TS, TSInd> JsonDeserialize(string json!!)
-		{
-			foreach (var deserializer in Deserializers)
-			{
-				if (deserializer(json, out var mat))
-					return mat;
-			}
 			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 		#endregion

@@ -4919,7 +4919,12 @@
         </member>
         <member name="M:Althea.AbstractApiSelector`1.ApiEnumerator.#ctor">
             <summary>
-            The default constructor of <see cref="T:Althea.AbstractApiSelector`1.ApiEnumerator"/>
+            The default constructor of <see cref="T:Althea.AbstractApiSelector`1.ApiEnumerator"/> that starts the enumeration and enters API reader lock.
+            </summary>
+        </member>
+        <member name="M:Althea.AbstractApiSelector`1.ApiEnumerator.Dispose">
+            <summary>
+            The disposer of <see cref="T:Althea.AbstractApiSelector`1.ApiEnumerator"/> that simply exits the API reader lock.
             </summary>
         </member>
         <member name="M:Althea.AbstractApiSelector`1.ApiEnumerator.Reset">
@@ -5041,9 +5046,8 @@
         </member>
         <member name="T:Althea.Settings">
             <summary>
-            The static class for global settings
+            The static class for global settings include print settings and implementation settings
             </summary>
-            <remarks>Notice that the settings are thread static (see <see cref="T:System.ThreadStaticAttribute"/>).</remarks>
         </member>
         <member name="P:Althea.Settings.PrintSetting">
             <summary>
@@ -5086,6 +5090,11 @@
             </summary>
             <remarks>If the value is true, there may be creations and dispositions of implementation classes that may introduce more time loss.<br/>
             Otherwise, there may be maintained storages of implementation classes that may introduce some memory loss.</remarks>
+        </member>
+        <member name="M:Althea.Settings.SetImplementation``1(``0)">
+            <summary>
+            The alias of <see cref="M:Althea.AbstractApiSelector`1.SetImplementation(`0)"/>.
+            </summary>
         </member>
         <member name="M:Althea.Settings.TrySetBackend(Althea.IBackends)">
             <summary>
@@ -28356,10 +28365,7 @@
             <param name="info">The given <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/> to be converted</param>
         </member>
         <member name="M:Althea.TensorAlgebra.StorableContractInfo.ToString">
-            <summary>
-            Returns the string representation of this <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/>
-            </summary>
-            <returns>The string representation of this <see cref="T:Althea.TensorAlgebra.StorableContractInfo"/></returns>
+            <inheritdoc/>
         </member>
         <member name="T:Althea.TensorAlgebra.ContractInfoExtension">
             <summary>

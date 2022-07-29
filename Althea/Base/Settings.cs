@@ -44,11 +44,51 @@ namespace Althea
 	}
 	#endregion
 
+	#region implementation settings
+	internal record struct ImplementationSettings(bool DisposeNotCurrentImplementation, Dictionary<string, object> Implementations)
+	{
+		private static Dictionary<string, object> GetImplementations(IBackends backend)
+		{
+			Dictionary<string, object> impls = new();
+			foreach (var p in backend.GetType().GetProperties())
+			{
+				if (!p.PropertyType.IsRuntimeApiInterface())
+					continue;
+				object? impl = p.GetValue(backend);
+				if (impl is null)
+					continue;
+				impls.Add(p.PropertyType.AssemblyQualifiedName ?? string.Empty, impl);
+			}
+			return impls;
+		}
+
+		public ImplementationSettings(IBackends backend) : this(false, GetImplementations(backend))
+		{ }
+
+		public readonly void SetBackends()
+		{
+			foreach (var kv in this.Implementations)
+			{
+				try
+				{
+					Type t = Type.GetType(kv.Key) ?? throw new InvalidOperationException();
+					typeof(Settings).GetMethod(nameof(Settings.SetImplementation))?
+									.MakeGenericMethod(t)?
+									.Invoke(null, new[] { kv.Value });
+				}
+				catch (Exception e)
+				{
+					Log.Write($"Error occurred during setting implementation of {kv.Key}: {e}", level: LogLevel.Error);
+				}
+			}
+		}
+	}
+	#endregion
+
 	/// <summary>
-	/// The static class for global settings
+	/// The static class for global settings include print settings and implementation settings
 	/// </summary>
-	/// <remarks>Notice that the settings are thread static (see <see cref="ThreadStaticAttribute"/>).</remarks>
-	public static partial class Settings
+	public static class Settings
 	{
 		#region class for settings
 		internal record JsonSettings
@@ -134,9 +174,70 @@ namespace Althea
 		/// </summary>
 		/// <remarks>If the value is true, there may be creations and dispositions of implementation classes that may introduce more time loss.<br/>
 		/// Otherwise, there may be maintained storages of implementation classes that may introduce some memory loss.</remarks>
-		public static bool DisposeNotCurrentImplementation {
+		public static bool DisposeNotCurrentImplementation
+		{
 			get => settings.ImplementationSettings.DisposeNotCurrentImplementation;
 			set => settings.ImplementationSettings = settings.ImplementationSettings with { DisposeNotCurrentImplementation = value };
+		}
+
+		/// <summary>
+		/// Set the API implementation of <typeparamref name="TApi"/> among all to a given <paramref name="implementation"/>.
+		/// </summary>
+		/// <typeparam name="TApi">The runtime API interface type</typeparam>
+		/// <param name="implementation">The implementation which implements <typeparamref name="TApi"/></param>
+		/// <exception cref="ArgumentException">If <paramref name="implementation"/> does not implements <typeparamref name="TApi"/> with empty constructor</exception>
+		/// <exception cref="ObjectDisposedException">If <paramref name="implementation"/> is disposed</exception>
+		public static void SetImplementation<TApi>(TApi implementation) where TApi : IAbstractRuntimeApi<TApi>
+		{
+			lock (__lockSetting)
+			{
+				AbstractApiSelector<TApi>.SetImplementation(implementation);
+				settings.ImplementationSettings.Implementations[typeof(TApi).AssemblyQualifiedName ?? string.Empty] = implementation;
+			}
+		}
+
+		internal static bool IsRuntimeApiInterface(this Type t)
+		{
+			if (!t.IsInterface)
+				return false;
+			try
+			{
+				typeof(IAbstractRuntimeApi<>).MakeGenericType(t);
+			}
+			catch (InvalidOperationException)
+			{
+				return false;
+			}
+			if (t.GetCustomAttributes(typeof(SourceGenerator.AbstractRuntimeApiAttribute), false).Length != 1)
+				return false;
+			return true;
+		}
+
+		/// <summary>
+		/// Set all runtime API(s) which inherits <see cref="IAbstractRuntimeApi{TApi}"/> and <paramref name="implementation"/> implements to <paramref name="implementation"/> at the same time.
+		/// </summary>
+		/// <param name="implementation">The API implementation to set</param>
+		/// <remarks>This method is based on reflection, thus it shall NOT be invoked repeatedly to prevent performance issues.</remarks>
+		public static void SetAllImplementations(object implementation)
+		{
+			lock (__lockSetting)
+			{
+				foreach (var t in implementation.GetType().GetInterfaces())
+				{
+					try
+					{
+						if (!t.IsRuntimeApiInterface())
+							continue;
+						typeof(Settings).GetMethod(nameof(Settings.SetImplementation))?
+										.MakeGenericMethod(t)?
+										.Invoke(null, new[] { implementation });
+					}
+					catch (Exception e)
+					{
+						Log.Write($"Error occurred during setting implementation of {t}: {e}", level: LogLevel.Error);
+					}
+				}
+			}
 		}
 
 		/// <summary>
@@ -144,6 +245,7 @@ namespace Althea
 		/// </summary>
 		/// <param name="backend">The <see cref="IBackends"/> used to set all back-ends</param>
 		/// <return>Success or not. Some implementation may still be changed even if this returns false.</return>
+		/// <remarks>This method is based on reflection, thus it shall NOT be invoked repeatedly to prevent performance issues.</remarks>
 		public static bool TrySetBackend(IBackends backend)
 		{
 			if (backend is null || !backend.Available)
@@ -173,7 +275,6 @@ namespace Althea
 			NumberHandling = JsonNumberHandling.AllowReadingFromString | JsonNumberHandling.AllowNamedFloatingPointLiterals,
 			WriteIndented = true,
 			IgnoreReadOnlyProperties = true,
-			Converters = { new ImplementationSettings.JsonConverter() }
 		};
 
 		private static string fileName = "Althea.json";

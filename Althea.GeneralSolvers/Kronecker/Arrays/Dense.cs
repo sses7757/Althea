@@ -8,7 +8,7 @@ using Althea.Storage;
 namespace Althea.GeneralSolvers.Kronecker.Array
 {
 	internal class DenseVector<T, TS> : Althea.Array.DenseVector<T, TS>, IConvertibleVector<T, DenseVector<T, TS>, DenseMatrix<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region create
@@ -30,7 +30,7 @@ namespace Althea.GeneralSolvers.Kronecker.Array
 	}
 
 	internal class DenseMatrix<T, TS> : Althea.Array.DenseMatrix<T, TS>, IConvertibleMatrix<T, DenseMatrix<T, TS>, DenseVector<T, TS>>
-		where T : unmanaged, INumber<T>
+		where T : unmanaged, IBaseNumber<T>
 		where TS : class, IStorage<T, TS>
 	{
 		#region create

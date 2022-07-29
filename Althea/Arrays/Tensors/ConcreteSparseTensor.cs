@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -191,26 +191,8 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(int Format, T Default, long[] Length, long NonZeros, TS Values, TSInd Indices);
-
-		private CoordinateSparseTensor(Repr repr) : this(repr.Length, repr.Values, repr.Indices, repr.Default, repr.NonZeros) { }
-
-		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize<Repr>(new(this.Format.Data, this.DefaultValue, this.Size.ToArray(), this.NStored, this.Storage, this.IndexStorage), JsonOptions);
-
-		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseTensor<T, TInd, TS, TSInd>? vector)
-		{
-			try
-			{
-				vector = new CoordinateSparseTensor<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
-				return true;
-			}
-			catch (Exception)
-			{
-				vector = null;
-				return false;
-			}
-		}
+		[JsonConstructor]
+		private CoordinateSparseTensor(TS storage, TSInd indexStorage, T defaultValue, long[] sizeArray, string labelsArray) : this(sizeArray, storage, indexStorage, defaultValue, -1, labelsArray) { }
 
 		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseTensor<T, TInd, TS, TSInd>? vector)
 		{
@@ -229,7 +211,6 @@ namespace Althea.Array
 		static CoordinateSparseTensor()
 		{
 			Creators.Add(TryCreate);
-			Deserializers.Add(TryJsonDeserialize);
 		}
 		#endregion
 	}
@@ -252,7 +233,11 @@ namespace Althea.Array
 		private readonly long blockLength;
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<long> BlockSize => this.blockSize.AsSpan(this.Rank);
+
+		[JsonInclude]
+		private long[] BlockSizeArray => this.BlockSize.ToArray();
 
 		private static readonly SparseFormat format = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, SparseFormat.Major.Column);
 
@@ -474,26 +459,8 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(int Format, T Default, long[] Length, long[] BlockSize, long NonZeros, TS Values, TSInd Indices);
-
-		private CoordinateBlockSparseTensor(Repr repr) : this(repr.Length, repr.BlockSize, repr.Values, repr.Indices, repr.Default, repr.NonZeros) { }
-
-		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize<Repr>(new(this.Format.Data, this.DefaultValue, this.Size.ToArray(), this.BlockSize.ToArray(), this.NStored, this.Storage, this.IndexStorage), JsonOptions);
-
-		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseTensor<T, TInd, TS, TSInd>? vector)
-		{
-			try
-			{
-				vector = new CoordinateBlockSparseTensor<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
-				return true;
-			}
-			catch (Exception)
-			{
-				vector = null;
-				return false;
-			}
-		}
+		[JsonConstructor]
+		private CoordinateBlockSparseTensor(TS storage, TSInd indexStorage, T defaultValue, long[] sizeArray, long[] blockSizeArray, string labelsArray) : this(sizeArray, blockSizeArray, storage, indexStorage, defaultValue, -1, labelsArray) { }
 
 		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseTensor<T, TInd, TS, TSInd>? vector)
 		{
@@ -518,7 +485,6 @@ namespace Althea.Array
 			if (TInd.Size > sizeof(long))
 				throw new NotSupportedException(Resources.ArithmeticError.DataTypeNotAllow);
 			Creators.Add(TryCreate);
-			Deserializers.Add(TryJsonDeserialize);
 		}
 		#endregion
 	}

@@ -26,7 +26,7 @@ namespace Althea.GeneralSolvers.Kronecker.Backend
 
 
 		/// <inheritdoc/>
-		public virtual bool KroneckerMultiplyVector<T, TMat, TVec>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default) where T : unmanaged, INumber<T> where TMat : class, IConvertibleMatrix<T, TMat, TVec> where TVec : class, IConvertibleVector<T, TVec, TMat>
+		public virtual bool KroneckerMultiplyVector<T, TMat, TVec>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default) where T : unmanaged, IBaseNumber<T> where TMat : class, IConvertibleMatrix<T, TMat, TVec> where TVec : class, IConvertibleVector<T, TVec, TMat>
 		{
 			if (scalar == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);

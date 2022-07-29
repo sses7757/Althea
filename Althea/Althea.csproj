@@ -18,10 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="LinearAlgebra\Dense\ExpressionExtendBlasAPI.cs">
+    <None Include="LinearAlgebra\Dense\DynamicExtendBlasAPI.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ExpressionExtendBlasAPI.tt</DependentUpon>
+      <DependentUpon>DynamicExtendBlasAPI.tt</DependentUpon>
     </None>
     <None Include="LinearAlgebra\Sparse\ExtendIndexAPI.cs">
       <DesignTime>True</DesignTime>
@@ -78,6 +78,11 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>SwapSort.tt</DependentUpon>
+    </Compile>
+    <Compile Update="LinearAlgebra\Dense\DynamicExtendBlasAPI.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DynamicExtendBlasAPI.tt</DependentUpon>
     </Compile>
     <Compile Update="LinearAlgebra\Dense\ExpressionExtendBlasAPI.cs">
       <DesignTime>True</DesignTime>
@@ -230,9 +235,9 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>SwapSort.cs</LastGenOutput>
     </None>
-    <None Update="LinearAlgebra\Dense\ExpressionExtendBlasAPI.tt">
+    <None Update="LinearAlgebra\Dense\DynamicExtendBlasAPI.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ExpressionExtendBlasAPI.cs</LastGenOutput>
+      <LastGenOutput>DynamicExtendBlasAPI.cs</LastGenOutput>
     </None>
     <None Update="LinearAlgebra\Sparse\ExtendIndexAPI.tt">
       <Generator>TextTemplatingFileGenerator</Generator>

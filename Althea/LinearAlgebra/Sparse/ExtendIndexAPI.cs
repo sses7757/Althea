@@ -8,10 +8,10 @@ using Althea.Storage;
 namespace Althea.LinearAlgebra.Sparse
 {
 	/// <summary>
-	/// The abstract interface for runtime extended index related operation API routines 
+	/// The abstract interface for runtime dynamic extended index related operation API routines 
 	/// </summary>
 	[AbstractRuntimeApi]
-	public interface IExtendIndexOperationAbstractApi : IAbstractRuntimeApi<IExtendIndexOperationAbstractApi>
+	public interface IDynamicIndexOperationAbstractApi : IAbstractRuntimeApi<IDynamicIndexOperationAbstractApi>
 	{
 		/// <summary>
 		/// When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with all given values.

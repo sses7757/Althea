@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -53,12 +54,13 @@ namespace Althea.Array
 		/// <param name="rows">The number of rows of the matrix to create</param>
 		/// <param name="cols">The number of columns of the matrix to create</param>
 		/// <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="rows"/></param>
-		/// <param name="unitDiag">Whether the triangular matrix's diagonal elements are all 1 and thus not used.</param>
+		/// <param name="unitDiagonal">Whether the triangular matrix's diagonal elements are all 1 and thus not used.</param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
-		public TriangularMatrix(bool upper, TS storage!!, long rows, long cols, long leadDim = 0, bool unitDiag = false) : base(storage, rows, cols, leadDim)
+		[JsonConstructor]
+		public TriangularMatrix(bool upper, TS storage!!, long rows, long cols, long leadDim = 0, bool unitDiagonal = false) : base(storage, rows, cols, leadDim)
 		{
-			this.upper = upper; this.unitDiag = unitDiag;
+			this.upper = upper; this.unitDiag = unitDiagonal;
 		}
 		#endregion
 
@@ -263,25 +265,7 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(TS Values, long Rows, long Cols, long LeadDim, bool Upper, bool UnitDiag);
-		private static JsonSerializerOptions JsonOptions => new()
-		{
-			Converters = { TS.JsonConverter },
-			WriteIndented = true,
-		};
-
-		/// <inheritdoc/>
-		public string JsonSerialize()
-		{
-			return JsonSerializer.Serialize<Repr>(new(this.Storage, this.NRows, this.NCols, this.LeadDim, this.upper, this.unitDiag), JsonOptions);
-		}
-
-		/// <inheritdoc/>
-		public static TriangularMatrix<T, TS> JsonDeserialize(string json!!)
-		{
-			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
-			return new(repr.Upper, repr.Values, repr.Rows, repr.Cols, repr.LeadDim, repr.UnitDiag);
-		}
+		static JsonSerializerOptions IValueArray<T, TriangularMatrix<T, TS>>.JsonSerializeOptions => IDenseArray<T, TS>.JsonSerializeOptions;
 		#endregion
 
 		#region string
@@ -362,13 +346,14 @@ namespace Althea.Array
 		/// <param name="storage">The storage of type <typeparamref name="TS"/> to create from</param>
 		/// <param name="n">The number of rows and columns of the matrix to create</param>
 		/// <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="n"/></param>
-		/// <param name="herm">Whether the symmetric matrix is Hermitian or simply symmetric or according to <typeparamref name="T"/> (null)</param>
+		/// <param name="hermitian">Whether the symmetric matrix is Hermitian or simply symmetric or according to <typeparamref name="T"/> (null)</param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0</exception>
-		public SymmetricMatrix(bool upper, TS storage!!, long n, long leadDim = 0, bool? herm = null) : base(storage, n, n, leadDim)
+		[JsonConstructor]
+		public SymmetricMatrix(bool upper, TS storage!!, long n, long leadDim = 0, bool? hermitian = null) : base(storage, n, n, leadDim)
 		{
 			this.upper = upper;
-			this.herm = herm ?? true;
+			this.herm = hermitian ?? true;
 			if (!T.IsComplexType)
 				this.herm = false;
 		}
@@ -581,25 +566,7 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(TS Values, long N, long LeadDim, bool Upper, bool SymmetricOrHermitian);
-		private static JsonSerializerOptions JsonOptions => new()
-		{
-			Converters = { TS.JsonConverter },
-			WriteIndented = true,
-		};
-
-		/// <inheritdoc/>
-		public string JsonSerialize()
-		{
-			return JsonSerializer.Serialize<Repr>(new(this.Storage, this.NRows, this.LeadDim, this.upper, this.herm), JsonOptions);
-		}
-
-		/// <inheritdoc/>
-		public static SymmetricMatrix<T, TS> JsonDeserialize(string json!!)
-		{
-			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
-			return new(repr.Upper, repr.Values, repr.N, repr.LeadDim, repr.SymmetricOrHermitian);
-		}
+		static JsonSerializerOptions IValueArray<T, SymmetricMatrix<T, TS>>.JsonSerializeOptions => IDenseArray<T, TS>.JsonSerializeOptions;
 		#endregion
 
 		#region string

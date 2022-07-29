@@ -161,6 +161,7 @@ namespace Althea.Backend
 		private readonly CSharp.Storage.Api ST = new();
 		private readonly CSharp.LinearAlgebra.Api LA = new();
 		private readonly CSharp.Random.Api RN = new();
+		private readonly CSharp.Transformer.Api TF = new();
 
 		/// <inheritdoc/>
 		public TensorAlgebra.Dense.IBaseAbstractApi? TensorAlgebraDenseBase => null;
@@ -178,10 +179,13 @@ namespace Althea.Backend
 		public LinearAlgebra.Sparse.IConversionAbstractApi? LinearAlgebraSparseConversion => LA;
 
 		/// <inheritdoc/>
-		public GeneralSolver.IAbstractApi? GeneralSolver => throw new NotImplementedException();
+		public LinearAlgebra.Sparse.IIndexOperationAbstractApi? LinearAlgebraSparseIndexOperation => LA;
 
 		/// <inheritdoc/>
-		public Transformer.IAbstractApi? Transformer => null;
+		public LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi? LinearAlgebraSparseDynamicIndexOperation => null;
+
+		/// <inheritdoc/>
+		public Transformer.IAbstractApi? Transformer => TF;
 
 		/// <inheritdoc/>
 		public LinearAlgebra.Dense.ICopyAbstractApi? LinearAlgebraDenseCopy => ST;
@@ -193,7 +197,7 @@ namespace Althea.Backend
 		public TensorAlgebra.Sparse.IAbstractApi? TensorAlgebraSparse => null;
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Dense.ILapackAbstractApi? LinearAlgebraDenseLapack => null;
+		public LinearAlgebra.Dense.ILapackAbstractApi? LinearAlgebraDenseLapack => LA;
 
 		/// <inheritdoc/>
 		public Althea.Random.IAbstractApi? Random => RN;
@@ -203,6 +207,9 @@ namespace Althea.Backend
 
 		/// <inheritdoc/>
 		public TensorAlgebra.Dense.IExtendAbstractApi? TensorAlgebraDenseExtend => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IDynamicExtendAbstractApi? TensorAlgebraDenseDynamicExtend => null;
 	}
 	#endregion
 }

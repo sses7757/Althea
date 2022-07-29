@@ -347,8 +347,8 @@ namespace Althea
 		}
 	}
 }";
-			sourceText = SourceText.From(implSetting, Encoding.UTF8);
-			context.AddSource($"ImplementationSettings.cs", sourceText);
+			////sourceText = SourceText.From(implSetting, Encoding.UTF8);
+			////context.AddSource($"ImplementationSettings.cs", sourceText);
 		}
 
 		public void Execute(GeneratorExecutionContext context)

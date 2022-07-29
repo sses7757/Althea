@@ -354,7 +354,7 @@ namespace Althea.Storage
 		/// <summary>
 		/// When implemented by a derived class, statically get the JSON converter of <typeparamref name="TSelf"/>. Cannot be null.
 		/// </summary>
-		protected internal abstract static JsonConverter<TSelf> JsonConverter { get; }
+		abstract static JsonConverter<TSelf> JsonConverter { get; }
 	}
 
 	/// <summary>

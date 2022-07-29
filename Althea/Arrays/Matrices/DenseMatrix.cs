@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -151,12 +152,13 @@ namespace Althea.Array
 		/// Create a new <see cref="DenseMatrix{T, TS}"/> with given <paramref name="storage"/> and size.
 		/// </summary>
 		/// <param name="storage">The storage of type <typeparamref name="TS"/> to create from</param>
-		/// <param name="rows">The number of rows of the matrix to create</param>
-		/// <param name="cols">The number of columns of the matrix to create</param>
-		/// <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="rows"/></param>
+		/// <param name="nRows">The number of rows of the matrix to create</param>
+		/// <param name="nCols">The number of columns of the matrix to create</param>
+		/// <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="nRows"/></param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
-		public DenseMatrix(TS storage!!, long rows, long cols, long leadDim = 0) : base(storage, rows, cols, leadDim)
+		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="nRows"/> or <paramref name="nCols"/> ≤ 0</exception>
+		[JsonConstructor]
+		public DenseMatrix(TS storage!!, long nRows, long nCols, long leadDim = 0) : base(storage, nRows, nCols, leadDim)
 		{
 			// do nothing
 		}
@@ -319,25 +321,7 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(TS Values, long Rows, long Cols, long LeadDim);
-		private static JsonSerializerOptions JsonOptions => new()
-		{
-			Converters = { TS.JsonConverter },
-			WriteIndented = true,
-		};
-
-		/// <inheritdoc/>
-		public string JsonSerialize()
-		{
-			return JsonSerializer.Serialize<Repr>(new(this.Storage, this.NRows, this.NCols, this.LeadDim), JsonOptions);
-		}
-
-		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> JsonDeserialize(string json!!)
-		{
-			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
-			return new(repr.Values, repr.Rows, repr.Cols, repr.LeadDim);
-		}
+		static JsonSerializerOptions IValueArray<T, DenseMatrix<T, TS>>.JsonSerializeOptions => IDenseArray<T, TS>.JsonSerializeOptions;
 		#endregion
 
 		#region string
@@ -372,7 +356,7 @@ namespace Althea.Array
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	[StructLayout(LayoutKind.Sequential)]
-	public class DiagonalMatrix<T, TS> : IArray<T>, IBaseMatrix<T, DiagonalMatrix<T, TS>>,
+	public class DiagonalMatrix<T, TS> : IDenseArray<T, TS>, IBaseMatrix<T, DiagonalMatrix<T, TS>>,
 		IMatrixVectorMultiplyOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, DiagonalMatrix<T, TS>>,
 		IMatrixUnaryOperators<T, DiagonalMatrix<T, TS>, DiagonalMatrix<T, TS>>,
 		IMatrixBinaryOperators<T, DiagonalMatrix<T, TS>, DiagonalMatrix<T, TS>, DiagonalMatrix<T, TS>>,
@@ -396,9 +380,9 @@ namespace Althea.Array
 		public long NCols => this.n;
 
 		ReadOnlySpan<long> IArray<T>.Size => SpanHelper.CreateReadOnlySpan(in this.n, 2);
-
 		ReadOnlySpan<long> IValueArray<T, DiagonalMatrix<T, TS>>.Size => ((IPitchedArray<T>)this).Size;
-
+		ReadOnlySpan<long> IPitchedArray<T>.Strides => SpanHelper.CreateReadOnlySpan(in this.stride, 1);
+		ReadOnlySpan<long> IPitchedArray<T>.OuterSize => SpanHelper.CreateReadOnlySpan(in n, 2);
 		long IValueArray<T, DiagonalMatrix<T, TS>>.Length => this.n * this.n;
 
 		static DiagonalMatrix<T, TS> IValueArray<T, DiagonalMatrix<T, TS>>.Empty => new();
@@ -704,25 +688,10 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(TS Values, long N, long Stride);
-		private static JsonSerializerOptions JsonOptions => new()
-		{
-			Converters = { TS.JsonConverter },
-			WriteIndented = true,
-		};
+		static JsonSerializerOptions IValueArray<T, DiagonalMatrix<T, TS>>.JsonSerializeOptions => IDenseArray<T, TS>.JsonSerializeOptions;
 
-		/// <inheritdoc/>
-		public string JsonSerialize()
-		{
-			return JsonSerializer.Serialize<Repr>(new(this.values, this.n, this.stride), JsonOptions);
-		}
-
-		/// <inheritdoc/>
-		public static DiagonalMatrix<T, TS> JsonDeserialize(string json!!)
-		{
-			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
-			return new(repr.Values, repr.N, repr.Stride);
-		}
+		[JsonConstructor]
+		private DiagonalMatrix(TS storage, long nRows, long nCols, long stride) : this(storage, nRows, stride) { }
 		#endregion
 
 		#region string

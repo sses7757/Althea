@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
-
+using System.Threading;
 
 namespace Althea
 {
@@ -53,24 +53,6 @@ namespace Althea
 
 		private static readonly object __locker = new();
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int Count<TApi>() where TApi : IAbstractRuntimeApi<TApi>
-		{
-			return AbstractApiSelector<TApi>.APIs.Count;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static TApi Get<TApi>(int index) where TApi : IAbstractRuntimeApi<TApi>
-		{
-			return AbstractApiSelector<TApi>.APIs[index];
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static int IndexOf<TApi>(TApi instance) where TApi : IAbstractRuntimeApi<TApi>
-		{
-			return AbstractApiSelector<TApi>.APIs.IndexOf(instance);
-		}
-
 		internal static void Add<TApi>(TApi instance) where TApi : IAbstractRuntimeApi<TApi>
 		{
 			var handle = typeof(TApi).TypeHandle;
@@ -86,6 +68,8 @@ namespace Althea
 
 		internal static void Dispose<TApi>(int index) where TApi : IAbstractRuntimeApi<TApi>
 		{
+			if (index < 0)
+				return;
 			lock (__locker)
 			{
 				var instance = AbstractApiSelector<TApi>.APIs[index];
@@ -132,13 +116,43 @@ namespace Althea
 		/// Get the currently using <typeparamref name="TApi"/>.
 		/// </summary>
 		/// <remarks>DO NOT directly access the method of it unless you are sure what you are doing.</remarks>
-		public static TApi? Current => CurrentApiIndex >= 0 ? ApiManager.Get<TApi>(CurrentApiIndex) : default;
+		public static TApi? Current => CurrentApiIndex >= 0 ? APIs[CurrentApiIndex] : default;
 
 		internal static readonly List<TApi> APIs = new(); 
 
 		private static int CurrentApiIndex = -1;
 
-		private static readonly object apiChangeLock = new();
+		private static readonly ReaderWriterLockSlim apiLock = new();
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void SetImplementation(TApi implementation!!)
+		{
+			if (implementation.Disposed)
+				throw new ObjectDisposedException(nameof(implementation));
+			try
+			{
+				apiLock.EnterWriteLock();
+				int newIndex = APIs.IndexOf(implementation);
+				if (newIndex < 0)
+				{
+					ApiManager.Add(implementation);
+					newIndex = APIs.Count - 1;
+				}
+				if (Settings.DisposeNotCurrentImplementation)
+				{
+					ApiManager.Dispose<TApi>(CurrentApiIndex);
+				}
+				CurrentApiIndex = newIndex;
+				if (APIs[CurrentApiIndex].Disposed)
+				{
+					ApiManager.Initiate<TApi>(CurrentApiIndex, implementation.GetType());
+				}
+			}
+			finally
+			{
+				apiLock.ExitWriteLock();
+			}
+		}
 		#endregion
 
 		#region enumerate
@@ -162,13 +176,21 @@ namespace Althea
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				get
 				{
-					List<TApi> apis = new(ApiManager.Count<TApi>());
-					var enumerator = GetEnumerator();
-					do
+					List<TApi> apis = new(APIs.Count);
+					apiLock.EnterReadLock();
+					try
 					{
-						apis.Add(enumerator.Current);
-					} while (enumerator.MoveNext());
-					return apis;
+						var enumerator = GetEnumerator();
+						do
+						{
+							apis.Add(enumerator.Current);
+						} while (enumerator.MoveNext());
+						return apis;
+					}
+					finally
+					{
+						apiLock.ExitReadLock();
+					}
 				}
 			}
 		}
@@ -185,11 +207,12 @@ namespace Althea
 		protected ref struct ApiEnumerator
 		{
 			private int current = 0;
+			private bool disposed = false;
 
 			private static int EndIndex
 			{
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => (CurrentApiIndex + 1) % ApiManager.Count<TApi>();
+				get => (CurrentApiIndex + 1) % APIs.Count;
 			}
 
 			/// <summary>
@@ -198,16 +221,29 @@ namespace Althea
 			public TApi Current
 			{
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => ApiManager.Get<TApi>(current);
+				get => this.disposed ? throw new ObjectDisposedException(nameof(ApiEnumerator)) : APIs[current];
 			}
 
 			/// <summary>
-			/// The default constructor of <see cref="ApiEnumerator"/>
+			/// The default constructor of <see cref="ApiEnumerator"/> that starts the enumeration and enters API reader lock.
 			/// </summary>
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public ApiEnumerator()
 			{
+				apiLock.EnterReadLock();
 				this.Reset();
+			}
+
+			/// <summary>
+			/// The disposer of <see cref="ApiEnumerator"/> that simply exits the API reader lock.
+			/// </summary>
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Dispose()
+			{
+				if (this.disposed)
+					throw new ObjectDisposedException(nameof(ApiEnumerator));
+				apiLock.ExitReadLock();
+				this.disposed = true;
 			}
 
 			/// <summary>
@@ -216,9 +252,11 @@ namespace Althea
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public void Reset()
 			{
+				if (this.disposed)
+					throw new ObjectDisposedException(nameof(ApiEnumerator));
 				this.current = CurrentApiIndex - 1;
 				if (this.current < 0)
-					this.current = ApiManager.Count<TApi>() - 1;
+					this.current = APIs.Count - 1;
 			}
 
 			/// <summary>
@@ -228,46 +266,17 @@ namespace Althea
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool MoveNext()
 			{
+				if (this.disposed)
+					throw new ObjectDisposedException(nameof(ApiEnumerator));
 				do
 				{
 					this.current++;
-					if (this.current == ApiManager.Count<TApi>())
+					if (this.current == APIs.Count)
 						current = 0;
 					if (this.current == EndIndex)
 						return false;
 				} while (this.Current.Disposed);
 				return true;
-			}
-		}
-
-		/// <summary>
-		/// Set the current API implementation among all to a given <paramref name="implementation"/>
-		/// </summary>
-		/// <param name="implementation">The implementation which implements <typeparamref name="TApi"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="implementation"/> does not implements <typeparamref name="TApi"/> with empty constructor</exception>
-		/// <exception cref="ObjectDisposedException">If <paramref name="implementation"/> is disposed</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void SetImplementation(TApi implementation!!)
-		{
-			if (implementation.Disposed)
-				throw new ObjectDisposedException(nameof(implementation));
-			lock (apiChangeLock)
-			{
-				int newIndex = ApiManager.IndexOf(implementation);
-				if (newIndex < 0)
-				{
-					ApiManager.Add(implementation);
-					newIndex = ApiManager.Count<TApi>() - 1;
-				}
-				if (Settings.DisposeNotCurrentImplementation)
-				{
-					ApiManager.Dispose<TApi>(CurrentApiIndex);
-				}
-				CurrentApiIndex = newIndex;
-				if (ApiManager.Get<TApi>(CurrentApiIndex).Disposed)
-				{
-					ApiManager.Initiate<TApi>(CurrentApiIndex, implementation.GetType());
-				}
 			}
 		}
 		#endregion

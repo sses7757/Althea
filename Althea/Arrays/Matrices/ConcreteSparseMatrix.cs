@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Dense;
@@ -32,6 +32,11 @@ namespace Althea.Array
 
 		/// <inheritdoc/>
 		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
+
+		/// <summary>
+		/// Get whether this matrix is of row major or column major.
+		/// </summary>
+		public bool RowMajor => this.RowMajor;
 
 		/// <summary>
 		/// Create a new <see cref="CoordinateSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
@@ -146,26 +151,8 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(bool RowMajor, long NRows, long NCols, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
-
-		private CoordinateSparseMatrix(Repr repr) : this(repr.RowMajor, repr.NRows, repr.NCols, repr.Values, repr.RowIndices, repr.ColIndices, repr.Default) { }
-
-		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize(new Repr(this.rowMajor, this.NRows, this.NCols, this.DefaultValue, this.Storage, this.RowIndexStorage, this.ColIndexStorage), JsonOptions);
-
-		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
-		{
-			try
-			{
-				matrix = new CoordinateSparseMatrix<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
-				return true;
-			}
-			catch (Exception)
-			{
-				matrix = null;
-				return false;
-			}
-		}
+		[JsonConstructor]
+		private CoordinateSparseMatrix(bool rowMajor, long nRows, long nCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
 
 		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
 		{
@@ -186,7 +173,6 @@ namespace Althea.Array
 		static CoordinateSparseMatrix()
 		{
 			Creators.Add(TryCreate);
-			Deserializers.Add(TryJsonDeserialize);
 		}
 		#endregion
 	}
@@ -206,6 +192,11 @@ namespace Althea.Array
 		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Compressed, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
 
 		private readonly bool rowMajor;
+
+		/// <summary>
+		/// Get whether this matrix is of row major or column major.
+		/// </summary>
+		public bool RowMajor => this.RowMajor;
 
 		/// <inheritdoc/>
 		public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : base.RowIndexStorage;
@@ -364,26 +355,8 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(bool RowMajor, long NRows, long NCols, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
-
-		private CompressSparseMatrix(Repr repr) : this(repr.RowMajor, repr.NRows, repr.NCols, repr.Values, repr.RowIndices, repr.ColIndices, repr.Default) { }
-
-		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize(new Repr(this.rowMajor, this.NRows, this.NCols, this.DefaultValue, this.Storage, this.RowIndexStorage, this.ColIndexStorage), JsonOptions);
-
-		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
-		{
-			try
-			{
-				matrix = new CompressSparseMatrix<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
-				return true;
-			}
-			catch (Exception)
-			{
-				matrix = null;
-				return false;
-			}
-		}
+		[JsonConstructor]
+		private CompressSparseMatrix(bool rowMajor, long nRows, long nCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
 
 		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
 		{
@@ -413,7 +386,6 @@ namespace Althea.Array
 		static CompressSparseMatrix()
 		{
 			Creators.Add(TryCreate);
-			Deserializers.Add(TryJsonDeserialize);
 		}
 		#endregion
 	}
@@ -441,6 +413,21 @@ namespace Althea.Array
 		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, (SparseFormat.Major)byte.MaxValue);
 
 		private readonly bool rowMajor;
+
+		/// <summary>
+		/// Get whether this matrix is of row major or column major.
+		/// </summary>
+		public bool RowMajor => this.RowMajor;
+
+		/// <summary>
+		/// Get the number of rows of blocks of this matrix.
+		/// </summary>
+		public long BlockRows => this.blockRows;
+
+		/// <summary>
+		/// Get the number of columns of blocks of this matrix.
+		/// </summary>
+		public long BlockCols => this.blockCols;
 
 		/// <inheritdoc/>
 		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
@@ -608,26 +595,8 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(bool RowMajor, long NRows, long NCols, long NonZeros, long RowBlockSize, long ColBlockSize, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
-
-		private CoordinateBlockSparseMatrix(Repr repr) : this(repr.RowMajor, repr.NRows, repr.NCols, repr.RowBlockSize, repr.ColBlockSize, repr.Values, repr.RowIndices, repr.ColIndices, repr.Default, repr.NonZeros) { }
-
-		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize(new Repr(this.rowMajor, this.NRows, this.NCols, this.NStored, this.blockRows, this.blockCols, this.DefaultValue, this.Storage, this.RowIndexStorage, this.ColIndexStorage), JsonOptions);
-
-		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
-		{
-			try
-			{
-				matrix = new CoordinateBlockSparseMatrix<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
-				return true;
-			}
-			catch (Exception)
-			{
-				matrix = null;
-				return false;
-			}
-		}
+		[JsonConstructor]
+		private CoordinateBlockSparseMatrix(bool rowMajor, long nRows, long nCols, long blockRows, long blockCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, blockRows, blockCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
 
 		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
 		{
@@ -649,7 +618,6 @@ namespace Althea.Array
 		static CoordinateBlockSparseMatrix()
 		{
 			Creators.Add(TryCreate);
-			Deserializers.Add(TryJsonDeserialize);
 		}
 		#endregion
 	}
@@ -676,6 +644,21 @@ namespace Althea.Array
 		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Compressed, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
 
 		private readonly bool rowMajor;
+
+		/// <summary>
+		/// Get whether this matrix is of row major or column major.
+		/// </summary>
+		public bool RowMajor => this.RowMajor;
+
+		/// <summary>
+		/// Get the number of rows of blocks of this matrix.
+		/// </summary>
+		public long BlockRows => this.blockRows;
+
+		/// <summary>
+		/// Get the number of columns of blocks of this matrix.
+		/// </summary>
+		public long BlockCols => this.blockCols;
 
 		/// <inheritdoc/>
 		public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : this.rowIndices.MakeReference(0, this.NStored / this.blockRows);
@@ -876,26 +859,8 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(bool RowMajor, long NRows, long NCols, long NonZeros, long BlockRows, long BlockCols, T Default, TS Values, TSInd RowIndices, TSInd ColIndices);
-
-		private CompressBlockSparseMatrix(Repr repr) : this(repr.RowMajor, repr.NRows, repr.NCols, repr.BlockRows, repr.BlockCols, repr.Values, repr.RowIndices, repr.ColIndices, repr.Default, repr.NonZeros) { }
-
-		/// <inheritdoc/>
-		public override string JsonSerialize() => JsonSerializer.Serialize(new Repr(this.rowMajor, this.NRows, this.NCols, this.NStored, this.blockRows, this.blockCols, this.DefaultValue, this.Storage, this.RowIndexStorage, this.ColIndexStorage), JsonOptions);
-
-		private static bool TryJsonDeserialize(string json!!, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
-		{
-			try
-			{
-				matrix = new CompressBlockSparseMatrix<T, TInd, TS, TSInd>(JsonSerializer.Deserialize<Repr>(json, JsonOptions));
-				return true;
-			}
-			catch (Exception)
-			{
-				matrix = null;
-				return false;
-			}
-		}
+		[JsonConstructor]
+		private CompressBlockSparseMatrix(bool rowMajor, long nRows, long nCols, long blockRows, long blockCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, blockRows, blockCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
 
 		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
 		{
@@ -926,7 +891,6 @@ namespace Althea.Array
 		static CompressBlockSparseMatrix()
 		{
 			Creators.Add(TryCreate);
-			Deserializers.Add(TryJsonDeserialize);
 		}
 		#endregion
 	}

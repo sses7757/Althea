@@ -52,16 +52,6 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return true;
 		}
 
-		public virtual partial bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-		{
-			minmax = default;
-			if (!MinMax<T, TS, long>(array, stride, out minmax.Min))
-				return false;
-			if (!MinMax<T, TS, int>(array, stride, out minmax.Max))
-				return false;
-			return true;
-		}
-
 		private static int BinarySearch<T>(T* x, int incx, int length, T value) where T : unmanaged, IBaseNumber<T>
 		{
 			int left = 0;
@@ -111,7 +101,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 						{
 							find = i;
 							break;
-						}	
+						}
 					}
 				}
 			}
@@ -175,7 +165,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return lower ? -1 : length;
 		}
 
-		public virtual partial bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		public virtual partial bool BoundOf<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			index = -1;
 			if (!GetPointer(array, stride, out T* x, out int length, out int inc))
@@ -199,82 +189,118 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			return true;
 		}
+		#endregion
 
-
+		#region fill
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorAllBoundsManaged<T, U, Lower>(T* x, int length, T start, T end, U* y) where T : unmanaged, IBinaryInt<T> where U : unmanaged, IBinaryInt<U>
+		private static bool FillWithRangeManaged<T>(T* x, int length, int inc, T step) where T : unmanaged, IBaseNumber<T>
 		{
-			bool lower = typeof(Lower) == typeof(bool);
-			T value = start;
-			for (int i = 0; i < length && value != end; i++)
+			if (inc == 1)
 			{
-				T current = x[i];
-				if ((lower && current >= value) || (!lower && current > value))
+				length--;
+				for (int i = 0; i < length; i++)
 				{
-					// direct convert is OK here
-					y[0] = *(U*)&i;
-					// increase pointer
-					y++;
-					// increase value
-					value++;
+					x[i + 1] = x[i] + step;
 				}
 			}
-		}
-
-		public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInt<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, IBinaryInt<TOut> where TSOut : class, IStorage<TOut, TSOut>
-		{
-			if (!GetPointerIndexType(array, 1, out T* x, out int lenx, out _))
-				return false;
-			if (!GetPointerIndexType(target, 1, out TOut* y, out int leny, out _))
-				return false;
-			if (leny.As<T>() < end - start)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(target));
-			if ((typeof(TOut) == typeof(byte) && leny > byte.MaxValue) ||
-				(typeof(TOut) == typeof(sbyte) && leny > sbyte.MaxValue) ||
-				(typeof(TOut) == typeof(short) && leny > short.MaxValue) ||
-				(typeof(TOut) == typeof(ushort) && leny > ushort.MaxValue))
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(target));
-
-			if (lowerBound)
-				VectorAllBoundsManaged<T, TOut, bool>(x, lenx, start, end, y);
 			else
-				VectorAllBoundsManaged<T, TOut, byte>(x, lenx, start, end, y);
+			{
+				T* prev = x, now = x + inc, end = x + length * inc;
+				for (; now < end; prev += inc, now += inc)
+				{
+					*now = *prev + step;
+				}
+			}
 			return true;
 		}
 
-		public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) where T : unmanaged, IBinaryInt<T> where TOut : unmanaged, IBinaryInt<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool FillWithRangeReal<T, U>(void* xx, int length, T startT, T stepT) where T : unmanaged, IBaseNumber<T> where U : unmanaged, INumberBase<U>
 		{
-			if (!GetPointerIndexType(bounds, 1, out T* x, out int lenx, out _))
-				return false;
-			if (!GetPointerIndexType(target, 1, out TOut* y, out int leny, out _))
-				return false;
-			if (lowerBound)
-			{	// the 'lower' bound array has to contain the length information as well
-				x++; lenx--;
-			}
-			int length = x[lenx - 1].AsInt32();
-			if (length > leny)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(target));
-			long startL = start.AsInt64();
-			if ((typeof(TOut) == typeof(byte) && length + startL > byte.MaxValue) ||
-				(typeof(TOut) == typeof(sbyte) && length + startL > sbyte.MaxValue) ||
-				(typeof(TOut) == typeof(short) && length + startL > short.MaxValue) ||
-				(typeof(TOut) == typeof(ushort) && length + startL > ushort.MaxValue) ||
-				(typeof(TOut) == typeof(int) && length + startL > int.MaxValue) ||
-				(typeof(TOut) == typeof(uint) && length + startL > uint.MaxValue))
-				throw new ArgumentOutOfRangeException(nameof(start), start, Resources.ParameterError.InvalidValue);
-
-			TOut value = start;
-			int xPre = x[0].AsInt32(), xNow;
-			new Span<TOut>(y, xPre).Fill(value);
-			for (int i = 1; i < lenx; i++)
+			U* x = (U*)xx;
+			U start = *(U*)&startT, step = *(U*)&stepT;
+			U* starts = stackalloc U[Vector<U>.Count];
+			starts[0] = start;
+			for (int i = 1; i < Vector<U>.Count; i++)
 			{
-				value++;
-				xNow = x[i].AsInt32();
-				new Span<TOut>(y + xPre, xNow).Fill(value);
-				xPre = xNow;
+				starts[i] += starts[i - 1] + step;
+			}
+			Buffer.MemoryCopy(starts, x, Vector<U>.Count * sizeof(U), Vector<U>.Count * sizeof(U));
+			U* end = x + length;
+			Vector<U> steps = new(step);
+			for (x += Vector<U>.Count; x < end; x += Vector<U>.Count)
+			{
+				var prev = LoadVector(x - Vector<U>.Count);
+				var now = LoadVector(x);
+				now = prev + steps;
+				StoreVector(now, x);
+			}
+			if (x < end)
+			{
+				FillWithRangeManaged((T*)x, (int)(end - x), 1, stepT);
 			}
 			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static bool FillWithRangeComp<T, U>(void* xx, int length, T startT, T stepT) where T : unmanaged, IBaseNumber<T> where U : unmanaged, INumberBase<U>
+		{
+			U* x = (U*)xx;
+			U* starts = stackalloc U[Vector<U>.Count], steps = stackalloc U[Vector<U>.Count];
+			starts[0] = *(U*)&startT; starts[1] = *((U*)&startT + 1);
+			steps[0] = *(U*)&stepT; steps[1] = *((U*)&stepT + 1);
+			for (int i = 2; i < Vector<U>.Count; i += 2)
+			{
+				starts[i] += starts[i - 2] + steps[0];
+				starts[i + 1] += starts[i - 1] + steps[1];
+				steps[i] = steps[0]; steps[i + 1] = steps[1];
+			}
+			Buffer.MemoryCopy(starts, x, Vector<U>.Count * sizeof(U), Vector<U>.Count * sizeof(U));
+			U* end = x + length;
+			Vector<U> incs = LoadVector(steps);
+			for (x += Vector<U>.Count; x < end; x += Vector<U>.Count)
+			{
+				var prev = LoadVector(x - Vector<U>.Count);
+				var now = LoadVector(x);
+				now = prev + incs;
+				StoreVector(now, x);
+			}
+			if (x < end)
+			{
+				FillWithRangeManaged((T*)x, (int)(end - x) / 2, 1, stepT);
+			}
+			return true;
+		}
+
+		public virtual partial bool FillWithRange<T, TS>(TS array, long stride, T start, T step) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		{
+			if (!GetPointer(array, stride, out T* x, out int length, out int inc))
+				return false;
+			x[0] = start;
+			return start switch
+			{
+				SignedInt8 => FillWithRangeReal<T, sbyte>(x, length, start, step),
+				SignedInt16 => FillWithRangeReal<T, short>(x, length, start, step),
+				SignedInt32 => FillWithRangeReal<T, int>(x, length, start, step),
+				SignedInt64 => FillWithRangeReal<T, long>(x, length, start, step),
+				UnsignedInt8 => FillWithRangeReal<T, byte>(x, length, start, step),
+				UnsignedInt16 => FillWithRangeReal<T, ushort>(x, length, start, step),
+				UnsignedInt32 => FillWithRangeReal<T, uint>(x, length, start, step),
+				UnsignedInt64 => FillWithRangeReal<T, ulong>(x, length, start, step),
+				Float32 => FillWithRangeReal<T, float>(x, length, start, step),
+				Float64 => FillWithRangeReal<T, double>(x, length, start, step),
+				ComplexInteger<SignedInt8> => FillWithRangeComp<T, sbyte>(x, length * 2, start, step),
+				ComplexInteger<SignedInt16> => FillWithRangeComp<T, short>(x, length * 2, start, step),
+				ComplexInteger<SignedInt32> => FillWithRangeComp<T, int>(x, length * 2, start, step),
+				ComplexInteger<SignedInt64> => FillWithRangeComp<T, long>(x, length * 2, start, step),
+				ComplexInteger<UnsignedInt8> => FillWithRangeComp<T, byte>(x, length * 2, start, step),
+				ComplexInteger<UnsignedInt16> => FillWithRangeComp<T, ushort>(x, length * 2, start, step),
+				ComplexInteger<UnsignedInt32> => FillWithRangeComp<T, uint>(x, length * 2, start, step),
+				ComplexInteger<UnsignedInt64> => FillWithRangeComp<T, ulong>(x, length * 2, start, step),
+				Complex<Float32> => FillWithRangeComp<T, float>(x, length * 2, start, step),
+				Complex<Float64> => FillWithRangeComp<T, double>(x, length * 2, start, step),
+				_ => FillWithRangeManaged(x, length, inc, step),
+			};
 		}
 		#endregion
 

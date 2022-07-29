@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra.Dense;
@@ -62,6 +63,7 @@ namespace Althea.Array
 		public long Stride => this.stride;
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public long Length => this.length;
 
 		/// <summary>
@@ -267,25 +269,10 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(TS Values, long Stride);
-		private static JsonSerializerOptions JsonOptions => new()
-		{
-			Converters = { TS.JsonConverter },
-			WriteIndented = true,
-		};
+		static JsonSerializerOptions IValueArray<T, DenseVector<T, TS>>.JsonSerializeOptions => IDenseArray<T, TS>.JsonSerializeOptions;
 
-		/// <inheritdoc/>
-		public string JsonSerialize()
-		{
-			return JsonSerializer.Serialize<Repr>(new(this.values, this.stride), JsonOptions);
-		}
-
-		/// <inheritdoc/>
-		public static DenseVector<T, TS> JsonDeserialize(string json!!)
-		{
-			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
-			return new(repr.Values, repr.Values.Length + repr.Stride - 1, repr.Stride);
-		}
+		[JsonConstructor]
+		private DenseVector(TS storage, long stride) : this(storage, storage.Length, stride) { }
 		#endregion
 
 		#region string

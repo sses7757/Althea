@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Althea.SourceGenerator;
+using Althea.Numerics;
 
 
 namespace Althea.GeneralSolvers.Krylov

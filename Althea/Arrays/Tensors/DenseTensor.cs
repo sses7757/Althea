@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -51,9 +52,11 @@ namespace Althea.Array
 		private const byte MAX_RANK = 15;
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public int Rank => this.rank;
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public long Length => this.length;
 
 		/// <summary>
@@ -62,18 +65,23 @@ namespace Althea.Array
 		public TS Storage => this.values.MakeReference();
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<long> Size => this.size.AsSpan(this.rank);
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<long> SizeProd => this.sizeProd.AsSpan(this.rank + 1);
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<long> OuterSize => this.outerSize.AsSpan(this.rank);
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<long> Strides => this.outerSize.AsSpan(this.rank + 1);
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<char> Labels
 		{
 			get => this.labels.AsSpan(this.rank);
@@ -84,6 +92,15 @@ namespace Althea.Array
 				this.labels.CopyFromSpan(value);
 			}
 		}
+
+		[JsonInclude]
+		private long[] SizeArray => this.Size.ToArray();
+
+		[JsonInclude]
+		private long[] OuterSizeArray => this.OuterSize.ToArray();
+
+		[JsonInclude]
+		private string LabelsArray => new(this.Labels);
 
 		/// <inheritdoc/>
 		public char GetLabel(int index)
@@ -366,25 +383,10 @@ namespace Althea.Array
 		#endregion
 
 		#region serialization
-		private record struct Repr(TS Values, long[] Size, long[] OuterSize);
-		private static JsonSerializerOptions JsonOptions => new()
-		{
-			Converters = { TS.JsonConverter },
-			WriteIndented = true,
-		};
+		static JsonSerializerOptions IValueArray<T, DenseTensor<T, TS>>.JsonSerializeOptions => IDenseArray<T, TS>.JsonSerializeOptions;
 
-		/// <inheritdoc/>
-		public string JsonSerialize()
-		{
-			return JsonSerializer.Serialize<Repr>(new(this.values, this.Size.ToArray(), this.outerSize.ToArray()), JsonOptions);
-		}
-
-		/// <inheritdoc/>
-		public static DenseTensor<T, TS> JsonDeserialize(string json!!)
-		{
-			var repr = JsonSerializer.Deserialize<Repr>(json, JsonOptions);
-			return new(repr.Values, repr.Size, repr.OuterSize);
-		}
+		[JsonConstructor]
+		private DenseTensor(TS storage, long[] sizeArray, long[] outerSizeArray, string labelsArray) : this(storage, (ReadOnlySpan<long>)sizeArray, outerSizeArray, labelsArray) { }
 		#endregion
 
 		#region string

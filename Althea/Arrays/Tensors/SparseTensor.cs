@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -24,7 +25,7 @@ namespace Althea.Array
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Explicit)]
-	public abstract class SparseTensor<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
+	public abstract partial class SparseTensor<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
 		IBaseTensor<T, SparseTensor<T, TInd, TS, TSInd>>,
 		ITensorUnaryOperators<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>,
 		ITensorBinaryOperators<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>, DenseTensor<T, TS>>,
@@ -67,12 +68,15 @@ namespace Althea.Array
 		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.indices?.IsValid() ?? false);
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public int Rank => this.rank;
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public long Length => this.length;
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public long NStored
 		{
 			get => this.nnz;
@@ -82,15 +86,19 @@ namespace Althea.Array
 		/// <summary>
 		/// Get the number of maximum possible elements that can be stored in this sparse tensor.
 		/// </summary>
+		[JsonIgnore]
 		protected long MaxStored => this.values.Length;
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<long> Size => this.size.AsSpan(this.rank);
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<long> SizeProd => this.sizeProd.AsSpan(this.rank + 1);
 
 		/// <inheritdoc/>
+		[JsonDiscriminator]
 		public abstract SparseFormat Format { get; }
 
 		/// <inheritdoc/>
@@ -107,6 +115,7 @@ namespace Althea.Array
 		public virtual TSInd IndexStorage => this.indices.MakeReference(0, this.nnz);
 
 		/// <inheritdoc/>
+		[JsonIgnore]
 		public ReadOnlySpan<char> Labels
 		{
 			get => this.labels.AsSpan(this.rank);
@@ -117,6 +126,12 @@ namespace Althea.Array
 				this.labels.CopyFromSpan(value);
 			}
 		}
+
+		[JsonInclude]
+		private long[] SizeArray => this.Size.ToArray();
+
+		[JsonInclude]
+		private string LabelsArray => new(this.Labels);
 
 		/// <inheritdoc/>
 		public char GetLabel(int index)
@@ -488,18 +503,6 @@ namespace Althea.Array
 		#endregion
 
 		#region string
-		/// <summary>
-		/// The <see cref="JsonSerializerOptions"/> used for <see cref="JsonSerialize"/> and <see cref="JsonDeserialize(string)"/>.
-		/// </summary>
-		protected static JsonSerializerOptions JsonOptions => new()
-		{
-			Converters = { TS.JsonConverter, TSInd.JsonConverter },
-			WriteIndented = true,
-		};
-
-		/// <inheritdoc/>
-		public abstract string JsonSerialize();
-
 		static string IMainPropertyFormattable<SparseTensor<T, TInd, TS, TSInd>>.StringMain => nameof(SparseTensor<T, TInd, TS, TSInd>);
 
 		static IEnumerable<string> IMainPropertyFormattable<SparseTensor<T, TInd, TS, TSInd>>.PropertyNames => new[] { "DataType", "IndexType", "Format", "DefaultValue", "Values", "Indices" };
@@ -514,6 +517,8 @@ namespace Althea.Array
 		#endregion
 
 		#region protected static
+		static JsonSerializerOptions IValueArray<T, SparseTensor<T, TInd, TS, TSInd>>.JsonSerializeOptions => ISparseArray<T, TInd, TS, TSInd>.JsonSerializeOptions;
+
 		/// <summary>
 		/// Encapsulates a method that statically create a new sparse tensor from the given <paramref name="wrapper"/>.
 		/// </summary>
@@ -542,31 +547,6 @@ namespace Althea.Array
 					return ten;
 			}
 			wrapper.DisposeAll();
-			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
-		}
-
-		/// <summary>
-		/// Encapsulates a method that statically deserialize the given <paramref name="json"/> to a new sparse tensor.
-		/// </summary>
-		/// <param name="json">The JSON string to create from.</param>
-		/// <param name="matrix">A created <see cref="SparseTensor{T, TInd, TS, TSInd}"/> from the given <paramref name="json"/></param>
-		/// <returns>Success or not.</returns>
-		protected delegate bool TryDeserialize(string json, [NotNullWhen(true)] out SparseTensor<T, TInd, TS, TSInd>? matrix);
-
-		/// <summary>
-		/// The list used to store the JSON deserializers for sub-classes.
-		/// </summary>
-		/// <remarks>Any sub-class that inherits <see cref="SparseTensor{T, TInd, TS, TSInd}"/> SHALL add its own <see cref="TryDeserialize"/> implementation to this list.</remarks>
-		protected static readonly List<TryDeserialize> Deserializers = new();
-
-		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> JsonDeserialize(string json!!)
-		{
-			foreach (var deserializer in Deserializers)
-			{
-				if (deserializer(json, out var ten))
-					return ten;
-			}
 			throw new NotSupportedException(Resources.SparseError.FormatNotSupport);
 		}
 		#endregion

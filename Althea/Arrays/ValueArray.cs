@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 using Althea.Helpers;
 using Althea.Linq;
@@ -255,18 +256,25 @@ namespace Althea.Array
 
 		#region serialization
 		/// <summary>
-		/// When implemented by a derived class, serialize this array to a JSON object.
+		/// When implemented by a derived class, statically get the <see cref="JsonSerializerOptions"/> used to JSON serialize and deserialize <typeparamref name="TSelf"/>s whose <see cref="JsonSerializerOptions.Converters"/> shall contains necessary <see cref="IStorage{T, TSelf}.JsonConverter"/>(s).
+		/// </summary>
+		protected abstract static JsonSerializerOptions JsonSerializeOptions { get; }
+
+		/// <summary>
+		/// When implemented by a derived class, serialize this array to a JSON object. The default implementation simply utilizes <see cref="JsonSerializer.Serialize{TValue}(TValue, JsonSerializerOptions?)"/> and <see cref="JsonSerializeOptions"/>.
 		/// </summary>
 		/// <returns>The serialization of this array as a JSON object <see cref="string"/>.</returns>
-		string JsonSerialize();
-		
+		public virtual string JsonSerialize() => JsonSerializer.Serialize(this, TSelf.JsonSerializeOptions);
+
 		/// <summary>
-		/// When implemented by a derived factory class, statically reconstruct a <typeparamref name="TSelf"/> from the given <paramref name="json"/> object <see cref="string"/>.
+		/// Statically reconstruct a <typeparamref name="TSelf"/> from the given <paramref name="json"/> object <see cref="string"/>.
 		/// </summary>
 		/// <param name="json">The JSON object string used to deserialize</param>
 		/// <returns>The reconstructed <typeparamref name="TSelf"/> from <paramref name="json"/>.</returns>
-		/// <exception cref="ArgumentException">If <paramref name="json"/> is not a valid JSON serialization from <see cref="JsonSerialize"/></exception>
-		abstract static TSelf JsonDeserialize(string json);
+		/// <exception cref="ArgumentNullException">If <paramref name="json"/> null</exception>
+		/// <exception cref="JsonException"></exception>
+		/// <exception cref="NotSupportedException"></exception>
+		public static TSelf JsonDeserialize(string json!!) => JsonSerializer.Deserialize<TSelf>(json, TSelf.JsonSerializeOptions) ?? throw new NotSupportedException();
 		#endregion
 	}
 }

@@ -19,7 +19,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra;
 /// The C# back-end of <see cref="IBlasAbstractApi"/> that utilizes <see cref="System.Runtime.Intrinsics"/> and <see cref="Vector{T}"/>.<br/>
 /// Only supports storages on CPU memory of primitive and pre-defined types and single-threaded vector operations.
 /// </summary>
-public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IConversionAbstractApi, ILapackAbstractApi
+public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IConversionAbstractApi, ILapackAbstractApi, IIndexOperationAbstractApi
 {
 	#region basic
 	void IDisposable.Dispose()
@@ -660,19 +660,13 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	public virtual partial bool Sort<T, TOther, TS, TS2>(TS keys, long strideKeys, TS2 values, long strideValues) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TOther : unmanaged, IBaseNumber<TOther> where TS2 : class, IStorage<TOther, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool MinMax<T, TS>(TS array, long stride, out (T Min, T Max) minmax) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
-
-	/// <inheritdoc/>
 	public virtual partial bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool IndexBound<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool BoundOf<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool IndexGetAllBounds<T, TOut, TS, TSOut>(TS array, TSOut target, T start, T end, bool lowerBound) where T : unmanaged, IBinaryInt<T> where TS : class, IStorage<T, TS> where TOut : unmanaged, IBinaryInt<TOut> where TSOut : class, IStorage<TOut, TSOut>;
-
-	/// <inheritdoc/>
-	public virtual partial bool IndexGenerateFromBounds<T, TOut, TS, TSOut>(TS bounds, TSOut target, bool lowerBound, TOut start) where T : unmanaged, IBinaryInt<T> where TOut : unmanaged, IBinaryInt<TOut> where TS : class, IStorage<T, TS> where TSOut : class, IStorage<TOut, TSOut>;
+	public virtual partial bool FillWithRange<T, TS>(TS array, long stride, T start, T step) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
 	public virtual partial bool VectorSetValuesAt<T, TInd, TS, TSInd>(TS x, T value, TSInd positions) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>;

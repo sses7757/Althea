@@ -310,6 +310,7 @@ namespace Althea.Array
 		/// <summary>
 		/// The full constructor of a <see cref="SparseFormat"/>.
 		/// </summary>
+		[System.Text.Json.Serialization.JsonConstructor]
 		public SparseFormat(Type type, Blocking blocking = Blocking.None, Major major = Major.None)
 		{
 			this.type = type;
