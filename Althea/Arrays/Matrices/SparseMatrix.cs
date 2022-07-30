@@ -24,6 +24,7 @@ namespace Althea.Array
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential)]
 	public abstract partial class SparseMatrix<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
+		ISubtypeJsonConvertible<SparseMatrix<T, TInd, TS, TSInd>>,
 		IBaseMatrix<T, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixVectorMultiplyOperators<T, DenseVector<T, TS>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>,
 		IMatrixUnaryOperators<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>,
@@ -449,7 +450,10 @@ namespace Althea.Array
 		#endregion
 
 		#region protected static
-		static JsonSerializerOptions IValueArray<T, SparseMatrix<T, TInd, TS, TSInd>>.JsonSerializeOptions => ISparseArray<T, TInd, TS, TSInd>.JsonSerializeOptions;
+		/// <inheritdoc/>
+		public static JsonSerializerOptions JsonSerializeOptions { get; } = ISparseArray<T, TInd, TS, TSInd>.JsonSerializeOptions;
+
+		static SparseMatrix() => JsonSerializeOptions.Converters.Add(new ISubtypeJsonConvertible<SparseMatrix<T, TInd, TS, TSInd>>.JsonConverter());
 
 		/// <summary>
 		/// Encapsulates a method that statically create a new sparse matrix from the given <paramref name="wrapper"/>.

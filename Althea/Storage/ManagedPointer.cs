@@ -9,34 +9,18 @@ namespace Althea.Storage
 	/// <summary>
 	/// The managed pointer that implements <see cref="IPointer{TSelf}"/> as a example
 	/// </summary>
-	public readonly struct ManagedPointer : IPointer<ManagedPointer>
+	public readonly record struct ManagedPointer(IntPtr Pointer, long LengthInBytes) : IPointer<ManagedPointer>
 	{
 		#region basic
-		private readonly IntPtr data;
-
-		/// <inheritdoc/>
-		public long LengthInBytes { get; }
-
 		/// <summary>
 		/// Get the underlying data as a <see cref="Span{T}"/> of <see cref="byte"/>
 		/// </summary>
-		public unsafe Span<byte> Data => new(this.data.ToPointer(), (int)this.LengthInBytes);
+		public unsafe Span<byte> Data => new(this.Pointer.ToPointer(), (int)this.LengthInBytes);
 
 		/// <summary>
 		/// Get the underlying data as a <see cref="Span{T}"/> of <typeparamref name="T"/>
 		/// </summary>
 		public Span<T> AsData<T>() where T : unmanaged, IBaseNumber<T> => this.Data.As<byte, T>();
-
-		/// <summary>
-		/// Create a new <see cref="ManagedPointer"/> with given <paramref name="data"/> as a pointer from a fixed managed buffer and <paramref name="length"/>.
-		/// </summary>
-		/// <param name="data">The data as a pointer from a fixed managed buffer</param>
-		/// <param name="length">The length of <paramref name="data"/> in bytes</param>
-		public ManagedPointer(IntPtr data, long length)
-		{
-			this.data = data;
-			this.LengthInBytes = length;
-		}
 
 		/// <inheritdoc/>
 		public bool IsValid() => this.LengthInBytes > 0;
@@ -44,34 +28,6 @@ namespace Althea.Storage
 		static StorageLocation IPointer<ManagedPointer>.Location => new(LocationType.CpuRam, 0);
 
 		static ManagedPointer IPointer<ManagedPointer>.Default => new();
-		#endregion
-
-		#region equality
-		/// <inheritdoc/>
-		public bool Equals(ManagedPointer other) => this.data == other.data;
-
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => obj is ManagedPointer p && this.Equals(p);
-
-		/// <inheritdoc/>
-		public static bool operator ==(ManagedPointer left, ManagedPointer right) => left.Equals(right);
-
-		/// <inheritdoc/>
-		public static bool operator !=(ManagedPointer left, ManagedPointer right) => left.Equals(right);
-
-		/// <inheritdoc/>
-		public override int GetHashCode() => this.data.GetHashCode();
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<ManagedPointer>.StringMain => nameof(ManagedPointer);
-
-		static IEnumerable<string> IMainPropertyFormattable<ManagedPointer>.PropertyNames => new[] { "FixedPointer", nameof(LengthInBytes) };
-
-		IEnumerable<object?> IMainPropertyFormattable<ManagedPointer>.PropertyValues => new object[] { this.data, this.LengthInBytes };
-
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<ManagedPointer>.ToString(in this);
 		#endregion
 	}
 
@@ -165,10 +121,6 @@ namespace Althea.Storage
 		{
 			return other is ManagedPureStorage<T> mp && this.Pointer.OverlapWith(mp.Pointer);
 		}
-
-		static ManagedPureStorage<T> System.Numerics.IAdditionOperators<ManagedPureStorage<T>, long, ManagedPureStorage<T>>.op_CheckedAddition(ManagedPureStorage<T> left, long right) => left + right;
-
-		static ManagedPureStorage<T> System.Numerics.ISubtractionOperators<ManagedPureStorage<T>, long, ManagedPureStorage<T>>.op_CheckedSubtraction(ManagedPureStorage<T> left, long right) => left - right;
 		#endregion
 	}
 }

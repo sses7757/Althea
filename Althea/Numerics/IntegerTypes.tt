@@ -52,11 +52,13 @@ var operators = new (string op, string type, string param, string invoke)[]
 };
 var checkedOperators = new (string name, string op, string type, string param, string invoke)[]
 {
+	/*
 	("IAdditionOperators<TSelf, TSelf, TSelf>.op_CheckedAddition", "+", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("ISubtractionOperators<TSelf, TSelf, TSelf>.op_CheckedSubtraction", "-", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("IMultiplyOperators<TSelf, TSelf, TSelf>.op_CheckedMultiply", "*", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("IDivisionOperators<TSelf, TSelf, TSelf>.op_CheckedDivision", "/", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("IUnaryNegationOperators<TSelf, TSelf>.op_CheckedUnaryNegation", "-", "TSelf", "TSelf value", "value"),
+	*/
 };
 #>
 // NOTICE:
@@ -328,6 +330,7 @@ public readonly partial struct <#=reps[i]#> : IBinaryInt<<#=reps[i]#>>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static <#=reps[i]#> IIncrementOperators<<#=reps[i]#>>.op_CheckedIncrement(<#=reps[i]#> value)
@@ -345,6 +348,7 @@ public readonly partial struct <#=reps[i]#> : IBinaryInt<<#=reps[i]#>>
 		v = checked((<#=orgs[i]#>)(v - 1));
 		return v;
 	}
+	*/
 	
 <# if (!reps[i].StartsWith("U")) { #>
 	/// <inheritdoc/>

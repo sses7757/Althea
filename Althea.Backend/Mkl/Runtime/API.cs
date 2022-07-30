@@ -44,6 +44,22 @@ namespace Althea.Backend.Mkl
 	/// </summary>
 	public static class Runtime
 	{
+		internal static bool Available
+		{
+			get
+			{
+				try
+				{
+					GetDriverVersion();
+					return true;
+				}
+				catch (Exception)
+				{
+					return false;
+				}
+			}
+		}
+
 		/// <summary>
 		/// Get the MKL version
 		/// </summary>

@@ -18,12 +18,14 @@ namespace Althea.Array
 	/// <summary>
 	/// The abstract sparse vector abstract class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
 	/// </summary>
+	/// <remarks>See <see cref="ISubtypeJsonConvertible{TSelf}"/> for polymorphism JSON conversion notice.</remarks>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
 	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Sequential, Pack = sizeof(long))]
 	public abstract partial class SparseVector<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
+		ISubtypeJsonConvertible<SparseVector<T, TInd, TS, TSInd>>,
 		IBaseVector<T, SparseVector<T, TInd, TS, TSInd>>,
 		IVectorUnaryOperators<T, SparseVector<T, TInd, TS, TSInd>, SparseVector<T, TInd, TS, TSInd>>,
 		IVectorBinaryOperators<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseVector<T, TS>>,
@@ -55,7 +57,6 @@ namespace Althea.Array
 		bool ICheckValid.IsValid() => (this.values?.IsValid() ?? false) && (this.indices?.IsValid() ?? false);
 
 		/// <inheritdoc/>
-		[JsonDiscriminator]
 		public abstract SparseFormat Format { get; }
 
 		/// <inheritdoc/>
@@ -407,7 +408,10 @@ namespace Althea.Array
 		#endregion
 
 		#region protected static
-		static JsonSerializerOptions IValueArray<T, SparseVector<T, TInd, TS, TSInd>>.JsonSerializeOptions => ISparseArray<T, TInd, TS, TSInd>.JsonSerializeOptions;
+		/// <inheritdoc/>
+		public static JsonSerializerOptions JsonSerializeOptions { get; } = ISparseArray<T, TInd, TS, TSInd>.JsonSerializeOptions;
+
+		static SparseVector() => JsonSerializeOptions.Converters.Add(new ISubtypeJsonConvertible<SparseVector<T, TInd, TS, TSInd>>.JsonConverter());
 
 		/// <summary>
 		/// Encapsulates a method that statically create a new sparse vector from the given <paramref name="wrapper"/>.

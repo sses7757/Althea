@@ -560,6 +560,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		return new(r, value.imag);
 	}
 
+	/*
 	static Complex<T> IAdditionOperators<Complex<T>, Complex<T>, Complex<T>>.op_CheckedAddition(Complex<T> left, Complex<T> right) => new(checked(left.real + right.real), checked(left.imag + right.imag));
 	static Complex<T> ISubtractionOperators<Complex<T>, Complex<T>, Complex<T>>.op_CheckedSubtraction(Complex<T> left, Complex<T> right) => new(checked(left.real - right.real), checked(left.imag- right.imag));
 	static Complex<T> IMultiplyOperators<Complex<T>, Complex<T>, Complex<T>>.op_CheckedMultiply(Complex<T> x, Complex<T> y)
@@ -588,6 +589,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		r = checked(r - T.One);
 		return new(r, value.imag);
 	}
+	*/
 	#endregion
 
 	#region other arithmetics
@@ -661,6 +663,13 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	private static readonly T RealOneOverLog2 = T.Log2(T.E);
 	private static readonly T RealOneOverLog10 = T.Log10(T.E);
 	private static readonly T RealHalfPi = T.Pi / RealTwo;
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Complex<T> Hypot(Complex<T> x, Complex<T> y) => Sqrt(x * x + y * y);
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Complex<T> Root(Complex<T> x, int n) => n == 1 ? x : n == 2 ? Sqrt(x) : n == 3 ? Cbrt(x) : PowReal(x, T.One / n.As<T>());
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Complex<T> Log(Complex<T> x)
@@ -1411,6 +1420,7 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static ComplexInteger<T> operator >>(ComplexInteger<T> value, int shiftAmount) => new(value.real >> shiftAmount, value.imag >> shiftAmount);
 
+	/*
 	static ComplexInteger<T> IAdditionOperators<ComplexInteger<T>, ComplexInteger<T>, ComplexInteger<T>>.op_CheckedAddition(ComplexInteger<T> left, ComplexInteger<T> right) => new(checked(left.real + right.real), checked(left.imag + right.imag));
 	static ComplexInteger<T> ISubtractionOperators<ComplexInteger<T>, ComplexInteger<T>, ComplexInteger<T>>.op_CheckedSubtraction(ComplexInteger<T> left, ComplexInteger<T> right) => new(checked(left.real - right.real), checked(left.imag - right.imag));
 	static ComplexInteger<T> IMultiplyOperators<ComplexInteger<T>, ComplexInteger<T>, ComplexInteger<T>>.op_CheckedMultiply(ComplexInteger<T> x, ComplexInteger<T> y)
@@ -1439,6 +1449,7 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 		r = T.op_CheckedDecrement(r);
 		return new(r, value.imag);
 	}
+	*/
 	static ComplexInteger<T> IShiftOperators<ComplexInteger<T>, ComplexInteger<T>>.op_UnsignedRightShift(ComplexInteger<T> value, int shiftAmount) => new(T.op_UnsignedRightShift(value.real, shiftAmount), T.op_UnsignedRightShift(value.imag, shiftAmount));
 	#endregion
 

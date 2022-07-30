@@ -1,5 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Helpers;
 using Althea.Storage;
@@ -198,6 +200,7 @@ namespace Althea.Array
 	/// The structure for the format of any sparse array with size the same as an <see cref="int"/>.
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
+	[JsonConverter(typeof(SparseFormat.JsonConverter))]
 	public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseFormat, SparseFormat>, System.Numerics.IBitwiseOperators<SparseFormat, SparseFormat, SparseFormat>
 	{
 		#region enumerates
@@ -273,6 +276,27 @@ namespace Althea.Array
 		}
 		#endregion
 
+		#region JSON
+		private sealed class JsonConverter : JsonConverter<SparseFormat>
+		{
+			public override SparseFormat Read(ref Utf8JsonReader reader, System.Type typeToConvert, JsonSerializerOptions options)
+			{
+				if (typeToConvert != typeof(SparseFormat))
+					throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(typeToConvert));
+				if (!reader.Read())
+					throw new JsonException();
+				if (!reader.TryGetInt32(out int data))
+					throw new JsonException(Resources.ParameterError.UnexpectedType);
+				return new(data);
+			}
+
+			public override void Write(Utf8JsonWriter writer, SparseFormat value, JsonSerializerOptions options)
+			{
+				writer.WriteNumberValue(value.data);
+			}
+		}
+		#endregion
+
 		#region basic
 		[FieldOffset(0)]
 		private readonly int data = 0;
@@ -299,7 +323,7 @@ namespace Althea.Array
 		/// </summary>
 		public Major MajorType => this.major;
 
-		internal SparseFormat(int data)
+		private SparseFormat(int data)
 		{
 			this = default;
 			this.data = data;
@@ -310,7 +334,6 @@ namespace Althea.Array
 		/// <summary>
 		/// The full constructor of a <see cref="SparseFormat"/>.
 		/// </summary>
-		[System.Text.Json.Serialization.JsonConstructor]
 		public SparseFormat(Type type, Blocking blocking = Blocking.None, Major major = Major.None)
 		{
 			this.type = type;

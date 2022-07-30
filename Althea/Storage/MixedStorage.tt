@@ -285,9 +285,6 @@ namespace Althea.Storage
 		
 		/// <inheritdoc/>
 		public static bool operator !=(MixedStorage<T, <#=pointerTypes#>> left, MixedStorage<T, <#=pointerTypes#>> right) => !left.Equals(right);
-
-		static MixedStorage<T, <#=pointerTypes#>> System.Numerics.IAdditionOperators<MixedStorage<T, <#=pointerTypes#>>, long, MixedStorage<T, <#=pointerTypes#>>>.op_CheckedAddition(MixedStorage<T, <#=pointerTypes#>> left, long right) => left + right;
-		static MixedStorage<T, <#=pointerTypes#>> System.Numerics.ISubtractionOperators<MixedStorage<T, <#=pointerTypes#>>, long, MixedStorage<T, <#=pointerTypes#>>>.op_CheckedSubtraction(MixedStorage<T, <#=pointerTypes#>> left, long right) => left - right;
 		#endregion
 
 		#region string

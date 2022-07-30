@@ -579,7 +579,7 @@ namespace Althea.Storage
 	/// The interface for an immutable pointer which can be read, overwritten and positioned at any possible storage location, including any type of memory and any scheme of URI.
 	/// </summary>
 	/// <typeparam name="TSelf">The actual implementation type</typeparam>
-	public interface IPointer<TSelf> : ICheckValid, IMainPropertyFormattable<TSelf>, IEqualityOperators<TSelf, TSelf> where TSelf : IPointer<TSelf>
+	public interface IPointer<TSelf> : ICheckValid, IEqualityOperators<TSelf, TSelf> where TSelf : IPointer<TSelf>
 	{
 		/// <summary>
 		/// When implemented by derived classes, statically get the <see cref="StorageLocation"/> of this pointer's underlying type.
@@ -607,9 +607,13 @@ namespace Althea.Storage
 	/// <summary>
 	/// The struct of which delimits a certain section of a certain memory block
 	/// </summary>
+	/// <param name="Pointer">The native pointer (without offset and presenting length) as a <see cref="IPointer{T}"/></param>
+	/// <param name="OffsetInBytes">The offset in bytes to the <see cref="Pointer"/> of this <see cref="PointerSegment{T}"/></param>
+	/// <param name="LengthInBytes">The <b>presenting</b> length in bytes of this <see cref="PointerSegment{T}"/></param>
 	/// <typeparam name="T">The type of <see cref="IPointer{T}"/></typeparam>
 	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used to store information of memory blocks.</remarks>
-	public readonly struct PointerSegment<T> : ICheckValid, IMainPropertyFormattable<PointerSegment<T>>,
+	public readonly record struct PointerSegment<T>(T Pointer, long OffsetInBytes, long LengthInBytes) : 
+		ICheckValid,
 		IEqualityOperators<PointerSegment<T>, PointerSegment<T>>,
 		IAdditiveIdentity<PointerSegment<T>, long>,
 		IAdditionOperators<PointerSegment<T>, long, PointerSegment<T>>,
@@ -629,31 +633,14 @@ namespace Althea.Storage
 		public static StorageLocation Location => T.Location;
 
 		/// <summary>
-		/// The native pointer (without offset and presenting length) as a <see cref="IPointer{T}"/>
-		/// </summary>
-		public T Pointer { get; }
-
-		/// <summary>
-		/// The offset in bytes to the <see cref="Pointer"/> of this <see cref="PointerSegment{T}"/>
-		/// </summary>
-		public long OffsetInBytes { get; }
-
-		/// <summary>
-		/// The <b>presenting</b> length in bytes of this <see cref="PointerSegment{T}"/>
-		/// </summary>
-		public long LengthInBytes { get; }
-
-		/// <summary>
 		/// Create with given pointer
 		/// </summary>
 		/// <param name="pointer">The underlying pointer</param>
 		/// <exception cref="ArgumentNullException">If <paramref name="pointer"/> is not a valid value</exception>
-		public PointerSegment(T pointer)
+		public PointerSegment(T pointer) : this(pointer, 0, pointer.LengthInBytes)
 		{
 			if (pointer is null || !pointer.IsValid())
 				throw new ArgumentNullException(nameof(pointer));
-
-			this.Pointer = pointer; this.OffsetInBytes = 0; this.LengthInBytes = pointer.LengthInBytes;
 		}
 
 		/// <summary>
@@ -663,20 +650,14 @@ namespace Althea.Storage
 		/// <param name="offset">The offset to the <paramref name="pointer"/> in bytes</param>
 		/// <param name="newLength">The new presenting length in bytes, default 0 means automatically calculating from <paramref name="offset"/> and <see cref="IPointer{T}.LengthInBytes"/>. A value less than or equals to 0 means automatically calculate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> or <paramref name="newLength"/> exceeds the boundary</exception>
-		public PointerSegment(PointerSegment<T> pointer, long offset = 0, long newLength = 0)
+		public PointerSegment(PointerSegment<T> pointer, long offset = 0, long newLength = 0) : this(pointer.Pointer, offset + pointer.OffsetInBytes, newLength <= 0 ? pointer.LengthInBytes - (offset + pointer.OffsetInBytes) : newLength)
 		{
-			offset += pointer.OffsetInBytes;
-			if (offset < 0)
+			if (this.OffsetInBytes < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, ParameterError.CannotNegative);
-			long off = offset;
-			if (off > pointer.Pointer.LengthInBytes)
+			if (this.OffsetInBytes > pointer.Pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, ParameterError.InvalidValue);
-			if (newLength <= 0)
-				newLength = pointer.LengthInBytes - off;
-			if (off + newLength > pointer.Pointer.LengthInBytes)
+			if (this.OffsetInBytes + this.LengthInBytes > pointer.Pointer.LengthInBytes)
 				throw new ArgumentOutOfRangeException(nameof(newLength), newLength, ParameterError.InvalidValue);
-
-			this.Pointer = pointer.Pointer; this.OffsetInBytes = off; this.LengthInBytes = newLength;
 		}
 
 		/// <summary>
@@ -695,45 +676,13 @@ namespace Althea.Storage
 		/// <returns>The new <see cref="PointerSegment{T}"/> with same pointer and offset while length is set to <paramref name="newLength"/></returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="newLength"/> exceeds the boundary</exception>
 		public PointerSegment<T> AsLength(long newLength) => newLength == this.LengthInBytes ? this : new(this, 0, newLength);
-		#endregion
 
-		#region equality
 		/// <summary>
 		/// Check whether this <see cref="PointerSegment{T}"/> overlaps with the <paramref name="other"/> <see cref="PointerSegment{T}"/>
 		/// </summary>
 		/// <param name="other">The other <see cref="PointerSegment{T}"/> to check overlap</param>
 		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
 		public bool OverlapWith(PointerSegment<T> other) => this.Pointer == other.Pointer && (this.OffsetInBytes > other.OffsetInBytes + other.LengthInBytes || other.OffsetInBytes > this.OffsetInBytes + this.LengthInBytes);
-
-		/// <summary>
-		/// Whether this == <paramref name="other"/>
-		/// </summary>
-		/// <param name="other">another <see cref="PointerSegment{T}"/> to compare</param>
-		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(PointerSegment<T> other) => this.Pointer == other.Pointer && this.OffsetInBytes == other.OffsetInBytes;
-
-		/// <summary>
-		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
-		/// </summary>
-		/// <param name="obj">another object to compare</param>
-		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object? obj) => obj is PointerSegment<T> s && this.Equals(s);
-
-		/// <summary>
-		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="PointerSegment{T}"/>.
-		/// </summary>
-		/// <returns>The hash code</returns>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer.GetHashCode(), this.OffsetInBytes, this.LengthInBytes);
-
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		public static bool operator ==(PointerSegment<T> left, PointerSegment<T> right) => left.Equals(right);
-
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		public static bool operator !=(PointerSegment<T> left, PointerSegment<T> right) => !(left == right);
 		#endregion
 
 		#region operators
@@ -764,26 +713,10 @@ namespace Althea.Storage
 		/// <exception cref="InvalidOperationException">If <paramref name="left"/> and <paramref name="right"/> have different pointers</exception>
 		public static long operator -(PointerSegment<T> left, PointerSegment<T> right) => left.Pointer == right.Pointer ? left.OffsetInBytes - right.OffsetInBytes : throw new InvalidOperationException();
 
-		static PointerSegment<T> IAdditionOperators<PointerSegment<T>, long, PointerSegment<T>>.op_CheckedAddition(PointerSegment<T> left, long right) => left + right;
-		static PointerSegment<T> ISubtractionOperators<PointerSegment<T>, long, PointerSegment<T>>.op_CheckedSubtraction(PointerSegment<T> left, long right) => left - right;
-		static long ISubtractionOperators<PointerSegment<T>, PointerSegment<T>, long>.op_CheckedSubtraction(PointerSegment<T> left, PointerSegment<T> right) => left - right;
-
 		/// <summary>
 		/// Implicitly convert a pointer of type <typeparamref name="T"/> to a <see cref="PointerSegment{T}"/>
 		/// </summary>
 		public static implicit operator PointerSegment<T>(T pointer) => new(pointer);
-		#endregion
-
-		#region to string
-		static string IMainPropertyFormattable<PointerSegment<T>>.StringMain => T.StringMain;
-		static IEnumerable<string> IMainPropertyFormattable<PointerSegment<T>>.PropertyNames => new[] { nameof(Location), nameof(LengthInBytes), nameof(OffsetInBytes), nameof(Pointer) };
-		IEnumerable<object?> IMainPropertyFormattable<PointerSegment<T>>.PropertyValues => new object[] { Location, this.LengthInBytes, this.OffsetInBytes, this.Pointer };
-
-		/// <summary>
-		/// Return the string representation of this <see cref="PointerSegment{T}"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="PointerSegment{T}"/></returns>
-		public override string ToString() => IMainPropertyFormattable<PointerSegment<T>>.ToString(in this);
 		#endregion
 	}
 

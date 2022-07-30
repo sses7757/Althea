@@ -250,51 +250,6 @@ namespace {ns.Name}
 		/// </summary>
 		bool Available { get; }";
 
-
-			string implSetting = @"using System.Text.Json;
-using System.Text.Json.Serialization;
-
-
-namespace Althea
-{
-	internal record struct ImplementationSettings
-	{
-		public ImplementationSettings() : this(Settings.GetInternalBackend(""CSharp""))
-		{ }
-
-		public bool DisposeNotCurrentImplementation { get; set; }";
-			string implSettingSet = @"
-
-		internal void SetBackends()
-		{";
-			string implSettingBackend = @"
-
-		internal ImplementationSettings(IBackends impls)
-		{
-			this.DisposeNotCurrentImplementation = false;";
-			string implSettingJson = @"
-
-		[JsonConstructor]
-		internal ImplementationSettings(bool disposeNotCurrentImplementation";
-			string implSettingJson2 = @"
-		{
-			this.DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
-			Type? type;";
-			string implSettingJson3 = @"
-
-		internal sealed class JsonConverter : JsonConverter<ImplementationSettings>
-		{
-			public override ImplementationSettings Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				return JsonSerializer.Deserialize<ImplementationSettings>(ref reader);
-			}
-
-			public override void Write(Utf8JsonWriter writer, ImplementationSettings value, JsonSerializerOptions options)
-			{
-				writer.WriteStartObject();
-				writer.WriteBoolean(nameof(DisposeNotCurrentImplementation), value.DisposeNotCurrentImplementation);
-				writer.WriteString(nameof(LinearAlgebraDenseBlas), value.LinearAlgebraDenseBlas?.GetType()?.AssemblyQualifiedName);";
-
 			foreach (var apiClass in apiClasses)
 			{
 				var ns = apiClass.Parent as NamespaceDeclarationSyntax;
@@ -311,44 +266,11 @@ namespace Althea
 		/// The API implementation of <see cref=""{ns.Name}.{apiClass.Identifier}""/>.
 		/// </summary>
 		{ns.Name}.{apiClass.Identifier}? {propertyName} {{ get; }}";
-
-				implSetting += $@"
-
-		public {ns.Name}.{apiClass.Identifier}? {propertyName} {{ get; set; }}";
-				implSettingBackend += $@"
-			this.{propertyName} = impls.{propertyName};";
-				implSettingSet += $@"
-			if (this.{propertyName} is not null)
-				{ns.Name}.{selectorName}.SetImplementation(this.{propertyName});";
-				implSettingJson += $@", string? {propertyNameFirstLower}";
-				implSettingJson2 += $@"
-			if ({propertyNameFirstLower} is null)
-			{{
-				this.{propertyName} = null;
-			}}
-			else
-			{{
-				type = Type.GetType({propertyNameFirstLower});
-				if (type is null)
-					throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof({propertyNameFirstLower}));
-				this.{propertyName} = IAbstractRuntimeApi<{ns.Name}.{apiClass.Identifier}>.Create(type);
-			}}";
-				implSettingJson3 += $@"
-				writer.WriteString(nameof({propertyName}), value.{propertyName}?.GetType()?.AssemblyQualifiedName);";
 			}
 
 			backendInterface += Environment.NewLine + "\t}" + Environment.NewLine + "}";
 			SourceText sourceText = SourceText.From(backendInterface, Encoding.UTF8);
 			context.AddSource($"IBackends.cs", sourceText);
-
-			implSetting += implSettingSet + Environment.NewLine + "\t\t}" + implSettingBackend + Environment.NewLine + "\t\t}" + implSettingJson + ")" + implSettingJson2 + Environment.NewLine + "\t\t}" + implSettingJson3 + @"
-				writer.WriteEndObject();
-			}
-		}
-	}
-}";
-			////sourceText = SourceText.From(implSetting, Encoding.UTF8);
-			////context.AddSource($"ImplementationSettings.cs", sourceText);
 		}
 
 		public void Execute(GeneratorExecutionContext context)

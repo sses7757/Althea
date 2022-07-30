@@ -341,6 +341,14 @@ public readonly partial struct Float64 : IBinaryFloat<Float64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Float64 Hypot(Float64 x, Float64 y) => double.Hypot(x, y);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Float64 Root(Float64 x, int n) => double.Root(x, n);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Float64 Acos(Float64 x) => double.Acos(x);
 
 	/// <inheritdoc/>
@@ -450,6 +458,7 @@ public readonly partial struct Float64 : IBinaryFloat<Float64>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float64 IIncrementOperators<Float64>.op_CheckedIncrement(Float64 value) => ++value;
@@ -457,23 +466,9 @@ public readonly partial struct Float64 : IBinaryFloat<Float64>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float64 IDecrementOperators<Float64>.op_CheckedDecrement(Float64 value) => --value;
+	*/
 
-		/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float64 IAdditionOperators<Float64, Float64, Float64>.op_CheckedAddition(Float64 left, Float64 right) => checked(left._value + right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float64 ISubtractionOperators<Float64, Float64, Float64>.op_CheckedSubtraction(Float64 left, Float64 right) => checked(left._value - right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float64 IMultiplyOperators<Float64, Float64, Float64>.op_CheckedMultiply(Float64 left, Float64 right) => checked(left._value * right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float64 IDivisionOperators<Float64, Float64, Float64>.op_CheckedDivision(Float64 left, Float64 right) => checked(left._value / right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float64 IUnaryNegationOperators<Float64, Float64>.op_CheckedUnaryNegation(Float64 value) => checked(-value._value);
-}
+	}
 
 
 /// <summary>
@@ -808,6 +803,14 @@ public readonly partial struct Float32 : IBinaryFloat<Float32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Float32 Hypot(Float32 x, Float32 y) => float.Hypot(x, y);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Float32 Root(Float32 x, int n) => float.Root(x, n);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Float32 Acos(Float32 x) => float.Acos(x);
 
 	/// <inheritdoc/>
@@ -917,6 +920,7 @@ public readonly partial struct Float32 : IBinaryFloat<Float32>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float32 IIncrementOperators<Float32>.op_CheckedIncrement(Float32 value) => ++value;
@@ -924,23 +928,9 @@ public readonly partial struct Float32 : IBinaryFloat<Float32>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float32 IDecrementOperators<Float32>.op_CheckedDecrement(Float32 value) => --value;
+	*/
 
-		/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float32 IAdditionOperators<Float32, Float32, Float32>.op_CheckedAddition(Float32 left, Float32 right) => checked(left._value + right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float32 ISubtractionOperators<Float32, Float32, Float32>.op_CheckedSubtraction(Float32 left, Float32 right) => checked(left._value - right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float32 IMultiplyOperators<Float32, Float32, Float32>.op_CheckedMultiply(Float32 left, Float32 right) => checked(left._value * right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float32 IDivisionOperators<Float32, Float32, Float32>.op_CheckedDivision(Float32 left, Float32 right) => checked(left._value / right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float32 IUnaryNegationOperators<Float32, Float32>.op_CheckedUnaryNegation(Float32 value) => checked(-value._value);
-}
+	}
 
 
 /// <summary>
@@ -1275,6 +1265,14 @@ public readonly partial struct Float16 : IBinaryFloat<Float16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Float16 Hypot(Float16 x, Float16 y) => Half.Hypot(x, y);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Float16 Root(Float16 x, int n) => Half.Root(x, n);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Float16 Acos(Float16 x) => Half.Acos(x);
 
 	/// <inheritdoc/>
@@ -1384,6 +1382,7 @@ public readonly partial struct Float16 : IBinaryFloat<Float16>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float16 IIncrementOperators<Float16>.op_CheckedIncrement(Float16 value) => ++value;
@@ -1391,20 +1390,6 @@ public readonly partial struct Float16 : IBinaryFloat<Float16>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float16 IDecrementOperators<Float16>.op_CheckedDecrement(Float16 value) => --value;
+	*/
 
-		/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float16 IAdditionOperators<Float16, Float16, Float16>.op_CheckedAddition(Float16 left, Float16 right) => checked(left._value + right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float16 ISubtractionOperators<Float16, Float16, Float16>.op_CheckedSubtraction(Float16 left, Float16 right) => checked(left._value - right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float16 IMultiplyOperators<Float16, Float16, Float16>.op_CheckedMultiply(Float16 left, Float16 right) => checked(left._value * right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float16 IDivisionOperators<Float16, Float16, Float16>.op_CheckedDivision(Float16 left, Float16 right) => checked(left._value / right._value);
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float16 IUnaryNegationOperators<Float16, Float16>.op_CheckedUnaryNegation(Float16 value) => checked(-value._value);
-}
+	}

@@ -49,6 +49,11 @@
             When implemented by a derived class, get the value array of this dense array.
             </summary>
         </member>
+        <member name="P:Althea.Array.IDenseArray`2.JsonSerializeOptions">
+            <summary>
+            The <see cref="T:System.Text.Json.JsonSerializerOptions"/> for <typeparamref name="TS"/>.
+            </summary>
+        </member>
         <member name="T:Althea.Array.ISparseArray`1">
             <summary>
             The base interface for sparse arrays.
@@ -69,6 +74,48 @@
             <summary>
             When implemented by a derived class, get number of elements actually stored this sparse vector.
             </summary>
+        </member>
+        <member name="T:Althea.Array.ISubtypeJsonConvertible`1">
+            <summary>
+            The interface for polymorphism subtype JSON convertible type <typeparamref name="TSelf"/>.
+            </summary>
+            <typeparam name="TSelf">The actual type whose subtypes will be serialized and deserialized polymorphically which must be abstract or an interface.</typeparam>
+            <remarks>For this interface to work, the <see cref="P:System.Text.Json.JsonSerializerOptions.Converters"/> shall contains a <see cref="T:Althea.Array.ISubtypeJsonConvertible`1.JsonConverter"/>.<br/>
+            And any subtype of <typeparamref name="TSelf"/> shall be able to correctly deserialized by <see cref="M:System.Text.Json.JsonSerializer.Deserialize``1(System.String,System.Text.Json.JsonSerializerOptions)"/> (e.g. via a constructor with <see cref="T:System.Text.Json.Serialization.JsonConstructorAttribute"/>).</remarks>
+            <example><code>
+            public abstract class BaseClass : <see cref="T:Althea.Array.ISubtypeJsonConvertible`1"/>
+            {
+            	// functional codes...
+            	
+            	private static readonly JsonSerializerOptions options = new() { <see cref="P:System.Text.Json.JsonSerializerOptions.Converters"/> = { <see cref="T:Althea.Array.ISubtypeJsonConvertible`1"/>&lt;BaseClass&gt; };
+            
+            	public string Serialize()
+            	{
+            		return <see cref="M:System.Text.Json.JsonSerializer.Serialize``1(``0,System.Text.Json.JsonSerializerOptions)">JsonSerializer.Serialize</see>(this, options);
+            	}
+            	
+            	public static BaseClass Deserialize(string json)
+            	{
+            		return <see cref="M:System.Text.Json.JsonSerializer.Deserialize``1(System.String,System.Text.Json.JsonSerializerOptions)">JsonSerializer.Deserialize</see>(this, options);
+            	}
+            }
+            </code></example>
+        </member>
+        <member name="T:Althea.Array.ISubtypeJsonConvertible`1.JsonConverter">
+            <summary>
+            The polymorphism JSON converter for <typeparamref name="TSelf"/>'s sub-types.
+            </summary>
+        </member>
+        <member name="M:Althea.Array.ISubtypeJsonConvertible`1.JsonConverter.#ctor">
+            <summary>
+            The default constructor for <see cref="T:Althea.Array.ISubtypeJsonConvertible`1.JsonConverter"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Array.ISubtypeJsonConvertible`1.JsonConverter.Read(System.Text.Json.Utf8JsonReader@,System.Type,System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.ISubtypeJsonConvertible`1.JsonConverter.Write(System.Text.Json.Utf8JsonWriter,`0,System.Text.Json.JsonSerializerOptions)">
+            <inheritdoc/>
         </member>
         <member name="T:Althea.Array.ISparseArray`4">
             <summary>
@@ -92,6 +139,11 @@
         <member name="P:Althea.Array.ISparseArray`4.BlockSize">
             <summary>
             When implemented by a derived class, get the constant block size of this sparse array, can be empty if it is not a <see cref="F:Althea.Array.SparseFormat.Blocking.Simple"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Array.ISparseArray`4.JsonSerializeOptions">
+            <summary>
+            The <see cref="T:System.Text.Json.JsonSerializerOptions"/> for <typeparamref name="TS"/>.
             </summary>
         </member>
         <member name="T:Althea.Array.ILabeledTensor`1">
@@ -170,6 +222,11 @@
         <member name="P:Althea.Array.CoordinateSparseMatrix`4.Format">
             <inheritdoc/>
         </member>
+        <member name="P:Althea.Array.CoordinateSparseMatrix`4.RowMajor">
+            <summary>
+            Get whether this matrix is of row major or column major.
+            </summary>
+        </member>
         <member name="M:Althea.Array.CoordinateSparseMatrix`4.#ctor(System.Boolean,System.Int64,System.Int64,`2,`3,`3,`0,System.Int64)">
             <summary>
             Create a new <see cref="T:Althea.Array.CoordinateSparseMatrix`4"/> with given parameters.
@@ -207,9 +264,6 @@
         <member name="M:Althea.Array.CoordinateSparseMatrix`4.Print(System.Nullable{Althea.PrintSettings})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.CoordinateSparseMatrix`4.JsonSerialize">
-            <inheritdoc/>
-        </member>
         <member name="T:Althea.Array.CompressSparseMatrix`4">
             <summary>
             The concrete element-wise compressed sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
@@ -218,6 +272,11 @@
             <typeparam name="TS">The storage type used by the value storage</typeparam>
             <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
             <typeparam name="TSInd">The index storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+        </member>
+        <member name="P:Althea.Array.CompressSparseMatrix`4.RowMajor">
+            <summary>
+            Get whether this matrix is of row major or column major.
+            </summary>
         </member>
         <member name="P:Althea.Array.CompressSparseMatrix`4.RowIndexStorage">
             <inheritdoc/>
@@ -265,9 +324,6 @@
         <member name="M:Althea.Array.CompressSparseMatrix`4.Print(System.Nullable{Althea.PrintSettings})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.CompressSparseMatrix`4.JsonSerialize">
-            <inheritdoc/>
-        </member>
         <member name="T:Althea.Array.CoordinateBlockSparseMatrix`4">
             <summary>
             The concrete simple block coordinated sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
@@ -276,6 +332,21 @@
             <typeparam name="TS">The storage type used by the value storage</typeparam>
             <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
             <typeparam name="TSInd">The index storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+        </member>
+        <member name="P:Althea.Array.CoordinateBlockSparseMatrix`4.RowMajor">
+            <summary>
+            Get whether this matrix is of row major or column major.
+            </summary>
+        </member>
+        <member name="P:Althea.Array.CoordinateBlockSparseMatrix`4.BlockRows">
+            <summary>
+            Get the number of rows of blocks of this matrix.
+            </summary>
+        </member>
+        <member name="P:Althea.Array.CoordinateBlockSparseMatrix`4.BlockCols">
+            <summary>
+            Get the number of columns of blocks of this matrix.
+            </summary>
         </member>
         <member name="P:Althea.Array.CoordinateBlockSparseMatrix`4.Format">
             <inheritdoc/>
@@ -325,9 +396,6 @@
         <member name="M:Althea.Array.CoordinateBlockSparseMatrix`4.Print(System.Nullable{Althea.PrintSettings})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.CoordinateBlockSparseMatrix`4.JsonSerialize">
-            <inheritdoc/>
-        </member>
         <member name="T:Althea.Array.CompressBlockSparseMatrix`4">
             <summary>
             The concrete simple block compressed sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
@@ -336,6 +404,21 @@
             <typeparam name="TS">The storage type used by the value storage</typeparam>
             <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
             <typeparam name="TSInd">The index storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
+        </member>
+        <member name="P:Althea.Array.CompressBlockSparseMatrix`4.RowMajor">
+            <summary>
+            Get whether this matrix is of row major or column major.
+            </summary>
+        </member>
+        <member name="P:Althea.Array.CompressBlockSparseMatrix`4.BlockRows">
+            <summary>
+            Get the number of rows of blocks of this matrix.
+            </summary>
+        </member>
+        <member name="P:Althea.Array.CompressBlockSparseMatrix`4.BlockCols">
+            <summary>
+            Get the number of columns of blocks of this matrix.
+            </summary>
         </member>
         <member name="P:Althea.Array.CompressBlockSparseMatrix`4.RowIndexStorage">
             <inheritdoc/>
@@ -383,9 +466,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.CompressBlockSparseMatrix`4.Print(System.Nullable{Althea.PrintSettings})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.CompressBlockSparseMatrix`4.JsonSerialize">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.AbstractDenseMatrix`2">
@@ -464,11 +544,11 @@
             Create a new <see cref="T:Althea.Array.DenseMatrix`2"/> with given <paramref name="storage"/> and size.
             </summary>
             <param name="storage">The storage of type <typeparamref name="TS"/> to create from</param>
-            <param name="rows">The number of rows of the matrix to create</param>
-            <param name="cols">The number of columns of the matrix to create</param>
-            <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="rows"/></param>
+            <param name="nRows">The number of rows of the matrix to create</param>
+            <param name="nCols">The number of columns of the matrix to create</param>
+            <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="nRows"/></param>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="nRows"/> or <paramref name="nCols"/> ≤ 0</exception>
         </member>
         <member name="M:Althea.Array.DenseMatrix`2.#ctor(Althea.Array.DenseMatrix{`0,`1})">
             <summary>
@@ -568,12 +648,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseMatrix`2.ToCompact">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.DenseMatrix`2.JsonSerialize">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.DenseMatrix`2.JsonDeserialize(System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseMatrix`2.ToString">
@@ -753,12 +827,6 @@
             Get a referenced <see cref="T:Althea.Array.DiagonalMatrix`2"/> from the underlying storage of this <see cref="T:Althea.Array.DenseVector`2"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.DiagonalMatrix`2.JsonSerialize">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.DiagonalMatrix`2.JsonDeserialize(System.String)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Array.DiagonalMatrix`2.ToString">
             <inheritdoc/>
         </member>
@@ -791,7 +859,7 @@
             <param name="rows">The number of rows of the matrix to create</param>
             <param name="cols">The number of columns of the matrix to create</param>
             <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="rows"/></param>
-            <param name="unitDiag">Whether the triangular matrix's diagonal elements are all 1 and thus not used.</param>
+            <param name="unitDiagonal">Whether the triangular matrix's diagonal elements are all 1 and thus not used.</param>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
         </member>
@@ -913,12 +981,6 @@
         <member name="M:Althea.Array.TriangularMatrix`2.ToCompact">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.TriangularMatrix`2.JsonSerialize">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.TriangularMatrix`2.JsonDeserialize(System.String)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Array.TriangularMatrix`2.ToString">
             <inheritdoc/>
         </member>
@@ -950,7 +1012,7 @@
             <param name="storage">The storage of type <typeparamref name="TS"/> to create from</param>
             <param name="n">The number of rows and columns of the matrix to create</param>
             <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="n"/></param>
-            <param name="herm">Whether the symmetric matrix is Hermitian or simply symmetric or according to <typeparamref name="T"/> (null)</param>
+            <param name="hermitian">Whether the symmetric matrix is Hermitian or simply symmetric or according to <typeparamref name="T"/> (null)</param>
             <exception cref="T:System.ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0</exception>
         </member>
@@ -1069,12 +1131,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SymmetricMatrix`2.ToCompact">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.SymmetricMatrix`2.JsonSerialize">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.SymmetricMatrix`2.JsonDeserialize(System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SymmetricMatrix`2.ToString">
@@ -1414,18 +1470,13 @@
         <member name="M:Althea.Array.SparseMatrix`4.CreateAlike">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Array.SparseMatrix`4.JsonOptions">
-            <summary>
-            The <see cref="T:System.Text.Json.JsonSerializerOptions"/> used for <see cref="M:Althea.Array.SparseMatrix`4.JsonSerialize"/> and <see cref="M:Althea.Array.SparseMatrix`4.JsonDeserialize(System.String)"/>.
-            </summary>
-        </member>
-        <member name="M:Althea.Array.SparseMatrix`4.JsonSerialize">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Array.SparseMatrix`4.ToString">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SparseMatrix`4.Print(System.Nullable{Althea.PrintSettings})">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Array.SparseMatrix`4.JsonSerializeOptions">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.SparseMatrix`4.TryCreateFromWrapper">
@@ -1449,23 +1500,6 @@
             <param name="wrapper">The <see cref="T:Althea.Array.SparseArrayWrapper`4"/> to create from.</param>
             <returns>A created <see cref="T:Althea.Array.SparseMatrix`4"/> from the given <paramref name="wrapper"/>.</returns>
             <exception cref="T:System.NotSupportedException">If none of the creators in sub-classes can be used to create a <see cref="T:Althea.Array.SparseMatrix`4"/></exception>
-        </member>
-        <member name="T:Althea.Array.SparseMatrix`4.TryDeserialize">
-            <summary>
-            Encapsulates a method that statically deserialize the given <paramref name="json"/> to a new sparse matrix.
-            </summary>
-            <param name="json">The JSON string to create from.</param>
-            <param name="matrix">A created <see cref="T:Althea.Array.SparseMatrix`4"/> from the given <paramref name="json"/></param>
-            <returns>Success or not.</returns>
-        </member>
-        <member name="F:Althea.Array.SparseMatrix`4.Deserializers">
-            <summary>
-            The list used to store the JSON deserializers for sub-classes.
-            </summary>
-            <remarks>Any sub-class that inherits <see cref="T:Althea.Array.SparseMatrix`4"/> SHALL add its own <see cref="T:Althea.Array.SparseMatrix`4.TryDeserialize"/> implementation to this list.</remarks>
-        </member>
-        <member name="M:Althea.Array.SparseMatrix`4.JsonDeserialize(System.String)">
-            <inheritdoc/>
         </member>
         <member name="T:Althea.Array.DenseOperation`2">
             <summary>
@@ -2893,9 +2927,6 @@
         <member name="M:Althea.Array.CoordinateSparseTensor`4.Print(System.Nullable{Althea.PrintSettings})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.CoordinateSparseTensor`4.JsonSerialize">
-            <inheritdoc/>
-        </member>
         <member name="T:Althea.Array.CoordinateBlockSparseTensor`4">
             <summary>
             The coordinated simple block sparse tensor class whose value storage is of type <typeparamref name="TS"/> and the only sorted index (as if in column major) storage is of type <typeparamref name="TSInd"/>.
@@ -2951,9 +2982,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.CoordinateBlockSparseTensor`4.Print(System.Nullable{Althea.PrintSettings})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.CoordinateBlockSparseTensor`4.JsonSerialize">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.DenseTensor`2">
@@ -3125,12 +3153,6 @@
             Copy the values from this dense tensor to a new <typeparamref name="TS"/> without stride.
             </summary>
             <returns>The created compact tensor's storage as a <typeparamref name="TS"/></returns>
-        </member>
-        <member name="M:Althea.Array.DenseTensor`2.JsonSerialize">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.DenseTensor`2.JsonDeserialize(System.String)">
-            <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseTensor`2.ToString">
             <inheritdoc/>
@@ -3382,18 +3404,13 @@
         <member name="M:Althea.Array.SparseTensor`4.CreateAlike">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Array.SparseTensor`4.JsonOptions">
-            <summary>
-            The <see cref="T:System.Text.Json.JsonSerializerOptions"/> used for <see cref="M:Althea.Array.SparseTensor`4.JsonSerialize"/> and <see cref="M:Althea.Array.SparseTensor`4.JsonDeserialize(System.String)"/>.
-            </summary>
-        </member>
-        <member name="M:Althea.Array.SparseTensor`4.JsonSerialize">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Array.SparseTensor`4.ToString">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SparseTensor`4.Print(System.Nullable{Althea.PrintSettings})">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Array.SparseTensor`4.JsonSerializeOptions">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.SparseTensor`4.TryCreateFromWrapper">
@@ -3417,23 +3434,6 @@
             <param name="wrapper">The <see cref="T:Althea.Array.SparseArrayWrapper`4"/> to create from.</param>
             <returns>A created <see cref="T:Althea.Array.SparseTensor`4"/> from the given <paramref name="wrapper"/>.</returns>
             <exception cref="T:System.NotSupportedException">If none of the creators in sub-classes can be used to create a <see cref="T:Althea.Array.SparseTensor`4"/></exception>
-        </member>
-        <member name="T:Althea.Array.SparseTensor`4.TryDeserialize">
-            <summary>
-            Encapsulates a method that statically deserialize the given <paramref name="json"/> to a new sparse tensor.
-            </summary>
-            <param name="json">The JSON string to create from.</param>
-            <param name="matrix">A created <see cref="T:Althea.Array.SparseTensor`4"/> from the given <paramref name="json"/></param>
-            <returns>Success or not.</returns>
-        </member>
-        <member name="F:Althea.Array.SparseTensor`4.Deserializers">
-            <summary>
-            The list used to store the JSON deserializers for sub-classes.
-            </summary>
-            <remarks>Any sub-class that inherits <see cref="T:Althea.Array.SparseTensor`4"/> SHALL add its own <see cref="T:Althea.Array.SparseTensor`4.TryDeserialize"/> implementation to this list.</remarks>
-        </member>
-        <member name="M:Althea.Array.SparseTensor`4.JsonDeserialize(System.String)">
-            <inheritdoc/>
         </member>
         <member name="T:Althea.Array.IBaseTensor`2">
             <summary>
@@ -3719,19 +3719,26 @@
             <exception cref="T:System.ArgumentException">If <paramref name="newSize"/> is of length 2 and are all non-positive while the length of <paramref name="array"/> is not a perfect square; or <paramref name="newSize"/> has more than one uncertain dimensions</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If the product of <paramref name="newSize"/> is not the same as the presenting length of <paramref name="array"/></exception>
         </member>
+        <member name="P:Althea.Array.IValueArray`2.JsonSerializeOptions">
+            <summary>
+            When implemented by a derived class, statically get the <see cref="T:System.Text.Json.JsonSerializerOptions"/> used to JSON serialize and deserialize <typeparamref name="TSelf"/>s whose <see cref="P:System.Text.Json.JsonSerializerOptions.Converters"/> shall contains necessary <see cref="P:Althea.Storage.IStorage`2.JsonConverter"/>(s).
+            </summary>
+        </member>
         <member name="M:Althea.Array.IValueArray`2.JsonSerialize">
             <summary>
-            When implemented by a derived class, serialize this array to a JSON object.
+            When implemented by a derived class, serialize this array to a JSON object. The default implementation simply utilizes <see cref="M:System.Text.Json.JsonSerializer.Serialize``1(``0,System.Text.Json.JsonSerializerOptions)"/> and <see cref="P:Althea.Array.IValueArray`2.JsonSerializeOptions"/>.
             </summary>
             <returns>The serialization of this array as a JSON object <see cref="T:System.String"/>.</returns>
         </member>
         <member name="M:Althea.Array.IValueArray`2.JsonDeserialize(System.String)">
             <summary>
-            When implemented by a derived factory class, statically reconstruct a <typeparamref name="TSelf"/> from the given <paramref name="json"/> object <see cref="T:System.String"/>.
+            Statically reconstruct a <typeparamref name="TSelf"/> from the given <paramref name="json"/> object <see cref="T:System.String"/>.
             </summary>
             <param name="json">The JSON object string used to deserialize</param>
             <returns>The reconstructed <typeparamref name="TSelf"/> from <paramref name="json"/>.</returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="json"/> is not a valid JSON serialization from <see cref="M:Althea.Array.IValueArray`2.JsonSerialize"/></exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="json"/> null</exception>
+            <exception cref="T:System.Text.Json.JsonException"></exception>
+            <exception cref="T:System.NotSupportedException"></exception>
         </member>
         <member name="T:Althea.Array.CoordinateSparseVector`4">
             <summary>
@@ -3779,9 +3786,6 @@
         <member name="M:Althea.Array.CoordinateSparseVector`4.CreateAlike">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.CoordinateSparseVector`4.JsonSerialize">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Array.CoordinateSparseVector`4.Print(System.Nullable{Althea.PrintSettings})">
             <inheritdoc/>
         </member>
@@ -3800,6 +3804,11 @@
         <member name="P:Althea.Array.BlockSparseVector`4.IndexStorage">
             <inheritdoc/>
         </member>
+        <member name="P:Althea.Array.BlockSparseVector`4.BlockLength">
+            <summary>
+            Get the block length of this <see cref="T:Althea.Array.BlockSparseVector`4"/>.
+            </summary>
+        </member>
         <member name="M:Althea.Array.BlockSparseVector`4.#ctor(System.Int64,`2,`3,System.Int64,`0,System.Int64)">
             <summary>
             Create a new <see cref="T:Althea.Array.BlockSparseVector`4"/> with given parameters.
@@ -3808,7 +3817,7 @@
             <param name="length">The presenting length</param>
             <param name="values">The original value array</param>
             <param name="indices">The original index array of blocks</param>
-            <param name="blockSize">The constant block size</param>
+            <param name="blockLength">The constant block length</param>
             <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="values"/> is too short</exception>
@@ -3839,9 +3848,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.BlockSparseVector`4.CreateAlike">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.BlockSparseVector`4.JsonSerialize">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.BlockSparseVector`4.Print(System.Nullable{Althea.PrintSettings})">
@@ -3989,12 +3995,6 @@
             </summary>
             <returns>The created compact vector's storage as a <typeparamref name="TS"/></returns>
         </member>
-        <member name="M:Althea.Array.DenseVector`2.JsonSerialize">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Array.DenseVector`2.JsonDeserialize(System.String)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Array.DenseVector`2.ToString">
             <inheritdoc/>
         </member>
@@ -4005,6 +4005,7 @@
             <summary>
             The abstract sparse vector abstract class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
             </summary>
+            <remarks>See <see cref="T:Althea.Array.ISubtypeJsonConvertible`1"/> for polymorphism JSON conversion notice.</remarks>
             <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The storage type used by the value storage</typeparam>
             <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
@@ -4205,18 +4206,13 @@
         <member name="M:Althea.Array.SparseVector`4.CreateAlike">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Array.SparseVector`4.JsonOptions">
-            <summary>
-            The <see cref="T:System.Text.Json.JsonSerializerOptions"/> used for <see cref="M:Althea.Array.SparseVector`4.JsonSerialize"/> and <see cref="M:Althea.Array.SparseVector`4.JsonDeserialize(System.String)"/>.
-            </summary>
-        </member>
-        <member name="M:Althea.Array.SparseVector`4.JsonSerialize">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Array.SparseVector`4.ToString">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SparseVector`4.Print(System.Nullable{Althea.PrintSettings})">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Array.SparseVector`4.JsonSerializeOptions">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.SparseVector`4.TryCreateFromWrapper">
@@ -4240,23 +4236,6 @@
             <param name="wrapper">The <see cref="T:Althea.Array.SparseArrayWrapper`4"/> to create from.</param>
             <returns>A created <see cref="T:Althea.Array.SparseVector`4"/> from the given <paramref name="wrapper"/>.</returns>
             <exception cref="T:System.NotSupportedException">If none of the creators in sub-classes can be used to create a <see cref="T:Althea.Array.SparseVector`4"/></exception>
-        </member>
-        <member name="T:Althea.Array.SparseVector`4.TryDeserialize">
-            <summary>
-            Encapsulates a method that statically deserialize the given <paramref name="json"/> to a new sparse matrix.
-            </summary>
-            <param name="json">The JSON string to create from.</param>
-            <param name="matrix">A created <see cref="T:Althea.Array.SparseVector`4"/> from the given <paramref name="json"/></param>
-            <returns>Success or not.</returns>
-        </member>
-        <member name="F:Althea.Array.SparseVector`4.Deserializers">
-            <summary>
-            The list used to store the JSON deserializers for sub-classes.
-            </summary>
-            <remarks>Any sub-class that inherits <see cref="T:Althea.Array.SparseVector`4"/> SHALL add its own <see cref="T:Althea.Array.SparseVector`4.TryDeserialize"/> implementation to this list.</remarks>
-        </member>
-        <member name="M:Althea.Array.SparseVector`4.JsonDeserialize(System.String)">
-            <inheritdoc/>
         </member>
         <member name="T:Althea.Array.IBaseVector`2">
             <summary>
@@ -4938,14 +4917,6 @@
             </summary>
             <returns>true if the enumerator was successfully advanced to the next element; false if the enumerator has passed the end of the collection.</returns>
         </member>
-        <member name="M:Althea.AbstractApiSelector`1.SetImplementation(`0)">
-            <summary>
-            Set the current API implementation among all to a given <paramref name="implementation"/>
-            </summary>
-            <param name="implementation">The implementation which implements <typeparamref name="TApi"/></param>
-            <exception cref="T:System.ArgumentException">If <paramref name="implementation"/> does not implements <typeparamref name="TApi"/> with empty constructor</exception>
-            <exception cref="T:System.ObjectDisposedException">If <paramref name="implementation"/> is disposed</exception>
-        </member>
         <member name="T:Althea.ICheckValid">
             <summary>
             The interface for an object whose validness can be checked
@@ -5093,8 +5064,19 @@
         </member>
         <member name="M:Althea.Settings.SetImplementation``1(``0)">
             <summary>
-            The alias of <see cref="M:Althea.AbstractApiSelector`1.SetImplementation(`0)"/>.
+            Set the API implementation of <typeparamref name="TApi"/> among all to a given <paramref name="implementation"/>.
             </summary>
+            <typeparam name="TApi">The runtime API interface type</typeparam>
+            <param name="implementation">The implementation which implements <typeparamref name="TApi"/></param>
+            <exception cref="T:System.ArgumentException">If <paramref name="implementation"/> does not implements <typeparamref name="TApi"/> with empty constructor</exception>
+            <exception cref="T:System.ObjectDisposedException">If <paramref name="implementation"/> is disposed</exception>
+        </member>
+        <member name="M:Althea.Settings.SetAllImplementations(System.Object)">
+            <summary>
+            Set all runtime API(s) which inherits <see cref="T:Althea.IAbstractRuntimeApi`1"/> and <paramref name="implementation"/> implements to <paramref name="implementation"/> at the same time.
+            </summary>
+            <param name="implementation">The API implementation to set</param>
+            <remarks>This method is based on reflection, thus it shall NOT be invoked repeatedly to prevent performance issues.</remarks>
         </member>
         <member name="M:Althea.Settings.TrySetBackend(Althea.IBackends)">
             <summary>
@@ -5102,6 +5084,7 @@
             </summary>
             <param name="backend">The <see cref="T:Althea.IBackends"/> used to set all back-ends</param>
             <return>Success or not. Some implementation may still be changed even if this returns false.</return>
+            <remarks>This method is based on reflection, thus it shall NOT be invoked repeatedly to prevent performance issues.</remarks>
         </member>
         <member name="M:Althea.Settings.Import(System.Boolean)">
             <summary>
@@ -16398,12 +16381,12 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="array"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
         </member>
-        <member name="T:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi">
+        <member name="T:Althea.LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi">
             <summary>
-            The abstract interface for runtime extended index related operation API routines 
+            The abstract interface for runtime dynamic extended index related operation API routines 
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi.Sort``6(``1,System.Int64,``3,System.Int64,``5,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi.Sort``6(``1,System.Int64,``3,System.Int64,``5,System.Int64)">
             <summary>
             When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
             </summary>
@@ -16423,7 +16406,7 @@
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi.Sort``8(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi.Sort``8(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64)">
             <summary>
             When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
             </summary>
@@ -16447,7 +16430,7 @@
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi.Sort``10(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64,``9,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi.Sort``10(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64,``9,System.Int64)">
             <summary>
             When implemented by a derived class, sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
             </summary>
@@ -16475,7 +16458,7 @@
             <exception cref="T:System.ArgumentNullException">If any of the storages is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi.Sort``4(``2,System.Int64,System.ReadOnlySpan{``3},System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi.Sort``4(``2,System.Int64,System.ReadOnlySpan{``3},System.ReadOnlySpan{System.Int64})">
             <summary>
             When implemented by a derived class, sort the elements of the given integer-typed <paramref name="key"/> with <paramref name="values"/>.
             </summary>
@@ -17171,12 +17154,12 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="stride"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="T:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector">
+        <member name="T:Althea.LinearAlgebra.Sparse.DynamicIndexOperationApiSelector">
             <summary>
-            The selector class for runtime extended index related operation API routines 
+            The selector class for runtime dynamic extended index related operation API routines 
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector.Sort``6(``1,System.Int64,``3,System.Int64,``5,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Sparse.DynamicIndexOperationApiSelector.Sort``6(``1,System.Int64,``3,System.Int64,``5,System.Int64)">
             <summary>
             Sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
             </summary>
@@ -17196,7 +17179,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector.Sort``8(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Sparse.DynamicIndexOperationApiSelector.Sort``8(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64)">
             <summary>
             Sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
             </summary>
@@ -17220,7 +17203,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector.Sort``10(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64,``9,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Sparse.DynamicIndexOperationApiSelector.Sort``10(``1,System.Int64,``3,System.Int64,``5,System.Int64,``7,System.Int64,``9,System.Int64)">
             <summary>
             Sort the elements of the given integer-typed <paramref name="keys"/> with all given values.
             </summary>
@@ -17248,7 +17231,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If any of the strides ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Sparse.ExtendIndexOperationApiSelector.Sort``4(``2,System.Int64,System.ReadOnlySpan{``3},System.ReadOnlySpan{System.Int64})">
+        <member name="M:Althea.LinearAlgebra.Sparse.DynamicIndexOperationApiSelector.Sort``4(``2,System.Int64,System.ReadOnlySpan{``3},System.ReadOnlySpan{System.Int64})">
             <summary>
             Sort the elements of the given integer-typed <paramref name="key"/> with <paramref name="values"/>.
             </summary>
@@ -18437,6 +18420,12 @@
         <member name="M:Althea.Numerics.Complex`1.Exp(Althea.Numerics.Complex{`0})">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.Complex`1.Hypot(Althea.Numerics.Complex{`0},Althea.Numerics.Complex{`0})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Numerics.Complex`1.Root(Althea.Numerics.Complex{`0},System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.Complex`1.Log(Althea.Numerics.Complex{`0})">
             <inheritdoc/>
         </member>
@@ -19237,6 +19226,12 @@
         <member name="M:Althea.Numerics.Float64.Sqrt(Althea.Numerics.Float64)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.Float64.Hypot(Althea.Numerics.Float64,Althea.Numerics.Float64)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Numerics.Float64.Root(Althea.Numerics.Float64,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.Float64.Acos(Althea.Numerics.Float64)">
             <inheritdoc/>
         </member>
@@ -19319,27 +19314,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Float64.op_Decrement(Althea.Numerics.Float64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float64.System#Numerics#IIncrementOperators{Althea#Numerics#Float64}#op_CheckedIncrement(Althea.Numerics.Float64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float64.System#Numerics#IDecrementOperators{Althea#Numerics#Float64}#op_CheckedDecrement(Althea.Numerics.Float64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float64.System#Numerics#IAdditionOperators{Althea#Numerics#Float64,Althea#Numerics#Float64,Althea#Numerics#Float64}#op_CheckedAddition(Althea.Numerics.Float64,Althea.Numerics.Float64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float64.System#Numerics#ISubtractionOperators{Althea#Numerics#Float64,Althea#Numerics#Float64,Althea#Numerics#Float64}#op_CheckedSubtraction(Althea.Numerics.Float64,Althea.Numerics.Float64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float64.System#Numerics#IMultiplyOperators{Althea#Numerics#Float64,Althea#Numerics#Float64,Althea#Numerics#Float64}#op_CheckedMultiply(Althea.Numerics.Float64,Althea.Numerics.Float64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float64.System#Numerics#IDivisionOperators{Althea#Numerics#Float64,Althea#Numerics#Float64,Althea#Numerics#Float64}#op_CheckedDivision(Althea.Numerics.Float64,Althea.Numerics.Float64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float64.System#Numerics#IUnaryNegationOperators{Althea#Numerics#Float64,Althea#Numerics#Float64}#op_CheckedUnaryNegation(Althea.Numerics.Float64)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.Float32">
@@ -19602,6 +19576,12 @@
         <member name="M:Althea.Numerics.Float32.Sqrt(Althea.Numerics.Float32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.Float32.Hypot(Althea.Numerics.Float32,Althea.Numerics.Float32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Numerics.Float32.Root(Althea.Numerics.Float32,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.Float32.Acos(Althea.Numerics.Float32)">
             <inheritdoc/>
         </member>
@@ -19684,27 +19664,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Float32.op_Decrement(Althea.Numerics.Float32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float32.System#Numerics#IIncrementOperators{Althea#Numerics#Float32}#op_CheckedIncrement(Althea.Numerics.Float32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float32.System#Numerics#IDecrementOperators{Althea#Numerics#Float32}#op_CheckedDecrement(Althea.Numerics.Float32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float32.System#Numerics#IAdditionOperators{Althea#Numerics#Float32,Althea#Numerics#Float32,Althea#Numerics#Float32}#op_CheckedAddition(Althea.Numerics.Float32,Althea.Numerics.Float32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float32.System#Numerics#ISubtractionOperators{Althea#Numerics#Float32,Althea#Numerics#Float32,Althea#Numerics#Float32}#op_CheckedSubtraction(Althea.Numerics.Float32,Althea.Numerics.Float32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float32.System#Numerics#IMultiplyOperators{Althea#Numerics#Float32,Althea#Numerics#Float32,Althea#Numerics#Float32}#op_CheckedMultiply(Althea.Numerics.Float32,Althea.Numerics.Float32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float32.System#Numerics#IDivisionOperators{Althea#Numerics#Float32,Althea#Numerics#Float32,Althea#Numerics#Float32}#op_CheckedDivision(Althea.Numerics.Float32,Althea.Numerics.Float32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float32.System#Numerics#IUnaryNegationOperators{Althea#Numerics#Float32,Althea#Numerics#Float32}#op_CheckedUnaryNegation(Althea.Numerics.Float32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.Float16">
@@ -19967,6 +19926,12 @@
         <member name="M:Althea.Numerics.Float16.Sqrt(Althea.Numerics.Float16)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.Float16.Hypot(Althea.Numerics.Float16,Althea.Numerics.Float16)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Numerics.Float16.Root(Althea.Numerics.Float16,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.Float16.Acos(Althea.Numerics.Float16)">
             <inheritdoc/>
         </member>
@@ -20049,27 +20014,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Float16.op_Decrement(Althea.Numerics.Float16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float16.System#Numerics#IIncrementOperators{Althea#Numerics#Float16}#op_CheckedIncrement(Althea.Numerics.Float16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float16.System#Numerics#IDecrementOperators{Althea#Numerics#Float16}#op_CheckedDecrement(Althea.Numerics.Float16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float16.System#Numerics#IAdditionOperators{Althea#Numerics#Float16,Althea#Numerics#Float16,Althea#Numerics#Float16}#op_CheckedAddition(Althea.Numerics.Float16,Althea.Numerics.Float16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float16.System#Numerics#ISubtractionOperators{Althea#Numerics#Float16,Althea#Numerics#Float16,Althea#Numerics#Float16}#op_CheckedSubtraction(Althea.Numerics.Float16,Althea.Numerics.Float16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float16.System#Numerics#IMultiplyOperators{Althea#Numerics#Float16,Althea#Numerics#Float16,Althea#Numerics#Float16}#op_CheckedMultiply(Althea.Numerics.Float16,Althea.Numerics.Float16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float16.System#Numerics#IDivisionOperators{Althea#Numerics#Float16,Althea#Numerics#Float16,Althea#Numerics#Float16}#op_CheckedDivision(Althea.Numerics.Float16,Althea.Numerics.Float16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Float16.System#Numerics#IUnaryNegationOperators{Althea#Numerics#Float16,Althea#Numerics#Float16}#op_CheckedUnaryNegation(Althea.Numerics.Float16)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt8">
@@ -20314,28 +20258,7 @@
         <member name="M:Althea.Numerics.SignedInt8.op_Decrement(Althea.Numerics.SignedInt8)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.SignedInt8.System#Numerics#IIncrementOperators{Althea#Numerics#SignedInt8}#op_CheckedIncrement(Althea.Numerics.SignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt8.System#Numerics#IDecrementOperators{Althea#Numerics#SignedInt8}#op_CheckedDecrement(Althea.Numerics.SignedInt8)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.SignedInt8.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8}#op_UnsignedRightShift(Althea.Numerics.SignedInt8,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt8.System#Numerics#IAdditionOperators{Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8}#op_CheckedAddition(Althea.Numerics.SignedInt8,Althea.Numerics.SignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt8.System#Numerics#ISubtractionOperators{Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8}#op_CheckedSubtraction(Althea.Numerics.SignedInt8,Althea.Numerics.SignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt8.System#Numerics#IMultiplyOperators{Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8}#op_CheckedMultiply(Althea.Numerics.SignedInt8,Althea.Numerics.SignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt8.System#Numerics#IDivisionOperators{Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8}#op_CheckedDivision(Althea.Numerics.SignedInt8,Althea.Numerics.SignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt8.System#Numerics#IUnaryNegationOperators{Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8}#op_CheckedUnaryNegation(Althea.Numerics.SignedInt8)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt16">
@@ -20580,28 +20503,7 @@
         <member name="M:Althea.Numerics.SignedInt16.op_Decrement(Althea.Numerics.SignedInt16)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.SignedInt16.System#Numerics#IIncrementOperators{Althea#Numerics#SignedInt16}#op_CheckedIncrement(Althea.Numerics.SignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt16.System#Numerics#IDecrementOperators{Althea#Numerics#SignedInt16}#op_CheckedDecrement(Althea.Numerics.SignedInt16)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.SignedInt16.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16}#op_UnsignedRightShift(Althea.Numerics.SignedInt16,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt16.System#Numerics#IAdditionOperators{Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16}#op_CheckedAddition(Althea.Numerics.SignedInt16,Althea.Numerics.SignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt16.System#Numerics#ISubtractionOperators{Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16}#op_CheckedSubtraction(Althea.Numerics.SignedInt16,Althea.Numerics.SignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt16.System#Numerics#IMultiplyOperators{Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16}#op_CheckedMultiply(Althea.Numerics.SignedInt16,Althea.Numerics.SignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt16.System#Numerics#IDivisionOperators{Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16}#op_CheckedDivision(Althea.Numerics.SignedInt16,Althea.Numerics.SignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt16.System#Numerics#IUnaryNegationOperators{Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16}#op_CheckedUnaryNegation(Althea.Numerics.SignedInt16)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt32">
@@ -20846,28 +20748,7 @@
         <member name="M:Althea.Numerics.SignedInt32.op_Decrement(Althea.Numerics.SignedInt32)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.SignedInt32.System#Numerics#IIncrementOperators{Althea#Numerics#SignedInt32}#op_CheckedIncrement(Althea.Numerics.SignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt32.System#Numerics#IDecrementOperators{Althea#Numerics#SignedInt32}#op_CheckedDecrement(Althea.Numerics.SignedInt32)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.SignedInt32.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32}#op_UnsignedRightShift(Althea.Numerics.SignedInt32,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt32.System#Numerics#IAdditionOperators{Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32}#op_CheckedAddition(Althea.Numerics.SignedInt32,Althea.Numerics.SignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt32.System#Numerics#ISubtractionOperators{Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32}#op_CheckedSubtraction(Althea.Numerics.SignedInt32,Althea.Numerics.SignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt32.System#Numerics#IMultiplyOperators{Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32}#op_CheckedMultiply(Althea.Numerics.SignedInt32,Althea.Numerics.SignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt32.System#Numerics#IDivisionOperators{Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32}#op_CheckedDivision(Althea.Numerics.SignedInt32,Althea.Numerics.SignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt32.System#Numerics#IUnaryNegationOperators{Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32}#op_CheckedUnaryNegation(Althea.Numerics.SignedInt32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt64">
@@ -21112,28 +20993,7 @@
         <member name="M:Althea.Numerics.SignedInt64.op_Decrement(Althea.Numerics.SignedInt64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.SignedInt64.System#Numerics#IIncrementOperators{Althea#Numerics#SignedInt64}#op_CheckedIncrement(Althea.Numerics.SignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt64.System#Numerics#IDecrementOperators{Althea#Numerics#SignedInt64}#op_CheckedDecrement(Althea.Numerics.SignedInt64)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.SignedInt64.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64}#op_UnsignedRightShift(Althea.Numerics.SignedInt64,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt64.System#Numerics#IAdditionOperators{Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64}#op_CheckedAddition(Althea.Numerics.SignedInt64,Althea.Numerics.SignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt64.System#Numerics#ISubtractionOperators{Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64}#op_CheckedSubtraction(Althea.Numerics.SignedInt64,Althea.Numerics.SignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt64.System#Numerics#IMultiplyOperators{Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64}#op_CheckedMultiply(Althea.Numerics.SignedInt64,Althea.Numerics.SignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt64.System#Numerics#IDivisionOperators{Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64}#op_CheckedDivision(Althea.Numerics.SignedInt64,Althea.Numerics.SignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt64.System#Numerics#IUnaryNegationOperators{Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64}#op_CheckedUnaryNegation(Althea.Numerics.SignedInt64)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt128">
@@ -21378,28 +21238,7 @@
         <member name="M:Althea.Numerics.SignedInt128.op_Decrement(Althea.Numerics.SignedInt128)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.SignedInt128.System#Numerics#IIncrementOperators{Althea#Numerics#SignedInt128}#op_CheckedIncrement(Althea.Numerics.SignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt128.System#Numerics#IDecrementOperators{Althea#Numerics#SignedInt128}#op_CheckedDecrement(Althea.Numerics.SignedInt128)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.SignedInt128.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128}#op_UnsignedRightShift(Althea.Numerics.SignedInt128,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt128.System#Numerics#IAdditionOperators{Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128}#op_CheckedAddition(Althea.Numerics.SignedInt128,Althea.Numerics.SignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt128.System#Numerics#ISubtractionOperators{Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128}#op_CheckedSubtraction(Althea.Numerics.SignedInt128,Althea.Numerics.SignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt128.System#Numerics#IMultiplyOperators{Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128}#op_CheckedMultiply(Althea.Numerics.SignedInt128,Althea.Numerics.SignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt128.System#Numerics#IDivisionOperators{Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128}#op_CheckedDivision(Althea.Numerics.SignedInt128,Althea.Numerics.SignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt128.System#Numerics#IUnaryNegationOperators{Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128}#op_CheckedUnaryNegation(Althea.Numerics.SignedInt128)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt8">
@@ -21644,28 +21483,7 @@
         <member name="M:Althea.Numerics.UnsignedInt8.op_Decrement(Althea.Numerics.UnsignedInt8)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#IIncrementOperators{Althea#Numerics#UnsignedInt8}#op_CheckedIncrement(Althea.Numerics.UnsignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#IDecrementOperators{Althea#Numerics#UnsignedInt8}#op_CheckedDecrement(Althea.Numerics.UnsignedInt8)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt8,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#IAdditionOperators{Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8}#op_CheckedAddition(Althea.Numerics.UnsignedInt8,Althea.Numerics.UnsignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#ISubtractionOperators{Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8}#op_CheckedSubtraction(Althea.Numerics.UnsignedInt8,Althea.Numerics.UnsignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#IMultiplyOperators{Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8}#op_CheckedMultiply(Althea.Numerics.UnsignedInt8,Althea.Numerics.UnsignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#IDivisionOperators{Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8}#op_CheckedDivision(Althea.Numerics.UnsignedInt8,Althea.Numerics.UnsignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#IUnaryNegationOperators{Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8}#op_CheckedUnaryNegation(Althea.Numerics.UnsignedInt8)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt16">
@@ -21910,28 +21728,7 @@
         <member name="M:Althea.Numerics.UnsignedInt16.op_Decrement(Althea.Numerics.UnsignedInt16)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#IIncrementOperators{Althea#Numerics#UnsignedInt16}#op_CheckedIncrement(Althea.Numerics.UnsignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#IDecrementOperators{Althea#Numerics#UnsignedInt16}#op_CheckedDecrement(Althea.Numerics.UnsignedInt16)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt16,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#IAdditionOperators{Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16}#op_CheckedAddition(Althea.Numerics.UnsignedInt16,Althea.Numerics.UnsignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#ISubtractionOperators{Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16}#op_CheckedSubtraction(Althea.Numerics.UnsignedInt16,Althea.Numerics.UnsignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#IMultiplyOperators{Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16}#op_CheckedMultiply(Althea.Numerics.UnsignedInt16,Althea.Numerics.UnsignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#IDivisionOperators{Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16}#op_CheckedDivision(Althea.Numerics.UnsignedInt16,Althea.Numerics.UnsignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#IUnaryNegationOperators{Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16}#op_CheckedUnaryNegation(Althea.Numerics.UnsignedInt16)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt32">
@@ -22176,28 +21973,7 @@
         <member name="M:Althea.Numerics.UnsignedInt32.op_Decrement(Althea.Numerics.UnsignedInt32)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#IIncrementOperators{Althea#Numerics#UnsignedInt32}#op_CheckedIncrement(Althea.Numerics.UnsignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#IDecrementOperators{Althea#Numerics#UnsignedInt32}#op_CheckedDecrement(Althea.Numerics.UnsignedInt32)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt32,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#IAdditionOperators{Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32}#op_CheckedAddition(Althea.Numerics.UnsignedInt32,Althea.Numerics.UnsignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#ISubtractionOperators{Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32}#op_CheckedSubtraction(Althea.Numerics.UnsignedInt32,Althea.Numerics.UnsignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#IMultiplyOperators{Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32}#op_CheckedMultiply(Althea.Numerics.UnsignedInt32,Althea.Numerics.UnsignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#IDivisionOperators{Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32}#op_CheckedDivision(Althea.Numerics.UnsignedInt32,Althea.Numerics.UnsignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#IUnaryNegationOperators{Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32}#op_CheckedUnaryNegation(Althea.Numerics.UnsignedInt32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt64">
@@ -22442,28 +22218,7 @@
         <member name="M:Althea.Numerics.UnsignedInt64.op_Decrement(Althea.Numerics.UnsignedInt64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#IIncrementOperators{Althea#Numerics#UnsignedInt64}#op_CheckedIncrement(Althea.Numerics.UnsignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#IDecrementOperators{Althea#Numerics#UnsignedInt64}#op_CheckedDecrement(Althea.Numerics.UnsignedInt64)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt64,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#IAdditionOperators{Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64}#op_CheckedAddition(Althea.Numerics.UnsignedInt64,Althea.Numerics.UnsignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#ISubtractionOperators{Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64}#op_CheckedSubtraction(Althea.Numerics.UnsignedInt64,Althea.Numerics.UnsignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#IMultiplyOperators{Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64}#op_CheckedMultiply(Althea.Numerics.UnsignedInt64,Althea.Numerics.UnsignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#IDivisionOperators{Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64}#op_CheckedDivision(Althea.Numerics.UnsignedInt64,Althea.Numerics.UnsignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#IUnaryNegationOperators{Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64}#op_CheckedUnaryNegation(Althea.Numerics.UnsignedInt64)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt128">
@@ -22708,28 +22463,7 @@
         <member name="M:Althea.Numerics.UnsignedInt128.op_Decrement(Althea.Numerics.UnsignedInt128)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#IIncrementOperators{Althea#Numerics#UnsignedInt128}#op_CheckedIncrement(Althea.Numerics.UnsignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#IDecrementOperators{Althea#Numerics#UnsignedInt128}#op_CheckedDecrement(Althea.Numerics.UnsignedInt128)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt128,System.Int32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#IAdditionOperators{Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128}#op_CheckedAddition(Althea.Numerics.UnsignedInt128,Althea.Numerics.UnsignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#ISubtractionOperators{Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128}#op_CheckedSubtraction(Althea.Numerics.UnsignedInt128,Althea.Numerics.UnsignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#IMultiplyOperators{Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128}#op_CheckedMultiply(Althea.Numerics.UnsignedInt128,Althea.Numerics.UnsignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#IDivisionOperators{Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128}#op_CheckedDivision(Althea.Numerics.UnsignedInt128,Althea.Numerics.UnsignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#IUnaryNegationOperators{Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128}#op_CheckedUnaryNegation(Althea.Numerics.UnsignedInt128)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.DataTypeTuple">
@@ -25797,8 +25531,30 @@
             <summary>
             The struct of which delimits a certain section of a certain memory block
             </summary>
+            <param name="Pointer">The native pointer (without offset and presenting length) as a <see cref="T:Althea.Storage.IPointer`1"/></param>
+            <param name="OffsetInBytes">The offset in bytes to the <see cref="P:Althea.Storage.PointerSegment`1.Pointer"/> of this <see cref="T:Althea.Storage.PointerSegment`1"/></param>
+            <param name="LengthInBytes">The <b>presenting</b> length in bytes of this <see cref="T:Althea.Storage.PointerSegment`1"/></param>
             <typeparam name="T">The type of <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used to store information of memory blocks.</remarks>
+        </member>
+        <member name="M:Althea.Storage.PointerSegment`1.#ctor(`0,System.Int64,System.Int64)">
+            <summary>
+            The struct of which delimits a certain section of a certain memory block
+            </summary>
+            <param name="Pointer">The native pointer (without offset and presenting length) as a <see cref="T:Althea.Storage.IPointer`1"/></param>
+            <param name="OffsetInBytes">The offset in bytes to the <see cref="P:Althea.Storage.PointerSegment`1.Pointer"/> of this <see cref="T:Althea.Storage.PointerSegment`1"/></param>
+            <param name="LengthInBytes">The <b>presenting</b> length in bytes of this <see cref="T:Althea.Storage.PointerSegment`1"/></param>
+            <typeparam name="T">The type of <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
+            <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used to store information of memory blocks.</remarks>
+        </member>
+        <member name="P:Althea.Storage.PointerSegment`1.Pointer">
+            <summary>The native pointer (without offset and presenting length) as a <see cref="T:Althea.Storage.IPointer`1"/></summary>
+        </member>
+        <member name="P:Althea.Storage.PointerSegment`1.OffsetInBytes">
+            <summary>The offset in bytes to the <see cref="P:Althea.Storage.PointerSegment`1.Pointer"/> of this <see cref="T:Althea.Storage.PointerSegment`1"/></summary>
+        </member>
+        <member name="P:Althea.Storage.PointerSegment`1.LengthInBytes">
+            <summary>The <b>presenting</b> length in bytes of this <see cref="T:Althea.Storage.PointerSegment`1"/></summary>
         </member>
         <member name="M:Althea.Storage.PointerSegment`1.IsValid">
             <summary>
@@ -25808,21 +25564,6 @@
         <member name="P:Althea.Storage.PointerSegment`1.Location">
             <summary>
             The <see cref="T:Althea.Storage.StorageLocation"/> of this <see cref="T:Althea.Storage.PointerSegment`1"/>
-            </summary>
-        </member>
-        <member name="P:Althea.Storage.PointerSegment`1.Pointer">
-            <summary>
-            The native pointer (without offset and presenting length) as a <see cref="T:Althea.Storage.IPointer`1"/>
-            </summary>
-        </member>
-        <member name="P:Althea.Storage.PointerSegment`1.OffsetInBytes">
-            <summary>
-            The offset in bytes to the <see cref="P:Althea.Storage.PointerSegment`1.Pointer"/> of this <see cref="T:Althea.Storage.PointerSegment`1"/>
-            </summary>
-        </member>
-        <member name="P:Althea.Storage.PointerSegment`1.LengthInBytes">
-            <summary>
-            The <b>presenting</b> length in bytes of this <see cref="T:Althea.Storage.PointerSegment`1"/>
             </summary>
         </member>
         <member name="M:Althea.Storage.PointerSegment`1.#ctor(`0)">
@@ -25865,36 +25606,6 @@
             <param name="other">The other <see cref="T:Althea.Storage.PointerSegment`1"/> to check overlap</param>
             <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
         </member>
-        <member name="M:Althea.Storage.PointerSegment`1.Equals(Althea.Storage.PointerSegment{`0})">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Storage.PointerSegment`1"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
-        </member>
-        <member name="M:Althea.Storage.PointerSegment`1.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Storage.PointerSegment`1.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Storage.PointerSegment`1"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Storage.PointerSegment`1.op_Equality(Althea.Storage.PointerSegment{`0},Althea.Storage.PointerSegment{`0})">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Storage.PointerSegment`1.op_Inequality(Althea.Storage.PointerSegment{`0},Althea.Storage.PointerSegment{`0})">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
         <member name="M:Althea.Storage.PointerSegment`1.op_Addition(Althea.Storage.PointerSegment{`0},System.Int64)">
             <summary>
             Add offset (in bytes) to a <see cref="T:Althea.Storage.PointerSegment`1"/> to get another.
@@ -25925,19 +25636,15 @@
             Implicitly convert a pointer of type <typeparamref name="T"/> to a <see cref="T:Althea.Storage.PointerSegment`1"/>
             </summary>
         </member>
-        <member name="M:Althea.Storage.PointerSegment`1.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Storage.PointerSegment`1"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Storage.PointerSegment`1"/></returns>
-        </member>
         <member name="T:Althea.Storage.ManagedPointer">
             <summary>
             The managed pointer that implements <see cref="T:Althea.Storage.IPointer`1"/> as a example
             </summary>
         </member>
-        <member name="P:Althea.Storage.ManagedPointer.LengthInBytes">
-            <inheritdoc/>
+        <member name="M:Althea.Storage.ManagedPointer.#ctor(System.IntPtr,System.Int64)">
+            <summary>
+            The managed pointer that implements <see cref="T:Althea.Storage.IPointer`1"/> as a example
+            </summary>
         </member>
         <member name="P:Althea.Storage.ManagedPointer.Data">
             <summary>
@@ -25949,32 +25656,7 @@
             Get the underlying data as a <see cref="T:System.Span`1"/> of <typeparamref name="T"/>
             </summary>
         </member>
-        <member name="M:Althea.Storage.ManagedPointer.#ctor(System.IntPtr,System.Int64)">
-            <summary>
-            Create a new <see cref="T:Althea.Storage.ManagedPointer"/> with given <paramref name="data"/> as a pointer from a fixed managed buffer and <paramref name="length"/>.
-            </summary>
-            <param name="data">The data as a pointer from a fixed managed buffer</param>
-            <param name="length">The length of <paramref name="data"/> in bytes</param>
-        </member>
         <member name="M:Althea.Storage.ManagedPointer.IsValid">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Storage.ManagedPointer.Equals(Althea.Storage.ManagedPointer)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Storage.ManagedPointer.Equals(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Storage.ManagedPointer.op_Equality(Althea.Storage.ManagedPointer,Althea.Storage.ManagedPointer)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Storage.ManagedPointer.op_Inequality(Althea.Storage.ManagedPointer,Althea.Storage.ManagedPointer)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Storage.ManagedPointer.GetHashCode">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Storage.ManagedPointer.ToString">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`2">
@@ -29912,9 +29594,9 @@
             The API implementation of <see cref="T:Althea.LinearAlgebra.Sparse.IIndexOperationAbstractApi"/>.
             </summary>
         </member>
-        <member name="P:Althea.IBackends.LinearAlgebraSparseExtendIndexOperation">
+        <member name="P:Althea.IBackends.LinearAlgebraSparseDynamicIndexOperation">
             <summary>
-            The API implementation of <see cref="T:Althea.LinearAlgebra.Sparse.IExtendIndexOperationAbstractApi"/>.
+            The API implementation of <see cref="T:Althea.LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi"/>.
             </summary>
         </member>
         <member name="P:Althea.IBackends.Random">

@@ -26,6 +26,7 @@ namespace Althea.Array
 	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
 	[StructLayout(LayoutKind.Explicit)]
 	public abstract partial class SparseTensor<T, TInd, TS, TSInd> : ISparseArray<T, TInd, TS, TSInd>,
+		ISubtypeJsonConvertible<SparseTensor<T, TInd, TS, TSInd>>,
 		IBaseTensor<T, SparseTensor<T, TInd, TS, TSInd>>,
 		ITensorUnaryOperators<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>,
 		ITensorBinaryOperators<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>, DenseTensor<T, TS>>,
@@ -98,7 +99,6 @@ namespace Althea.Array
 		public ReadOnlySpan<long> SizeProd => this.sizeProd.AsSpan(this.rank + 1);
 
 		/// <inheritdoc/>
-		[JsonDiscriminator]
 		public abstract SparseFormat Format { get; }
 
 		/// <inheritdoc/>
@@ -517,7 +517,10 @@ namespace Althea.Array
 		#endregion
 
 		#region protected static
-		static JsonSerializerOptions IValueArray<T, SparseTensor<T, TInd, TS, TSInd>>.JsonSerializeOptions => ISparseArray<T, TInd, TS, TSInd>.JsonSerializeOptions;
+		/// <inheritdoc/>
+		public static JsonSerializerOptions JsonSerializeOptions { get; } = ISparseArray<T, TInd, TS, TSInd>.JsonSerializeOptions;
+
+		static SparseTensor() => JsonSerializeOptions.Converters.Add(new ISubtypeJsonConvertible<SparseTensor<T, TInd, TS, TSInd>>.JsonConverter());
 
 		/// <summary>
 		/// Encapsulates a method that statically create a new sparse tensor from the given <paramref name="wrapper"/>.

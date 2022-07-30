@@ -343,6 +343,7 @@ public readonly partial struct SignedInt8 : IBinaryInt<SignedInt8>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt8 IIncrementOperators<SignedInt8>.op_CheckedIncrement(SignedInt8 value)
@@ -360,30 +361,11 @@ public readonly partial struct SignedInt8 : IBinaryInt<SignedInt8>
 		v = checked((sbyte)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt8 IShiftOperators<SignedInt8, SignedInt8>.op_UnsignedRightShift(SignedInt8 value, int shiftAmount) => (sbyte)((byte)value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt8 IAdditionOperators<SignedInt8, SignedInt8, SignedInt8>.op_CheckedAddition(SignedInt8 left, SignedInt8 right) => checked((sbyte)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt8 ISubtractionOperators<SignedInt8, SignedInt8, SignedInt8>.op_CheckedSubtraction(SignedInt8 left, SignedInt8 right) => checked((sbyte)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt8 IMultiplyOperators<SignedInt8, SignedInt8, SignedInt8>.op_CheckedMultiply(SignedInt8 left, SignedInt8 right) => checked((sbyte)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt8 IDivisionOperators<SignedInt8, SignedInt8, SignedInt8>.op_CheckedDivision(SignedInt8 left, SignedInt8 right) => checked((sbyte)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt8 IUnaryNegationOperators<SignedInt8, SignedInt8>.op_CheckedUnaryNegation(SignedInt8 value) => checked((sbyte)(-value._value));
 
 }
 
@@ -720,6 +702,7 @@ public readonly partial struct SignedInt16 : IBinaryInt<SignedInt16>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt16 IIncrementOperators<SignedInt16>.op_CheckedIncrement(SignedInt16 value)
@@ -737,30 +720,11 @@ public readonly partial struct SignedInt16 : IBinaryInt<SignedInt16>
 		v = checked((short)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt16 IShiftOperators<SignedInt16, SignedInt16>.op_UnsignedRightShift(SignedInt16 value, int shiftAmount) => (short)((ushort)value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt16 IAdditionOperators<SignedInt16, SignedInt16, SignedInt16>.op_CheckedAddition(SignedInt16 left, SignedInt16 right) => checked((short)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt16 ISubtractionOperators<SignedInt16, SignedInt16, SignedInt16>.op_CheckedSubtraction(SignedInt16 left, SignedInt16 right) => checked((short)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt16 IMultiplyOperators<SignedInt16, SignedInt16, SignedInt16>.op_CheckedMultiply(SignedInt16 left, SignedInt16 right) => checked((short)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt16 IDivisionOperators<SignedInt16, SignedInt16, SignedInt16>.op_CheckedDivision(SignedInt16 left, SignedInt16 right) => checked((short)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt16 IUnaryNegationOperators<SignedInt16, SignedInt16>.op_CheckedUnaryNegation(SignedInt16 value) => checked((short)(-value._value));
 
 }
 
@@ -1097,6 +1061,7 @@ public readonly partial struct SignedInt32 : IBinaryInt<SignedInt32>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt32 IIncrementOperators<SignedInt32>.op_CheckedIncrement(SignedInt32 value)
@@ -1114,30 +1079,11 @@ public readonly partial struct SignedInt32 : IBinaryInt<SignedInt32>
 		v = checked((int)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt32 IShiftOperators<SignedInt32, SignedInt32>.op_UnsignedRightShift(SignedInt32 value, int shiftAmount) => (int)((uint)value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt32 IAdditionOperators<SignedInt32, SignedInt32, SignedInt32>.op_CheckedAddition(SignedInt32 left, SignedInt32 right) => checked((int)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt32 ISubtractionOperators<SignedInt32, SignedInt32, SignedInt32>.op_CheckedSubtraction(SignedInt32 left, SignedInt32 right) => checked((int)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt32 IMultiplyOperators<SignedInt32, SignedInt32, SignedInt32>.op_CheckedMultiply(SignedInt32 left, SignedInt32 right) => checked((int)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt32 IDivisionOperators<SignedInt32, SignedInt32, SignedInt32>.op_CheckedDivision(SignedInt32 left, SignedInt32 right) => checked((int)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt32 IUnaryNegationOperators<SignedInt32, SignedInt32>.op_CheckedUnaryNegation(SignedInt32 value) => checked((int)(-value._value));
 
 }
 
@@ -1474,6 +1420,7 @@ public readonly partial struct SignedInt64 : IBinaryInt<SignedInt64>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt64 IIncrementOperators<SignedInt64>.op_CheckedIncrement(SignedInt64 value)
@@ -1491,30 +1438,11 @@ public readonly partial struct SignedInt64 : IBinaryInt<SignedInt64>
 		v = checked((long)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt64 IShiftOperators<SignedInt64, SignedInt64>.op_UnsignedRightShift(SignedInt64 value, int shiftAmount) => (long)((ulong)value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt64 IAdditionOperators<SignedInt64, SignedInt64, SignedInt64>.op_CheckedAddition(SignedInt64 left, SignedInt64 right) => checked((long)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt64 ISubtractionOperators<SignedInt64, SignedInt64, SignedInt64>.op_CheckedSubtraction(SignedInt64 left, SignedInt64 right) => checked((long)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt64 IMultiplyOperators<SignedInt64, SignedInt64, SignedInt64>.op_CheckedMultiply(SignedInt64 left, SignedInt64 right) => checked((long)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt64 IDivisionOperators<SignedInt64, SignedInt64, SignedInt64>.op_CheckedDivision(SignedInt64 left, SignedInt64 right) => checked((long)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt64 IUnaryNegationOperators<SignedInt64, SignedInt64>.op_CheckedUnaryNegation(SignedInt64 value) => checked((long)(-value._value));
 
 }
 
@@ -1851,6 +1779,7 @@ public readonly partial struct SignedInt128 : IBinaryInt<SignedInt128>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt128 IIncrementOperators<SignedInt128>.op_CheckedIncrement(SignedInt128 value)
@@ -1868,30 +1797,11 @@ public readonly partial struct SignedInt128 : IBinaryInt<SignedInt128>
 		v = checked((Int128)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static SignedInt128 IShiftOperators<SignedInt128, SignedInt128>.op_UnsignedRightShift(SignedInt128 value, int shiftAmount) => (Int128)((UInt128)value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt128 IAdditionOperators<SignedInt128, SignedInt128, SignedInt128>.op_CheckedAddition(SignedInt128 left, SignedInt128 right) => checked((Int128)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt128 ISubtractionOperators<SignedInt128, SignedInt128, SignedInt128>.op_CheckedSubtraction(SignedInt128 left, SignedInt128 right) => checked((Int128)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt128 IMultiplyOperators<SignedInt128, SignedInt128, SignedInt128>.op_CheckedMultiply(SignedInt128 left, SignedInt128 right) => checked((Int128)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt128 IDivisionOperators<SignedInt128, SignedInt128, SignedInt128>.op_CheckedDivision(SignedInt128 left, SignedInt128 right) => checked((Int128)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt128 IUnaryNegationOperators<SignedInt128, SignedInt128>.op_CheckedUnaryNegation(SignedInt128 value) => checked((Int128)(-value._value));
 
 }
 
@@ -2228,6 +2138,7 @@ public readonly partial struct UnsignedInt8 : IBinaryInt<UnsignedInt8>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt8 IIncrementOperators<UnsignedInt8>.op_CheckedIncrement(UnsignedInt8 value)
@@ -2245,30 +2156,11 @@ public readonly partial struct UnsignedInt8 : IBinaryInt<UnsignedInt8>
 		v = checked((byte)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt8 IShiftOperators<UnsignedInt8, UnsignedInt8>.op_UnsignedRightShift(UnsignedInt8 value, int shiftAmount) => (byte)(value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt8 IAdditionOperators<UnsignedInt8, UnsignedInt8, UnsignedInt8>.op_CheckedAddition(UnsignedInt8 left, UnsignedInt8 right) => checked((byte)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt8 ISubtractionOperators<UnsignedInt8, UnsignedInt8, UnsignedInt8>.op_CheckedSubtraction(UnsignedInt8 left, UnsignedInt8 right) => checked((byte)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt8 IMultiplyOperators<UnsignedInt8, UnsignedInt8, UnsignedInt8>.op_CheckedMultiply(UnsignedInt8 left, UnsignedInt8 right) => checked((byte)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt8 IDivisionOperators<UnsignedInt8, UnsignedInt8, UnsignedInt8>.op_CheckedDivision(UnsignedInt8 left, UnsignedInt8 right) => checked((byte)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt8 IUnaryNegationOperators<UnsignedInt8, UnsignedInt8>.op_CheckedUnaryNegation(UnsignedInt8 value) => checked((byte)(-value._value));
 
 }
 
@@ -2607,6 +2499,7 @@ public readonly partial struct UnsignedInt16 : IBinaryInt<UnsignedInt16>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt16 IIncrementOperators<UnsignedInt16>.op_CheckedIncrement(UnsignedInt16 value)
@@ -2624,30 +2517,11 @@ public readonly partial struct UnsignedInt16 : IBinaryInt<UnsignedInt16>
 		v = checked((ushort)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt16 IShiftOperators<UnsignedInt16, UnsignedInt16>.op_UnsignedRightShift(UnsignedInt16 value, int shiftAmount) => (ushort)(value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt16 IAdditionOperators<UnsignedInt16, UnsignedInt16, UnsignedInt16>.op_CheckedAddition(UnsignedInt16 left, UnsignedInt16 right) => checked((ushort)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt16 ISubtractionOperators<UnsignedInt16, UnsignedInt16, UnsignedInt16>.op_CheckedSubtraction(UnsignedInt16 left, UnsignedInt16 right) => checked((ushort)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt16 IMultiplyOperators<UnsignedInt16, UnsignedInt16, UnsignedInt16>.op_CheckedMultiply(UnsignedInt16 left, UnsignedInt16 right) => checked((ushort)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt16 IDivisionOperators<UnsignedInt16, UnsignedInt16, UnsignedInt16>.op_CheckedDivision(UnsignedInt16 left, UnsignedInt16 right) => checked((ushort)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt16 IUnaryNegationOperators<UnsignedInt16, UnsignedInt16>.op_CheckedUnaryNegation(UnsignedInt16 value) => checked((ushort)(-value._value));
 
 }
 
@@ -2986,6 +2860,7 @@ public readonly partial struct UnsignedInt32 : IBinaryInt<UnsignedInt32>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt32 IIncrementOperators<UnsignedInt32>.op_CheckedIncrement(UnsignedInt32 value)
@@ -3003,30 +2878,11 @@ public readonly partial struct UnsignedInt32 : IBinaryInt<UnsignedInt32>
 		v = checked((uint)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt32 IShiftOperators<UnsignedInt32, UnsignedInt32>.op_UnsignedRightShift(UnsignedInt32 value, int shiftAmount) => (uint)(value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt32 IAdditionOperators<UnsignedInt32, UnsignedInt32, UnsignedInt32>.op_CheckedAddition(UnsignedInt32 left, UnsignedInt32 right) => checked((uint)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt32 ISubtractionOperators<UnsignedInt32, UnsignedInt32, UnsignedInt32>.op_CheckedSubtraction(UnsignedInt32 left, UnsignedInt32 right) => checked((uint)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt32 IMultiplyOperators<UnsignedInt32, UnsignedInt32, UnsignedInt32>.op_CheckedMultiply(UnsignedInt32 left, UnsignedInt32 right) => checked((uint)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt32 IDivisionOperators<UnsignedInt32, UnsignedInt32, UnsignedInt32>.op_CheckedDivision(UnsignedInt32 left, UnsignedInt32 right) => checked((uint)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt32 IUnaryNegationOperators<UnsignedInt32, UnsignedInt32>.op_CheckedUnaryNegation(UnsignedInt32 value) => checked((uint)(-value._value));
 
 }
 
@@ -3364,6 +3220,7 @@ public readonly partial struct UnsignedInt64 : IBinaryInt<UnsignedInt64>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt64 IIncrementOperators<UnsignedInt64>.op_CheckedIncrement(UnsignedInt64 value)
@@ -3381,30 +3238,12 @@ public readonly partial struct UnsignedInt64 : IBinaryInt<UnsignedInt64>
 		v = checked((ulong)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt64 IShiftOperators<UnsignedInt64, UnsignedInt64>.op_UnsignedRightShift(UnsignedInt64 value, int shiftAmount) => (ulong)(value._value >> shiftAmount);
 
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt64 IAdditionOperators<UnsignedInt64, UnsignedInt64, UnsignedInt64>.op_CheckedAddition(UnsignedInt64 left, UnsignedInt64 right) => checked((ulong)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt64 ISubtractionOperators<UnsignedInt64, UnsignedInt64, UnsignedInt64>.op_CheckedSubtraction(UnsignedInt64 left, UnsignedInt64 right) => checked((ulong)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt64 IMultiplyOperators<UnsignedInt64, UnsignedInt64, UnsignedInt64>.op_CheckedMultiply(UnsignedInt64 left, UnsignedInt64 right) => checked((ulong)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt64 IDivisionOperators<UnsignedInt64, UnsignedInt64, UnsignedInt64>.op_CheckedDivision(UnsignedInt64 left, UnsignedInt64 right) => checked((ulong)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt64 IUnaryNegationOperators<UnsignedInt64, UnsignedInt64>.op_CheckedUnaryNegation(UnsignedInt64 left) => checked((ulong)(-(long)left._value));
 }
 
 
@@ -3742,6 +3581,7 @@ public readonly partial struct UnsignedInt128 : IBinaryInt<UnsignedInt128>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt128 IIncrementOperators<UnsignedInt128>.op_CheckedIncrement(UnsignedInt128 value)
@@ -3759,29 +3599,10 @@ public readonly partial struct UnsignedInt128 : IBinaryInt<UnsignedInt128>
 		v = checked((UInt128)(v - 1));
 		return v;
 	}
+	*/
 	
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static UnsignedInt128 IShiftOperators<UnsignedInt128, UnsignedInt128>.op_UnsignedRightShift(UnsignedInt128 value, int shiftAmount) => (UInt128)(value._value >> shiftAmount);
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt128 IAdditionOperators<UnsignedInt128, UnsignedInt128, UnsignedInt128>.op_CheckedAddition(UnsignedInt128 left, UnsignedInt128 right) => checked((UInt128)(left._value + right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt128 ISubtractionOperators<UnsignedInt128, UnsignedInt128, UnsignedInt128>.op_CheckedSubtraction(UnsignedInt128 left, UnsignedInt128 right) => checked((UInt128)(left._value - right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt128 IMultiplyOperators<UnsignedInt128, UnsignedInt128, UnsignedInt128>.op_CheckedMultiply(UnsignedInt128 left, UnsignedInt128 right) => checked((UInt128)(left._value * right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt128 IDivisionOperators<UnsignedInt128, UnsignedInt128, UnsignedInt128>.op_CheckedDivision(UnsignedInt128 left, UnsignedInt128 right) => checked((UInt128)(left._value / right._value));
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt128 IUnaryNegationOperators<UnsignedInt128, UnsignedInt128>.op_CheckedUnaryNegation(UnsignedInt128 value) => checked((UInt128)(-value._value));
 
 }

@@ -203,8 +203,6 @@ namespace Althea.Storage
 
 		/// <inheritdoc/>
 		public static bool operator !=(PureStorage<T, TP> left, PureStorage<T, TP> right) => !left.Equals(right);
-		static PureStorage<T, TP> System.Numerics.IAdditionOperators<PureStorage<T, TP>, long, PureStorage<T, TP>>.op_CheckedAddition(PureStorage<T, TP> left, long right) => left + right;
-		static PureStorage<T, TP> System.Numerics.ISubtractionOperators<PureStorage<T, TP>, long, PureStorage<T, TP>>.op_CheckedSubtraction(PureStorage<T, TP> left, long right) => left - right;
 		#endregion
 
 		#region string

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Althea.Linq;
 
@@ -87,6 +88,139 @@ namespace Althea.Array
 		/// When implemented by a derived class, get number of elements actually stored this sparse vector.
 		/// </summary>
 		long NStored { get; }
+		#endregion
+	}
+
+	// Ignore Spelling: readonly
+	/// <summary>
+	/// The interface for polymorphism subtype JSON convertible type <typeparamref name="TSelf"/>.
+	/// </summary>
+	/// <typeparam name="TSelf">The actual type whose subtypes will be serialized and deserialized polymorphically which must be abstract or an interface.</typeparam>
+	/// <remarks>For this interface to work, the <see cref="JsonSerializerOptions.Converters"/> shall contains a <see cref="JsonConverter"/>.<br/>
+	/// And any subtype of <typeparamref name="TSelf"/> shall be able to correctly deserialized by <see cref="JsonSerializer.Deserialize{TSelf}(string, JsonSerializerOptions?)"/> (e.g. via a constructor with <see cref="JsonConstructorAttribute"/>).</remarks>
+	/// <example><code>
+	/// public abstract class BaseClass : <see cref="ISubtypeJsonConvertible{TSelf}"/>
+	/// {
+	///		// functional codes...
+	///		
+	///		private static readonly JsonSerializerOptions options = new() { <see cref="JsonSerializerOptions.Converters"/> = { <see cref="ISubtypeJsonConvertible{TSelf}"/>&lt;BaseClass&gt; };
+	/// 
+	///		public string Serialize()
+	///		{
+	///			return <see cref="JsonSerializer.Serialize{TValue}(TValue, JsonSerializerOptions?)">JsonSerializer.Serialize</see>(this, options);
+	///		}
+	///		
+	///		public static BaseClass Deserialize(string json)
+	///		{
+	///			return <see cref="JsonSerializer.Deserialize{TValue}(string, JsonSerializerOptions?)">JsonSerializer.Deserialize</see>(this, options);
+	///		}
+	/// }
+	/// </code></example>
+	public interface ISubtypeJsonConvertible<TSelf> where TSelf : ISubtypeJsonConvertible<TSelf>
+	{
+		#region JSON serialization
+		/// <summary>
+		/// The polymorphism JSON converter for <typeparamref name="TSelf"/>'s sub-types.
+		/// </summary>
+		protected sealed class JsonConverter : JsonConverter<TSelf>
+		{
+			static JsonConverter()
+			{
+				if (!typeof(TSelf).IsAbstract && !typeof(TSelf).IsInterface)
+					throw new InvalidOperationException(Resources.ParameterError.UnexpectedType);
+			}
+
+			/// <summary>
+			/// The default constructor for <see cref="JsonConverter"/>
+			/// </summary>
+			public JsonConverter()
+			{
+				foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+				{
+					foreach (var type in assembly.GetTypes().Where(static t => t.IsAssignableTo(typeof(TSelf))))
+					{
+						if (type == typeof(TSelf) || type.IsAbstract)
+							continue;
+						if (!type.GetConstructors()
+								 .Where(static c => c.CustomAttributes
+										.Select(static a => a.AttributeType)
+										.Contains(typeof(JsonConstructorAttribute)))
+								 .Any())
+							continue;
+						try
+						{
+							var func = typeof(JsonSerializer).GetMethod(nameof(JsonSerializer.Deserialize), 0, new[] { typeof(Utf8JsonReader).MakeByRefType(), typeof(JsonSerializerOptions) })?.MakeGenericMethod(type)?.CreateDelegate<ReadDelegate>();
+							if (func is null)
+								continue;
+							constructors.Add(type, func);
+						}
+						catch (Exception)
+						{
+							continue;
+						}
+					}
+				}
+			}
+
+			private delegate TSelf? ReadDelegate(ref Utf8JsonReader reader, JsonSerializerOptions options);
+
+			private readonly Dictionary<Type, ReadDelegate> constructors = new();
+
+			private const string TYPE_NAME = "$type", PROP_NAME = "$value";
+
+			/// <inheritdoc/>
+			public override TSelf? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				// read type
+				if (!reader.Read())
+					throw new JsonException();
+				if (reader.GetString() != TYPE_NAME)
+					throw new JsonException(Resources.ParameterError.UnexpectedValue);
+				if (!reader.Read())
+					throw new JsonException();
+				Type? type;
+				try
+				{
+					type = Type.GetType(reader.GetString() ?? "");
+				}
+				catch (Exception e)
+				{
+					throw new JsonException(Resources.ParameterError.UnexpectedType, e);
+				}
+				if (type is null || !type.IsAssignableTo(typeof(TSelf)))
+					throw new JsonException(Resources.ParameterError.InvalidValue);
+				// read properties
+				if (!reader.Read())
+					throw new JsonException();
+				if (reader.GetString() != PROP_NAME)
+					throw new JsonException(Resources.ParameterError.UnexpectedValue);
+				if (!reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.StartObject)
+					throw new JsonException();
+				// deserialize
+				var result = constructors[type].Invoke(ref reader, options);
+				// end
+				if (!reader.Read())
+					throw new JsonException();
+				if (reader.TokenType != JsonTokenType.EndObject)
+					throw new JsonException();
+				return result;
+			}
+
+			/// <inheritdoc/>
+			public override void Write(Utf8JsonWriter writer, TSelf value, JsonSerializerOptions options)
+			{
+				writer.WriteStartObject();
+				writer.WriteString(TYPE_NAME, value.GetType().AssemblyQualifiedName);
+				writer.WritePropertyName(PROP_NAME);
+				{
+					// "object" will be changed to actual type during serialization
+					JsonSerializer.Serialize(writer, (object)value, options);
+				}
+				writer.WriteEndObject();
+			}
+		}
 		#endregion
 	}
 

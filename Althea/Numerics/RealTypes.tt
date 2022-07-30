@@ -59,6 +59,8 @@ var methods = new (string name, string type, string param, string invoke)[]
 	("Pow", "TSelf", "TSelf x, TSelf y", "x, y"),
 	("Cbrt", "TSelf", "TSelf x", "x"),
 	("Sqrt", "TSelf", "TSelf x", "x"),
+	("Hypot", "TSelf", "TSelf x, TSelf y", "x, y"),
+	("Root", "TSelf", "TSelf x, int n", "x, n"),
 	("Acos", "TSelf", "TSelf x", "x"),
 	("Asin", "TSelf", "TSelf x", "x"),
 	("Atan", "TSelf", "TSelf x", "x"),
@@ -91,11 +93,13 @@ var operators = new (string op, string type, string param, string invoke)[]
 };
 var checkedOperators = new (string name, string op, string type, string param, string invoke)[]
 {
+	/*
 	("IAdditionOperators<TSelf, TSelf, TSelf>.op_CheckedAddition", "+", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("ISubtractionOperators<TSelf, TSelf, TSelf>.op_CheckedSubtraction", "-", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("IMultiplyOperators<TSelf, TSelf, TSelf>.op_CheckedMultiply", "*", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("IDivisionOperators<TSelf, TSelf, TSelf>.op_CheckedDivision", "/", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("IUnaryNegationOperators<TSelf, TSelf>.op_CheckedUnaryNegation", "-", "TSelf", "TSelf value", "value"),
+	*/
 };
 var propertyNames = new string[] { "NaN", "NegativeInfinity", "PositiveInfinity", "E", "Epsilon", "Pi", "Tau" };
 var propertyTypes = new string[] { "TSelf", "TSelf", "TSelf", "TSelf", "TSelf", "TSelf", "TSelf", "TSelf" };
@@ -286,6 +290,7 @@ public readonly partial struct <#=reps[i]#> : IBinaryFloat<<#=reps[i]#>>
 		return v;
 	}
 	
+	/*
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static <#=reps[i]#> IIncrementOperators<<#=reps[i]#>>.op_CheckedIncrement(<#=reps[i]#> value) => ++value;
@@ -293,6 +298,7 @@ public readonly partial struct <#=reps[i]#> : IBinaryFloat<<#=reps[i]#>>
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static <#=reps[i]#> IDecrementOperators<<#=reps[i]#>>.op_CheckedDecrement(<#=reps[i]#> value) => --value;
+	*/
 
 	<# foreach (var (name, op, type, param, invoke) in checkedOperators) { #>
 	/// <inheritdoc/>

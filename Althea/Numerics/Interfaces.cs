@@ -111,6 +111,122 @@ public interface IBaseNumber<TSelf> :
 	#endregion
 }
 
+#region math functions
+public interface IExponentialFunctions<TSelf> where TSelf : unmanaged, IExponentialFunctions<TSelf>, IBaseNumber<TSelf>
+{
+	abstract static TSelf Exp(TSelf x);
+
+	static TSelf ExpM1(TSelf x)
+	{
+		return TSelf.Exp(x) - TSelf.One;
+	}
+
+	abstract static TSelf Exp2(TSelf x);
+
+	static TSelf Exp2M1(TSelf x)
+	{
+		return TSelf.Exp2(x) - TSelf.One;
+	}
+
+	abstract static TSelf Exp10(TSelf x);
+
+	static TSelf Exp10M1(TSelf x)
+	{
+		return TSelf.Exp10(x) - TSelf.One;
+	}
+}
+
+public interface IHyperbolicFunctions<TSelf> where TSelf : unmanaged, IHyperbolicFunctions<TSelf>, IBaseNumber<TSelf>
+{
+	abstract static TSelf Acosh(TSelf x);
+
+	abstract static TSelf Asinh(TSelf x);
+
+	abstract static TSelf Atanh(TSelf x);
+
+	abstract static TSelf Cosh(TSelf x);
+
+	abstract static TSelf Sinh(TSelf x);
+
+	abstract static TSelf Tanh(TSelf x);
+}
+
+public interface ILogarithmicFunctions<TSelf> where TSelf : unmanaged, ILogarithmicFunctions<TSelf>, IBaseNumber<TSelf>
+{
+	abstract static TSelf Log(TSelf x);
+
+	abstract static TSelf Log(TSelf x, TSelf newBase);
+
+	static TSelf LogP1(TSelf x)
+	{
+		return TSelf.Log(x + TSelf.One);
+	}
+
+	abstract static TSelf Log2(TSelf x);
+
+	static TSelf Log2P1(TSelf x)
+	{
+		return TSelf.Log2(x + TSelf.One);
+	}
+
+	abstract static TSelf Log10(TSelf x);
+
+	static TSelf Log10P1(TSelf x)
+	{
+		return TSelf.Log10(x + TSelf.One);
+	}
+}
+
+public interface IPowerFunctions<TSelf> where TSelf : unmanaged, IPowerFunctions<TSelf>, IBaseNumber<TSelf>
+{
+	abstract static TSelf Pow(TSelf x, TSelf y);
+}
+
+public interface IRootFunctions<TSelf> where TSelf : unmanaged, IRootFunctions<TSelf>, IBaseNumber<TSelf>
+{
+	abstract static TSelf Cbrt(TSelf x);
+
+	abstract static TSelf Hypot(TSelf x, TSelf y);
+
+	abstract static TSelf Root(TSelf x, int n);
+
+	abstract static TSelf Sqrt(TSelf x);
+}
+
+public interface ITrigonometricFunctions<TSelf> where TSelf : unmanaged, ITrigonometricFunctions<TSelf>, IBinaryFloat<TSelf>
+{
+	abstract static TSelf Acos(TSelf x);
+
+	static TSelf AcosPi(TSelf x) => TSelf.Acos(x) / TSelf.Pi;
+
+	abstract static TSelf Asin(TSelf x);
+
+	static TSelf AsinPi(TSelf x) => TSelf.Asin(x) / TSelf.Pi;
+
+	abstract static TSelf Atan(TSelf x);
+
+	abstract static TSelf Atan2(TSelf y, TSelf x);
+
+	static TSelf Atan2Pi(TSelf y, TSelf x) => TSelf.Atan2(y, x) / TSelf.Pi;
+
+	static TSelf AtanPi(TSelf x) => TSelf.Atan(x) / TSelf.Pi;
+
+	abstract static TSelf Cos(TSelf x);
+
+	static TSelf CosPi(TSelf x) => TSelf.Cos(x * TSelf.Pi);
+
+	abstract static TSelf Sin(TSelf x);
+
+	abstract static (TSelf Sin, TSelf Cos) SinCos(TSelf x);
+
+	static TSelf SinPi(TSelf x) => TSelf.Sin(x * TSelf.Pi);
+
+	abstract static TSelf Tan(TSelf x);
+
+	static TSelf TanPi(TSelf x) => TSelf.Tan(x * TSelf.Pi);
+}
+#endregion
+
 /// <summary>
 /// The base interface for all binary floating point numbers used by <see cref="Althea"/> including binary floating point complex numbers.
 /// </summary>

@@ -524,8 +524,6 @@ namespace Althea.Storage
 
 		/// <inheritdoc/>
 		public static bool operator !=(CachedStorage<T, TS, TPh, TPl> left, CachedStorage<T, TS, TPh, TPl> right) => !left.Equals(right);
-		static CachedStorage<T, TS, TPh, TPl> System.Numerics.IAdditionOperators<CachedStorage<T, TS, TPh, TPl>, long, CachedStorage<T, TS, TPh, TPl>>.op_CheckedAddition(CachedStorage<T, TS, TPh, TPl> left, long right) => left + right;
-		static CachedStorage<T, TS, TPh, TPl> System.Numerics.ISubtractionOperators<CachedStorage<T, TS, TPh, TPl>, long, CachedStorage<T, TS, TPh, TPl>>.op_CheckedSubtraction(CachedStorage<T, TS, TPh, TPl> left, long right) => left - right;
 		#endregion
 
 		#region string

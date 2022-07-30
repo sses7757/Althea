@@ -277,7 +277,7 @@ namespace Althea
 			IgnoreReadOnlyProperties = true,
 		};
 
-		private static string fileName = "Althea.json";
+		private static string fileName = "Althea.Settings.json";
 
 		/// <summary>
 		/// Import the settings from the JSON configuration file.
