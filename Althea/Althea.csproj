@@ -220,7 +220,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Althea.json">
+    <None Update="Althea.Settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Helpers\FixedClassBuffer.tt">

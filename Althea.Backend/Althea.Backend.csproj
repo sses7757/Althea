@@ -69,10 +69,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Cuda\SupplementCUDA.dll">
+    <None Update="Cuda\ExtendBlasCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Mkl\SupplementTBB.dll">
+    <None Update="Mkl\ExtendBlasTBB.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

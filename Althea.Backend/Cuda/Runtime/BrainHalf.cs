@@ -1,7 +1,6 @@
-﻿using System;
+﻿using System.Globalization;
+using System.Numerics;
 using System.Runtime.CompilerServices;
-
-using Althea.Numerics;
 
 
 namespace Althea.Backend.Cuda
@@ -15,28 +14,22 @@ namespace Althea.Backend.Cuda
 		/// <summary>
 		/// The Brain Floating Point floating-point format.
 		/// </summary>
-		/// <see ref="https://www.nextplatform.com/2018/05/10/tearing-apart-googles-tpu-3-0-ai-coprocessor/"/>
-		public const DataTypeClassification BrainFloat = (DataTypeClassification)4;
-
-		/// <summary>
-		/// The Brain Floating Point base type, cannot be used separately.
-		/// </summary>
-		public const int TypeFloatPoint_Brain = (int)BrainFloat << DataTypeExtension.TypeMaskStart;
+		public const DataTypeClassification BrainFloat = (DataTypeClassification)(1 << 4);
 
 		/// <summary>
 		/// The <see cref="DataType"/> of <see cref="BrainHalf"/>
 		/// </summary>
-		public const DataType RealBrainFloat16 = (DataType)(DataTypeExtension.Real | DataTypeExtension.Byte2 | TypeFloatPoint_Brain);
+		public const DataType RealBrainFloat16 = (DataType)((int)DataTypeTuple.Real + ((int)BrainFloat << 8) + 2 << 16);
 
 		/// <summary>
 		/// The <see cref="DataType"/> of <see cref="Complex{T}"/> of <see cref="BrainHalf"/>
 		/// </summary>
-		public const DataType ComplexBrainFloat16 = (DataType)(DataTypeExtension.Complex | DataTypeExtension.Byte2 | TypeFloatPoint_Brain);
+		public const DataType ComplexBrainFloat16 = (DataType)((int)DataTypeTuple.Complex + ((int)BrainFloat << 8) + 2 << 16);
 
 		/// <summary>
 		/// The machine precision of <see cref="BrainHalf"/>
 		/// </summary>
-		public const double BrainFloat16Precision = 0.0078125;
+		public const double BrainHalfPrecision = 0.0078125;
 	}
 	#endregion
 
@@ -46,7 +39,7 @@ namespace Althea.Backend.Cuda
 	/// </summary>
 	/// <remarks>Do not use the methods during heavy loads since they are all software implemented.</remarks>
 	/// <seealso ref="https://www.nextplatform.com/2018/05/10/tearing-apart-googles-tpu-3-0-ai-coprocessor/"/>
-	public readonly struct BrainHalf : ICustomNumberType<BrainHalf>, IEquatable<BrainHalf>, IComparable<BrainHalf>, IFormattable
+	public readonly partial struct BrainHalf : IBinaryFloat<BrainHalf>
 	{
 		#region basic
 		private const byte START_EXP = 7;
@@ -60,6 +53,7 @@ namespace Althea.Backend.Cuda
 
 		private const byte MAX_EXPONENT = byte.MaxValue - 1; // (2^8 - 1) - 1 //- BIAS
 		private const byte ABNORMAL_EXP = byte.MaxValue;
+		private const byte ONE_EXP = BIAS;
 
 		private readonly ushort _data;
 
@@ -85,81 +79,92 @@ namespace Althea.Backend.Cuda
 			get => (byte)(this._data & FRAC_MASK);
 		}
 
-		/// <summary>
-		/// Get the value of <see cref="BrainHalf"/> representing the positive infinity.
-		/// </summary>
-		public static readonly BrainHalf PositiveInfinity = new(false, ABNORMAL_EXP, 0);
-		/// <summary>
-		/// Get the value of <see cref="BrainHalf"/> representing the negative infinity.
-		/// </summary>
-		public static readonly BrainHalf NegativeInfinity = new(true, ABNORMAL_EXP, 0);
-		/// <summary>
-		/// Get the value of <see cref="BrainHalf"/> representing a Not-a-Number.
-		/// </summary>
-		public static readonly BrainHalf NaN = new(false, ABNORMAL_EXP, 1);
-		/// <summary>
-		/// Get the value of <see cref="BrainHalf"/> representing the maximum value.
-		/// </summary>
-		public static readonly BrainHalf MaxValue = new(false, MAX_EXPONENT, 127);
-		/// <summary>
-		/// Get the value of <see cref="BrainHalf"/> representing the minimum value.
-		/// </summary>
-		public static readonly BrainHalf MinValue = new(true, MAX_EXPONENT, 127);
+		static DataType IBaseNumber<BrainHalf>.Type => BrainFloatConst.RealBrainFloat16;
 
-		/// <summary>
-		/// Check whether the given <see cref="BrainHalf"/> <paramref name="value"/> is zero or not
-		/// </summary>
-		/// <param name="value">The given <see cref="BrainHalf"/> to check</param>
-		/// <returns>Whether <paramref name="value"/> is zero or not</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsZero(BrainHalf value)
-		{
-			return (value._data | SIGN_MASK) == SIGN_MASK;
-		}
+		static int IBaseNumber<BrainHalf>.Size => sizeof(ushort);
 
-		/// <summary>
-		/// Check whether the given <see cref="BrainHalf"/> <paramref name="value"/> is NaN or not
-		/// </summary>
-		/// <param name="value">The given <see cref="BrainHalf"/> to check</param>
-		/// <returns>Whether <paramref name="value"/> is NaN or not</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsNaN(BrainHalf value)
-		{
-			return ((value._data & EXP_MASK) == EXP_MASK) && value.FracPart != 0;
-		}
+		static bool IBaseNumber<BrainHalf>.IsComplexType => false;
 
-		/// <summary>
-		/// Check whether the given <see cref="BrainHalf"/> <paramref name="value"/> is infinite or not
-		/// </summary>
-		/// <param name="value">The given <see cref="BrainHalf"/> to check</param>
-		/// <returns>Whether <paramref name="value"/> is infinite or not</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsInfinite(BrainHalf value)
-		{
-			return ((value._data & EXP_MASK) == EXP_MASK) && value.FracPart == 0;
-		}
+		static BrainHalf IBaseNumber<BrainHalf>.MachinePrecision => (BrainHalf)BrainFloatConst.BrainHalfPrecision;
+		#endregion
 
-		/// <summary>
-		/// Check whether the given <see cref="BrainHalf"/> <paramref name="value"/> is subnormal or not
-		/// </summary>
-		/// <param name="value">The given <see cref="BrainHalf"/> to check</param>
-		/// <returns>Whether <paramref name="value"/> is subnormal or not</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsSubnormal(BrainHalf value)
-		{
-			return value.ExpPart == 0 && value.FracPart != 0;
-		}
+		#region constants
+		/// <inheritdoc/>
+		public static BrainHalf One => new(false, ONE_EXP, 0);
+		/// <inheritdoc/>
+		public static BrainHalf Zero => default;
+		static BrainHalf IAdditiveIdentity<BrainHalf, BrainHalf>.AdditiveIdentity => default;
+		static BrainHalf IMultiplicativeIdentity<BrainHalf, BrainHalf>.MultiplicativeIdentity => One;
+		/// <inheritdoc/>
+		public static BrainHalf NegativeOne => new(true, ONE_EXP, 0);
+		/// <inheritdoc/>
+		public static BrainHalf NegativeZero => new(true, 0, 0);
+		/// <inheritdoc/>
+		public static BrainHalf PositiveInfinity => new(false, ABNORMAL_EXP, 0);
+		/// <inheritdoc/>
+		public static BrainHalf NegativeInfinity => new(true, ABNORMAL_EXP, 0);
+		/// <inheritdoc/>
+		public static BrainHalf NaN => new(false, ABNORMAL_EXP, 1);
+		/// <inheritdoc/>
+		public static BrainHalf MaxValue => new(false, MAX_EXPONENT, 127);
+		/// <inheritdoc/>
+		public static BrainHalf MinValue => new(true, MAX_EXPONENT, 127);
 
-		/// <summary>
-		/// Check whether the given <see cref="BrainHalf"/> <paramref name="value"/> is finite or not
-		/// </summary>
-		/// <param name="value">The given <see cref="BrainHalf"/> to check</param>
-		/// <returns>Whether <paramref name="value"/> is finite or not</returns>
+		/// <inheritdoc/>
+		public static BrainHalf E => (BrainHalf)float.E;
+
+		/// <inheritdoc/>
+		public static BrainHalf Epsilon => new(true, 0, 1);
+
+		/// <inheritdoc/>
+		public static BrainHalf Pi => (BrainHalf)float.Pi;
+
+		/// <inheritdoc/>
+		public static BrainHalf Tau => (BrainHalf)float.Tau;
+		#endregion
+
+		#region predicates
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsFinite(BrainHalf value)
-		{
-			return (value._data & EXP_MASK) != EXP_MASK;
-		}
+		public static bool IsZero(BrainHalf value) => (value._data | SIGN_MASK) == SIGN_MASK;
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNaN(BrainHalf value) => ((value._data & EXP_MASK) == EXP_MASK) && value.FracPart != 0;
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsInfinite(BrainHalf value) => ((value._data & EXP_MASK) == EXP_MASK) && value.FracPart == 0;
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsSubnormal(BrainHalf value) => value.ExpPart == 0 && value.FracPart != 0;
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsFinite(BrainHalf value) => (value._data & EXP_MASK) != EXP_MASK;
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsNegative(BrainHalf value) => value.IsNeg;
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsPositive(BrainHalf value) => !value.IsNeg && !IsZero(value);
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsInteger(BrainHalf value) => value.ExpPart >= 7 + BIAS || value.ExpPart >= BIAS + 7 - byte.TrailingZeroCount(value.FracPart);
+
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsOddInteger(BrainHalf value) => value.ExpPart <= BIAS + 7 - byte.TrailingZeroCount(value.FracPart);
+
+		static bool IBaseNumber<BrainHalf>.IsReal(BrainHalf value) => true;
+
+		static bool IBaseNumber<BrainHalf>.IsComplex(BrainHalf value) => false;
+
+		static bool IBaseNumber<BrainHalf>.IsImaginaryNumber(BrainHalf value) => false;
 		#endregion
 
 		#region convert
@@ -367,124 +372,54 @@ namespace Althea.Backend.Cuda
 		}
 		#endregion
 
-		#region ICustomNativeType
-		/// <summary>
-		/// Try to parse the given <see cref="string"/> <paramref name="s"/> to a <see cref="BrainHalf"/>
-		/// </summary>
-		/// <param name="s">The given <see cref="string"/> to be parsed</param>
-		/// <param name="value">The output parsed <see cref="BrainHalf"/></param>
-		/// <returns>Success or not</returns>
-		public static bool TryParse(string s, out BrainHalf value)
-		{
-			value = default;
-			if (!double.TryParse(s, out double v))
-				return false;
-			value = (BrainHalf)v;
-			if (double.IsFinite(v) && !IsFinite(value))
-				return false;
-			return true;
-		}
-
-		bool ICustomNumberType<BrainHalf>.TryParse_Internal(string str, out BrainHalf result) => TryParse(str, out result);
-
-		DataTypeClassification ICustomNumberType<BrainHalf>.Classification_Internal() => BrainFloatConst.BrainFloat;
-
-		double ICustomNumberType<BrainHalf>.MachinePrecision_Internal() => BrainFloatConst.BrainFloat16Precision;
-		#endregion
-
 		#region arithmetic
-		/// <summary>
-		/// Unary negation operator
-		/// </summary>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf operator -(BrainHalf value)
-		{
-			return new((ushort)(value._data ^ SIGN_MASK));
-		}
+		public static BrainHalf Abs(BrainHalf value) => new((ushort)((value._data | SIGN_MASK) ^ SIGN_MASK));
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static BrainHalf Sqrt(BrainHalf value) => (BrainHalf)MathF.Sqrt(value);
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static BrainHalf Cbrt(BrainHalf value) => (BrainHalf)MathF.Cbrt(value);
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static BrainHalf Root(BrainHalf value, int n) => (BrainHalf)float.Root(value, n);
+		/// <inheritdoc/>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static BrainHalf Pow(BrainHalf basis, BrainHalf power) => (BrainHalf)Math.Pow(basis, power);
 
-		/// <summary>
-		/// Unary absolute value operator
-		/// </summary>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf Abs(BrainHalf value)
-		{
-			return new((ushort)((value._data | SIGN_MASK) ^ SIGN_MASK));
-		}
-
-		/// <summary>
-		/// Unary square root value operator
-		/// </summary>
+		public static BrainHalf operator +(BrainHalf value) => value;
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf Sqrt(BrainHalf value)
-		{
-			return (BrainHalf)MathF.Sqrt(value);
-		}
-
-		/// <summary>
-		/// Binary addition operator
-		/// </summary>
+		public static BrainHalf operator -(BrainHalf value) => new((ushort)(value._data ^ SIGN_MASK));
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf operator +(BrainHalf left, BrainHalf right)
-		{
-			return (BrainHalf)((float)left + right);
-		}
-
-		/// <summary>
-		/// Binary subtraction operator
-		/// </summary>
+		public static BrainHalf operator ++(BrainHalf value) => (BrainHalf)(value + 1.0f);
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf operator -(BrainHalf left, BrainHalf right)
-		{
-			return (BrainHalf)((float)left - right);
-		}
-
-		/// <summary>
-		/// Binary multiplication operator
-		/// </summary>
+		public static BrainHalf operator --(BrainHalf value) => (BrainHalf)(value - 1.0f);
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf operator *(BrainHalf left, BrainHalf right)
-		{
-			return (BrainHalf)((float)left * right);
-		}
-
-		/// <summary>
-		/// Binary division operator
-		/// </summary>
+		public static BrainHalf operator +(BrainHalf left, BrainHalf right) => (BrainHalf)((float)left + right);
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf operator /(BrainHalf left, BrainHalf right)
-		{
-			return (BrainHalf)((float)left / right);
-		}
-
-		/// <summary>
-		/// Binary exponentiation operator
-		/// </summary>
+		public static BrainHalf operator -(BrainHalf left, BrainHalf right) => (BrainHalf)((float)left - right);
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf Pow(BrainHalf basis, double power)
-		{
-			return (BrainHalf)Math.Pow(basis, power);
-		}
-		
-		/// <summary>
-		/// Binary exponentiation operator
-		/// </summary>
+		public static BrainHalf operator *(BrainHalf left, BrainHalf right) => (BrainHalf)((float)left * right);
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static BrainHalf Pow(BrainHalf basis, BrainHalf power)
-		{
-			return (BrainHalf)MathF.Pow(basis, power);
-		}
+		public static BrainHalf operator /(BrainHalf left, BrainHalf right) => (BrainHalf)((float)left / right);
 		#endregion
 
 		#region compare
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static bool AreZero(BrainHalf left, BrainHalf right)
-		{
-			return (ushort)((left._data | right._data) & ~SIGN_MASK) == 0;
-		}
+		private static bool AreZero(BrainHalf left, BrainHalf right) => (ushort)((left._data | right._data) & ~SIGN_MASK) == 0;
 
-		/// <summary>
-		/// Equality comparer
-		/// </summary>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator ==(BrainHalf left, BrainHalf right)
 		{
@@ -496,16 +431,10 @@ namespace Althea.Backend.Cuda
 				return true;
 			return false;
 		}
-
-		/// <summary>
-		/// Inequality comparer
-		/// </summary>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator !=(BrainHalf left, BrainHalf right) => !(left == right);
-
-		/// <summary>
-		/// Less than comparer
-		/// </summary>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator <(BrainHalf left, BrainHalf right)
 		{
@@ -518,16 +447,10 @@ namespace Althea.Backend.Cuda
 			}
 			return (left._data < right._data) ^ leftNeg;
 		}
-
-		/// <summary>
-		/// Greater than comparer
-		/// </summary>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator >(BrainHalf left, BrainHalf right) => right < left;
-
-		/// <summary>
-		/// Less than or equals to comparer
-		/// </summary>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator <=(BrainHalf left, BrainHalf right)
 		{
@@ -540,17 +463,11 @@ namespace Althea.Backend.Cuda
 			}
 			return (left._data <= right._data) ^ leftNeg;
 		}
-
-		/// <summary>
-		/// Greater than or equals to comparer
-		/// </summary>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool operator >=(BrainHalf left, BrainHalf right) => right <= left;
 
-		/// <summary>
-		/// Get the hash code of this <see cref="BrainHalf"/> that returns the same values for all NaNs and both zeros, respectively.
-		/// </summary>
-		/// <returns>The hash code of this <see cref="BrainHalf"/></returns>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
@@ -559,31 +476,13 @@ namespace Althea.Backend.Cuda
 			else
 				return this._data;
 		}
-
-		/// <summary>
-		/// Check whether the given <paramref name="obj"/> <see cref="object"/> represents the same value as this one
-		/// </summary>
-		/// <param name="obj">The other <see cref="object"/> to be compared</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override bool Equals(object? obj) => obj is BrainHalf f && this.Equals(f);
-
-		/// <summary>
-		/// Check whether the given <paramref name="other"/> <see cref="BrainHalf"/> represents the same value as this one
-		/// </summary>
-		/// <param name="other">The other <see cref="BrainHalf"/> to be compared</param>
-		/// <returns><c>this == <paramref name="other"/></c></returns>
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(BrainHalf other)
-		{
-			return this == other;
-		}
-
-		/// <summary>
-		/// Compare this <see cref="BrainHalf"/> with the <paramref name="other"/> one
-		/// </summary>
-		/// <param name="other">The other <see cref="BrainHalf"/> to be compared</param>
-		/// <returns>A positive value if <c>this &gt; <paramref name="other"/></c>; a negative value if <c>this &lt; <paramref name="other"/></c>; otherwise, 0</returns>
+		public bool Equals(BrainHalf other) => this == other;
+		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int CompareTo(BrainHalf other)
 		{
@@ -605,24 +504,60 @@ namespace Althea.Backend.Cuda
 			}
 			return 1;
 		}
+		int IComparable.CompareTo(object? obj) => obj is BrainHalf bh ? this.CompareTo(bh) : throw new NotSupportedException();
 		#endregion
 
 		#region string
-		/// <summary>
-		/// Get the string representation of this <see cref="BrainHalf"/>
-		/// </summary>
-		/// <returns>The string representation of this <see cref="BrainHalf"/></returns>
+		/// <inheritdoc/>
 		public override string ToString() => this.ToString(null, null);
+		/// <inheritdoc/>
+		public string ToString(string? format, IFormatProvider? formatProvider) => ((float)this).ToString(format, formatProvider);
+		bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider) => ((float)this).TryFormat(destination, out charsWritten, format, provider);
 
-		/// <summary>
-		/// Get the string representation of this <see cref="BrainHalf"/> of given <paramref name="format"/>
-		/// </summary>
-		/// <param name="format">The format specification</param>
-		/// <param name="formatProvider">The <see cref="IFormatProvider"/></param>
-		/// <returns>The string representation of this <see cref="BrainHalf"/> of given <paramref name="format"/></returns>
-		public string ToString(string? format, IFormatProvider? formatProvider)
+		/// <inheritdoc/>
+		public static BrainHalf Parse(string s, IFormatProvider? provider) => (BrainHalf)float.Parse(s, provider);
+		/// <inheritdoc/>
+		public static bool TryParse(string? s, IFormatProvider? provider, out BrainHalf result)
 		{
-			return ((float)this).ToString(format, formatProvider);
+			result = default;
+			if (!float.TryParse(s, provider, out var f))
+				return false;
+			result = (BrainHalf)f;
+			return true;
+		}
+		/// <inheritdoc/>
+		public static BrainHalf Parse(ReadOnlySpan<char> s, IFormatProvider? provider) => (BrainHalf)float.Parse(s, provider);
+		/// <inheritdoc/>
+		public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out BrainHalf result)
+		{
+			result = default;
+			if (!float.TryParse(s, provider, out var f))
+				return false;
+			result = (BrainHalf)f;
+			return true;
+		}
+
+		/// <inheritdoc/>
+		public static BrainHalf Parse(string s, NumberStyles style, IFormatProvider? provider) => (BrainHalf)float.Parse(s, style, provider);
+		/// <inheritdoc/>
+		public static BrainHalf Parse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider) => (BrainHalf)float.Parse(s, style, provider);
+		/// <inheritdoc/>
+		public static bool TryParse(string s, NumberStyles style, IFormatProvider? provider, out BrainHalf result)
+		{
+			result = default;
+			if (!float.TryParse(s, style, provider, out var f))
+				return false;
+			result = (BrainHalf)f;
+			return true;
+		}
+		/// <inheritdoc/>
+		public static bool TryParse(ReadOnlySpan<char> s, NumberStyles style, IFormatProvider? provider, out BrainHalf result)
+		{
+			result = default;
+			if (!float.TryParse(s, style, provider, out var f))
+				return false;
+			result = (BrainHalf)f;
+			return true;
 		}
 		#endregion
 	}

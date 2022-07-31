@@ -1,10 +1,344 @@
-﻿using System;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
-using Althea.Numerics;
+using Althea.Helpers;
 
 
 namespace Althea.Backend.Cuda
 {
+	#region CDUA device property
+	// Ignore Spelling: mipmapped Cubemap
+	/// <summary>
+	/// The structure that wraps the properties of a CUDA device
+	/// </summary>
+	[StructLayout(LayoutKind.Sequential)]
+	public readonly struct CudaDeviceProperty
+	{
+		/// <summary>
+		/// ASCII string identifying device
+		/// </summary>
+		public readonly FixedBuffer_256<byte> name;
+		/// <summary>
+		/// 16-byte unique identifier
+		/// </summary>
+		public readonly FixedBuffer_16<byte> uuid;
+		/// <summary>
+		/// 8-byte locally unique identifier. Value is undefined on TCC and non-Windows platforms
+		/// </summary>
+		public readonly FixedBuffer_8<byte> luid;
+		/// <summary>
+		/// LUID device node mask. Value is undefined on TCC and non-Windows platforms
+		/// </summary>
+		public readonly int luidDeviceNodeMask;
+		/// <summary>
+		/// Global memory available on device in bytes
+		/// </summary>
+		public readonly long totalGlobalMem;
+		/// <summary>
+		/// Shared memory available per block in bytes
+		/// </summary>
+		public readonly long sharedMemPerBlock;
+		/// <summary>
+		/// 32-bit registers available per block
+		/// </summary>
+		public readonly int regsPerBlock;
+		/// <summary>
+		/// Warp size in threads
+		/// </summary>
+		public readonly int warpSize;
+		/// <summary>
+		/// Maximum pitch in bytes allowed by memory copies
+		/// </summary>
+		public readonly long memPitch;
+		/// <summary>
+		/// Maximum number of threads per block
+		/// </summary>
+		public readonly int maxThreadsPerBlock;
+		/// <summary>
+		/// Maximum size of each dimension of a block
+		/// </summary>
+		public readonly FixedBuffer_12<int> maxThreadsDim;
+		/// <summary>
+		/// Maximum size of each dimension of a grid
+		/// </summary>
+		public readonly FixedBuffer_12<int> maxGridSize;
+		/// <summary>
+		/// Clock frequency in kilohertz
+		/// </summary>
+		public readonly int clockRate;
+		/// <summary>
+		/// Constant memory available on device in bytes
+		/// </summary>
+		public readonly long totalConstMem;
+		/// <summary>
+		/// Major compute capability
+		/// </summary>
+		public readonly int major;
+		/// <summary>
+		/// Minor compute capability
+		/// </summary>
+		public readonly int minor;
+		/// <summary>
+		/// Alignment requirement for textures
+		/// </summary>
+		public readonly long textureAlignment;
+		/// <summary>
+		/// Pitch alignment requirement for texture references bound to pitched memory
+		/// </summary>
+		public readonly long texturePitchAlignment;
+		/// <summary>
+		/// Device can concurrently copy memory and execute a kernel. Deprecated. Use instead asyncEngineCount.
+		/// </summary>
+		public readonly int deviceOverlap;
+		/// <summary>
+		/// Number of multiprocessors on device
+		/// </summary>
+		public readonly int multiProcessorCount;
+		/// <summary>
+		/// Specified whether there is a run time limit on kernels
+		/// </summary>
+		public readonly int kernelExecTimeoutEnabled;
+		/// <summary>
+		/// Device is integrated as opposed to discrete
+		/// </summary>
+		public readonly int integrated;
+		/// <summary>
+		/// Device can map host memory with cudaHostAlloc/cudaHostGetDevicePointer
+		/// </summary>
+		public readonly int canMapHostMemory;
+		/// <summary>
+		/// Compute mode (See ::cudaComputeMode)
+		/// </summary>
+		public readonly int computeMode;
+		/// <summary>
+		/// Maximum 1D texture size
+		/// </summary>
+		public readonly int maxTexture1D;
+		/// <summary>
+		/// Maximum 1D mipmapped texture size
+		/// </summary>
+		public readonly int maxTexture1DMipmap;
+		/// <summary>
+		/// Maximum size for 1D textures bound to linear memory
+		/// </summary>
+		public readonly int maxTexture1DLinear;
+		/// <summary>
+		/// Maximum 2D texture dimensions
+		/// </summary>
+		public readonly FixedBuffer_8<int> maxTexture2D;
+		/// <summary>
+		/// Maximum 2D mipmapped texture dimensions
+		/// </summary>
+		public readonly FixedBuffer_8<int> maxTexture2DMipmap;
+		/// <summary>
+		/// Maximum dimensions (width, height, pitch) for 2D textures bound to pitched memory
+		/// </summary>
+		public readonly FixedBuffer_12<int> maxTexture2DLinear;
+		/// <summary>
+		/// Maximum 2D texture dimensions if texture gather operations have to be performed
+		/// </summary>
+		public readonly FixedBuffer_8<int> maxTexture2DGather;
+		/// <summary>
+		/// Maximum 3D texture dimensions
+		/// </summary>
+		public readonly FixedBuffer_12<int> maxTexture3D;
+		/// <summary>
+		/// Maximum alternate 3D texture dimensions
+		/// </summary>
+		public readonly FixedBuffer_12<int> maxTexture3DAlt;
+		/// <summary>
+		/// Maximum Cubemap texture dimensions
+		/// </summary>
+		public readonly int maxTextureCubemap;
+		/// <summary>
+		/// Maximum 1D layered texture dimensions
+		/// </summary>
+		public readonly FixedBuffer_8<int> maxTexture1DLayered;
+		/// <summary>
+		/// Maximum 2D layered texture dimensions
+		/// </summary>
+		public readonly FixedBuffer_12<int> maxTexture2DLayered;
+		/// <summary>
+		/// Maximum Cubemap layered texture dimensions
+		/// </summary>
+		public readonly FixedBuffer_8<int> maxTextureCubemapLayered;
+		/// <summary>
+		/// Maximum 1D surface size
+		/// </summary>
+		public readonly int maxSurface1D;
+		/// <summary>
+		/// Maximum 2D surface dimensions
+		/// </summary>
+		public readonly FixedBuffer_8<int> maxSurface2D;
+		/// <summary>
+		/// Maximum 3D surface dimensions
+		/// </summary>
+		public readonly FixedBuffer_12<int> maxSurface3D;
+		/// <summary>
+		/// Maximum 1D layered surface dimensions
+		/// </summary>
+		public readonly FixedBuffer_8<int> maxSurface1DLayered;
+		/// <summary>
+		/// Maximum 2D layered surface dimensions
+		/// </summary>
+		public readonly FixedBuffer_12<int> maxSurface2DLayered;
+		/// <summary>
+		/// Maximum Cubemap surface dimensions
+		/// </summary>
+		public readonly int maxSurfaceCubemap;
+		/// <summary>
+		/// Maximum Cubemap layered surface dimensions
+		/// </summary>
+		public readonly FixedBuffer_8<int> maxSurfaceCubemapLayered;
+		/// <summary>
+		/// Alignment requirements for surfaces
+		/// </summary>
+		public readonly long surfaceAlignment;
+		/// <summary>
+		/// Device can possibly execute multiple kernels concurrently
+		/// </summary>
+		public readonly int concurrentKernels;
+		/// <summary>
+		/// Device has ECC support enabled
+		/// </summary>
+		public readonly int ECCEnabled;
+		/// <summary>
+		/// PCI bus ID of the device
+		/// </summary>
+		public readonly int pciBusID;
+		/// <summary>
+		/// PCI device ID of the device
+		/// </summary>
+		public readonly int pciDeviceID;
+		/// <summary>
+		/// PCI domain ID of the device
+		/// </summary>
+		public readonly int pciDomainID;
+		/// <summary>
+		/// 1 if device is a Tesla device using TCC driver, 0 otherwise
+		/// </summary>
+		public readonly int tccDriver;
+		/// <summary>
+		/// Number of asynchronous engines
+		/// </summary>
+		public readonly int asyncEngineCount;
+		/// <summary>
+		/// Device shares a unified address space with the host
+		/// </summary>
+		public readonly int unifiedAddressing;
+		/// <summary>
+		/// Peak memory clock frequency in kilohertz
+		/// </summary>
+		public readonly int memoryClockRate;
+		/// <summary>
+		/// Global memory bus width in bits
+		/// </summary>
+		public readonly int memoryBusWidth;
+		/// <summary>
+		/// Size of L2 cache in bytes
+		/// </summary>
+		public readonly int l2CacheSize;
+		/// <summary>
+		/// Device's maximum l2 persisting lines capacity setting in bytes
+		/// </summary>
+		public readonly int persistingL2CacheMaxSize;
+		/// <summary>
+		/// Maximum resident threads per multiprocessor
+		/// </summary>
+		public readonly int maxThreadsPerMultiProcessor;
+		/// <summary>
+		/// Device supports stream priorities
+		/// </summary>
+		public readonly int streamPrioritiesSupported;
+		/// <summary>
+		/// Device supports caching globals in L1
+		/// </summary>
+		public readonly int globalL1CacheSupported;
+		/// <summary>
+		/// Device supports caching locals in L1
+		/// </summary>
+		public readonly int localL1CacheSupported;
+		/// <summary>
+		/// Shared memory available per multiprocessor in bytes
+		/// </summary>
+		public readonly long sharedMemPerMultiprocessor;
+		/// <summary>
+		/// 32-bit registers available per multiprocessor
+		/// </summary>
+		public readonly int regsPerMultiprocessor;
+		/// <summary>
+		/// Device supports allocating managed memory on this system
+		/// </summary>
+		public readonly int managedMemory;
+		/// <summary>
+		/// Device is on a multi-GPU board
+		/// </summary>
+		public readonly int isMultiGpuBoard;
+		/// <summary>
+		/// Unique identifier for a group of devices on the same multi-GPU board
+		/// </summary>
+		public readonly int multiGpuBoardGroupID;
+		/// <summary>
+		/// Link between the device and the host supports native atomic operations
+		/// </summary>
+		public readonly int hostNativeAtomicSupported;
+		/// <summary>
+		/// Ratio of single precision performance (in floating-point operations per second) to double precision performance
+		/// </summary>
+		public readonly int singleToDoublePrecisionPerfRatio;
+		/// <summary>
+		/// Device supports coherently accessing page-able memory without calling cudaHostRegister on it
+		/// </summary>
+		public readonly int pageableMemoryAccess;
+		/// <summary>
+		/// Device can coherently access managed memory concurrently with the CPU
+		/// </summary>
+		public readonly int concurrentManagedAccess;
+		/// <summary>
+		/// Device supports Compute Preemption
+		/// </summary>
+		public readonly int computePreemptionSupported;
+		/// <summary>
+		/// Device can access host registered memory at the same virtual address as the CPU
+		/// </summary>
+		public readonly int canUseHostPointerForRegisteredMem;
+		/// <summary>
+		/// Device supports launching cooperative kernels via ::cudaLaunchCooperativeKernel
+		/// </summary>
+		public readonly int cooperativeLaunch;
+		/// <summary>
+		/// Device can participate in cooperative kernels launched via ::cudaLaunchCooperativeKernelMultiDevice
+		/// </summary>
+		public readonly int cooperativeMultiDeviceLaunch;
+		/// <summary>
+		/// Per device maximum shared memory per block usable by special opt in
+		/// </summary>
+		public readonly long sharedMemPerBlockOptin;
+		/// <summary>
+		/// Device accesses page-able memory via the host's page tables
+		/// </summary>
+		public readonly int pageableMemoryAccessUsesHostPageTables;
+		/// <summary>
+		/// Host can directly access managed memory on the device without migration.
+		/// </summary>
+		public readonly int directManagedMemAccessFromHost;
+		/// <summary>
+		/// Maximum number of resident blocks per multiprocessor
+		/// </summary>
+		public readonly int maxBlocksPerMultiProcessor;
+		/// <summary>
+		/// The maximum value of ::cudaAccessPolicyWindow::num_bytes.
+		/// </summary>
+		public readonly int accessPolicyMaxWindowSize;
+		/// <summary>
+		/// Shared memory reserved by CUDA driver per block in bytes
+		/// </summary>
+		public readonly long reservedSharedMemPerBlock;
+	}
+	#endregion
+
+	#region CUDA data type
 	/// <summary>
 	/// The <see cref="CudaDataType"/> enum specifies the data type used by CUDA.
 	/// </summary>
@@ -27,11 +361,11 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		RealInt8 = 3,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="float"/> or <see cref="ComplexSingle"/>
+		/// <see cref="Complex{T}"/> of <see cref="float"/>
 		/// </summary>
 		ComplexFloat32 = 4,
 		/// <summary>
-		/// <see cref="Complex{T}"/> of <see cref="double"/> or <see cref="ComplexDouble"/>
+		/// <see cref="Complex{T}"/> of <see cref="double"/>
 		/// </summary>
 		ComplexFloat64 = 5,
 		/// <summary>
@@ -166,8 +500,9 @@ namespace Althea.Backend.Cuda
 			};
 		}
 	}
+	#endregion
 
-
+	#region CUDA error
 	/// <summary>
 	/// Error codes returned by CUDA driver API calls
 	/// </summary>
@@ -911,4 +1246,26 @@ namespace Althea.Backend.Cuda
 		[Obsolete("deprecated as of CUDA 4.1")]
 		ErrorApiFailureBase = 10000
 	}
+
+	/// <summary>
+	/// The static class containing extension methods for <see cref="StatusException"/> and <see cref="CudaError"/>
+	/// </summary>
+	public static partial class StatusExtension
+	{
+		/// <summary>
+		/// Check whether the input <see cref="CudaError"/> is success or not and throw exception if it is not
+		/// </summary>
+		/// <param name="err">The <see cref="CudaError"/> to be checked</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this CudaError err)
+		{
+			if (err != CudaError.Success)
+			{
+				if (err == CudaError.ErrorOutOfMemory)
+					throw new OutOfMemoryException();
+				throw new StatusException(err, new StackTrace(0));
+			}
+		}
+	}
+	#endregion
 }
