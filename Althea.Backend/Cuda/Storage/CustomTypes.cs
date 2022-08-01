@@ -1,10 +1,9 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Althea.Backend.Cuda.Storage;
-using Althea.Helpers;
 
 
 namespace Althea.Backend.Cuda.Storage
@@ -90,7 +89,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		NvfsDriverError = 5010,
 		/// <summary>
-		/// A CUDA Driver API error. This error indicates a CUDA driver-API error. If this is set, a CDUA-specific error code is set in the <see cref="CudaFileError.driverResult"/>.
+		/// A CUDA Driver API error. This error indicates a CUDA driver-API error. If this is set, a CDUA-specific error code is set in the <see cref="CudaFileError.DriverResult"/>.
 		/// </summary>
 		CudaDriverError = 5011,
 		/// <summary>
@@ -182,68 +181,14 @@ namespace Althea.Backend.Cuda.Storage
 	/// <summary>
 	/// The CDUA file operation or driver error wrapper returned by the CUDA GPUDirect® Storage (GDS) APIs
 	/// </summary>
-	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct CudaFileError : IEquatable<CudaFileError>
+	public readonly record struct CudaFileError(CudaFileOpError FileOpResult, CudaError DriverResult)
 	{
-		internal readonly CudaFileOpError fileOpResult;
-
-		internal readonly CudaError driverResult;
-
 		/// <summary>
 		/// Check whether this <see cref="CudaFileError"/> represents a success status
 		/// </summary>
 		public bool IsSuccess {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.fileOpResult == CudaFileOpError.Success;
-		}
-
-		/// <summary>
-		/// Equality comparer
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(CudaFileError a, CudaFileError b) => a.Equals(b);
-
-		/// <summary>
-		/// Inequality comparer
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(CudaFileError a, CudaFileError b) => !a.Equals(b);
-
-		/// <summary>
-		/// Check whether this <see cref="CudaFileError"/> represents the same value as the <paramref name="other"/> one
-		/// </summary>
-		/// <param name="other">The other <see cref="CudaFileError"/> to compare</param>
-		/// <returns><c>this == <paramref name="other"/></c></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Equals(CudaFileError other) => this.IsSuccess && other.IsSuccess || (this.fileOpResult == other.fileOpResult && this.driverResult == other.driverResult);
-
-		/// <summary>
-		/// Check whether this <see cref="CudaFileError"/> represents the same value as the <paramref name="obj"/>
-		/// </summary>
-		/// <param name="obj">The other <see cref="object"/> to compare</param>
-		/// <returns><c>this == <paramref name="obj"/></c></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj)
-		{
-			return obj is CudaFileError a && this.Equals(a);
-		}
-
-		/// <summary>
-		/// Get the hash code of this <see cref="CudaFileError"/>
-		/// </summary>
-		/// <returns>The hash code of this <see cref="CudaFileError"/></returns>
-		public override int GetHashCode()
-		{
-			return this.IsSuccess ? 0 : HashCode.Combine(this.fileOpResult, this.driverResult);
-		}
-
-		/// <summary>
-		/// Get the string representation of this <see cref="CudaFileError"/>
-		/// </summary>
-		/// <returns>The string representation of this <see cref="CudaFileError"/></returns>
-		public override string ToString()
-		{
-			return this.IsSuccess ? "Success" : this.fileOpResult == CudaFileOpError.CudaDriverError ? this.driverResult.ToString() : this.fileOpResult.ToString();
+			get => this.FileOpResult == CudaFileOpError.Success;
 		}
 	}
 	#endregion
@@ -252,7 +197,6 @@ namespace Althea.Backend.Cuda.Storage
 	/// <summary>
 	/// The supported feature flags of a certain CUDA file driver
 	/// </summary>
-	[Flags]
 	public enum CudaFileFeatureFlag
 	{
 		/// <summary>
@@ -273,7 +217,6 @@ namespace Althea.Backend.Cuda.Storage
 	/// <summary>
 	/// The solution supporting status of a CUDA file driver
 	/// </summary>
-	[Flags]
 	public enum CudaFileDriverStatusFlag
 	{
 		/// <summary>
@@ -289,7 +232,6 @@ namespace Althea.Backend.Cuda.Storage
 	/// <summary>
 	/// The supported control mode of a CUDA file driver
 	/// </summary>
-	[Flags]
 	public enum CudaFileDriverControlFlag
 	{
 		/// <summary>
@@ -305,8 +247,14 @@ namespace Althea.Backend.Cuda.Storage
 	/// <summary>
 	/// The structure that wraps the properties of a CDUA file driver
 	/// </summary>
+	/// <param name="Nfsp">The instance of <see cref="NvidiaFileSystemProperty"/> that wrappers the properties of a NVIDIA file system</param>
+	/// <param name="Flags">The <see cref="CudaFileFeatureFlag"/> of current CDUA file driver</param>
+	/// <param name="MaxDeviceCacheSize">The maximum GPU buffer space per device, in KiB and 4K-aligned, that is used internally, for example, to handle unaligned IO and optimal IO path routing. This value might be rounded down to the nearest GPU page size.</param>
+	/// <param name="PerBufferCacheSize">The GPU bounce buffer size, in KiB, used for internal pools.</param>
+	/// <param name="MaxPinnedMemorySize">The maximum buffer space, in KiB, that is pinned and mapped. See <see cref="NativeMethods.cuFileDriverSetMaxPinnedMemSize(long)"/>.</param>
+	/// <param name="MaxBatchIOTimeout">The timeout in milliseconds for batched IO operations</param>
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct CudaFileDriverProperty
+	public readonly record struct CudaFileDriverProperty(CudaFileDriverProperty.NvidiaFileSystemProperty Nfsp, CudaFileFeatureFlag Flags, int MaxDeviceCacheSize, int PerBufferCacheSize, int MaxPinnedMemorySize, int MaxBatchIOTimeout)
 	{
 		/// <summary>
 		/// The structure that wrappers the properties of a NVIDIA file system
@@ -339,26 +287,6 @@ namespace Althea.Backend.Cuda.Storage
 			/// </summary>
 			public readonly CudaFileDriverControlFlag control;
 		}
-		/// <summary>
-		/// The <see cref="CudaFileFeatureFlag"/> of current CDUA file driver
-		/// </summary>
-		public readonly CudaFileFeatureFlag flags;
-		/// <summary>
-		/// The maximum GPU buffer space per device, in KiB and 4K-aligned, that is used internally, for example, to handle unaligned IO and optimal IO path routing. This value might be rounded down to the nearest GPU page size.
-		/// </summary>
-		public readonly int maxDeviceCacheSize;
-		/// <summary>
-		/// The GPU bounce buffer size, in KiB, used for internal pools.
-		/// </summary>
-		public readonly int perBufferCacheSize;
-		/// <summary>
-		/// The maximum buffer space, in KiB, that is pinned and mapped. See <see cref="NativeMethods.cuFileDriverSetMaxPinnedMemSize(long)"/>.
-		/// </summary>
-		public readonly int maxPinnedMemorySize;
-		/// <summary>
-		/// The timeout in milliseconds for batched IO operations
-		/// </summary>
-		public readonly int maxBatchIOTimeout;
 	}
 
 	/// <summary>
@@ -388,15 +316,15 @@ namespace Althea.Backend.Cuda.Storage
 	{
 		// NULL means discover using FSTAT
 		// input = file handle
-		private readonly delegate* unmanaged<CudaFileHandle, string> getFileSystemType;
+		private readonly delegate* unmanaged<IntPtr, string> getFileSystemType;
 
 		// list of host addresses to use, NULL means no restriction
 		// input = file handle, output host addresses
-		private readonly delegate* unmanaged<CudaFileHandle, void**, int> getRDMADeviceList;
+		private readonly delegate* unmanaged<IntPtr, void**, int> getRDMADeviceList;
 
 		// input = file handle, device memory pointer, size, offset, host address
 		// return -1 means no pref
-		private readonly delegate* unmanaged<CudaFileHandle, IntPtr, ulong, long, void*, int> getRDMADevicePriority;
+		private readonly delegate* unmanaged<IntPtr, IntPtr, ulong, long, void*, int> getRDMADevicePriority;
 
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 		private readonly struct RDMAInfo
@@ -409,40 +337,26 @@ namespace Althea.Backend.Cuda.Storage
 		// NULL means try VFS
 		// input = file handle, device memory pointer, size, offset, RDMAInfo
 		// return size of bytes that were successfully read
-		private readonly delegate* unmanaged<CudaFileHandle, IntPtr, ulong, long, ref RDMAInfo, long> read;
+		private readonly delegate* unmanaged<IntPtr, IntPtr, ulong, long, ref RDMAInfo, long> read;
 
 		// NULL means try VFS
 		// input = file handle, device memory pointer, size, offset, RDMAInfo
 		// return size of bytes that were successfully written
-		private readonly delegate* unmanaged<CudaFileHandle, IntPtr, ulong, long, ref RDMAInfo, long> write;
+		private readonly delegate* unmanaged<IntPtr, IntPtr, ulong, long, ref RDMAInfo, long> write;
 	}
 
 	/// <summary>
 	/// The structure that wraps the information about a registered CUDA file
 	/// </summary>
 	[StructLayout(LayoutKind.Sequential)]
-	public readonly struct CudaFileDescription : ICloneable<CudaFileDescription>
+	public readonly record struct CudaFileDescription(CudaFileHandleType Type, IntPtr OsHandle, FileSystemOperations Operations)
 	{
-		private readonly CudaFileHandleType type;
-
-		private readonly IntPtr handle;
-
-		private readonly FileSystemOperations operations;
-
-		/// <summary>
-		/// Get the <see cref="CudaFileHandleType"/> of this registered file
-		/// </summary>
-		public CudaFileHandleType HandleType {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.type;
-		}
-
 		/// <summary>
 		/// Get the file handle of this registered file as if the operating system is Windows
 		/// </summary>
 		public IntPtr FileHandleAsWindows {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.handle;
+			get => this.OsHandle;
 		}
 
 		/// <summary>
@@ -450,7 +364,7 @@ namespace Althea.Backend.Cuda.Storage
 		/// </summary>
 		public int FileHandleAsLinux {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.handle.ToInt32();
+			get => this.OsHandle.ToInt32();
 		}
 
 		/// <summary>
@@ -460,41 +374,89 @@ namespace Althea.Backend.Cuda.Storage
 		/// <param name="handle">The actual file handle as a <see cref="IntPtr"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public CudaFileDescription(CudaFileHandleType type, IntPtr handle) : this(type, handle, new()) { }
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private CudaFileDescription(CudaFileHandleType type, IntPtr handle, FileSystemOperations op)
-		{
-			this.type = type; this.handle = handle;
-			this.operations = op;
-		}
-
-		/// <summary>
-		/// Clone this <see cref="CudaFileDescription"/>
-		/// </summary>
-		/// <returns>The cloned <see cref="CudaFileDescription"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CudaFileDescription Clone()
-		{
-			return new(this.type, this.handle, this.operations);
-		}
 	}
+	#endregion
 
+	#region CUDA file pointer
 	/// <summary>
-	/// The structure that wraps file handle managed by CUDA file runtime
+	/// The wrapper for CUDA file handle and its size that implements <see cref="IPointer{TSelf}"/>.
 	/// </summary>
-	public readonly struct CudaFileHandle
+	public readonly struct CudaFilePointer : IPointer<CudaFilePointer>, IDisposable
 	{
-		private readonly IntPtr pointer;
+		#region basic
+		/// <inheritdoc/>
+		public static StorageLocation Location => new(LocationType.Uri, (short)UriScheme.File);
+
+		static CudaFilePointer IPointer<CudaFilePointer>.Default => throw new NotImplementedException();
+
+		private readonly FileStream stream;
+		private readonly IntPtr handle;
+		/// <summary>
+		/// The underlying CUDA file handle
+		/// </summary>
+		public readonly IntPtr Handle => this.handle;
+		/// <summary>
+		/// The size of the underlying file in bytes
+		/// </summary>
+		public readonly long LengthInBytes => this.stream.Length;
+
+		/// <inheritdoc/>
+		public bool IsValid() => this.Handle != default;
 
 		/// <summary>
-		/// Get the string representation of this <see cref="CudaFileHandle"/>
+		/// Create a new <see cref="CudaFilePointer"/> with given <paramref name="filePath"/>.
 		/// </summary>
-		/// <returns>The string representation of this <see cref="CudaFileHandle"/></returns>
-		public override string ToString() => this.pointer.ToString("X");
+		/// <param name="filePath">The given path to the file to be created or overwritten</param>
+		/// <param name="readOnly">Whether the file shall be opened as read-only or read-and-write</param>
+		public CudaFilePointer(string filePath, bool readOnly = false)
+		{
+			// stream
+			this.stream = new(filePath, FileMode.OpenOrCreate, readOnly ? FileAccess.Read : FileAccess.ReadWrite, FileShare.Read, 0);
+			// CUDA file
+			CudaFileDescription descr = new(Environment.OSVersion.Platform == PlatformID.Unix ? CudaFileHandleType.OpaqueLinux : CudaFileHandleType.OpaqueWindows, this.stream.SafeFileHandle.DangerousGetHandle());
+			var err = NativeMethods.cuFileHandleRegister(out this.handle, ref descr);
+			if (!err.IsSuccess)
+			{
+				this.Dispose();
+				err.Check();
+			}
+		}
+
+		/// <inheritdoc/>
+		public void Dispose()
+		{
+			if (this.stream is null)
+				return;
+			NativeMethods.cuFileHandleDeregister(this.handle).Check();
+			this.stream.Dispose();
+			File.Delete(this.stream.Name);
+		}
+		#endregion
+
+		#region equality
+		/// <inheritdoc/>
+		public bool Equals(CudaFilePointer cudaFile) => this.handle == cudaFile.handle;
+
+		/// <inheritdoc/>
+		public override bool Equals(object? obj) => obj is CudaFilePointer cudaFile && this.Equals(cudaFile);
+
+		/// <inheritdoc/>
+		public override int GetHashCode() => this.handle.GetHashCode();
+
+		/// <inheritdoc/>
+		public static bool operator ==(CudaFilePointer left, CudaFilePointer right) => left.Equals(right);
+		/// <inheritdoc/>
+		public static bool operator !=(CudaFilePointer left, CudaFilePointer right) => !left.Equals(right);
+
+		/// <inheritdoc/>
+		public override string ToString() => $"[CudaHandle = {this.handle:X}, File = {this.stream.Name}]";
+		#endregion
 	}
+
 	#endregion
 }
 
+#region error checks
 namespace Althea.Backend.Cuda
 {
 	/// <summary>
@@ -511,10 +473,10 @@ namespace Althea.Backend.Cuda
 		{
 			if (err.IsSuccess)
 			{
-				if (err.fileOpResult == CudaFileOpError.CudaDriverError)
-					throw new StatusException(err.fileOpResult, err.driverResult, new StackTrace(0));
+				if (err.FileOpResult == CudaFileOpError.CudaDriverError)
+					throw new StatusException(err.FileOpResult, err.DriverResult, new StackTrace(0));
 				else
-					throw new StatusException(err.fileOpResult, new StackTrace(0));
+					throw new StatusException(err.FileOpResult, new StackTrace(0));
 			}
 		}
 
@@ -532,7 +494,7 @@ namespace Althea.Backend.Cuda
 		}
 
 		/// <summary>
-		/// Check whether the output of <see cref="NativeMethods.cuFileRead"/> and <see cref="NativeMethods.cuFileWrite"/> is success or not and throw exception if it is not
+		/// Check whether the output of <see cref="Storage.NativeMethods.cuFileRead"/> and <see cref="Storage.NativeMethods.cuFileWrite"/> is success or not and throw exception if it is not
 		/// </summary>
 		/// <param name="err">The <see cref="CudaFileOpError"/> to be checked</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -548,3 +510,4 @@ namespace Althea.Backend.Cuda
 		}
 	}
 }
+#endregion

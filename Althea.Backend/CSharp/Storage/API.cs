@@ -146,7 +146,7 @@ namespace Althea.Backend.CSharp.Storage
 			actualCopied = Math.Min((source.LengthInBytes / T.Size - 1) / strideSource + 1, (destination.LengthInBytes / T.Size - 1) / strideDestination + 1);
 			unsafe
 			{
-				StridedCopy((T*)source.Pointer.FromGenericCpu().OffsetPointer(source.OffsetInBytes), (T*)destination.Pointer.FromGenericCpu().OffsetPointer(destination.OffsetInBytes), (int)strideSource, (int)strideDestination, (int)actualCopied);
+				StridedCopy((T*)source.Pointer.FromGenericCpu().NativePointer(source.OffsetInBytes), (T*)destination.Pointer.FromGenericCpu().NativePointer(destination.OffsetInBytes), (int)strideSource, (int)strideDestination, (int)actualCopied);
 			}
 			return true;
 		}

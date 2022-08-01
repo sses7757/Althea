@@ -391,6 +391,7 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public virtual void Dispose(bool invokedByUser)
 		{
+			this.Strategy.Flush(this.CopyWrapper);
 			if (this is not ReferenceCachedStorage<T, TS, TPh, TPl>)
 			{
 				Mem.Free(this.Cache.Pointer);

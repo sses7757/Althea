@@ -18,6 +18,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Cuda\Runtime\CudaGpuIds.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CudaGpuIds.tt</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
   </ItemGroup>
 
@@ -50,6 +58,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Cuda\Runtime\BrainHalfMethods.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>BrainHalfMethods.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Cuda\Runtime\CudaGpuIds.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CudaGpuIds.tt</DependentUpon>
+    </Compile>
     <Compile Update="Resource.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -72,9 +90,21 @@
     <None Update="Cuda\ExtendBlasCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Cuda\Runtime\BrainHalfMethods.tt">
+      <LastGenOutput>BrainHalfMethods.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Cuda\Runtime\CudaGpuIds.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>CudaGpuIds.cs</LastGenOutput>
+    </None>
     <None Update="Mkl\ExtendBlasTBB.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>

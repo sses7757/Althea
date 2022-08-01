@@ -494,8 +494,8 @@ namespace Althea.Backend.Cuda
 				DataType.ComplexUInt16 => CudaDataType.ComplexUInt16,
 				DataType.ComplexUInt32 => CudaDataType.ComplexUInt32,
 				DataType.ComplexUInt64 => CudaDataType.ComplexUInt64,
-				BrainFloatConst.RealBrainFloat16 => CudaDataType.RealBrainFloat16,
-				BrainFloatConst.ComplexBrainFloat16 => CudaDataType.ComplexBrainFloat16,
+				BrainHalf.RealBrainHalfType => CudaDataType.RealBrainFloat16,
+				BrainHalf.ComplexBrainHalfType => CudaDataType.ComplexBrainFloat16,
 				_ => (CudaDataType)(-1),
 			};
 		}

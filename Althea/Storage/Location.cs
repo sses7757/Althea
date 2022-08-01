@@ -75,7 +75,7 @@ namespace Althea.Storage
 
 		static LocationTypeExtension()
 		{
-			EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.Uri, static d => $"(scheme={((Storage.UriScheme)d).GetName()})");
+			EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.Uri, static d => $"(scheme={((UriScheme)d).GetName()})");
 			EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.CpuRam, static d => $"(device_ID={d})");
 			EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.GpuRam, static d => $"(device_ID={d})");
 		}
