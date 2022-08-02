@@ -295,7 +295,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasScopy(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy);
 
-		/// <returns></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasDcopy_v2(IntPtr handle, int n, IntPtr x, int incx, IntPtr y, int incy);
 		[DllImport(CUBLAS_API_DLL_NAME)]

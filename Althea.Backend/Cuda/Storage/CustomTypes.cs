@@ -381,7 +381,7 @@ namespace Althea.Backend.Cuda.Storage
 	/// <summary>
 	/// The wrapper for CUDA file handle and its size that implements <see cref="IPointer{TSelf}"/>.
 	/// </summary>
-	public readonly struct CudaFilePointer : IPointer<CudaFilePointer>, IDisposable
+	public readonly record struct CudaFilePointer : IPointer<CudaFilePointer>, IDisposable
 	{
 		#region basic
 		/// <inheritdoc/>
@@ -399,6 +399,14 @@ namespace Althea.Backend.Cuda.Storage
 		/// The size of the underlying file in bytes
 		/// </summary>
 		public readonly long LengthInBytes => this.stream.Length;
+		/// <summary>
+		/// The path of the underlying file
+		/// </summary>
+		public readonly string FilePath => this.stream.Name;
+		/// <summary>
+		/// Whether the underlying file is read-only or read-and-write
+		/// </summary>
+		public readonly bool CanWrite => this.stream.CanWrite;
 
 		/// <inheritdoc/>
 		public bool IsValid() => this.Handle != default;
@@ -414,7 +422,7 @@ namespace Althea.Backend.Cuda.Storage
 			this.stream = new(filePath, FileMode.OpenOrCreate, readOnly ? FileAccess.Read : FileAccess.ReadWrite, FileShare.Read, 0);
 			// CUDA file
 			CudaFileDescription descr = new(Environment.OSVersion.Platform == PlatformID.Unix ? CudaFileHandleType.OpaqueLinux : CudaFileHandleType.OpaqueWindows, this.stream.SafeFileHandle.DangerousGetHandle());
-			var err = NativeMethods.cuFileHandleRegister(out this.handle, ref descr);
+			var err = Storage.NativeMethods.cuFileHandleRegister(out this.handle, ref descr);
 			if (!err.IsSuccess)
 			{
 				this.Dispose();
@@ -427,38 +435,24 @@ namespace Althea.Backend.Cuda.Storage
 		{
 			if (this.stream is null)
 				return;
-			NativeMethods.cuFileHandleDeregister(this.handle).Check();
+			Storage.NativeMethods.cuFileHandleDeregister(this.handle).Check();
 			this.stream.Dispose();
 			File.Delete(this.stream.Name);
 		}
-		#endregion
-
-		#region equality
-		/// <inheritdoc/>
-		public bool Equals(CudaFilePointer cudaFile) => this.handle == cudaFile.handle;
-
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => obj is CudaFilePointer cudaFile && this.Equals(cudaFile);
 
 		/// <inheritdoc/>
 		public override int GetHashCode() => this.handle.GetHashCode();
 
 		/// <inheritdoc/>
-		public static bool operator ==(CudaFilePointer left, CudaFilePointer right) => left.Equals(right);
-		/// <inheritdoc/>
-		public static bool operator !=(CudaFilePointer left, CudaFilePointer right) => !left.Equals(right);
-
-		/// <inheritdoc/>
-		public override string ToString() => $"[CudaHandle = {this.handle:X}, File = {this.stream.Name}]";
+		public bool Equals(CudaFilePointer other) => this.handle == other.handle;
 		#endregion
 	}
-
 	#endregion
 }
 
-#region error checks
 namespace Althea.Backend.Cuda
 {
+	#region error checks
 	/// <summary>
 	/// The static class containing extension methods for <see cref="CudaFileError"/> and <see cref="CudaFileOpError"/>
 	/// </summary>
@@ -509,5 +503,5 @@ namespace Althea.Backend.Cuda
 			}
 		}
 	}
+	#endregion
 }
-#endregion

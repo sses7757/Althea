@@ -3,198 +3,274 @@
 
 using System.Runtime.CompilerServices;
 
+using Althea.Backend.Cuda.Storage;
+
 
 namespace Althea.Backend.Cuda;
 
-	/// <summary>
-	/// The struct with nothing for GPU 0.
-	/// </summary>
-	public readonly struct GpuId0 : IGpuId
+/// <summary>
+/// The struct with nothing for GPU 0.
+/// </summary>
+public readonly struct GpuId0 : IGpuId
+{
+	static short IGpuId.GpuId
 	{
-		static short IGpuId.GpuId
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 0;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 1.
+/// </summary>
+public readonly struct GpuId1 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 1;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 2.
+/// </summary>
+public readonly struct GpuId2 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 2;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 3.
+/// </summary>
+public readonly struct GpuId3 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 3;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 4.
+/// </summary>
+public readonly struct GpuId4 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 4;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 5.
+/// </summary>
+public readonly struct GpuId5 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 5;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 6.
+/// </summary>
+public readonly struct GpuId6 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 6;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 7.
+/// </summary>
+public readonly struct GpuId7 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 7;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 8.
+/// </summary>
+public readonly struct GpuId8 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 8;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 9.
+/// </summary>
+public readonly struct GpuId9 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 9;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 10.
+/// </summary>
+public readonly struct GpuId10 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 10;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 11.
+/// </summary>
+public readonly struct GpuId11 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 11;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 12.
+/// </summary>
+public readonly struct GpuId12 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 12;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 13.
+/// </summary>
+public readonly struct GpuId13 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 13;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 14.
+/// </summary>
+public readonly struct GpuId14 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 14;
+	}
+}
+
+/// <summary>
+/// The struct with nothing for GPU 15.
+/// </summary>
+public readonly struct GpuId15 : IGpuId
+{
+	static short IGpuId.GpuId
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => 15;
+	}
+}
+
+internal static class CudaMemoryPointerExtension
+{
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static bool FromGenericGpu<TP>(this TP pointer, out CudaMemoryPointer ptr) where TP : IPointer<TP>
+	{
+		ptr = default;
+		if (pointer is CudaMemoryPointer<GpuId0>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId1>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId2>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId3>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId4>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId5>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId6>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId7>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId8>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId9>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId10>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId11>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId12>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId13>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId14>)
+			goto END;
+		if (pointer is CudaMemoryPointer<GpuId15>)
+			goto END;
+		return false;
+	END:
+		ptr = Unsafe.As<TP, CudaMemoryPointer>(ref pointer);
+		return true;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static bool FromGenericFile<TP>(this TP pointer, out CudaFilePointer ptr) where TP : IPointer<TP>
+	{
+		if (pointer is CudaFilePointer p)
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 0;
+			ptr = p;
+			return true;
+		}
+		else
+		{
+			ptr = default;
+			return false;
 		}
 	}
 
-	/// <summary>
-	/// The struct with nothing for GPU 1.
-	/// </summary>
-	public readonly struct GpuId1 : IGpuId
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static (CudaMemoryPointer, CudaFilePointer) FromGeneric<TP>(this TP pointer) where TP : IPointer<TP>
 	{
-		static short IGpuId.GpuId
+		(CudaMemoryPointer, CudaFilePointer) result = default;
+		if (FromGenericFile(pointer, out var f))
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 1;
+			result.Item2 = f;
 		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 2.
-	/// </summary>
-	public readonly struct GpuId2 : IGpuId
-	{
-		static short IGpuId.GpuId
+		if (FromGenericGpu(pointer, out var g))
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 2;
+			result.Item1 = g;
 		}
+		return result;
 	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 3.
-	/// </summary>
-	public readonly struct GpuId3 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 3;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 4.
-	/// </summary>
-	public readonly struct GpuId4 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 4;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 5.
-	/// </summary>
-	public readonly struct GpuId5 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 5;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 6.
-	/// </summary>
-	public readonly struct GpuId6 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 6;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 7.
-	/// </summary>
-	public readonly struct GpuId7 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 7;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 8.
-	/// </summary>
-	public readonly struct GpuId8 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 8;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 9.
-	/// </summary>
-	public readonly struct GpuId9 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 9;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 10.
-	/// </summary>
-	public readonly struct GpuId10 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 10;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 11.
-	/// </summary>
-	public readonly struct GpuId11 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 11;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 12.
-	/// </summary>
-	public readonly struct GpuId12 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 12;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 13.
-	/// </summary>
-	public readonly struct GpuId13 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 13;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 14.
-	/// </summary>
-	public readonly struct GpuId14 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 14;
-		}
-	}
-
-	/// <summary>
-	/// The struct with nothing for GPU 15.
-	/// </summary>
-	public readonly struct GpuId15 : IGpuId
-	{
-		static short IGpuId.GpuId
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => 15;
-		}
-	}
-
+}

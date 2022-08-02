@@ -40,7 +40,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public bool Disposed { get; set; } = false;
+		public bool Disposed { get; protected set; } = false;
 
 		private readonly Dictionary<(object matrix, MatrixOp trans), IntPtr> mvCache = new();
 		private readonly Dictionary<(object matrix, MatrixOp trans, long cols), IntPtr> mmCache = new();

@@ -29,7 +29,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	/// <inheritdoc/>
-	public bool Disposed { get; set; } = false;
+	public bool Disposed { get; protected set; } = false;
 
 	/// <summary>
 	/// Get the default <see cref="Api"/>.

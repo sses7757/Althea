@@ -65,7 +65,7 @@ namespace Althea.Backend.Mkl.Random
 		}
 
 		/// <inheritdoc/>
-		public bool Disposed { get; set; } = false;
+		public bool Disposed { get; protected set; } = false;
 		#endregion
 
 		#region get distribution

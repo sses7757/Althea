@@ -15,7 +15,7 @@ namespace Althea
 		/// <summary>
 		/// When implemented by a derived class, get a <see cref="bool"/> indicating whether this instance is disposed or not
 		/// </summary>
-		public bool Disposed { get; protected set; }
+		public bool Disposed { get; }
 
 		private delegate TApi CreateDelegate();
 

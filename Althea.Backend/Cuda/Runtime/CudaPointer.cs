@@ -29,10 +29,10 @@ internal readonly record struct CudaMemoryPointer(IntPtr Pointer, long LengthInB
 	internal readonly unsafe T* UnmangedPointer<T>(long offset = 0) where T : unmanaged, IBaseNumber<T> => (T*)this.Pointer.ToPointer() + offset;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal readonly unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
+	internal readonly unsafe void* OffsetPointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal readonly unsafe void* OffsetPointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
+	internal readonly unsafe void* OffsetPointer<TP>(PointerSegment<TP> ps) where TP : IPointer<TP> => (byte*)this.Pointer.ToPointer() + ps.OffsetInBytes;
 	#endregion
 }
 
@@ -58,18 +58,4 @@ public readonly record struct CudaMemoryPointer<TD>(IntPtr Pointer, long LengthI
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static CudaMemoryPointer<TD> Create<T>(IntPtr pointer, long length) where T : unmanaged, IBaseNumber<T> => new(pointer, length * T.Size);
 	#endregion
-
-	#region extension
-	internal readonly CudaMemoryPointer Base
-	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => Unsafe.As<CudaMemoryPointer<TD>, CudaMemoryPointer>(ref Unsafe.AsRef(in this));
-	}
-	#endregion
-}
-
-internal static class CudaMemoryPointerExtension
-{
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static CudaMemoryPointer FromGenericGpu<TP>(this TP pointer) where TP : IPointer<TP> => Unsafe.As<TP, CudaMemoryPointer>(ref pointer);
 }

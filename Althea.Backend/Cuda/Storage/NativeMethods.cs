@@ -6,7 +6,7 @@ namespace Althea.Backend.Cuda.Storage;
 /// <summary>
 /// Native methods from CUDA runtime and GPUDirect® Storage API
 /// </summary>
-public static class NativeMethods
+public static unsafe class NativeMethods
 {
 	#region memory manipulation
 	/// <summary>
@@ -47,7 +47,7 @@ public static class NativeMethods
 	/// <param name="count">length in bytes</param>
 	/// <param name="kind">copy kind <see cref="MemoryCopyKind"/></param>
 	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
-	internal static extern CudaError cudaMemcpy(IntPtr dst, IntPtr src, long count, MemoryCopyKind kind);
+	internal static extern CudaError cudaMemcpy(void* dst, void* src, long count, MemoryCopyKind kind);
 
 	/// <summary>
 	/// Copies 2D data between host and device or within device.
@@ -60,7 +60,7 @@ public static class NativeMethods
 	/// <param name="width">width to copy, in real size rather than bytes</param>
 	/// <param name="kind">copy kind of <see cref="MemoryCopyKind"/></param>
 	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
-	internal static extern CudaError cudaMemcpy2D(IntPtr dst, long destLD, IntPtr src, long srcLD, long height, long width, MemoryCopyKind kind);
+	internal static extern CudaError cudaMemcpy2D(void* dst, long destLD, void* src, long srcLD, long height, long width, MemoryCopyKind kind);
 
 	/// <summary>
 	/// Initializes or sets device memory to a value.
@@ -69,7 +69,7 @@ public static class NativeMethods
 	/// <param name="value">Value to set for each byte of specified memory</param>
 	/// <param name="count">Size in bytes to set</param>
 	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
-	internal static extern CudaError cudaMemset(IntPtr devPtr, int value, long count);
+	internal static extern CudaError cudaMemset(void* devPtr, int value, long count);
 	#endregion
 
 	#region CUDA file
@@ -194,7 +194,7 @@ public static class NativeMethods
 	/// <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
 	/// <remarks>Strided filling reduce the performance greatly.</remarks>
 	[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-	internal static unsafe extern void vecFillVal(DataType type, IntPtr array, void* value, long N, int stride);
+	internal static unsafe extern int vecFillVal(DataType type, void* array, void* value, long N, int stride);
 
 	/// <summary>
 	/// Strided copy the <paramref name="src"/> GPU array to the <paramref name="dst"/> GPU array
@@ -207,6 +207,6 @@ public static class NativeMethods
 	/// <param name="strideDst">The stride between two consecutive elements to be overwritten in <paramref name="dst"/></param>
 	/// <remarks>Strided copying reduce the performance greatly.</remarks>
 	[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-	internal static extern void vecStridedCopy(DataType type, IntPtr src, IntPtr dst, long N, int strideSrc, int strideDst);
+	internal static extern int vecStridedCopy(DataType type, void* src, void* dst, long N, int strideSrc, int strideDst);
 	#endregion
 }

@@ -123,82 +123,13 @@
   <data name="CannotWrite" xml:space="preserve">
     <value>Writing data to unwritable {0} is not allowed.</value>
   </data>
-  <data name="ChangeDevice" xml:space="preserve">
-    <value>The CUDA device ID changes from {0} to {1}.</value>
-  </data>
-  <data name="CompareComplex" xml:space="preserve">
-    <value>Cannot compare complex numbers of type {0}.</value>
+  <data name="CudaDeviceNotSupport" xml:space="preserve">
+    <value>The given CUDA device ID is not supported yet.</value>
   </data>
   <data name="CuFileFS" xml:space="preserve">
     <value>File system error occurred during CuFile read/write.</value>
   </data>
-  <data name="GenericNotNormalReal" xml:space="preserve">
-    <value>The (complex) number {0} is not close enough to a normal real number.</value>
-  </data>
-  <data name="GMRESConverge" xml:space="preserve">
-    <value>Generalized Minimal Residual algorithm converged after {0} restarts.</value>
-  </data>
-  <data name="GMRESFail" xml:space="preserve">
-    <value>Generalized Minimal Residual algorithm failed to converged after {0} restarts, current residual = {1}.</value>
-  </data>
-  <data name="GMRESStart" xml:space="preserve">
-    <value>Generalized Minimal Residual algorithm statrs with matrix size = {0} and maximum number of restarts = {1}.</value>
-  </data>
   <data name="InsufficientCudaCapability" xml:space="preserve">
     <value>The CUDA compute capability {0} of current CUDA device is less than required {1}.</value>
-  </data>
-  <data name="IterationAndTimeInfo" xml:space="preserve">
-    <value>Krylov subspace algorithm: now at iteration {0}, {1} passed since last output.</value>
-  </data>
-  <data name="KrylovSchurConverge" xml:space="preserve">
-    <value>Krylov-Schur algorithm converged after {0} restarts.</value>
-  </data>
-  <data name="KrylovSchurFail" xml:space="preserve">
-    <value>Krylov-Schur algorithm failed to converged after {0} restarts, still {1} eigen-pairs left.</value>
-  </data>
-  <data name="KrylovSchurStart" xml:space="preserve">
-    <value>Krylov-Schur algorithm statrs with matrix size = {0} and maximum number of restarts = {1}.</value>
-  </data>
-  <data name="LanczosConvergeOnePair" xml:space="preserve">
-    <value>Restarting Lanczos algorithm found that the {0} eigen-pair converges.</value>
-  </data>
-  <data name="MinResFinish" xml:space="preserve">
-    <value>Preconditioned Minimal Residual algorithm main calculation finishes, relative error = {0} (desired = {1}).</value>
-  </data>
-  <data name="MinResStart" xml:space="preserve">
-    <value>Preconditioned Minimal Residual algorithm statrs with matrix size = {0} and maximum number of iterations = {1}.</value>
-  </data>
-  <data name="NaiveLanczosFinish" xml:space="preserve">
-    <value>Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {1}.</value>
-  </data>
-  <data name="NaiveLanczosStart" xml:space="preserve">
-    <value>Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iterations = {1}.</value>
-  </data>
-  <data name="NotPositiveDefinite" xml:space="preserve">
-    <value>The given matrix is not a hermitian-positive-definite matrix.</value>
-  </data>
-  <data name="PCGFinish" xml:space="preserve">
-    <value>Preconditioned Conjugate Gradient algorithm main calculation finishes, relative error = {0} (desired = {1}).</value>
-  </data>
-  <data name="PCGStart" xml:space="preserve">
-    <value>Preconditioned Conjugate Gradient algorithm statrs with matrix size = {0} and maximum number of iterations = {1}.</value>
-  </data>
-  <data name="RestartLanczosConverge" xml:space="preserve">
-    <value>Restarting Lanczos algorithm converged after {0} restarts.</value>
-  </data>
-  <data name="RestartLanczosFail" xml:space="preserve">
-    <value>Restarting Lanczos algorithm failed to converged after {0} restarts, still {1} eigen-pairs left.</value>
-  </data>
-  <data name="RestartLanczosStart" xml:space="preserve">
-    <value>Restarting Lanczos algorithm statrs with matrix size = {0} and maximum number of restarts = {1}.</value>
-  </data>
-  <data name="RestartWarn1" xml:space="preserve">
-    <value>Restarting with only one preserved Ritz pair may never improve the result.</value>
-  </data>
-  <data name="RestartWarn2" xml:space="preserve">
-    <value>Restarting while preserving more than half Ritz pairs may not improve the result.</value>
-  </data>
-  <data name="TooMuchEigenvaluesRequired" xml:space="preserve">
-    <value>The number of smallest eigenvalues required ({0}) is larger than the desired value, maybe the native eigen solver is a better option.</value>
   </data>
 </root>

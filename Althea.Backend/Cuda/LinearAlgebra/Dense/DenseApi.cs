@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
+using Althea.Backend.Cuda.Storage;
 using Althea.Backend.Storage;
 using Althea.Helpers;
 using Althea.LinearAlgebra;

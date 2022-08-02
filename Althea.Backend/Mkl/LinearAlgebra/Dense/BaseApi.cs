@@ -233,7 +233,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IHal
 	}
 
 	/// <inheritdoc/>
-	public bool Disposed { get; set; } = false;
+	public bool Disposed { get; protected set; } = false;
 
 	/// <summary>
 	/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").

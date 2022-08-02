@@ -12,7 +12,7 @@ namespace Althea.Backend.Mkl.Transformer
 	{
 		#region basic
 		/// <inheritdoc/>
-		public bool Disposed { get; set; } = false;
+		public bool Disposed { get; protected set; } = false;
 
 		/// <inheritdoc/>
 		public void Dispose()
