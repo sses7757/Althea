@@ -207,37 +207,101 @@ internal static class CudaMemoryPointerExtension
 	{
 		ptr = default;
 		if (pointer is CudaMemoryPointer<GpuId0>)
+		{
+			if (Runtime.CurrentDeviceID != 0)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId1>)
+		{
+			if (Runtime.CurrentDeviceID != 1)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId2>)
+		{
+			if (Runtime.CurrentDeviceID != 2)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId3>)
+		{
+			if (Runtime.CurrentDeviceID != 3)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId4>)
+		{
+			if (Runtime.CurrentDeviceID != 4)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId5>)
+		{
+			if (Runtime.CurrentDeviceID != 5)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId6>)
+		{
+			if (Runtime.CurrentDeviceID != 6)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId7>)
+		{
+			if (Runtime.CurrentDeviceID != 7)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId8>)
+		{
+			if (Runtime.CurrentDeviceID != 8)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId9>)
+		{
+			if (Runtime.CurrentDeviceID != 9)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId10>)
+		{
+			if (Runtime.CurrentDeviceID != 10)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId11>)
+		{
+			if (Runtime.CurrentDeviceID != 11)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId12>)
+		{
+			if (Runtime.CurrentDeviceID != 12)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId13>)
+		{
+			if (Runtime.CurrentDeviceID != 13)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId14>)
+		{
+			if (Runtime.CurrentDeviceID != 14)
+				return false;
 			goto END;
+		}
 		if (pointer is CudaMemoryPointer<GpuId15>)
+		{
+			if (Runtime.CurrentDeviceID != 15)
+				return false;
 			goto END;
+		}
 		return false;
 	END:
 		ptr = Unsafe.As<TP, CudaMemoryPointer>(ref pointer);
@@ -273,4 +337,123 @@ internal static class CudaMemoryPointerExtension
 		}
 		return result;
 	}
+}
+
+internal static unsafe class MemoryPointerChecker
+{
+	#region CUDA back-end
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool GetPointer<T, TS>(TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		pointer = default; length = 0;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId0>>)
+		{
+			if (Runtime.CurrentDeviceID != 0)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId1>>)
+		{
+			if (Runtime.CurrentDeviceID != 1)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId2>>)
+		{
+			if (Runtime.CurrentDeviceID != 2)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId3>>)
+		{
+			if (Runtime.CurrentDeviceID != 3)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId4>>)
+		{
+			if (Runtime.CurrentDeviceID != 4)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId5>>)
+		{
+			if (Runtime.CurrentDeviceID != 5)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId6>>)
+		{
+			if (Runtime.CurrentDeviceID != 6)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId7>>)
+		{
+			if (Runtime.CurrentDeviceID != 7)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId8>>)
+		{
+			if (Runtime.CurrentDeviceID != 8)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId9>>)
+		{
+			if (Runtime.CurrentDeviceID != 9)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId10>>)
+		{
+			if (Runtime.CurrentDeviceID != 10)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId11>>)
+		{
+			if (Runtime.CurrentDeviceID != 11)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId12>>)
+		{
+			if (Runtime.CurrentDeviceID != 12)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId13>>)
+		{
+			if (Runtime.CurrentDeviceID != 13)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId14>>)
+		{
+			if (Runtime.CurrentDeviceID != 14)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId15>>)
+		{
+			if (Runtime.CurrentDeviceID != 15)
+				return false;
+			goto END;
+		}
+		return false;
+	END:
+		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
+		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
+		if (pointer == default)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
+		length = ps.LengthInBytes / sizeof(T);
+		if (length > int.MaxValue || length < 0)
+			return false;
+		return true;
+	}
+	#endregion
 }

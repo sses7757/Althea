@@ -16,9 +16,16 @@ public interface IGpuId
 	abstract static short GpuId { get; }
 }
 
-internal readonly record struct CudaMemoryPointer(IntPtr Pointer, long LengthInBytes)
+internal readonly record struct CudaMemoryPointer(IntPtr Pointer, long LengthInBytes) : IMemoryPointer<CudaMemoryPointer>
 {
+	static StorageLocation IPointer<CudaMemoryPointer>.Location => new(LocationType.GpuRam, 0);
+
+	static CudaMemoryPointer IPointer<CudaMemoryPointer>.Default => default;
+
 	#region extension
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly bool IsValid() => this.Pointer != default;
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal readonly TP AsGeneric<TP>() where TP : IPointer<TP> => Unsafe.As<CudaMemoryPointer, TP>(ref Unsafe.AsRef(in this));
 
@@ -32,7 +39,7 @@ internal readonly record struct CudaMemoryPointer(IntPtr Pointer, long LengthInB
 	internal readonly unsafe void* OffsetPointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal readonly unsafe void* OffsetPointer<TP>(PointerSegment<TP> ps) where TP : IPointer<TP> => (byte*)this.Pointer.ToPointer() + ps.OffsetInBytes;
+	internal readonly unsafe void* NativePointer<TP>(PointerSegment<TP> ps) where TP : IPointer<TP> => (byte*)this.Pointer.ToPointer() + ps.OffsetInBytes;
 	#endregion
 }
 

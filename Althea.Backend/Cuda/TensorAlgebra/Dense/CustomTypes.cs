@@ -13,9 +13,6 @@ using Althea.Backend.Cuda.TensorAlgebra.Dense;
 
 namespace Althea.Backend.Cuda
 {
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaTensorStatus"/> and <see cref="CudaTensorStatus"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>

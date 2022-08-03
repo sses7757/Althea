@@ -128,9 +128,26 @@ namespace Althea.Backend.CSharp.Storage
 		internal static unsafe void StridedCopy<T>(T* src, T* dst, int srcInc, int dstInc, int count) where T : unmanaged, IBaseNumber<T>
 		{
 			T* end = src + srcInc * count;
-			for (; src < end; src += srcInc, dst += dstInc)
+			if (srcInc == 1)
 			{
-				*dst = *src;
+				for (; src < end; src++, dst += dstInc)
+				{
+					*dst = *src;
+				}
+			}
+			else if (dstInc == 1)
+			{
+				for (; src < end; src += srcInc, dst++)
+				{
+					*dst = *src;
+				}
+			}
+			else
+			{
+				for (; src < end; src += srcInc, dst += dstInc)
+				{
+					*dst = *src;
+				}
 			}
 		}
 

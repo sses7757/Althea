@@ -2,7 +2,6 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 
-using Althea.Backend.Cuda.LinearAlgebra.Dense;
 using Althea.Backend.Storage;
 using Althea.Linq;
 
@@ -151,11 +150,11 @@ namespace Althea.Backend.Cuda.Storage
 		{
 			valid = false;
 			var (gpu, file) = pointer.FromGeneric();
-			if (gpu != default)
+			if (gpu.IsValid())
 			{
 				NativeMethods.cudaFree(gpu.Pointer).Check();
 			}
-			else if (file != default)
+			else if (file.IsValid())
 			{
 				if (!this.CudaFileSupported)
 					return false;
@@ -175,11 +174,11 @@ namespace Althea.Backend.Cuda.Storage
 		public virtual bool FillWithValue<TP>(PointerSegment<TP> pointer, byte value) where TP : notnull, IPointer<TP>
 		{
 			var (gpu, file) = pointer.Pointer.FromGeneric();
-			if (gpu != default)
+			if (gpu.IsValid())
 			{
-				NativeMethods.cudaMemset(gpu.OffsetPointer(pointer), value, pointer.LengthInBytes).Check();
+				NativeMethods.cudaMemset(gpu.NativePointer(pointer), value, pointer.LengthInBytes).Check();
 			}
-			else if (file != default)
+			else if (file.IsValid())
 			{
 				if (!file.CanWrite)
 					throw new InvalidOperationException();
@@ -205,12 +204,12 @@ namespace Althea.Backend.Cuda.Storage
 			if (value.AllBytesSame())
 				return FillWithValue(pointer, *(byte*)&value);
 			var (gpu, file) = pointer.Pointer.FromGeneric();
-			if (gpu != default)
+			if (gpu.IsValid())
 			{
-				if (NativeMethods.vecFillVal(T.Type, gpu.OffsetPointer(pointer), &value, pointer.LengthInBytes / sizeof(T), 1) < 0)
+				if (NativeMethods.vecFillVal(T.Type, gpu.NativePointer(pointer), &value, pointer.LengthInBytes / sizeof(T), 1) < 0)
 					return false;
 			}
-			else if (file != default)
+			else if (file.IsValid())
 			{
 				if (!file.CanWrite)
 					throw new InvalidOperationException();
@@ -237,7 +236,7 @@ namespace Althea.Backend.Cuda.Storage
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static MemoryCopyKind GetCopyKind(CpuMemoryPointer src, CpuMemoryPointer dst)
 		{
-			bool srcHost = src != default, dstHost = dst != default;
+			bool srcHost = src.IsValid(), dstHost = dst.IsValid();
 			MemoryCopyKind copyKind;
 			if (srcHost && dstHost)
 				copyKind = MemoryCopyKind.HostToHost;
@@ -256,7 +255,7 @@ namespace Althea.Backend.Cuda.Storage
 			actualCopied = Math.Min(source.LengthInBytes / sizeof(T), destination.LengthInBytes / sizeof(T)) * sizeof(T);
 			var (gpuSrc, fileSrc) = source.Pointer.FromGeneric();
 			var (gpuDst, fileDst) = destination.Pointer.FromGeneric();
-			if (!this.CudaFileSupported && (fileSrc != default || fileDst != default))
+			if (!this.CudaFileSupported && (fileSrc.IsValid() || fileDst.IsValid()))
 				return false;
 			CpuMemoryPointer cpuSrc = default, cpuDst = default;
 			if (gpuSrc == default && fileSrc == default)
@@ -273,9 +272,9 @@ namespace Althea.Backend.Cuda.Storage
 			}
 			if (fileSrc == default && fileDst == default)
 			{
-				NativeMethods.cudaMemcpy(gpuDst.OffsetPointer(destination), gpuSrc.OffsetPointer(source), actualCopied, GetCopyKind(cpuSrc, cpuDst)).Check();
+				NativeMethods.cudaMemcpy(gpuDst.NativePointer(destination), gpuSrc.NativePointer(source), actualCopied, GetCopyKind(cpuSrc, cpuDst)).Check();
 			}
-			else if (gpuSrc != default && fileDst != default)
+			else if (gpuSrc.IsValid() && fileDst.IsValid())
 			{
 				if (!fileDst.CanWrite)
 					throw new InvalidOperationException();
@@ -283,13 +282,13 @@ namespace Althea.Backend.Cuda.Storage
 				using var buf = CudaFileBuffer.Create(gpuSrc.Pointer, gpuSrc.LengthInBytes, cached);
 				NativeMethods.cuFileWrite(fileDst.Handle, gpuSrc.Pointer, actualCopied, destination.OffsetInBytes, source.OffsetInBytes).Check();
 			}
-			else if (fileSrc != default && gpuDst != default)
+			else if (fileSrc.IsValid() && gpuDst.IsValid())
 			{
 				bool cached = this.fileBuffers!.TryGetValue(fileSrc.Handle, out var ptr) && ptr == gpuDst.Pointer;
 				using var buf = CudaFileBuffer.Create(gpuDst.Pointer, gpuDst.LengthInBytes, cached);
 				NativeMethods.cuFileRead(fileSrc.Handle, gpuDst.Pointer, actualCopied, source.OffsetInBytes, destination.OffsetInBytes).Check();
 			}
-			else if (fileSrc != default && fileDst != default)
+			else if (fileSrc.IsValid() && fileDst.IsValid())
 			{
 				// large buffer to mitigate misalignment performance loss
 				using var buffer = CudaBuffer.Create(Math.Min(actualCopied, 65536), 0, false);
@@ -321,7 +320,7 @@ namespace Althea.Backend.Cuda.Storage
 
 			var (gpuSrc, fileSrc) = source.Pointer.FromGeneric();
 			var (gpuDst, fileDst) = destination.Pointer.FromGeneric();
-			if (!this.CudaFileSupported && (fileSrc != default || fileDst != default))
+			if (!this.CudaFileSupported && (fileSrc.IsValid() || fileDst.IsValid()))
 				return false;
 			CpuMemoryPointer cpuSrc = default, cpuDst = default;
 			if (gpuSrc == default && fileSrc == default)
@@ -339,9 +338,9 @@ namespace Althea.Backend.Cuda.Storage
 
 			if (fileSrc == default && fileDst == default)
 			{
-				NativeMethods.cudaMemcpy2D(gpuDst.OffsetPointer(destination), destinationLD, gpuSrc.OffsetPointer(source), sourceLD, height, width, GetCopyKind(cpuSrc, cpuDst)).Check();
+				NativeMethods.cudaMemcpy2D(gpuDst.NativePointer(destination), destinationLD, gpuSrc.NativePointer(source), sourceLD, height, width, GetCopyKind(cpuSrc, cpuDst)).Check();
 			}
-			else if (gpuSrc != default && fileDst != default)
+			else if (gpuSrc.IsValid() && fileDst.IsValid())
 			{
 				if (!fileDst.CanWrite)
 					throw new InvalidOperationException();
@@ -352,7 +351,7 @@ namespace Althea.Backend.Cuda.Storage
 					NativeMethods.cuFileWrite(fileDst.Handle, gpuSrc.Pointer, height, destination.OffsetInBytes + i * destinationLD, source.OffsetInBytes + i * sourceLD).Check();
 				}
 			}
-			else if (fileSrc != default && gpuDst != default)
+			else if (fileSrc.IsValid() && gpuDst.IsValid())
 			{
 				bool cached = this.fileBuffers!.TryGetValue(fileSrc.Handle, out var ptr) && ptr == gpuDst.Pointer;
 				using var buf = CudaFileBuffer.Create(gpuDst.Pointer, gpuDst.LengthInBytes, cached);
@@ -361,7 +360,7 @@ namespace Althea.Backend.Cuda.Storage
 					NativeMethods.cuFileRead(fileSrc.Handle, gpuDst.Pointer, height, source.OffsetInBytes + i * sourceLD, destination.OffsetInBytes + i * destinationLD).Check();
 				}
 			}
-			else if (fileSrc != default && fileDst != default)
+			else if (fileSrc.IsValid() && fileDst.IsValid())
 			{
 				using var buffer = CudaBuffer.Create(height, 0, false);
 				using CudaFileBuffer buf = buffer;
@@ -379,52 +378,32 @@ namespace Althea.Backend.Cuda.Storage
 
 		#region strided copy
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool PointerStridedCopy<T>(IntPtr source, int incrementSource, IntPtr destination, int incrementDestination, MemoryCopyKind copyKind, int copies) where T : unmanaged, IBaseNumber<T>
+		internal static bool PointerStridedCopy<T>(void* source, int incrementSource, void* destination, int incrementDestination, MemoryCopyKind copyKind, long copies) where T : unmanaged, IBaseNumber<T>
 		{
 			if (incrementSource == 1 && incrementDestination == 1)
 			{
-				return NativeMethods.cudaMemcpy(destination, source, sizeof(T) * (long)copies, copyKind) == CudaError.Success;
+				NativeMethods.cudaMemcpy(destination, source, sizeof(T) * copies, copyKind).Check();
+				return true;
 			}
 			switch (copyKind)
 			{
 				case MemoryCopyKind.HostToDevice:
-					LinearAlgebra.Dense.NativeMethods.cublasSetVector(copies, sizeof(T), source, incrementSource, destination, incrementDestination);
+					if (copies > int.MaxValue)
+						return false;
+					LinearAlgebra.Dense.NativeMethods.cublasSetVector((int)copies, sizeof(T), source, incrementSource, destination, incrementDestination).Check();
 					break;
 				case MemoryCopyKind.DeviceToHost:
-					LinearAlgebra.Dense.NativeMethods.cublasGetVector(copies, sizeof(T), source, incrementSource, destination, incrementDestination);
+					if (copies > int.MaxValue)
+						return false;
+					LinearAlgebra.Dense.NativeMethods.cublasGetVector((int)copies, sizeof(T), source, incrementSource, destination, incrementDestination).Check();
 					break;
 				case MemoryCopyKind.DeviceToDevice:
-					var (major, minor) = CudaRuntime.GetDriverVersion();
-					bool cuda111Above = (major == 11 && minor >= 1) || major > 11;
-					var handles = DenseApi.deviceHandles[CudaRuntime.CurrentDeviceID];
-					if (handles is not null && handles.First is { } h)
-					{
-						delegate*<IntPtr, int, IntPtr, int, IntPtr, int, CudaBlasStatus> func = null;
-						switch (Const<T>.DataType)
-						{
-							case DataType.RealFloat32:
-								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasScopy : &LinearAlgebra.Dense.NativeMethods.cublasScopy_v2;
-								break;
-							case DataType.RealFloat64:
-								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasDcopy : &LinearAlgebra.Dense.NativeMethods.cublasDcopy_v2;
-								break;
-							case DataType.ComplexSingle:
-								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasCcopy : &LinearAlgebra.Dense.NativeMethods.cublasCcopy_v2;
-								break;
-							case DataType.ComplexDouble:
-								func = cuda111Above ? &LinearAlgebra.Dense.NativeMethods.cublasZcopy : &LinearAlgebra.Dense.NativeMethods.cublasZcopy_v2;
-								break;
-							default:
-								break;
-						}
-						if (func is not null)
-						{
-							func(h.Value, copies, source, incrementSource, destination, incrementDestination).Check();
-							return true;
-						}
-					}
-					NativeMethods.vecStridedCopy(Const<T>.DataType, source, destination, copies, incrementSource, incrementDestination);
-					break;
+					return NativeMethods.vecStridedCopy(T.Type, source, destination, copies, incrementSource, incrementDestination) == 0;
+				case MemoryCopyKind.HostToHost:
+					if (copies > int.MaxValue)
+						return false;
+					CSharp.Storage.Api.StridedCopy((T*)source, (T*)destination, incrementSource, incrementDestination, (int)copies);
+					return true;
 				default:
 					return false;
 			}
@@ -439,7 +418,32 @@ namespace Althea.Backend.Cuda.Storage
 			{
 				return this.MemoryCopy<T, TP1, TP2>(source, destination, out actualCopied);
 			}
-			
+			actualCopied = (source.LengthInBytes / sizeof(T) + incrementSource - 1) / incrementSource;
+			actualCopied = Math.Min(actualCopied, (destination.LengthInBytes / sizeof(T) + incrementDestination - 1) / incrementDestination);
+			if (incrementSource > int.MaxValue || incrementDestination > int.MaxValue)
+				return false;
+
+			var (gpuSrc, fileSrc) = source.Pointer.FromGeneric();
+			var (gpuDst, fileDst) = destination.Pointer.FromGeneric();
+			if (fileSrc.IsValid() || fileDst.IsValid())
+				return false;
+			CpuMemoryPointer cpuSrc = default, cpuDst = default;
+			if (gpuSrc == default && fileSrc == default)
+			{
+				if (source.Pointer is not CpuMemoryPointer cpu)
+					return false;
+				cpuSrc = cpu;
+			}
+			if (gpuDst == default && fileDst == default)
+			{
+				if (destination.Pointer is not CpuMemoryPointer cpu)
+					return false;
+				cpuDst = cpu;
+			}
+			void* src = gpuSrc.IsValid() ? gpuSrc.NativePointer(source) : cpuSrc.NativePointer(source);
+			void* dst = gpuDst.IsValid() ? gpuDst.NativePointer(destination) : cpuDst.NativePointer(destination);
+
+			return PointerStridedCopy<T>(src, (int)incrementSource, dst, (int)incrementDestination, GetCopyKind(cpuSrc, cpuDst), actualCopied);
 		}
 		#endregion
 	}

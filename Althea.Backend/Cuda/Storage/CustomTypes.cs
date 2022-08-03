@@ -409,7 +409,7 @@ namespace Althea.Backend.Cuda.Storage
 		public readonly bool CanWrite => this.stream.CanWrite;
 
 		/// <inheritdoc/>
-		public bool IsValid() => this.Handle != default;
+		public readonly bool IsValid() => this.Handle != default;
 
 		/// <summary>
 		/// Create a new <see cref="CudaFilePointer"/> with given <paramref name="filePath"/>.
@@ -444,7 +444,7 @@ namespace Althea.Backend.Cuda.Storage
 		public override int GetHashCode() => this.handle.GetHashCode();
 
 		/// <inheritdoc/>
-		public bool Equals(CudaFilePointer other) => this.handle == other.handle;
+		public readonly bool Equals(CudaFilePointer other) => this.handle == other.handle;
 		#endregion
 	}
 	#endregion
@@ -453,9 +453,6 @@ namespace Althea.Backend.Cuda.Storage
 namespace Althea.Backend.Cuda
 {
 	#region error checks
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaFileError"/> and <see cref="CudaFileOpError"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>

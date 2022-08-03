@@ -1247,9 +1247,6 @@ namespace Althea.Backend.Cuda
 		ErrorApiFailureBase = 10000
 	}
 
-	/// <summary>
-	/// The static class containing extension methods for <see cref="StatusException"/> and <see cref="CudaError"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>

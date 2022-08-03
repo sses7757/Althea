@@ -107,7 +107,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="incy">The spacing between consecutive elements of <paramref name="y"/></param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSetVector(int n, int elemSize, IntPtr x, int incx, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasSetVector(int n, int elemSize, void* x, int incx, void* y, int incy);
 
 		/// <summary>
 		/// This function copies <paramref name="n"/> elements from a vector <paramref name="x"/> in GPU memory space to a vector <paramref name="y"/> in CPU memory space. Elements in both vectors are assumed to have a size of <paramref name="elemSize"/> bytes. The storage spacing between consecutive elements is given by <paramref name="incx"/> and <paramref name="incy"/> respectively.
@@ -120,7 +120,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="incy">The spacing between consecutive elements of <paramref name="y"/></param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(CUBLAS_API_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetVector(int n, int elemSize, IntPtr x, int incx, IntPtr y, int incy);
+		internal static extern CudaBlasStatus cublasGetVector(int n, int elemSize, void* x, int incx, void* y, int incy);
 		#endregion
 
 

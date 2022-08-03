@@ -12,9 +12,6 @@ using Althea.Numerics;
 
 namespace Althea.Backend.Cuda
 {
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaBlasStatus"/> and <see cref="CudaSolverStatus"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>

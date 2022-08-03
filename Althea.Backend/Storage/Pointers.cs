@@ -41,6 +41,10 @@ public readonly record struct CpuMemoryPointer(IntPtr Pointer, long LengthInByte
 	/// <param name="length">The length in <typeparamref name="T"/></param>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static CpuMemoryPointer Create<T>(IntPtr pointer, long length) where T : unmanaged, IBaseNumber<T> => new(pointer, length * T.Size);
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly bool IsValid() => this.Pointer != default;
 	#endregion
 
 	#region extension
@@ -52,6 +56,9 @@ public readonly record struct CpuMemoryPointer(IntPtr Pointer, long LengthInByte
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal unsafe void* NativePointer(long offset = 0) => (byte*)this.Pointer.ToPointer() + offset;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal unsafe void* NativePointer<TP>(PointerSegment<TP> ps) where TP : IPointer<TP> => (byte*)this.Pointer.ToPointer() + ps.OffsetInBytes;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal unsafe Span<T> AsSpan<T>(long offset = 0, int length = 0) where T : unmanaged, IBaseNumber<T> => new(this.UnmangedPointer<T>(offset), length);

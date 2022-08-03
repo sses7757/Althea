@@ -36,7 +36,11 @@ internal static class CudaMemoryPointerExtension
 		ptr = default;
 <# for (int i = 0; i < 16; i++) { #>
 		if (pointer is CudaMemoryPointer<GpuId<#=i#>>)
+		{
+			if (Runtime.CurrentDeviceID != <#=i#>)
+				return false;
 			goto END;
+		}
 <# } #>
 		return false;
 	END:
@@ -73,4 +77,35 @@ internal static class CudaMemoryPointerExtension
 		}
 		return result;
 	}
+}
+
+internal static unsafe class MemoryPointerChecker
+{
+	#region CUDA back-end
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool GetPointer<T, TS>(TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		pointer = default; length = 0;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+<# for (int i = 0; i < 16; i++) { #>
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId<#=i#>>>)
+		{
+			if (Runtime.CurrentDeviceID != <#=i#>)
+				return false;
+			goto END;
+		}
+<# } #>
+		return false;
+	END:
+		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
+		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
+		if (pointer == default)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
+		length = ps.LengthInBytes / sizeof(T);
+		if (length > int.MaxValue || length < 0)
+			return false;
+		return true;
+	}
+	#endregion
 }
