@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.SourceGenerator", "A
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExtendBlas", "ExtendBlas\ExtendBlas.vcxproj", "{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Althea.GeneralSolvers", "Althea.GeneralSolvers\Althea.GeneralSolvers.csproj", "{0F08AF51-31F4-4C13-9930-50F166BDF7D5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.GeneralSolvers", "Althea.GeneralSolvers\Althea.GeneralSolvers.csproj", "{0F08AF51-31F4-4C13-9930-50F166BDF7D5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

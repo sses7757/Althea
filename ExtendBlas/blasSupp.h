@@ -21,6 +21,7 @@
 // CUDA includes
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <cusolverDn.h>
 
 // math and complex
 #include <math.h>

@@ -4,22 +4,22 @@ using System.Runtime.CompilerServices;
 
 namespace Althea.Backend.Cuda.Storage
 {
-	internal readonly ref struct CudaFileBuffer
+	internal readonly unsafe ref struct CudaFileBuffer
 	{
-		private readonly IntPtr buffer;
+		private readonly void* buffer;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator IntPtr(CudaFileBuffer buffer) => buffer.buffer;
+		public static implicit operator void*(CudaFileBuffer buffer) => buffer.buffer;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal CudaFileBuffer(IntPtr buf, long size)
+		internal CudaFileBuffer(void* buf, long size)
 		{
 			this.buffer = buf;
 			NativeMethods.cuFileBufRegister(buf, size, 0).Check();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CudaFileBuffer Create(IntPtr buf, long size, bool cached = false) => cached ? default : new(buf, size);
+		public static CudaFileBuffer Create(void* buf, long size, bool cached = false) => cached ? default : new(buf, size);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
@@ -29,9 +29,9 @@ namespace Althea.Backend.Cuda.Storage
 		}
 	}
 
-	internal readonly ref struct CudaBuffer
+	internal readonly unsafe ref struct CudaBuffer
 	{
-		private readonly IntPtr deviceBuffer;
+		private readonly void* deviceBuffer;
 
 		private readonly long extraDeviceInfoOffset;
 
@@ -49,14 +49,14 @@ namespace Althea.Backend.Cuda.Storage
 		/// <summary>
 		/// Get the pointer to the buffer array on current CUDA device (GPU memory) as an <see cref="IntPtr"/> or <see cref="IntPtr.Zero"/> if no array was allocated on device.
 		/// </summary>
-		public IntPtr DeviceBuffer
+		public void* DeviceBuffer
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => this.deviceBuffer;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator IntPtr(CudaBuffer buffer) => buffer.deviceBuffer;
+		public static implicit operator void*(CudaBuffer buffer) => buffer.deviceBuffer;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator byte[]?(CudaBuffer buffer) => buffer.hostBuffer;
@@ -67,10 +67,10 @@ namespace Althea.Backend.Cuda.Storage
 		/// <summary>
 		/// Get the pointer to the preserved extra device info on current CUDA device (GPU memory) as an <see cref="IntPtr"/> or <see cref="IntPtr.Zero"/> if there is no preserved extra device info.
 		/// </summary>
-		public IntPtr ExtraDeviceInfo
+		public void* ExtraDeviceInfo
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.extraDeviceInfoOffset < 0 ? default : (IntPtr)((long)this.deviceBuffer + extraDeviceInfoOffset);
+			get => this.extraDeviceInfoOffset < 0 ? default : ((byte*)this.deviceBuffer + extraDeviceInfoOffset);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

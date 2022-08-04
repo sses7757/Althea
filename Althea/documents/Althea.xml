@@ -22569,17 +22569,17 @@
             <see cref="T:System.Double"/> = <see cref="F:Althea.Numerics.DataTypeTuple.Real"/> + <see cref="F:Althea.Numerics.DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="F:Althea.Numerics.DataTypeSize.Byte8"/>
             </summary>
         </member>
-        <member name="F:Althea.Numerics.DataType.ComplexHalf">
+        <member name="F:Althea.Numerics.DataType.ComplexFloat16">
             <summary>
             <see cref="T:Althea.Numerics.Complex`1"/> of <see cref="T:System.Half"/> = <see cref="F:Althea.Numerics.DataTypeTuple.Real"/> + <see cref="F:Althea.Numerics.DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="F:Althea.Numerics.DataTypeSize.Byte2"/>
             </summary>
         </member>
-        <member name="F:Althea.Numerics.DataType.ComplexSingle">
+        <member name="F:Althea.Numerics.DataType.ComplexFloat32">
             <summary>
             <see cref="T:Althea.Numerics.Complex`1"/> of <see cref="T:System.Single"/> = <see cref="F:Althea.Numerics.DataTypeTuple.Real"/> + <see cref="F:Althea.Numerics.DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="F:Althea.Numerics.DataTypeSize.Byte4"/>
             </summary>
         </member>
-        <member name="F:Althea.Numerics.DataType.ComplexDouble">
+        <member name="F:Althea.Numerics.DataType.ComplexFloat64">
             <summary>
             <see cref="T:Althea.Numerics.Complex`1"/> of <see cref="T:System.Double"/> = <see cref="F:Althea.Numerics.DataTypeTuple.Real"/> + <see cref="F:Althea.Numerics.DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="F:Althea.Numerics.DataTypeSize.Byte8"/>
             </summary>

@@ -1,94 +1,85 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using Althea.LinearAlgebra;
-using Althea.Numerics;
 
 
-namespace Althea.Backend.Cuda.LinearAlgebra
+namespace Althea.Backend.Cuda.LinearAlgebra;
+
+/// <summary>
+/// The <see cref="CuBlasOperation"/> enum indicates which operation needs to be performed with the dense matrix.<br/>
+/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-transpose), ‘T’ or ‘t’ (transpose) and ‘C’ or ‘c’ (conjugate transpose) that are often used as parameters to legacy BLAS implementations.
+/// </summary>
+internal enum CuBlasOperation
 {
 	/// <summary>
-	/// The <see cref="CuBlasOperation"/> enum indicates which operation needs to be performed with the dense matrix.<br/>
-	/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-transpose), ‘T’ or ‘t’ (transpose) and ‘C’ or ‘c’ (conjugate transpose) that are often used as parameters to legacy BLAS implementations.
+	/// the non-transpose operation is selected
 	/// </summary>
-	internal enum CuBlasOperation
+	None = 0,
+	/// <summary>
+	/// the transpose operation is selected
+	/// </summary>
+	Transpose = 1,
+	/// <summary>
+	/// the conjugate transpose operation is selected
+	/// </summary>
+	ConjugateTranspose = 2,
+	Conjugate = 3,
+}
+
+internal static class Conversions
+{
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static sbyte ToSvdChar<T, TS1, TS2>(TS1 matrix, TS2? svd, bool full) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
-		/// <summary>
-		/// the non-transpose operation is selected
-		/// </summary>
-		None = 0,
-		/// <summary>
-		/// the transpose operation is selected
-		/// </summary>
-		Transpose = 1,
-		/// <summary>
-		/// the conjugate transpose operation is selected
-		/// </summary>
-		ConjugateTranspose = 2,
-		/// <summary>
-		/// the conjugate alone operation, not used in cuBLAS, shall be further dealt with
-		/// </summary>
-		ConjugateAlone = 3,
+		if (svd is null)
+			return (sbyte)'N';
+		if (svd == matrix)
+			return (sbyte)'O';
+		return full ? (sbyte)'A' : (sbyte)'S';
 	}
 
-	internal static class Conversions
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static CuBlasOperation ToCuda(this MatrixOperation op, bool? hermitian = null)
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static sbyte ToChar(this SVDStore store)
+		return op switch
 		{
-			return store switch
-			{
-				SVDStore.All => (sbyte)'A',
-				SVDStore.Economic => (sbyte)'S',
-				SVDStore.Overwrite => (sbyte)'O',
-				SVDStore.None => (sbyte)'N',
-				_ => 0,
-			};
-		}
+			MatrixOperation.Transpose => CuBlasOperation.Transpose,
+			MatrixOperation.Conjugate => hermitian.HasValue && hermitian.Value ? CuBlasOperation.Transpose : CuBlasOperation.Conjugate,
+			MatrixOperation.ConjugateTranspose => CuBlasOperation.ConjugateTranspose,
+			_ => CuBlasOperation.None,
+		};
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static CuBlasOperation ToCuda(this Althea.LinearAlgebra.MatrixOperation op, bool? hermitian = null)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static bool CheckBaseSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
+	{
+		return value switch
 		{
-			return op switch
-			{
-				Althea.LinearAlgebra.MatrixOperation.Transpose => CuBlasOperation.Transpose,
-				Althea.LinearAlgebra.MatrixOperation.Conjugate => hermitian.HasValue && hermitian.Value ? CuBlasOperation.Transpose : CuBlasOperation.ConjugateAlone,
-				Althea.LinearAlgebra.MatrixOperation.ConjugateTranspose => CuBlasOperation.ConjugateTranspose,
-				_ => CuBlasOperation.None,
-			};
-		}
+			Float32 or Float64 or
+			Complex<Float32> or Complex<Float64> => true,
+			_ => false,
+		};
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CheckBaseSupport(this DataType type)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static bool CheckExSupportt<T>(this T value) where T : unmanaged, IBaseNumber<T>
+	{
+		return value switch
 		{
-			return type switch
-			{
-				DataType.RealFloat32 or DataType.RealFloat64 or
-				DataType.ComplexSingle or DataType.ComplexDouble => true,
-				_ => false,
-			};
-		}
+			Float32 or Float64 or Float16 or
+			Complex<Float32> or Complex<Float64> or Complex<Float16> => true,
+			_ => false,
+		};
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CheckExSupport(this DataType type)
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static bool CheckEx2Supportt<T>(this T value) where T : unmanaged, IBaseNumber<T>
+	{
+		return value switch
 		{
-			return type switch
-			{
-				DataType.RealFloat32 or DataType.RealFloat64 or DataType.RealFloat16 or
-				DataType.ComplexSingle or DataType.ComplexDouble or DataType.ComplexHalf => true,
-				_ => false,
-			};
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CheckEx2Support(this DataType type)
-		{
-			return type switch
-			{
-				DataType.RealFloat32 or DataType.RealFloat64 or DataType.RealFloat16 or BrainFloatConst.RealBrainFloat16 or
-				DataType.ComplexSingle or DataType.ComplexDouble or DataType.ComplexHalf or BrainFloatConst.ComplexBrainFloat16 => true,
-				_ => false,
-			};
-		}
+			Float32 or Float64 or Float16 or BrainHalf or
+			Complex<Float32> or Complex<Float64> or Complex<Float16> or Complex<BrainHalf> => true,
+			_ => false,
+		};
 	}
 }

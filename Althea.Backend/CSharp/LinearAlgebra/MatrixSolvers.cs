@@ -159,7 +159,7 @@ public static unsafe class MatrixSolvers
 	#endregion
 
 	#region point wise operations
-	private const DataType Accelerated = DataType.RealFloat32 | DataType.RealFloat64 | DataType.ComplexSingle | DataType.ComplexDouble;
+	private const DataType Accelerated = DataType.RealFloat32 | DataType.RealFloat64 | DataType.ComplexFloat32 | DataType.ComplexFloat64;
 
 	// x / (y + scalar)
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

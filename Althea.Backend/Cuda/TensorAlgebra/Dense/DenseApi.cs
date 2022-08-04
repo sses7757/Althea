@@ -17,7 +17,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	/// <summary>
 	/// The CUDA back-end of the dense tensor algebra <see cref="AbstractApi"/> that utilizes cuTENSOR with 1.0 ≤ version ≤ 1.2 (and maybe future versions)
 	/// </summary>
-	/// <remarks>Unlike the <see cref="LinearAlgebra.Dense.DenseApi"/> that binds a instance with a specific CUDA device, this class changes the underlying handle when the <see cref="CudaRuntime.CurrentDeviceID"/> is changed.<br/>
+	/// <remarks>Unlike the <see cref="LinearAlgebra.Dense.Api"/> that binds a instance with a specific CUDA device, this class changes the underlying handle when the <see cref="CudaRuntime.CurrentDeviceID"/> is changed.<br/>
 	/// CUDA stream is not supported, but it can be easily added.</remarks>
 	public class DenseApi : AbstractApi
 	{

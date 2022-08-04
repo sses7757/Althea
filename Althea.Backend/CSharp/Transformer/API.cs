@@ -393,7 +393,7 @@ public class Api : Althea.Transformer.IAbstractApi
 		fixed (Complex<T>* src = array)
 		fixed (T* dst = output)
 		{
-			Buffer.MemoryCopy(src, buffer, n * sizeof(T) * 2 n * sizeof(T) * 2);
+			Buffer.MemoryCopy(src, buffer, n * sizeof(T) * 2, n * sizeof(T) * 2);
 			FFT(new Span<Complex<T>>(buffer, n), false);
 			Storage.Api.StridedCopy((T*)(void*)buffer, dst, 2, 1, n);
 		}

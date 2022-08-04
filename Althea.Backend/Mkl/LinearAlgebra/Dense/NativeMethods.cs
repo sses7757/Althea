@@ -178,12 +178,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 
 		#region vector math
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		[return: MarshalAs(UnmanagedType.FunctionPtr)]
 		internal static extern VmlErrorCallbackDelegate? vmlGetErrorCallBack();
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		[return: MarshalAs(UnmanagedType.FunctionPtr)]
 		internal static extern VmlErrorCallbackDelegate? vmlClearErrorCallBack();
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		[return: MarshalAs(UnmanagedType.FunctionPtr)]
 		internal static extern VmlErrorCallbackDelegate? vmlSetErrorCallBack([MarshalAs(UnmanagedType.FunctionPtr)] VmlErrorCallbackDelegate newCallback);
 
 		[NativeMethod(1)]

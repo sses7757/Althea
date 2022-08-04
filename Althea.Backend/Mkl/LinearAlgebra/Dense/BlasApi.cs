@@ -62,9 +62,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotComplex);
 			if (!GetPointer(x, strideX, out T* px, out long n))
 				return false;
-			if (T.Type == DataType.ComplexSingle)
+			if (T.Type == DataType.ComplexFloat32)
 				*(float*)&result = NM.cblas_scasum(n, px, strideX);
-			else if (T.Type == DataType.ComplexDouble)
+			else if (T.Type == DataType.ComplexFloat64)
 				*(double*)&result = NM.cblas_dzasum(n, px, strideX);
 			else
 				return false;

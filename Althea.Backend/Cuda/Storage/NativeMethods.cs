@@ -14,14 +14,14 @@ public static unsafe class NativeMethods
 	/// </summary>
 	/// <param name="devPtr">the pointer to the array to free</param>
 	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
-	internal static extern CudaError cudaFree(IntPtr devPtr);
+	internal static extern CudaError cudaFree(void* devPtr);
 
 	/// <summary>
 	/// Frees page-locked (pinned) memory on the host.
 	/// </summary>
 	/// <param name="ptr">the pointer to the array to free</param>
 	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
-	internal static extern CudaError cudaFreeHost(IntPtr ptr);
+	internal static extern CudaError cudaFreeHost(void* ptr);
 
 	/// <summary>
 	/// Allocates page-locked (pinned) memory on the host.
@@ -29,7 +29,7 @@ public static unsafe class NativeMethods
 	/// <param name="pHost">the returned host array pointer</param>
 	/// <param name="size">the array size in bytes</param>
 	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
-	internal static extern CudaError cudaMallocHost(out IntPtr pHost, long size);
+	internal static extern CudaError cudaMallocHost(out void* pHost, long size);
 
 	/// <summary>
 	/// Allocates memory on the device.
@@ -37,7 +37,7 @@ public static unsafe class NativeMethods
 	/// <param name="pDev">the returned device array pointer</param>
 	/// <param name="size">the array size in bytes</param>
 	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
-	internal static extern CudaError cudaMalloc(out IntPtr pDev, long size);
+	internal static extern CudaError cudaMalloc(out void* pDev, long size);
 
 	/// <summary>
 	/// Copies data between host and device linearly.
@@ -122,21 +122,21 @@ public static unsafe class NativeMethods
 	internal static extern CudaFileError cuFileDriverSetMaxPinnedMemSize(long maxPinnedMemorySize);
 
 	/// <summary>
-	/// This API registers the specified GPU <paramref name="address"/> and <paramref name="size"/> (in bytes) for use with the cuFileRead and cuFileWrite operations. The user must call <see cref="cuFileBufDeregister(IntPtr)"/> to release the pinned memory mappings.
+	/// This API registers the specified GPU <paramref name="address"/> and <paramref name="size"/> (in bytes) for use with the cuFileRead and cuFileWrite operations. The user must call <see cref="cuFileBufDeregister(void* )"/> to release the pinned memory mappings.
 	/// </summary>
 	/// <param name="address">Address of device pointer. cuFileRead and cuFileWrite <b>must</b> use this devPtr_base as the base address.</param>
 	/// <param name="size">Size in bytes from the start of memory to map.</param>
 	/// <param name="flags">Reserved for future use, must be 0.</param>
 	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
-	internal static extern CudaFileError cuFileBufRegister(IntPtr address, long size, int flags);
+	internal static extern CudaFileError cuFileBufRegister(void* address, long size, int flags);
 
 	/// <summary>
-	/// This API deregister memory mappings that were registered by <see cref="cuFileBufRegister(IntPtr, long, int)"/>.
+	/// This API deregister memory mappings that were registered by <see cref="cuFileBufRegister(void* , long, int)"/>.
 	/// </summary>
-	/// <param name="address">Address of device pointer to release the mappings that were provided to <see cref="cuFileBufRegister(IntPtr, long, int)"/></param>
+	/// <param name="address">Address of device pointer to release the mappings that were provided to <see cref="cuFileBufRegister(void* , long, int)"/></param>
 	/// <returns></returns>
 	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
-	internal static extern CudaFileError cuFileBufDeregister(IntPtr address);
+	internal static extern CudaFileError cuFileBufDeregister(void* address);
 
 	/// <summary>
 	/// This API makes a file descriptor or handle that is known to the cuFile subsystem by using an OS-agnostic interface.
@@ -160,13 +160,13 @@ public static unsafe class NativeMethods
 	/// This is a synchronous call and blocks until the IO is complete.
 	/// </summary>
 	/// <param name="fileHandle">The handle of the file</param>
-	/// <param name="devPtr">The base address of buffer in device memory. For registered buffers, it be the same as the one used in <see cref="cuFileBufRegister(IntPtr, long, int)"/>.</param>
+	/// <param name="devPtr">The base address of buffer in device memory. For registered buffers, it be the same as the one used in <see cref="cuFileBufRegister(void* , long, int)"/>.</param>
 	/// <param name="size">The size in bytes to read.</param>
 	/// <param name="fileOffset">Offset in the file to read from.</param>
 	/// <param name="devPtrOffset">Offset relative to the <paramref name="devPtr"/> to read into. This parameter should be used only with registered buffers.</param>
 	/// <returns>Size of bytes that were successfully read; or -1 on an error, so error number is set to indicate file system errors. All other errors return a negative integer value of the <see cref="CudaFileOpError"/> value.</returns>
 	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
-	internal static extern long cuFileRead(IntPtr fileHandle, IntPtr devPtr, long size, long fileOffset, long devPtrOffset);
+	internal static extern long cuFileRead(IntPtr fileHandle, void* devPtr, long size, long fileOffset, long devPtrOffset);
 
 	/// <summary>
 	/// This API reads the data from a specified <paramref name="fileHandle"/> at a specified <paramref name="fileOffset"/> for <paramref name="size"/> bytes into the GPU memory indicated by <paramref name="devPtr"/> and <paramref name="devPtrOffset"/> by using GDS functionality.<br/>
@@ -174,13 +174,13 @@ public static unsafe class NativeMethods
 	/// This is a synchronous call and blocks until the IO is complete.
 	/// </summary>
 	/// <param name="fileHandle">The handle of the file</param>
-	/// <param name="devPtr">The base address of buffer in device memory. For registered buffers, it be the same as the one used in <see cref="cuFileBufRegister(IntPtr, long, int)"/>.</param>
+	/// <param name="devPtr">The base address of buffer in device memory. For registered buffers, it be the same as the one used in <see cref="cuFileBufRegister(void* , long, int)"/>.</param>
 	/// <param name="size">The size in bytes to read.</param>
 	/// <param name="fileOffset">Offset in the file to read from.</param>
 	/// <param name="devPtrOffset">Offset relative to the <paramref name="devPtr"/> to read into. This parameter should be used only with registered buffers.</param>
 	/// <returns>Size of bytes that were successfully read; or -1 on an error, so error number is set to indicate file system errors. All other errors return a negative integer value of the <see cref="CudaFileOpError"/> value.</returns>
 	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
-	internal static extern long cuFileWrite(IntPtr fileHandle, IntPtr devPtr, long size, long fileOffset, long devPtrOffset);
+	internal static extern long cuFileWrite(IntPtr fileHandle, void* devPtr, long size, long fileOffset, long devPtrOffset);
 	#endregion
 
 	#region custom

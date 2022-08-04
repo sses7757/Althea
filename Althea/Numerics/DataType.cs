@@ -105,15 +105,15 @@ namespace Althea.Numerics
 		/// <summary>
 		/// <see cref="Complex{T}"/> of <see cref="Half"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte2"/>
 		/// </summary>
-		ComplexHalf = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
+		ComplexFloat16 = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte2 << 16),
 		/// <summary>
 		/// <see cref="Complex{T}"/> of <see cref="float"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte4"/>
 		/// </summary>
-		ComplexSingle = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
+		ComplexFloat32 = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte4 << 16),
 		/// <summary>
 		/// <see cref="Complex{T}"/> of <see cref="double"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> + <see cref="DataTypeSize.Byte8"/>
 		/// </summary>
-		ComplexDouble = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
+		ComplexFloat64 = DataTypeTuple.Complex + (DataTypeClassification.BinaryFloat_IEEE754 << 8) + (DataTypeSize.Byte8 << 16),
 
 		/// <summary>
 		/// <see cref="sbyte"/> = <see cref="DataTypeTuple.Real"/> + <see cref="DataTypeClassification.SignedInteger"/> + <see cref="DataTypeSize.Byte1"/>

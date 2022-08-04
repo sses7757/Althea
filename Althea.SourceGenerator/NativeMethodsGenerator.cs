@@ -34,7 +34,7 @@ namespace Althea.SourceGenerator
 		/// <param name="refComplexType">Whether the complex scalar input parameters shall have <c>in</c> modifiers or not</param>
 		/// <param name="returnRealType">Whether to return real scalar type instead of complex scalar type</param>
 		/// <param name="onlyReal">Whether to include only real types (true) or only complex types (false) or both (leave empty)</param>
-		/// <remarks>This means that the types are <c>float, double, Complex&lt;float&gt;, Complex&lt;double&gt;</c> with type character <c>s, d, c, z</c>, respectively.</remarks>
+		/// <remarks>This means that the types are <c>Float32, Float64, Complex&lt;Float32&gt;, Complex&lt;Float64&gt;</c> with type character <c>s, d, c, z</c>, respectively.</remarks>
 		public NativeMethodAttribute(int typeCharPosition, bool typeCharUpper = false, bool refComplexType = false, bool returnRealType = false, bool onlyReal = false)
 		{
 		}
@@ -47,10 +47,10 @@ namespace Althea.SourceGenerator
 	public sealed class CustomNativeMethodAttribute : Attribute
 	{
 		/// <summary>
-		/// Create a new <see cref="NativeMethodAttribute"/> by indicating the type character position and the full type names and characters.
+		/// Create a new <see cref="CustomNativeMethodAttribute"/> by indicating the type character position and the full type names and characters.
 		/// </summary>
 		/// <param name="typeCharPosition">The variable type character position, such as 6 for <c>cblas_?copy</c>. Must be the same across multiple attributes.</param>
-		/// <param name="typeName">The full variable type name, such as <c>Complex&lt;float&gt;</c></param>
+		/// <param name="typeName">The full variable type name, such as <c>Complex&lt;Float32&gt;</c></param>
 		/// <param name="typeChar">The variable type character in the method identifier</param>
 		/// <param name="inputModifier">The input parameter modifier</param>
 		/// <param name="returnName">The full return type name, empty means <paramref name="typeName"/></param>
@@ -243,7 +243,7 @@ namespace {ns.Name}
 						if (retReal)
 						{
 							typeReturn = new[] { "Float32", "Float64", "Float32", "Float64" };
-							typeChars = upper ? new[] { "S", "D", "SC", "DZ" } : new[] { "s", "d", "sc", "dz" };
+							typeChars = upper ? new[] { "S", "D", "Sc", "Dz" } : new[] { "s", "d", "sc", "dz" };
 						}
 					}
 					if (attr.ArgumentList.Arguments.Count == 5)
