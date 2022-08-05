@@ -8,6 +8,14 @@ using Althea.Helpers;
 namespace Althea.Backend.Cuda
 {
 	#region CDUA device property
+	internal interface IBindedDevice
+	{
+		/// <summary>
+		/// Get the device ID that binds to this instance when initializing it.
+		/// </summary>
+		public int BindedDeviceID { get; }
+	}
+
 	// Ignore Spelling: mipmapped Cubemap
 	/// <summary>
 	/// The structure that wraps the properties of a CUDA device

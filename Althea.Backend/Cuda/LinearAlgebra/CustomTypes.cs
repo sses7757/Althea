@@ -51,17 +51,6 @@ internal static class Conversions
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static bool CheckBaseSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
-	{
-		return value switch
-		{
-			Float32 or Float64 or
-			Complex<Float32> or Complex<Float64> => true,
-			_ => false,
-		};
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static bool CheckExSupportt<T>(this T value) where T : unmanaged, IBaseNumber<T>
 	{
 		return value switch

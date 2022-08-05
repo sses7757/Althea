@@ -26,16 +26,16 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[DllImport(Cuda.NativeMethods.CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSaxpy(IntPtr handle, int n, void* α, void* x, int incx, void* y, int incy);
 
-		[CustomNativeMethod(6, "Float32", @"Sdot")]
-		[CustomNativeMethod(6, "Float64", @"Ddot")]
-		[CustomNativeMethod(6, "Complex<Float32>", @"Cdotu")]
-		[CustomNativeMethod(6, "Complex<Float32>", @"Cdotc")]
-		[CustomNativeMethod(6, "Complex<Float64>", @"Zdotu")]
-		[CustomNativeMethod(6, "Complex<Float64>", @"Zdotc")]
+		[CustomNativeMethod(6, "Float32", "Sdot")]
+		[CustomNativeMethod(6, "Float64", "Ddot")]
+		[CustomNativeMethod(6, "Complex<Float32>", "Cdotu")]
+		[CustomNativeMethod(6, "Complex<Float32>", "Cdotc")]
+		[CustomNativeMethod(6, "Complex<Float64>", "Zdotu")]
+		[CustomNativeMethod(6, "Complex<Float64>", "Zdotc")]
 		[DllImport(Cuda.NativeMethods.CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSdot(IntPtr handle, int n, void* x, int incx, void* y, int incy, void* result);
 
-		[NativeMethod(6, true)]
+		[NativeMethod(6, true, false, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSnrm2(IntPtr handle, int n, void* x, int incx, void* result);
 
@@ -57,16 +57,20 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[DllImport(Cuda.NativeMethods.CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSsymv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, void* A, int lda, void* x, int incx, void* β, void* y, int incy);
 
+		[NativeMethod(6, true, false, false, false)]
+		[DllImport(Cuda.NativeMethods.CUBLAS_API_DLL_NAME)]
+		internal static extern CudaBlasStatus cublasChemv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, void* A, int lda, void* x, int incx, void* β, void* y, int incy);
+
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasStrmv(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, void* A, int lda, void* x, int incx);
 
-		[CustomNativeMethod(6, "Float32", @"Sger")]
-		[CustomNativeMethod(6, "Float64", @"Dger")]
-		[CustomNativeMethod(6, "Complex<Float32>", @"Cgeru")]
-		[CustomNativeMethod(6, "Complex<Float32>", @"Cgerc")]
-		[CustomNativeMethod(6, "Complex<Float64>", @"Zgeru")]
-		[CustomNativeMethod(6, "Complex<Float64>", @"Zgerc")]
+		[CustomNativeMethod(6, "Float32", "Sger")]
+		[CustomNativeMethod(6, "Float64", "Dger")]
+		[CustomNativeMethod(6, "Complex<Float32>", "Cgeru")]
+		[CustomNativeMethod(6, "Complex<Float32>", "Cgerc")]
+		[CustomNativeMethod(6, "Complex<Float64>", "Zgeru")]
+		[CustomNativeMethod(6, "Complex<Float64>", "Zgerc")]
 		[DllImport(Cuda.NativeMethods.CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasSger(IntPtr handle, int m, int n, void* α, void* x, int incx, void* y, int incy, void* A, int lda);
 
@@ -296,289 +300,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		[DllImport(Cuda.NativeMethods.CUBLAS_API_DLL_NAME)]
 		internal static extern CudaBlasStatus cublasGemmEx(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* alpha, void* A, CudaDataType Atype, int lda, void* B, CudaDataType Btype, int ldb, void* beta, void* C, CudaDataType Ctype, int ldc, CuBlasComputeType computeType, CuBlasGemmAlgorithm algo);
-		#endregion
-
-		#region custom
-		/// <summary>
-		/// Multiply or divide the vector <paramref name="a"/> by <paramref name="b"/> in-place
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
-		/// <param name="a">The vector to be in-place multiplied or divided of <paramref name="type"/></param>
-		/// <param name="b">The vector to multiply or divide <paramref name="a"/> of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		/// <param name="multiply">Perform multiply or divide</param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecsMulDiv(DataType type, void* a, void* b, long N, int strideA, int strideB, bool multiply);
-
-		/// <summary>
-		/// Add the vector <paramref name="a"/> scaled by <paramref name="scalar"/> to <paramref name="b"/> in-place
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
-		/// <param name="scalar">The scalar to multiply of <paramref name="type"/></param>
-		/// <param name="a">The vector to add of <paramref name="type"/></param>
-		/// <param name="b">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecsAdd(DataType type, void* scalar, void* a, void* b, long N, int strideA, int strideB);
-
-		/// <summary>
-		/// Check whether the two vectors <paramref name="a"/> and <paramref name="b"/> are element-wise equal
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> and <paramref name="b"/></param>
-		/// <param name="a">The first vector to compare of <paramref name="type"/></param>
-		/// <param name="b">The second vector to compare of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		/// <returns>The two vectors are element-wise equal</returns>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern bool vecsEq(DataType type, void* a, void* b, long N, int strideA, int strideB);
-
-		/// <summary>
-		/// In-place exponentiate the vector <paramref name="a"/> by a scalar exponent <paramref name="p"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="p">The pointer to the scalar exponent of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecPowSameType(DataType type, void* a, void* p, long N, int stride);
-
-		/// <summary>
-		/// In-place exponentiate the vector <paramref name="a"/> by a scalar exponent <paramref name="p"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/> (must be a complex type)</param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="p">The pointer to the scalar exponent of <paramref name="type"/>'s real corresponding type</param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecPowRealType(DataType type, void* a, void* p, long N, int stride);
-
-		/// <summary>
-		/// In-place conjugate the vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecConj(DataType type, void* a, long N, int stride);
-
-		/// <summary>
-		/// Convert the <paramref name="src"/> vector of <paramref name="srcType"/> to the <paramref name="dst"/> vector of <paramref name="dstType"/>
-		/// </summary>
-		/// <param name="srcType">The <see cref="DataType"/> of <paramref name="src"/></param>
-		/// <param name="dstType">The <see cref="DataType"/> of <paramref name="dst"/></param>
-		/// <param name="src">The source vector of <paramref name="srcType"/></param>
-		/// <param name="dst">The destination vector of <paramref name="dstType"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
-		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		/// <param name="toRealByAbs">If the conversion converts a complex type to a real type, whether the down grade elements be of the complexes's absolute values or their real parts.</param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern CudaError vecDataConvert(DataType srcType, DataType dstType, void* src, void* dst, long N, int strideSrc, int strideDst, bool toRealByAbs);
-
-		/// <summary>
-		/// In-place set the values in <paramref name="a"/> whose absolute values are less than or equal to the absolute value of <paramref name="threshold"/> to 0
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="threshold">The pointer to the threshold used to clip the vector <paramref name="a"/> of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecClip(DataType type, void* a, void* threshold, long N, int stride);
-
-		/// <summary>
-		/// In-place add all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="scalar">The pointer to the scalar to add of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecAddScalar(DataType type, void* a, void* scalar, long N, int stride);
-
-		/// <summary>
-		/// In-place multiplies all elements in vector <paramref name="a"/> with the given <paramref name="scalar"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be in-place modified of <paramref name="type"/></param>
-		/// <param name="scalar">The pointer to the scalar to multiply of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecMulScalar(DataType type, void* a, void* scalar, long N, int stride);
-
-		/// <summary>
-		/// Sums all the elements in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="outSum">The output sum as a pointer of <paramref name="type"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecSum(DataType type, void* a, long N, int stride, void* outSum);
-
-		/// <summary>
-		/// Get the index of the element with minimum absolute value in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <returns>The index of the element</returns>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern long vecArgAbsMin(DataType type, void* a, long N, int stride);
-
-		/// <summary>
-		/// Get the index of the element with maximum absolute value in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <returns>The index of the element</returns>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern long vecArgAbsMax(DataType type, void* a, long N, int stride);
-
-		/// <summary>
-		/// Sums all the elements's absolute values in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <returns>The sum as a <see cref="double"/></returns>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern double vecAbsSum(DataType type, void* a, long N, int stride);
-
-		/// <summary>
-		/// Compute the 2-norm of the given vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be summed of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <returns>The 2-norm as a <see cref="double"/></returns>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern double vecNorm(DataType type, void* a, long N, int stride);
-
-		/// <summary>
-		/// Calculate the inner product of vector <paramref name="a"/> and <paramref name="b"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The left vector to be inner product of <paramref name="type"/></param>
-		/// <param name="b">The right vector to be inner product of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		/// <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecDot(DataType type, void* a, void* b, long N, int strideA, int strideB, void* outProd);
-
-		/// <summary>
-		/// Calculate the inner product of the conjugate of vector <paramref name="a"/> and <paramref name="b"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/>, must be a complex type</param>
-		/// <param name="a">The left vector to be inner product of <paramref name="type"/></param>
-		/// <param name="b">The right vector to be inner product of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="strideA">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="strideB">The spacing between consecutive elements of <paramref name="b"/></param>
-		/// <param name="outProd">The output inner product as a pointer of <paramref name="type"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecDotc(DataType type, void* a, void* b, long N, int strideA, int strideB, void* outProd);
-
-		/// <summary>
-		/// Multiplies all the elements in vector <paramref name="a"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="a"/></param>
-		/// <param name="a">The vector to be multiplied of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="stride">The spacing between consecutive elements of <paramref name="a"/></param>
-		/// <param name="outProd">The output product as a pointer of <paramref name="type"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecProd(DataType type, void* a, long N, int stride, void* outProd);
-
-		/// <summary>
-		/// Performs the partial sum from vector <paramref name="src"/> to vector <paramref name="dst"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="src"/> and <paramref name="dst"/></param>
-		/// <param name="src">The source vector of <paramref name="type"/></param>
-		/// <param name="dst">The destination vector of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="inclusive">Perform inclusive (the first element is <paramref name="src"/>[0]) or exclusive (the first element is 0)</param>
-		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
-		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecParSum(DataType type, void* src, void* dst, long N, bool inclusive, int strideSrc, int strideDst);
-
-		/// <summary>
-		/// Performs the partial sum from vector <paramref name="src"/> to vector <paramref name="dst"/>
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="src"/> and <paramref name="dst"/></param>
-		/// <param name="src">The source vector of <paramref name="type"/></param>
-		/// <param name="dst">The destination vector of <paramref name="type"/></param>
-		/// <param name="N">The number of elements to be operated</param>
-		/// <param name="inclusive">Perform inclusive (the first element is <paramref name="src"/>[0]) or exclusive (the first element is 1)</param>
-		/// <param name="strideSrc">The spacing between consecutive elements of <paramref name="src"/></param>
-		/// <param name="strideDst">The spacing between consecutive elements of <paramref name="dst"/></param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern int vecParProd(DataType type, void* src, void* dst, long N, bool inclusive, int strideSrc, int strideDst);
-
-		/// <summary>
-		/// Performs the Kronecker product of matrix <paramref name="A"/> and <paramref name="B"/> and add the result to <paramref name="dest"/> in-place
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="A"/>, <paramref name="B"/> and <paramref name="dest"/></param>
-		/// <param name="A">The input left matrix of <paramref name="type"/></param>
-		/// <param name="ldA">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rowsA"/></param>
-		/// <param name="rowsA">The number of rows of <paramref name="A"/></param>
-		/// <param name="colsA">The number of columns of <paramref name="A"/></param>
-		/// <param name="B">The input right matrix of <paramref name="type"/></param>
-		/// <param name="ldB">The leading dimension of <paramref name="B"/>, must be at least <paramref name="rowsB"/></param>
-		/// <param name="rowsB">The number of rows of <paramref name="B"/></param>
-		/// <param name="colsB">The number of columns of <paramref name="B"/></param>
-		/// <param name="dest">The destination matrix of <paramref name="type"/></param>
-		/// <param name="ldD">The leading dimension of <paramref name="dest"/></param>
-		/// <param name="alpha">The pointer to the scalar of <paramref name="type"/> to multiply to <paramref name="A"/>'s elements during the computation</param>
-		/// <param name="beta">The pointer to the scalar of <paramref name="type"/> to multiply to <paramref name="dest"/>'s elements during the computation</param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern void matKron(DataType type,
-											void* A, long ldA, long rowsA, long colsA,
-											void* B, long ldB, long rowsB, long colsB,
-											void* dest, long ldD, void* alpha, void* beta);
-
-		/// <summary>
-		/// Makes the matrix <paramref name="A"/> hermitian or symmetric by copying its upper part to/from its lower part
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="A"/></param>
-		/// <param name="A">The matrix to be modified of <paramref name="type"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rows"/></param>
-		/// <param name="rows">The number of rows of <paramref name="A"/></param>
-		/// <param name="upperStored">Whether <paramref name="A"/>'s upper part or its lower part is stored</param>
-		/// <param name="hermA">If <paramref name="type"/> is a complex type, make <paramref name="A"/> hermitian or symmetric</param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern void matMakeHerm(DataType type, void* A, long ld, long rows, bool upperStored, bool hermA);
-
-		/// <summary>
-		/// Clear (set to 0) the matrix <paramref name="A"/>'s upper part or its lower part
-		/// </summary>
-		/// <param name="type">The <see cref="DataType"/> of <paramref name="A"/></param>
-		/// <param name="A">The matrix to be modified of <paramref name="type"/></param>
-		/// <param name="ld">The leading dimension of <paramref name="A"/>, must be at least <paramref name="rows"/></param>
-		/// <param name="rows">The number of rows of <paramref name="A"/></param>
-		/// <param name="clearLower">Whether <paramref name="A"/>'s upper part or its lower part shall be preserved</param>
-		[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
-		internal static extern void matTriClear(DataType type, void* A, long ld, long rows, bool clearLower);
 		#endregion
 
 		#region solver

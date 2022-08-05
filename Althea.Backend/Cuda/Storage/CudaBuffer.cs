@@ -19,6 +19,9 @@ namespace Althea.Backend.Cuda.Storage
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static CudaFileBuffer Create(IntPtr buf, long size, bool cached = false) => cached ? default : new(buf.ToPointer(), size);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static CudaFileBuffer Create(void* buf, long size, bool cached = false) => cached ? default : new(buf, size);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

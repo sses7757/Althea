@@ -75,7 +75,7 @@ namespace Althea.Backend.Cuda
 		/// <param name="currentID">The ID of the current CUDA device</param>
 		public static void DefaultDeviceChangeCallback(int previousID, int currentID)
 		{
-			Helpers.Log.Write(string.Format(Resource.ChangeDevice, previousID, currentID));
+			Helpers.Log.Write(string.Format($"CUDA device changed from {previousID} to {currentID}."));
 		}
 
 		/// <summary>
