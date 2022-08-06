@@ -1,5 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Althea.LinearAlgebra;
+
 
 namespace Althea.Backend.Cuda;
 
@@ -36,7 +38,7 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static unsafe bool GetPointerInner<T, TS>(TS? s, long m, long n, long ld, out T* pointer, string? sName = null, string? mName = null, string? nName = null, string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	private static unsafe bool GetPointerInner<T, TS>(TS s, long m, long n, long ld, out T* pointer, string? sName = null, string? mName = null, string? nName = null, string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (m <= 0)
 			throw new ArgumentOutOfRangeException(mName, m, Resources.ParameterError.MustPositive);

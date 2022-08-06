@@ -13,14 +13,14 @@ public static unsafe class NativeMethods
 	/// Frees memory on the device.
 	/// </summary>
 	/// <param name="devPtr">the pointer to the array to free</param>
-	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUDART_DLL_NAME)]
 	internal static extern CudaError cudaFree(void* devPtr);
 
 	/// <summary>
 	/// Frees page-locked (pinned) memory on the host.
 	/// </summary>
 	/// <param name="ptr">the pointer to the array to free</param>
-	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUDART_DLL_NAME)]
 	internal static extern CudaError cudaFreeHost(void* ptr);
 
 	/// <summary>
@@ -28,7 +28,7 @@ public static unsafe class NativeMethods
 	/// </summary>
 	/// <param name="pHost">the returned host array pointer</param>
 	/// <param name="size">the array size in bytes</param>
-	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUDART_DLL_NAME)]
 	internal static extern CudaError cudaMallocHost(out void* pHost, long size);
 
 	/// <summary>
@@ -36,7 +36,7 @@ public static unsafe class NativeMethods
 	/// </summary>
 	/// <param name="pDev">the returned device array pointer</param>
 	/// <param name="size">the array size in bytes</param>
-	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUDART_DLL_NAME)]
 	internal static extern CudaError cudaMalloc(out void* pDev, long size);
 
 	/// <summary>
@@ -46,7 +46,7 @@ public static unsafe class NativeMethods
 	/// <param name="src">source array pointer</param>
 	/// <param name="count">length in bytes</param>
 	/// <param name="kind">copy kind <see cref="MemoryCopyKind"/></param>
-	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUDART_DLL_NAME)]
 	internal static extern CudaError cudaMemcpy(void* dst, void* src, long count, MemoryCopyKind kind);
 
 	/// <summary>
@@ -59,7 +59,7 @@ public static unsafe class NativeMethods
 	/// <param name="height">height to copy, in bytes</param>
 	/// <param name="width">width to copy, in real size rather than bytes</param>
 	/// <param name="kind">copy kind of <see cref="MemoryCopyKind"/></param>
-	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUDART_DLL_NAME)]
 	internal static extern CudaError cudaMemcpy2D(void* dst, long destLD, void* src, long srcLD, long height, long width, MemoryCopyKind kind);
 
 	/// <summary>
@@ -68,7 +68,7 @@ public static unsafe class NativeMethods
 	/// <param name="devPtr">Pointer to device memory</param>
 	/// <param name="value">Value to set for each byte of specified memory</param>
 	/// <param name="count">Size in bytes to set</param>
-	[DllImport(Cuda.NativeMethods.CUDART_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUDART_DLL_NAME)]
 	internal static extern CudaError cudaMemset(void* devPtr, int value, long count);
 	#endregion
 
@@ -76,20 +76,20 @@ public static unsafe class NativeMethods
 	/// <summary>
 	/// Initialize the cuFile infrastructure
 	/// </summary>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileDriverOpen();
 
 	/// <summary>
 	/// Finalize the cuFile system
 	/// </summary>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileDriverClose();
 
 	/// <summary>
 	/// Query capabilities based on current versions, installed functionality
 	/// </summary>
 	/// <param name="prop">The output <see cref="CudaFileDriverProperty"/></param>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileGetDriverProperties(out CudaFileDriverProperty prop);
 
 	/// <summary>
@@ -97,28 +97,28 @@ public static unsafe class NativeMethods
 	/// </summary>
 	/// <param name="poll">Use polling mode or not</param>
 	/// <param name="pollThresholdSize">The polling threshold size in KiB, must be 4K aligned</param>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileDriverSetPollMode(bool poll, long pollThresholdSize);
 
 	/// <summary>
 	/// API to set max IO size (KiB) used by the library to talk to NVIDIA-FS driver
 	/// </summary>
 	/// <param name="maxDirectIoSize">The maximum allowed direct IO size to set in KiB. The default value is 16384 KiB.This is because typically parallel-file systems perform better with bulk read/writes.</param>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileDriverSetMaxDirectIOSize(long maxDirectIoSize);
 
 	/// <summary>
 	/// API to set the maximum GPU buffer space, in KiB, per device and is used for internal use, for example, to handle unaligned IO and optimal IO path routing. This value might be rounded down to the nearest GPU page size.
 	/// </summary>
 	/// <param name="maxCacheSize">The max cache size to set in KiB, must be 4K aligned. The default value is 131072 KiB.</param>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileDriverSetMaxCacheSize(long maxCacheSize);
 
 	/// <summary>
 	/// API to set the maximum buffer space, in KiB, that is pinned and mapped. This value might be rounded down to the nearest GPU page size.
 	/// </summary>
 	/// <param name="maxPinnedMemorySize">The maximum buffer size to set in KiB, must be 4K aligned, that is pinned and mapped to the GPU BAR space.</param>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileDriverSetMaxPinnedMemSize(long maxPinnedMemorySize);
 
 	/// <summary>
@@ -127,7 +127,7 @@ public static unsafe class NativeMethods
 	/// <param name="address">Address of device pointer. cuFileRead and cuFileWrite <b>must</b> use this devPtr_base as the base address.</param>
 	/// <param name="size">Size in bytes from the start of memory to map.</param>
 	/// <param name="flags">Reserved for future use, must be 0.</param>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileBufRegister(void* address, long size, int flags);
 
 	/// <summary>
@@ -135,7 +135,7 @@ public static unsafe class NativeMethods
 	/// </summary>
 	/// <param name="address">Address of device pointer to release the mappings that were provided to <see cref="cuFileBufRegister(void* , long, int)"/></param>
 	/// <returns></returns>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileBufDeregister(void* address);
 
 	/// <summary>
@@ -143,7 +143,7 @@ public static unsafe class NativeMethods
 	/// </summary>
 	/// <param name="fileHandle">Output a valid pointer to the OS-neutral cuFile handle structure that is supplied by the user but populated and maintained by the cuFile runtime.</param>
 	/// <param name="descr">Input <see cref="CudaFileDescription"/> that is supplied by the user carrying details regarding the file to be opened.</param>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileHandleRegister(out IntPtr fileHandle, ref CudaFileDescription descr);
 
 	/// <summary>
@@ -151,7 +151,7 @@ public static unsafe class NativeMethods
 	/// This API should be invoked only after the application ensures there are no outstanding IO operations with the handle.
 	/// </summary>
 	/// <param name="fileHandle">The <see cref="IntPtr"/> obtained from <see cref="cuFileHandleRegister(out IntPtr, ref CudaFileDescription)"/></param>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern CudaFileError cuFileHandleDeregister(in IntPtr fileHandle);
 
 	/// <summary>
@@ -165,7 +165,7 @@ public static unsafe class NativeMethods
 	/// <param name="fileOffset">Offset in the file to read from.</param>
 	/// <param name="devPtrOffset">Offset relative to the <paramref name="devPtr"/> to read into. This parameter should be used only with registered buffers.</param>
 	/// <returns>Size of bytes that were successfully read; or -1 on an error, so error number is set to indicate file system errors. All other errors return a negative integer value of the <see cref="CudaFileOpError"/> value.</returns>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern long cuFileRead(IntPtr fileHandle, void* devPtr, long size, long fileOffset, long devPtrOffset);
 
 	/// <summary>
@@ -179,7 +179,7 @@ public static unsafe class NativeMethods
 	/// <param name="fileOffset">Offset in the file to read from.</param>
 	/// <param name="devPtrOffset">Offset relative to the <paramref name="devPtr"/> to read into. This parameter should be used only with registered buffers.</param>
 	/// <returns>Size of bytes that were successfully read; or -1 on an error, so error number is set to indicate file system errors. All other errors return a negative integer value of the <see cref="CudaFileOpError"/> value.</returns>
-	[DllImport(Cuda.NativeMethods.CUFILE_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern long cuFileWrite(IntPtr fileHandle, void* devPtr, long size, long fileOffset, long devPtrOffset);
 	#endregion
 
@@ -193,7 +193,7 @@ public static unsafe class NativeMethods
 	/// <param name="N">The number of elements of <paramref name="array"/>, in <paramref name="type"/></param>
 	/// <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
 	/// <remarks>Strided filling reduce the performance greatly.</remarks>
-	[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static unsafe extern int vecFillVal(DataType type, void* array, void* value, long N, int stride);
 
 	/// <summary>
@@ -206,7 +206,7 @@ public static unsafe class NativeMethods
 	/// <param name="strideSrc">The stride between two consecutive elements to be copied in <paramref name="src"/></param>
 	/// <param name="strideDst">The stride between two consecutive elements to be overwritten in <paramref name="dst"/></param>
 	/// <remarks>Strided copying reduce the performance greatly.</remarks>
-	[DllImport(Cuda.NativeMethods.CUSTOM_API_DLL_NAME)]
+	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern int vecStridedCopy(DataType type, void* src, void* dst, long N, int strideSrc, int strideDst);
 	#endregion
 }

@@ -8,17 +8,17 @@ namespace Althea.Backend.Cuda.Random
 	/// </summary>
 	public static unsafe class NativeMethods
 	{
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandCreateGenerator(out IntPtr generator, GeneratorType rngType);
 
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandDestroyGenerator(IntPtr generator);
 
 		/// <summary>
 		/// Set the seed value of the pseudo-random number generator. All values of seed are valid. Different seeds will produce different sequences. Different seeds will often not be statistically correlated with each other, but some pairs of seed values may generate sequences which are statistically correlated.
 		/// </summary>
 		/// <returns>CudaRandomError</returns>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandSetPseudoRandomGeneratorSeed(IntPtr generator, ulong seed);
 
 		/// <summary>
@@ -26,7 +26,7 @@ namespace Althea.Backend.Cuda.Random
 		/// <br/>
 		/// All values of offset are valid.  The offset position is absolute, not relative to the current position in the sequence.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandSetGeneratorOffset(IntPtr generator, ulong offset);
 
 		/// <summary>
@@ -46,7 +46,7 @@ namespace Althea.Backend.Cuda.Random
 		/// </list>
 		/// </param>
 		/// <param name="order">Legal values of order for quasi-random generator is <see cref="Ordering.QuasiDefault"/></param>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandSetGeneratorOrdering(IntPtr generator, Ordering order);
 
 		/// <summary>
@@ -54,7 +54,7 @@ namespace Althea.Backend.Cuda.Random
 		/// <para/>
 		/// Legal values for <paramref name="dimensions"/> are 1 to 20000.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandSetQuasiRandomGeneratorDimensions(IntPtr generator, uint dimensions);
 
 		/// <summary>
@@ -62,7 +62,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="uint"/>s with every bit random.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGenerate(IntPtr generator, void* deviceArray, long size);
 
 		/// <summary>
@@ -70,7 +70,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="ulong"/>s with every bit random.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGenerateLongLong(IntPtr generator, void* deviceArray, long size);
 
 		/// <summary>
@@ -78,7 +78,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="float"/>s between 0.0f and 1.0f, (0.0f, 1.0f] for specify.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGenerateUniform(IntPtr generator, void* deviceArray, long size);
 
 		/// <summary>
@@ -86,7 +86,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="double"/>s between 0.0d and 1.0d, (0.0d, 1.0d] for specify.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGenerateUniformDouble(IntPtr generator, void* deviceArray, long size);
 
 		/// <summary>
@@ -94,7 +94,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="float"/>s sampled from the normal distribution with given <paramref name="mean"/> and <paramref name="standardDeviation"/>.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGenerateNormal(IntPtr generator, void* deviceArray, long size, float mean, float standardDeviation);
 
 		/// <summary>
@@ -102,7 +102,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="float"/>s sampled from the log normal distribution with given <paramref name="mean"/> and <paramref name="standardDeviation"/>.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGenerateLogNormal(IntPtr generator, void* deviceArray, long size, float mean, float standardDeviation);
 
 		/// <summary>
@@ -110,7 +110,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="double"/>s sampled from the normal distribution with given <paramref name="mean"/> and <paramref name="standardDeviation"/>.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGenerateNormalDouble(IntPtr generator, void* deviceArray, long size, double mean, double standardDeviation);
 
 		/// <summary>
@@ -118,7 +118,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="double"/>s sampled from the log normal distribution with given <paramref name="mean"/> and <paramref name="standardDeviation"/>.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGenerateLogNormalDouble(IntPtr generator, void* deviceArray, long size, double mean, double standardDeviation);
 
 		/// <summary>
@@ -126,7 +126,7 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="uint"/>s sampled from the Poisson distribution with given <paramref name="lambda"/>.
 		/// </summary>
-		[DllImport(Cuda.NativeMethods.CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandGeneratePoisson(IntPtr generator, void* deviceArray, long size, double lambda);
 	}
 }

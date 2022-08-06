@@ -666,6 +666,40 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			return funcRe != null || funcCm != null;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void TriangularMatrixMultiplyGeneralPostProcess<T, TS1, TS2, TS3, TApi>(TApi api, bool actualSquare, bool leftA, bool fillUpper, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, long minA, long maxA, long colA, long rowA, long colB, long rowB, T α, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TApi : class, Althea.LinearAlgebra.Dense.IBlasAbstractApi, Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi
+		{
+			if (actualSquare)
+			{
+				if (opA.CanInPlace() == fillUpper)
+				{
+					if (leftA)
+						api.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, m - minA, n, T.Zero, C, ldc, C + minA, ldc);
+					else
+						api.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, m, n - minA, T.Zero, C, ldc, C + minA * ldc, ldc);
+				}
+			}
+			else
+			{
+				if (opA.CanInPlace() == fillUpper)
+				{
+					A += minA * (opA.CanInPlace() ? lda : 1);
+					if (leftA)
+						api.GeneralMatricesMultiply(opA, opB, m, n, maxA - minA, α, A, lda, B + minA * (opB.CanInPlace() ? 1 : ldb), ldb, T.One, C, ldc);
+					else
+						api.GeneralMatricesMultiply(opB, opA, m, n - minA, opB.CanInPlace() ? colB : rowB, α, B, ldb, A, lda, T.Zero, C + minA * ldc, ldc);
+				}
+				else
+				{
+					A += minA * (opA.CanInPlace() ? 1 : lda);
+					if (leftA)
+						api.GeneralMatricesMultiply(opA, opB, m - minA, n, opA.CanInPlace() ? colA : rowA, α, A, lda, B, ldb, T.Zero, C + minA * ldc, ldc);
+					else
+						api.GeneralMatricesMultiply(opB, opA, m, n, opB.CanInPlace() ? colB : rowB, α, B + minA * (opB.CanInPlace() ? ldb : 1), ldb, A, lda, T.One, C, ldc);
+				}
+			}
+		}
+
 		/// <inheritdoc/>
 		public virtual bool TriangularMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
@@ -723,35 +757,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			funcRe?.Invoke(MklMatrixLayout.ColMajor, lr, fu, opA.ToMkl(), ud, mm, nn, α, pA, lda, pC, ldc);
 			funcCm?.Invoke(MklMatrixLayout.ColMajor, lr, fu, opA.ToMkl(), ud, mm, nn, α, pA, lda, pC, ldc);
 			long minA = Math.Min(rowA, colA), maxA = Math.Max(rowA, colA);
-			if (actualSquare)
-			{
-				if (opA.CanInPlace() == fillUpper)
-				{
-					if (leftA)
-						this.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, m - minA, n, T.Zero, C, ldc, C + minA, ldc);
-					else
-						this.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, m, n - minA, T.Zero, C, ldc, C + minA * ldc, ldc);
-				}
-			}
-			else
-			{
-				if (opA.CanInPlace() == fillUpper)
-				{
-					A += minA * (opA.CanInPlace() ? lda : 1);
-					if (leftA)
-						this.GeneralMatricesMultiply(opA, opB, m, n, maxA - minA, α, A, lda, B + minA * (opB.CanInPlace() ? 1 : ldb), ldb, T.One, C, ldc);
-					else
-						this.GeneralMatricesMultiply(opB, opA, m, n - minA, opB.CanInPlace() ? colB : rowB, α, B, ldb, A, lda, T.Zero, C + minA * ldc, ldc);
-				}
-				else
-				{
-					A += minA * (opA.CanInPlace() ? 1 : lda);
-					if (leftA)
-						this.GeneralMatricesMultiply(opA, opB, m - minA, n, opA.CanInPlace() ? colA : rowA, α, A, lda, B, ldb, T.Zero, C + minA * ldc, ldc);
-					else
-						this.GeneralMatricesMultiply(opB, opA, m, n, opB.CanInPlace() ? colB : rowB, α, B + minA * (opB.CanInPlace() ? ldb : 1), ldb, A, lda, T.One, C, ldc);
-				}
-			}
+			TriangularMatrixMultiplyGeneralPostProcess(this, actualSquare, leftA, fillUpper, opA, opB, m, n, k, minA, maxA, colA, rowA, colB, rowB, α, A, lda, B, ldb, C, ldc);
 			if (conjugated)
 				Conjugater.Conjugate(pC, mm, nn, ldc);
 			return true;

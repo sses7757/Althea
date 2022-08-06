@@ -3,6 +3,7 @@
 using Althea.LinearAlgebra;
 
 using static Althea.Backend.Cuda.MemoryPointerChecker;
+
 using NM = Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods;
 using NMC = Althea.Backend.Cuda.LinearAlgebra.Dense.CustomNativeMethods;
 
@@ -392,7 +393,7 @@ public unsafe partial class Api
 		if (func is null)
 			return false;
 		if (β != T.One) // scale A
-			this.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, m, n, β, A, lda, T.Zero, null, 0, A, lda);
+			this.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, m, n, β, A, lda, default, (TSM?)null, default, A, lda);
 		func(this.cublasHandle, mm, nn, &α, px, incx, py, incy, pA, llda).Check();
 		return true;
 	}
@@ -419,7 +420,7 @@ public unsafe partial class Api
 		if (func is null)
 			return false;
 		if (β != T.One) // scale A
-			this.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, T.Zero, null, 0, A, lda);
+			this.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, default, (TSM?)null, default, A, lda);
 		func(this.cublasHandle, fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower, nn, &α, px, incx, pA, llda).Check();
 		return true;
 	}
@@ -448,13 +449,358 @@ public unsafe partial class Api
 			_ => null,
 		};
 		if (β != T.One) // scale A
-			this.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, T.Zero, null, 0, A, lda);
+			this.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, n, n, β, A, lda, default, (TSM?)null, default, A, lda);
 		func(this.cublasHandle, fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower, nn, &α, px, incx, py, incy, pA, llda).Check();
 		return true;
 	}
 	#endregion
 
 	#region level 3
+	/// <inheritdoc/>
+	public virtual bool GeneralMatricesMultiply<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	{
+		if (!GetPointer(this, A, opA, m, k, lda, out T* pA, out _, out int kk, out int llda))
+			return false;
+		if (!GetPointer(this, B, opB, k, n, ldb, out T* pB, out _, out _, out int lldb))
+			return false;
+		if (!GetPointer(this, C, m, n, ldc, out T* pC, out int mm, out int nn, out int lldc))
+			return false;
 
+		delegate*<IntPtr, CuBlasOperation, CuBlasOperation, int, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NM.cublasSgemm,
+			Float64 => &NM.cublasDgemm,
+			Complex<Float32> => this.ComplexGemmUseGemm3m ? &NM.cublasCgemm3m : &NM.cublasCgemm,
+			Complex<Float64> => this.ComplexGemmUseGemm3m ? &NM.cublasZgemm3m : &NM.cublasZgemm,
+			_ => null,
+		};
+		if (func is not null || T.Type == DataType.RealFloat16 || T.Type == BrainHalf.RealBrainHalfType)
+		{
+			// nothing
+		}
+		else
+			return false;
+
+		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
+		if ((opA == MatrixOperation.Conjugate) != (opB == MatrixOperation.Conjugate))
+			return false;
+		if (opA == MatrixOperation.Conjugate && β != T.Zero)
+			Conjugater.Conjugate(pC, mm, nn, lldc);
+		if (func is not null)
+		{
+			func(this.cublasHandle, opA.ToCuda(), opB.ToCuda(), mm, nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc).Check();
+		}
+		else
+		{
+			var type = T.Type.ToCudaDataType();
+			CuBlasComputeType cType = type switch
+			{
+				////CudaDataType.RealFloat32 or CudaDataType.ComplexFloat32 => CuBlasComputeType.Compute32F,
+				////CudaDataType.RealFloat64 or CudaDataType.ComplexFloat64 => CuBlasComputeType.Compute64F,
+				CudaDataType.RealFloat16 => CuBlasComputeType.Compute16F,
+				CudaDataType.RealBrainFloat16 => CuBlasComputeType.Compute32F,
+				_ => default,
+			};
+			NM.cublasGemmEx(this.cublasHandle, opA.ToCuda(), opB.ToCuda(), mm, nn, kk, &α, pA, type, llda, pB, type, lldb, &β, pC, type, lldc, cType, CuBlasGemmAlgorithm.Default).Check();
+		}
+		if (opA == MatrixOperation.Conjugate)
+			Conjugater.Conjugate(pC, mm, nn, lldc);
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public virtual bool SymmetricMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool fillUpper, bool leftA, bool hermA, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	{
+		if (α == T.Zero)
+			throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
+		opA = opA.Simplify<T>(hermA); opB = opB.Simplify<T>();
+		if (!GetPointer(this, A, leftA ? m : n, leftA ? m : n, lda, out T* pA, out _, out _, out int llda))
+			return false;
+		if (!GetPointer(this, B, opB, m, n, ldb, out T* pB, out _, out _, out int lldb))
+			return false;
+		if (!GetPointer(this, C, m, n, ldc, out T* pC, out int mm, out int nn, out int lldc))
+			return false;
+
+		delegate*<IntPtr, CuBlasSideMode, CuBlasFillMode, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NM.cublasSsymm,
+			Float64 => &NM.cublasDsymm,
+			Complex<Float32> => hermA ? &NM.cublasChemm : &NM.cublasCsymm,
+			Complex<Float64> => hermA ? &NM.cublasZhemm : &NM.cublasZsymm,
+			_ => null,
+		};
+		var side = leftA ? CuBlasSideMode.Left : CuBlasSideMode.Right;
+		var uplo = fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower;
+		if (!opB.CanInPlace())
+		{
+			if (m != ldc)
+				return false;
+			// pre
+			if (opA != MatrixOperation.None)
+				return false;
+			// multiply
+			func(this.cublasHandle, side, uplo, mm, nn, &α, pA, llda, pB, lldb, &β, pC, lldc);
+			// post
+		}
+		else if (opA == MatrixOperation.Conjugate)
+		{   // T is complex
+			// pre
+			if (opB == MatrixOperation.None)
+				return false;
+			// multiply
+			func(this.cublasHandle, side, uplo, mm, nn, &α, pA, llda, pB, lldb, &β, pC, lldc);
+			// post
+			Conjugater.Conjugate(pC, mm, nn, lldc);
+		}
+		else
+		{
+			if (opB != MatrixOperation.None)
+				return false;
+			func(this.cublasHandle, side, uplo, mm, nn, &α, pA, llda, pB, lldb, &β, pC, lldc);
+		}
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public virtual bool TriangularMatrixSolve<T, TS1, TS2>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	{
+		if (!GetPointer(this, A, m, m, lda, out T* pA, out int mm, out _, out int llda))
+			return false;
+		if (!GetPointer(this, B, m, n, ldb, out T* pB, out _, out int nn, out int lldb))
+			return false;
+		if (α == T.Zero) // result is 0
+			return this.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, m, n, α, B, ldb, default, (TS1?)null, default, B, ldb);
+		if (op == MatrixOperation.Conjugate)
+			return false;
+
+		delegate*<IntPtr, CuBlasSideMode, CuBlasFillMode, CuBlasOperation, CuBlasDiagType, int, int, T*, T*, int, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NativeMethods.cublasStrsm,
+			Float64 => &NativeMethods.cublasDtrsm,
+			Complex<Float32> => &NativeMethods.cublasCtrsm,
+			Complex<Float64> => &NativeMethods.cublasZtrsm,
+			_ => null,
+		};
+		func(this.cublasHandle, leftA ? CuBlasSideMode.Right : CuBlasSideMode.Left, fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower, op.ToCuda(), unitDiag ? CuBlasDiagType.Unit : CuBlasDiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb).Check();
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public virtual bool TriangularMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	{
+		int rowA, colA, rowB, colB;
+		(rowA, colA) = opA.CanInPlace() ? ((int)m, (int)k) : ((int)k, (int)m);
+		(rowB, colB) = opB.CanInPlace() ? ((int)k, (int)n) : ((int)n, (int)k);
+		if (!leftA)
+		{
+			((rowA, colA), (rowB, colB)) = ((rowB, colB), (rowA, colA));
+		}
+		if (!GetPointer(this, A, rowA, colA, lda, out T* pA, out _, out _, out int llda))
+			return false;
+		if (!GetPointer(this, B, rowB, colB, ldb, out T* pB, out _, out _, out int lldb))
+			return false;
+		if (!GetPointer(this, C, m, n, ldc, out T* pC, out _, out _, out int lldc))
+			return false;
+		if (β != T.Zero || (pB == pC && (!opB.CanInPlace() || rowB != m || colB != n || ldb != ldc || rowA != colA)))
+			return false;
+		opA = opA.Simplify<T>();
+		delegate*<IntPtr, CuBlasSideMode, CuBlasFillMode, CuBlasOperation, CuBlasDiagType, int, int, T*, T*, int, T*, int, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NM.cublasStrmm,
+			Float64 => &NM.cublasDtrmm,
+			Complex<Float32> => &NM.cublasCtrmm,
+			Complex<Float64> => &NM.cublasZtrmm,
+			_ => null,
+		};
+		if (func is null)
+			return false;
+		var lr = leftA ? CuBlasSideMode.Left : CuBlasSideMode.Right;
+		var fu = fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower;
+		var ud = unitDiag ? CuBlasDiagType.Unit : CuBlasDiagType.NonUnit;
+		bool actualSquare = opA.CanInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
+		bool conjugated = false;
+		int mm = Math.Min(rowB, (int)m), nn = Math.Min(colB, (int)n);
+		if (opA == MatrixOperation.Conjugate)
+		{
+			opB = opB.Conjugate().Simplify<T>();
+			opA = MatrixOperation.None;
+			conjugated = true;
+		}
+		func(this.cublasHandle, lr, fu, opA.ToCuda(), ud, mm, nn, &α, pA, llda, pB, lldb, pC, lldc).Check();
+		long minA = Math.Min(rowA, colA), maxA = Math.Max(rowA, colA);
+		Mkl.LinearAlgebra.Dense.Api.TriangularMatrixMultiplyGeneralPostProcess(this, actualSquare, leftA, fillUpper, opA, opB, m, n, k, minA, maxA, colA, rowA, colB, rowB, α, A, lda, B, ldb, C, ldc);
+		if (conjugated)
+			Conjugater.Conjugate(pC, mm, nn, lldc);
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public virtual bool SymmetricRankKUpdate<T, TS1, TS2>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, TS1 A, long lda, T β, TS2 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	{
+		if (!GetPointer(this, A, op, n, k, lda, out T* pA, out int nn, out int kk, out int llda))
+			return false;
+		if (!GetPointer(this, C, n, n, ldc, out T* pC, out _, out _, out int lldc))
+			return false;
+		op = op.Simplify<T>();
+		if (op == MatrixOperation.Conjugate && β != T.Zero)
+			return false;
+		
+		delegate*<IntPtr, CuBlasFillMode, CuBlasOperation, int, int, T*, T*, int, T*, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NativeMethods.cublasSsyrk,
+			Float64 => &NativeMethods.cublasDsyrk,
+			Complex<Float32> => conjA ? &NativeMethods.cublasCherk : &NativeMethods.cublasCsyrk,
+			Complex<Float64> => conjA ? &NativeMethods.cublasZherk : &NativeMethods.cublasZsyrk,
+			_ => null,
+		};
+		if (func is null)
+			return false;
+		func(this.cublasHandle, fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower, op.ToCuda(), nn, kk, &α, pA, llda, &β, pC, lldc).Check();
+		if (op == MatrixOperation.Conjugate)
+			Conjugater.Conjugate(pC, nn, kk, lldc);
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public virtual bool SymmetricRankTwoKUpdate<T, TS1, TS2, TS3>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	{
+		if (!GetPointer(this, A, op, n, k, lda, out T* pA, out int nn, out int kk, out int llda))
+			return false;
+		if (!GetPointer(this, B, op, n, k, ldb, out T* pB, out _, out _, out int lldb))
+			return false;
+		if (!GetPointer(this, C, n, n, ldc, out T* pC, out _, out _, out int lldc))
+			return false;
+		op = op.Simplify<T>();
+		if (op == MatrixOperation.Conjugate && β != T.Zero)
+			return false;
+
+		delegate*<IntPtr, CuBlasFillMode, CuBlasOperation, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NativeMethods.cublasSsyr2k,
+			Float64 => &NativeMethods.cublasDsyr2k,
+			Complex<Float32> => conjugate ? &NativeMethods.cublasCher2k : &NativeMethods.cublasCsyr2k,
+			Complex<Float64> => conjugate ? &NativeMethods.cublasZher2k : &NativeMethods.cublasZsyr2k,
+			_ => null,
+		};
+		if (func is null)
+			return false;
+		func(this.cublasHandle, fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower, op.ToCuda(), nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc).Check();
+		if (op == MatrixOperation.Conjugate)
+			Conjugater.Conjugate(pC, nn, kk, lldc);
+		return true;
+	}
+	#endregion
+
+	#region BLAS-like
+	/// <inheritdoc/>
+	public virtual bool GeneralMatricesAdd<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	{
+		if (!GetPointer(this, A, opA, m, n, lda, out T* pA, out _, out _, out int llda))
+			return false;
+		if (!GetPointer(this, B, opB, m, n, ldb, out T* pB, out _, out _, out int lldb))
+			return false;
+		if (!GetPointer(this, C, m, n, ldc, out T* pC, out int mm, out int nn, out int lldc))
+			return false;
+
+		// shortcut
+		if ((A is null || α == T.Zero) != (B is null || β == T.Zero))
+		{
+			if ((A is null || α == T.Zero) && opB == MatrixOperation.None && β == T.One)
+			{   // copy B to C
+				Storage.NativeMethods.cudaMemcpy2D(pC, ldc * sizeof(T), pB, ldb * sizeof(T), m * sizeof(T), n, Storage.MemoryCopyKind.DeviceToDevice).Check();
+			}
+			else if ((B is null || β == T.Zero) && opA == MatrixOperation.None && α == T.One)
+			{   // copy A to C
+				Storage.NativeMethods.cudaMemcpy2D(pC, ldc * sizeof(T), pA, lda * sizeof(T), m * sizeof(T), n, Storage.MemoryCopyKind.DeviceToDevice).Check();
+			}
+			return true;
+		}
+		// normal
+		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
+		if ((opA == MatrixOperation.Conjugate) != (opB == MatrixOperation.Conjugate))
+			return false;
+		if (llda <= 0) llda = 1;
+		if (lldb <= 0) lldb = 1;
+		delegate*<IntPtr, CuBlasOperation, CuBlasOperation, int, int, T*, T*, int, T*, T*, int, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NativeMethods.cublasSgeam,
+			Float64 => &NativeMethods.cublasDgeam,
+			Complex<Float32> => &NativeMethods.cublasCgeam,
+			Complex<Float64> => &NativeMethods.cublasZgeam,
+			_ => null,
+		};
+		func(this.cublasHandle, opA.ToCuda(), opB.ToCuda(), mm, nn, &α, pA, llda, &β, pB, lldb, pC, lldc).Check();
+		if (opA == MatrixOperation.Conjugate)
+			Conjugater.Conjugate(pC, mm, nn, lldc);
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public virtual bool DiagonalMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, MatrixOperation opA, bool conjX, long m, long n, T α, TS1 A, long lda, TS2 x, long strideX, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	{
+		if (!GetPointer(this, x, strideX, out T* px, out int nx, out int incx))
+			return false;
+		if (!GetPointer(this, A, opA, m, n, lda, out T* pA, out int mm, out int nn, out int llda))
+			return false;
+		if (!GetPointer(this, C, m, n, ldc, out T* pC, out _, out _, out int lldc))
+			return false;
+		if (nx < (leftA == opA.CanInPlace() ? n : m))
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
+		if (β != T.Zero)
+			return false;
+
+		delegate*<IntPtr, CuBlasSideMode, int, int, T*, int, T*, int, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NativeMethods.cublasSdgmm,
+			Float64 => &NativeMethods.cublasDdgmm,
+			Complex<Float32> => &NativeMethods.cublasCdgmm,
+			Complex<Float64> => &NativeMethods.cublasZdgmm,
+			_ => null,
+		};
+		// overwrite C by diagonal multiply result
+		func(this.cublasHandle, leftA ? CuBlasSideMode.Right : CuBlasSideMode.Left, mm, nn, pA, llda, px, incx, pC, lldc).Check();
+		// C = α * C
+		if (α != T.One)
+			return this.GeneralMatricesAdd(MatrixOperation.None, MatrixOperation.None, m, n, α, C, ldc, default, (TS3?)null, default, C, ldc);
+		return true;
+	}
+
+	/// <summary>
+	/// See <see cref="SymmetricRankKUpdate{T, TS1, TS2}(bool, MatrixOperation, bool, long, long, T, TS1, long, T, TS2, long)"/> except we are computing <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c> can be used when <paramref name="B"/> is in such way that the result <paramref name="C"/> is guaranteed to be symmetric/hermitian.
+	/// </summary>
+	public virtual bool SymmetricRankKUpdateVariant<T, TS1, TS2, TS3>(bool fillUpper, MatrixOperation op, bool conjB, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	{
+		if (!GetPointer(this, A, op, n, k, lda, out T* pA, out int nn, out int kk, out int llda))
+			return false;
+		if (!GetPointer(this, B, op, n, k, lda, out T* pB, out _, out _, out int lldb))
+			return false;
+		if (!GetPointer(this, C, n, n, ldc, out T* pC, out _, out _, out int lldc))
+			return false;
+		op = op.Simplify<T>();
+		if (op == MatrixOperation.Conjugate && β != T.Zero)
+			return false;
+
+		delegate*<IntPtr, CuBlasFillMode, CuBlasOperation, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
+		func = default(T) switch
+		{
+			Float32 => &NativeMethods.cublasSsyrkx,
+			Float64 => &NativeMethods.cublasDsyrkx,
+			Complex<Float32> => conjB ? &NativeMethods.cublasCherkx : &NativeMethods.cublasCsyrkx,
+			Complex<Float64> => conjB ? &NativeMethods.cublasZherkx : &NativeMethods.cublasZsyrkx,
+			_ => null,
+		};
+		func(this.cublasHandle, fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower, op.ToCuda(), nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc).Check();
+		if (op == MatrixOperation.Conjugate)
+			Conjugater.Conjugate(pC, nn, kk, lldc);
+		return true;
+	}
 	#endregion
 }
