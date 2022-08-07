@@ -166,31 +166,31 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[DllImport(Cuda.NativeMethods.CUSOLVER_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSorgqr(IntPtr handle, int m, int n, int k, void* A, int lda, void* τ, void* work, int lenWork, void* devInfo);
 
-		[CustomNativeMethod(10, "Float32", @"Sor")]
-		[CustomNativeMethod(10, "Float64", @"Dor")]
-		[CustomNativeMethod(10, "Complex<Float32>", @"Cun")]
-		[CustomNativeMethod(10, "Complex<Float64>", @"Zun")]
+		[CustomNativeMethod(10, "Float32", "Sor")]
+		[CustomNativeMethod(10, "Float64", "Dor")]
+		[CustomNativeMethod(10, "Complex<Float32>", "Cun")]
+		[CustomNativeMethod(10, "Complex<Float64>", "Zun")]
 		[DllImport(Cuda.NativeMethods.CUSOLVER_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSormqr_bufferSize(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, void* A, int lda, void* τ, void* C, int ldc, out int lenWork);
 
-		[CustomNativeMethod(10, "Float32", @"Sor")]
-		[CustomNativeMethod(10, "Float64", @"Dor")]
-		[CustomNativeMethod(10, "Complex<Float32>", @"Cun")]
-		[CustomNativeMethod(10, "Complex<Float64>", @"Zun")]
+		[CustomNativeMethod(10, "Float32", "Sor")]
+		[CustomNativeMethod(10, "Float64", "Dor")]
+		[CustomNativeMethod(10, "Complex<Float32>", "Cun")]
+		[CustomNativeMethod(10, "Complex<Float64>", "Zun")]
 		[DllImport(Cuda.NativeMethods.CUSOLVER_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSormqr(IntPtr handle, CuBlasSideMode side, CuBlasOperation trans, int m, int n, int k, void* A, int lda, void* τ, void* C, int ldc, void* work, int lenWork, void* devInfo);
 
-		[CustomNativeMethod(10, "Float32", @"Ssy")]
-		[CustomNativeMethod(10, "Float64", @"Dsy")]
-		[CustomNativeMethod(10, "Complex<Float32>", @"Che")]
-		[CustomNativeMethod(10, "Complex<Float64>", @"Zhe")]
+		[CustomNativeMethod(10, "Float32", "Ssy")]
+		[CustomNativeMethod(10, "Float64", "Dsy")]
+		[CustomNativeMethod(10, "Complex<Float32>", "Che")]
+		[CustomNativeMethod(10, "Complex<Float64>", "Zhe")]
 		[DllImport(Cuda.NativeMethods.CUSOLVER_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSsygvd_bufferSize(IntPtr handle, GeneralEigenType itype, CuSolverEigMode jobz, CuBlasFillMode uplo, int n, void* A, int lda, void* B, int ldb, void* W, out int lenWork);
 
-		[CustomNativeMethod(10, "Float32", @"Ssy")]
-		[CustomNativeMethod(10, "Float64", @"Dsy")]
-		[CustomNativeMethod(10, "Complex<Float32>", @"Che")]
-		[CustomNativeMethod(10, "Complex<Float64>", @"Zhe")]
+		[CustomNativeMethod(10, "Float32", "Ssy")]
+		[CustomNativeMethod(10, "Float64", "Dsy")]
+		[CustomNativeMethod(10, "Complex<Float32>", "Che")]
+		[CustomNativeMethod(10, "Complex<Float64>", "Zhe")]
 		[DllImport(Cuda.NativeMethods.CUSOLVER_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSsygvd(IntPtr handle, GeneralEigenType itype, CuSolverEigMode jobz, CuBlasFillMode uplo, int n, void* A, int lda, void* B, int ldb, void* W, void* work, int lenWork, void* devInfo);
 		#endregion

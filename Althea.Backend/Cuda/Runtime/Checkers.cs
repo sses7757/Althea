@@ -58,4 +58,24 @@ internal static unsafe partial class MemoryPointerChecker
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
 		return true;
 	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static unsafe bool GetPointerLongInner<T, TS>(TS s, long m, long n, long ld, out T* pointer, string? sName = null, string? mName = null, string? nName = null, string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		if (m <= 0)
+			throw new ArgumentOutOfRangeException(mName, m, Resources.ParameterError.MustPositive);
+		if (n <= 0)
+			throw new ArgumentOutOfRangeException(nName, n, Resources.ParameterError.MustPositive);
+		if (ld < m)
+			throw new ArgumentOutOfRangeException(ldName, ld, Resources.ParameterError.InvalidValue);
+		pointer = default;
+		if (s is not PureStorage<T, CudaMemoryPointer> ps)
+			return false; // not support
+		pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
+		if (pointer == default)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
+		if ((ps.Length + (ld - m)) / ld < n)
+			throw new ArgumentException(Resources.ParameterError.WrongSize);
+		return true;
+	}
 }

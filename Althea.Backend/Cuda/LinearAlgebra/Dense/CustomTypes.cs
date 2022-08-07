@@ -37,10 +37,10 @@ namespace Althea.Backend.Cuda
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe void CheckDeviceInfo(this SolveMethodKind kind, IntPtr deviceInfo)
+		internal static unsafe void CheckDeviceInfo(this SolveMethodKind kind, void* deviceInfo)
 		{
 			int info;
-			Storage.NativeMethods.cudaMemcpy(&info, (void*)deviceInfo, sizeof(int), Storage.MemoryCopyKind.DeviceToHost).Check();
+			Storage.NativeMethods.cudaMemcpy(&info, deviceInfo, sizeof(int), Storage.MemoryCopyKind.DeviceToHost).Check();
 			if (info > 0)
 				throw new MatrixSolveAlgorithmException(kind, info);
 			if (info < 0)

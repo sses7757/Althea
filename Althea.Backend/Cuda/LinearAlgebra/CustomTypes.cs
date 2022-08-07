@@ -29,7 +29,7 @@ internal enum CuBlasOperation
 internal static class Conversions
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static sbyte ToSvdChar<T, TS1, TS2>(TS1 matrix, TS2? svd, bool full) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	internal static unsafe sbyte ToSvdChar<T>(T* matrix, T* svd, bool full) where T : unmanaged, IBaseNumber<T>
 	{
 		if (svd is null)
 			return (sbyte)'N';
@@ -51,7 +51,18 @@ internal static class Conversions
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static bool CheckExSupportt<T>(this T value) where T : unmanaged, IBaseNumber<T>
+	internal static bool CheckBaseSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
+	{
+		return value switch
+		{
+			Float32 or Float64 or
+			Complex<Float32> or Complex<Float64> => true,
+			_ => false,
+		};
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static bool CheckExSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
 	{
 		return value switch
 		{
@@ -62,7 +73,7 @@ internal static class Conversions
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static bool CheckEx2Supportt<T>(this T value) where T : unmanaged, IBaseNumber<T>
+	internal static bool CheckEx2Support<T>(this T value) where T : unmanaged, IBaseNumber<T>
 	{
 		return value switch
 		{
