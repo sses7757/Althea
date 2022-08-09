@@ -158,11 +158,17 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[DllImport(Cuda.NativeMethods.CUSOLVER_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSgeqrf(IntPtr handle, int m, int n, void* A, int lda, void* τ, void* Workspace, int lenWork, void* devInfo);
 
-		[NativeMethod(10, true)]
+		[CustomNativeMethod(10, "Float32", "Sor")]
+		[CustomNativeMethod(10, "Float64", "Dor")]
+		[CustomNativeMethod(10, "Complex<Float32>", "Cun")]
+		[CustomNativeMethod(10, "Complex<Float64>", "Zun")]
 		[DllImport(Cuda.NativeMethods.CUSOLVER_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSorgqr_bufferSize(IntPtr handle, int m, int n, int k, void* A, int lda, void* τ, out int lenWork);
 
-		[NativeMethod(10, true)]
+		[CustomNativeMethod(10, "Float32", "Sor")]
+		[CustomNativeMethod(10, "Float64", "Dor")]
+		[CustomNativeMethod(10, "Complex<Float32>", "Cun")]
+		[CustomNativeMethod(10, "Complex<Float64>", "Zun")]
 		[DllImport(Cuda.NativeMethods.CUSOLVER_DLL_NAME)]
 		internal static extern CudaSolverStatus cusolverDnSorgqr(IntPtr handle, int m, int n, int k, void* A, int lda, void* τ, void* work, int lenWork, void* devInfo);
 
