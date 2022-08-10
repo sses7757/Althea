@@ -34,7 +34,10 @@ public unsafe class CustomNativeMethods
 	internal static extern CustomStatus vecDataConvert(DataType srcType, DataType dstType, bool toRealByAbs, long n, void* src, long strideSrc, void* dst, long strideDst);
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-	internal static extern CustomStatus vecConj(DataType type, long n, void* array, long stride);
+	internal static extern CustomStatus vecConj(DataType type, long n, void* a, long strideA, void* b, long strideB);
+
+	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+	internal static extern CustomStatus vecAbs(DataType type, long n, void* a, long strideA, void* b, long strideB);
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern CustomStatus vecFillVal(DataType type, long n, void* value, void* array, long stride);
@@ -47,6 +50,9 @@ public unsafe class CustomNativeMethods
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern CustomStatus vecMulScalar(DataType type, long n, void* scalar, void* a, long strideA, void* b, long strideB);
+
+	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+	internal static extern CustomStatus vecPowScalar(DataType type, long n, void* scalar, void* a, long strideA, void* b, long strideB);
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern CustomStatus vecsEq(DataType type, long n, void* a, long strideA, void* b, long strideB, out bool equals);

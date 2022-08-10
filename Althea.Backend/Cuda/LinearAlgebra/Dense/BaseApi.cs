@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 
-using Althea.Backend.Cuda.Storage;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
@@ -20,7 +19,7 @@ internal readonly unsafe ref struct Conjugater1<T> where T : unmanaged, IBaseNum
 		this.ptr = ptr; this.n = n; this.inc = inc;
 		if (op == MatrixOperation.Conjugate)
 		{
-			CustomNativeMethods.vecConj(T.Type, n, ptr, inc).Check();
+			CustomNativeMethods.vecConj(T.Type, n, ptr, inc, ptr, inc).Check();
 		}
 		else
 		{
@@ -32,7 +31,7 @@ internal readonly unsafe ref struct Conjugater1<T> where T : unmanaged, IBaseNum
 	public void Dispose()
 	{
 		if (this.n != 0)
-			CustomNativeMethods.vecConj(T.Type, n, ptr, inc).Check();
+			CustomNativeMethods.vecConj(T.Type, n, ptr, inc, ptr, inc).Check();
 	}
 }
 
@@ -44,7 +43,7 @@ internal static class Conjugater
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal unsafe static bool Conjugate<T>(T* ptr, int n, int inc) where T : unmanaged, IBaseNumber<T>
 	{
-		return CustomNativeMethods.vecConj(T.Type, n, ptr, inc).Check();
+		return CustomNativeMethods.vecConj(T.Type, n, ptr, inc, ptr, inc).Check();
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -159,237 +158,5 @@ public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAb
 		};
 		func(this.cublasHandle, n, from, incx, to, incy).Check();
 	}
-	#endregion
-
-
-	#region custom level 1
-	protected override unsafe bool AggregateProduct_<T>(Storage<T> x, int stride, out T product)
-	{
-		product = default;
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var n, stride))
-			return false;
-		T result;
-		NativeMethods.vecProd(T.Type, px, n, stride, &result);
-		product = result;
-		return true;
-	}
-
-	protected override unsafe bool AggregateSum_<T>(Storage<T> x, int stride, out T sum)
-	{
-		sum = default;
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var n, stride))
-			return false;
-		T result;
-		NativeMethods.vecSum(T.Type, px, n, stride, &result);
-		sum = result;
-		return true;
-	}
-
-	protected override unsafe bool PartialProduct_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var nx, strideX))
-			return false;
-		if (!CheckPointerLong(y, out var py, out var ny, strideY))
-			return false;
-		long n = Math.Min(nx, ny);
-		NativeMethods.vecParProd(T.Type, px, py, n, inclusive, strideX, strideY);
-		return true;
-	}
-
-	protected override bool PartialSum_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, bool inclusive)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var nx, strideX))
-			return false;
-		if (!CheckPointerLong(y, out var py, out var ny, strideY))
-			return false;
-		long n = Math.Min(nx, ny);
-		NativeMethods.vecParSum(T.Type, px, py, n, inclusive, strideX, strideY);
-		return true;
-	}
-
-	protected override unsafe bool PointWiseAddScalar_<T>(Storage<T> x, int stride, T scalr)
-	{
-		if (scalr.IsZero())
-			return true;
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var n, stride))
-			return false;
-		NativeMethods.vecAddScalar(T.Type, px, &scalr, n, stride);
-		return true;
-	}
-
-	protected override bool PointWiseCast_<T, TOut>(Storage<T> source, int incSrc, Storage<TOut> destination, int incDst)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(source, out var px, out var nx, incSrc))
-			return false;
-		if (!CheckPointerLong(destination, out var py, out var ny, incDst))
-			return false;
-		long n = Math.Min(nx, ny);
-		NativeMethods.vecDataConvert(T.Type, Const<TOut>.DataType, px, py, n, incSrc, incDst, true).Check();
-		return true;
-	}
-
-	protected override bool PointWiseConjugate_<T>(Storage<T> x, int stride)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var n, stride))
-			return false;
-		NativeMethods.vecConj(T.Type, px, n, stride);
-		return true;
-	}
-
-	protected override bool PointWiseDivide_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var nx, strideX))
-			return false;
-		if (!CheckPointerLong(y, out var py, out var ny, strideY))
-			return false;
-		long n = Math.Min(nx, ny);
-		NativeMethods.vecsMulDiv(T.Type, px, py, n, strideX, strideY, false);
-		return true;
-	}
-
-	protected override bool PointWiseEquals_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY, out bool equals)
-	{
-		equals = false;
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var nx, strideX))
-			return false;
-		if (!CheckPointerLong(y, out var py, out var ny, strideY))
-			return false;
-		long n = Math.Min(nx, ny);
-		equals = NativeMethods.vecsEq(T.Type, px, py, n, strideX, strideY);
-		return true;
-	}
-
-	protected override bool PointWiseMultiply_<T>(Storage<T> x, int strideX, Storage<T> y, int strideY)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var nx, strideX))
-			return false;
-		if (!CheckPointerLong(y, out var py, out var ny, strideY))
-			return false;
-		long n = Math.Min(nx, ny);
-		NativeMethods.vecsMulDiv(T.Type, px, py, n, strideX, strideY, true);
-		return true;
-	}
-
-	protected override unsafe bool PointWisePower_<T>(Storage<T> x, int stride, double p)
-	{
-		if (p == 1)
-			return true;
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var n, stride))
-			return false;
-		if (p == 0)
-		{
-			T one = Const<T>.One;
-			Storage.NativeMethods.vecFillVal(T.Type, px, &one, n, stride);
-			return true;
-		}
-		if (p == 2)
-		{
-			NativeMethods.vecsMulDiv(T.Type, px, px, n, stride, stride, true);
-			return true;
-		}
-		T pp = p.FromDouble<T>(); // for complex type, (&pp)[0..sizeof(T)/2] == (T::value_type)p
-		NativeMethods.vecPowSameType(T.Type, px, &pp, n, stride);
-		return true;
-	}
-
-	protected override unsafe bool PointWisePower_<T>(Storage<T> x, int stride, T p)
-	{
-		if (p.IsEqual(Const<T>.One))
-			return true;
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var n, stride))
-			return false;
-		if (p.IsZero())
-		{
-			T one = Const<T>.One;
-			Storage.NativeMethods.vecFillVal(T.Type, px, &one, n, stride);
-			return true;
-		}
-		if (p.IsEqual(Const<T>.Two))
-		{
-			NativeMethods.vecsMulDiv(T.Type, px, px, n, stride, stride, true);
-			return true;
-		}
-		NativeMethods.vecPowSameType(T.Type, px, &p, n, stride);
-		return true;
-	}
-
-	protected override unsafe bool TruncateArray_<T>(Storage<T> x, int stride, double threshold)
-	{
-		if (threshold <= 0)
-			throw new ArgumentOutOfRangeException(nameof(threshold), threshold, Resources.Parameter.MustPositive);
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(x, out var px, out var n, stride))
-			return false;
-		T pp = threshold.FromDouble<T>();
-		NativeMethods.vecClip(T.Type, px, &pp, n, stride);
-		return true;
-	}
-	#endregion
-
-
-	#region custom level 3
-	protected override bool MatrixCopyUpperLowerParts_<T>(bool storedUpper, bool hermitian, long n, Storage<T> A, long lda)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(A, n, lda, out var pA))
-			return false;
-		NativeMethods.matMakeHerm(T.Type, pA, lda, n, storedUpper, hermitian);
-		return true;
-	}
-
-	protected override bool MatrixClearUpperLowerPart_<T>(bool clearLower, long n, Storage<T> A, long lda)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(A, n, lda, out var pA))
-			return false;
-		NativeMethods.matTriClear(T.Type, pA, lda, n, clearLower);
-		return true;
-	}
-
-	// Ignore Spelling: lda ma na ldb mb nb ldc
-	protected override unsafe bool MatrixKronecker_<T>(long ma, long na, long mb, long nb, T α, Storage<T> A, long lda, Storage<T> B, long ldb, T β, Storage<T> C, long ldc)
-	{
-		if (!Const<T>.IsPreDefinedNoHalf)
-			return false;
-		if (!CheckPointerLong(A, na, lda, out var pA))
-			return false;
-		if (!CheckPointerLong(B, nb, ldb, out var pB))
-			return false;
-		////if (ldc < ma * mb)
-		////	throw new ArgumentException(Resources.Parameter.InvalidValue, nameof(ldc));
-
-		if (!CheckPointerLong(C, na * nb, ldc, out var pC))
-			return false;
-		NativeMethods.matKron(T.Type, pA, lda, ma, na, pB, ldb, mb, nb, pC, ldc, &α, &β);
-		return true;
-	}
-
 	#endregion
 }

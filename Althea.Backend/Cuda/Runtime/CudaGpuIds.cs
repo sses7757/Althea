@@ -558,6 +558,115 @@ internal static unsafe partial class MemoryPointerChecker
 	END:
 		return GetPointerInner(s, stride, out pointer, out length, out inc, sName, strideName);
 	}
+	
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		pointer = default; length = 0;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId0>>)
+		{
+			if (Runtime.CurrentDeviceID != 0)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId1>>)
+		{
+			if (Runtime.CurrentDeviceID != 1)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId2>>)
+		{
+			if (Runtime.CurrentDeviceID != 2)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId3>>)
+		{
+			if (Runtime.CurrentDeviceID != 3)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId4>>)
+		{
+			if (Runtime.CurrentDeviceID != 4)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId5>>)
+		{
+			if (Runtime.CurrentDeviceID != 5)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId6>>)
+		{
+			if (Runtime.CurrentDeviceID != 6)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId7>>)
+		{
+			if (Runtime.CurrentDeviceID != 7)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId8>>)
+		{
+			if (Runtime.CurrentDeviceID != 8)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId9>>)
+		{
+			if (Runtime.CurrentDeviceID != 9)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId10>>)
+		{
+			if (Runtime.CurrentDeviceID != 10)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId11>>)
+		{
+			if (Runtime.CurrentDeviceID != 11)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId12>>)
+		{
+			if (Runtime.CurrentDeviceID != 12)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId13>>)
+		{
+			if (Runtime.CurrentDeviceID != 13)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId14>>)
+		{
+			if (Runtime.CurrentDeviceID != 14)
+				return false;
+			goto END;
+		}
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId15>>)
+		{
+			if (Runtime.CurrentDeviceID != 15)
+				return false;
+			goto END;
+		}
+		return false;
+	END:
+		return GetPointerInnerLong(s, stride, out pointer, out length, sName, strideName);
+	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static unsafe bool GetPointer<T, TS>(IBindedDevice api, TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression("ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>

@@ -1,14 +1,9 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Backend.Cuda.LinearAlgebra.Dense;
 using Althea.Backend.Cuda.LinearAlgebra.Sparse;
-using Althea.Helpers;
-using Althea.LinearAlgebra;
-using Althea.LinearAlgebra.Sparse;
-using Althea.Numerics;
+
 
 namespace Althea.Backend.Cuda
 {
@@ -26,14 +21,6 @@ namespace Althea.Backend.Cuda
 				throw new StatusException(err, new StackTrace(0));
 			}
 		}
-
-		// TODO: sparse API
-		////[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		////internal static DenseVectorWrapper ToWrapper<T>(this Arrays.DenseVector<T> vector, SparseApi api) where T : unmanaged, INumber<T>
-		////{
-		////	api.GetPointer(vector.Storage, out IntPtr p, out long length);
-		////	return new(api.InternalInfo, length, p, Const<T>.DataType.ToCudaDataType());
-		////}
 	}
 }
 
@@ -53,7 +40,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		/// </summary>
 		NotInitialized = 1,
 		/// <summary>
-		///  "Resource allocation failed inside the CUSPARSE library. This is usually caused by a <see cref="Storage.NativeMethods.cudaMalloc(out IntPtr, long)"/> failure. To correct: prior to the function call, deallocate previously allocated memory as much as possible.
+		///  "Resource allocation failed inside the CUSPARSE library. This is usually caused by a <see cref="Storage.NativeMethods.cudaMalloc(out void*, long)"/> failure. To correct: prior to the function call, deallocate previously allocated memory as much as possible.
 		/// </summary>
 		AllocFailed = 2,
 		/// <summary>
@@ -73,7 +60,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		/// </summary>
 		ExecutionFailed = 6,
 		/// <summary>
-		/// An internal CUDA Sparse operation failed. This error is usually caused by a <see cref="Storage.NativeMethods.cudaMalloc(out IntPtr, long)"/> failure. To correct: check that the hardware, an appropriate version of the driver, and the CUDA Sparse library are correctly installed. Also, check that the memory passed as a parameter to the routine is not being deallocated prior to the routine’s completion.
+		/// An internal CUDA Sparse operation failed. This error is usually caused by a <see cref="Storage.NativeMethods.cudaMalloc(out void*, long)"/> failure. To correct: check that the hardware, an appropriate version of the driver, and the CUDA Sparse library are correctly installed. Also, check that the memory passed as a parameter to the routine is not being deallocated prior to the routine’s completion.
 		/// </summary>
 		InternalError = 7,
 		/// <summary>

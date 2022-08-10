@@ -122,6 +122,27 @@ internal static unsafe partial class MemoryPointerChecker
 	END:
 		return GetPointerInner(s, stride, out pointer, out length, out inc, sName, strideName);
 	}
+	
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		pointer = default; length = 0;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+<# for (int i = 0; i < 16; i++) { #>
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId<#=i#>>>)
+		{
+			if (Runtime.CurrentDeviceID != <#=i#>)
+				return false;
+			goto END;
+		}
+<# } #>
+		return false;
+	END:
+		return GetPointerInnerLong(s, stride, out pointer, out length, sName, strideName);
+	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static unsafe bool GetPointer<T, TS>(IBindedDevice api, TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression("ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
