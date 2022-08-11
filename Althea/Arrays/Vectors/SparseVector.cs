@@ -100,7 +100,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If the <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		protected SparseVector(long length, TS values!!, TSInd indices!!, T defaultValue = default, long nnz = -1)
+		protected SparseVector(long length, TS values, TSInd indices, T defaultValue = default, long nnz = -1)
 		{
 			this.defaultValue = defaultValue;
 			if (length < 0)
@@ -325,7 +325,7 @@ namespace Althea.Array
 
 		#region operators
 		/// <inheritdoc/>
-		public static SparseVector<T, TInd, TS, TSInd> operator *(SparseVector<T, TInd, TS, TSInd> vector!!, T scalar) => vector.ApplyToClone(v => v.Scale(scalar));
+		public static SparseVector<T, TInd, TS, TSInd> operator *(SparseVector<T, TInd, TS, TSInd> vector, T scalar) => vector.ApplyToClone(v => v.Scale(scalar));
 
 		/// <inheritdoc/>
 		public static SparseVector<T, TInd, TS, TSInd> operator -(SparseVector<T, TInd, TS, TSInd> vector) => vector * (-T.One);
@@ -353,13 +353,13 @@ namespace Althea.Array
 		public static SparseVector<T, TInd, TS, TSInd> operator +(SparseVector<T, TInd, TS, TSInd> left, SparseVector<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.VectorsAdd(T.One, left, right);
 
 		/// <inheritdoc/>
-		public static SparseVector<T, TInd, TS, TSInd> operator -(SparseVector<T, TInd, TS, TSInd> left!!, SparseVector<T, TInd, TS, TSInd> right!!) => SparseOperation<T, TInd, TS, TSInd>.VectorsAdd(-T.One, right, left);
+		public static SparseVector<T, TInd, TS, TSInd> operator -(SparseVector<T, TInd, TS, TSInd> left, SparseVector<T, TInd, TS, TSInd> right) => SparseOperation<T, TInd, TS, TSInd>.VectorsAdd(-T.One, right, left);
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DenseMatrix<T, TS> matrix!!, SparseVector<T, TInd, TS, TSInd> vector!!) => SparseOperation<T, TInd, TS, TSInd>.MatrixMultiplyVector(matrix, vector, T.One);
+		public static DenseVector<T, TS> operator *(DenseMatrix<T, TS> matrix, SparseVector<T, TInd, TS, TSInd> vector) => SparseOperation<T, TInd, TS, TSInd>.MatrixMultiplyVector(matrix, vector, T.One);
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(SparseVector<T, TInd, TS, TSInd> vector!!, DenseMatrix<T, TS> matrix!!) => SparseOperation<T, TInd, TS, TSInd>.MatrixMultiplyVector(matrix, vector, T.One, MatrixOperation.Transpose);
+		public static DenseVector<T, TS> operator *(SparseVector<T, TInd, TS, TSInd> vector, DenseMatrix<T, TS> matrix) => SparseOperation<T, TInd, TS, TSInd>.MatrixMultiplyVector(matrix, vector, T.One, MatrixOperation.Transpose);
 		#endregion
 
 		#region conversion and clone

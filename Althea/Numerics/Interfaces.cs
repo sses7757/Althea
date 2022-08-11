@@ -13,7 +13,7 @@ namespace Althea.Numerics;
 /// </remarks>
 /// <typeparam name="TSelf">The actual type that implements this <see cref="IBaseNumber{TSelf}"/></typeparam>
 public interface IBaseNumber<TSelf> :
-	IComparisonOperators<TSelf, TSelf>, IEqualityOperators<TSelf, TSelf>,
+	IComparisonOperators<TSelf, TSelf, bool>, IEquatable<TSelf>,
 	IAdditionOperators<TSelf, TSelf, TSelf>, ISubtractionOperators<TSelf, TSelf, TSelf>,
 	IMultiplyOperators<TSelf, TSelf, TSelf>, IDivisionOperators<TSelf, TSelf, TSelf>,
 	IAdditiveIdentity<TSelf, TSelf>, IMultiplicativeIdentity<TSelf, TSelf>,
@@ -188,7 +188,7 @@ public interface IRootFunctions<TSelf> where TSelf : unmanaged, IRootFunctions<T
 
 	abstract static TSelf Hypot(TSelf x, TSelf y);
 
-	abstract static TSelf Root(TSelf x, int n);
+	abstract static TSelf RootN(TSelf x, int n);
 
 	abstract static TSelf Sqrt(TSelf x);
 }
@@ -293,7 +293,7 @@ public interface IBinaryFloat<TSelf> : IBaseNumber<TSelf>,
 /// </remarks>
 /// <typeparam name="TSelf">The actual type that implements this <see cref="IBinaryInt{TSelf}"/></typeparam>
 public interface IBinaryInt<TSelf> : IBaseNumber<TSelf>,
-	IBitwiseOperators<TSelf, TSelf, TSelf>, IModulusOperators<TSelf, TSelf, TSelf>, IShiftOperators<TSelf, TSelf>
+	IBitwiseOperators<TSelf, TSelf, TSelf>, IModulusOperators<TSelf, TSelf, TSelf>, IShiftOperators<TSelf, int, TSelf>
 	where TSelf : unmanaged, IBinaryInt<TSelf>
 {
 	#region math

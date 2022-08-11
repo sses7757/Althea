@@ -58,7 +58,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		[JsonConstructor]
-		public TriangularMatrix(bool upper, TS storage!!, long rows, long cols, long leadDim = 0, bool unitDiagonal = false) : base(storage, rows, cols, leadDim)
+		public TriangularMatrix(bool upper, TS storage, long rows, long cols, long leadDim = 0, bool unitDiagonal = false) : base(storage, rows, cols, leadDim)
 		{
 			this.upper = upper; this.unitDiag = unitDiagonal;
 		}
@@ -193,24 +193,24 @@ namespace Althea.Array
 
 		#region operators
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(TriangularMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One);
+		public static DenseVector<T, TS> operator *(TriangularMatrix<T, TS> matrix, DenseVector<T, TS> vector) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One);
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector!!, TriangularMatrix<T, TS> matrix!!) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One, MatrixOperation.Transpose);
+		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector, TriangularMatrix<T, TS> matrix) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One, MatrixOperation.Transpose);
 
 		/// <inheritdoc/>
-		public static TriangularMatrix<T, TS> operator *(TriangularMatrix<T, TS> matrix!!, T scalar) => matrix.ApplyToClone(m => m.Scale(scalar));
+		public static TriangularMatrix<T, TS> operator *(TriangularMatrix<T, TS> matrix, T scalar) => matrix.ApplyToClone(m => m.Scale(scalar));
 
 		/// <inheritdoc/>
-		public static TriangularMatrix<T, TS> operator -(TriangularMatrix<T, TS> matrix!!) => matrix * (-T.One);
+		public static TriangularMatrix<T, TS> operator -(TriangularMatrix<T, TS> matrix) => matrix * (-T.One);
 		/// <inheritdoc/>
-		public static TriangularMatrix<T, TS> operator *(T scalar, TriangularMatrix<T, TS> matrix!!) => matrix * scalar;
+		public static TriangularMatrix<T, TS> operator *(T scalar, TriangularMatrix<T, TS> matrix) => matrix * scalar;
 
 		/// <inheritdoc/>
-		public static TriangularMatrix<T, TS> operator /(TriangularMatrix<T, TS> matrix!!, T scalar) => matrix * (T.One / scalar);
+		public static TriangularMatrix<T, TS> operator /(TriangularMatrix<T, TS> matrix, T scalar) => matrix * (T.One / scalar);
 
 		/// <inheritdoc/>
-		public static TriangularMatrix<T, TS> operator ^(TriangularMatrix<T, TS> matrix!!, MatrixOperation operation) => DenseOperation<T, TS>.AddMatrices(matrix, T.One, (TriangularMatrix<T, TS>?)null, default, operation);
+		public static TriangularMatrix<T, TS> operator ^(TriangularMatrix<T, TS> matrix, MatrixOperation operation) => DenseOperation<T, TS>.AddMatrices(matrix, T.One, (TriangularMatrix<T, TS>?)null, default, operation);
 
 		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator +(TriangularMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(left, T.One, right, T.One);
@@ -350,7 +350,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> ≤ 0</exception>
 		[JsonConstructor]
-		public SymmetricMatrix(bool upper, TS storage!!, long n, long leadDim = 0, bool? hermitian = null) : base(storage, n, n, leadDim)
+		public SymmetricMatrix(bool upper, TS storage, long n, long leadDim = 0, bool? hermitian = null) : base(storage, n, n, leadDim)
 		{
 			this.upper = upper;
 			this.herm = hermitian ?? true;
@@ -496,24 +496,24 @@ namespace Althea.Array
 
 		#region operators
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(SymmetricMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One);
+		public static DenseVector<T, TS> operator *(SymmetricMatrix<T, TS> matrix, DenseVector<T, TS> vector) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One);
 
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector!!, SymmetricMatrix<T, TS> matrix!!) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One, MatrixOperation.Transpose);
+		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector, SymmetricMatrix<T, TS> matrix) => DenseOperation<T, TS>.MatrixMultiplyVector(matrix, vector, T.One, MatrixOperation.Transpose);
 
 		/// <inheritdoc/>
-		public static SymmetricMatrix<T, TS> operator *(SymmetricMatrix<T, TS> matrix!!, T scalar) => matrix.ApplyToClone(m => m.Scale(scalar));
+		public static SymmetricMatrix<T, TS> operator *(SymmetricMatrix<T, TS> matrix, T scalar) => matrix.ApplyToClone(m => m.Scale(scalar));
 
 		/// <inheritdoc/>
-		public static SymmetricMatrix<T, TS> operator -(SymmetricMatrix<T, TS> matrix!!) => matrix * (-T.One);
+		public static SymmetricMatrix<T, TS> operator -(SymmetricMatrix<T, TS> matrix) => matrix * (-T.One);
 		/// <inheritdoc/>
-		public static SymmetricMatrix<T, TS> operator *(T scalar, SymmetricMatrix<T, TS> matrix!!) => matrix * scalar;
+		public static SymmetricMatrix<T, TS> operator *(T scalar, SymmetricMatrix<T, TS> matrix) => matrix * scalar;
 
 		/// <inheritdoc/>
-		public static SymmetricMatrix<T, TS> operator /(SymmetricMatrix<T, TS> matrix!!, T scalar) => matrix * (T.One / scalar);
+		public static SymmetricMatrix<T, TS> operator /(SymmetricMatrix<T, TS> matrix, T scalar) => matrix * (T.One / scalar);
 
 		/// <inheritdoc/>
-		public static SymmetricMatrix<T, TS> operator ^(SymmetricMatrix<T, TS> matrix!!, MatrixOperation operation) => DenseOperation<T, TS>.AddMatrices(matrix, T.One, (SymmetricMatrix<T, TS>?)null, default, operation);
+		public static SymmetricMatrix<T, TS> operator ^(SymmetricMatrix<T, TS> matrix, MatrixOperation operation) => DenseOperation<T, TS>.AddMatrices(matrix, T.One, (SymmetricMatrix<T, TS>?)null, default, operation);
 
 		/// <inheritdoc/>
 		public static DenseMatrix<T, TS> operator +(SymmetricMatrix<T, TS> left, DenseMatrix<T, TS> right) => DenseOperation<T, TS>.AddMatrices(left, T.One, right, T.One);

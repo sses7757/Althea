@@ -119,7 +119,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public void SetLabels(params char[] labels!!)
+		public void SetLabels(params char[] labels)
 		{
 			if (labels.Length != this.rank)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
@@ -141,7 +141,7 @@ namespace Althea.Array
 		/// <param name="labels">The labels of all dimensions of the new tensor, default means <c>{'a', 'b', ...}</c></param>
 		/// <exception cref="ArgumentException">If the sizes mismatch with each other</exception>
 		/// <exception cref="NotSupportedException">If the rank is too high</exception>
-		public DenseTensor(TS storage!!, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize = default, ReadOnlySpan<char> labels = default)
+		public DenseTensor(TS storage, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize = default, ReadOnlySpan<char> labels = default)
 		{
 			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
@@ -340,7 +340,7 @@ namespace Althea.Array
 		public static DenseTensor<T, TS> operator *(DenseTensor<T, TS> tensor, T scalar) => DenseOperation<T, TS>.Permute(tensor, TensorOrder.Identity, scalar);
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> operator *(T scalar, DenseTensor<T, TS> tensor!!) => tensor * scalar;
+		public static DenseTensor<T, TS> operator *(T scalar, DenseTensor<T, TS> tensor) => tensor * scalar;
 
 		/// <inheritdoc/>
 		public static DenseTensor<T, TS> operator -(DenseTensor<T, TS> tensor) => tensor * (-T.One);

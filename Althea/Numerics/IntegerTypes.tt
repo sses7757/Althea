@@ -49,6 +49,7 @@ var operators = new (string op, string type, string param, string invoke)[]
 	("%", "TSelf", "TSelf left, TSelf right", "left, right"),
 	("<<", "TSelf", "TSelf value, int shiftAmount", "value, shiftAmount"),
 	(">>", "TSelf", "TSelf value, int shiftAmount", "value, shiftAmount"),
+	(">>>", "TSelf", "TSelf value, int shiftAmount", "value, shiftAmount"),
 };
 var checkedOperators = new (string name, string op, string type, string param, string invoke)[]
 {
@@ -329,36 +330,6 @@ public readonly partial struct <#=reps[i]#> : IBinaryInt<<#=reps[i]#>>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static <#=reps[i]#> IIncrementOperators<<#=reps[i]#>>.op_CheckedIncrement(<#=reps[i]#> value)
-	{
-		var v = value._value;
-		v = checked((<#=orgs[i]#>)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static <#=reps[i]#> IDecrementOperators<<#=reps[i]#>>.op_CheckedDecrement(<#=reps[i]#> value)
-	{
-		var v = value._value;
-		v = checked((<#=orgs[i]#>)(v - 1));
-		return v;
-	}
-	*/
-	
-<# if (!reps[i].StartsWith("U")) { #>
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static <#=reps[i]#> IShiftOperators<<#=reps[i]#>, <#=reps[i]#>>.op_UnsignedRightShift(<#=reps[i]#> value, int shiftAmount) => (<#=orgs[i]#>)((<#=uorgs[i]#>)value._value >> shiftAmount);
-<# } else { #>
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static <#=reps[i]#> IShiftOperators<<#=reps[i]#>, <#=reps[i]#>>.op_UnsignedRightShift(<#=reps[i]#> value, int shiftAmount) => (<#=orgs[i]#>)(value._value >> shiftAmount);
-<# } #>
 
 <# foreach (var (name, op, type, param, invoke) in checkedOperators)
 {

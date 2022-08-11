@@ -17,7 +17,7 @@ namespace Althea.Storage
 {
 	#region mixed storage of 2 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 2 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 2 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -84,11 +84,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location,  });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer2))?.GetGetMethod(), };
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, TP1, TP2>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -302,7 +300,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, TP1, TP2>(pointer1, pointer2);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
@@ -424,7 +422,7 @@ namespace Althea.Storage
 
 	#region mixed storage of 3 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 3 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 3 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -501,11 +499,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location,  });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer3))?.GetGetMethod(), };
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, TP1, TP2, TP3>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -736,7 +732,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, TP1, TP2, TP3>(pointer1, pointer2, pointer3);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
@@ -875,7 +871,7 @@ namespace Althea.Storage
 
 	#region mixed storage of 4 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 4 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 4 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -962,11 +958,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location,  });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer4))?.GetGetMethod(), };
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -1214,7 +1208,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(pointer1, pointer2, pointer3, pointer4);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
@@ -1370,7 +1364,7 @@ namespace Althea.Storage
 
 	#region mixed storage of 5 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 5 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 5 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -1467,11 +1461,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location,  });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer5))?.GetGetMethod(), };
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -1736,7 +1728,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(pointer1, pointer2, pointer3, pointer4, pointer5);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
@@ -1909,7 +1901,7 @@ namespace Althea.Storage
 
 	#region mixed storage of 6 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 6 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 6 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -2016,11 +2008,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location,  });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer5))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer6))?.GetGetMethod(), };
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -2302,7 +2292,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
@@ -2492,7 +2482,7 @@ namespace Althea.Storage
 
 	#region mixed storage of 7 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 7 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 7 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -2609,11 +2599,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location,  });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer5))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer6))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer7))?.GetGetMethod(), };
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -2912,7 +2900,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
@@ -3119,7 +3107,7 @@ namespace Althea.Storage
 
 	#region mixed storage of 8 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 8 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 8 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -3246,11 +3234,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location,  });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer5))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer6))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer7))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer8))?.GetGetMethod(), };
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer8))!.GetGetMethod()!, };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -3566,7 +3552,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
@@ -3790,7 +3776,7 @@ namespace Althea.Storage
 
 	#region mixed storage of 9 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 9 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 9 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -3927,11 +3913,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location, TP9.Location,  });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer1))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer2))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer3))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer4))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer5))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer6))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer7))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer8))?.GetGetMethod(), typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer9))?.GetGetMethod(), };
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer8))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer9))!.GetGetMethod()!, };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -4264,7 +4248,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);

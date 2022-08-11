@@ -131,7 +131,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="MatrixMultiplyVector(TMat, TVec1, TVec2, T, T, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckMatMulVec(TMat matrix!!, TVec1 vector!!, TVec2 vectorOut!!, T α, MatrixOperation operation)
+		protected static void CheckMatMulVec(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, MatrixOperation operation)
 		{
 			long n = operation.CanInPlace() ? matrix.NCols : matrix.NRows;
 			if (n != vector.Length || vector.Length != vectorOut.Length)
@@ -155,7 +155,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="MatrixMultiplyVector(TMat, TVec1, T, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static TS CheckMatMulVec<TS>(TMat matrix!!, TVec1 vector!!, TS storage!!, T α, MatrixOperation operation) where TS : class, IStorage<T, TS>
+		protected static TS CheckMatMulVec<TS>(TMat matrix, TVec1 vector, TS storage, T α, MatrixOperation operation) where TS : class, IStorage<T, TS>
 		{
 			var (m, n) = (matrix.NRows, matrix.NCols);
 			if (!operation.CanInPlace())
@@ -334,7 +334,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="AddMatrices(TMat1?, T, TMat2?, T, TMat3, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static (long m, long n) CheckAdd(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C!!, MatrixOperation opA, MatrixOperation opB)
+		protected static (long m, long n) CheckAdd(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C, MatrixOperation opA, MatrixOperation opB)
 		{
 			bool nullA = A is null || scalarA == T.Zero;
 			bool nullB = B is null || scalarB == T.Zero;
@@ -440,7 +440,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="MultiplyMatries(TMat1, TMat2, T, T, TMat3, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static (long m, long n, long k) CheckMul(T α, TMat1 A!!, TMat2 B!!, TMat3 C!!, MatrixOperation opA, MatrixOperation opB)
+		protected static (long m, long n, long k) CheckMul(T α, TMat1 A, TMat2 B, TMat3 C, MatrixOperation opA, MatrixOperation opB)
 		{
 			if (α == T.Zero)
 				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
@@ -475,7 +475,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="MultiplyMatries(TMat1, TMat2, T, MatrixOperation, MatrixOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static TS CheckMul<TS>(T α, TMat1 A!!, TMat2 B!!, MatrixOperation opA, MatrixOperation opB, TS? storage, out long m, out long n, out long k) where TS : class, IStorage<T, TS>
+		protected static TS CheckMul<TS>(T α, TMat1 A, TMat2 B, MatrixOperation opA, MatrixOperation opB, TS? storage, out long m, out long n, out long k) where TS : class, IStorage<T, TS>
 		{
 			if (α == T.Zero)
 				throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
@@ -692,7 +692,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="LinearSolve(TMat1, TMat2, TMat3)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckLinear(TMat1 coefficients!!, TMat2 rightHandSides!!, TMat3 outSolves!!)
+		protected static void CheckLinear(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves)
 		{
 			if (coefficients.NRows != coefficients.NCols || coefficients.NRows != rightHandSides.NRows)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
@@ -727,7 +727,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="LeastSquareSolve(TMat1, TMat2, TMat3)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckLeast(TMat1 coefficients!!, TMat2 rightHandSides!!, TMat3 outSolves!!)
+		protected static void CheckLeast(TMat1 coefficients, TMat2 rightHandSides, TMat3 outSolves)
 		{
 			if (coefficients.NRows <= coefficients.NCols || coefficients.NRows != rightHandSides.NRows)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(coefficients));
@@ -762,7 +762,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="QRDecomposition(TMat1, TMat2, TMat3?, bool)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckQR(TMat1 matrix!!, TMat2 outTriangular!!, TMat3? outUnary, bool full)
+		protected static void CheckQR(TMat1 matrix, TMat2 outTriangular, TMat3? outUnary, bool full)
 		{
 			if (matrix.NRows == matrix.NCols)
 			{
@@ -931,7 +931,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, TTen2, T, UnaryOperation, UnaryOperation, ReduceOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static Span<int> CheckReduce(TTen1 A!!, TensorOrder order, T scalar, TTen2 B!!, Span<int> reduceInds)
+		protected static Span<int> CheckReduce(TTen1 A, TensorOrder order, T scalar, TTen2 B, Span<int> reduceInds)
 		{
 			if (scalar == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
@@ -979,7 +979,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, TTen2, UnaryOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckPermute(TTen1 A!!, TensorOrder order, T scalar, TTen2 B!!, Span<int> perm)
+		protected static void CheckPermute(TTen1 A, TensorOrder order, T scalar, TTen2 B, Span<int> perm)
 		{
 			if (scalar == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
@@ -1009,7 +1009,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, UnaryOperation, ReduceOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckReduce(TTen1 A!!, TensorOrder order, T scalar, ref Span<int> reduceInds, ref Span<long> outputSize)
+		protected static void CheckReduce(TTen1 A, TensorOrder order, T scalar, ref Span<int> reduceInds, ref Span<long> outputSize)
 		{
 			if (scalar == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
@@ -1049,7 +1049,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, UnaryOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckPermute(TTen1 A!!, TensorOrder order, T scalar, Span<int> perm, Span<long> outputSize)
+		protected static void CheckPermute(TTen1 A, TensorOrder order, T scalar, Span<int> perm, Span<long> outputSize)
 		{
 			if (scalar == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(scalar), scalar, Resources.ParameterError.CannotZero);
@@ -1087,7 +1087,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="Contract(TTen1, UnaryOperation, TTen2, UnaryOperation, T, TTen3, UnaryOperation, T)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static StorableContractInfo CheckContract(TTen1 A!!, TTen2 B!!, T α, TTen3 C!!)
+		protected static StorableContractInfo CheckContract(TTen1 A, TTen2 B, T α, TTen3 C)
 		{
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -1121,7 +1121,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="TensorsBinaryOperation(TTen1?, TensorOrder, UnaryOperation, T, TTen2?, TensorOrder, UnaryOperation, T, TTen3, BinaryOperation)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void CheckBinary(TTen1? A, TensorOrder orderA, T α, TTen2? B, TensorOrder orderB, T β, TTen3 C!!, Span<int> permA, Span<int> permB)
+		protected static void CheckBinary(TTen1? A, TensorOrder orderA, T α, TTen2? B, TensorOrder orderB, T β, TTen3 C, Span<int> permA, Span<int> permB)
 		{
 			bool nullA = A is null || α == T.Zero;
 			bool nullB = B is null || β == T.Zero;
@@ -1168,7 +1168,7 @@ namespace Althea.Array
 		/// Check the input parameters of <see cref="Contract(TTen1, UnaryOperation, TTen2, UnaryOperation, T)"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static StorableContractInfo CheckContract(TTen1 A!!, TTen2 B!!, T α, ref Span<long> outputSize, ref Span<char> outputLabel)
+		protected static StorableContractInfo CheckContract(TTen1 A, TTen2 B, T α, ref Span<long> outputSize, ref Span<char> outputLabel)
 		{
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);

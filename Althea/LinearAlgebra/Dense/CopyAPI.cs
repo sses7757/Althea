@@ -70,13 +70,12 @@ namespace Althea.LinearAlgebra.Dense
 	public static class StorageExtension
 	{
 		#region method generators
-#pragma warning disable CS8601
-		internal static readonly MethodInfo SizeOfPointerMethod = typeof(IStorage).GetMethod(nameof(IStorage.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null);
-#pragma warning restore CS8601
-		private static Action<TS1, TS2, long, long, long, long> GetCopy2DMethod<T, TS1, TS2>() where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage where TS2 : class, IStorage
+		private static Action<TS1, TS2, long, long, long, long> GetCopy2DMethod<T, TS1, TS2>() where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<TS1> where TS2 : class, IStorage<TS2>
 		{
 			Type type1 = typeof(TS1), type2 = typeof(TS2);
-			MethodInfo[] pointerGetters1 = TS2.PointerGetters, pointerGetters2 = TS2.PointerGetters;
+			MethodInfo SizeOfPointerMethod1 = type1.GetMethod(nameof(IStorage<ManagedPureStorage<Float32>>.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null)!;
+			MethodInfo SizeOfPointerMethod2 = type2.GetMethod(nameof(IStorage<ManagedPureStorage<Float32>>.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null)!;
+			MethodInfo[] pointerGetters1 = TS1.PointerGetters, pointerGetters2 = TS2.PointerGetters;
 			MethodInfo[] pointerLen1 = new MethodInfo[pointerGetters1.Length], pointerMove1 = new MethodInfo[pointerGetters1.Length];
 			MethodInfo[] pointerLen2 = new MethodInfo[pointerGetters2.Length], pointerMove2 = new MethodInfo[pointerGetters2.Length];
 			MethodInfo[,] pointerCopy2D = new MethodInfo[pointerGetters1.Length, pointerGetters2.Length];
@@ -134,7 +133,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Ldc_I4, i);
-				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod);
+				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod1);
 				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, i); // long sizeSrcPointerI = src.SizeOfPointer(i);
 			}
@@ -142,7 +141,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				IL.Emit(OpCodes.Ldarg_1);
 				IL.Emit(OpCodes.Ldc_I4, j);
-				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod);
+				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod2);
 				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, j + pointerGetters1.Length); // long sizeDstPointerJ = dst.SizeOfPointer(i);
 			}
@@ -525,6 +524,8 @@ namespace Althea.LinearAlgebra.Dense
 		private static Action<TS1, TS2, long, long> GetCopyStridedMethod<T, TS1, TS2>() where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			Type type1 = typeof(TS1), type2 = typeof(TS2);
+			MethodInfo SizeOfPointerMethod1 = type1.GetMethod(nameof(IStorage<ManagedPureStorage<Float32>>.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null)!;
+			MethodInfo SizeOfPointerMethod2 = type2.GetMethod(nameof(IStorage<ManagedPureStorage<Float32>>.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null)!;
 			MethodInfo[] pointerGetters1 = TS2.PointerGetters, pointerGetters2 = TS2.PointerGetters;
 			MethodInfo[] pointerLen1 = new MethodInfo[pointerGetters1.Length], pointerMove1 = new MethodInfo[pointerGetters1.Length];
 			MethodInfo[] pointerLen2 = new MethodInfo[pointerGetters2.Length], pointerMove2 = new MethodInfo[pointerGetters2.Length];
@@ -583,7 +584,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Ldc_I4, i);
-				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod);
+				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod1);
 				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, i); // long sizeSrcPointerI = src.SizeOfPointer(i);
 			}
@@ -591,7 +592,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				IL.Emit(OpCodes.Ldarg_1);
 				IL.Emit(OpCodes.Ldc_I4, j);
-				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod);
+				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod2);
 				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, j + pointerGetters1.Length); // long sizeDstPointerJ = dst.SizeOfPointer(i);
 			}
@@ -973,7 +974,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// or <c><paramref name="sourceLD"/> and <paramref name="width"/> indicate size larger than <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
 		/// or <c><paramref name="destinationLD"/> and <paramref name="width"/> indicate size larger than <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
+		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage{TSelf}.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
 		public static void Copy2DTo<T, TS1, TS2>(this TS1 source, long sourceLD, TS2 destination, long destinationLD, long height, long width) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!source.IsValid())

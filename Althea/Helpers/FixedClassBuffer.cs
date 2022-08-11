@@ -19,7 +19,7 @@ namespace Althea.Helpers
 	[StructLayout(LayoutKind.Sequential, Size = 2 * 8)]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public struct FixedClassBuffer_2<T> : IEqualityOperators<FixedClassBuffer_2<T>, FixedClassBuffer_2<T>>, IReadOnlyList<T>, IAsSpan<T> where T : class
+	public struct FixedClassBuffer_2<T> : IEqualityOperators<FixedClassBuffer_2<T>, FixedClassBuffer_2<T>, bool>, IReadOnlyList<T>, IAsSpan<T> where T : class
 	{
 		#region basic
 		private const int _count = 2;
@@ -207,7 +207,7 @@ namespace Althea.Helpers
 	[StructLayout(LayoutKind.Sequential, Size = 4 * 8)]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public struct FixedClassBuffer_4<T> : IEqualityOperators<FixedClassBuffer_4<T>, FixedClassBuffer_4<T>>, IReadOnlyList<T>, IAsSpan<T> where T : class
+	public struct FixedClassBuffer_4<T> : IEqualityOperators<FixedClassBuffer_4<T>, FixedClassBuffer_4<T>, bool>, IReadOnlyList<T>, IAsSpan<T> where T : class
 	{
 		#region basic
 		private const int _count = 4;
@@ -395,7 +395,7 @@ namespace Althea.Helpers
 	[StructLayout(LayoutKind.Sequential, Size = 8 * 8)]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public struct FixedClassBuffer_8<T> : IEqualityOperators<FixedClassBuffer_8<T>, FixedClassBuffer_8<T>>, IReadOnlyList<T>, IAsSpan<T> where T : class
+	public struct FixedClassBuffer_8<T> : IEqualityOperators<FixedClassBuffer_8<T>, FixedClassBuffer_8<T>, bool>, IReadOnlyList<T>, IAsSpan<T> where T : class
 	{
 		#region basic
 		private const int _count = 8;
@@ -583,7 +583,7 @@ namespace Althea.Helpers
 	[StructLayout(LayoutKind.Sequential, Size = 16 * 8)]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public struct FixedClassBuffer_16<T> : IEqualityOperators<FixedClassBuffer_16<T>, FixedClassBuffer_16<T>>, IReadOnlyList<T>, IAsSpan<T> where T : class
+	public struct FixedClassBuffer_16<T> : IEqualityOperators<FixedClassBuffer_16<T>, FixedClassBuffer_16<T>, bool>, IReadOnlyList<T>, IAsSpan<T> where T : class
 	{
 		#region basic
 		private const int _count = 16;

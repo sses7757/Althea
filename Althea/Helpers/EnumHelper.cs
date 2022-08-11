@@ -8,7 +8,7 @@ namespace Althea.Helpers
 	/// <summary>
 	/// The read-only struct for storing method parameter types
 	/// </summary>
-	public readonly struct MethodParametersInfo : IEqualityOperators<MethodParametersInfo, MethodParametersInfo>
+	public readonly struct MethodParametersInfo : IEqualityOperators<MethodParametersInfo, MethodParametersInfo, bool>
 	{
 		private readonly FixedClassBuffer_8<Type> parameterTypes;
 

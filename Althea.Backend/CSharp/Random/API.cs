@@ -33,7 +33,7 @@ namespace Althea.Backend.CSharp.Random
 
 		#region operations
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static unsafe bool Check<T, TS, TDist>(TS storage!!, in TDist distribution, out IntPtr pointer, out int length, out T offset, out T scale)
+		private static unsafe bool Check<T, TS, TDist>(TS storage, in TDist distribution, out IntPtr pointer, out int length, out T offset, out T scale)
 			where T : unmanaged, IBaseNumber<T>
 			where TS : class, IStorage<T, TS>
 			where TDist : struct, IRandomDistribution<TDist>

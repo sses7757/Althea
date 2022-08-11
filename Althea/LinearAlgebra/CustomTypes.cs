@@ -492,7 +492,7 @@ namespace Althea.LinearAlgebra
 		/// <param name="matrix">The matrix to take slice from</param>
 		/// <param name="sub">The sub-matrix to be overwritten by the sliced <paramref name="matrix"/> or to overwrite the <paramref name="matrix"/>'s slice</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MatrixSliceWrapper Create(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric matrix!!, IMatrixMetric? sub = null)
+		public static MatrixSliceWrapper Create(long offsetRow, long countRow, long offsetCol, long countCol, IMatrixMetric matrix, IMatrixMetric? sub = null)
 		{
 			if (offsetRow < 0)
 				throw new ArgumentOutOfRangeException(nameof(offsetRow), offsetRow, Resources.ParameterError.CannotNegative);

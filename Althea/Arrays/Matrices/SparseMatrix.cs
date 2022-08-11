@@ -110,7 +110,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		protected SparseMatrix(long rows, long cols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1)
+		protected SparseMatrix(long rows, long cols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1)
 		{
 			this.defaultValue = defaultValue;
 			if (rows <= 0)

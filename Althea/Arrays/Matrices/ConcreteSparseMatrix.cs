@@ -52,7 +52,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoordinateSparseMatrix(bool rowMajor, long rows, long cols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		public CoordinateSparseMatrix(bool rowMajor, long rows, long cols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
 		{
 			this.rowMajor = rowMajor;
 			if (rowIndices.Length != values.Length)
@@ -220,7 +220,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CompressSparseMatrix(bool rowMajor, long rows, long cols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		public CompressSparseMatrix(bool rowMajor, long rows, long cols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
 		{
 			this.rowMajor = rowMajor;
 			if (rowMajor && (colIndices.Length != values.Length || rowIndices.Length != rows + 1))
@@ -454,7 +454,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short or its length</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoordinateBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		public CoordinateBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
 		{
 			this.rowMajor = rowMajor;
 			this.blockRows = blockRows; this.blockCols = blockCols;
@@ -685,7 +685,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CompressBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values!!, TSInd rowIndices!!, TSInd colIndices!!, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		public CompressBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
 		{
 			this.rowMajor = rowMajor;
 			this.blockRows = blockRows; this.blockCols = blockCols;

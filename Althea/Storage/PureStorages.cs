@@ -12,7 +12,7 @@ using Mem = Althea.Storage.ApiSelector;
 namespace Althea.Storage
 {
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 1 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 1 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 	/// <typeparam name="TP">Any pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
 	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
@@ -57,11 +57,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(TP.Location);
 
-#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(PureStorageBase<TP>).GetProperty(nameof(Pointer))?.GetGetMethod() };
-#pragma warning restore CS8619
+		static MethodInfo[] IStorage<PureStorage<T, TP>>.PointerGetters => new[] { typeof(PureStorageBase<TP>).GetProperty(nameof(Pointer))!.GetGetMethod()! };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<PureStorage<T, TP>>.SizeOfPointer(int i)
 		{
 			return this.IsValid() ? 1 : 0;
 		}
@@ -244,7 +242,7 @@ namespace Althea.Storage
 				return new ActualPureStorage<T, TP>(pointer);
 			}
 
-			public override void Write(Utf8JsonWriter writer, PureStorage<T, TP> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, PureStorage<T, TP> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);

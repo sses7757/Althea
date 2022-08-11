@@ -43,7 +43,7 @@ namespace Althea.Storage
 #>
 	#region mixed storage of <#=i#> locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == <#=i#> and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == <#=i#> and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
 	/// </summary>
 <# for (int j = 0; j < i; j++) { #>
 	/// <typeparam name="TP<#=j + 1#>">The <#=ordinal[j]#> pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -114,11 +114,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { <# for (int j = 1; j <= i; j++) { #>TP<#=j#>.Location, <# } #> });
 		
-		#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { <# for (int j = 1; j <= i; j++) { #>typeof(MixedStorageBase<<#=pointerTypes#>>).GetProperty(nameof(Pointer<#=j#>))?.GetGetMethod(), <# } #>};
-		#pragma warning restore CS8619
+		static MethodInfo[] IStorage<MixedStorage<T, <#=pointerTypes#>>>.PointerGetters => new[] { <# for (int j = 1; j <= i; j++) { #>typeof(MixedStorageBase<<#=pointerTypes#>>).GetProperty(nameof(Pointer<#=j#>))!.GetGetMethod()!, <# } #>};
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<MixedStorage<T, <#=pointerTypes#>>>.SizeOfPointer(int i)
 		{
 			if (this.Disposed)
 				return 0;
@@ -327,7 +325,7 @@ namespace Althea.Storage
 				return new ActualMixedStorage<T, <#=pointerTypes#>>(<#=pointerInputs#>);
 			}
 
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, <#=pointerTypes#>> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, MixedStorage<T, <#=pointerTypes#>> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);

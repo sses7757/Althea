@@ -5265,15 +5265,6 @@
             Empty <see cref="T:Althea.Helpers.TypeMismatchException"/>
             </summary>
         </member>
-        <member name="M:Althea.Helpers.TypeMismatchException.#ctor(Althea.Numerics.DataType,System.Collections.Generic.IReadOnlyList{Althea.Storage.IStorage},Althea.Helpers.TypeMismatchException.MismatchReason,System.Exception)">
-            <summary>
-            Create a <see cref="T:Althea.Helpers.TypeMismatchException"/> with given mismatch type and mismatch reason and inner exception
-            </summary>
-            <param name="type">The mismatch type</param>
-            <param name="storages">The list of <see cref="T:Althea.Storage.IStorage"/> to get the real <see cref="T:System.Type"/> corresponding of <paramref name="type"/></param>
-            <param name="reason">The mismatch reason</param>
-            <param name="inner">The inner exception</param>
-        </member>
         <member name="M:Althea.Helpers.TypeMismatchException.#ctor(System.Type,Althea.Helpers.TypeMismatchException.MismatchReason)">
             <summary>
             Create a <see cref="T:Althea.Helpers.TypeMismatchException"/> with given mismatch type and mismatch reason
@@ -9192,7 +9183,7 @@
             or <c><paramref name="sourceLD"/> and <paramref name="width"/> indicate size larger than <paramref name="source"/>.<see cref="P:Althea.Storage.IStorage.LengthInBytes">Length</see></c>, 
             or <c><paramref name="destinationLD"/> and <paramref name="width"/> indicate size larger than <paramref name="destination"/>.<see cref="P:Althea.Storage.IStorage.LengthInBytes">Length</see></c>
             </exception>
-            <exception cref="T:System.InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="P:Althea.Storage.IStorage.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
+            <exception cref="T:System.InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
         </member>
         <member name="M:Althea.LinearAlgebra.Dense.StorageExtension.ToManaged2D``2(``1,System.Int64,System.Span{``0},System.Int64,System.Int64,System.Int64)">
             <summary>
@@ -18423,7 +18414,7 @@
         <member name="M:Althea.Numerics.Complex`1.Hypot(Althea.Numerics.Complex{`0},Althea.Numerics.Complex{`0})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.Complex`1.Root(Althea.Numerics.Complex{`0},System.Int32)">
+        <member name="M:Althea.Numerics.Complex`1.RootN(Althea.Numerics.Complex{`0},System.Int32)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Complex`1.Log(Althea.Numerics.Complex{`0})">
@@ -18566,93 +18557,6 @@
         </member>
         <member name="M:Althea.Numerics.Complex`1.TryFormat(System.Span{System.Char},System.Int32@,System.ReadOnlySpan{System.Char},System.IFormatProvider)">
             <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.Complex`1.MyRegex">
-            <remarks>
-            Pattern explanation:<br/>
-            <code>
-            ○ 1st capture group.<br/>
-                ○ Match with 2 alternative expressions.<br/>
-                    ○ Match a sequence of expressions.<br/>
-                        ○ Match a character in the set [+-] atomically, optionally.<br/>
-                        ○ Match a Unicode digit greedily at least once.<br/>
-                        ○ Optional (greedy).<br/>
-                            ○ Match '.'.<br/>
-                            ○ Match a Unicode digit greedily at least once.<br/>
-                    ○ Match a sequence of expressions.<br/>
-                        ○ Match a character in the set [+-] atomically, optionally.<br/>
-                        ○ Match a Unicode digit greedily any number of times.<br/>
-                        ○ Match '.' atomically, optionally.<br/>
-                        ○ Match a Unicode digit greedily at least once.<br/>
-                ○ Optional (greedy).<br/>
-                    ○ Match a character in the set [Ee].<br/>
-                    ○ Match a character in the set [+-] atomically, optionally.<br/>
-                    ○ Match a Unicode digit greedily at least once.<br/>
-            ○ Match a whitespace character greedily any number of times.<br/>
-            ○ Optional (greedy).<br/>
-                ○ 2nd capture group.<br/>
-                    ○ Match a character in the set [+-].<br/>
-                    ○ Match a whitespace character atomically any number of times.<br/>
-                    ○ Match with 2 alternative expressions.<br/>
-                        ○ Match a sequence of expressions.<br/>
-                            ○ Match a Unicode digit greedily at least once.<br/>
-                            ○ Optional (greedy).<br/>
-                                ○ Match '.'.<br/>
-                                ○ Match a Unicode digit greedily at least once.<br/>
-                        ○ Match a sequence of expressions.<br/>
-                            ○ Match a Unicode digit greedily any number of times.<br/>
-                            ○ Match '.' atomically, optionally.<br/>
-                            ○ Match a Unicode digit greedily at least once.<br/>
-                    ○ Optional (greedy).<br/>
-                        ○ Match a character in the set [Ee].<br/>
-                        ○ Match a character in the set [+-] atomically, optionally.<br/>
-                        ○ Match a Unicode digit atomically at least once.<br/>
-                    ○ Match a whitespace character atomically, optionally.<br/>
-                    ○ Match a character in the set [Ii].<br/>
-            </code>
-            </remarks>
-        </member>
-        <member name="M:Althea.Numerics.Complex`1.MyRegex1">
-            <remarks>
-            Pattern explanation:<br/>
-            <code>
-            ○ 1st capture group.<br/>
-                ○ Match with 2 alternative expressions.<br/>
-                    ○ Match a sequence of expressions.<br/>
-                        ○ Match a character in the set [+-] atomically, optionally.<br/>
-                        ○ Match a Unicode digit greedily at least once.<br/>
-                        ○ Optional (greedy).<br/>
-                            ○ Match '.'.<br/>
-                            ○ Match a Unicode digit greedily at least once.<br/>
-                    ○ Match a sequence of expressions.<br/>
-                        ○ Match a character in the set [+-] atomically, optionally.<br/>
-                        ○ Match a Unicode digit greedily any number of times.<br/>
-                        ○ Match '.' atomically, optionally.<br/>
-                        ○ Match a Unicode digit greedily at least once.<br/>
-                ○ Optional (greedy).<br/>
-                    ○ Match a character in the set [Ee].<br/>
-                    ○ Match a character in the set [+-] atomically, optionally.<br/>
-                    ○ Match a Unicode digit atomically at least once.<br/>
-                ○ Match a whitespace character atomically, optionally.<br/>
-                ○ Match a character in the set [Ii].<br/>
-            ○ Match a whitespace character atomically any number of times.<br/>
-            ○ 2nd capture group.<br/>
-                ○ Match with 2 alternative expressions.<br/>
-                    ○ Match a sequence of expressions.<br/>
-                        ○ Match a Unicode digit greedily at least once.<br/>
-                        ○ Optional (greedy).<br/>
-                            ○ Match '.'.<br/>
-                            ○ Match a Unicode digit greedily at least once.<br/>
-                    ○ Match a sequence of expressions.<br/>
-                        ○ Match a Unicode digit greedily any number of times.<br/>
-                        ○ Match '.' atomically, optionally.<br/>
-                        ○ Match a Unicode digit greedily at least once.<br/>
-                ○ Optional (greedy).<br/>
-                    ○ Match a character in the set [Ee].<br/>
-                    ○ Match a character in the set [+-] atomically, optionally.<br/>
-                    ○ Match a Unicode digit atomically at least once.<br/>
-            </code>
-            </remarks>
         </member>
         <member name="M:Althea.Numerics.Complex`1.TryConvertTo``1(Althea.Numerics.Complex{`0},``0@)">
             <inheritdoc/>
@@ -18892,6 +18796,9 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.ComplexInteger`1.op_RightShift(Althea.Numerics.ComplexInteger{`0},System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Numerics.ComplexInteger`1.op_UnsignedRightShift(Althea.Numerics.ComplexInteger{`0},System.Int32)">
             <inheritdoc/>
         </member>
         <member name="P:Althea.Numerics.ComplexInteger`1.MagnitudeSquared">
@@ -19229,7 +19136,7 @@
         <member name="M:Althea.Numerics.Float64.Hypot(Althea.Numerics.Float64,Althea.Numerics.Float64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.Float64.Root(Althea.Numerics.Float64,System.Int32)">
+        <member name="M:Althea.Numerics.Float64.RootN(Althea.Numerics.Float64,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Float64.Acos(Althea.Numerics.Float64)">
@@ -19579,7 +19486,7 @@
         <member name="M:Althea.Numerics.Float32.Hypot(Althea.Numerics.Float32,Althea.Numerics.Float32)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.Float32.Root(Althea.Numerics.Float32,System.Int32)">
+        <member name="M:Althea.Numerics.Float32.RootN(Althea.Numerics.Float32,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Float32.Acos(Althea.Numerics.Float32)">
@@ -19929,7 +19836,7 @@
         <member name="M:Althea.Numerics.Float16.Hypot(Althea.Numerics.Float16,Althea.Numerics.Float16)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Numerics.Float16.Root(Althea.Numerics.Float16,System.Int32)">
+        <member name="M:Althea.Numerics.Float16.RootN(Althea.Numerics.Float16,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Float16.Acos(Althea.Numerics.Float16)">
@@ -20252,13 +20159,13 @@
         <member name="M:Althea.Numerics.SignedInt8.op_RightShift(Althea.Numerics.SignedInt8,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.SignedInt8.op_UnsignedRightShift(Althea.Numerics.SignedInt8,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.SignedInt8.op_Increment(Althea.Numerics.SignedInt8)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.SignedInt8.op_Decrement(Althea.Numerics.SignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt8.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt8,Althea#Numerics#SignedInt8}#op_UnsignedRightShift(Althea.Numerics.SignedInt8,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt16">
@@ -20497,13 +20404,13 @@
         <member name="M:Althea.Numerics.SignedInt16.op_RightShift(Althea.Numerics.SignedInt16,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.SignedInt16.op_UnsignedRightShift(Althea.Numerics.SignedInt16,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.SignedInt16.op_Increment(Althea.Numerics.SignedInt16)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.SignedInt16.op_Decrement(Althea.Numerics.SignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt16.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt16,Althea#Numerics#SignedInt16}#op_UnsignedRightShift(Althea.Numerics.SignedInt16,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt32">
@@ -20742,13 +20649,13 @@
         <member name="M:Althea.Numerics.SignedInt32.op_RightShift(Althea.Numerics.SignedInt32,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.SignedInt32.op_UnsignedRightShift(Althea.Numerics.SignedInt32,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.SignedInt32.op_Increment(Althea.Numerics.SignedInt32)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.SignedInt32.op_Decrement(Althea.Numerics.SignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt32.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt32,Althea#Numerics#SignedInt32}#op_UnsignedRightShift(Althea.Numerics.SignedInt32,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt64">
@@ -20987,13 +20894,13 @@
         <member name="M:Althea.Numerics.SignedInt64.op_RightShift(Althea.Numerics.SignedInt64,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.SignedInt64.op_UnsignedRightShift(Althea.Numerics.SignedInt64,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.SignedInt64.op_Increment(Althea.Numerics.SignedInt64)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.SignedInt64.op_Decrement(Althea.Numerics.SignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt64.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt64,Althea#Numerics#SignedInt64}#op_UnsignedRightShift(Althea.Numerics.SignedInt64,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.SignedInt128">
@@ -21232,13 +21139,13 @@
         <member name="M:Althea.Numerics.SignedInt128.op_RightShift(Althea.Numerics.SignedInt128,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.SignedInt128.op_UnsignedRightShift(Althea.Numerics.SignedInt128,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.SignedInt128.op_Increment(Althea.Numerics.SignedInt128)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.SignedInt128.op_Decrement(Althea.Numerics.SignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.SignedInt128.System#Numerics#IShiftOperators{Althea#Numerics#SignedInt128,Althea#Numerics#SignedInt128}#op_UnsignedRightShift(Althea.Numerics.SignedInt128,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt8">
@@ -21477,13 +21384,13 @@
         <member name="M:Althea.Numerics.UnsignedInt8.op_RightShift(Althea.Numerics.UnsignedInt8,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.UnsignedInt8.op_UnsignedRightShift(Althea.Numerics.UnsignedInt8,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.UnsignedInt8.op_Increment(Althea.Numerics.UnsignedInt8)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.UnsignedInt8.op_Decrement(Althea.Numerics.UnsignedInt8)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt8.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt8,Althea#Numerics#UnsignedInt8}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt8,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt16">
@@ -21722,13 +21629,13 @@
         <member name="M:Althea.Numerics.UnsignedInt16.op_RightShift(Althea.Numerics.UnsignedInt16,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.UnsignedInt16.op_UnsignedRightShift(Althea.Numerics.UnsignedInt16,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.UnsignedInt16.op_Increment(Althea.Numerics.UnsignedInt16)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.UnsignedInt16.op_Decrement(Althea.Numerics.UnsignedInt16)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt16.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt16,Althea#Numerics#UnsignedInt16}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt16,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt32">
@@ -21967,13 +21874,13 @@
         <member name="M:Althea.Numerics.UnsignedInt32.op_RightShift(Althea.Numerics.UnsignedInt32,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.UnsignedInt32.op_UnsignedRightShift(Althea.Numerics.UnsignedInt32,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.UnsignedInt32.op_Increment(Althea.Numerics.UnsignedInt32)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.UnsignedInt32.op_Decrement(Althea.Numerics.UnsignedInt32)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt32.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt32,Althea#Numerics#UnsignedInt32}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt32,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt64">
@@ -22212,13 +22119,13 @@
         <member name="M:Althea.Numerics.UnsignedInt64.op_RightShift(Althea.Numerics.UnsignedInt64,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.UnsignedInt64.op_UnsignedRightShift(Althea.Numerics.UnsignedInt64,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.UnsignedInt64.op_Increment(Althea.Numerics.UnsignedInt64)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.UnsignedInt64.op_Decrement(Althea.Numerics.UnsignedInt64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt64.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt64,Althea#Numerics#UnsignedInt64}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt64,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.UnsignedInt128">
@@ -22457,13 +22364,13 @@
         <member name="M:Althea.Numerics.UnsignedInt128.op_RightShift(Althea.Numerics.UnsignedInt128,System.Int32)">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Numerics.UnsignedInt128.op_UnsignedRightShift(Althea.Numerics.UnsignedInt128,System.Int32)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Numerics.UnsignedInt128.op_Increment(Althea.Numerics.UnsignedInt128)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.UnsignedInt128.op_Decrement(Althea.Numerics.UnsignedInt128)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Numerics.UnsignedInt128.System#Numerics#IShiftOperators{Althea#Numerics#UnsignedInt128,Althea#Numerics#UnsignedInt128}#op_UnsignedRightShift(Althea.Numerics.UnsignedInt128,System.Int32)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Numerics.DataTypeTuple">
@@ -23823,17 +23730,25 @@
             The struct for a multi-dimensional normal distribution of type <typeparamref name="T"/>
             </summary>
             <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="OriginalCovarianceStored">Whether the original matrix or the upper column-major Cholesky factorization of <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/> is stored</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.MultiNormalDistribution`1.#ctor(System.Boolean,System.Nullable{System.Int64})">
+            <summary>
+            The struct for a multi-dimensional normal distribution of type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">Any unmanaged floating point type</typeparam>
+            <param name="OriginalCovarianceStored">Whether the original matrix or the upper column-major Cholesky factorization of <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/> is stored</param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="P:Althea.Random.MultiNormalDistribution`1.OriginalCovarianceStored">
+            <summary>Whether the original matrix or the upper column-major Cholesky factorization of <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/> is stored</summary>
+        </member>
+        <member name="P:Althea.Random.MultiNormalDistribution`1.RandomSeed">
+            <summary><inheritdoc/></summary>
         </member>
         <member name="P:Althea.Random.MultiNormalDistribution`1.Rank">
             <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.MultiNormalDistribution`1.RandomSeed">
-            <inheritdoc/>
-        </member>
-        <member name="P:Althea.Random.MultiNormalDistribution`1.OriginalCovarianceStored">
-            <summary>
-            Whether the original matrix or the upper column-major Cholesky factorization of <see cref="P:Althea.Random.MultiNormalDistribution`1.CovarianceMatrix"/> is stored
-            </summary>
         </member>
         <member name="P:Althea.Random.MultiNormalDistribution`1.Means">
             <summary>
@@ -23845,28 +23760,15 @@
             The covariance matrix of all dimensions stored in a 1D array
             </summary>
         </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.DataSize(System.Int32)">
-            <summary>
-            Statically get the size in bytes of the <see cref="T:System.Span`1"/> to create which will be used to store <see cref="T:Althea.Random.MultinomialDistribution`1"/>.
-            </summary>
-            <param name="rank">The rank, must be positive</param>
-            <returns>The size of the <see cref="T:System.Span`1"/> to be created by invoker in bytes</returns>
-        </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.Create(System.Span{System.Byte},System.ReadOnlySpan{`0},System.ReadOnlySpan{`0},System.Boolean,System.Nullable{System.Int64})">
+        <member name="M:Althea.Random.MultiNormalDistribution`1.#ctor(System.ReadOnlySpan{`0},System.ReadOnlySpan{`0},System.Boolean,System.Nullable{System.Int64})">
             <summary>
             Create a multi-normal distribution of given <paramref name="means"/> and <paramref name="covar"/>.
             </summary>
-            <param name="data">The <see cref="T:System.Span`1"/> of <see cref="T:System.Byte"/> used to store the actual <see cref="T:Althea.Random.MultiNormalDistribution`1"/>, must has length ≥ <see cref="M:Althea.Random.MultiNormalDistribution`1.DataSize(System.Int32)"/></param>
             <param name="means">The mean values of all dimensions</param>
             <param name="covar">The covariance matrix (or its upper column-major Cholesky factorization) of all dimensions stored in a 1D array</param>
             <param name="originalCovar">Whether <paramref name="covar"/> is the original matrix or the Cholesky factorization</param>
             <param name="seed">The random seed</param>
             <exception cref="T:System.ArgumentException">If the size(s) is/are invalid</exception>
-            <example><code>
-            <see cref="T:System.Span`1"/> data = stackalloc byte[<see cref="T:Althea.Random.MultiNormalDistribution`1"/>.DataSize(rank)];
-            <see cref="M:Althea.Random.MultiNormalDistribution`1.Create(System.Span{System.Byte},System.ReadOnlySpan{`0},System.ReadOnlySpan{`0},System.Boolean,System.Nullable{System.Int64})"/>(data, means, covar, originalCovar, seed);
-            ref var dist = ref Unsafe.As&lt;byte, <see cref="T:Althea.Random.MultiNormalDistribution`1"/>&gt;(ref data[0]);
-            </code></example>
         </member>
         <member name="M:Althea.Random.MultiNormalDistribution`1.GetCholesky(System.Span{`0})">
             <summary>
@@ -23874,39 +23776,29 @@
             </summary>
             <returns>Success or not</returns>
         </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.ToString">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.Equals(Althea.Random.MultiNormalDistribution{`0})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.op_Equality(Althea.Random.MultiNormalDistribution{`0},Althea.Random.MultiNormalDistribution{`0})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.op_Inequality(Althea.Random.MultiNormalDistribution{`0},Althea.Random.MultiNormalDistribution{`0})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.Equals(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultiNormalDistribution`1.GetHashCode">
-            <inheritdoc/>
-        </member>
         <member name="T:Althea.Random.MultinomialDistribution`1">
             <summary>
             The struct for a multinomial distribution of type <typeparamref name="T"/>
             </summary>
             <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="NTrials">The number of trials <c>m</c></param>
+            <param name="RandomSeed"><inheritdoc/></param>
+        </member>
+        <member name="M:Althea.Random.MultinomialDistribution`1.#ctor(System.Int32,System.Nullable{System.Int64})">
+            <summary>
+            The struct for a multinomial distribution of type <typeparamref name="T"/>
+            </summary>
+            <typeparam name="T">Any unmanaged integral type</typeparam>
+            <param name="NTrials">The number of trials <c>m</c></param>
+            <param name="RandomSeed"><inheritdoc/></param>
         </member>
         <member name="P:Althea.Random.MultinomialDistribution`1.NTrials">
-            <summary>
-            The number of trials <c>m</c>
-            </summary>
-        </member>
-        <member name="P:Althea.Random.MultinomialDistribution`1.Rank">
-            <inheritdoc/>
+            <summary>The number of trials <c>m</c></summary>
         </member>
         <member name="P:Althea.Random.MultinomialDistribution`1.RandomSeed">
+            <summary><inheritdoc/></summary>
+        </member>
+        <member name="P:Althea.Random.MultinomialDistribution`1.Rank">
             <inheritdoc/>
         </member>
         <member name="P:Althea.Random.MultinomialDistribution`1.Probabilities">
@@ -23914,45 +23806,14 @@
             The probabilities values of all dimensions
             </summary>
         </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.DataSize(System.Int32)">
+        <member name="M:Althea.Random.MultinomialDistribution`1.#ctor(System.Int32,System.ReadOnlySpan{System.Decimal},System.Nullable{System.Int64})">
             <summary>
-            Statically get the size in bytes of the <see cref="T:System.Span`1"/> to create which will be used to store <see cref="T:Althea.Random.MultinomialDistribution`1"/>.
+            Create a multinomial distribution of given <paramref name="probs"/>.
             </summary>
-            <param name="rank">The rank, must be positive</param>
-            <returns>The size of the <see cref="T:System.Span`1"/> to be created by invoker in bytes</returns>
-        </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.Create(System.Span{System.Byte},System.Int32,System.ReadOnlySpan{System.Decimal},System.Nullable{System.Int64})">
-            <summary>
-            Create a multi-normal distribution of given <paramref name="probs"/>.
-            </summary>
-            <param name="data">The <see cref="T:System.Span`1"/> of <see cref="T:System.Byte"/> used to store the actual <see cref="T:Althea.Random.MultinomialDistribution`1"/>, must has length ≥ <see cref="M:Althea.Random.MultinomialDistribution`1.DataSize(System.Int32)"/></param>
             <param name="trials">The number of trials</param>
             <param name="probs">The probability values of all dimensions</param>
             <param name="seed">The random seed</param>
             <exception cref="T:System.ArgumentException">If the size(s) is/are invalid</exception>
-            <example><code>
-            <see cref="T:System.Span`1"/> data = stackalloc byte[<see cref="T:Althea.Random.MultinomialDistribution`1"/>.DataSize(rank)];
-            <see cref="M:Althea.Random.MultinomialDistribution`1.Create(System.Span{System.Byte},System.Int32,System.ReadOnlySpan{System.Decimal},System.Nullable{System.Int64})"/>(data,trials, probabilities, seed);
-            ref var dist = ref Unsafe.As&lt;byte, <see cref="T:Althea.Random.MultinomialDistribution`1"/>&gt;(ref data[0]);
-            </code></example>
-        </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.ToString">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.Equals(Althea.Random.MultinomialDistribution{`0})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.op_Equality(Althea.Random.MultinomialDistribution{`0},Althea.Random.MultinomialDistribution{`0})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.op_Inequality(Althea.Random.MultinomialDistribution{`0},Althea.Random.MultinomialDistribution{`0})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.Equals(System.Object)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Random.MultinomialDistribution`1.GetHashCode">
-            <inheritdoc/>
         </member>
         <member name="T:Althea.Random.ApiSelector">
             <summary>
@@ -24548,7 +24409,7 @@
             <param name="storage">The storage to be filled with <paramref name="value"/></param>
             <param name="value">The byte value to fill</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
         </member>
         <member name="M:Althea.Storage.StorageExtension.FillWith``2(``1,``0)">
             <summary>
@@ -24559,7 +24420,7 @@
             <param name="storage">The storage to be filled with <paramref name="value"/></param>
             <param name="value">The value to fill</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
         </member>
         <member name="M:Althea.Storage.StorageExtension.CopyTo``3(``1,``2)">
             <summary>
@@ -24572,7 +24433,7 @@
             <param name="destination">The destination storage</param>
             <returns>Actual length in <typeparamref name="T"/> copied.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="P:Althea.Storage.IStorage.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
+            <exception cref="T:System.InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
         </member>
         <member name="M:Althea.Storage.StorageExtension.ToManaged``2(``1,System.Span{``0})">
             <summary>
@@ -24584,7 +24445,7 @@
             <param name="destination">The destination span</param>
             <returns>Actual length in <typeparamref name="T"/> copied.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
         </member>
         <member name="M:Althea.Storage.StorageExtension.FromManaged``2(``1,System.ReadOnlySpan{``0})">
             <summary>
@@ -24596,7 +24457,7 @@
             <param name="destination">The destination storage</param>
             <returns>Actual length in <typeparamref name="T"/> copied.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
         </member>
         <member name="M:Althea.Storage.StorageExtension.ToManaged``2(``1)">
             <summary>
@@ -24607,7 +24468,7 @@
             <param name="storage">The input storage</param>
             <returns>The first element of <paramref name="storage"/>.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
         </member>
         <member name="M:Althea.Storage.StorageExtension.FromManaged``2(``1,``0)">
             <summary>
@@ -24618,7 +24479,7 @@
             <param name="storage">The storage to be modified</param>
             <param name="value">The value of type <typeparamref name="T"/> to set</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="storage"/> is invalid</exception>
-            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
+            <exception cref="T:System.InvalidOperationException">If the <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/> of <typeparamref name="TS"/> are not correct pointer property names</exception>
         </member>
         <member name="T:Althea.Storage.CopyDelegate">
             <summary>
@@ -24706,7 +24567,7 @@
         </member>
         <member name="T:Althea.Storage.CachedStorageBase`3">
             <summary>
-            The abstract storage class as a base class for all single level caching storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 2.
+            The abstract storage class as a base class for all single level caching storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 2.
             </summary>
             <typeparam name="TS">Any cache strategy struct which implements <see cref="T:Althea.Storage.ICacheStrategy`1"/></typeparam>
             <typeparam name="TPh">Any high speed pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -24967,29 +24828,6 @@
             When implemented by a derived class, get the total length of the presenting array in bytes.
             </summary>
         </member>
-        <member name="P:Althea.Storage.IStorage.DataType">
-            <summary>
-            When implemented by a derived class, statically get the data type of this storage as a <see cref="T:Althea.Numerics.DataType"/>.
-            </summary>
-        </member>
-        <member name="P:Althea.Storage.IStorage.LocationDescription">
-            <summary>
-            When implemented by a derived class, statically get the description of the storage locations of this <see cref="T:Althea.Storage.IStorage"/> as a <see cref="T:Althea.Storage.CombinationOfLocations"/>.
-            </summary>
-        </member>
-        <member name="P:Althea.Storage.IStorage.PointerGetters">
-            <summary>
-            When implemented by a derived class, statically get the <see cref="T:System.Reflection.MethodInfo"/> of the pointers' getter methods in defined order.
-            </summary>
-        </member>
-        <member name="M:Althea.Storage.IStorage.SizeOfPointer(System.Int32)">
-            <summary>
-            When implemented by a derived class, get the size of the pointer getter method of index <paramref name="i"/> defined in <see cref="P:Althea.Storage.IStorage.PointerGetters"/>. The default implementation simply returns 1.
-            </summary>
-            <param name="i">The index of the pointer getter method</param>
-            <returns>The size of the pointer getter method of index <paramref name="i"/>.</returns>
-            <remarks>If the implemented class returns values larger than 1 for some pointers, it shall implement pointers' getters like <c>public <see cref="T:Althea.Storage.PointerSegment`1"/> PointerN(<see cref="T:System.Int64"/> index, <see cref="T:System.Boolean"/> intentWrite) { ... }</c></remarks>
-        </member>
         <member name="M:Althea.Storage.IStorage.IsByteOffsetValid(System.Int64,System.Int64)">
             <summary>
             When implemented by a derived class, check whether this storage is valid or not after moving <paramref name="offset"/> bytes and set length to <paramref name="newLength"/> bytes.
@@ -25004,6 +24842,35 @@
             </summary>
             <param name="other">The other <see cref="T:Althea.Storage.IStorage"/> to check overlap</param>
             <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+        </member>
+        <member name="T:Althea.Storage.IStorage`1">
+            <summary>
+            The base interface for all storage classes with self-type-reference
+            </summary>
+            <typeparam name="TSelf">The actual class that implement <see cref="T:Althea.Storage.IStorage`1"/></typeparam>
+        </member>
+        <member name="P:Althea.Storage.IStorage`1.DataType">
+            <summary>
+            When implemented by a derived class, statically get the data type of this storage as a <see cref="T:Althea.Numerics.DataType"/>.
+            </summary>
+        </member>
+        <member name="P:Althea.Storage.IStorage`1.LocationDescription">
+            <summary>
+            When implemented by a derived class, statically get the description of the storage locations of this <see cref="T:Althea.Storage.IStorage"/> as a <see cref="T:Althea.Storage.CombinationOfLocations"/>.
+            </summary>
+        </member>
+        <member name="P:Althea.Storage.IStorage`1.PointerGetters">
+            <summary>
+            When implemented by a derived class, statically get the <see cref="T:System.Reflection.MethodInfo"/> of the pointers' getter methods in defined order.
+            </summary>
+        </member>
+        <member name="M:Althea.Storage.IStorage`1.SizeOfPointer(System.Int32)">
+            <summary>
+            When implemented by a derived class, get the size of the pointer getter method of index <paramref name="i"/> defined in <see cref="P:Althea.Storage.IStorage`1.PointerGetters"/>. The default implementation simply returns 1.
+            </summary>
+            <param name="i">The index of the pointer getter method</param>
+            <returns>The size of the pointer getter method of index <paramref name="i"/>.</returns>
+            <remarks>If the implemented class returns values larger than 1 for some pointers, it shall implement pointers' getters like <c>public <see cref="T:Althea.Storage.PointerSegment`1"/> PointerN(<see cref="T:System.Int64"/> index, <see cref="T:System.Boolean"/> intentWrite) { ... }</c></remarks>
         </member>
         <member name="T:Althea.Storage.IStorage`2">
             <summary>
@@ -25156,7 +25023,7 @@
         </member>
         <member name="M:Althea.Storage.IReferenceStorage`2.Create``1(Althea.Storage.IStorage,System.Int64,System.Int64,System.Boolean)">
             <summary>
-            Create a referenced <typeparamref name="TStorage"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
+            Create a referenced <see cref="T:Althea.Storage.IStorage"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
             </summary>
             <typeparam name="TS">The type constrain for <paramref name="storage"/></typeparam>
             <param name="storage">The <see cref="T:Althea.Storage.IStorage"/> to be referenced</param>
@@ -25329,59 +25196,24 @@
             <remarks>
             This struct has size of a <see cref="T:System.Int32"/>. The <see cref="T:Althea.Storage.LocationType"/> occupies first 2 bytes and its detail occupies the rest.
             </remarks>
-        </member>
-        <member name="P:Althea.Storage.StorageLocation.Type">
-            <summary>
-            The location type of this <see cref="T:Althea.Storage.StorageLocation"/> as a <see cref="T:Althea.Storage.LocationType"/>
-            </summary>
-        </member>
-        <member name="P:Althea.Storage.StorageLocation.Detail">
-            <summary>
-            The location detail of the <see cref="P:Althea.Storage.StorageLocation.Type"/>.
-            </summary>
+            <param name="Type">The location type of this <see cref="T:Althea.Storage.StorageLocation"/> as a <see cref="T:Althea.Storage.LocationType"/></param>
+            <param name="Detail">The location detail of the <see cref="P:Althea.Storage.StorageLocation.Type"/>.</param>
         </member>
         <member name="M:Althea.Storage.StorageLocation.#ctor(Althea.Storage.LocationType,System.Int16)">
             <summary>
-            Create with given location and device ID
+            The struct of a storage location
             </summary>
-            <param name="type">The location of this <see cref="T:Althea.Storage.StorageLocation"/>, must be a flag</param>
-            <param name="detail">The detail of <paramref name="type"/>: a <see cref="T:Althea.Storage.UriScheme"/> for a <see cref="F:Althea.Storage.LocationType.Uri"/> or a device ID otherwise.</param>
+            <remarks>
+            This struct has size of a <see cref="T:System.Int32"/>. The <see cref="T:Althea.Storage.LocationType"/> occupies first 2 bytes and its detail occupies the rest.
+            </remarks>
+            <param name="Type">The location type of this <see cref="T:Althea.Storage.StorageLocation"/> as a <see cref="T:Althea.Storage.LocationType"/></param>
+            <param name="Detail">The location detail of the <see cref="P:Althea.Storage.StorageLocation.Type"/>.</param>
         </member>
-        <member name="M:Althea.Storage.StorageLocation.Equals(Althea.Storage.StorageLocation)">
-            <summary>
-            Whether this == <paramref name="other"/>
-            </summary>
-            <param name="other">another <see cref="T:Althea.Storage.StorageLocation"/> to compare</param>
-            <returns>this == <paramref name="other"/></returns>
+        <member name="P:Althea.Storage.StorageLocation.Type">
+            <summary>The location type of this <see cref="T:Althea.Storage.StorageLocation"/> as a <see cref="T:Althea.Storage.LocationType"/></summary>
         </member>
-        <member name="M:Althea.Storage.StorageLocation.Equals(System.Object)">
-            <summary>
-            Override <see cref="M:System.ValueType.Equals(System.Object)"/> to check whether this == <paramref name="obj"/>
-            </summary>
-            <param name="obj">another object to compare</param>
-            <returns>this == <paramref name="obj"/></returns>
-        </member>
-        <member name="M:Althea.Storage.StorageLocation.GetHashCode">
-            <summary>
-            Override <see cref="M:System.ValueType.GetHashCode"/> to get the hash code this <see cref="T:Althea.Storage.StorageLocation"/>.
-            </summary>
-            <returns>The hash code</returns>
-        </member>
-        <member name="M:Althea.Storage.StorageLocation.op_Equality(Althea.Storage.StorageLocation,Althea.Storage.StorageLocation)">
-            <summary>
-            Equality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Storage.StorageLocation.op_Inequality(Althea.Storage.StorageLocation,Althea.Storage.StorageLocation)">
-            <summary>
-            Inequality operator
-            </summary>
-        </member>
-        <member name="M:Althea.Storage.StorageLocation.ToString">
-            <summary>
-            Return the string representation of this <see cref="T:Althea.Storage.StorageLocation"/>
-            </summary>
-            <returns>the string representation of this <see cref="T:Althea.Storage.StorageLocation"/></returns>
+        <member name="P:Althea.Storage.StorageLocation.Detail">
+            <summary>The location detail of the <see cref="P:Althea.Storage.StorageLocation.Type"/>.</summary>
         </member>
         <member name="T:Althea.Storage.CombinationOfLocations">
             <summary>
@@ -25661,7 +25493,7 @@
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`2">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 2 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 2 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP1">The first pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">The second pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -25849,7 +25681,7 @@
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`3">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 3 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 3 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP1">The first pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">The second pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -26050,7 +25882,7 @@
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`4">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 4 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 4 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP1">The first pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">The second pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -26264,7 +26096,7 @@
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`5">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 5 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 5 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP1">The first pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">The second pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -26491,7 +26323,7 @@
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`6">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 6 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 6 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP1">The first pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">The second pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -26731,7 +26563,7 @@
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`7">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 7 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 7 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP1">The first pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">The second pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -26984,7 +26816,7 @@
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`8">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 8 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 8 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP1">The first pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">The second pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -27250,7 +27082,7 @@
         </member>
         <member name="T:Althea.Storage.MixedStorageBase`9">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 9 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 9 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP1">The first pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <typeparam name="TP2">The second pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
@@ -27529,7 +27361,7 @@
         </member>
         <member name="T:Althea.Storage.PureStorageBase`1">
             <summary>
-            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 1 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
+            The abstract storage class as a base class for all storage classes whose <see cref="P:Althea.Storage.IStorage`1.LocationDescription"/>.<see cref="P:Althea.Storage.CombinationOfLocations.Count">Count</see> == 1 and its <see cref="P:Althea.Storage.CombinationOfLocations.Type"/> == <see cref="F:Althea.Storage.CombinationType.AllStored"/>.
             </summary>
             <typeparam name="TP">Any pointer type which implements <see cref="T:Althea.Storage.IPointer`1"/></typeparam>
             <remarks>This class only servers as a type identifier which can not be used directly</remarks>
@@ -29633,91 +29465,6 @@
             <summary>
             The API implementation of <see cref="T:Althea.Transformer.IAbstractApi"/>.
             </summary>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0">
-            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the MyRegex method.</summary>
-        </member>
-        <member name="F:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0.Instance">
-            <summary>Cached, thread-safe singleton instance.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0.#ctor">
-            <summary>Initializes the instance.</summary>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0.RunnerFactory">
-            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0.RunnerFactory.CreateInstance">
-            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0.RunnerFactory.Runner">
-            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
-            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
-            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-            <returns>true if a possible match was found; false if no more matches are possible.</returns>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
-            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1">
-            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the MyRegex1 method.</summary>
-        </member>
-        <member name="F:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1.Instance">
-            <summary>Cached, thread-safe singleton instance.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1.#ctor">
-            <summary>Initializes the instance.</summary>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1.RunnerFactory">
-            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1.RunnerFactory.CreateInstance">
-            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1.RunnerFactory.Runner">
-            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
-            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
-            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-            <returns>true if a possible match was found; false if no more matches are possible.</returns>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.MyRegex1_1.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
-            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
-            <param name="inputSpan">The text being scanned by the regular expression.</param>
-            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
-        </member>
-        <member name="T:System.Text.RegularExpressions.Generated.__1a1221ce.Utilities">
-            <summary>Helper methods used by generated <see cref="T:System.Text.RegularExpressions.Regex"/>-derived implementations.</summary>
-        </member>
-        <member name="F:System.Text.RegularExpressions.Generated.__1a1221ce.Utilities.s_defaultTimeout">
-            <summary>Default timeout value set in <see cref="T:System.AppContext"/>, or <see cref="F:System.Text.RegularExpressions.Regex.InfiniteMatchTimeout"/> if none was set.</summary>
-        </member>
-        <member name="F:System.Text.RegularExpressions.Generated.__1a1221ce.Utilities.s_hasTimeout">
-            <summary>Whether <see cref="F:System.Text.RegularExpressions.Generated.__1a1221ce.Utilities.s_defaultTimeout"/> is non-infinite.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.Utilities.StackPush(System.Int32[]@,System.Int32@,System.Int32,System.Int32)">
-            <summary>Pushes 2 values onto the backtracking stack.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.Utilities.StackPop(System.Int32[],System.Int32@,System.Int32@,System.Int32@)">
-            <summary>Pops 2 values from the backtracking stack.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.Utilities.StackPush(System.Int32[]@,System.Int32@,System.Int32,System.Int32,System.Int32)">
-            <summary>Pushes 3 values onto the backtracking stack.</summary>
-        </member>
-        <member name="M:System.Text.RegularExpressions.Generated.__1a1221ce.Utilities.StackPush(System.Int32[]@,System.Int32@,System.Int32)">
-            <summary>Pushes 1 value onto the backtracking stack.</summary>
         </member>
     </members>
 </doc>

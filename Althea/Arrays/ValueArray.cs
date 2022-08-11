@@ -18,7 +18,7 @@ namespace Althea.Array
 		{
 			public int count = 1;
 		}
-		private static readonly ConditionalWeakTable<IStorage, RefCount> ReferenceCountings = new();
+		private static readonly ConditionalWeakTable<object, RefCount> ReferenceCountings = new();
 
 		/// <summary>
 		/// Add the given <paramref name="storage"/> to the manager whose <see cref="IStorage.Reference"/> is used to determine whether it is a referenced storage or not.
@@ -26,7 +26,7 @@ namespace Althea.Array
 		/// <typeparam name="TS">The actual storage type that implements <see cref="IStorage"/></typeparam>
 		/// <param name="storage">The storage to be managed</param>
 		/// <returns>Returns the <paramref name="storage"/> itself.</returns>
-		public static TS AddToManager<TS>(this TS storage!!) where TS : class, IStorage
+		public static TS AddToManager<TS>(this TS storage) where TS : class, IStorage
 		{
 			if (!storage.IsValid())
 				return storage;
@@ -82,7 +82,7 @@ namespace Althea.Array
 	/// All inherited classes shall use <see cref="ArrayStorageManager.AddToManager{TS}"/> in constructors and <see cref="ArrayStorageManager.SafeDispose{TS}"/> in <see cref="IDisposable.Dispose"/> rather than fininalizers to improve GC performance.
 	/// </remarks>
 	public interface IValueArray<T, TSelf> : ICheckValid, IDisposable, IPrintable<T>,
-		ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, System.Numerics.IEqualityOperators<TSelf, TSelf>
+		ICreateAlike<TSelf>, IMainPropertyFormattable<TSelf>, System.Numerics.IEqualityOperators<TSelf, TSelf, bool>
 		where T : unmanaged, IBaseNumber<T>
 		where TSelf : class, IValueArray<T, TSelf>
 	{
@@ -264,8 +264,8 @@ namespace Althea.Array
 		/// When implemented by a derived class, serialize this array to a JSON object. The default implementation simply utilizes <see cref="JsonSerializer.Serialize{TValue}(TValue, JsonSerializerOptions?)"/> and <see cref="JsonSerializeOptions"/>.
 		/// </summary>
 		/// <returns>The serialization of this array as a JSON object <see cref="string"/>.</returns>
-		public virtual string JsonSerialize() => JsonSerializer.Serialize(this, TSelf.JsonSerializeOptions);
-
+		public virtual string JsonSerialize() => JsonSerializer.Serialize((object)this, TSelf.JsonSerializeOptions);
+		
 		/// <summary>
 		/// Statically reconstruct a <typeparamref name="TSelf"/> from the given <paramref name="json"/> object <see cref="string"/>.
 		/// </summary>
@@ -274,7 +274,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentNullException">If <paramref name="json"/> null</exception>
 		/// <exception cref="JsonException"></exception>
 		/// <exception cref="NotSupportedException"></exception>
-		public static TSelf JsonDeserialize(string json!!) => JsonSerializer.Deserialize<TSelf>(json, TSelf.JsonSerializeOptions) ?? throw new NotSupportedException();
+		public static TSelf JsonDeserialize(string json) => JsonSerializer.Deserialize<TSelf>(json, TSelf.JsonSerializeOptions) ?? throw new NotSupportedException();
 		#endregion
 	}
 }

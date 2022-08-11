@@ -42,7 +42,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoordinateSparseVector(long length, TS values!!, TSInd indices!!, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
+		public CoordinateSparseVector(long length, TS values, TSInd indices, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
 		{
 			if (values.Length != indices.Length)
 			{
@@ -244,7 +244,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public BlockSparseVector(long length, TS values!!, TSInd indices!!, long blockLength, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
+		public BlockSparseVector(long length, TS values, TSInd indices, long blockLength, T defaultValue = default, long nnz = -1) : base(length, values, indices, defaultValue, nnz)
 		{
 			this.blockLength = blockLength;
 			try

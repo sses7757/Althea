@@ -50751,7 +50751,7 @@
                       </Method>
                     </Accessors>
                   </Property>
-                  <Property Name="MethodInfo[] IStorage.PointerGetters" File="D:\Works\git\ALTHEA\Althea\Storage\Interface.cs" Line="61">
+                  <Property Name="MethodInfo[] IStorage{TSelf}.PointerGetters" File="D:\Works\git\ALTHEA\Althea\Storage\Interface.cs" Line="61">
                     <Metrics>
                       <Metric Name="MaintainabilityIndex" Value="100" />
                       <Metric Name="CyclomaticComplexity" Value="1" />
@@ -50760,7 +50760,7 @@
                       <Metric Name="ExecutableLines" Value="0" />
                     </Metrics>
                     <Accessors>
-                      <Method Name="MethodInfo[] IStorage.PointerGetters.get" File="D:\Works\git\ALTHEA\Althea\Storage\Interface.cs" Line="61">
+                      <Method Name="MethodInfo[] IStorage{TSelf}.PointerGetters.get" File="D:\Works\git\ALTHEA\Althea\Storage\Interface.cs" Line="61">
                         <Metrics>
                           <Metric Name="MaintainabilityIndex" Value="100" />
                           <Metric Name="CyclomaticComplexity" Value="1" />

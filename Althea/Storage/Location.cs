@@ -226,80 +226,9 @@ namespace Althea.Storage
 	/// <remarks>
 	/// This struct has size of a <see cref="int"/>. The <see cref="LocationType"/> occupies first 2 bytes and its detail occupies the rest.
 	/// </remarks>
-	public readonly struct StorageLocation : IEqualityOperators<StorageLocation, StorageLocation>
-	{
-		#region basic
-		/// <summary>
-		/// The location type of this <see cref="StorageLocation"/> as a <see cref="LocationType"/>
-		/// </summary>
-		public LocationType Type { get; }
-
-		/// <summary>
-		/// The location detail of the <see cref="Type"/>.
-		/// </summary>
-		public short Detail { get; }
-
-		/// <summary>
-		/// Create with given location and device ID
-		/// </summary>
-		/// <param name="type">The location of this <see cref="StorageLocation"/>, must be a flag</param>
-		/// <param name="detail">The detail of <paramref name="type"/>: a <see cref="Althea.Storage.UriScheme"/> for a <see cref="LocationType.Uri"/> or a device ID otherwise.</param>
-		public StorageLocation(LocationType type, short detail)
-		{
-			this.Type = type; this.Detail = detail;
-		}
-
-		[JsonConstructor]
-		internal StorageLocation(string type, short detail)
-		{
-			this.Type = EnumHelper.Parse<LocationType>(type); this.Detail = detail;
-		}
-		#endregion
-
-		#region equality
-		/// <summary>
-		/// Whether this == <paramref name="other"/>
-		/// </summary>
-		/// <param name="other">another <see cref="StorageLocation"/> to compare</param>
-		/// <returns>this == <paramref name="other"/></returns>
-		public bool Equals(StorageLocation other) => this.Type == other.Type && this.Detail == other.Detail;
-
-		/// <summary>
-		/// Override <see cref="ValueType.Equals(object?)"/> to check whether this == <paramref name="obj"/>
-		/// </summary>
-		/// <param name="obj">another object to compare</param>
-		/// <returns>this == <paramref name="obj"/></returns>
-		public override bool Equals(object? obj) => obj is StorageLocation storageDetail && this.Equals(storageDetail);
-
-		/// <summary>
-		/// Override <see cref="ValueType.GetHashCode"/> to get the hash code this <see cref="StorageLocation"/>.
-		/// </summary>
-		/// <returns>The hash code</returns>
-		public override int GetHashCode() => ((int)this.Type << sizeof(short)) + this.Detail;
-
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		public static bool operator ==(StorageLocation left, StorageLocation right) => left.Equals(right);
-
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(StorageLocation left, StorageLocation right) => !(left == right);
-		#endregion
-
-		#region string related
-		/// <summary>
-		/// Return the string representation of this <see cref="StorageLocation"/>
-		/// </summary>
-		/// <returns>the string representation of this <see cref="StorageLocation"/></returns>
-		public override string ToString()
-		{
-			return this.Type.GetName() + this.Type.GetMethod<LocationType, LocationTypeExtension.GetDetailDescription>();
-		}
-		#endregion
-	}
+	/// <param name="Type">The location type of this <see cref="StorageLocation"/> as a <see cref="LocationType"/></param>
+	/// <param name="Detail">The location detail of the <see cref="Type"/>.</param>
+	public readonly record struct StorageLocation(LocationType Type, short Detail);
 
 	/// <summary>
 	/// The struct of a combination of storage location(s)
@@ -310,7 +239,7 @@ namespace Althea.Storage
 	/// Furthermore, still nearly no GC is necessary even if some reference type has field of this <see cref="CombinationOfLocations"/>.
 	/// </remarks>
 	[StructLayout(LayoutKind.Explicit)]
-	public readonly struct CombinationOfLocations : IEqualityOperators<CombinationOfLocations, CombinationOfLocations>, IReadOnlyList<StorageLocation>, IMainPropertyFormattable<CombinationOfLocations>
+	public readonly struct CombinationOfLocations : IEqualityOperators<CombinationOfLocations, CombinationOfLocations, bool>, IReadOnlyList<StorageLocation>, IMainPropertyFormattable<CombinationOfLocations>
 	{
 		#region basic
 		private const int MaxSize = (64 - 4) / 4;//default(FixedBuffer_64<StorageLocation>).Count - 1;
@@ -579,7 +508,7 @@ namespace Althea.Storage
 	/// The interface for an immutable pointer which can be read, overwritten and positioned at any possible storage location, including any type of memory and any scheme of URI.
 	/// </summary>
 	/// <typeparam name="TSelf">The actual implementation type</typeparam>
-	public interface IPointer<TSelf> : ICheckValid, IEqualityOperators<TSelf, TSelf> where TSelf : IPointer<TSelf>
+	public interface IPointer<TSelf> : ICheckValid, IEqualityOperators<TSelf, TSelf, bool> where TSelf : IPointer<TSelf>
 	{
 		/// <summary>
 		/// When implemented by derived classes, statically get the <see cref="StorageLocation"/> of this pointer's underlying type.
@@ -614,7 +543,7 @@ namespace Althea.Storage
 	/// <remarks>This struct is <b>not</b> responsible for releasing unmanaged memories. It is only used to store information of memory blocks.</remarks>
 	public readonly record struct PointerSegment<T>(T Pointer, long OffsetInBytes, long LengthInBytes) : 
 		ICheckValid,
-		IEqualityOperators<PointerSegment<T>, PointerSegment<T>>,
+		IEqualityOperators<PointerSegment<T>, PointerSegment<T>, bool>,
 		IAdditiveIdentity<PointerSegment<T>, long>,
 		IAdditionOperators<PointerSegment<T>, long, PointerSegment<T>>,
 		ISubtractionOperators<PointerSegment<T>, long, PointerSegment<T>>,

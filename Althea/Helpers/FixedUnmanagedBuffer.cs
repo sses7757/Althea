@@ -20,7 +20,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_8<T> : IEqualityOperators<FixedBuffer_8<T>, FixedBuffer_8<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_8<T> : IEqualityOperators<FixedBuffer_8<T>, FixedBuffer_8<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 8 / sizeof(T);
@@ -331,7 +331,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_12<T> : IEqualityOperators<FixedBuffer_12<T>, FixedBuffer_12<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_12<T> : IEqualityOperators<FixedBuffer_12<T>, FixedBuffer_12<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 12 / sizeof(T);
@@ -642,7 +642,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_16<T> : IEqualityOperators<FixedBuffer_16<T>, FixedBuffer_16<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_16<T> : IEqualityOperators<FixedBuffer_16<T>, FixedBuffer_16<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 16 / sizeof(T);
@@ -953,7 +953,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_24<T> : IEqualityOperators<FixedBuffer_24<T>, FixedBuffer_24<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_24<T> : IEqualityOperators<FixedBuffer_24<T>, FixedBuffer_24<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 24 / sizeof(T);
@@ -1264,7 +1264,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_32<T> : IEqualityOperators<FixedBuffer_32<T>, FixedBuffer_32<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_32<T> : IEqualityOperators<FixedBuffer_32<T>, FixedBuffer_32<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 32 / sizeof(T);
@@ -1575,7 +1575,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_64<T> : IEqualityOperators<FixedBuffer_64<T>, FixedBuffer_64<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_64<T> : IEqualityOperators<FixedBuffer_64<T>, FixedBuffer_64<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 64 / sizeof(T);
@@ -1886,7 +1886,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_128<T> : IEqualityOperators<FixedBuffer_128<T>, FixedBuffer_128<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_128<T> : IEqualityOperators<FixedBuffer_128<T>, FixedBuffer_128<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 128 / sizeof(T);
@@ -2197,7 +2197,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_256<T> : IEqualityOperators<FixedBuffer_256<T>, FixedBuffer_256<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_256<T> : IEqualityOperators<FixedBuffer_256<T>, FixedBuffer_256<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 256 / sizeof(T);
@@ -2508,7 +2508,7 @@ namespace Althea.Helpers
 	[UnsafeValueType]
 	[DebuggerTypeProxy(typeof(FixedBufferDebugView<>))]
 	[DebuggerDisplay("{ToString(),raw}")]
-	public unsafe struct FixedBuffer_120<T> : IEqualityOperators<FixedBuffer_120<T>, FixedBuffer_120<T>>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
+	public unsafe struct FixedBuffer_120<T> : IEqualityOperators<FixedBuffer_120<T>, FixedBuffer_120<T>, bool>, IFixedBuffer<T>, IAsSpan<T> where T : unmanaged, IEquatable<T>
 	{
 		#region basic
 		private static readonly int _count = 120 / sizeof(T);

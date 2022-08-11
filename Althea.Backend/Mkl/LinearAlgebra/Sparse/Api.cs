@@ -106,7 +106,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public virtual bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x!!, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual bool VectorSparseToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (x.Size.Length != 1)
 				throw new ArgumentException(Resources.ParameterError.InvalidRank, nameof(x));
@@ -160,7 +160,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				var valOut = PureStorage<T, CpuMemoryPointer>.Create(nnz);
 				var idxOut = PureStorage<TInd, CpuMemoryPointer>.Create(nnz);
 				_ = NMC.vecPruneCal(T.Type, n, buf, nnz, (MklInt*)idxOut.Pointer.Pointer.Pointer, (void*)valOut.Pointer.Pointer.Pointer);
-				y.SetValues(n, valOut as TS2 ?? TS2.Empty, idxOut as TSInd ?? TSInd.Empty); // never empty
+				y.SetValues(n, (valOut as TS2)!, (idxOut as TSInd)!); // never empty
 			}
 			else
 			{   // in-place modify y
@@ -182,7 +182,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		#region vector matrix conversion
 		/// <inheritdoc/>
-		public virtual bool SparseVectorToMatrix<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> vector!!, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
+		public virtual bool SparseVectorToMatrix<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> vector, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
 		{
 			if (!TInd1.Type.IsInteger() || TInd1.Size != sizeof(MklInt))
 				return false;
@@ -243,7 +243,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public virtual bool SparseMatrixToVector<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> matrix!!, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
+		public virtual bool SparseMatrixToVector<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> matrix, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
 		{
 			if (!TInd1.Type.IsInteger() || TInd1.Size != sizeof(MklInt))
 				return false;
@@ -302,7 +302,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		private static readonly SparseFormat SupportInputFormat = SparseFormat.MatrixCocFormat | SparseFormat.MatrixCorFormat | SparseFormat.MatrixCsrFormat | SparseFormat.MatrixCscFormat | SparseFormat.MatrixBsrFormat;
 
 		/// <inheritdoc/>
-		public virtual bool MatrixSparseFormatConvert<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source!!, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
+		public virtual bool MatrixSparseFormatConvert<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
 		{
 			if ((target.Format & CompressedFormat) == SparseFormat.None || (source.Format & SupportInputFormat) == SparseFormat.None || source.DefaultValue != T.Zero || target.DefaultValue != T.Zero)
 				return false;
@@ -353,7 +353,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		#region vector computation
 		/// <inheritdoc/>
-		public virtual bool VectorSparseAddToDense<T, TInd, TS1, TS2, TSInd>(T α, ISparseArray<T, TInd, TS1, TSInd> x!!, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual bool VectorSparseAddToDense<T, TInd, TS1, TS2, TSInd>(T α, ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (strideY != 1)
 				return false;
@@ -384,7 +384,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public virtual bool VectorSparseDotDense<T, TInd, TS1, TS2, TSInd>(bool conjX, ISparseArray<T, TInd, TS1, TSInd> x!!, TS2 y, long strideY, out T dot) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual bool VectorSparseDotDense<T, TInd, TS1, TS2, TSInd>(bool conjX, ISparseArray<T, TInd, TS1, TSInd> x, TS2 y, long strideY, out T dot) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			dot = default;
 			if (x.Size.Length != 1)
@@ -422,7 +422,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public virtual bool VectorSparseAddSparse<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(T α, ISparseArray<T, TInd1, TS1, TSInd1> x!!, ISparseArray<T, TInd2, TS2, TSInd2> y!!, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd1 : class, IStorage<TInd1, TSInd1> where TSInd2 : class, IStorage<TInd2, TSInd2> where TSInd3 : class, IStorage<TInd3, TSInd3>
+		public virtual bool VectorSparseAddSparse<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(T α, ISparseArray<T, TInd1, TS1, TSInd1> x, ISparseArray<T, TInd2, TS2, TSInd2> y, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd1 : class, IStorage<TInd1, TSInd1> where TSInd2 : class, IStorage<TInd2, TSInd2> where TSInd3 : class, IStorage<TInd3, TSInd3>
 		{
 			if (x.Size.Length != 1 || y.Size.Length != 1)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(x));
@@ -482,7 +482,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		private static readonly MatrixDescr GeneralMatrix = new(MatrixType.General, MatrixFillMode.Full, MatrixDiagType.NonUnit);
 
 		/// <inheritdoc/>
-		public virtual bool MatrixSparseMultiplyVectorDense<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation op, T α, ISparseArray<T, TInd, TS1, TSInd> M!!, TS2 x!!, long strideX, T β, TS3 y!!, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd : class, IStorage<TInd, TSInd>
+		public virtual bool MatrixSparseMultiplyVectorDense<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation op, T α, ISparseArray<T, TInd, TS1, TSInd> M, TS2 x, long strideX, T β, TS3 y, long strideY) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -522,7 +522,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public virtual bool VectorSparseOuter<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(bool conjY, ISparseArray<T, TInd1, TS1, TSInd1> x!!, ISparseArray<T, TInd2, TS2, TSInd2> y!!, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd1 : class, IStorage<TInd1, TSInd1> where TSInd2 : class, IStorage<TInd2, TSInd2> where TSInd3 : class, IStorage<TInd3, TSInd3>
+		public virtual bool VectorSparseOuter<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(bool conjY, ISparseArray<T, TInd1, TS1, TSInd1> x, ISparseArray<T, TInd2, TS2, TSInd2> y, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd1 : class, IStorage<TInd1, TSInd1> where TSInd2 : class, IStorage<TInd2, TSInd2> where TSInd3 : class, IStorage<TInd3, TSInd3>
 		{
 			if ((target.Format & SparseFormat.MatrixCooFormat) == SparseFormat.None)
 				return false; // not supported
@@ -666,7 +666,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public virtual bool MatrixSparseMultiplySparse<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(MatrixOperation opA, MatrixOperation opB, T α, ISparseArray<T, TInd1, TS1, TSInd1> A!!, ISparseArray<T, TInd2, TS2, TSInd2> B!!, T β, ISparseArray<T, TInd3, TS3, TSInd3>? C, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS3 : class, IStorage<T, TS3> where TSInd3 : class, IStorage<TInd3, TSInd3>
+		public virtual bool MatrixSparseMultiplySparse<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(MatrixOperation opA, MatrixOperation opB, T α, ISparseArray<T, TInd1, TS1, TSInd1> A, ISparseArray<T, TInd2, TS2, TSInd2> B, T β, ISparseArray<T, TInd3, TS3, TSInd3>? C, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS3 : class, IStorage<T, TS3> where TSInd3 : class, IStorage<TInd3, TSInd3>
 		{
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -699,7 +699,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		}
 
 		/// <inheritdoc/>
-		public virtual bool MatrixSparseMultiplySparse<T, TInd1, TInd2, TS1, TS2, TS3, TSInd1, TSInd2>(MatrixOperation opA, MatrixOperation opB, T α, ISparseArray<T, TInd1, TS1, TSInd1> A!!, ISparseArray<T, TInd2, TS2, TSInd2> B!!, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TS3 : class, IStorage<T, TS3>
+		public virtual bool MatrixSparseMultiplySparse<T, TInd1, TInd2, TS1, TS2, TS3, TSInd1, TSInd2>(MatrixOperation opA, MatrixOperation opB, T α, ISparseArray<T, TInd1, TS1, TSInd1> A, ISparseArray<T, TInd2, TS2, TSInd2> B, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TS3 : class, IStorage<T, TS3>
 		{
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);

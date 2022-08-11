@@ -324,6 +324,10 @@ public readonly partial struct SignedInt8 : IBinaryInt<SignedInt8>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static SignedInt8 operator >>(SignedInt8 value, int shiftAmount) => (sbyte)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static SignedInt8 operator >>>(SignedInt8 value, int shiftAmount) => (sbyte)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -342,30 +346,6 @@ public readonly partial struct SignedInt8 : IBinaryInt<SignedInt8>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt8 IIncrementOperators<SignedInt8>.op_CheckedIncrement(SignedInt8 value)
-	{
-		var v = value._value;
-		v = checked((sbyte)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt8 IDecrementOperators<SignedInt8>.op_CheckedDecrement(SignedInt8 value)
-	{
-		var v = value._value;
-		v = checked((sbyte)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt8 IShiftOperators<SignedInt8, SignedInt8>.op_UnsignedRightShift(SignedInt8 value, int shiftAmount) => (sbyte)((byte)value._value >> shiftAmount);
 
 }
 
@@ -683,6 +663,10 @@ public readonly partial struct SignedInt16 : IBinaryInt<SignedInt16>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static SignedInt16 operator >>(SignedInt16 value, int shiftAmount) => (short)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static SignedInt16 operator >>>(SignedInt16 value, int shiftAmount) => (short)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -701,30 +685,6 @@ public readonly partial struct SignedInt16 : IBinaryInt<SignedInt16>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt16 IIncrementOperators<SignedInt16>.op_CheckedIncrement(SignedInt16 value)
-	{
-		var v = value._value;
-		v = checked((short)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt16 IDecrementOperators<SignedInt16>.op_CheckedDecrement(SignedInt16 value)
-	{
-		var v = value._value;
-		v = checked((short)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt16 IShiftOperators<SignedInt16, SignedInt16>.op_UnsignedRightShift(SignedInt16 value, int shiftAmount) => (short)((ushort)value._value >> shiftAmount);
 
 }
 
@@ -1042,6 +1002,10 @@ public readonly partial struct SignedInt32 : IBinaryInt<SignedInt32>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static SignedInt32 operator >>(SignedInt32 value, int shiftAmount) => (int)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static SignedInt32 operator >>>(SignedInt32 value, int shiftAmount) => (int)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1060,30 +1024,6 @@ public readonly partial struct SignedInt32 : IBinaryInt<SignedInt32>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt32 IIncrementOperators<SignedInt32>.op_CheckedIncrement(SignedInt32 value)
-	{
-		var v = value._value;
-		v = checked((int)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt32 IDecrementOperators<SignedInt32>.op_CheckedDecrement(SignedInt32 value)
-	{
-		var v = value._value;
-		v = checked((int)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt32 IShiftOperators<SignedInt32, SignedInt32>.op_UnsignedRightShift(SignedInt32 value, int shiftAmount) => (int)((uint)value._value >> shiftAmount);
 
 }
 
@@ -1401,6 +1341,10 @@ public readonly partial struct SignedInt64 : IBinaryInt<SignedInt64>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static SignedInt64 operator >>(SignedInt64 value, int shiftAmount) => (long)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static SignedInt64 operator >>>(SignedInt64 value, int shiftAmount) => (long)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1419,30 +1363,6 @@ public readonly partial struct SignedInt64 : IBinaryInt<SignedInt64>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt64 IIncrementOperators<SignedInt64>.op_CheckedIncrement(SignedInt64 value)
-	{
-		var v = value._value;
-		v = checked((long)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt64 IDecrementOperators<SignedInt64>.op_CheckedDecrement(SignedInt64 value)
-	{
-		var v = value._value;
-		v = checked((long)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt64 IShiftOperators<SignedInt64, SignedInt64>.op_UnsignedRightShift(SignedInt64 value, int shiftAmount) => (long)((ulong)value._value >> shiftAmount);
 
 }
 
@@ -1760,6 +1680,10 @@ public readonly partial struct SignedInt128 : IBinaryInt<SignedInt128>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static SignedInt128 operator >>(SignedInt128 value, int shiftAmount) => (Int128)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static SignedInt128 operator >>>(SignedInt128 value, int shiftAmount) => (Int128)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1778,30 +1702,6 @@ public readonly partial struct SignedInt128 : IBinaryInt<SignedInt128>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt128 IIncrementOperators<SignedInt128>.op_CheckedIncrement(SignedInt128 value)
-	{
-		var v = value._value;
-		v = checked((Int128)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt128 IDecrementOperators<SignedInt128>.op_CheckedDecrement(SignedInt128 value)
-	{
-		var v = value._value;
-		v = checked((Int128)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static SignedInt128 IShiftOperators<SignedInt128, SignedInt128>.op_UnsignedRightShift(SignedInt128 value, int shiftAmount) => (Int128)((UInt128)value._value >> shiftAmount);
 
 }
 
@@ -2119,6 +2019,10 @@ public readonly partial struct UnsignedInt8 : IBinaryInt<UnsignedInt8>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UnsignedInt8 operator >>(UnsignedInt8 value, int shiftAmount) => (byte)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UnsignedInt8 operator >>>(UnsignedInt8 value, int shiftAmount) => (byte)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2137,30 +2041,6 @@ public readonly partial struct UnsignedInt8 : IBinaryInt<UnsignedInt8>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt8 IIncrementOperators<UnsignedInt8>.op_CheckedIncrement(UnsignedInt8 value)
-	{
-		var v = value._value;
-		v = checked((byte)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt8 IDecrementOperators<UnsignedInt8>.op_CheckedDecrement(UnsignedInt8 value)
-	{
-		var v = value._value;
-		v = checked((byte)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt8 IShiftOperators<UnsignedInt8, UnsignedInt8>.op_UnsignedRightShift(UnsignedInt8 value, int shiftAmount) => (byte)(value._value >> shiftAmount);
 
 }
 
@@ -2480,6 +2360,10 @@ public readonly partial struct UnsignedInt16 : IBinaryInt<UnsignedInt16>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UnsignedInt16 operator >>(UnsignedInt16 value, int shiftAmount) => (ushort)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UnsignedInt16 operator >>>(UnsignedInt16 value, int shiftAmount) => (ushort)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2498,30 +2382,6 @@ public readonly partial struct UnsignedInt16 : IBinaryInt<UnsignedInt16>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt16 IIncrementOperators<UnsignedInt16>.op_CheckedIncrement(UnsignedInt16 value)
-	{
-		var v = value._value;
-		v = checked((ushort)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt16 IDecrementOperators<UnsignedInt16>.op_CheckedDecrement(UnsignedInt16 value)
-	{
-		var v = value._value;
-		v = checked((ushort)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt16 IShiftOperators<UnsignedInt16, UnsignedInt16>.op_UnsignedRightShift(UnsignedInt16 value, int shiftAmount) => (ushort)(value._value >> shiftAmount);
 
 }
 
@@ -2841,6 +2701,10 @@ public readonly partial struct UnsignedInt32 : IBinaryInt<UnsignedInt32>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UnsignedInt32 operator >>(UnsignedInt32 value, int shiftAmount) => (uint)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UnsignedInt32 operator >>>(UnsignedInt32 value, int shiftAmount) => (uint)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2859,30 +2723,6 @@ public readonly partial struct UnsignedInt32 : IBinaryInt<UnsignedInt32>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt32 IIncrementOperators<UnsignedInt32>.op_CheckedIncrement(UnsignedInt32 value)
-	{
-		var v = value._value;
-		v = checked((uint)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt32 IDecrementOperators<UnsignedInt32>.op_CheckedDecrement(UnsignedInt32 value)
-	{
-		var v = value._value;
-		v = checked((uint)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt32 IShiftOperators<UnsignedInt32, UnsignedInt32>.op_UnsignedRightShift(UnsignedInt32 value, int shiftAmount) => (uint)(value._value >> shiftAmount);
 
 }
 
@@ -3201,6 +3041,10 @@ public readonly partial struct UnsignedInt64 : IBinaryInt<UnsignedInt64>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UnsignedInt64 operator >>(UnsignedInt64 value, int shiftAmount) => (ulong)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UnsignedInt64 operator >>>(UnsignedInt64 value, int shiftAmount) => (ulong)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3219,30 +3063,6 @@ public readonly partial struct UnsignedInt64 : IBinaryInt<UnsignedInt64>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt64 IIncrementOperators<UnsignedInt64>.op_CheckedIncrement(UnsignedInt64 value)
-	{
-		var v = value._value;
-		v = checked((ulong)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt64 IDecrementOperators<UnsignedInt64>.op_CheckedDecrement(UnsignedInt64 value)
-	{
-		var v = value._value;
-		v = checked((ulong)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt64 IShiftOperators<UnsignedInt64, UnsignedInt64>.op_UnsignedRightShift(UnsignedInt64 value, int shiftAmount) => (ulong)(value._value >> shiftAmount);
 
 }
 
@@ -3562,6 +3382,10 @@ public readonly partial struct UnsignedInt128 : IBinaryInt<UnsignedInt128>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static UnsignedInt128 operator >>(UnsignedInt128 value, int shiftAmount) => (UInt128)(value._value >> shiftAmount);
 
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static UnsignedInt128 operator >>>(UnsignedInt128 value, int shiftAmount) => (UInt128)(value._value >>> shiftAmount);
+
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3580,29 +3404,5 @@ public readonly partial struct UnsignedInt128 : IBinaryInt<UnsignedInt128>
 		--v;
 		return v;
 	}
-	
-	/*
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt128 IIncrementOperators<UnsignedInt128>.op_CheckedIncrement(UnsignedInt128 value)
-	{
-		var v = value._value;
-		v = checked((UInt128)(v + 1));
-		return v;
-	}
-
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt128 IDecrementOperators<UnsignedInt128>.op_CheckedDecrement(UnsignedInt128 value)
-	{
-		var v = value._value;
-		v = checked((UInt128)(v - 1));
-		return v;
-	}
-	*/
-	
-	/// <inheritdoc/>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static UnsignedInt128 IShiftOperators<UnsignedInt128, UnsignedInt128>.op_UnsignedRightShift(UnsignedInt128 value, int shiftAmount) => (UInt128)(value._value >> shiftAmount);
 
 }

@@ -374,7 +374,7 @@ namespace Althea.Linq
 		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
 		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="Span{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateProd<T>(this Span<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged, IMultiplyOperators<T, T, T>, IMultiplicativeIdentity<T, T>, IAdditiveIdentity<T, T>, IEqualityOperators<T, T>
+		public static ReadOnlySpan<T> AccumulateProd<T>(this Span<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged, IMultiplyOperators<T, T, T>, IMultiplicativeIdentity<T, T>, IAdditiveIdentity<T, T>, IEqualityOperators<T, T, bool>
 		{
 			return AccumulateProd((ReadOnlySpan<T>)span, result, init, inclusive);
 		}
@@ -476,7 +476,7 @@ namespace Althea.Linq
 		/// <param name="init">The initial value, default 0 will be replaced by 1</param>
 		/// <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
 		/// <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="Span{T}.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="ReadOnlySpan{T}.Length">Length</see> + 1)]</returns>
-		public static ReadOnlySpan<T> AccumulateProd<T>(this ReadOnlySpan<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged, IMultiplyOperators<T, T, T>, IMultiplicativeIdentity<T, T>, IAdditiveIdentity<T, T>, IEqualityOperators<T, T>
+		public static ReadOnlySpan<T> AccumulateProd<T>(this ReadOnlySpan<T> span, Span<T> result, T init = default, bool inclusive = true) where T : unmanaged, IMultiplyOperators<T, T, T>, IMultiplicativeIdentity<T, T>, IAdditiveIdentity<T, T>, IEqualityOperators<T, T, bool>
 		{
 			if (span.IsEmpty)
 				throw new ArgumentNullException(nameof(span));
@@ -978,7 +978,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to compare</param>
 		/// <param name="other">The other span to compare</param>
 		/// <returns>Sequentially larger or equals or not</returns>
-		public static bool SequenceLargerEqualThan<T>(this Span<T> span, ReadOnlySpan<T> other) where T : IComparisonOperators<T, T>
+		public static bool SequenceLargerEqualThan<T>(this Span<T> span, ReadOnlySpan<T> other) where T : IComparisonOperators<T, T, bool>
 		{
 			return SequenceLargerEqualThan((ReadOnlySpan<T>)span, other);
 		}
@@ -989,7 +989,7 @@ namespace Althea.Linq
 		/// <param name="span">The span to compare</param>
 		/// <param name="other">The other span to compare</param>
 		/// <returns>Sequentially larger or equals or not</returns>
-		public static bool SequenceLargerEqualThan<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> other) where T : IComparisonOperators<T, T>
+		public static bool SequenceLargerEqualThan<T>(this ReadOnlySpan<T> span, ReadOnlySpan<T> other) where T : IComparisonOperators<T, T, bool>
 		{
 			int len = span.Length;
 			if (len != other.Length)

@@ -27,7 +27,7 @@ namespace Althea.Storage
 	/// The interface for caching strategy of a two-level caching system
 	/// </summary>
 	/// <typeparam name="TSelf">The actual unmanaged number that implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
-	public interface ICacheStrategy<TSelf> : System.Numerics.IEqualityOperators<TSelf, TSelf>, ICheckValid where TSelf : struct, ICacheStrategy<TSelf>
+	public interface ICacheStrategy<TSelf> : System.Numerics.IEqualityOperators<TSelf, TSelf, bool>, ICheckValid where TSelf : struct, ICacheStrategy<TSelf>
 	{
 		/// <summary>
 		/// When implemented by a derived struct, statically create a <typeparamref name="TSelf"/> and get the size of the cache level in bytes with given size of the low speed level.
@@ -67,11 +67,11 @@ namespace Althea.Storage
 	/// <summary>
 	/// The direct mapping cache strategy as the default strategy as well as a demonstration
 	/// </summary>
-	public struct DirectMappingStrategy : ICacheStrategy<DirectMappingStrategy>, System.Numerics.IEqualityOperators<DirectMappingStrategy, DirectMappingStrategy>
+	public struct DirectMappingStrategy : ICacheStrategy<DirectMappingStrategy>, System.Numerics.IEqualityOperators<DirectMappingStrategy, DirectMappingStrategy, bool>
 	{
 		#region basic
 		[StructLayout(LayoutKind.Explicit)]
-		private struct CacheLineInfo : System.Numerics.IEqualityOperators<CacheLineInfo, CacheLineInfo>, IEquatable<CacheLineInfo>
+		private struct CacheLineInfo : System.Numerics.IEqualityOperators<CacheLineInfo, CacheLineInfo, bool>, IEquatable<CacheLineInfo>
 		{
 			[FieldOffset(0)] // little-endian
 			private byte dirtyAndValid;
@@ -259,8 +259,9 @@ namespace Althea.Storage
 	}
 	#endregion
 
+	#region base
 	/// <summary>
-	/// The abstract storage class as a base class for all single level caching storage classes whose <see cref="IStorage.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 2.
+	/// The abstract storage class as a base class for all single level caching storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 2.
 	/// </summary>
 	/// <typeparam name="TS">Any cache strategy struct which implements <see cref="ICacheStrategy{TSelf}"/></typeparam>
 	/// <typeparam name="TPh">Any high speed pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
@@ -310,6 +311,7 @@ namespace Althea.Storage
 				Mem.MemoryCopy(this.Cache + sourceOffset, this.Memory.MoveBy(destinationOffset, copyLength));
 		}
 	}
+	#endregion
 
 	/// <summary>
 	/// The abstract cached storage class that inherits <see cref="CachedStorageBase{TS, TPh, TPl}"/> and constrains data type to <typeparamref name="T"/>
@@ -351,11 +353,9 @@ namespace Althea.Storage
 		/// <inheritdoc/>
 		public static CombinationOfLocations LocationDescription => new(stackalloc bool[] { true, false }.CreateCombinationType(), stackalloc StorageLocation[] { TPh.Location, TPl.Location });
 
-#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(CachedStorage<T, TS, TPh, TPl>).GetMethod(nameof(MemoryPieceAt)) };
-#pragma warning restore CS8619
+		static MethodInfo[] IStorage<CachedStorage<T, TS, TPh, TPl>>.PointerGetters => new[] { typeof(CachedStorage<T, TS, TPh, TPl>).GetMethod(nameof(MemoryPieceAt))! };
 
-		long IStorage.SizeOfPointer(int i)
+		long IStorage<CachedStorage<T, TS, TPh, TPl>>.SizeOfPointer(int i)
 		{
 			if (!this.IsValid())
 				return 0;
@@ -565,13 +565,13 @@ namespace Althea.Storage
 				return new ActualCachedStorage<T, TS, TPh, TPl>(pointer);
 			}
 
-			public override void Write(Utf8JsonWriter writer, CachedStorage<T, TS, TPh, TPl> value!!, JsonSerializerOptions options)
+			public override void Write(Utf8JsonWriter writer, CachedStorage<T, TS, TPh, TPl> value, JsonSerializerOptions options)
 			{
 				if (!value.IsValid())
 					throw new JsonException(ParameterError.InvalidValue);
 				byte[] temp = new byte[value.LengthInBytes];
 				value.Strategy.Flush(value.CopyWrapper);
-				Mem.ToManaged<UnsignedInt8, TPl>(value.Memory, temp.AsAux());
+				Mem.ToManaged(value.Memory, temp.AsAux());
 				writer.WriteStartObject();
 				writer.WriteBase64String(nameof(Repr.Data), temp);
 				writer.WriteEndObject();

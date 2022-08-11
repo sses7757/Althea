@@ -296,11 +296,11 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		@"(" + floatPattern2 + ")";
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static unsafe bool TryParseAny(delegate*<string, NumberStyles, IFormatProvider?, out T, bool> parseFunc, string str!!, NumberStyles style, IFormatProvider? provider, out T real, out T imag)
+	private static unsafe bool TryParseAny(delegate*<string, NumberStyles, IFormatProvider?, out T, bool> parseFunc, string str, NumberStyles style, IFormatProvider? provider, out T real, out T imag)
 	{
 		real = imag = default;
 
-		Regex regex = MyRegex();
+		Regex regex = new(regexPattern1);
 		Match match = regex.Match(str);
 		bool success = match.Success;
 		if (!success)
@@ -324,7 +324,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 			return true;
 
 		SecondTry:
-		regex = MyRegex1();
+		regex = new(regexPattern2);
 		match = regex.Match(str);
 		success = match.Success;
 		if (!success)
@@ -463,7 +463,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	{
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int Compare(Complex<T> x, Complex<T> y) => x.real.CompareTo(y.real);
+		public int Compare(Complex<T> x, Complex<T> y) => x.real > y.real? 1 : x.real == y.real? 0 : -1;
 	}
 
 	/// <inheritdoc/>
@@ -473,14 +473,12 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Complex<T> Min(Complex<T> x, Complex<T> y) => x < y ? x : y;
 
-	int IComparable.CompareTo(object? obj) => obj is Complex<T> c ? this.CompareTo(c) : throw new InvalidOperationException();
-
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public int CompareTo(Complex<T> other)
 	{
 		if (this.imag == T.Zero && other.imag == T.Zero)
-			return this.real.CompareTo(other.real);
+			return this.real > other.real ? 1 : this.real == other.real ? 0 : -1;
 		throw new InvalidOperationException();
 	}
 	#endregion
@@ -669,7 +667,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	public static Complex<T> Hypot(Complex<T> x, Complex<T> y) => Sqrt(x * x + y * y);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Complex<T> Root(Complex<T> x, int n) => n == 1 ? x : n == 2 ? Sqrt(x) : n == 3 ? Cbrt(x) : PowReal(x, T.One / n.As<T>());
+	public static Complex<T> RootN(Complex<T> x, int n) => n == 1 ? x : n == 2 ? Sqrt(x) : n == 3 ? Cbrt(x) : PowReal(x, T.One / n.As<T>());
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Complex<T> Log(Complex<T> x)
@@ -1071,11 +1069,6 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		destination[charsWritten] = ')'; charsWritten++;
 		return true;
 	}
-
-	[RegexGenerator("((?:[-+]?\\d+(?:\\.\\d+)?|[-+]?\\d*\\.?\\d+)(?:[eE][\\+\\-]?\\d+)?)\\s*([\\+\\-]\\s*(?:(?:\\d+(?:\\.\\d+)?|\\d*\\.?\\d+)(?:[eE][\\+\\-]?\\d+)?)\\s?[iI])?")]
-	private static partial Regex MyRegex();
-	[RegexGenerator("((?:[-+]?\\d+(?:\\.\\d+)?|[-+]?\\d*\\.?\\d+)(?:[eE][\\+\\-]?\\d+)?\\s?[iI])\\s*((?:\\d+(?:\\.\\d+)?|\\d*\\.?\\d+)(?:[eE][\\+\\-]?\\d+)?)")]
-	private static partial Regex MyRegex1();
 	#endregion
 }
 
@@ -1301,7 +1294,7 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 	{
 		/// <inheritdoc/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int Compare(ComplexInteger<T> x, ComplexInteger<T> y) => x.real.CompareTo(y.real);
+		public int Compare(ComplexInteger<T> x, ComplexInteger<T> y) => x.real > y.real? 1 : x.real == y.real? 0 : -1;
 	}
 
 	/// <inheritdoc/>
@@ -1311,14 +1304,12 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static ComplexInteger<T> Min(ComplexInteger<T> x, ComplexInteger<T> y) => x < y ? x : y;
 
-	int IComparable.CompareTo(object? obj) => obj is ComplexInteger<T> c ? this.CompareTo(c) : throw new InvalidOperationException();
-
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public int CompareTo(ComplexInteger<T> other)
 	{
 		if (this.imag == T.Zero && other.imag == T.Zero)
-			return this.real.CompareTo(other.real);
+			return this.real > other.real ? 1 : this.real == other.real ? 0 : -1;
 		throw new InvalidOperationException();
 	}
 	#endregion
@@ -1419,6 +1410,9 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static ComplexInteger<T> operator >>(ComplexInteger<T> value, int shiftAmount) => new(value.real >> shiftAmount, value.imag >> shiftAmount);
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ComplexInteger<T> operator >>>(ComplexInteger<T> value, int shiftAmount) => new(value.real >>> shiftAmount, value.imag >>> shiftAmount);
 
 	/*
 	static ComplexInteger<T> IAdditionOperators<ComplexInteger<T>, ComplexInteger<T>, ComplexInteger<T>>.op_CheckedAddition(ComplexInteger<T> left, ComplexInteger<T> right) => new(checked(left.real + right.real), checked(left.imag + right.imag));
@@ -1450,7 +1444,6 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 		return new(r, value.imag);
 	}
 	*/
-	static ComplexInteger<T> IShiftOperators<ComplexInteger<T>, ComplexInteger<T>>.op_UnsignedRightShift(ComplexInteger<T> value, int shiftAmount) => new(T.op_UnsignedRightShift(value.real, shiftAmount), T.op_UnsignedRightShift(value.imag, shiftAmount));
 	#endregion
 
 	#region other arithmetics

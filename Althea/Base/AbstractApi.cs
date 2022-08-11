@@ -125,7 +125,7 @@ namespace Althea
 		private static readonly ReaderWriterLockSlim apiLock = new();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void SetImplementation(TApi implementation!!)
+		internal static void SetImplementation(TApi implementation)
 		{
 			if (implementation.Disposed)
 				throw new ObjectDisposedException(nameof(implementation));

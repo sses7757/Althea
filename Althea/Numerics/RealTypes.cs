@@ -345,7 +345,7 @@ public readonly partial struct Float64 : IBinaryFloat<Float64>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float64 Root(Float64 x, int n) => double.Root(x, n);
+	public static Float64 RootN(Float64 x, int n) => double.RootN(x, n);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -807,7 +807,7 @@ public readonly partial struct Float32 : IBinaryFloat<Float32>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float32 Root(Float32 x, int n) => float.Root(x, n);
+	public static Float32 RootN(Float32 x, int n) => float.RootN(x, n);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1269,7 +1269,7 @@ public readonly partial struct Float16 : IBinaryFloat<Float16>
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float16 Root(Float16 x, int n) => Half.Root(x, n);
+	public static Float16 RootN(Float16 x, int n) => Half.RootN(x, n);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -332,7 +332,7 @@ namespace Althea.Array
 		#region tensor out-of-place operations
 		/// <inheritdoc/>
 		/// <exception cref="ArgumentException">If <paramref name="A"/>'s default value is not zero</exception>
-		static SparseTensor<T, TInd, TS, TSInd> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, UnaryOperation opA, ReduceOperation reduce)
+		static SparseTensor<T, TInd, TS, TSInd> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, UnaryOperation opA, ReduceOperation reduce)
 		{
 			if (A.DefaultValue != T.Zero)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(A));
@@ -345,7 +345,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static SparseTensor<T, TInd, TS, TSInd> Permute(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity)
+		public static SparseTensor<T, TInd, TS, TSInd> Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity)
 		{
 			Span<int> perm = stackalloc int[A.Rank];
 			Span<long> sizeB = stackalloc long[A.Rank];
@@ -356,7 +356,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseTensor<T, TS> Reduce(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T α,  UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
+		public static DenseTensor<T, TS> Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α,  UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
 		{
 			Span<int> reduceInds = stackalloc int[A.Rank];
 			Span<long> sizeB = stackalloc long[A.Rank];
@@ -375,7 +375,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		static DenseTensor<T, TS> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.Permute(SparseTensor<T, TInd, TS, TSInd> A!!, TensorOrder order, T scalar, UnaryOperation op)
+		static DenseTensor<T, TS> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, UnaryOperation op)
 		{
 			Span<int> perm = stackalloc int[A.Rank];
 			Span<long> sizeB = stackalloc long[A.Rank];
@@ -395,7 +395,7 @@ namespace Althea.Array
 
 		/// <inheritdoc/>
 		/// <exception cref="ArgumentException">If <paramref name="A"/> or <paramref name="B"/>'s default value is not zero</exception>
-		public static SparseTensor<T, TInd, TS, TSInd> Contract(SparseTensor<T, TInd, TS, TSInd> A!!, UnaryOperation opA, SparseTensor<T, TInd, TS, TSInd> B!!, UnaryOperation opB, T α)
+		public static SparseTensor<T, TInd, TS, TSInd> Contract(SparseTensor<T, TInd, TS, TSInd> A, UnaryOperation opA, SparseTensor<T, TInd, TS, TSInd> B, UnaryOperation opB, T α)
 		{
 			if (A.DefaultValue != T.Zero)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(A));

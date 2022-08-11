@@ -81,7 +81,7 @@ namespace Althea.Array
 		/// <param name="stride">The stride between consecutive elements in <paramref name="storage"/>, default 1</param>
 		/// <exception cref="ArgumentException">If <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="length"/> ≤ 0 or <paramref name="stride"/> ≤ 0 or ≥ <paramref name="storage"/>'s length</exception>
-		public DenseVector(TS storage!!, long length, long stride = 1)
+		public DenseVector(TS storage, long length, long stride = 1)
 		{
 			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));

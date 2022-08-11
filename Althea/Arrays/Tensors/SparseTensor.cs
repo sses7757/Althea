@@ -150,7 +150,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public void SetLabels(params char[] labels!!)
+		public void SetLabels(params char[] labels)
 		{
 			if (labels.Length != this.rank)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
@@ -169,7 +169,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="size"/> ≤ 0</exception>
 		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
 		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		protected SparseTensor(ReadOnlySpan<long> size, TS values!!, TSInd indices!!, T defaultValue = default, long nnz = -1, ReadOnlySpan<char> labels = default)
+		protected SparseTensor(ReadOnlySpan<long> size, TS values, TSInd indices, T defaultValue = default, long nnz = -1, ReadOnlySpan<char> labels = default)
 		{
 			this.defaultValue = defaultValue;
 			if (size.IsEmpty || size.Length > MAX_RANK)

@@ -79,7 +79,7 @@ namespace Althea.Array
 		/// <param name="leadDim">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="rows"/></param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
-		protected AbstractDenseMatrix(TS storage!!, long rows, long cols, long leadDim = 0)
+		protected AbstractDenseMatrix(TS storage, long rows, long cols, long leadDim = 0)
 		{
 			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
@@ -158,7 +158,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="nRows"/> or <paramref name="nCols"/> ≤ 0</exception>
 		[JsonConstructor]
-		public DenseMatrix(TS storage!!, long nRows, long nCols, long leadDim = 0) : base(storage, nRows, nCols, leadDim)
+		public DenseMatrix(TS storage, long nRows, long nCols, long leadDim = 0) : base(storage, nRows, nCols, leadDim)
 		{
 			// do nothing
 		}
@@ -407,7 +407,7 @@ namespace Althea.Array
 		/// <param name="stride">The size of the leading dimension (the actual number of rows), default 0 means the same as <paramref name="n"/></param>
 		/// <exception cref="ArgumentException">If the length of <paramref name="storage"/> is too short</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="n"/> or <paramref name="stride"/> ≤ 0</exception>
-		public DiagonalMatrix(TS storage!!, long n, long stride = 1)
+		public DiagonalMatrix(TS storage, long n, long stride = 1)
 		{
 			if (!storage.IsValid())
 				throw new ArgumentNullException(nameof(storage));
@@ -573,7 +573,7 @@ namespace Althea.Array
 
 		#region operators
 		/// <inheritdoc/>
-		public static DenseVector<T, TS> operator *(DiagonalMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!)
+		public static DenseVector<T, TS> operator *(DiagonalMatrix<T, TS> matrix, DenseVector<T, TS> vector)
 		{
 			if (vector.Length != matrix.n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
@@ -584,7 +584,7 @@ namespace Althea.Array
 		public static DenseVector<T, TS> operator *(DenseVector<T, TS> vector, DiagonalMatrix<T, TS> matrix) => matrix * vector;
 
 		/// <inheritdoc/>
-		public static DiagonalMatrix<T, TS> operator *(DiagonalMatrix<T, TS> matrix!!, T scalar) => matrix.ApplyToAlike(m => Blas.Scale(m.values, m.stride, scalar));
+		public static DiagonalMatrix<T, TS> operator *(DiagonalMatrix<T, TS> matrix, T scalar) => matrix.ApplyToAlike(m => Blas.Scale(m.values, m.stride, scalar));
 
 		/// <inheritdoc/>
 		public static DiagonalMatrix<T, TS> operator -(DiagonalMatrix<T, TS> matrix) => matrix * (-T.One);
@@ -596,7 +596,7 @@ namespace Althea.Array
 		public static DiagonalMatrix<T, TS> operator /(DiagonalMatrix<T, TS> matrix, T scalar) => matrix * (T.One / scalar);
 
 		/// <inheritdoc/>
-		public static DiagonalMatrix<T, TS> operator ^(DiagonalMatrix<T, TS> matrix!!, MatrixOperation operation)
+		public static DiagonalMatrix<T, TS> operator ^(DiagonalMatrix<T, TS> matrix, MatrixOperation operation)
 		{
 			if (!T.IsComplexType || (operation & MatrixOperation.Conjugate) != 0)
 				return ((ICloneable<DiagonalMatrix<T, TS>>)matrix).Clone();
@@ -604,7 +604,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DiagonalMatrix<T, TS> operator *(DiagonalMatrix<T, TS> left!!, DiagonalMatrix<T, TS> right!!)
+		public static DiagonalMatrix<T, TS> operator *(DiagonalMatrix<T, TS> left, DiagonalMatrix<T, TS> right)
 		{
 			if (left.n != right.n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
@@ -612,7 +612,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DiagonalMatrix<T, TS> operator +(DiagonalMatrix<T, TS> left!!, DiagonalMatrix<T, TS> right!!)
+		public static DiagonalMatrix<T, TS> operator +(DiagonalMatrix<T, TS> left, DiagonalMatrix<T, TS> right)
 		{
 			if (left.n != right.n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
@@ -620,7 +620,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DiagonalMatrix<T, TS> operator -(DiagonalMatrix<T, TS> left!!, DiagonalMatrix<T, TS> right!!)
+		public static DiagonalMatrix<T, TS> operator -(DiagonalMatrix<T, TS> left, DiagonalMatrix<T, TS> right)
 		{
 			if (left.n != right.n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
@@ -628,7 +628,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator +(DiagonalMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!)
+		public static DenseMatrix<T, TS> operator +(DiagonalMatrix<T, TS> left, DenseMatrix<T, TS> right)
 		{
 			if (left.n != right.NRows || left.n != right.NCols)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
@@ -640,7 +640,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> operator -(DiagonalMatrix<T, TS> left!!, DenseMatrix<T, TS> right!!)
+		public static DenseMatrix<T, TS> operator -(DiagonalMatrix<T, TS> left, DenseMatrix<T, TS> right)
 		{
 			if (left.n != right.NRows || left.n != right.NCols)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
@@ -684,7 +684,7 @@ namespace Althea.Array
 		/// <summary>
 		/// Get a referenced <see cref="DiagonalMatrix{T, TS}"/> from the underlying storage of this <see cref="DenseVector{T, TS}"/>.
 		/// </summary>
-		public static DiagonalMatrix<T, TS> FromVector(DenseVector<T, TS> vector!!) => new(vector.Storage, vector.Length, vector.Stride);
+		public static DiagonalMatrix<T, TS> FromVector(DenseVector<T, TS> vector) => new(vector.Storage, vector.Length, vector.Stride);
 		#endregion
 
 		#region serialization

@@ -508,7 +508,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> MultiplyMatries(DiagonalMatrix<T, TS> A!!, DenseMatrix<T, TS> B!!, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public static DenseMatrix<T, TS> MultiplyMatries(DiagonalMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var output = IMatrixOperations<T, DiagonalMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, opA, opB, B.Storage, out long m, out long n, out _);
 			opA = opA.Simplify<T>(false);
@@ -525,7 +525,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static DenseMatrix<T, TS> MultiplyMatries(DenseMatrix<T, TS> A!!, DiagonalMatrix<T, TS> B!!, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public static DenseMatrix<T, TS> MultiplyMatries(DenseMatrix<T, TS> A, DiagonalMatrix<T, TS> B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var output = IMatrixOperations<T, DenseMatrix<T, TS>, DiagonalMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, opA, opB, A.Storage, out long m, out long n, out _);
 			opB = opB.Simplify<T>(false);
@@ -672,7 +672,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void MultiplyMatries(DiagonalMatrix<T, TS> A!!, DenseMatrix<T, TS> B!!, T α, T β, DenseMatrix<T, TS> C!!, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public static void MultiplyMatries(DiagonalMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (m, n, _) = IMatrixOperations<T, DiagonalMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			opA = opA.Simplify<T>(false);
@@ -680,7 +680,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void MultiplyMatries(DenseMatrix<T, TS> A!!, DiagonalMatrix<T, TS> B!!, T α, T β, DenseMatrix<T, TS> C!!, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+		public static void MultiplyMatries(DenseMatrix<T, TS> A, DiagonalMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (m, n, _) = IMatrixOperations<T, DenseMatrix<T, TS>, DiagonalMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 			opB = opB.Simplify<T>(false);
@@ -698,7 +698,7 @@ namespace Althea.Array
 		/// <param name="α">The scalar to multiply to <paramref name="left"/> or <paramref name="right"/></param>
 		/// <param name="β">The scalar to multiply to <paramref name="matrix"/></param>
 		/// <param name="conjugateRight">Whether to use the conjugate transpose of <paramref name="right"/> or simply transpose.</param>
-		public static void RankOneUpdate(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> left!!, DenseVector<T, TS> right!!, T α, T β = default, bool conjugateRight = true)
+		public static void RankOneUpdate(DenseMatrix<T, TS> matrix, DenseVector<T, TS> left, DenseVector<T, TS> right, T α, T β = default, bool conjugateRight = true)
 		{
 			if (matrix.NRows != left.Length || matrix.NCols != right.Length)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(matrix));
@@ -716,7 +716,7 @@ namespace Althea.Array
 		/// <param name="vector">The left and right vector to outer product</param>
 		/// <param name="α">The scalar to multiply to <paramref name="vector"/></param>
 		/// <param name="β">The scalar to multiply to <paramref name="matrix"/></param>
-		public static void RankOneUpdate(SymmetricMatrix<T, TS> matrix!!, DenseVector<T, TS> vector!!, T α, T β = default)
+		public static void RankOneUpdate(SymmetricMatrix<T, TS> matrix, DenseVector<T, TS> vector, T α, T β = default)
 		{
 			if (matrix.NRows != vector.Length)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(matrix));
@@ -733,7 +733,7 @@ namespace Althea.Array
 		/// <param name="y">The vector to outer product</param>
 		/// <param name="α">The scalar to multiply to <paramref name="x"/> or <paramref name="y"/></param>
 		/// <param name="β">The scalar to multiply to <paramref name="matrix"/></param>
-		public static void RankTwoUpdate(SymmetricMatrix<T, TS> matrix!!, DenseVector<T, TS> x!!, DenseVector<T, TS> y!!, T α, T β = default)
+		public static void RankTwoUpdate(SymmetricMatrix<T, TS> matrix, DenseVector<T, TS> x, DenseVector<T, TS> y, T α, T β = default)
 		{
 			if (matrix.NRows != x.Length)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(matrix));
@@ -752,7 +752,7 @@ namespace Althea.Array
 		/// <param name="α">The scalar to multiply to <paramref name="B"/></param>
 		/// <param name="β">The scalar to multiply to <paramref name="A"/></param>
 		/// <param name="opB">The operation to be applied to <paramref name="B"/></param>
-		public static void RankKUpdate(SymmetricMatrix<T, TS> A!!, DenseMatrix<T, TS> B!!, T α, T β = default, MatrixOperation opB = MatrixOperation.None)
+		public static void RankKUpdate(SymmetricMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β = default, MatrixOperation opB = MatrixOperation.None)
 		{
 			var (n, k) = (B.NRows, B.NCols);
 			if (!opB.CanInPlace())
@@ -773,7 +773,7 @@ namespace Althea.Array
 		/// <param name="α">The scalar to multiply to <paramref name="B"/> or <paramref name="C"/></param>
 		/// <param name="β">The scalar to multiply to <paramref name="A"/></param>
 		/// <param name="op">The operation to be applied to both <paramref name="B"/> and <paramref name="C"/></param>
-		public static void RankTwoKUpdate(SymmetricMatrix<T, TS> A!!, DenseMatrix<T, TS> B!!, DenseMatrix<T, TS> C!!, T α, T β = default, MatrixOperation op = MatrixOperation.None)
+		public static void RankTwoKUpdate(SymmetricMatrix<T, TS> A, DenseMatrix<T, TS> B, DenseMatrix<T, TS> C, T α, T β = default, MatrixOperation op = MatrixOperation.None)
 		{
 			var (n, k) = (B.NRows, B.NCols);
 			if (!op.CanInPlace())
@@ -790,7 +790,7 @@ namespace Althea.Array
 
 		#region tensor
 		/// <inheritdoc/>
-		public static void Reduce(DenseTensor<T, TS> A!!, TensorOrder order, T α, DenseTensor<T, TS> B!!, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
+		public static void Reduce(DenseTensor<T, TS> A, TensorOrder order, T α, DenseTensor<T, TS> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
 		{
 			Span<int> reduceInd = stackalloc int[A.Rank];
 			reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, α, B, reduceInd);
@@ -798,7 +798,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void Permute(DenseTensor<T, TS> A!!, TensorOrder order, T scalar, DenseTensor<T, TS> B!!, UnaryOperation op = UnaryOperation.Identity)
+		public static void Permute(DenseTensor<T, TS> A, TensorOrder order, T scalar, DenseTensor<T, TS> B, UnaryOperation op = UnaryOperation.Identity)
 		{
 			Span<int> perm = stackalloc int[A.Rank];
 			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
@@ -844,7 +844,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void Contract(DenseTensor<T, TS> A!!, UnaryOperation opA, DenseTensor<T, TS> B!!, UnaryOperation opB, T α, DenseTensor<T, TS> C!!, UnaryOperation opC, T β)
+		public static void Contract(DenseTensor<T, TS> A, UnaryOperation opA, DenseTensor<T, TS> B, UnaryOperation opB, T α, DenseTensor<T, TS> C, UnaryOperation opC, T β)
 		{
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -858,7 +858,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C!!, BinaryOperation binary)
+		public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C, BinaryOperation binary)
 		{
 			Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 			ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
@@ -1007,7 +1007,7 @@ namespace Althea.Array
 		#endregion
 
 		#region matrix eigen solve
-		private static void CheckStandardEigen(AbstractDenseMatrix<T, TS> matrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
+		private static void CheckStandardEigen(AbstractDenseMatrix<T, TS> matrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 		{
 			if (matrix.NRows != matrix.NCols)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(matrix));
@@ -1038,7 +1038,7 @@ namespace Althea.Array
 			}
 		}
 
-		private static void CheckGeneralEigen(AbstractDenseMatrix<T, TS> matrix!!, AbstractDenseMatrix<T, TS> otherMatrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseVector<T, TS>? outValuesDenominator, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
+		private static void CheckGeneralEigen(AbstractDenseMatrix<T, TS> matrix, AbstractDenseMatrix<T, TS> otherMatrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseVector<T, TS>? outValuesDenominator, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 		{
 			if (matrix.NRows != matrix.NCols)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(matrix));
@@ -1079,7 +1079,7 @@ namespace Althea.Array
 			}
 		}
 
-		private static void CheckSchur(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS> outSchurForm!!, DenseMatrix<T, TS>? outVectors, bool copy = true)
+		private static void CheckSchur(DenseMatrix<T, TS> matrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS> outSchurForm, DenseMatrix<T, TS>? outVectors, bool copy = true)
 		{
 			if (matrix.NRows != matrix.NCols)
 				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(matrix));
@@ -1126,7 +1126,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void SchurReorder<TInd, TSInd>(DenseMatrix<T, TS> schurForm!!, DenseMatrix<T, TS>? schurVectors, DenseVector<T, TS> values!!, DenseVector<T, TS>? valuesImag, TSInd select!!) where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+		public static void SchurReorder<TInd, TSInd>(DenseMatrix<T, TS> schurForm, DenseMatrix<T, TS>? schurVectors, DenseVector<T, TS> values, DenseVector<T, TS>? valuesImag, TSInd select) where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 		{
 			CheckSchur(schurForm, values, valuesImag, schurForm, schurVectors, false);
 			if (select.Length != schurForm.NRows)
@@ -1135,7 +1135,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void SingularValueSolve(DenseMatrix<T, TS> matrix!!, DenseVector<T, TS> outValues!!, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
+		public static void SingularValueSolve(DenseMatrix<T, TS> matrix, DenseVector<T, TS> outValues, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 		{
 			if (Math.Min(matrix.NRows, matrix.NCols) != outValues.Length)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(outValues));
@@ -1184,7 +1184,7 @@ namespace Althea.Array
 		}
 
 		/// <inheritdoc/>
-		public static void GeneralEigenSolve(GeneralEigenType type, DenseMatrix<T, TS> matrix!!, DenseMatrix<T, TS> otherMatrix!!, DenseVector<T, TS> outValues!!, DenseVector<T, TS>? outValuesImag, DenseVector<T, TS>? outValuesDenominator, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
+		public static void GeneralEigenSolve(GeneralEigenType type, DenseMatrix<T, TS> matrix, DenseMatrix<T, TS> otherMatrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseVector<T, TS>? outValuesDenominator, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 		{
 			if (type == GeneralEigenType.None)
 				throw new ArgumentOutOfRangeException(nameof(type));

@@ -38,9 +38,7 @@ namespace Althea.Storage
 
 		long IStorage.TotalOffsetInBytes => 0;
 
-#pragma warning disable CS8603
-		static JsonConverter<ManagedPureStorage<T>> IStorage<T, ManagedPureStorage<T>>.JsonConverter => null;
-#pragma warning restore CS8603
+		static JsonConverter<ManagedPureStorage<T>> IStorage<T, ManagedPureStorage<T>>.JsonConverter => null!;
 
 		public PointerSegment<ManagedPointer> Pointer { get; }
 
@@ -79,9 +77,7 @@ namespace Althea.Storage
 			// do nothing
 		}
 
-#pragma warning disable CS8619
-		static MethodInfo[] IStorage.PointerGetters => new[] { typeof(ManagedPureStorage<T>).GetProperty(nameof(Pointer))?.GetGetMethod() };
-#pragma warning restore CS8619
+		static MethodInfo[] IStorage<ManagedPureStorage<T>>.PointerGetters => new[] { typeof(ManagedPureStorage<T>).GetProperty(nameof(Pointer))!.GetGetMethod()! };
 
 		public static ManagedPureStorage<T> Create(ReadOnlySpan<long> lengths) => throw new InvalidOperationException();
 

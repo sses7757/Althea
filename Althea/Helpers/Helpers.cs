@@ -727,7 +727,7 @@ namespace Althea.Helpers
 		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
 		/// <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToClone<T>(this T array!!, Action<T> action) where T : IDisposable, ICloneable<T>
+		public static T ApplyToClone<T>(this T array, Action<T> action) where T : IDisposable, ICloneable<T>
 		{
 			var clone = array.Clone();
 			try
@@ -751,7 +751,7 @@ namespace Althea.Helpers
 		/// <param name="action">The <see cref="Action{T}"/> to apply</param>
 		/// <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToAlike<T>(this T array!!, Action<T> action) where T : IDisposable, ICreateAlike<T>
+		public static T ApplyToAlike<T>(this T array, Action<T> action) where T : IDisposable, ICreateAlike<T>
 		{
 			var alike = array.CreateAlike();
 			try
@@ -775,7 +775,7 @@ namespace Althea.Helpers
 		/// <param name="action">The <see cref="Action{T, T}"/> whose first input is <paramref name="array"/> and second input is its clone</param>
 		/// <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToClone<T>(this T array!!, Action<T, T> action) where T : IDisposable, ICloneable<T>
+		public static T ApplyToClone<T>(this T array, Action<T, T> action) where T : IDisposable, ICloneable<T>
 		{
 			var clone = array.Clone();
 			try
@@ -799,7 +799,7 @@ namespace Althea.Helpers
 		/// <param name="action">The <see cref="Action{T, T}"/> whose first input is <paramref name="array"/> and second input is its alike one</param>
 		/// <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T ApplyToAlike<T>(this T array!!, Action<T, T> action) where T : IDisposable, ICreateAlike<T>
+		public static T ApplyToAlike<T>(this T array, Action<T, T> action) where T : IDisposable, ICreateAlike<T>
 		{
 			var alike = array.CreateAlike();
 			try

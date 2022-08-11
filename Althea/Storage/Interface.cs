@@ -46,6 +46,28 @@ namespace Althea.Storage
 		long LengthInBytes { get; }
 
 		/// <summary>
+		/// When implemented by a derived class, check whether this storage is valid or not after moving <paramref name="offset"/> bytes and set length to <paramref name="newLength"/> bytes.
+		/// </summary>
+		/// <param name="offset">The offset to move in bytes, can be negative</param>
+		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
+		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/>.</returns>
+		bool IsByteOffsetValid(long offset, long newLength = 0);
+
+		/// <summary>
+		/// When implemented by a derived class, check whether this storage overlaps with the <paramref name="other"/> storage.
+		/// </summary>
+		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
+		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+		bool OverlapWith(IStorage other);
+	}
+
+	/// <summary>
+	/// The base interface for all storage classes with self-type-reference
+	/// </summary>
+	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{TSelf}"/></typeparam>
+	public interface IStorage<TSelf> : IStorage where TSelf : class, IStorage<TSelf>
+	{
+		/// <summary>
 		/// When implemented by a derived class, statically get the data type of this storage as a <see cref="Numerics.DataType"/>.
 		/// </summary>
 		abstract static DataType DataType { get; }
@@ -67,21 +89,6 @@ namespace Althea.Storage
 		/// <returns>The size of the pointer getter method of index <paramref name="i"/>.</returns>
 		/// <remarks>If the implemented class returns values larger than 1 for some pointers, it shall implement pointers' getters like <c>public <see cref="PointerSegment{T}"/> PointerN(<see cref="long"/> index, <see cref="bool"/> intentWrite) { ... }</c></remarks>
 		internal protected virtual long SizeOfPointer(int i) => 1;
-
-		/// <summary>
-		/// When implemented by a derived class, check whether this storage is valid or not after moving <paramref name="offset"/> bytes and set length to <paramref name="newLength"/> bytes.
-		/// </summary>
-		/// <param name="offset">The offset to move in bytes, can be negative</param>
-		/// <param name="newLength">The length to check in bytes, default 0 means auto calculation by <paramref name="offset"/></param>
-		/// <returns>The validness of this storage under <paramref name="offset"/> and <paramref name="newLength"/>.</returns>
-		bool IsByteOffsetValid(long offset, long newLength = 0);
-
-		/// <summary>
-		/// When implemented by a derived class, check whether this storage overlaps with the <paramref name="other"/> storage.
-		/// </summary>
-		/// <param name="other">The other <see cref="IStorage"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		bool OverlapWith(IStorage other);
 	}
 
 	/// <summary>
@@ -89,9 +96,11 @@ namespace Althea.Storage
 	/// </summary>
 	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
 	/// <typeparam name="TSelf">The actual class that implement <see cref="IStorage{T, TSelf}"/></typeparam>
-	public interface IStorage<T, TSelf> : IStorage, IReadOnlyList<T>,
-		ICreateAlike<TSelf>, System.Numerics.IEqualityOperators<TSelf, TSelf>, IMainPropertyFormattable<TSelf>,
-		System.Numerics.IAdditiveIdentity<TSelf, long>, System.Numerics.IAdditionOperators<TSelf, long, TSelf>,
+	public interface IStorage<T, TSelf> : IStorage<TSelf>, IReadOnlyList<T>,
+		IMainPropertyFormattable<TSelf>, ICreateAlike<TSelf>,
+		System.Numerics.IEqualityOperators<TSelf, TSelf, bool>,
+		System.Numerics.IAdditiveIdentity<TSelf, long>,
+		System.Numerics.IAdditionOperators<TSelf, long, TSelf>,
 		System.Numerics.ISubtractionOperators<TSelf, long, TSelf>
 		where T : unmanaged, IBaseNumber<T>
 		where TSelf : class, IStorage<T, TSelf>
@@ -380,7 +389,7 @@ namespace Althea.Storage
 		void IStorage.Dispose(bool invokedByUser) { }
 
 		/// <summary>
-		/// Create a referenced <typeparamref name="TStorage"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
+		/// Create a referenced <see cref="IStorage"/> with given reference <paramref name="storage"/> and <paramref name="offset"/> to it
 		/// </summary>
 		/// <typeparam name="TS">The type constrain for <paramref name="storage"/></typeparam>
 		/// <param name="storage">The <see cref="IStorage"/> to be referenced</param>
@@ -413,7 +422,7 @@ namespace Althea.Storage
 			}
 			// check
 			if (storage is not TS)
-				throw new ArgumentException(ParameterError.UnexpectedType, nameof(storage));
+				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(storage));
 			if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(offset), offset, ParameterError.CannotNegative);
 			if (storage.LengthInBytes < offset + newLength)

@@ -201,7 +201,7 @@ namespace Althea.Array
 	/// </summary>
 	[StructLayout(LayoutKind.Explicit)]
 	[JsonConverter(typeof(SparseFormat.JsonConverter))]
-	public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseFormat, SparseFormat>, System.Numerics.IBitwiseOperators<SparseFormat, SparseFormat, SparseFormat>
+	public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseFormat, SparseFormat, bool>, IEquatable<SparseFormat>, System.Numerics.IBitwiseOperators<SparseFormat, SparseFormat, SparseFormat>
 	{
 		#region enumerates
 		/// <summary>
@@ -657,7 +657,7 @@ namespace Althea.Array
 		/// <param name="indices2">The second <see cref="IndexStorages"/> to set</param>
 		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
 		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
-		public void SetValues(TSVal values!!, TSInd indices1!!, TSInd indices2!!)
+		public void SetValues(TSVal values, TSInd indices1, TSInd indices2)
 		{
 			this.vals = 1;
 			this.valueStorage[0] = values;
@@ -676,7 +676,7 @@ namespace Althea.Array
 		/// <param name="indices2">The second <see cref="IndexStorages"/> to set</param>
 		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
 		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
-		public void SetValues(long rows, long cols, TSVal values!!, TSInd indices1!!, TSInd indices2!!)
+		public void SetValues(long rows, long cols, TSVal values, TSInd indices1, TSInd indices2)
 		{
 			this.rank = 2;
 			this.size[0] = rows; this.size[1] = cols;
@@ -695,7 +695,7 @@ namespace Althea.Array
 		/// <param name="indices2">The second <see cref="IndexStorages"/> to set</param>
 		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
 		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
-		public void SetValues(long rows, long cols, long blockRows, long blockCols, TSVal values!!, TSInd indices1!!, TSInd indices2!!)
+		public void SetValues(long rows, long cols, long blockRows, long blockCols, TSVal values, TSInd indices1, TSInd indices2)
 		{
 			this.blockSize[0] = blockRows; this.blockSize[1] = blockCols;
 			this.SetValues(rows, cols, values, indices1, indices2);
@@ -711,7 +711,7 @@ namespace Althea.Array
 		/// <exception cref="ArgumentNullException">if any of the input storages is null</exception>
 		/// <exception cref="NotSupportedException">If the lengths exceeds the internal limits</exception>
 		/// <exception cref="ArgumentException">If <paramref name="blockSize"/> is not empty while its length is not the same as <paramref name="size"/></exception>
-		public void SetValues(long size, TSVal values!!, TSInd indices!!, long blockSize = default)
+		public void SetValues(long size, TSVal values, TSInd indices, long blockSize = default)
 		{
 			this.rank = 1;
 			this.size[0] = size;
@@ -785,7 +785,7 @@ namespace Althea.Array
 		/// Create a <see cref="SparseArrayWrapper{TVal, TInd, TSVal, TSInd}"/> with given <paramref name="array"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SparseArrayWrapper<TVal, TInd, TSVal, TSInd> Create(ISparseArray<TVal, TInd, TSVal, TSInd> array!!)
+		public static SparseArrayWrapper<TVal, TInd, TSVal, TSInd> Create(ISparseArray<TVal, TInd, TSVal, TSInd> array)
 		{
 			SparseArrayWrapper<TVal, TInd, TSVal, TSInd> wrapper = default;
 			wrapper.DefaultValue = array.DefaultValue;

@@ -14,18 +14,55 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		/// <param name="err">The <see cref="CudaSparseStatus"/> to be checked</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaSparseStatus err)
+		public static bool Check(this CudaSparseStatus err)
 		{
+			if (err == CudaSparseStatus.NotSupported)
+				return false;
 			if (err != CudaSparseStatus.Success)
-			{
 				throw new StatusException(err, new StackTrace(0));
-			}
+			return true;
 		}
 	}
 }
 
 namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 {
+	internal static class Conversions
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool CheckBaseSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
+		{
+			return value switch
+			{
+				Float32 or Float64 or
+				Complex<Float32> or Complex<Float64> => true,
+				_ => false,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool CheckExSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
+		{
+			return value switch
+			{
+				Float32 or Float64 or Float16 or
+				Complex<Float32> or Complex<Float64> or Complex<Float16> => true,
+				_ => false,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool CheckEx2Support<T>(this T value) where T : unmanaged, IBaseNumber<T>
+		{
+			return value switch
+			{
+				Float32 or Float64 or Float16 or BrainHalf or
+				Complex<Float32> or Complex<Float64> or Complex<Float16> or Complex<BrainHalf> => true,
+				_ => false,
+			};
+		}
+	}
+
 	/// <summary>
 	/// The returned status (errors) of the cuSparse (CUDA Sparse) API calls
 	/// </summary>
@@ -81,99 +118,101 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		InsufficientResource = 11,
 	}
 
-	/// <summary>
-	/// This type indicates the type of matrix stored in sparse storage. Notice that for symmetric, Hermitian and triangular matrices only their lower or upper part is assumed to be stored.
-	/// </summary>
+	internal enum PointerMode
+	{
+		Host = 0,
+		Device = 1
+	}
+
+	internal enum SparseToDenseAlgorithm
+	{
+		Default = 0,
+	}
+	internal enum DenseToSparseAlgorithm
+	{
+		Default = 0,
+	}
+
+	internal enum SparseMVAlgorithm
+	{
+		Default = 0,
+		CsrAlgorithm1 = 2,
+		CsrAlgorithm2 = 3,
+		CooAlgorithm1 = 1,
+		CooAlgorithm2 = 4
+	}
+
+	internal enum SparseMMAlgorithm
+	{
+		Default = 0,
+		CooAlgorithm1 = 1,
+		CooAlgorithm2 = 2,
+		CooAlgorithm3 = 3,
+		CooAlgorithm4 = 5,
+		CsrAlgorithm1 = 4,
+		CsrAlgorithm2 = 6,
+		CsrAlgorithm3 = 12,
+		BlockEllAlgorithm1 = 13
+	}
+
+	internal enum SparseGemmAlgorithm {
+		Default = 0,
+		CsrDeterministic = 1,
+		CsrNonDeterministic = 2
+	}
+
+	internal enum Csr2CscAlgorithm
+	{
+		Algorithm1 = 1, // faster than V2 (in general), deterministic
+		Algorithm2 = 2  // low memory requirement, non-deterministic
+	}
+
 	internal enum MatrixType
 	{
-		/// <summary>
-		/// the matrix is general.
-		/// </summary>
 		General = 0,
-		/// <summary>
-		/// the matrix is symmetric.
-		/// </summary>
 		Symmetric = 1,
-		/// <summary>
-		/// the matrix is Hermitian.
-		/// </summary>
 		Hermitian = 2,
-		/// <summary>
-		/// the matrix is triangular.
-		/// </summary>
 		Triangular = 3
 	}
 
-	/// <summary>
-	/// This enum indicates if the base of the matrix indices is zero or one.
-	/// </summary>
+	internal enum SparseAction
+	{
+		OnlyIndices = 0,
+		ValuesAndIndices = 1,
+	}
+
 	internal enum IndexBase
 	{
-		/// <summary>
-		/// the base index is zero.
-		/// </summary>
 		Zero = 0,
-		/// <summary>
-		/// the base index is one.
-		/// </summary>
 		One = 1
 	}
 
-	/// <summary>
-	/// This enum indicates the index type for representing the sparse matrix indices.
-	/// </summary>
 	internal enum IndexType
 	{
-		/// <summary>
-		/// 16-bit unsigned integer [0, 65535]
-		/// </summary>
 		UnsignedInt16 = 1,
-		/// <summary>
-		/// 32-bit signed integer [0, 2^31 - 1]
-		/// </summary>
 		Integer32 = 2,
-		/// <summary>
-		/// 64-bit signed integer [0, 2^63 - 1]
-		/// </summary>
 		Integer64 = 3
 	}
 
-	/// <summary>
-	/// This enum indicates the format of the sparse matrix.
-	/// </summary>
-	internal enum CudaSparseMatrixFormat
+	internal enum MatrixFormat
 	{
-		/// <summary>
-		/// The matrix is stored in Compressed Sparse Row (CSR) format
-		/// </summary>
-		CompressedRowMajor = 1,
-		/// <summary>
-		/// The matrix is stored in Compressed Sparse Column (CSC) format
-		/// </summary>
-		CompressedColumnMajor = 2,
-		/// <summary>
-		/// The matrix is stored in Coordinate (COO) format organized in Structure of Arrays (SoA) layout
-		/// </summary>
-		Coordinate = 3,
-		/// <summary>
-		/// The matrix is stored in Coordinate (COO) format organized in Arrays of Structures (AoS) layout
-		/// </summary>
-		CoordinateAoS = 4,
+		CSR = 1,
+		CSC = 2,
+		Coo = 3,
+		CooAoS = 4,
+		BlockedEll = 5
 	}
-	
-	/// <summary>
-	/// This enum indicates the memory layout of a dense matrix. Currently, only column-major layout is supported.
-	/// </summary>
-	public enum DenseMatrixOrder
+
+	internal enum DenseMatrixOrder
 	{
-		/// <summary>
-		/// The matrix is stored in column-major
-		/// </summary>
 		Column = 1,
-		/// <summary>
-		/// The matrix is stored in row-major
-		/// </summary>
 		Row = 2
+	}
+
+	internal enum SparseMatrixOrder
+	{
+		Row = 0,
+		Column = 1
 	}
 
 
@@ -196,8 +235,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		public DenseVectorWrapper(long cuSparseHandleInfo, long length, IntPtr values, CudaDataType dataType)
 		{
-			this.cuSparseHandleInfo = cuSparseHandleInfo; this.Length = length; this.PtrValues = values; this.DataType = dataType;
-			this.__align = 0;
+			this.cuSparseHandleInfo = cuSparseHandleInfo; Length = length; PtrValues = values; DataType = dataType;
+			__align = 0;
 		}
 	}
 
@@ -226,9 +265,9 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		public DenseMatrixWrapper(long cuSparseHandleInfo, long rows, long cols, long ld, IntPtr values, CudaDataType dataType, DenseMatrixOrder order)
 		{
-			this.cuSparseHandleInfo = cuSparseHandleInfo; this.Rows = rows; this.Cols = cols; this.LeadDim = ld;
-			this.preserve1 = 1; this.__align = 0; this.preserve0 = 0;
-			this.PtrValues = values; this.DataType = dataType; this.MemoryOrder = order;
+			this.cuSparseHandleInfo = cuSparseHandleInfo; Rows = rows; Cols = cols; LeadDim = ld;
+			preserve1 = 1; __align = 0; preserve0 = 0;
+			PtrValues = values; DataType = dataType; MemoryOrder = order;
 		}
 	}
 
@@ -255,9 +294,9 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		public SparseVectorWrapper(long cuSparseHandleInfo, long length, IntPtr values, CudaDataType dataType, long nnz, IntPtr indices, IndexType indexType, IndexBase indexBase)
 		{
-			this.cuSparseHandleInfo = cuSparseHandleInfo; this.Length = length; this.PtrValues = values; this.DataType = dataType;
-			this.NonZeros = nnz; this.PtrIndices = indices; this.IndexType = indexType; this.IndexBase = indexBase;
-			this.__align = 0;
+			this.cuSparseHandleInfo = cuSparseHandleInfo; Length = length; PtrValues = values; DataType = dataType;
+			NonZeros = nnz; PtrIndices = indices; IndexType = indexType; IndexBase = indexBase;
+			__align = 0;
 		}
 	}
 
