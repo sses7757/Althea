@@ -2,7 +2,9 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using Althea.Array;
 using Althea.Backend.Cuda.LinearAlgebra.Sparse;
+using Althea.Backend.Mkl.LinearAlgebra.Sparse;
 
 
 namespace Althea.Backend.Cuda
@@ -215,7 +217,154 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		Column = 1
 	}
 
+	internal readonly unsafe ref struct DenseVectorWrapper
+	{
+		private readonly IntPtr handle;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private DenseVectorWrapper(IntPtr handle) => this.handle = handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroyDnVec(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DenseVectorWrapper Create<T>(T* values, long size, out bool success) where T : unmanaged, IBaseNumber<T>
+		{
+			success = NativeMethods.cusparseCreateDnVec(out IntPtr descr, size, values, T.Type.ToCudaDataType()).Check();
+			return success ? new(descr) : default;
+		}
+	}
+
+	internal readonly unsafe ref struct DenseMatrixWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private DenseMatrixWrapper(IntPtr handle) => this.handle = handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroyDnMat(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DenseMatrixWrapper Create<T>(T* values, long rows, long cols, long ld, bool transpose, out bool success) where T : unmanaged, IBaseNumber<T>
+		{
+			DenseMatrixOrder order = DenseMatrixOrder.Column;
+			if (transpose)
+			{
+				order = DenseMatrixOrder.Row;
+				(rows, cols) = (cols, rows);
+			}
+			success = NativeMethods.cusparseCreateDnMat(out IntPtr descr, rows, cols, ld, values, T.Type.ToCudaDataType(), order).Check();
+			return success ? new(descr) : default;
+		}
+	}
+
+	internal readonly unsafe ref struct SparseVectorWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private SparseVectorWrapper(IntPtr handle) => this.handle = handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroySpVec(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseVectorWrapper Create<T, TInd>(T* values, TInd* indices, long size, long nnz, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBaseNumber<TInd>
+		{
+			var idxType = sizeof(TInd) == sizeof(int) ? IndexType.Integer32 : IndexType.Integer64;
+			success = NativeMethods.cusparseCreateSpVec(out IntPtr descr, size, nnz, indices, values, idxType, IndexBase.Zero, T.Type.ToCudaDataType()).Check();
+			return success ? new(descr) : default;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseVectorWrapper Create<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> vector, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			if (!MemoryPointerChecker.GetPointer(api, vector, out T* vals, out TInd* inds, out long nnz))
+			{
+				success = false;
+				return default;
+			}
+			return Create(vals, inds, vector.Size[0], nnz, out success);
+		}
+	}
+
+	internal readonly unsafe ref struct SparseMatrixWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private SparseMatrixWrapper(IntPtr handle) => this.handle = handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroySpMat(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixWrapper Create<T, TInd>(SparseFormat format, long rows, long cols, long nnz, T* vals, TInd* rowInd, TInd* colInd, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
+		{
+			IntPtr descr;
+			var idxType = sizeof(TInd) == sizeof(int) ? IndexType.Integer32 : IndexType.Integer64;
+			if (format.Class == SparseFormat.Type.Coordinated)
+				success = NativeMethods.cusparseCreateCoo(out descr, rows, cols, nnz, rowInd, colInd, vals, idxType, IndexBase.Zero, T.Type.ToCudaDataType()).Check();
+			else if (format.MajorType == SparseFormat.Major.Row)
+				success = NativeMethods.cusparseCreateCsr(out descr, rows, cols, nnz, rowInd, colInd, vals, idxType, idxType, IndexBase.Zero, T.Type.ToCudaDataType()).Check();
+			else
+				success = NativeMethods.cusparseCreateCsc(out descr, rows, cols, nnz, colInd, rowInd, vals, idxType, idxType, IndexBase.Zero, T.Type.ToCudaDataType()).Check();
+			return success ? new(descr) : default;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixWrapper Create<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			if (!MemoryPointerChecker.GetPointer(api, matrix, out T* vals, out TInd* rowInd, out var colInd, out long nnz))
+			{
+				success = false;
+				return default;
+			}
+			return Create(matrix.Format, matrix.Size[0], matrix.Size[1], nnz, vals, rowInd, colInd, out success);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool GetSizes(out long rows, out long cols, out long nnz)
+		{
+			return NativeMethods.cusparseSpMatGetSize(this.handle, out rows, out cols, out nnz).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool SetPointers(SparseFormat format, void* values, void* rows, void* cols)
+		{
+			if (format.Class == SparseFormat.Type.Coordinated)
+				return NativeMethods.cusparseCooSetPointers(this.handle, rows, cols, values).Check();
+			if (!format.IsCompressed)
+				return false;
+			if (format.IsRowMajor)
+				return NativeMethods.cusparseCsrSetPointers(this.handle, rows, cols, values).Check();
+			else
+				return NativeMethods.cusparseCscSetPointers(this.handle, cols, rows, values).Check();
+		}
+	}
+
+	/*
 	// The following sparse/dense vector/matrix descriptors are guessed from the cuSparse 11.3 APIs.
 	// Since the APIs always allocate them on unmanaged heap which is unnecessary in most cases and may cause performance loss,
 	//   using a structure that can be allocated on stack is a better option.
@@ -299,5 +448,5 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 			__align = 0;
 		}
 	}
-
+	*/
 }

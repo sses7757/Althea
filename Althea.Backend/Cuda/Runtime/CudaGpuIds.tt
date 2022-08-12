@@ -211,5 +211,42 @@ END:
 END:
 	return GetPointerLongInner(s, m, n, ld, out pointer, sName, mName, nName, ldName);
 	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice api, TS s, TSInd sInd, out T* pointer, out TInd* pointerInd, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("sInd")] string? sIndName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	{
+		pointer = default; pointerInd = default; length = 0;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (!TInd.Type.IsInteger() || (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long)))
+			return false;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (sInd is null || !sInd.IsValid())
+			throw new ArgumentNullException(sIndName);
+<# for (int i = 0; i < 16; i++) { #>
+		if (s is PureStorage<T, CudaMemoryPointer<GpuId<#=i#>>> && sInd is PureStorage<TInd, CudaMemoryPointer<GpuId<#=i#>>>)
+		{
+			if (Runtime.CurrentDeviceID != <#=i#>)
+				return false;
+			goto END;
+		}
+<# } #>
+		return GetPointerInner(s, sInd, out pointer, out pointerInd, sName, sIndName);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static bool GetPointer<T, TInd, TS, TSInd>(TS val, TSInd rowInd, TSInd colInd) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	{
+<# for (int i = 0; i < 16; i++) { #>
+		if (val is PureStorage<T, CudaMemoryPointer<GpuId<#=i#>>> && rowInd is PureStorage<TInd, CudaMemoryPointer<GpuId<#=i#>>> && colInd is PureStorage<TInd, CudaMemoryPointer<GpuId<#=i#>>>)
+		{
+			if (Runtime.CurrentDeviceID != <#=i#>)
+				return false;
+			goto END;
+		}
+<# } #>
+		return true;
+	}
 	#endregion
 }

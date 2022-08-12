@@ -139,7 +139,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		/// <inheritdoc/>
 		public virtual bool VectorDenseToSparse<T, TInd, TS1, TS2, TSInd>(TS1 x, long strideX, ref SparseArrayWrapper<T, TInd, TS2, TSInd> y, double threshold = 0) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS2 : class, IStorage<T, TS2> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			if (!TInd.Type.IsInteger() || TInd.Size != sizeof(MklInt))
+			if (sizeof(TInd) != sizeof(MklInt))
 				return false;
 			if (strideX != 1 || y.Format != SparseFormat.VectorCooFormat || y.DefaultValue != T.Zero)
 				return false;
@@ -160,7 +160,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				var valOut = PureStorage<T, CpuMemoryPointer>.Create(nnz);
 				var idxOut = PureStorage<TInd, CpuMemoryPointer>.Create(nnz);
 				_ = NMC.vecPruneCal(T.Type, n, buf, nnz, (MklInt*)idxOut.Pointer.Pointer.Pointer, (void*)valOut.Pointer.Pointer.Pointer);
-				y.SetValues(n, (valOut as TS2)!, (idxOut as TSInd)!); // never empty
+				y.SetValues(n, (valOut as TS2)!, (idxOut as TSInd)!);
 			}
 			else
 			{   // in-place modify y
@@ -184,7 +184,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		/// <inheritdoc/>
 		public virtual bool SparseVectorToMatrix<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> vector, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
 		{
-			if (!TInd1.Type.IsInteger() || TInd1.Size != sizeof(MklInt))
+			if (sizeof(TInd1) != sizeof(MklInt))
 				return false;
 			if (typeof(TInd1) != typeof(TInd2))
 				return false;
@@ -229,10 +229,10 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			{
 				var s = PureStorage<TInd2, CpuMemoryPointer>.Create(nnz);
 				pRow = (TInd2*)s.Pointer.Pointer.Pointer;
-				rowIdxOut = s as TSInd2 ?? TSInd2.Empty; // never empty
+				rowIdxOut = (s as TSInd2)!;
 				s = PureStorage<TInd2, CpuMemoryPointer>.Create(nnz);
 				pCol = (TInd2*)s.Pointer.Pointer.Pointer;
-				colIdxOut = s as TSInd2 ?? TSInd2.Empty; // never empty
+				colIdxOut = (s as TSInd2)!;
 			}
 			Buffer.MemoryCopy(px, pVal, nnz * sizeof(T), nnz * sizeof(T));
 			NMC.spVecIdxToCooIdxs(pp, (MklInt*)pRow, (MklInt*)pCol, nnz, vector.Size[0]);
@@ -245,7 +245,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		/// <inheritdoc/>
 		public virtual bool SparseMatrixToVector<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> matrix, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
 		{
-			if (!TInd1.Type.IsInteger() || TInd1.Size != sizeof(MklInt))
+			if (sizeof(TInd1) != sizeof(MklInt))
 				return false;
 			if (typeof(TInd1) != typeof(TInd2))
 				return false;
@@ -530,7 +530,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				return false;
 			if (!GetPointer(y, out T* py, out var ppy, out var nnzy))
 				return false;
-			if (!TInd3.Type.IsInteger() || sizeof(TInd3) != sizeof(MklInt))
+			if (sizeof(TInd3) != sizeof(MklInt))
 				return false;
 			if (target.ValueStorages.Length is not 0 and not 1 || target.IndexStorages.Length is not 0 and not 2)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));
@@ -584,7 +584,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 		{
 			if (target.Format != SparseFormat.Any)
 				return false; // not supported
-			if (!TInd3.Type.IsInteger() || sizeof(TInd3) != sizeof(MklInt))
+			if (sizeof(TInd3) != sizeof(MklInt))
 				return false; // not supported
 			if (target.ValueStorages.Length != 0 || target.IndexStorages.Length != 0)
 				return false; // not supported
@@ -672,7 +672,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
 			if (target.Format != SparseFormat.Any)
 				return false; // not supported
-			if (!TInd3.Type.IsInteger() || sizeof(TInd3) != sizeof(MklInt))
+			if (sizeof(TInd3) != sizeof(MklInt))
 				return false; // not supported
 			if (target.ValueStorages.Length != 0 || target.IndexStorages.Length != 0)
 				return false; // not supported
@@ -786,7 +786,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				return false;
 			if (!GetPointer(B, out T* pb, out var prb, out var pcb, out var nnzb))
 				return false;
-			if (!TInd3.Type.IsInteger() || sizeof(TInd3) != sizeof(MklInt))
+			if (sizeof(TInd3) != sizeof(MklInt))
 				return false;
 			if (target.ValueStorages.Length is not 0 and not 1 || target.IndexStorages.Length is not 0 and not 2)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));

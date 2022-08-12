@@ -465,6 +465,16 @@ namespace Althea.Array
 
 		#region methods
 		/// <summary>
+		/// Get a <see cref="SparseFormat"/> whose <see cref="Type"/> is <see cref="Type.Compressed"/>.
+		/// </summary>
+		public readonly SparseFormat WithCompressed => new(Type.Compressed, this.blocking, this.major);
+
+		/// <summary>
+		/// Get a <see cref="SparseFormat"/> whose <see cref="Type"/> is <see cref="Type.Coordinated"/>.
+		/// </summary>
+		public readonly SparseFormat WithCoordinated => new(Type.Coordinated, this.blocking, this.major);
+
+		/// <summary>
 		/// Get a <see cref="SparseFormat"/> whose <see cref="Blocking"/> is <see cref="Blocking.None"/>.
 		/// </summary>
 		public readonly SparseFormat WithoutBlocking => new(this.type, Blocking.None, this.major);
