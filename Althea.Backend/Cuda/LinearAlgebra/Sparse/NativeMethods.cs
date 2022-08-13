@@ -34,7 +34,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		[NativeMethod(8, true)]
 		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
-		internal static extern CudaSparseStatus cusparseSnnz_compress(IntPtr handle, int m, SparseMatrixWrapper descr, Float32* csrSortedValA, int* csrSortedRowPtrA, int* nnzPerRow, int* nnzC, Float32 tol);
+		internal static extern CudaSparseStatus cusparseSnnz_compress(IntPtr handle, int m, SparseMatrixWrapper descr, Float32* csrSortedValA, int* csrSortedRowPtrA, int* nnzPerRow, out int nnzC, Float32 tol);
 
 		[NativeMethod(8, true)]
 		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
@@ -78,7 +78,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		[CustomNativeMethod(8, "Float32", "S")]
 		[CustomNativeMethod(8, "Float64", "D")]
 		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
-		internal static extern CudaSparseStatus cusparseHpruneCsr2csr(IntPtr handle, int m, int n, int nnzA, SparseMatrixWrapper descrA, void* csrValA, int* csrRowPtrA, int* csrColIndA, void* threshold, SparseMatrixWrapper descrC, void* csrValC, int* csrRowPtrC, int* csrColIndC, out int nnzTotal, void* pBuffer);
+		internal static extern CudaSparseStatus cusparseHpruneCsr2csr(IntPtr handle, int m, int n, int nnzA, SparseMatrixWrapper descrA, void* csrValA, int* csrRowPtrA, int* csrColIndA, void* threshold, SparseMatrixWrapper descrC, void* csrValC, int* csrRowPtrC, int* csrColIndC, void* pBuffer);
 		#endregion
 	}
 

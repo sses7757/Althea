@@ -334,14 +334,20 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static SparseMatrixWrapper Create<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		public static SparseMatrixWrapper Create<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out bool success, out long nnz, out T* vals, out TInd* rowInd, out TInd* colInd) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			if (!MemoryPointerChecker.GetPointer(api, matrix, out T* vals, out TInd* rowInd, out var colInd, out long nnz))
+			if (!MemoryPointerChecker.GetPointer(api, matrix, out vals, out rowInd, out colInd, out nnz))
 			{
 				success = false;
 				return default;
 			}
 			return Create(matrix.Format, matrix.Size[0], matrix.Size[1], nnz, vals, rowInd, colInd, out success);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixWrapper Create<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			return Create(api, matrix, out success, out _, out _, out _, out _);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

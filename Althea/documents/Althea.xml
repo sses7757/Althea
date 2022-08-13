@@ -4642,6 +4642,16 @@
             The simple-blocked row-major coordinated format for tensors
             </summary>
         </member>
+        <member name="P:Althea.Array.SparseFormat.WithCompressed">
+            <summary>
+            Get a <see cref="T:Althea.Array.SparseFormat"/> whose <see cref="T:Althea.Array.SparseFormat.Type"/> is <see cref="F:Althea.Array.SparseFormat.Type.Compressed"/>.
+            </summary>
+        </member>
+        <member name="P:Althea.Array.SparseFormat.WithCoordinated">
+            <summary>
+            Get a <see cref="T:Althea.Array.SparseFormat"/> whose <see cref="T:Althea.Array.SparseFormat.Type"/> is <see cref="F:Althea.Array.SparseFormat.Type.Coordinated"/>.
+            </summary>
+        </member>
         <member name="P:Althea.Array.SparseFormat.WithoutBlocking">
             <summary>
             Get a <see cref="T:Althea.Array.SparseFormat"/> whose <see cref="T:Althea.Array.SparseFormat.Blocking"/> is <see cref="F:Althea.Array.SparseFormat.Blocking.None"/>.

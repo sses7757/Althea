@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <!--It is necessary to use AnyCPU to generate codes (at least for VS 16.10.2 and .NET5)-->
-    <Platforms>AnyCPU;x64</Platforms>
+    <Platforms>x64</Platforms>
     <RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
   </PropertyGroup>
   
