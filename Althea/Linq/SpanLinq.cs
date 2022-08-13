@@ -420,6 +420,28 @@ namespace Althea.Linq
 		{
 			return Prod((ReadOnlySpan<TOrg>)span, selector);
 		}
+
+		/// <summary>
+		/// List bitwise-and.
+		/// </summary>
+		/// <param name="span">The span to accumulate</param>
+		/// <returns>The bitwise-and result for all elements in <paramref name="span"/></returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		public static T AndAll<T>(this Span<T> span) where T : IBitwiseOperators<T, T, T>
+		{
+			return AndAll((ReadOnlySpan<T>)span);
+		}
+
+		/// <summary>
+		/// List bitwise-or.
+		/// </summary>
+		/// <param name="span">The span to accumulate</param>
+		/// <returns>The bitwise-or result for all elements in <paramref name="span"/></returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		public static T OrAll<T>(this Span<T> span) where T : IBitwiseOperators<T, T, T>
+		{
+			return OrAll((ReadOnlySpan<T>)span);
+		}
 		#endregion
 
 		#region aggregate of ReadOnlySpan
@@ -589,6 +611,46 @@ namespace Althea.Linq
 			for (int i = 1; i < len; i++)
 			{
 				result = selector.Invoke(span[i]) * result;
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// List bitwise-and.
+		/// </summary>
+		/// <param name="span">The span to accumulate</param>
+		/// <returns>The bitwise-and result for all elements in <paramref name="span"/></returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		public static T AndAll<T>(this ReadOnlySpan<T> span) where T : IBitwiseOperators<T, T, T>
+		{
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
+
+			int len = span.Length;
+			T result = span[0];
+			for (int i = 1; i < len; i++)
+			{
+				result &= span[i];
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// List bitwise-or.
+		/// </summary>
+		/// <param name="span">The span to accumulate</param>
+		/// <returns>The bitwise-or result for all elements in <paramref name="span"/></returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		public static T OrAll<T>(this ReadOnlySpan<T> span) where T : IBitwiseOperators<T, T, T>
+		{
+			if (span.IsEmpty)
+				throw new ArgumentNullException(nameof(span));
+
+			int len = span.Length;
+			T result = span[0];
+			for (int i = 1; i < len; i++)
+			{
+				result |= span[i];
 			}
 			return result;
 		}

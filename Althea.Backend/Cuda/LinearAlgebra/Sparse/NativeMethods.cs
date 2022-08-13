@@ -93,6 +93,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		////internal static readonly SparseFormat BlockEllFormat = new(EllType, SparseFormat.Blocking.Simple, SparseFormat.Major.Row);/
 
 		internal static readonly SparseFormat SupportFormat = SparseFormat.MatrixCocFormat | SparseFormat.MatrixCorFormat | SparseFormat.MatrixCsrFormat | SparseFormat.MatrixCscFormat;
+
+		internal static readonly SparseFormat SupportFormatIncludeBlocked = SparseFormat.MatrixCocFormat | SparseFormat.MatrixCorFormat | SparseFormat.MatrixCsrFormat | SparseFormat.MatrixCscFormat | SparseFormat.MatrixBscFormat | SparseFormat.MatrixBsrFormat;
 		#endregion
 
 		#region create and destroy

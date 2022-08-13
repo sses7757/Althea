@@ -579,7 +579,40 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 	/// <inheritdoc/>
 	public virtual bool MatrixSparseFormatConvert<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>
 	{
-
+		if (sizeof(TInd1) != sizeof(int) || sizeof(TInd2) != sizeof(int))
+			return false;
+		if (source.DefaultValue != T.Zero || target.DefaultValue != T.Zero)
+			return false;
+		if (target.ValueStorages.Length != 0 || target.IndexStorages.Length != 0)
+			return false;
+		if ((target.Format & NM.SupportFormatIncludeBlocked) == SparseFormat.None)
+			return false;
+		if (!GetPointerIncludeBlocked(this, source, out var psVal, out var psRow, out var psCol, out var nnz))
+			return false;
+		if ((target.Format & source.Format) != SparseFormat.None)
+		{
+			if (typeof(TS2) != typeof(TS1) || typeof(TSInd2) != typeof(TSInd1))
+				return false;
+			target.Format = source.Format;
+			if (target.Format.BlockType == SparseFormat.Blocking.Simple)
+				target.SetValues(source.Size[0], source.Size[1], source.BlockSize[0], source.BlockSize[1], (source.ValueStorages[0] as TS2)!, (source.IndexStorages[0] as TSInd2)!, (source.IndexStorages[1] as TSInd2)!);
+			else
+				target.SetValues(source.Size[0], source.Size[1], (source.ValueStorages[0] as TS2)!, (source.IndexStorages[0] as TSInd2)!, (source.IndexStorages[1] as TSInd2)!);
+			return true;
+		}
+		Span<SparseFormat> colFormats = stackalloc SparseFormat[] { SparseFormat.MatrixCocFormat, SparseFormat.MatrixCscFormat | SparseFormat.MatrixBscFormat };
+		Span<SparseFormat> rowFormats = stackalloc SparseFormat[colFormats.Length];
+		colFormats.CopyTo(rowFormats, static f => f.WithRowMajor);
+		SparseFormat colAll = colFormats.OrAll(), rowAll = rowFormats.OrAll();
+		int i = 0;
+		for (; i < colFormats.Length; i++)
+		{
+			if ((source.Format == colFormats[i] && (target.Format & colAll) != SparseFormat.None) || (source.Format == rowFormats[i] && (target.Format & rowAll) != SparseFormat.None))
+				goto CALC;
+		}
+		return false;
+	CALC:
+		
 	}
 	#endregion
 }
