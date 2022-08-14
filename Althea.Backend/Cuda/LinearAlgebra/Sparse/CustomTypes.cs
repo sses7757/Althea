@@ -304,6 +304,25 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		}
 	}
 
+	internal readonly unsafe ref struct BaseMatrixWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroyMatDescr(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public BaseMatrixWrapper()
+		{
+			NativeMethods.cusparseCreateMatDescr(out this.handle).Check();
+		}
+	}
+
 	internal readonly unsafe ref struct SparseMatrixWrapper
 	{
 		private readonly IntPtr handle;

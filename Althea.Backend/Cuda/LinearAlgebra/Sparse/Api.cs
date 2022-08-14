@@ -299,7 +299,7 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 		if (!NM.cusparseSparseToDense_bufferSize(this.cusparseHandle, sp, dn, SparseToDenseAlgorithm.Default, out long bufSize).Check())
 			return false;
 		using var buf = CudaBuffer.Create(bufSize, 0, false);
-		return NM.cusparseSparseToDense(this.cusparseHandle, sp, dn, SparseToDenseAlgorithm.Default, buf.DeviceBuffer).Check();
+		return NM.cusparseSparseToDense(this.cusparseHandle, sp, dn, SparseToDenseAlgorithm.Default, buf).Check();
 	}
 
 	/// <inheritdoc/>
@@ -368,16 +368,16 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 					return false;
 			}
 		}
-		using var sp = SparseMatrixWrapper.Create(format, rows, cols, 0, outVal, outRow, outCol, out bool success);
-		if (!success) return false;
 		if (threshold == 0)
 		{
+			using var sp = SparseMatrixWrapper.Create(format, rows, cols, 0, outVal, outRow, outCol, out bool success);
+			if (!success) return false;
 			using var dn = DenseMatrixWrapper.Create(ps, rows, cols, ld, false, out success);
 			if (!success) return false;
 			if (!NM.cusparseDenseToSparse_bufferSize(this.cusparseHandle, dn, sp, DenseToSparseAlgorithm.Default, out long bufSize).Check())
 				return false;
 			using var buf = CudaBuffer.Create(bufSize, 0, false);
-			if (!NM.cusparseDenseToSparse_analysis(this.cusparseHandle, dn, sp, DenseToSparseAlgorithm.Default, buf.DeviceBuffer).Check())
+			if (!NM.cusparseDenseToSparse_analysis(this.cusparseHandle, dn, sp, DenseToSparseAlgorithm.Default, buf).Check())
 				return false;
 			if (!sp.GetSizes(out _, out _, out long nnz))
 				return false;
@@ -407,28 +407,29 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 			}
 			if (!sp.SetPointers(format, outVal, outRow, outCol))
 				return false;
-			if (!NM.cusparseDenseToSparse_convert(this.cusparseHandle, dn, sp, DenseToSparseAlgorithm.Default, buf.DeviceBuffer).Check())
+			if (!NM.cusparseDenseToSparse_convert(this.cusparseHandle, dn, sp, DenseToSparseAlgorithm.Default, buf).Check())
 				return false;
 		}
 		else
 		{
+			using BaseMatrixWrapper sp = new();
 			T thre = threshold.As<T>();
 			int nrows = (int)rows, ncols = (int)cols, lld = (int)ld;
-			delegate*<IntPtr, int, int, T*, int, T*, SparseMatrixWrapper, int*, out int, void*, CudaSparseStatus> calcNnz = default(T) switch
+			delegate*<IntPtr, int, int, T*, int, T*, BaseMatrixWrapper, int*, out int, void*, CudaSparseStatus> calcNnz = default(T) switch
 			{
 				Float16 => &NM.cusparseHpruneDense2csrNnz,
 				Float32 => &NM.cusparseSpruneDense2csrNnz,
 				Float64 => &NM.cusparseDpruneDense2csrNnz,
 				_ => null
 			};
-			delegate*<IntPtr, int, int, T*, int, T*, SparseMatrixWrapper, T*, int*, int*, out long, CudaSparseStatus> getBufSize = default(T) switch
+			delegate*<IntPtr, int, int, T*, int, T*, BaseMatrixWrapper, T*, int*, int*, out long, CudaSparseStatus> getBufSize = default(T) switch
 			{
 				Float16 => &NM.cusparseHpruneDense2csr_bufferSizeExt,
 				Float32 => &NM.cusparseSpruneDense2csr_bufferSizeExt,
 				Float64 => &NM.cusparseDpruneDense2csr_bufferSizeExt,
 				_ => null
 			};
-			delegate*<IntPtr, int, int, T*, int, T*, SparseMatrixWrapper, T*, int*, int*, void*, CudaSparseStatus> prune = default(T) switch
+			delegate*<IntPtr, int, int, T*, int, T*, BaseMatrixWrapper, T*, int*, int*, void*, CudaSparseStatus> prune = default(T) switch
 			{
 				Float16 => &NM.cusparseHpruneDense2csr,
 				Float32 => &NM.cusparseSpruneDense2csr,
@@ -443,7 +444,7 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 			if (!getBufSize(this.cusparseHandle, nrows, ncols, ps, lld, &thre, sp, outVal, (int*)outRow, (int*)outCol, out long bufSize).Check())
 				return false;
 			using var buf = CudaBuffer.Create(bufSize, 0, false);
-			if (!calcNnz(this.cusparseHandle, nrows, ncols, ps, lld, &thre, sp, (int*)outRow, out int nnz, buf.DeviceBuffer).Check())
+			if (!calcNnz(this.cusparseHandle, nrows, ncols, ps, lld, &thre, sp, (int*)outRow, out int nnz, buf).Check())
 				return false;
 			colOut = TSInd.Create(stackalloc long[] { nnz });
 			if (!GetPointer(colOut, out outCol, out _))
@@ -457,7 +458,7 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 				valOut.Dispose();
 				return false;
 			}
-			if (!prune(this.cusparseHandle, nrows, ncols, ps, lld, &thre, sp, outVal, (int*)outRow, (int*)outCol, buf.DeviceBuffer).Check())
+			if (!prune(this.cusparseHandle, nrows, ncols, ps, lld, &thre, sp, outVal, (int*)outRow, (int*)outCol, buf).Check())
 				return false;
 		}
 		target.Format = format;
@@ -476,8 +477,8 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 			return false;
 		if (target.ValueStorages.Length != 0 || target.IndexStorages.Length != 0)
 			return false;
-		using var descrA = SparseMatrixWrapper.Create(this, source, out bool success, out long nnz, out var psVal, out var psRow, out var psCol);
-		if (!success) return false;
+		if (!GetPointer(this, source, out var psVal, out var psRow, out var psCol, out var nnz))
+			return false;
 		if (source.Size[0] > int.MaxValue || source.Size[1] > int.MaxValue || nnz > int.MaxValue)
 			return false;
 		int m = (int)source.Size[0], n = (int)source.Size[1], nnzA = (int)nnz;
@@ -494,8 +495,8 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 		{
 			rowOut.Dispose(); return false;
 		}
-		using var descrC = SparseMatrixWrapper.Create(SparseFormat.MatrixCsrFormat, m, n, 0, pdVal, pdRow, pdCol, out success);
-		if (!success) return false;
+		using BaseMatrixWrapper descrA = new();
+		using BaseMatrixWrapper descrC = new();
 		if (typeof(T) == typeof(Float16))
 		{
 			if (!NM.cusparseHpruneCsr2csr_bufferSizeExt(this.cusparseHandle, m, n, nnzA, descrA, psVal, (int*)psRow, (int*)psCol, &thre, descrC, pdVal, (int*)pdRow, (int*)pdCol, out long bufSize).Check())
@@ -503,7 +504,7 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 				rowOut.Dispose(); return false;
 			}
 			using var buf = CudaBuffer.Create(bufSize, 0, false);
-			if (!NM.cusparseHpruneCsr2csrNnz(this.cusparseHandle, m, n, nnzA, descrA, psVal, (int*)psRow, (int*)psCol, &thre, descrC, (int*)pdRow, out int nnzC, buf.DeviceBuffer).Check())
+			if (!NM.cusparseHpruneCsr2csrNnz(this.cusparseHandle, m, n, nnzA, descrA, psVal, (int*)psRow, (int*)psCol, &thre, descrC, (int*)pdRow, out int nnzC, buf).Check())
 			{
 				rowOut.Dispose(); return false;
 			}
@@ -517,7 +518,7 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 			{
 				valOut.Dispose(); return false;
 			}
-			if (!NM.cusparseHpruneCsr2csr(this.cusparseHandle, m, n, nnzA, descrA, psVal, (int*)psRow, (int*)psCol, &thre, descrC, pdVal, (int*)pdRow, (int*)pdCol, buf.DeviceBuffer).Check())
+			if (!NM.cusparseHpruneCsr2csr(this.cusparseHandle, m, n, nnzA, descrA, psVal, (int*)psRow, (int*)psCol, &thre, descrC, pdVal, (int*)pdRow, (int*)pdCol, buf).Check())
 			{
 				rowOut.Dispose(); colOut.Dispose(); valOut.Dispose();
 				return false;
@@ -581,6 +582,8 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 	{
 		if (sizeof(TInd1) != sizeof(int) || sizeof(TInd2) != sizeof(int))
 			return false;
+		if (typeof(TS2) != typeof(TS1) || typeof(TSInd2) != typeof(TSInd1))
+			return false;
 		if (source.DefaultValue != T.Zero || target.DefaultValue != T.Zero)
 			return false;
 		if (target.ValueStorages.Length != 0 || target.IndexStorages.Length != 0)
@@ -589,10 +592,9 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 			return false;
 		if (!GetPointerIncludeBlocked(this, source, out var psVal, out var psRow, out var psCol, out var nnz))
 			return false;
+		// shortcut for same format
 		if ((target.Format & source.Format) != SparseFormat.None)
 		{
-			if (typeof(TS2) != typeof(TS1) || typeof(TSInd2) != typeof(TSInd1))
-				return false;
 			target.Format = source.Format;
 			if (target.Format.BlockType == SparseFormat.Blocking.Simple)
 				target.SetValues(source.Size[0], source.Size[1], source.BlockSize[0], source.BlockSize[1], (source.ValueStorages[0] as TS2)!, (source.IndexStorages[0] as TSInd2)!, (source.IndexStorages[1] as TSInd2)!);
@@ -600,7 +602,23 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 				target.SetValues(source.Size[0], source.Size[1], (source.ValueStorages[0] as TS2)!, (source.IndexStorages[0] as TSInd2)!, (source.IndexStorages[1] as TSInd2)!);
 			return true;
 		}
-		Span<SparseFormat> colFormats = stackalloc SparseFormat[] { SparseFormat.MatrixCocFormat, SparseFormat.MatrixCscFormat | SparseFormat.MatrixBscFormat };
+		// shortcut for major conversion
+		if ((target.Format.MajorType == SparseFormat.Major.Row && (target.Format & source.Format.WithRowMajor) != SparseFormat.None) ||
+			(target.Format.MajorType == SparseFormat.Major.Column && (target.Format & source.Format.WithColumnMajor) != SparseFormat.None))
+		{
+			if (source.Format.WithRowMajor == SparseFormat.MatrixCorFormat)
+			{
+
+			}
+			else if (source.Format.WithRowMajor == SparseFormat.MatrixCsrFormat)
+			{
+
+			}
+			else
+				return false;
+		}
+		// cross-format conversion
+		Span<SparseFormat> colFormats = stackalloc SparseFormat[] { SparseFormat.MatrixCocFormat, SparseFormat.MatrixCscFormat, SparseFormat.MatrixBscFormat };
 		Span<SparseFormat> rowFormats = stackalloc SparseFormat[colFormats.Length];
 		colFormats.CopyTo(rowFormats, static f => f.WithRowMajor);
 		SparseFormat colAll = colFormats.OrAll(), rowAll = rowFormats.OrAll();
@@ -612,7 +630,159 @@ public unsafe class Api : IBindedDevice, IConversionAbstractApi, IComputationAbs
 		}
 		return false;
 	CALC:
-		
+		int m = (int)source.Size[0], n = (int)source.Size[1], nnzA = (int)nnz;
+		int mb = 1, nb = 1;
+		if (!target.BlockSize.IsEmpty)
+		{
+			mb = (int)target.BlockSize[0]; nb = (int)target.BlockSize[1];
+		}
+		if (!source.BlockSize.IsEmpty)
+		{
+			mb = (int)source.BlockSize[0]; nb = (int)source.BlockSize[1];
+		}
+		SparseFormat srcFmt = source.Format.WithRowMajor, dstFmt;
+		bool colMajor = source.Format == colFormats[i];
+		if (colMajor)
+		{
+			(m, n) = (n, m); (mb, nb) = (nb, mb);
+			var temp = psRow; psRow = psCol; psCol = temp;
+		}
+		TS2 valOut;
+		TSInd2 rowOut, colOut;
+		if (srcFmt == SparseFormat.MatrixCorFormat)
+		{	// COO -> CSR
+			if ((target.Format.WithRowMajor & SparseFormat.MatrixCsrFormat) == SparseFormat.None)
+				return false;
+			rowOut = TSInd2.Create(stackalloc long[] { m + 1 });
+			if (!GetPointer(rowOut, out TInd2* pdRow, out _))
+			{
+				rowOut.Dispose(); return false;
+			}
+			if (!NM.cusparseXcoo2csr(this.cusparseHandle, (int*)psRow, nnzA, m, (int*)pdRow, IndexBase.Zero).Check())
+			{
+				rowOut.Dispose(); return false;
+			}
+			valOut = (source.ValueStorages[0] as TS2)!;
+			colOut = colMajor ? (source.IndexStorages[0] as TSInd2)! : (source.IndexStorages[1] as TSInd2)!;
+			dstFmt = SparseFormat.MatrixCsrFormat;
+		}
+		else if (srcFmt == SparseFormat.MatrixCsrFormat)
+		{
+			if ((target.Format.WithRowMajor & SparseFormat.MatrixCorFormat) != SparseFormat.None)
+			{   // CSR -> COO
+				rowOut = TSInd2.Create(stackalloc[] { nnz });
+				if (!GetPointer(rowOut, out TInd2* pdRow, out _))
+				{
+					rowOut.Dispose(); return false;
+				}
+				if (!NM.cusparseXcsr2coo(this.cusparseHandle, (int*)psRow, nnzA, m, (int*)pdRow, IndexBase.Zero).Check())
+				{
+					rowOut.Dispose(); return false;
+				}
+				valOut = (source.ValueStorages[0] as TS2)!;
+				colOut = colMajor ? (source.IndexStorages[0] as TSInd2)! : (source.IndexStorages[1] as TSInd2)!;
+				dstFmt = SparseFormat.MatrixCorFormat;
+			}
+			else
+			{   // CSR -> BSR
+				delegate*<IntPtr, SparseMatrixOrder, int, int, BaseMatrixWrapper, T*, int*, int*, int, int, out int, CudaSparseStatus> getBufSize = default(T) switch
+				{
+					Float32 => &NM.cusparseScsr2gebsr_bufferSize,
+					Float64 => &NM.cusparseDcsr2gebsr_bufferSize,
+					Complex<Float32> => &NM.cusparseCcsr2gebsr_bufferSize,
+					Complex<Float64> => &NM.cusparseZcsr2gebsr_bufferSize,
+					_ => null
+				};
+				delegate*<IntPtr, SparseMatrixOrder, int, int, BaseMatrixWrapper, T*, int*, int*, BaseMatrixWrapper, T*, int*, int*, int, int, void*, CudaSparseStatus> calcFunc = default(T) switch
+				{
+					Float32 => &NM.cusparseScsr2gebsr,
+					Float64 => &NM.cusparseDcsr2gebsr,
+					Complex<Float32> => &NM.cusparseCcsr2gebsr,
+					Complex<Float64> => &NM.cusparseZcsr2gebsr,
+					_ => null
+				};
+				if (getBufSize is null)
+					return false;
+				using BaseMatrixWrapper descr = new();
+				var dir = colMajor ? SparseMatrixOrder.Column : SparseMatrixOrder.Row;
+				if (!getBufSize(this.cusparseHandle, dir, m, n, descr, psVal, (int*)psRow, (int*)psCol, mb, nb, out int bufSize).Check())
+					return false;
+				using var buf = CudaBuffer.Create(bufSize, 0, false);
+				rowOut = TSInd2.Create(stackalloc long[] { m / mb + 1 });
+				if (!GetPointer(rowOut, out TInd2* pdRow, out _))
+				{
+					rowOut.Dispose(); return false;
+				}
+				if (!NM.cusparseXcsr2gebsrNnz(this.cusparseHandle, dir, m, n, descr, (int*)psRow, (int*)psCol, descr, (int*)pdRow, mb, nb, out int nnzC, buf).Check())
+				{
+					rowOut.Dispose(); return false;
+				}
+				colOut = TSInd2.Create(stackalloc long[] { nnzC });
+				if (!GetPointer(colOut, out TInd2* pdCol, out _))
+				{
+					rowOut.Dispose(); colOut.Dispose(); return false;
+				}
+				valOut = TS2.Create(stackalloc long[] { nnzC * mb * nb });
+				if (!GetPointer(valOut, out T* pdVal, out _))
+				{
+					rowOut.Dispose(); colOut.Dispose(); valOut.Dispose(); return false;
+				}
+				if (!calcFunc(this.cusparseHandle, dir, m, n, descr, psVal, (int*)psRow, (int*)psCol, descr, pdVal, (int*)pdRow, (int*)pdCol, mb, nb, buf).Check())
+				{
+					rowOut.Dispose(); colOut.Dispose(); valOut.Dispose(); return false;
+				}
+				dstFmt = SparseFormat.MatrixBsrFormat;
+			}
+		}
+		else
+		{	// BSR -> CSR
+			if ((target.Format.WithRowMajor & SparseFormat.MatrixCsrFormat) == SparseFormat.None)
+				return false;
+			delegate*<IntPtr, SparseMatrixOrder, int, int, BaseMatrixWrapper, T*, int*, int*, int, int, BaseMatrixWrapper, T*, int*, int*, CudaSparseStatus> calcFunc = default(T) switch
+			{
+				Float32 => &NM.cusparseSgebsr2csr,
+				Float64 => &NM.cusparseDgebsr2csr,
+				Complex<Float32> => &NM.cusparseCgebsr2csr,
+				Complex<Float64> => &NM.cusparseZgebsr2csr,
+				_ => null
+			};
+			if (calcFunc is null)
+				return false;
+			rowOut = TSInd2.Create(stackalloc long[] { m + 1 });
+			if (!GetPointer(rowOut, out TInd2* pdRow, out _))
+			{
+				rowOut.Dispose(); return false;
+			}
+			colOut = TSInd2.Create(stackalloc long[] { nnz });
+			if (!GetPointer(colOut, out TInd2* pdCol, out _))
+			{
+				rowOut.Dispose(); colOut.Dispose(); return false;
+			}
+			valOut = TS2.Create(stackalloc long[] { nnz });
+			if (!GetPointer(valOut, out T* pdVal, out _))
+			{
+				rowOut.Dispose(); colOut.Dispose(); valOut.Dispose(); return false;
+			}
+			var dir = colMajor ? SparseMatrixOrder.Column : SparseMatrixOrder.Row;
+			using BaseMatrixWrapper descr = new();
+			if (!calcFunc(this.cusparseHandle, dir, m / mb, n / nb, descr, psVal, (int*)psRow, (int*)psCol, mb, nb, descr, pdVal, (int*)pdRow, (int*)pdCol).Check())
+			{
+				rowOut.Dispose(); colOut.Dispose(); valOut.Dispose(); return false;
+			}
+			dstFmt = SparseFormat.MatrixCsrFormat;
+		}
+		if (colMajor)
+		{
+			(m, n) = (n, m); (mb, nb) = (nb, mb);
+			dstFmt = dstFmt.WithColumnMajor;
+			(rowOut, colOut) = (colOut, rowOut);
+		}
+		target.Format = dstFmt;
+		if (dstFmt.BlockType == SparseFormat.Blocking.Element)
+			target.SetValues(m, n, valOut, rowOut, colOut);
+		else
+			target.SetValues(m, n, mb, nb, valOut, rowOut, colOut);
+		return true;
 	}
 	#endregion
 }
