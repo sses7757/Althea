@@ -63,6 +63,17 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 				_ => false,
 			};
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static CudaDataType ToComputeType(this CudaDataType type)
+		{
+			return type switch
+			{
+				CudaDataType.RealFloat16 or CudaDataType.RealBrainFloat16 => CudaDataType.RealFloat32,
+				CudaDataType.ComplexFloat16 or CudaDataType.ComplexBrainFloat16 => CudaDataType.ComplexFloat32,
+				_ => type
+			};
+		}
 	}
 
 	/// <summary>
@@ -237,6 +248,15 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		{
 			success = NativeMethods.cusparseCreateDnVec(out IntPtr descr, size, values, T.Type.ToCudaDataType()).Check();
 			return success ? new(descr) : default;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DenseVectorWrapper Create<T, TS>(IBindedDevice api, TS array, out bool success) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		{
+			success = false;
+			if (!MemoryPointerChecker.GetPointer(api, array, 1, out T* p, out var n))
+				return default;
+			return Create(p, n, out success);
 		}
 	}
 

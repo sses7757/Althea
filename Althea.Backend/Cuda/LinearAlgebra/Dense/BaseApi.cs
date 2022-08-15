@@ -41,9 +41,15 @@ internal static class Conjugater
 	internal unsafe static Conjugater1<T> Create<T>(T* ptr, int n, int inc, MatrixOperation op) where T : unmanaged, IBaseNumber<T> => new(ptr, n, inc, op);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal unsafe static bool Conjugate<T>(T* ptr, int n, int inc) where T : unmanaged, IBaseNumber<T>
+	internal unsafe static bool Conjugate<T>(T* ptr, long n, int inc) where T : unmanaged, IBaseNumber<T>
 	{
 		return CustomNativeMethods.vecConj(T.Type, n, ptr, inc, ptr, inc).Check();
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal unsafe static bool Conjugate<T>(long n, T* ptr1, int inc1, T* ptr2, int inc2) where T : unmanaged, IBaseNumber<T>
+	{
+		return CustomNativeMethods.vecConj(T.Type, n, ptr1, inc1, ptr2, inc2).Check();
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

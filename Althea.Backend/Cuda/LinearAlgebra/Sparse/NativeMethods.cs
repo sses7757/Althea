@@ -1,8 +1,6 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 using Althea.Array;
-using Althea.Backend.Mkl;
 using Althea.SourceGenerator;
 
 
@@ -12,6 +10,18 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 	internal static unsafe class NativeMethodsTemplate
 	{
 		#region conversion
+		[NativeMethod(8, true)]
+		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
+		internal static extern CudaSparseStatus cusparseSgebsr2gebsr_bufferSize(IntPtr handle, SparseMatrixOrder dir, int mb, int nb, int nnzb, BaseMatrixWrapper descrA, void* bsrValA, int* bsrRowPtrA, int* bsrColIndA, int rowBlockDimA, int colBlockDimA, int rowBlockDimC, int colBlockDimC, out int pBufferSize);
+
+		[CustomNativeMethod(8, "Float32", "X")]
+		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
+		internal static extern CudaSparseStatus cusparseXgebsr2gebsrNnz(IntPtr handle, SparseMatrixOrder dir, int mb, int nb, int nnzb, BaseMatrixWrapper descrA, int* bsrRowPtrA, int* bsrColIndA, int rowBlockDimA, int colBlockDimA, BaseMatrixWrapper descrC, int* bsrRowPtrC, int rowBlockDimC, int colBlockDimC, out int nnzTotal, void* pBuffer);
+
+		[NativeMethod(8, true)]
+		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
+		internal static extern CudaSparseStatus cusparseSgebsr2gebsr(IntPtr handle, SparseMatrixOrder dir, int mb, int nb, int nnzb, BaseMatrixWrapper descrA, void* bsrValA, int* bsrRowPtrA, int* bsrColIndA, int rowBlockDimA, int colBlockDimA, BaseMatrixWrapper descrC, void* bsrValC, int* bsrRowPtrC, int* bsrColIndC, int rowBlockDimC, int colBlockDimC, void* pBuffer);
+
 		[NativeMethod(8, true)]
 		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
 		internal static extern CudaSparseStatus cusparseSbsr2csr(IntPtr handle, SparseMatrixOrder dirA, int mb, int nb, BaseMatrixWrapper descrA, void* bsrSortedValA, int* bsrSortedRowPtrA, int* bsrSortedColIndA, int blockDim, BaseMatrixWrapper descrC, void* csrSortedValC, int* csrSortedRowPtrC, int* csrSortedColIndC);
@@ -261,45 +271,89 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 	/// </summary>
 	public static unsafe class CustomNativeMethods
 	{
+		#region int index
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecSetValAt(DataType type, void* a, void* value, MklInt* pos, long posN);
+		internal static extern int vecSetValAt_i32(DataType type, void* a, void* value, int* pos, long posN);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern long vecPruneDirect(DataType type, void* a, void* threshold, long n, MklInt* idxOut, void* valOut, bool safe, long nnz);
+		internal static extern long vecPruneDirect_i32(DataType type, void* a, void* threshold, long n, int* idxOut, void* valOut, bool safe, long nnz);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern long vecPruneBuffer(DataType type, long n);
+		internal static extern long vecPruneBuffer_i32(DataType type, long n);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern long vecPruneNnz(DataType type, void* a, void* threshold, long n, void* buffer);
+		internal static extern long vecPruneNnz_i32(DataType type, void* a, void* threshold, long n, void* buffer);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecPruneCal(DataType type, long n, void* buffer, long nnz, MklInt* indexOut, void* valueOut);
+		internal static extern int vecPruneCal_i32(DataType type, long n, void* buffer, long nnz, int* indexOut, void* valueOut);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void spVecIdxToCooIdxs(MklInt* index, MklInt* rowIdx, MklInt* colIdx, long N, long ld);
+		internal static extern void spVecIdxToCooIdxs_i32(int* index, int* rowIdx, int* colIdx, long N, long ld);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern void cooIdxsToSpVecIdx(MklInt* index, MklInt* rowIdx, MklInt* colIdx, long N, long ld);
+		internal static extern void cooIdxsToSpVecIdx_i32(int* index, int* rowIdx, int* colIdx, long N, long ld);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern long vecSpAddBuffer(DataType type, MklInt nnzA, MklInt nnzB);
+		internal static extern long vecSpAddBuffer_i32(DataType type, long nnzA, long nnzB);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern long vecSpAddNnz(DataType type, MklInt* indA, void* valA, MklInt nnzA, MklInt* indB, void* valB, MklInt nnzB, void* alpha, void* buffer);
+		internal static extern long vecSpAddNnz_i32(DataType type, int* indA, void* valA, long nnzA, int* indB, void* valB, long nnzB, void* alpha, void* buffer);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecSpAddCal(DataType type, void* buffer, long nnzAB, long nnzC, MklInt* C_index, void* C_value);
+		internal static extern int vecSpAddCal_i32(DataType type, void* buffer, long nnzAB, long nnzC, int* C_index, void* C_value);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int spVecOuterCheck(DataType type);
+		internal static extern int spVecOuterCheck_i32(DataType type);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int spVecOuter(DataType type, void* valA, MklInt* indA, long nnzA, void* valB, MklInt* indB, long nnzB, void* valC, MklInt* rowC, MklInt* colC, bool conj);
+		internal static extern int spVecOuter_i32(DataType type, void* valA, int* indA, long nnzA, void* valB, int* indB, long nnzB, void* valC, int* rowC, int* colC, bool conj);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int CooMatKron(DataType type, void* valA, MklInt* rowA, MklInt* colA, long nnzA, void* valB, MklInt* rowB, MklInt* colB, long nnzB, long rowsB, long colsB, void* valC, MklInt* rowC, MklInt* colC);
+		internal static extern int cooMatKron_i32(DataType type, void* valA, int* rowA, int* colA, long nnzA, void* valB, int* rowB, int* colB, long nnzB, long rowsB, long colsB, void* valC, int* rowC, int* colC);
+		#endregion
 
+		#region long index
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int vecSetValAt_i64(DataType type, void* a, void* value, long* pos, long posN);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern long vecPruneDirect_i64(DataType type, void* a, void* threshold, long n, long* idxOut, void* valOut, bool safe, long nnz);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern long vecPruneBuffer_i64(DataType type, long n);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern long vecPruneNnz_i64(DataType type, void* a, void* threshold, long n, void* buffer);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int vecPruneCal_i64(DataType type, long n, void* buffer, long nnz, long* indexOut, void* valueOut);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern void spVecIdxToCooIdxs_i64(long* index, long* rowIdx, long* colIdx, long N, long ld);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern void cooIdxsToSpVecIdx_i64(long* index, long* rowIdx, long* colIdx, long N, long ld);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern long vecSpAddBuffer_i64(DataType type, long nnzA, long nnzB);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern long vecSpAddNnz_i64(DataType type, long* indA, void* valA, long nnzA, long* indB, void* valB, long nnzB, void* alpha, void* buffer);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int vecSpAddCal_i64(DataType type, void* buffer, long nnzAB, long nnzC, long* C_index, void* C_value);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int spVecOuterCheck_i64(DataType type);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int spVecOuter_i64(DataType type, void* valA, long* indA, long nnzA, void* valB, long* indB, long nnzB, void* valC, long* rowC, long* colC, bool conj);
+
+		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int cooMatKron_i64(DataType type, void* valA, long* rowA, long* colA, long nnzA, void* valB, long* rowB, long* colB, long nnzB, long rowsB, long colsB, void* valC, long* rowC, long* colC);
+		#endregion
+
+		#region other
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int vecSort(DataType type, void* array, long N, int stride);
 
@@ -314,5 +368,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int vecBound(DataType type, bool lower, void* array, long N, int stride, void* toFind, out long index);
+		#endregion
 	}
 }

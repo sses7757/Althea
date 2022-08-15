@@ -11,6 +11,14 @@ namespace Althea.Backend.Cuda;
 internal static unsafe partial class MemoryPointerChecker
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static T* GetPointerDirect<T, TS>(this TS s, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
+		T* pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
+		return pointer;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static bool GetPointerInner<T, TS>(TS s, out T* pointer, out long length, string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
