@@ -308,35 +308,35 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// Operation that returns the addition of two input parameters
 		/// </summary>
-		Add,
+		Add = -1,
 		/// <summary>
 		/// Operation that returns the multiplication of two input parameters
 		/// </summary>
-		Multiply,
+		Multiply = -2,
 		/// <summary>
 		/// Operation that returns the division of two input parameters
 		/// </summary>
-		Divide,
+		Divide = -3,
 		/// <summary>
 		/// Operation that returns the power of the first input parameter to the second one
 		/// </summary>
-		Power,
+		Power = -4,
 		/// <summary>
 		/// Operation that returns the maximum of two input parameters
 		/// </summary>
-		Maximum,
+		Maximum = -5,
 		/// <summary>
 		/// Operation that returns the minimum of two input parameters
 		/// </summary>
-		Mininum,
+		Mininum = -6,
 		/// <summary>
 		/// Operation that returns the maximum of the absolute values two input parameters
 		/// </summary>
-		AbsoluteMaximum,
+		AbsoluteMaximum = -7,
 		/// <summary>
 		/// Operation that returns the minimum of the absolute values two input parameters
 		/// </summary>
-		AbsoluteMininum,
+		AbsoluteMininum = -8,
 	}
 
 	/// <summary>
@@ -348,39 +348,39 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// Operation that returns the addition of two input parameters
 		/// </summary>
-		Add,
+		Add = -1,
 		/// <summary>
 		/// Operation that returns the multiplication of two input parameters
 		/// </summary>
-		Multiply,
+		Multiply = -2,
 		/// <summary>
 		/// Operation that returns the power of the first input parameter to the second one
 		/// </summary>
-		Power,
+		Power = -3,
 		/// <summary>
 		/// Operation that simply returns the second input parameter
 		/// </summary>
-		Fill,
+		Fill = -4,
 		/// <summary>
 		/// Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
 		/// </summary>
-		Truncate,
+		Truncate = -5,
 		/// <summary>
 		/// Operation that returns the maximum of two input parameters
 		/// </summary>
-		Maximum,
+		Maximum = -6,
 		/// <summary>
 		/// Operation that returns the minimum of two input parameters
 		/// </summary>
-		Mininum,
+		Mininum = -7,
 		/// <summary>
 		/// Operation that returns the maximum of the absolute values two input parameters
 		/// </summary>
-		AbsoluteMaximum,
+		AbsoluteMaximum = -8,
 		/// <summary>
 		/// Operation that returns the minimum of the absolute values two input parameters
 		/// </summary>
-		AbsoluteMininum,
+		AbsoluteMininum = -9,
 	}
 
 	/// <summary>
@@ -392,39 +392,39 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// Operation that returns the addition of two input parameters
 		/// </summary>
-		Add,
+		Add = -2,
 		/// <summary>
 		/// Operation that returns the addition of the absolute value of the first input parameter and the second parameter
 		/// </summary>
-		AddAbsolute,
+		AddAbsolute = -3,
 		/// <summary>
 		/// Operation that returns the multiplication of two input parameters
 		/// </summary>
-		Multiply,
+		Multiply = -4,
 		/// <summary>
 		/// Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
 		/// </summary>
-		MultiplyAbsolute,
+		MultiplyAbsolute = -5,
 		/// <summary>
 		/// Operation that returns the addition of the square of the first input parameter and the second parameter; and sqrt the result before exit
 		/// </summary>
-		Norm,
+		Norm = -6,
 		/// <summary>
 		/// Operation that returns the maximum of two input parameters
 		/// </summary>
-		Maximum,
+		Maximum = -7,
 		/// <summary>
 		/// Operation that returns the minimum of two input parameters
 		/// </summary>
-		Mininum,
+		Mininum = -8,
 		/// <summary>
 		/// Operation that returns the maximum of the absolute values two input parameters
 		/// </summary>
-		AbsoluteMaximum,
+		AbsoluteMaximum = -9,
 		/// <summary>
 		/// Operation that returns the minimum of the absolute values two input parameters
 		/// </summary>
-		AbsoluteMininum,
+		AbsoluteMininum = -10,
 	}
 
 	/// <summary>
@@ -436,19 +436,19 @@ namespace Althea.LinearAlgebra
 		/// <summary>
 		/// Identity operator (i.e., elements are not changed)
 		/// </summary>
-		Identity,
+		Identity = 0,
 		/// <summary>
 		/// Complex conjugate operator (real-typed elements are not changed)
 		/// </summary>
-		Conjugate,
+		Conjugate = -1,
 		/// <summary>
 		/// Negation operator
 		/// </summary>
-		Negate,
+		Negate = -2,
 		/// <summary>
 		/// Absolute operator
 		/// </summary>
-		AbsoluteValue
+		AbsoluteValue = -3
 	}
 	#endregion
 

@@ -996,6 +996,32 @@ namespace Althea.Linq
 		}
 
 		/// <summary>
+		/// Check if any element of <paramref name="span"/> is less than or equals to 0
+		/// </summary>
+		/// <param name="span">The span to predicate</param>
+		/// <returns>Predicate result</returns>
+		public static bool AnyNonPositive<T>(this Span<T> span) where T : IAdditiveIdentity<T, T>, IComparisonOperators<T, T, bool>
+		{
+			return AnyNonPositive((ReadOnlySpan<T>)span);
+		}
+
+		/// <summary>
+		/// Check if any element of <paramref name="span"/> is less than or equals to 0
+		/// </summary>
+		/// <param name="span">The span to predicate</param>
+		/// <returns>Predicate result</returns>
+		public static bool AnyNonPositive<T>(this ReadOnlySpan<T> span) where T : IAdditiveIdentity<T, T>, IComparisonOperators<T, T, bool>
+		{
+			int len = span.Length;
+			for (int i = 0; i < len; i++)
+			{
+				if (span[i] < T.AdditiveIdentity)
+					return true;
+			}
+			return false;
+		}
+
+		/// <summary>
 		/// Check if <paramref name="span"/>'s all elements are sequentially equal to <paramref name="other"/>'s
 		/// </summary>
 		/// <typeparam name="TL">The left input type</typeparam>

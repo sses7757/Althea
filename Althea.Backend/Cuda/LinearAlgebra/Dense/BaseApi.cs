@@ -53,7 +53,7 @@ internal static class Conjugater
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal unsafe static bool Conjugate<T>(T* ptr, int m, int n, int ld) where T : unmanaged, IBaseNumber<T>
+	internal unsafe static bool Conjugate<T>(T* ptr, long m, long n, long ld) where T : unmanaged, IBaseNumber<T>
 	{
 		return CustomNativeMethods.matConj(T.Type, m, n, ptr, ld, ptr, ld).Check();
 	}

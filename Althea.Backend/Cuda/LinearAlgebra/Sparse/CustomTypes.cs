@@ -254,7 +254,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		public static DenseVectorWrapper Create<T, TS>(IBindedDevice api, TS array, out bool success) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			success = false;
-			if (!MemoryPointerChecker.GetPointer(api, array, 1, out T* p, out var n))
+			if (!MemoryPointerChecker.GetPointer(api, array,  out T* p, out var n))
 				return default;
 			return Create(p, n, out success);
 		}
@@ -406,6 +406,25 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 				return NativeMethods.cusparseCsrSetPointers(this.handle, rows, cols, values).Check();
 			else
 				return NativeMethods.cusparseCscSetPointers(this.handle, cols, rows, values).Check();
+		}
+	}
+
+	internal readonly unsafe ref struct SparseGemmDescriptor
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseSpGEMM_destroyDescr(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SparseGemmDescriptor()
+		{
+			NativeMethods.cusparseSpGEMM_createDescr(out this.handle).Check();
 		}
 	}
 

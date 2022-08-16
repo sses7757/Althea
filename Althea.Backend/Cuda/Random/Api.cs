@@ -11,7 +11,7 @@ namespace Althea.Backend.Cuda.Random
 	/// The CUDA back-end of the <see cref="Althea.Random.IAbstractApi"/> that supports filling GPU arrays with one-dimensional uniform, normal, log normal and Poisson distributions.
 	/// </summary>
 	/// <remarks>Other distributions can be easily supported by utilizing the result of uniform distributions.</remarks>
-	public class Api : Althea.Random.IAbstractApi
+	public class Api : IBindedDevice, Althea.Random.IAbstractApi
 	{
 		#region basic
 		private readonly IntPtr generator;
@@ -30,6 +30,7 @@ namespace Althea.Backend.Cuda.Random
 			NativeMethods.curandCreateGenerator(out this.generator, type).Check();
 			NativeMethods.curandSetGeneratorOrdering(generator, order).Check();
 			this.canHaveSeed = type is >= GeneratorType.PseudoDefault and <= GeneratorType.QuasiDefault && order == Ordering.Pseudoeseded;
+			this.BindedDeviceID = Runtime.CurrentDeviceID;
 		}
 
 		/// <inheritdoc/>
@@ -42,6 +43,9 @@ namespace Althea.Backend.Cuda.Random
 
 		/// <inheritdoc/>
 		public bool Disposed { get; protected set; } = false;
+
+		/// <inheritdoc/>
+		public int BindedDeviceID { get; }
 		#endregion
 
 		#region methods
@@ -122,7 +126,7 @@ namespace Althea.Backend.Cuda.Random
 		/// <inheritdoc/>
 		public virtual unsafe bool FillWithRandom<T, TS, TDist>(TS storage, in TDist distribution) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TDist : struct, IRank1Distribution<T, TDist>
 		{
-			if (!GetPointer(storage, out T* ptr, out var n))
+			if (!GetPointer(this, storage, out T* ptr, out var n))
 				return false;
 			return Generate(ptr, n, in distribution);
 		}

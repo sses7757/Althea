@@ -117,10 +117,10 @@ internal static unsafe class ArrayPoolBuffers
 
 
 #region error buffer
-internal unsafe readonly ref struct ErrorStateBuffer<T, TS> where T : unmanaged where TS : class, IStorage<TS>
+internal unsafe ref struct ErrorStateBuffer<T, TS> where T : unmanaged where TS : class, IStorage<TS>
 {
-	private readonly TS data;
-	private readonly T* ptr;
+	private TS data;
+	private T* ptr;
 	// cannot be modified inside, however can read from outside's error info
 	private readonly ref bool hasError;
 
@@ -144,9 +144,26 @@ internal unsafe readonly ref struct ErrorStateBuffer<T, TS> where T : unmanaged 
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void Update(TS data, void* ptr)
+	{
+		this.data = data; this.ptr = (T*)ptr;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void Swap(in ErrorStateBuffer<T, TS> other)
+	{
+		var temp = other;
+		other.Update(this.data, this.ptr);
+		this.Update(temp.data, temp.ptr);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator TS(ErrorStateBuffer<T, TS> buf) => buf.data;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator T*(ErrorStateBuffer<T, TS> buf) => buf.ptr;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly U* As<U>() where U : unmanaged => (U*)this.ptr;
 }
 #endregion

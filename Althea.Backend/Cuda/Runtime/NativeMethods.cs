@@ -8,7 +8,6 @@ namespace Althea.Backend.Cuda
 	/// </summary>
 	public static class NativeMethods
 	{
-		// Ignore Spelling: cudart cufile cublas curand cusolver cusparse cufft
 		/// <summary>
 		/// The CUDA Runtime library name
 		/// </summary>
@@ -37,6 +36,10 @@ namespace Althea.Backend.Cuda
 		/// The cuFft library name
 		/// </summary>
 		public const string CUFFT_DLL_NAME = @"cufft";
+		/// <summary>
+		/// The cuTensor library name
+		/// </summary>
+		public const string CUTENSOR_DLL_NAME = @"cutensor";
 		/// <summary>
 		/// The custom CUDA library name
 		/// </summary>

@@ -1,7 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 
 using Althea.Array;
+using Althea.Backend.Storage;
+using Althea.LinearAlgebra;
 using Althea.Linq;
+using Althea.Storage;
 
 using static Althea.Backend.Cuda.LinearAlgebra.Sparse.NativeMethods;
 
@@ -19,23 +23,74 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool GetPointerInner<T, TS>(TS s, out T* pointer, out long length, string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
+		pointer = default; length = 0;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (!CheckPointer<T, TS>(s))
+			return false;
 		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
 		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
 		if (pointer == default)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
 		length = ps.LengthInBytes / sizeof(T);
-		if (length < 0)
+		return length >= 0;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		pointer = default; length = 0;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (!CheckPointer<T, TS>(s))
+			return false;
+		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
+		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
+		if (pointer == default)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
+		length = ps.LengthInBytes / sizeof(T);
+		return length >= 0;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		pointer = default; length = 0;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (stride <= 0)
+			throw new ArgumentOutOfRangeException(strideName, strideName, Resources.ParameterError.MustPositive);
+		if (!CheckPointer<T, TS>(s))
+			return false;
+		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
+		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
+		if (pointer == default)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
+		length = ps.LengthInBytes / sizeof(T);
+		length = (length - 1) / stride + 1;
+		if (length > int.MaxValue || length < 0)
 			return false;
 		return true;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool GetPointerInner<T, TS>(TS s, long stride, out T* pointer, out int length, out int inc, string? sName = null, string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS s, long stride, out T* pointer, out int length, out int inc, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
+		pointer = default; length = 0; inc = 0;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
 		if (stride <= 0)
 			throw new ArgumentOutOfRangeException(strideName, strideName, Resources.ParameterError.MustPositive);
+		if (!CheckPointer<T, TS>(s))
+			return false;
 		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
 		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
 		if (pointer == default)
@@ -49,64 +104,93 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool GetPointerInnerLong<T, TS>(TS s, long stride, out T* pointer, out long length, string? sName = null, string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
-		if (stride <= 0)
-			throw new ArgumentOutOfRangeException(strideName, strideName, Resources.ParameterError.MustPositive);
+		pointer = default; mm = (int)m; nn = (int)n; lld = (int)ld;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (s is null || !s.IsValid())
+			return true;
+		if (m > int.MaxValue || n > int.MaxValue || ld > int.MaxValue)
+			return false;
+		if (m <= 0)
+			throw new ArgumentOutOfRangeException(mName, m, Resources.ParameterError.MustPositive);
+		if (n <= 0)
+			throw new ArgumentOutOfRangeException(nName, n, Resources.ParameterError.MustPositive);
+		if (ld < m)
+			throw new ArgumentOutOfRangeException(ldName, ld, Resources.ParameterError.InvalidValue);
+		if (!CheckPointer<T, TS>(s))
+			return false;
 		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
 		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
 		if (pointer == default)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
-		length = ps.LengthInBytes / sizeof(T);
-		length = (length - 1) / stride + 1;
+		long len = ps.LengthInBytes / sizeof(T);
+		if ((len + (ld - m)) / ld < n)
+			throw new ArgumentException(Resources.ParameterError.WrongSize);
 		return true;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static unsafe bool GetPointerInner<T, TS>(TS s, long m, long n, long ld, out T* pointer, string? sName = null, string? mName = null, string? nName = null, string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS? s, MatrixOperation op, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
-		if (m <= 0)
-			throw new ArgumentOutOfRangeException(mName, m, Resources.ParameterError.MustPositive);
-		if (n <= 0)
-			throw new ArgumentOutOfRangeException(nName, n, Resources.ParameterError.MustPositive);
-		if (ld < m)
-			throw new ArgumentOutOfRangeException(ldName, ld, Resources.ParameterError.InvalidValue);
+		if (!op.CanInPlace())
+		{
+			(m, n) = (n, m);
+		}
+		return GetPointer(api, s, m, n, ld, out pointer, sName, mName, nName, ldName);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS? s, MatrixOperation op, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		if (!op.CanInPlace())
+		{
+			(m, n) = (n, m);
+		}
+		return GetPointer(api, s, m, n, ld, out pointer, out mm, out nn, out lld, sName, mName, nName, ldName);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool GetPointer<T, TS>(IBindedDevice api, TS? s, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
 		pointer = default;
-		if (m > int.MaxValue || n > int.MaxValue || ld > int.MaxValue)
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
-		if (s is not PureStorage<T, CudaMemoryPointer> ps)
-			return false; // not support
-		pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
-		if (pointer == default)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
-		if ((ps.Length + (ld - m)) / ld < n)
-			throw new ArgumentException(Resources.ParameterError.WrongSize);
-		return true;
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static unsafe bool GetPointerLongInner<T, TS>(TS s, long m, long n, long ld, out T* pointer, string? sName = null, string? mName = null, string? nName = null, string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-	{
+		if (s is null || !s.IsValid())
+			return true;
 		if (m <= 0)
 			throw new ArgumentOutOfRangeException(mName, m, Resources.ParameterError.MustPositive);
 		if (n <= 0)
 			throw new ArgumentOutOfRangeException(nName, n, Resources.ParameterError.MustPositive);
 		if (ld < m)
 			throw new ArgumentOutOfRangeException(ldName, ld, Resources.ParameterError.InvalidValue);
-		pointer = default;
-		if (s is not PureStorage<T, CudaMemoryPointer> ps)
-			return false; // not support
-		pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
+		if (!CheckPointer<T, TS>(s))
+			return false;
+		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
+		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
 		if (pointer == default)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
-		if ((ps.Length + (ld - m)) / ld < n)
+		long len = ps.LengthInBytes / sizeof(T);
+		if ((len + (ld - m)) / ld < n)
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
 		return true;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static bool GetPointerInner<T, TInd, TS, TSInd>(TS s, TSInd sInd, out T* pointer, out TInd* pointerInd, out long length, string? sName = null, string? sIndName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice api, TS s, TSInd sInd, out T* pointer, out TInd* pointerInd, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("sInd")] string? sIndName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
+		pointer = default; pointerInd = default; length = 0;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
+			return false;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (sInd is null || !sInd.IsValid())
+			throw new ArgumentNullException(sIndName);
+		if (!CheckPointer<T, TInd, TS, TSInd>(s, sInd))
+			return false;
 		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
 		var psInd = Unsafe.As<TSInd, PureStorage<TInd, CudaMemoryPointer>>(ref Unsafe.AsRef(in sInd)).Pointer;
 		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
@@ -115,20 +199,51 @@ internal static unsafe partial class MemoryPointerChecker
 		pointerInd = psInd.Pointer.UnmangedPointer<TInd>(psInd.OffsetInBytes);
 		if (pointerInd == default)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, sIndName);
-		length = ps.LengthInBytes / sizeof(T);
-		if (length < 0)
-			return false;
 		if (psInd.LengthInBytes != ps.LengthInBytes)
 			throw new ArgumentException(Resources.ParameterError.NotSameSize, sIndName);
-		return true;
+		length = ps.LengthInBytes / sizeof(T);
+		return length >= 0;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice api, TS s, TSInd sInd1, TSInd sInd2, out T* pointer, out TInd* pointerInd1, out TInd* pointerInd2, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("sInd1")] string? sInd1Name = null, [CallerArgumentExpression("sInd2")] string? sInd2Name = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	{
+		pointer = default; pointerInd1 = default; pointerInd2 = default; length = 0;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
+			return false;
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (sInd1 is null || !sInd1.IsValid())
+			throw new ArgumentNullException(sInd1Name);
+		if (sInd2 is null || !sInd2.IsValid())
+			throw new ArgumentNullException(sInd2Name);
+		if (!CheckPointer<T, TInd, TS, TSInd>(s, sInd1, sInd2))
+			return false;
+		var ps = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in s)).Pointer;
+		var psInd1 = Unsafe.As<TSInd, PureStorage<TInd, CudaMemoryPointer>>(ref Unsafe.AsRef(in sInd1)).Pointer;
+		var psInd2 = Unsafe.As<TSInd, PureStorage<TInd, CudaMemoryPointer>>(ref Unsafe.AsRef(in sInd2)).Pointer;
+		pointer = ps.Pointer.UnmangedPointer<T>(ps.OffsetInBytes);
+		if (pointer == default)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
+		pointerInd1 = psInd1.Pointer.UnmangedPointer<TInd>(psInd1.OffsetInBytes);
+		if (pointerInd1 == default)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, sInd1Name);
+		pointerInd2 = psInd2.Pointer.UnmangedPointer<TInd>(psInd2.OffsetInBytes);
+		if (pointerInd2 == default)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, sInd2Name);
+		length = ps.LengthInBytes / sizeof(T);
+		return length >= 0;
+	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> vector, out T* pointer, out TInd* pointerInd, out long nnz, [CallerArgumentExpression("vector")] string? vectorName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		pointer = default; pointerInd = default; nnz = 0;
 		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+			return false;
+		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
 			return false;
 		if (vector is null)
 			throw new ArgumentNullException(vectorName);
@@ -151,7 +266,7 @@ internal static unsafe partial class MemoryPointerChecker
 		pointer = default; pointerRow = pointerCol = default; nnz = 0;
 		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
-		if (!TInd.Type.IsInteger() || (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long)))
+		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
 			return false;
 		if (matrix is null)
 			throw new ArgumentNullException(matrixName);
@@ -163,36 +278,16 @@ internal static unsafe partial class MemoryPointerChecker
 			return false;
 		if (matrix.ValueStorages.Length != 1 || matrix.IndexStorages.Length != 2)
 			return false;
-		var psVal = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in matrix.ValueStorages[0])).Pointer;
-		var psInd1 = Unsafe.As<TSInd, PureStorage<TInd, CudaMemoryPointer>>(ref Unsafe.AsRef(in matrix.IndexStorages[0])).Pointer;
-		var psInd2 = Unsafe.As<TSInd, PureStorage<TInd, CudaMemoryPointer>>(ref Unsafe.AsRef(in matrix.IndexStorages[1])).Pointer;
-		pointer = psVal.Pointer.UnmangedPointer<T>(psVal.OffsetInBytes);
-		if (pointer == default)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, matrixName);
-		pointerRow = psInd1.Pointer.UnmangedPointer<TInd>(psInd1.OffsetInBytes);
-		if (pointerRow == default)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, matrixName);
-		pointerCol = psInd2.Pointer.UnmangedPointer<TInd>(psInd2.OffsetInBytes);
-		if (pointerCol == default)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, matrixName);
-		nnz = psVal.LengthInBytes / sizeof(T);
-		long rowLen = psInd1.LengthInBytes / sizeof(TInd), colLen = psInd2.LengthInBytes / sizeof(TInd);
-		if (nnz < 0)
-			return false;
-		////if ((matrix.Format.Class == SparseFormat.Type.Coordinated && (nnz != rowLen || nnz != colLen)) ||
-		////	(matrix.Format == SparseFormat.MatrixCscFormat && (nnz != rowLen || matrix.Size[1] != colLen)) ||
-		////	(matrix.Format == SparseFormat.MatrixCsrFormat && (matrix.Size[0] != rowLen || nnz != colLen)))
-		////	throw new ArgumentException(Resources.ParameterError.NotSameSize, matrixName);
-		return true;
+		return GetPointer(api, matrix.ValueStorages[0], matrix.IndexStorages[0], matrix.IndexStorages[1], out pointer, out pointerRow, out pointerCol, out nnz);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool GetPointerIncludeBlocked<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	public static bool GetPointerIncludeBlocked<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		pointer = default; pointerRow = pointerCol = default; nnz = 0;
 		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
-		if (!TInd.Type.IsInteger() || (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long)))
+		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
 			return false;
 		if (matrix is null)
 			throw new ArgumentNullException(matrixName);
@@ -206,28 +301,27 @@ internal static unsafe partial class MemoryPointerChecker
 			return false;
 		if (matrix.Format.BlockType == SparseFormat.Blocking.Simple && matrix.BlockSize.Length != 2)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, matrixName);
-		var psVal = Unsafe.As<TS, PureStorage<T, CudaMemoryPointer>>(ref Unsafe.AsRef(in matrix.ValueStorages[0])).Pointer;
-		var psInd1 = Unsafe.As<TSInd, PureStorage<TInd, CudaMemoryPointer>>(ref Unsafe.AsRef(in matrix.IndexStorages[0])).Pointer;
-		var psInd2 = Unsafe.As<TSInd, PureStorage<TInd, CudaMemoryPointer>>(ref Unsafe.AsRef(in matrix.IndexStorages[1])).Pointer;
-		pointer = psVal.Pointer.UnmangedPointer<T>(psVal.OffsetInBytes);
-		if (pointer == default)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, matrixName);
-		pointerRow = psInd1.Pointer.UnmangedPointer<TInd>(psInd1.OffsetInBytes);
-		if (pointerRow == default)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, matrixName);
-		pointerCol = psInd2.Pointer.UnmangedPointer<TInd>(psInd2.OffsetInBytes);
-		if (pointerCol == default)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, matrixName);
-		nnz = psVal.LengthInBytes / sizeof(T);
-		long rowLen = psInd1.LengthInBytes / sizeof(TInd), colLen = psInd2.LengthInBytes / sizeof(TInd);
-		if (nnz < 0)
+		return GetPointer(api, matrix.ValueStorages[0], matrix.IndexStorages[0], matrix.IndexStorages[1], out pointer, out pointerRow, out pointerCol, out nnz);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static unsafe bool GetPointer<T, TS>(IBindedDevice api, TS s, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, out T* pointer,[CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("size")] string? sizeName = null, [CallerArgumentExpression("outerSize")] string? outerSizeName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		pointer = default;
+		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
-		////if ((matrix.Format.Class == SparseFormat.Type.Coordinated && (nnz != rowLen || nnz != colLen)) ||
-		////	(matrix.Format == SparseFormat.MatrixCscFormat && (nnz != rowLen || matrix.Size[1] != colLen)) ||
-		////	(matrix.Format == SparseFormat.MatrixCsrFormat && (matrix.Size[0] != rowLen || nnz != colLen)) ||
-		////	(matrix.Format == SparseFormat.MatrixBscFormat && (nnz / matrix.BlockSize.Prod() != rowLen || matrix.Size[1] / matrix.BlockSize[1] != colLen)) ||
-		////	(matrix.Format == SparseFormat.MatrixBsrFormat && (nnz / matrix.BlockSize.Prod() != colLen || matrix.Size[0] / matrix.BlockSize[0] != rowLen)))
-		////	throw new ArgumentException(Resources.ParameterError.NotSameSize, matrixName);
+		if (s is null || !s.IsValid())
+			throw new ArgumentNullException(sName);
+		if (size.AnyNonPositive())
+			throw new ArgumentOutOfRangeException(sizeName, size.ToArray(), Resources.ParameterError.MustPositive);
+		if (outerSize.AnyNonPositive())
+			throw new ArgumentOutOfRangeException(outerSizeName, outerSize.ToArray(), Resources.ParameterError.MustPositive);
+		if (!outerSize.SequenceLargerEqualThan(size))
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, outerSizeName);
+		if (!GetPointer(s, out pointer, out long n, sName))
+			return false;
+		if (n < size.Prod())
+			throw new ArgumentException(Resources.ParameterError.WrongSize, sName);
 		return true;
 	}
 }

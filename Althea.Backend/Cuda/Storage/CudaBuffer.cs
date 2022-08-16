@@ -112,6 +112,19 @@ internal readonly unsafe ref struct CudaBuffer
 	}
 
 	/// <summary>
+	/// Create a <see cref="CudaBuffer"/> by indicating the number of bytes required on current CUDA device memory
+	/// </summary>
+	/// <param name="workSpaceDeviceBytes">The number of bytes required as the working space on current CUDA device</param>
+	/// <returns>The created <see cref="CudaBuffer"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="workSpaceDeviceBytes"/> is less than 0</exception>
+	/// <exception cref="OutOfMemoryException">If the requested number of bytes are too large to be allocated</exception>
+	/// <exception cref="StatusException">If the CUDA API call returns other error status</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static CudaBuffer Create(long workSpaceDeviceBytes)
+	{
+		return new(workSpaceDeviceBytes, 0, 0);
+	}
+	/// <summary>
 	/// Create a <see cref="CudaBuffer"/> by indicating the number of bytes required on current CUDA device and host memory
 	/// </summary>
 	/// <param name="workSpaceDeviceBytes">The number of bytes required as the working space on current CUDA device</param>

@@ -277,9 +277,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 				{
 					rowSize = nnz; colSize = rows;
 				}
-				TS vals = new Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pv, nnz * sizeof(T))) as TS ?? TS.Empty;
-				TSInd rowInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
-				TSInd colInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
+				TS vals = (new Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pv, nnz * sizeof(T))) as TS)!;
+				TSInd rowInds = (new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd)!;
+				TSInd colInds = (new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd)!;
 				target.SetValues(rows, cols, vals, rowInds, colInds);
 				target.Format = transposed ? format : format.WithTransposedMajor;
 				pVals = (T*)pv;
@@ -310,9 +310,9 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 					(rowSize, colSize) = (colSize, rowSize);
 					var temp = pStarts; pStarts = pInds; pInds = temp;
 				}
-				TS vals = new Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pv, nnz * sizeof(T))) as TS ?? TS.Empty;
-				TSInd rowInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
-				TSInd colInds = new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd ?? TSInd.Empty;
+				TS vals = (new Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pv, nnz * sizeof(T))) as TS)!;
+				TSInd rowInds = (new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pStarts, rowSize * sizeof(TInd))) as TSInd)!;
+				TSInd colInds = (new Backend.Storage.ActualPureStorage<TInd, CpuMemoryPointer>(new CpuMemoryPointer((IntPtr)pInds, colSize * sizeof(TInd))) as TSInd)!;
 				target.SetValues(rows, cols, blockSize, blockSize, vals, rowInds, colInds);
 				target.Format = transposed ? format : format.WithTransposedMajor;
 				pVals = (T*)pv;

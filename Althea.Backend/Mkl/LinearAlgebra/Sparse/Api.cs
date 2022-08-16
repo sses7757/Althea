@@ -203,42 +203,20 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 		if (target.ValueStorages.Length is not 0 and not 1 || target.IndexStorages.Length is not 0 and not 2)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));
 
-		TS2 valOut; T* pVal;
-		TSInd2 rowIdxOut, colIdxOut; TInd2* pRow, pCol;
-		if (target.ValueStorages.Length == 1)
-		{
-			valOut = target.ValueStorages[0];
-			if (!GetPointer(valOut, out pVal, out var n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<T, CpuMemoryPointer>.Create(nnz);
-			pVal = (T*)s.Pointer.Pointer.Pointer;
-			valOut = s as TS2 ?? TS2.Empty; // never empty
-		}
-		if (target.IndexStorages.Length == 2)
-		{
-			rowIdxOut = target.IndexStorages[0]; colIdxOut = target.IndexStorages[1];
-			if (!GetPointer(rowIdxOut, out pRow, out var n2) || n2 != nnz)
-				return false;
-			if (!GetPointer(colIdxOut, out pCol, out n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<TInd2, CpuMemoryPointer>.Create(nnz);
-			pRow = (TInd2*)s.Pointer.Pointer.Pointer;
-			rowIdxOut = (s as TSInd2)!;
-			s = PureStorage<TInd2, CpuMemoryPointer>.Create(nnz);
-			pCol = (TInd2*)s.Pointer.Pointer.Pointer;
-			colIdxOut = (s as TSInd2)!;
-		}
-		Buffer.MemoryCopy(px, pVal, nnz * sizeof(T), nnz * sizeof(T));
-		NMC.spVecIdxToCooIdxs(pp, (MklInt*)pRow, (MklInt*)pCol, nnz, vector.Size[0]);
-		target.SetValues(valOut, rowIdxOut, colIdxOut);
+		bool hasError = true;
+		using var valOut = target.ValueStorages.CreateFromFirst<T, TS2>(nnz, ref hasError);
+		if (valOut.Invalid) return false;
+		using var rowOut = target.IndexStorages.CreateFromFirst<TInd2, TSInd2, MklInt>(nnz, ref hasError);
+		if (rowOut.Invalid) return false;
+		using var colOut = target.IndexStorages.CreateFromSecond<TInd2, TSInd2, MklInt>(nnz, ref hasError);
+		if (colOut.Invalid) return false;
+		if (px != valOut)
+			Buffer.MemoryCopy(px, valOut, nnz * sizeof(T), nnz * sizeof(T));
+		NMC.spVecIdxToCooIdxs(pp, rowOut, colOut, nnz, vector.Size[0]);
+		target.SetValues(valOut, rowOut, colOut);
 		target.Format = SparseFormat.MatrixCocFormat;
 		target.DefaultValue = T.Zero;
+		hasError = false;
 		return true;
 	}
 
@@ -262,37 +240,18 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 		if (target.IndexStorages.Length is not 0 and not 1 || target.ValueStorages.Length is not 0 and not 1)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(target));
 
-		TS2 valOut; T* pVal;
-		TSInd2 idxOut; TInd2* pIdx;
-		if (target.ValueStorages.Length == 1)
-		{
-			valOut = target.ValueStorages[0];
-			if (!GetPointer(valOut, out pVal, out var n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<T, CpuMemoryPointer>.Create(nnz);
-			pVal = (T*)s.Pointer.Pointer.Pointer;
-			valOut = s as TS2 ?? TS2.Empty; // never empty
-		}
-		if (target.IndexStorages.Length == 2)
-		{
-			idxOut = target.IndexStorages[0];
-			if (!GetPointer(idxOut, out pIdx, out var n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<TInd2, CpuMemoryPointer>.Create(nnz);
-			pIdx = (TInd2*)s.Pointer.Pointer.Pointer;
-			idxOut = s as TSInd2 ?? TSInd2.Empty; // never empty
-		}
-		Buffer.MemoryCopy(pm, pVal, nnz * sizeof(T), nnz * sizeof(T));
-		NMC.cooIdxsToSpVecIdx((MklInt*)pIdx, pr, pc, nnz, matrix.Size[0]);
+		bool hasError = true;
+		using var valOut = target.ValueStorages.CreateFromFirst<T, TS2>(nnz, ref hasError);
+		if (valOut.Invalid) return false;
+		using var idxOut = target.IndexStorages.CreateFromFirst<TInd2, TSInd2, MklInt>(nnz, ref hasError);
+		if (idxOut.Invalid) return false;
+		if (pm != valOut)
+			Buffer.MemoryCopy(pm, valOut, nnz * sizeof(T), nnz * sizeof(T));
+		NMC.cooIdxsToSpVecIdx(idxOut, pr, pc, nnz, matrix.Size[0]);
 		target.SetValues(matrix.Size.Prod(), valOut, idxOut);
 		target.Format = SparseFormat.VectorCooFormat;
 		target.DefaultValue = T.Zero;
+		hasError = false;
 		return true;
 	}
 	#endregion
@@ -444,36 +403,17 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 			return false;
 		using var buffer = ArrayPoolBuffers.Create<byte>(bufferSize);
 		long nnz = NMC.vecSpAddNnz(T.Type, ppx, px, nnzx, ppy, py, nnzy, &α, buffer);
-		TS3 valOut; T* pVal;
-		TSInd3 idxOut; TInd3* pIdx;
-		if (target.ValueStorages.Length == 1)
-		{
-			valOut = target.ValueStorages[0];
-			if (!GetPointer(valOut, out pVal, out var n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<T, CpuMemoryPointer>.Create(nnz);
-			pVal = (T*)s.Pointer.Pointer.Pointer;
-			valOut = s as TS3 ?? TS3.Empty; // never empty
-		}
-		if (target.IndexStorages.Length == 2)
-		{
-			idxOut = target.IndexStorages[0];
-			if (!GetPointer(idxOut, out pIdx, out var n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<TInd3, CpuMemoryPointer>.Create(nnz);
-			pIdx = (TInd3*)s.Pointer.Pointer.Pointer;
-			idxOut = s as TSInd3 ?? TSInd3.Empty; // never empty
-		}
-		_ = NMC.vecSpAddCal(T.Type, buffer, nnzx + nnzy, nnz, (MklInt*)pIdx, pVal);
+		bool hasError = true;
+		using var valOut = target.ValueStorages.CreateFromFirst<T, TS3>(nnz, ref hasError);
+		if (valOut.Invalid) return false;
+		using var idxOut = target.IndexStorages.CreateFromFirst<TInd3, TSInd3, MklInt>(nnz, ref hasError);
+		if (idxOut.Invalid) return false;
+		if (NMC.vecSpAddCal(T.Type, buffer, nnzx + nnzy, nnz, idxOut, valOut) != 0)
+			return false;
 		target.SetValues(x.Size[0], valOut, idxOut);
 		target.Format = SparseFormat.VectorCooFormat;
 		target.DefaultValue = T.Zero;
+		hasError = false;
 		return true;
 	}
 	#endregion
@@ -537,41 +477,16 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 
 		if (NMC.spVecOuterCheck(T.Type) < 0)
 			return false;
-		TS3 valOut; T* pVal;
-		TSInd3 rowIdxOut, colIdxOut; TInd3* pRow, pCol;
 		long nnz = nnzx * nnzy;
-		if (target.ValueStorages.Length == 1)
-		{
-			valOut = target.ValueStorages[0].MakeReference();
-			if (!GetPointer(valOut, out pVal, out var n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<T, CpuMemoryPointer>.Create(nnz);
-			pVal = (T*)s.Pointer.Pointer.Pointer;
-			valOut = s as TS3 ?? TS3.Empty; // never empty
-		}
-		if (target.IndexStorages.Length == 2)
-		{
-			rowIdxOut = target.IndexStorages[0].MakeReference();
-			colIdxOut = target.IndexStorages[1].MakeReference();
-			if (!GetPointer(rowIdxOut, out pRow, out var n2) || n2 != nnz)
-				return false;
-			if (!GetPointer(colIdxOut, out pCol, out n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<TInd3, CpuMemoryPointer>.Create(nnz);
-			pRow = (TInd3*)s.Pointer.Pointer.Pointer;
-			rowIdxOut = s as TSInd3 ?? TSInd3.Empty; // never empty
-			s = PureStorage<TInd3, CpuMemoryPointer>.Create(nnz);
-			pCol = (TInd3*)s.Pointer.Pointer.Pointer;
-			colIdxOut = s as TSInd3 ?? TSInd3.Empty; // never empty
-		}
-		_ = NMC.spVecOuter(T.Type, px, ppx, nnzx, py, ppy, nnzy, pVal, (MklInt*)pRow, (MklInt*)pCol, conjY);
-		target.SetValues(x.Size[0], y.Size[0], valOut, rowIdxOut, colIdxOut);
+		bool hasError = true;
+		using var valOut = target.ValueStorages.CreateFromFirst<T, TS3>(nnz, ref hasError);
+		if (valOut.Invalid) return false;
+		using var rowOut = target.IndexStorages.CreateFromFirst<TInd3, TSInd3, MklInt>(nnz, ref hasError);
+		if (rowOut.Invalid) return false;
+		using var colOut = target.IndexStorages.CreateFromSecond<TInd3, TSInd3, MklInt>(nnz, ref hasError);
+		if (colOut.Invalid) return false;
+		_ = NMC.spVecOuter(T.Type, px, ppx, nnzx, py, ppy, nnzy, valOut, rowOut, colOut, conjY);
+		target.SetValues(x.Size[0], y.Size[0], valOut, rowOut, colOut);
 		target.Format = SparseFormat.MatrixCocFormat;
 		target.DefaultValue = T.Zero;
 		return true;
@@ -703,6 +618,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 	{
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
 		long m = opA.CanInPlace() ? A.Size[0] : A.Size[1], n = opB.CanInPlace() ? B.Size[1] : B.Size[0];
 		if (!GetPointer(C, m, n, ldc, out T* pc))
 			return false;
@@ -734,18 +650,11 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 	}
 
 	/// <inheritdoc/>
-	public virtual bool MatrixDenseMultiplySparse<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation opA, MatrixOperation opB, long m, T α, TS1 A, long lda, ISparseArray<T, TInd, TS2, TSInd> B, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd : class, IStorage<TInd, TSInd>
-	{
-		if (α == T.Zero)
-			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
-		return false;
-	}
-
-	/// <inheritdoc/>
 	public virtual bool MatrixSparseMultiplyDense<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation opA, MatrixOperation opB, long n, T α, ISparseArray<T, TInd, TS1, TSInd> A, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
 		if (!opB.CanInPlace())
 			return false;
 		var (m, k) = opA.CanInPlace() ? (A.Size[0], A.Size[1]) : (A.Size[1], A.Size[0]);
@@ -777,6 +686,43 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 	}
 
 	/// <inheritdoc/>
+	public virtual bool MatrixDenseMultiplySparse<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation opA, MatrixOperation opB, long m, T α, TS1 A, long lda, ISparseArray<T, TInd, TS2, TSInd> B, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TSInd : class, IStorage<TInd, TSInd>
+	{
+		if (α == T.Zero)
+			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
+		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
+		if (!opA.CanInPlace())
+			return false;
+		var (k, n) = opB.CanInPlace() ? (B.Size[0], B.Size[1]) : (B.Size[1], B.Size[0]);
+		opB = opB.Transpose();
+		if (!GetPointer(A, m, k, lda, out T* pa))
+			return false;
+		if (!GetPointer(C, m, n, ldc, out T* pc))
+			return false;
+		using var descrB = SparseMatrixHandle.TryCreate(B, out bool success);
+		if (!success)
+			return false;
+
+		var func = default(T) switch
+		{
+			Float32 => new NM.mkl_sparse__mm<Float32>(NM.mkl_sparse_s_mm) as NM.mkl_sparse__mm<T>,
+			Float64 => new NM.mkl_sparse__mm<Float64>(NM.mkl_sparse_d_mm) as NM.mkl_sparse__mm<T>,
+			Complex<Float32> => new NM.mkl_sparse__mm<Complex<Float32>>(NM.mkl_sparse_c_mm) as NM.mkl_sparse__mm<T>,
+			Complex<Float64> => new NM.mkl_sparse__mm<Complex<Float64>>(NM.mkl_sparse_z_mm) as NM.mkl_sparse__mm<T>,
+			_ => null
+		};
+		if (func is null)
+			return false;
+		if (opA == MatrixOperation.Conjugate)
+			opB = opB.Conjugate();
+		if (func.Invoke(opB.ToOp(), α, descrB, GeneralMatrix, MatrixMajor.Row, pa, n, lda, β, pc, ldc).Check())
+			return false;
+		if (opA == MatrixOperation.Conjugate)
+			Dense.Conjugater.Conjugate(pc, m, n, ldc);
+		return true;
+	}
+
+	/// <inheritdoc/>
 	public virtual bool MatrixSparseKronecker<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(ISparseArray<T, TInd1, TS1, TSInd1> A, ISparseArray<T, TInd2, TS2, TSInd2> B, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> target) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS3 : class, IStorage<T, TS3> where TSInd3 : class, IStorage<TInd3, TSInd3>
 	{
 		if ((target.Format & SparseFormat.MatrixCocFormat) == SparseFormat.None ||
@@ -793,43 +739,19 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 
 		if (NMC.spVecOuterCheck(T.Type) < 0)
 			return false;
-		TS3 valOut; T* pVal;
-		TSInd3 rowIdxOut, colIdxOut; TInd3* pRow, pCol;
 		long nnz = nnza * nnzb;
-		if (target.ValueStorages.Length == 1)
-		{
-			valOut = target.ValueStorages[0].MakeReference();
-			if (!GetPointer(valOut, out pVal, out var n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<T, CpuMemoryPointer>.Create(nnz);
-			pVal = (T*)s.Pointer.Pointer.Pointer;
-			valOut = s as TS3 ?? TS3.Empty; // never empty
-		}
-		if (target.IndexStorages.Length == 2)
-		{
-			rowIdxOut = target.IndexStorages[0].MakeReference();
-			colIdxOut = target.IndexStorages[1].MakeReference();
-			if (!GetPointer(rowIdxOut, out pRow, out var n2) || n2 != nnz)
-				return false;
-			if (!GetPointer(colIdxOut, out pCol, out n2) || n2 != nnz)
-				return false;
-		}
-		else
-		{
-			var s = PureStorage<TInd3, CpuMemoryPointer>.Create(nnz);
-			pRow = (TInd3*)s.Pointer.Pointer.Pointer;
-			rowIdxOut = s as TSInd3 ?? TSInd3.Empty; // never empty
-			s = PureStorage<TInd3, CpuMemoryPointer>.Create(nnz);
-			pCol = (TInd3*)s.Pointer.Pointer.Pointer;
-			colIdxOut = s as TSInd3 ?? TSInd3.Empty; // never empty
-		}
-		_ = NMC.CooMatKron(T.Type, pa, pra, pca, nnza, pb, prb, pcb, nnzb, B.Size[0], B.Size[1], pVal, (MklInt*)pRow, (MklInt*)pCol);
-		target.SetValues(A.Size[0] * B.Size[0], A.Size[1] * B.Size[1], valOut, rowIdxOut, colIdxOut);
+		bool hasError = true;
+		using var valOut = target.ValueStorages.CreateFromFirst<T, TS3>(nnz, ref hasError);
+		if (valOut.Invalid) return false;
+		using var rowOut = target.IndexStorages.CreateFromFirst<TInd3, TSInd3, MklInt>(nnz, ref hasError);
+		if (rowOut.Invalid) return false;
+		using var colOut = target.IndexStorages.CreateFromSecond<TInd3, TSInd3, MklInt>(nnz, ref hasError);
+		if (colOut.Invalid) return false;
+		var err = NMC.cooMatKron(T.Type, pa, pra, pca, nnza, pb, prb, pcb, nnzb, B.Size[0], B.Size[1], valOut, rowOut, colOut);
+		target.SetValues(A.Size[0] * B.Size[0], A.Size[1] * B.Size[1], valOut, rowOut, colOut);
 		target.Format = SparseFormat.MatrixCocFormat;
 		target.DefaultValue = T.Zero;
+		hasError = false;
 		return true;
 	}
 	#endregion

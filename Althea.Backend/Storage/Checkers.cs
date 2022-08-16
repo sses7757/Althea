@@ -227,9 +227,9 @@ namespace Althea.Backend.Mkl
 			pointer = default; length = size.Prod();
 			if (s is null || !s.IsValid())
 				throw new ArgumentNullException(sName);
-			if (size.Any(static s => s <= 0))
+			if (size.AnyNonPositive())
 				throw new ArgumentOutOfRangeException(sizeName, size.ToArray(), Resources.ParameterError.MustPositive);
-			if (outerSize.Any(static s => s <= 0))
+			if (outerSize.AnyNonPositive())
 				throw new ArgumentOutOfRangeException(outerSizeName, outerSize.ToArray(), Resources.ParameterError.MustPositive);
 			if (!outerSize.SequenceLargerEqualThan(size))
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, outerSizeName);

@@ -255,13 +255,13 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		internal static extern CudaSparseStatus cusparseSpGEMM_destroyDescr(IntPtr descr);
 
 		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
-		internal static extern CudaSparseStatus cusparseSpGEMM_workEstimation(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, void* alpha, DenseMatrixWrapper matA, DenseMatrixWrapper matB, void* beta, DenseMatrixWrapper matC, CudaDataType computeType, SparseGemmAlgorithm alg, IntPtr spgemmDescr, out long bufferSize1, void* externalBuffer1 = null);
+		internal static extern CudaSparseStatus cusparseSpGEMM_workEstimation(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, void* alpha, SparseMatrixWrapper matA, SparseMatrixWrapper matB, void* beta, SparseMatrixWrapper matC, CudaDataType computeType, SparseGemmAlgorithm alg, SparseGemmDescriptor spgemmDescr, ref long bufferSize1, void* externalBuffer1 = null);
 
 		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
-		internal static extern CudaSparseStatus cusparseSpGEMM_compute(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, void* alpha, DenseMatrixWrapper matA, DenseMatrixWrapper matB, void* beta, DenseMatrixWrapper matC, CudaDataType computeType, SparseGemmAlgorithm alg, IntPtr spgemmDescr, out long bufferSize2, void* externalBuffer2 = null);
+		internal static extern CudaSparseStatus cusparseSpGEMM_compute(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, void* alpha, SparseMatrixWrapper matA, SparseMatrixWrapper matB, void* beta, SparseMatrixWrapper matC, CudaDataType computeType, SparseGemmAlgorithm alg, SparseGemmDescriptor spgemmDescr, ref long bufferSize2, void* externalBuffer2 = null);
 
 		[DllImport(Cuda.NativeMethods.CUSPARSE_DLL_NAME)]
-		internal static extern CudaSparseStatus cusparseSpGEMM_copy(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, void* alpha, DenseMatrixWrapper matA, DenseMatrixWrapper matB, void* beta, DenseMatrixWrapper matC, CudaDataType computeType, SparseGemmAlgorithm alg, IntPtr spgemmDescr);
+		internal static extern CudaSparseStatus cusparseSpGEMM_copy(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, void* alpha, SparseMatrixWrapper matA, SparseMatrixWrapper matB, void* beta, SparseMatrixWrapper matC, CudaDataType computeType, SparseGemmAlgorithm alg, SparseGemmDescriptor spgemmDescr);
 		#endregion
 	}
 
@@ -303,7 +303,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		internal static extern int vecSpAddCal_i32(DataType type, void* buffer, long nnzAB, long nnzC, int* C_index, void* C_value);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int spVecOuterCheck_i32(DataType type);
+		internal static extern int spVecOuterCheck(DataType type);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int spVecOuter_i32(DataType type, void* valA, int* indA, long nnzA, void* valB, int* indB, long nnzB, void* valC, int* rowC, int* colC, bool conj);
@@ -342,9 +342,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int vecSpAddCal_i64(DataType type, void* buffer, long nnzAB, long nnzC, long* C_index, void* C_value);
-
-		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int spVecOuterCheck_i64(DataType type);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int spVecOuter_i64(DataType type, void* valA, long* indA, long nnzA, void* valB, long* indB, long nnzB, void* valC, long* rowC, long* colC, bool conj);
