@@ -3,12 +3,14 @@
 using Althea.Array;
 using Althea.Backend.Cuda.Storage;
 using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.Linq;
+using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;
 
-using NM = Althea.Backend.Cuda.TensorAlgebra.Dense.NativeMethods;
-
 using static Althea.Backend.Cuda.MemoryPointerChecker;
+
+using NM = Althea.Backend.Cuda.TensorAlgebra.Dense.NativeMethods;
 
 
 namespace Althea.Backend.Cuda.TensorAlgebra.Dense;
@@ -18,6 +20,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense;
 /// </summary>
 public unsafe class Api : IBindedDevice, IBaseAbstractApi
 {
+	// TODO: limited-sized cache
 	#region basic
 	internal readonly CudaTensorHandle handle;
 
@@ -27,6 +30,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 	public Api()
 	{
 		NM.cutensorInit(out this.handle).Check();
+		this.ContractAlgorithm = ContractionAlgorithm.Default;
 		this.BindedDeviceID = Runtime.CurrentDeviceID;
 	}
 
@@ -34,8 +38,16 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 	public int BindedDeviceID { get; }
 
 	/// <inheritdoc/>
+	public bool Disposed { get; protected set; }
+
+	/// <inheritdoc/>
 	public virtual void Dispose()
 	{
+		lock (this)
+		{
+			this.contractCache.Clear();
+		}
+		this.Disposed = true;
 		GC.SuppressFinalize(this);
 	}
 
@@ -45,7 +57,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 	public ContractionAlgorithm ContractAlgorithm {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get {
-			if (this._algorithmFind.Equals(default))
+			if (this._algorithmFind.Invalid)
 			{
 				this._algorithmFind = new(this.handle, ContractionAlgorithm.Default);
 			}
@@ -63,14 +75,14 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 	#region contract cache
 	internal readonly struct DenseTensorDescription : IEquatable<DenseTensorDescription>
 	{
-		private readonly FixedBuffer_64<int> size, outerSize;
-
-		private readonly UnaryOperation op;
-
+		private readonly FixedBuffer_60<int> size;
 		private readonly int rank;
+		private readonly FixedBuffer_60<int> outerSize;
+		private readonly CuTensorUnary op;
+
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private DenseTensorDescription(ReadOnlySpan<int> size, ReadOnlySpan<int> outerSize, UnaryOperation op)
+		private DenseTensorDescription(ReadOnlySpan<int> size, ReadOnlySpan<int> outerSize, CuTensorUnary op)
 		{
 			this.rank = size.Length;
 			this.op = op;
@@ -80,7 +92,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static DenseTensorDescription Create<T>(DenseTensorWrapper<T> tensor) where T : unmanaged, IBaseNumber<T>
+		public static DenseTensorDescription Create<T, TS>(DenseTensorWrapper<T, TS> tensor) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			int r = tensor.Rank;
 			Span<int> size = stackalloc int[r], outerSize = stackalloc int[r];
@@ -102,31 +114,19 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj)
-		{
-			return obj is DenseTensorDescription find && this.Equals(find);
-		}
+		public override bool Equals(object? obj) => obj is DenseTensorDescription find && this.Equals(find);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe override int GetHashCode()
-		{
-			return HashCode.Combine(this.rank, this.op, this.size.AsSpan(this.rank).HashCodeOfSpan(), this.outerSize.AsSpan(this.rank).HashCodeOfSpan());
-		}
+		public unsafe override int GetHashCode() => HashCode.Combine(this.rank, this.op, this.size.AsSpan(this.rank).HashCodeOfSpan(), this.outerSize.AsSpan(this.rank).HashCodeOfSpan());
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator ==(DenseTensorDescription a, DenseTensorDescription b)
-		{
-			return a.Equals(b);
-		}
+		public static bool operator ==(DenseTensorDescription a, DenseTensorDescription b) => a.Equals(b);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool operator !=(DenseTensorDescription a, DenseTensorDescription b)
-		{
-			return !a.Equals(b);
-		}
+		public static bool operator !=(DenseTensorDescription a, DenseTensorDescription b) => !a.Equals(b);
 	}
 
-	private readonly struct ContractionDescription : IEquatable<ContractionDescription>
+	private readonly struct ContractionInfo : IEquatable<ContractionInfo>
 	{
 		private readonly DenseTensorDescription A, B, C;
 
@@ -135,13 +135,13 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		private readonly ContractionAlgorithm algorithm;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private ContractionDescription(in DenseTensorDescription A, in DenseTensorDescription B, in DenseTensorDescription C, in StorableContractInfo info, ContractionAlgorithm algorithm)
+		private ContractionInfo(in DenseTensorDescription A, in DenseTensorDescription B, in DenseTensorDescription C, in StorableContractInfo info, ContractionAlgorithm algorithm)
 		{
 			this.A = A; this.B = B; this.C = C; this.info = info; this.algorithm = algorithm;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ContractionDescription Create<T>(DenseTensorWrapper<T> A, DenseTensorWrapper<T> B, DenseTensorWrapper<T> C, TensorContractInfo info, ContractionAlgorithm algorithm) where T : unmanaged, IBaseNumber<T>
+		public static ContractionInfo Create<T, TS1, TS2, TS3>(DenseTensorWrapper<T, TS1> A, DenseTensorWrapper<T, TS2> B, DenseTensorWrapper<T, TS3> C, TensorContractInfo info, ContractionAlgorithm algorithm) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			var dA = DenseTensorDescription.Create(A);
 			var dB = DenseTensorDescription.Create(B);
@@ -151,83 +151,56 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe bool Equals(ContractionDescription other)
-		{
-			return this.A == other.A && this.B == other.B && this.C == other.C && this.info == other.info && this.algorithm == other.algorithm;
-		}
+		public unsafe bool Equals(ContractionInfo other) => this.A == other.A && this.B == other.B && this.C == other.C && this.info == other.info && this.algorithm == other.algorithm;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj)
-		{
-			return obj is ContractionDescription find && this.Equals(find);
-		}
+		public override bool Equals(object? obj) => obj is ContractionInfo find && this.Equals(find);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe override int GetHashCode()
-		{
-			return HashCode.Combine(this.A, this.B, this.C, this.info, this.algorithm);
-		}
+		public unsafe override int GetHashCode() => HashCode.Combine(this.A, this.B, this.C, this.info, this.algorithm);
 	}
 
-	private static readonly Dictionary<ContractionDescription, (ContractPlan plan, long workspace)> _cacheConc = new();
+	private readonly Dictionary<ContractionInfo, (ContractPlan plan, long workspace)> contractCache = new();
 	#endregion
 
 	#region methods
 	/// <inheritdoc/>
 	public virtual bool Permute<T, TS1, TS2>(DenseTensorWrapper<T, TS1> source, DenseArrayWrapper<T, TS2> destination, ReadOnlySpan<int> permutationOrder) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
-		if (!TensorDescription.TryCreate(this.handle, source, out var descrA))
-			return false;
-		if (!TensorDescription.TryCreate<T, TS2>(this.handle, destination, out var descrB))
-			return false;
 		if (!GetPointer(this, source.ValueStorage, source.Size, source.OuterSize, out T* pA))
 			return false;
 		if (!GetPointer(this, destination.ValueStorage, destination.Size, destination.OuterSize, out T* pB))
+			return false;
+		if (!TensorDescription.TryCreate(this.handle, source, out var descrA))
+			return false;
+		if (!TensorDescription.TryCreate<T, TS2>(this.handle, destination, out var descrB))
 			return false;
 		int r = source.Rank;
 		Span<int> modeA = stackalloc int[r].FillWithRange(1);
 		Span<int> modeB = stackalloc int[r];
 		modeA.ReOrderTo(modeB, permutationOrder);
 		T alpha = source.Scalar;
-		return NM.cutensorPermutation(this.handle, &alpha, pA, in descrA, modeA, pB, in descrB, modeB, descrA.dataType, null).Check();
+		return NM.cutensorPermutation(this.handle, &alpha, pA, &descrA, modeA, pB, &descrB, modeB, descrA.dataType, null).Check();
 	}
 
-	protected override unsafe bool Contract_<T>(DenseTensorWrapper<T> left, DenseTensorWrapper<T> right, DenseTensorWrapper<T> destination, TensorContractInfo info)
+	/// <inheritdoc/>
+	public virtual bool OperationBinary<T, TS1, TS2, TS3>(BinaryOperation binary, DenseTensorWrapper<T, TS1> left, ReadOnlySpan<int> leftPerm, DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
-		IntPtr pA = GetPointer(left.ValueStorage), pB = GetPointer(right.ValueStorage), pC = GetPointer(destination.ValueStorage);
-		if (pA == default || pB == default || pC == default)
-			return false;
-		if (left.Scalar.IsZero() || right.Scalar.IsZero()) // fill with 0
-			return this.Permute_(new DenseTensorWrapper<T>(destination), destination, stackalloc int[destination.Rank].FillWithRange(0));
-
-		var key = ContractionDescription.Create(left, right, destination, info, this.ContractAlgorithm);
-		if (!_cacheConc.ContainsKey(key))
-		{
-			if (!ContractDescription.Create(this.handle, left, right, destination, destination, info, out var descr))
-				return false;
-			if (!ContractPlan.Create(this.handle, in descr, in this._algorithmFind, out var plan0, out long workspace0))
-				return false;
-			_cacheConc.Add(key, (plan0, workspace0));
-		}
-		var (plan, workspace) = _cacheConc[key];
-		using var buffer = CudaBuffer.Create(workspace, extraDeviceInfo: false);
-		T alpha = left.Scalar.NativeMultiply(right.Scalar), beta = destination.Scalar;
-		NativeMethods.cutensorContraction(this.handle, in plan, &alpha, pA, pB, &beta, pC, pC, buffer.DeviceBuffer, workspace, default).Check();
-		return true;
-	}
-
-	protected override unsafe bool OperationBinary_<T>(Althea.TensorAlgebra.BinaryOperation binary, DenseTensorWrapper<T> left, Span<int> leftPerm, DenseTensorWrapper<T> right, Span<int> rightPerm, DenseTensorWrapper<T> destination)
-	{
-		BinaryOperation opAB = binary.ToCudaOp();
+		CuTensorBinary opAB = binary.ToCudaOp();
 		if (opAB == 0)
 			return false;
-		IntPtr pA = GetPointer(left.ValueStorage), pB = GetPointer(right.ValueStorage), pC = GetPointer(destination.ValueStorage);
-		if ((pA == default && pB == default) || pC == default)
+		if (!GetPointer(this, left.ValueStorage, left.Size, left.OuterSize, out T* pA))
 			return false;
-		if (!TensorDescription.Create(this.handle, destination, out var descrC))
+		if (!GetPointer(this, right.ValueStorage, right.Size, right.OuterSize, out T* pB))
 			return false;
-		TensorDescription.Create(this.handle, left, out var desrA);
-		TensorDescription.Create(this.handle, right, out var descrB);
+		if (!GetPointer(this, destination.ValueStorage, destination.Size, destination.OuterSize, out T* pC))
+			return false;
+		if (!TensorDescription.TryCreate(this.handle, left, out var descrA))
+			return false;
+		if (!TensorDescription.TryCreate(this.handle, right, out var descrB))
+			return false;
+		if (!TensorDescription.TryCreate<T, TS3>(this.handle, destination, out var descrC))
+			return false;
 		int r = destination.Rank;
 		Span<int> modeC = stackalloc int[r].FillWithRange(1);
 		Span<int> modeA = stackalloc int[r], modeB = stackalloc int[r];
@@ -236,11 +209,67 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		if (rightPerm.Length == r)
 			modeC.InverseOrderTo(modeB, rightPerm);
 		T alpha = left.Scalar, beta = right.Scalar;
-		NativeMethods.cutensorElementwiseBinary(this.handle, &alpha, pA, in desrA, in modeA[0], &beta, pB, in descrB, in modeB[0], pC, in descrC, in modeC[0], opAB, desrA.dataType, default).Check();
-		return true;
+		return NM.cutensorElementwiseBinary(this.handle, &alpha, pA, &descrA, modeA, &beta, pB, &descrB, modeB, pC, &descrC, modeC, opAB, descrA.dataType, null).Check();
 	}
 
-	protected internal unsafe bool OperationTrinary<T>(BinaryOperation binaryAB, BinaryOperation binaryABC, DenseTensorWrapper<T> A, Span<int> permA, DenseTensorWrapper<T> B, Span<int> permB, DenseTensorWrapper<T> C, Span<int> permC, DenseTensorWrapper<T> destination, Span<int> permD) where T : unmanaged, IBaseNumber<T>
+	/// <inheritdoc/>
+	public virtual bool Reduce<T, TS1, TS2>(ReduceOperation reduce, DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	{
+		CuTensorBinary opRed = reduce.ToCudaOp();
+		if (opRed == 0)
+			return false;
+		if (!GetPointer(this, source.ValueStorage, source.Size, source.OuterSize, out T* pA))
+			return false;
+		if (!GetPointer(this, destination.ValueStorage, destination.Size, destination.OuterSize, out T* pB))
+			return false;
+		if (!TensorDescription.TryCreate(this.handle, source, out var descrA))
+			return false;
+		if (!TensorDescription.TryCreate(this.handle, destination, out var descrB))
+			return false;
+		Span<int> modeA = stackalloc int[source.Rank].FillWithRange(1);
+		Span<int> modeB = stackalloc int[destination.Rank];
+		int c = 0;
+		for (int i = 0; i < modeA.Length; i++)
+		{
+			if (!reduceDimensions.Contains(i))
+				modeB[c++] = modeA[i];
+		}
+		var computeType = descrA.dataType.ToComputeType();
+		if (!NM.cutensorReductionGetWorkspace(this.handle, pA, &descrA, modeA, pB, &descrB, modeB, pB, &descrB, modeB, opRed, computeType, out long workspace).Check())
+			return false;
+		T alpha = source.Scalar, beta = destination.Scalar;
+		using var buffer = CudaBuffer.Create(workspace, extraDeviceInfo: false);
+		return NM.cutensorReduction(this.handle, &alpha, pA, &descrA, modeA, &beta, pB, &descrB, modeB, pB, &descrB, modeB, opRed, computeType, buffer.DeviceBuffer, workspace, default).Check();
+	}
+
+	/// <inheritdoc/>
+	public virtual bool Contract<T, TS1, TS2, TS3>(DenseTensorWrapper<T, TS1> left, DenseTensorWrapper<T, TS2> right, DenseTensorWrapper<T, TS3> destination, TensorContractInfo info) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	{
+		if (left.Scalar == T.Zero || right.Scalar == T.Zero)
+			return this.Permute(destination, (DenseArrayWrapper<T, TS3>)destination, stackalloc int[destination.Rank].FillWithRange(0));
+		if (!GetPointer(this, left.ValueStorage, left.Size, left.OuterSize, out T* pA))
+			return false;
+		if (!GetPointer(this, right.ValueStorage, right.Size, right.OuterSize, out T* pB))
+			return false;
+		if (!GetPointer(this, destination.ValueStorage, destination.Size, destination.OuterSize, out T* pC))
+			return false;
+		var key = ContractionInfo.Create(left, right, destination, info, this.ContractAlgorithm);
+		if (!contractCache.ContainsKey(key))
+		{
+			if (!ContractDescription.TryCreate(this, left, right, destination, destination, info, out var descr))
+				return false;
+			if (!ContractPlan.TryCreate(this.handle, &descr, in this._algorithmFind, out var plan0, out long workspace0))
+				return false;
+			contractCache.Add(key, (plan0, workspace0));
+		}
+		var (plan, workspace) = contractCache[key];
+		using var buffer = CudaBuffer.Create(workspace);
+		T alpha = left.Scalar * right.Scalar, beta = destination.Scalar;
+		return NM.cutensorContraction(this.handle, in plan, &alpha, pA, pB, &beta, pC, pC, buffer, workspace, null).Check();
+	}
+
+	/*
+	protected internal unsafe bool OperationTrinary<T>(CuTensorBinary binaryAB, CuTensorBinary binaryABC, DenseTensorWrapper<T> A, Span<int> permA, DenseTensorWrapper<T> B, Span<int> permB, DenseTensorWrapper<T> C, Span<int> permC, DenseTensorWrapper<T> destination, Span<int> permD) where T : unmanaged, IBaseNumber<T>
 	{
 		IntPtr pA = GetPointer(A.ValueStorage), pB = GetPointer(B.ValueStorage), pC = GetPointer(C.ValueStorage), pD = GetPointer(destination.ValueStorage);
 		if ((pA == default && pB == default && pC == default) || pC == default)
@@ -262,75 +291,9 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		if (permC.Length == r)
 			modeD.InverseOrderTo(modeC, permC);
 		T alpha = A.Scalar, beta = B.Scalar, gamma = C.Scalar;
-		NativeMethods.cutensorElementwiseTrinary(this.handle, &alpha, pA, in descrA, in modeA[0], &beta, pB, in descrB, in modeB[0], &gamma, pC, in descrC, in modeC[0], pD, in descrD, in modeD[0], binaryAB, binaryABC, descrA.dataType, default).Check();
+		NM.cutensorElementwiseTrinary(this.handle, &alpha, pA, &descrA, modeA, &beta, pB, &descrB, modeB, &gamma, pC, &descrC, modeC, pD, &descrD, modeD, binaryAB, binaryABC, descrA.dataType, default).Check();
 		return true;
 	}
-
-	protected override unsafe bool Permute_<T>(DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> permutationOrder)
-	{
-		IntPtr pA = GetPointer(source.ValueStorage), pB = GetPointer(destination.ValueStorage);
-		if (pA == default || pB == default)
-			return false;
-		if (!TensorDescription.Create(this.handle, source, out var descrA))
-			return false;
-		if (!TensorDescription.Create(this.handle, destination, out var descrB))
-			return false;
-		int r = source.Rank;
-		Span<int> modeA = stackalloc int[r].FillWithRange(1);
-		Span<int> modeB = stackalloc int[r];
-		modeA.ReOrderTo(modeB, permutationOrder);
-		T alpha = source.Scalar;
-		NativeMethods.cutensorPermutation(this.handle, &alpha, pA, in descrA, in modeA[0], pB, in descrB, in modeB[0], descrA.dataType, default).Check();
-		return true;
-	}
-
-	protected override unsafe bool Reduce_<T>(Althea.TensorAlgebra.BinaryOperation reduce, DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<int> reduceDimensions)
-	{
-		BinaryOperation opRed = reduce.ToCudaOp();
-		if (opRed == 0)
-			return false;
-		IntPtr pA = GetPointer(source.ValueStorage), pB = GetPointer(destination.ValueStorage);
-		if (pA == default || pB == default)
-			return false;
-		if (!TensorDescription.Create(this.handle, source, out var descrA))
-			return false;
-		if (!TensorDescription.Create(this.handle, destination, out var descrB))
-			return false;
-		Span<int> modeA = stackalloc int[source.Rank].FillWithRange(1);
-		Span<int> modeB = stackalloc int[destination.Rank];
-		int c = 0;
-		for (int i = 0; i < modeA.Length; i++)
-		{
-			if (!reduceDimensions.Contains(i))
-				modeB[c++] = modeA[i];
-		}
-		var computeType = descrA.dataType.ToComputeType();
-		NativeMethods.cutensorReductionGetWorkspace(this.handle, pA, in descrA, in modeA[0], pB, in descrB, in modeB[0], pB, in descrB, in modeB[0], opRed, computeType, out long workspace).Check();
-		T alpha = source.Scalar, beta = destination.Scalar;
-		using var buffer = CudaBuffer.Create(workspace, extraDeviceInfo: false);
-		NativeMethods.cutensorReduction(this.handle, &alpha, pA, in descrA, in modeA[0], &beta, pB, in descrB, in modeB[0], pB, in descrB, in modeB[0], opRed, computeType, buffer.DeviceBuffer, workspace, default).Check();
-		return true;
-	}
-
-	protected internal unsafe bool Reduce<T>(BinaryOperation reduce, DenseTensorWrapper<T> source, DenseTensorWrapper<T> destination, ReadOnlySpan<char> labelSource, ReadOnlySpan<char> labelDestination) where T : unmanaged, IBaseNumber<T>
-	{
-		IntPtr pA = GetPointer(source.ValueStorage), pB = GetPointer(destination.ValueStorage);
-		if (pA == default || pB == default)
-			return false;
-		if (!TensorDescription.Create(this.handle, source, out var descrA))
-			return false;
-		if (!TensorDescription.Create(this.handle, destination, out var descrB))
-			return false;
-		Span<int> modeA = stackalloc int[source.Rank];
-		Span<int> modeB = stackalloc int[destination.Rank];
-		labelSource.CopyTo(modeA, static c => c);
-		labelDestination.CopyTo(modeB, static c => c);
-		var computeType = descrA.dataType.ToComputeType();
-		NativeMethods.cutensorReductionGetWorkspace(this.handle, pA, in descrA, in modeA[0], pB, in descrB, in modeB[0], pB, in descrB, in modeB[0], reduce, computeType, out long workspace).Check();
-		T alpha = source.Scalar, beta = Const<T>.Zero;
-		using var buffer = CudaBuffer.Create(workspace, extraDeviceInfo: false);
-		NativeMethods.cutensorReduction(this.handle, &alpha, pA, in descrA, in modeA[0], &beta, pB, in descrB, in modeB[0], pB, in descrB, in modeB[0], reduce, computeType, buffer.DeviceBuffer, workspace, default).Check();
-		return true;
-	}
+	*/
 	#endregion
 }

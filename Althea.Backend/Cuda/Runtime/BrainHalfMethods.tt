@@ -47,7 +47,7 @@ var methods = new (string name, string type, string param, string invoke)[]
 	("Cbrt", "TSelf", "TSelf x", "x"),
 	("Sqrt", "TSelf", "TSelf x", "x"),
 	("Hypot", "TSelf", "TSelf x, TSelf y", "x, y"),
-	("Root", "TSelf", "TSelf x, int n", "x, n"),
+	("RootN", "TSelf", "TSelf x, int n", "x, n"),
 	("Acos", "TSelf", "TSelf x", "x"),
 	("Asin", "TSelf", "TSelf x", "x"),
 	("Atan", "TSelf", "TSelf x", "x"),

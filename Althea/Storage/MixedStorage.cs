@@ -13,4478 +13,4477 @@ using Althea.Resources;
 using Mem = Althea.Storage.ApiSelector;
 
 
-namespace Althea.Storage
+namespace Althea.Storage;
+
+#region mixed storage of 2 locations
+/// <summary>
+/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 2 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+/// </summary>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+public abstract class MixedStorageBase<TP1, TP2>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
 {
-	#region mixed storage of 2 locations
 	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 2 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+	/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
 	/// </summary>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
-	public abstract class MixedStorageBase<TP1, TP2>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
+	public PointerSegment<TP1> Pointer1 { get; protected init; }
+
+	/// <summary>
+	/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
+	/// </summary>
+	public PointerSegment<TP2> Pointer2 { get; protected init; }
+
+	/// <summary>
+	/// Create a new <see cref="MixedStorageBase{TP1, TP2}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2)
 	{
-		/// <summary>
-		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
-		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; protected init; }
-
-		/// <summary>
-		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
-		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; protected init; }
-
-		/// <summary>
-		/// Create a new <see cref="MixedStorageBase{TP1, TP2}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2)
-		{
-			this.Pointer1 = pointer1;
-			this.Pointer2 = pointer2;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorageBase{TP1, TP2}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorageBase() { }
+		this.Pointer1 = pointer1;
+		this.Pointer2 = pointer2;
 	}
 
 	/// <summary>
-	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2}"/> and constrains data type to <typeparamref name="T"/>
+	/// Create an empty <see cref="MixedStorageBase{TP1, TP2}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class MixedStorage<T, TP1, TP2> : MixedStorageBase<TP1, TP2>, IStorage<T, MixedStorage<T, TP1, TP2>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
-	{
-		#region basic
-		/// <summary>
-		/// Create a new <see cref="MixedStorage{T, TP1, TP2}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2) : base(pointer1, pointer2) { }
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorage{T, TP1, TP2}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorage() : base() { }
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2> Empty => new ReferenceMixedStorage<T, TP1, TP2>(null);
-		
-		/// <inheritdoc/>
-		public static DataType DataType => T.Type;
-		
-		/// <inheritdoc/>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location,  });
-		
-		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, };
-
-		long IStorage<MixedStorage<T, TP1, TP2>>.SizeOfPointer(int i)
-		{
-			if (this.Disposed)
-				return 0;
-			return i switch
-			{
-				0 => this.Pointer1.IsValid() ? 1 : 0,
-				1 => this.Pointer2.IsValid() ? 1 : 0,
-				_ => throw new ArgumentOutOfRangeException(nameof(i)),
-			};
-		}
-		
-		/// <inheritdoc/>
-		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes;
-		
-		/// <inheritdoc/>
-		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2>>)this).Length;
-		
-		/// <inheritdoc/>
-		public bool Disposed { get; private set; } = false;
-		
-		/// <inheritdoc/>
-		public virtual void Dispose(bool invokedByUser)
-		{
-			if (this is not ReferenceMixedStorage<T, TP1, TP2>)
-			{
-				Mem.Free(this.Pointer1.Pointer);
-				Mem.Free(this.Pointer2.Pointer);
-			}
-			this.Disposed = true;
-		}
-
-		/// <inheritdoc/>
-		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
-		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid());
-		#endregion
-
-		#region reference
-		ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2>>.GetPointerSizes(Span<long> sizes)
-		{
-			if (sizes.Length < 2)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
-			sizes[0] = this.Pointer1.LengthInBytes;
-			sizes[1] = this.Pointer2.LengthInBytes;
-			return sizes;
-		}
-
-		/// <inheritdoc/>
-		public bool OverlapWith(IStorage other)
-		{
-			return other is MixedStorageBase<TP1, TP2> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2);
-		}
-		
-		/// <inheritdoc/>
-		public MixedStorage<T, TP1, TP2> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2> @ref)
-				return @ref;
-			else
-				return new ReferenceMixedStorage<T, TP1, TP2>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
-		public bool OverlapWith(MixedStorage<T, TP1, TP2> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2);
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			return (storage as MixedStorage<TOut, TP1, TP2> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
-		}
-
-		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2}"/> of data type <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, TP1, TP2> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			if (typeof(TOut) == typeof(T))
-				return this.MakeReference() as MixedStorage<TOut, TP1, TP2> ?? MixedStorage<TOut, TP1, TP2>.Empty;
-			((IStorage<T, MixedStorage<T, TP1, TP2>>)this).CheckCast<TOut>();
-			return new ReferenceMixedStorage<TOut, TP1, TP2>(this);
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2}"/> of given lengths.
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MixedStorage<T, TP1, TP2> Create(long length1, long length2)
-		{
-			if (length1 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
-			if (length2 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
-			return new ActualMixedStorage<T, TP1, TP2>(length1,  length2);
-		}
-
-		static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.Create(ReadOnlySpan<long> lengths)
-		{
-			if (lengths.Length != 2)
-				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			return Create(lengths[0], lengths[1]);
-		}
-
-		static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.CreateAlike<T2, TS2>(TS2 storage)
-		{
-			return CreateAlike(storage as MixedStorage<T2, TP1, TP2> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
-		}
-
-		/// <summary>
-		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2}"/> alike <paramref name="storage"/>.
-		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
-		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2> CreateAlike<T2>(MixedStorage<T2, TP1, TP2> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size);
-		#endregion
-
-		#region operators
-		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2>, long>.AdditiveIdentity => 0;
-		
-		/// <inheritdoc/>
-		public bool Equals(MixedStorage<T, TP1, TP2>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-		
-		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-		
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2>);
-		
-		/// <inheritdoc/>
-		public static long operator -(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right)
-		{
-			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2>>.StorageDiffBytes(left, right);
-			if (diffBytes % T.Size != 0)
-				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / T.Size;
-		}
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2> operator +(MixedStorage<T, TP1, TP2> left, long right) => left.MakeReference(right);
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2> operator -(MixedStorage<T, TP1, TP2> left, long right) => left.MakeReference(-right);
-		
-		/// <inheritdoc/>
-		public static bool operator ==(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right) => left.Equals(right);
-		
-		/// <inheritdoc/>
-		public static bool operator !=(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right) => !left.Equals(right);
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.StringMain => nameof(MixedStorage<T, TP1, TP2>);
-
-		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2>>.Length), nameof(Pointer1), nameof(Pointer2) };
-
-		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-		
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.ToString(this);
-		
-		static JsonConverter<MixedStorage<T, TP1, TP2>> IStorage<T, MixedStorage<T, TP1, TP2>>.JsonConverter => new JsonConverter();
-
-		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2>>
-		{
-			private record struct Repr(string Data1, string Data2);
-
-			public override MixedStorage<T, TP1, TP2> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
-					throw new JsonException();
-
-				// read pointer 1
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data1 = reader.GetBytesFromBase64();
-				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 2
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data2 = reader.GetBytesFromBase64();
-				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-				
-				if (reader.TokenType != JsonTokenType.EndObject)
-					throw new JsonException();
-				reader.Read();
-				return new ActualMixedStorage<T, TP1, TP2>(pointer1, pointer2);
-			}
-
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2> value, JsonSerializerOptions options)
-			{
-				if (!value.IsValid())
-					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, }.Max()];
-				int size;
-				writer.WriteStartObject();
-				
-				// write pointer 1
-				size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
-				
-				// write pointer 2
-				size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
-				
-				writer.WriteEndObject();
-			}
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The actual storage class for a mixed storage on 2 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ActualMixedStorage<T, TP1, TP2> : MixedStorage<T, TP1, TP2>, IActualStorage<T, MixedStorage<T, TP1, TP2>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
-	{
-		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2) : base(pointer1, pointer2)
-		{
-			// do nothing
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2}"/> from the given lengths of all locations
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative))
-		{
-			if (this.Length == 0)
-				throw new ArgumentException(ParameterError.CannotAllZero);
-		}
-		
-		/// <summary>
-		/// The deconstructor to be invoked by GC
-		/// </summary>
-		~ActualMixedStorage() => this.Dispose(false);
-	}
-
-	/// <summary>
-	/// The reference storage class for a mixed storage on 2 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferenceMixedStorage<T, TP1, TP2> : MixedStorage<T, TP1, TP2>, IReferenceStorage<T, MixedStorage<T, TP1, TP2>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
-	{
-		/// <inheritdoc/>
-		public IStorage? Reference { get; }
-		
-		/// <inheritdoc/>
-		public long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
-		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2>>.Create<MixedStorageBase<TP1, TP2>>(storage, offset, newLength);
-			if (storage is not MixedStorageBase<TP1, TP2> s)
-				return;
-
-			this.Reference = storage; this.TotalOffsetInBytes = offset;
-
-			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default;
-			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes,  };
-			lenAccu.AccumulateSum(lenAccu, inclusive: false);
-			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
-
-			if (0 > firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1;
-			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset, newLength);
-			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset);
-			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer1.LengthInBytes;
-			if (1 > firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2;
-			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset, newLength);
-			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset);
-			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer2.LengthInBytes;
-			this.Pointer1 = p1; this.Pointer2 = p2;
-		}
-	}
-	#endregion
-
-
-	#region mixed storage of 3 locations
-	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 3 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
-	/// </summary>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
-	public abstract class MixedStorageBase<TP1, TP2, TP3>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
-	{
-		/// <summary>
-		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
-		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; protected init; }
-
-		/// <summary>
-		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
-		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; protected init; }
-
-		/// <summary>
-		/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
-		/// </summary>
-		public PointerSegment<TP3> Pointer3 { get; protected init; }
-
-		/// <summary>
-		/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3)
-		{
-			this.Pointer1 = pointer1;
-			this.Pointer2 = pointer2;
-			this.Pointer3 = pointer3;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorageBase() { }
-	}
-
-	/// <summary>
-	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3}"/> and constrains data type to <typeparamref name="T"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class MixedStorage<T, TP1, TP2, TP3> : MixedStorageBase<TP1, TP2, TP3>, IStorage<T, MixedStorage<T, TP1, TP2, TP3>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
-	{
-		#region basic
-		/// <summary>
-		/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3) : base(pointer1, pointer2, pointer3) { }
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorage() : base() { }
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3>(null);
-		
-		/// <inheritdoc/>
-		public static DataType DataType => T.Type;
-		
-		/// <inheritdoc/>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location,  });
-		
-		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, };
-
-		long IStorage<MixedStorage<T, TP1, TP2, TP3>>.SizeOfPointer(int i)
-		{
-			if (this.Disposed)
-				return 0;
-			return i switch
-			{
-				0 => this.Pointer1.IsValid() ? 1 : 0,
-				1 => this.Pointer2.IsValid() ? 1 : 0,
-				2 => this.Pointer3.IsValid() ? 1 : 0,
-				_ => throw new ArgumentOutOfRangeException(nameof(i)),
-			};
-		}
-		
-		/// <inheritdoc/>
-		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes;
-		
-		/// <inheritdoc/>
-		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).Length;
-		
-		/// <inheritdoc/>
-		public bool Disposed { get; private set; } = false;
-		
-		/// <inheritdoc/>
-		public virtual void Dispose(bool invokedByUser)
-		{
-			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3>)
-			{
-				Mem.Free(this.Pointer1.Pointer);
-				Mem.Free(this.Pointer2.Pointer);
-				Mem.Free(this.Pointer3.Pointer);
-			}
-			this.Disposed = true;
-		}
-
-		/// <inheritdoc/>
-		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
-		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid());
-		#endregion
-
-		#region reference
-		ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.GetPointerSizes(Span<long> sizes)
-		{
-			if (sizes.Length < 3)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
-			sizes[0] = this.Pointer1.LengthInBytes;
-			sizes[1] = this.Pointer2.LengthInBytes;
-			sizes[2] = this.Pointer3.LengthInBytes;
-			return sizes;
-		}
-
-		/// <inheritdoc/>
-		public bool OverlapWith(IStorage other)
-		{
-			return other is MixedStorageBase<TP1, TP2, TP3> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3);
-		}
-		
-		/// <inheritdoc/>
-		public MixedStorage<T, TP1, TP2, TP3> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3> @ref)
-				return @ref;
-			else
-				return new ReferenceMixedStorage<T, TP1, TP2, TP3>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
-		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3);
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			return (storage as MixedStorage<TOut, TP1, TP2, TP3> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
-		}
-
-		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of data type <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, TP1, TP2, TP3> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			if (typeof(TOut) == typeof(T))
-				return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3> ?? MixedStorage<TOut, TP1, TP2, TP3>.Empty;
-			((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).CheckCast<TOut>();
-			return new ReferenceMixedStorage<TOut, TP1, TP2, TP3>(this);
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of given lengths.
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MixedStorage<T, TP1, TP2, TP3> Create(long length1, long length2, long length3)
-		{
-			if (length1 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
-			if (length2 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
-			if (length3 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
-			return new ActualMixedStorage<T, TP1, TP2, TP3>(length1, length2,  length3);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Create(ReadOnlySpan<long> lengths)
-		{
-			if (lengths.Length != 3)
-				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			return Create(lengths[0], lengths[1], lengths[2]);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.CreateAlike<T2, TS2>(TS2 storage)
-		{
-			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
-		}
-
-		/// <summary>
-		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> alike <paramref name="storage"/>.
-		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
-		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size);
-		#endregion
-
-		#region operators
-		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3>, long>.AdditiveIdentity => 0;
-		
-		/// <inheritdoc/>
-		public bool Equals(MixedStorage<T, TP1, TP2, TP3>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-		
-		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-		
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3>);
-		
-		/// <inheritdoc/>
-		public static long operator -(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right)
-		{
-			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.StorageDiffBytes(left, right);
-			if (diffBytes % T.Size != 0)
-				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / T.Size;
-		}
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3> operator +(MixedStorage<T, TP1, TP2, TP3> left, long right) => left.MakeReference(right);
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3> operator -(MixedStorage<T, TP1, TP2, TP3> left, long right) => left.MakeReference(-right);
-		
-		/// <inheritdoc/>
-		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right) => left.Equals(right);
-		
-		/// <inheritdoc/>
-		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right) => !left.Equals(right);
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3>);
-
-		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Length), nameof(Pointer1), nameof(Pointer2) };
-
-		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-		
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.ToString(this);
-		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3>> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.JsonConverter => new JsonConverter();
-
-		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3>>
-		{
-			private record struct Repr(string Data1, string Data2, string Data3);
-
-			public override MixedStorage<T, TP1, TP2, TP3> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
-					throw new JsonException();
-
-				// read pointer 1
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data1 = reader.GetBytesFromBase64();
-				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 2
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data2 = reader.GetBytesFromBase64();
-				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 3
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data3 = reader.GetBytesFromBase64();
-				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-				
-				if (reader.TokenType != JsonTokenType.EndObject)
-					throw new JsonException();
-				reader.Read();
-				return new ActualMixedStorage<T, TP1, TP2, TP3>(pointer1, pointer2, pointer3);
-			}
-
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3> value, JsonSerializerOptions options)
-			{
-				if (!value.IsValid())
-					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, }.Max()];
-				int size;
-				writer.WriteStartObject();
-				
-				// write pointer 1
-				size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
-				
-				// write pointer 2
-				size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
-				
-				// write pointer 3
-				size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
-				
-				writer.WriteEndObject();
-			}
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The actual storage class for a mixed storage on 3 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ActualMixedStorage<T, TP1, TP2, TP3> : MixedStorage<T, TP1, TP2, TP3>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
-	{
-		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3) : base(pointer1, pointer2, pointer3)
-		{
-			// do nothing
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3}"/> from the given lengths of all locations
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative))
-		{
-			if (this.Length == 0)
-				throw new ArgumentException(ParameterError.CannotAllZero);
-		}
-		
-		/// <summary>
-		/// The deconstructor to be invoked by GC
-		/// </summary>
-		~ActualMixedStorage() => this.Dispose(false);
-	}
-
-	/// <summary>
-	/// The reference storage class for a mixed storage on 3 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3> : MixedStorage<T, TP1, TP2, TP3>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
-	{
-		/// <inheritdoc/>
-		public IStorage? Reference { get; }
-		
-		/// <inheritdoc/>
-		public long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
-		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Create<MixedStorageBase<TP1, TP2, TP3>>(storage, offset, newLength);
-			if (storage is not MixedStorageBase<TP1, TP2, TP3> s)
-				return;
-
-			this.Reference = storage; this.TotalOffsetInBytes = offset;
-
-			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default;
-			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes,  };
-			lenAccu.AccumulateSum(lenAccu, inclusive: false);
-			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
-
-			if (0 > firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1;
-			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset, newLength);
-			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset);
-			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer1.LengthInBytes;
-			if (1 > firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2;
-			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset, newLength);
-			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset);
-			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer2.LengthInBytes;
-			if (2 > firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3;
-			else if (2 == firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset, newLength);
-			else if (2 == firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset);
-			else if (2 > firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer3.LengthInBytes;
-			this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3;
-		}
-	}
-	#endregion
-
-
-	#region mixed storage of 4 locations
-	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 4 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
-	/// </summary>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
-	public abstract class MixedStorageBase<TP1, TP2, TP3, TP4>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
-	{
-		/// <summary>
-		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
-		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; protected init; }
-
-		/// <summary>
-		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
-		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; protected init; }
-
-		/// <summary>
-		/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
-		/// </summary>
-		public PointerSegment<TP3> Pointer3 { get; protected init; }
-
-		/// <summary>
-		/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
-		/// </summary>
-		public PointerSegment<TP4> Pointer4 { get; protected init; }
-
-		/// <summary>
-		/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4)
-		{
-			this.Pointer1 = pointer1;
-			this.Pointer2 = pointer2;
-			this.Pointer3 = pointer3;
-			this.Pointer4 = pointer4;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorageBase() { }
-	}
-
-	/// <summary>
-	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4}"/> and constrains data type to <typeparamref name="T"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class MixedStorage<T, TP1, TP2, TP3, TP4> : MixedStorageBase<TP1, TP2, TP3, TP4>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
-	{
-		#region basic
-		/// <summary>
-		/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4) : base(pointer1, pointer2, pointer3, pointer4) { }
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorage() : base() { }
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>(null);
-		
-		/// <inheritdoc/>
-		public static DataType DataType => T.Type;
-		
-		/// <inheritdoc/>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location,  });
-		
-		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, };
-
-		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4>>.SizeOfPointer(int i)
-		{
-			if (this.Disposed)
-				return 0;
-			return i switch
-			{
-				0 => this.Pointer1.IsValid() ? 1 : 0,
-				1 => this.Pointer2.IsValid() ? 1 : 0,
-				2 => this.Pointer3.IsValid() ? 1 : 0,
-				3 => this.Pointer4.IsValid() ? 1 : 0,
-				_ => throw new ArgumentOutOfRangeException(nameof(i)),
-			};
-		}
-		
-		/// <inheritdoc/>
-		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes;
-		
-		/// <inheritdoc/>
-		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).Length;
-		
-		/// <inheritdoc/>
-		public bool Disposed { get; private set; } = false;
-		
-		/// <inheritdoc/>
-		public virtual void Dispose(bool invokedByUser)
-		{
-			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>)
-			{
-				Mem.Free(this.Pointer1.Pointer);
-				Mem.Free(this.Pointer2.Pointer);
-				Mem.Free(this.Pointer3.Pointer);
-				Mem.Free(this.Pointer4.Pointer);
-			}
-			this.Disposed = true;
-		}
-
-		/// <inheritdoc/>
-		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
-		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid());
-		#endregion
-
-		#region reference
-		ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.GetPointerSizes(Span<long> sizes)
-		{
-			if (sizes.Length < 4)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
-			sizes[0] = this.Pointer1.LengthInBytes;
-			sizes[1] = this.Pointer2.LengthInBytes;
-			sizes[2] = this.Pointer3.LengthInBytes;
-			sizes[3] = this.Pointer4.LengthInBytes;
-			return sizes;
-		}
-
-		/// <inheritdoc/>
-		public bool OverlapWith(IStorage other)
-		{
-			return other is MixedStorageBase<TP1, TP2, TP3, TP4> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4);
-		}
-		
-		/// <inheritdoc/>
-		public MixedStorage<T, TP1, TP2, TP3, TP4> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4> @ref)
-				return @ref;
-			else
-				return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
-		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4);
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
-		}
-
-		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of data type <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, TP1, TP2, TP3, TP4> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			if (typeof(TOut) == typeof(T))
-				return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4>.Empty;
-			((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).CheckCast<TOut>();
-			return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4>(this);
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of given lengths.
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MixedStorage<T, TP1, TP2, TP3, TP4> Create(long length1, long length2, long length3, long length4)
-		{
-			if (length1 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
-			if (length2 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
-			if (length3 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
-			if (length4 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(length1, length2, length3,  length4);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Create(ReadOnlySpan<long> lengths)
-		{
-			if (lengths.Length != 4)
-				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			return Create(lengths[0], lengths[1], lengths[2], lengths[3]);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.CreateAlike<T2, TS2>(TS2 storage)
-		{
-			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
-		}
-
-		/// <summary>
-		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> alike <paramref name="storage"/>.
-		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
-		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size);
-		#endregion
-
-		#region operators
-		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4>, long>.AdditiveIdentity => 0;
-		
-		/// <inheritdoc/>
-		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-		
-		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-		
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4>);
-		
-		/// <inheritdoc/>
-		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right)
-		{
-			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.StorageDiffBytes(left, right);
-			if (diffBytes % T.Size != 0)
-				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / T.Size;
-		}
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4> operator +(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left.MakeReference(right);
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4> operator -(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left.MakeReference(-right);
-		
-		/// <inheritdoc/>
-		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right) => left.Equals(right);
-		
-		/// <inheritdoc/>
-		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right) => !left.Equals(right);
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4>);
-
-		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Length), nameof(Pointer1), nameof(Pointer2) };
-
-		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-		
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.ToString(this);
-		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.JsonConverter => new JsonConverter();
-
-		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>>
-		{
-			private record struct Repr(string Data1, string Data2, string Data3, string Data4);
-
-			public override MixedStorage<T, TP1, TP2, TP3, TP4> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
-					throw new JsonException();
-
-				// read pointer 1
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data1 = reader.GetBytesFromBase64();
-				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 2
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data2 = reader.GetBytesFromBase64();
-				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 3
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data3 = reader.GetBytesFromBase64();
-				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 4
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data4 = reader.GetBytesFromBase64();
-				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-				
-				if (reader.TokenType != JsonTokenType.EndObject)
-					throw new JsonException();
-				reader.Read();
-				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(pointer1, pointer2, pointer3, pointer4);
-			}
-
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4> value, JsonSerializerOptions options)
-			{
-				if (!value.IsValid())
-					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, }.Max()];
-				int size;
-				writer.WriteStartObject();
-				
-				// write pointer 1
-				size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
-				
-				// write pointer 2
-				size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
-				
-				// write pointer 3
-				size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
-				
-				// write pointer 4
-				size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
-				
-				writer.WriteEndObject();
-			}
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The actual storage class for a mixed storage on 4 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4> : MixedStorage<T, TP1, TP2, TP3, TP4>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
-	{
-		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4) : base(pointer1, pointer2, pointer3, pointer4)
-		{
-			// do nothing
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4}"/> from the given lengths of all locations
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative))
-		{
-			if (this.Length == 0)
-				throw new ArgumentException(ParameterError.CannotAllZero);
-		}
-		
-		/// <summary>
-		/// The deconstructor to be invoked by GC
-		/// </summary>
-		~ActualMixedStorage() => this.Dispose(false);
-	}
-
-	/// <summary>
-	/// The reference storage class for a mixed storage on 4 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4> : MixedStorage<T, TP1, TP2, TP3, TP4>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
-	{
-		/// <inheritdoc/>
-		public IStorage? Reference { get; }
-		
-		/// <inheritdoc/>
-		public long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
-		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4>>(storage, offset, newLength);
-			if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4> s)
-				return;
-
-			this.Reference = storage; this.TotalOffsetInBytes = offset;
-
-			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default;
-			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes,  };
-			lenAccu.AccumulateSum(lenAccu, inclusive: false);
-			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
-
-			if (0 > firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1;
-			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset, newLength);
-			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset);
-			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer1.LengthInBytes;
-			if (1 > firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2;
-			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset, newLength);
-			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset);
-			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer2.LengthInBytes;
-			if (2 > firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3;
-			else if (2 == firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset, newLength);
-			else if (2 == firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset);
-			else if (2 > firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer3.LengthInBytes;
-			if (3 > firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4;
-			else if (3 == firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset, newLength);
-			else if (3 == firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset);
-			else if (3 > firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer4.LengthInBytes;
-			this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4;
-		}
-	}
-	#endregion
-
-
-	#region mixed storage of 5 locations
-	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 5 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
-	/// </summary>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
-	public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
-	{
-		/// <summary>
-		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
-		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; protected init; }
-
-		/// <summary>
-		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
-		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; protected init; }
-
-		/// <summary>
-		/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
-		/// </summary>
-		public PointerSegment<TP3> Pointer3 { get; protected init; }
-
-		/// <summary>
-		/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
-		/// </summary>
-		public PointerSegment<TP4> Pointer4 { get; protected init; }
-
-		/// <summary>
-		/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
-		/// </summary>
-		public PointerSegment<TP5> Pointer5 { get; protected init; }
-
-		/// <summary>
-		/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5)
-		{
-			this.Pointer1 = pointer1;
-			this.Pointer2 = pointer2;
-			this.Pointer3 = pointer3;
-			this.Pointer4 = pointer4;
-			this.Pointer5 = pointer5;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorageBase() { }
-	}
-
-	/// <summary>
-	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5}"/> and constrains data type to <typeparamref name="T"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
-	{
-		#region basic
-		/// <summary>
-		/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5) : base(pointer1, pointer2, pointer3, pointer4, pointer5) { }
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorage() : base() { }
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(null);
-		
-		/// <inheritdoc/>
-		public static DataType DataType => T.Type;
-		
-		/// <inheritdoc/>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location,  });
-		
-		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, };
-
-		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.SizeOfPointer(int i)
-		{
-			if (this.Disposed)
-				return 0;
-			return i switch
-			{
-				0 => this.Pointer1.IsValid() ? 1 : 0,
-				1 => this.Pointer2.IsValid() ? 1 : 0,
-				2 => this.Pointer3.IsValid() ? 1 : 0,
-				3 => this.Pointer4.IsValid() ? 1 : 0,
-				4 => this.Pointer5.IsValid() ? 1 : 0,
-				_ => throw new ArgumentOutOfRangeException(nameof(i)),
-			};
-		}
-		
-		/// <inheritdoc/>
-		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes;
-		
-		/// <inheritdoc/>
-		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).Length;
-		
-		/// <inheritdoc/>
-		public bool Disposed { get; private set; } = false;
-		
-		/// <inheritdoc/>
-		public virtual void Dispose(bool invokedByUser)
-		{
-			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>)
-			{
-				Mem.Free(this.Pointer1.Pointer);
-				Mem.Free(this.Pointer2.Pointer);
-				Mem.Free(this.Pointer3.Pointer);
-				Mem.Free(this.Pointer4.Pointer);
-				Mem.Free(this.Pointer5.Pointer);
-			}
-			this.Disposed = true;
-		}
-
-		/// <inheritdoc/>
-		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
-		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid());
-		#endregion
-
-		#region reference
-		ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.GetPointerSizes(Span<long> sizes)
-		{
-			if (sizes.Length < 5)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
-			sizes[0] = this.Pointer1.LengthInBytes;
-			sizes[1] = this.Pointer2.LengthInBytes;
-			sizes[2] = this.Pointer3.LengthInBytes;
-			sizes[3] = this.Pointer4.LengthInBytes;
-			sizes[4] = this.Pointer5.LengthInBytes;
-			return sizes;
-		}
-
-		/// <inheritdoc/>
-		public bool OverlapWith(IStorage other)
-		{
-			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5);
-		}
-		
-		/// <inheritdoc/>
-		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5> @ref)
-				return @ref;
-			else
-				return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
-		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5);
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
-		}
-
-		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of data type <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			if (typeof(TOut) == typeof(T))
-				return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5>.Empty;
-			((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).CheckCast<TOut>();
-			return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5>(this);
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of given lengths.
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Create(long length1, long length2, long length3, long length4, long length5)
-		{
-			if (length1 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
-			if (length2 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
-			if (length3 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
-			if (length4 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
-			if (length5 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(length1, length2, length3, length4,  length5);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Create(ReadOnlySpan<long> lengths)
-		{
-			if (lengths.Length != 5)
-				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4]);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.CreateAlike<T2, TS2>(TS2 storage)
-		{
-			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
-		}
-
-		/// <summary>
-		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> alike <paramref name="storage"/>.
-		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
-		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size);
-		#endregion
-
-		#region operators
-		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, long>.AdditiveIdentity => 0;
-		
-		/// <inheritdoc/>
-		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-		
-		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-		
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5>);
-		
-		/// <inheritdoc/>
-		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right)
-		{
-			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.StorageDiffBytes(left, right);
-			if (diffBytes % T.Size != 0)
-				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / T.Size;
-		}
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left.MakeReference(right);
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left.MakeReference(-right);
-		
-		/// <inheritdoc/>
-		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right) => left.Equals(right);
-		
-		/// <inheritdoc/>
-		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right) => !left.Equals(right);
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5>);
-
-		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Length), nameof(Pointer1), nameof(Pointer2) };
-
-		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-		
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.ToString(this);
-		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.JsonConverter => new JsonConverter();
-
-		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
-		{
-			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5);
-
-			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
-					throw new JsonException();
-
-				// read pointer 1
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data1 = reader.GetBytesFromBase64();
-				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 2
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data2 = reader.GetBytesFromBase64();
-				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 3
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data3 = reader.GetBytesFromBase64();
-				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 4
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data4 = reader.GetBytesFromBase64();
-				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 5
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data5 = reader.GetBytesFromBase64();
-				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-				
-				if (reader.TokenType != JsonTokenType.EndObject)
-					throw new JsonException();
-				reader.Read();
-				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(pointer1, pointer2, pointer3, pointer4, pointer5);
-			}
-
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> value, JsonSerializerOptions options)
-			{
-				if (!value.IsValid())
-					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, }.Max()];
-				int size;
-				writer.WriteStartObject();
-				
-				// write pointer 1
-				size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
-				
-				// write pointer 2
-				size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
-				
-				// write pointer 3
-				size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
-				
-				// write pointer 4
-				size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
-				
-				// write pointer 5
-				size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
-				
-				writer.WriteEndObject();
-			}
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The actual storage class for a mixed storage on 5 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
-	{
-		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5) : base(pointer1, pointer2, pointer3, pointer4, pointer5)
-		{
-			// do nothing
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> from the given lengths of all locations
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative))
-		{
-			if (this.Length == 0)
-				throw new ArgumentException(ParameterError.CannotAllZero);
-		}
-		
-		/// <summary>
-		/// The deconstructor to be invoked by GC
-		/// </summary>
-		~ActualMixedStorage() => this.Dispose(false);
-	}
-
-	/// <summary>
-	/// The reference storage class for a mixed storage on 5 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
-	{
-		/// <inheritdoc/>
-		public IStorage? Reference { get; }
-		
-		/// <inheritdoc/>
-		public long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
-		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5>>(storage, offset, newLength);
-			if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5> s)
-				return;
-
-			this.Reference = storage; this.TotalOffsetInBytes = offset;
-
-			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default;
-			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes,  };
-			lenAccu.AccumulateSum(lenAccu, inclusive: false);
-			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
-
-			if (0 > firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1;
-			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset, newLength);
-			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset);
-			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer1.LengthInBytes;
-			if (1 > firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2;
-			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset, newLength);
-			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset);
-			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer2.LengthInBytes;
-			if (2 > firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3;
-			else if (2 == firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset, newLength);
-			else if (2 == firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset);
-			else if (2 > firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer3.LengthInBytes;
-			if (3 > firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4;
-			else if (3 == firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset, newLength);
-			else if (3 == firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset);
-			else if (3 > firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer4.LengthInBytes;
-			if (4 > firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5;
-			else if (4 == firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset, newLength);
-			else if (4 == firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset);
-			else if (4 > firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer5.LengthInBytes;
-			this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5;
-		}
-	}
-	#endregion
-
-
-	#region mixed storage of 6 locations
-	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 6 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
-	/// </summary>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
-	public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
-	{
-		/// <summary>
-		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
-		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; protected init; }
-
-		/// <summary>
-		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
-		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; protected init; }
-
-		/// <summary>
-		/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
-		/// </summary>
-		public PointerSegment<TP3> Pointer3 { get; protected init; }
-
-		/// <summary>
-		/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
-		/// </summary>
-		public PointerSegment<TP4> Pointer4 { get; protected init; }
-
-		/// <summary>
-		/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
-		/// </summary>
-		public PointerSegment<TP5> Pointer5 { get; protected init; }
-
-		/// <summary>
-		/// Get the sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> of this storage
-		/// </summary>
-		public PointerSegment<TP6> Pointer6 { get; protected init; }
-
-		/// <summary>
-		/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
-		protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6)
-		{
-			this.Pointer1 = pointer1;
-			this.Pointer2 = pointer2;
-			this.Pointer3 = pointer3;
-			this.Pointer4 = pointer4;
-			this.Pointer5 = pointer5;
-			this.Pointer6 = pointer6;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorageBase() { }
-	}
-
-	/// <summary>
-	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6}"/> and constrains data type to <typeparamref name="T"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
-	{
-		#region basic
-		/// <summary>
-		/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
-		protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6) { }
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorage() : base() { }
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(null);
-		
-		/// <inheritdoc/>
-		public static DataType DataType => T.Type;
-		
-		/// <inheritdoc/>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location,  });
-		
-		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, };
-
-		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.SizeOfPointer(int i)
-		{
-			if (this.Disposed)
-				return 0;
-			return i switch
-			{
-				0 => this.Pointer1.IsValid() ? 1 : 0,
-				1 => this.Pointer2.IsValid() ? 1 : 0,
-				2 => this.Pointer3.IsValid() ? 1 : 0,
-				3 => this.Pointer4.IsValid() ? 1 : 0,
-				4 => this.Pointer5.IsValid() ? 1 : 0,
-				5 => this.Pointer6.IsValid() ? 1 : 0,
-				_ => throw new ArgumentOutOfRangeException(nameof(i)),
-			};
-		}
-		
-		/// <inheritdoc/>
-		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes;
-		
-		/// <inheritdoc/>
-		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).Length;
-		
-		/// <inheritdoc/>
-		public bool Disposed { get; private set; } = false;
-		
-		/// <inheritdoc/>
-		public virtual void Dispose(bool invokedByUser)
-		{
-			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>)
-			{
-				Mem.Free(this.Pointer1.Pointer);
-				Mem.Free(this.Pointer2.Pointer);
-				Mem.Free(this.Pointer3.Pointer);
-				Mem.Free(this.Pointer4.Pointer);
-				Mem.Free(this.Pointer5.Pointer);
-				Mem.Free(this.Pointer6.Pointer);
-			}
-			this.Disposed = true;
-		}
-
-		/// <inheritdoc/>
-		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
-		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid());
-		#endregion
-
-		#region reference
-		ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.GetPointerSizes(Span<long> sizes)
-		{
-			if (sizes.Length < 6)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
-			sizes[0] = this.Pointer1.LengthInBytes;
-			sizes[1] = this.Pointer2.LengthInBytes;
-			sizes[2] = this.Pointer3.LengthInBytes;
-			sizes[3] = this.Pointer4.LengthInBytes;
-			sizes[4] = this.Pointer5.LengthInBytes;
-			sizes[5] = this.Pointer6.LengthInBytes;
-			return sizes;
-		}
-
-		/// <inheritdoc/>
-		public bool OverlapWith(IStorage other)
-		{
-			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6);
-		}
-		
-		/// <inheritdoc/>
-		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> @ref)
-				return @ref;
-			else
-				return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
-		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6);
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
-		}
-
-		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of data type <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			if (typeof(TOut) == typeof(T))
-				return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6>.Empty;
-			((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).CheckCast<TOut>();
-			return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6>(this);
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of given lengths.
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Create(long length1, long length2, long length3, long length4, long length5, long length6)
-		{
-			if (length1 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
-			if (length2 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
-			if (length3 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
-			if (length4 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
-			if (length5 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
-			if (length6 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(length1, length2, length3, length4, length5,  length6);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Create(ReadOnlySpan<long> lengths)
-		{
-			if (lengths.Length != 6)
-				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5]);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.CreateAlike<T2, TS2>(TS2 storage)
-		{
-			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
-		}
-
-		/// <summary>
-		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> alike <paramref name="storage"/>.
-		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
-		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size);
-		#endregion
-
-		#region operators
-		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, long>.AdditiveIdentity => 0;
-		
-		/// <inheritdoc/>
-		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-		
-		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-		
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>);
-		
-		/// <inheritdoc/>
-		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right)
-		{
-			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.StorageDiffBytes(left, right);
-			if (diffBytes % T.Size != 0)
-				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / T.Size;
-		}
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left.MakeReference(right);
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left.MakeReference(-right);
-		
-		/// <inheritdoc/>
-		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right) => left.Equals(right);
-		
-		/// <inheritdoc/>
-		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right) => !left.Equals(right);
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>);
-
-		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Length), nameof(Pointer1), nameof(Pointer2) };
-
-		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-		
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.ToString(this);
-		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.JsonConverter => new JsonConverter();
-
-		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
-		{
-			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6);
-
-			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
-					throw new JsonException();
-
-				// read pointer 1
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data1 = reader.GetBytesFromBase64();
-				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 2
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data2 = reader.GetBytesFromBase64();
-				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 3
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data3 = reader.GetBytesFromBase64();
-				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 4
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data4 = reader.GetBytesFromBase64();
-				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 5
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data5 = reader.GetBytesFromBase64();
-				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 6
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data6 = reader.GetBytesFromBase64();
-				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP6>(pointer6, data6.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-				
-				if (reader.TokenType != JsonTokenType.EndObject)
-					throw new JsonException();
-				reader.Read();
-				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6);
-			}
-
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> value, JsonSerializerOptions options)
-			{
-				if (!value.IsValid())
-					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, }.Max()];
-				int size;
-				writer.WriteStartObject();
-				
-				// write pointer 1
-				size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
-				
-				// write pointer 2
-				size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
-				
-				// write pointer 3
-				size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
-				
-				// write pointer 4
-				size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
-				
-				// write pointer 5
-				size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
-				
-				// write pointer 6
-				size = (int)Mem.ToManaged<UnsignedInt8, TP6>(value.Pointer6, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
-				
-				writer.WriteEndObject();
-			}
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The actual storage class for a mixed storage on 6 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
-	{
-		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6)
-		{
-			// do nothing
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> from the given lengths of all locations
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative))
-		{
-			if (this.Length == 0)
-				throw new ArgumentException(ParameterError.CannotAllZero);
-		}
-		
-		/// <summary>
-		/// The deconstructor to be invoked by GC
-		/// </summary>
-		~ActualMixedStorage() => this.Dispose(false);
-	}
-
-	/// <summary>
-	/// The reference storage class for a mixed storage on 6 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
-	{
-		/// <inheritdoc/>
-		public IStorage? Reference { get; }
-		
-		/// <inheritdoc/>
-		public long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
-		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>>(storage, offset, newLength);
-			if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6> s)
-				return;
-
-			this.Reference = storage; this.TotalOffsetInBytes = offset;
-
-			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default;
-			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes,  };
-			lenAccu.AccumulateSum(lenAccu, inclusive: false);
-			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
-
-			if (0 > firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1;
-			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset, newLength);
-			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset);
-			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer1.LengthInBytes;
-			if (1 > firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2;
-			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset, newLength);
-			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset);
-			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer2.LengthInBytes;
-			if (2 > firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3;
-			else if (2 == firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset, newLength);
-			else if (2 == firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset);
-			else if (2 > firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer3.LengthInBytes;
-			if (3 > firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4;
-			else if (3 == firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset, newLength);
-			else if (3 == firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset);
-			else if (3 > firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer4.LengthInBytes;
-			if (4 > firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5;
-			else if (4 == firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset, newLength);
-			else if (4 == firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset);
-			else if (4 > firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer5.LengthInBytes;
-			if (5 > firstNonEmpty && 5 < lastNonEmpty)
-				p6 = s.Pointer6;
-			else if (5 == firstNonEmpty && 5 == lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(offset, newLength);
-			else if (5 == firstNonEmpty && 5 < lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(offset);
-			else if (5 > firstNonEmpty && 5 == lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer6.LengthInBytes;
-			this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5; this.Pointer6 = p6;
-		}
-	}
-	#endregion
-
-
-	#region mixed storage of 7 locations
-	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 7 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
-	/// </summary>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
-	public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
-	{
-		/// <summary>
-		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
-		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; protected init; }
-
-		/// <summary>
-		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
-		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; protected init; }
-
-		/// <summary>
-		/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
-		/// </summary>
-		public PointerSegment<TP3> Pointer3 { get; protected init; }
-
-		/// <summary>
-		/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
-		/// </summary>
-		public PointerSegment<TP4> Pointer4 { get; protected init; }
-
-		/// <summary>
-		/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
-		/// </summary>
-		public PointerSegment<TP5> Pointer5 { get; protected init; }
-
-		/// <summary>
-		/// Get the sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> of this storage
-		/// </summary>
-		public PointerSegment<TP6> Pointer6 { get; protected init; }
-
-		/// <summary>
-		/// Get the seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> of this storage
-		/// </summary>
-		public PointerSegment<TP7> Pointer7 { get; protected init; }
-
-		/// <summary>
-		/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
-		protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7)
-		{
-			this.Pointer1 = pointer1;
-			this.Pointer2 = pointer2;
-			this.Pointer3 = pointer3;
-			this.Pointer4 = pointer4;
-			this.Pointer5 = pointer5;
-			this.Pointer6 = pointer6;
-			this.Pointer7 = pointer7;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorageBase() { }
-	}
-
-	/// <summary>
-	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> and constrains data type to <typeparamref name="T"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
-	{
-		#region basic
-		/// <summary>
-		/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
-		protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7) { }
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorage() : base() { }
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(null);
-		
-		/// <inheritdoc/>
-		public static DataType DataType => T.Type;
-		
-		/// <inheritdoc/>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location,  });
-		
-		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, };
-
-		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.SizeOfPointer(int i)
-		{
-			if (this.Disposed)
-				return 0;
-			return i switch
-			{
-				0 => this.Pointer1.IsValid() ? 1 : 0,
-				1 => this.Pointer2.IsValid() ? 1 : 0,
-				2 => this.Pointer3.IsValid() ? 1 : 0,
-				3 => this.Pointer4.IsValid() ? 1 : 0,
-				4 => this.Pointer5.IsValid() ? 1 : 0,
-				5 => this.Pointer6.IsValid() ? 1 : 0,
-				6 => this.Pointer7.IsValid() ? 1 : 0,
-				_ => throw new ArgumentOutOfRangeException(nameof(i)),
-			};
-		}
-		
-		/// <inheritdoc/>
-		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes;
-		
-		/// <inheritdoc/>
-		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).Length;
-		
-		/// <inheritdoc/>
-		public bool Disposed { get; private set; } = false;
-		
-		/// <inheritdoc/>
-		public virtual void Dispose(bool invokedByUser)
-		{
-			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>)
-			{
-				Mem.Free(this.Pointer1.Pointer);
-				Mem.Free(this.Pointer2.Pointer);
-				Mem.Free(this.Pointer3.Pointer);
-				Mem.Free(this.Pointer4.Pointer);
-				Mem.Free(this.Pointer5.Pointer);
-				Mem.Free(this.Pointer6.Pointer);
-				Mem.Free(this.Pointer7.Pointer);
-			}
-			this.Disposed = true;
-		}
-
-		/// <inheritdoc/>
-		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
-		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid());
-		#endregion
-
-		#region reference
-		ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.GetPointerSizes(Span<long> sizes)
-		{
-			if (sizes.Length < 7)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
-			sizes[0] = this.Pointer1.LengthInBytes;
-			sizes[1] = this.Pointer2.LengthInBytes;
-			sizes[2] = this.Pointer3.LengthInBytes;
-			sizes[3] = this.Pointer4.LengthInBytes;
-			sizes[4] = this.Pointer5.LengthInBytes;
-			sizes[5] = this.Pointer6.LengthInBytes;
-			sizes[6] = this.Pointer7.LengthInBytes;
-			return sizes;
-		}
-
-		/// <inheritdoc/>
-		public bool OverlapWith(IStorage other)
-		{
-			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7);
-		}
-		
-		/// <inheritdoc/>
-		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> @ref)
-				return @ref;
-			else
-				return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
-		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7);
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
-		}
-
-		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of data type <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			if (typeof(TOut) == typeof(T))
-				return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7>.Empty;
-			((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).CheckCast<TOut>();
-			return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(this);
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of given lengths.
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
-		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7)
-		{
-			if (length1 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
-			if (length2 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
-			if (length3 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
-			if (length4 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
-			if (length5 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
-			if (length6 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
-			if (length7 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(length1, length2, length3, length4, length5, length6,  length7);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Create(ReadOnlySpan<long> lengths)
-		{
-			if (lengths.Length != 7)
-				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6]);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.CreateAlike<T2, TS2>(TS2 storage)
-		{
-			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
-		}
-
-		/// <summary>
-		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> alike <paramref name="storage"/>.
-		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
-		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size);
-		#endregion
-
-		#region operators
-		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, long>.AdditiveIdentity => 0;
-		
-		/// <inheritdoc/>
-		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-		
-		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-		
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>);
-		
-		/// <inheritdoc/>
-		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right)
-		{
-			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.StorageDiffBytes(left, right);
-			if (diffBytes % T.Size != 0)
-				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / T.Size;
-		}
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left.MakeReference(right);
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left.MakeReference(-right);
-		
-		/// <inheritdoc/>
-		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right) => left.Equals(right);
-		
-		/// <inheritdoc/>
-		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right) => !left.Equals(right);
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>);
-
-		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Length), nameof(Pointer1), nameof(Pointer2) };
-
-		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-		
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.ToString(this);
-		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.JsonConverter => new JsonConverter();
-
-		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
-		{
-			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7);
-
-			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
-					throw new JsonException();
-
-				// read pointer 1
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data1 = reader.GetBytesFromBase64();
-				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 2
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data2 = reader.GetBytesFromBase64();
-				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 3
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data3 = reader.GetBytesFromBase64();
-				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 4
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data4 = reader.GetBytesFromBase64();
-				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 5
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data5 = reader.GetBytesFromBase64();
-				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 6
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data6 = reader.GetBytesFromBase64();
-				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP6>(pointer6, data6.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 7
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data7 = reader.GetBytesFromBase64();
-				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP7>(pointer7, data7.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-				
-				if (reader.TokenType != JsonTokenType.EndObject)
-					throw new JsonException();
-				reader.Read();
-				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7);
-			}
-
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> value, JsonSerializerOptions options)
-			{
-				if (!value.IsValid())
-					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, }.Max()];
-				int size;
-				writer.WriteStartObject();
-				
-				// write pointer 1
-				size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
-				
-				// write pointer 2
-				size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
-				
-				// write pointer 3
-				size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
-				
-				// write pointer 4
-				size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
-				
-				// write pointer 5
-				size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
-				
-				// write pointer 6
-				size = (int)Mem.ToManaged<UnsignedInt8, TP6>(value.Pointer6, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
-				
-				// write pointer 7
-				size = (int)Mem.ToManaged<UnsignedInt8, TP7>(value.Pointer7, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
-				
-				writer.WriteEndObject();
-			}
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The actual storage class for a mixed storage on 7 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
-	{
-		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7)
-		{
-			// do nothing
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> from the given lengths of all locations
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
-		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative))
-		{
-			if (this.Length == 0)
-				throw new ArgumentException(ParameterError.CannotAllZero);
-		}
-		
-		/// <summary>
-		/// The deconstructor to be invoked by GC
-		/// </summary>
-		~ActualMixedStorage() => this.Dispose(false);
-	}
-
-	/// <summary>
-	/// The reference storage class for a mixed storage on 7 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
-	{
-		/// <inheritdoc/>
-		public IStorage? Reference { get; }
-		
-		/// <inheritdoc/>
-		public long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
-		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>>(storage, offset, newLength);
-			if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7> s)
-				return;
-
-			this.Reference = storage; this.TotalOffsetInBytes = offset;
-
-			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default;
-			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes,  };
-			lenAccu.AccumulateSum(lenAccu, inclusive: false);
-			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
-
-			if (0 > firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1;
-			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset, newLength);
-			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset);
-			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer1.LengthInBytes;
-			if (1 > firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2;
-			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset, newLength);
-			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset);
-			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer2.LengthInBytes;
-			if (2 > firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3;
-			else if (2 == firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset, newLength);
-			else if (2 == firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset);
-			else if (2 > firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer3.LengthInBytes;
-			if (3 > firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4;
-			else if (3 == firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset, newLength);
-			else if (3 == firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset);
-			else if (3 > firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer4.LengthInBytes;
-			if (4 > firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5;
-			else if (4 == firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset, newLength);
-			else if (4 == firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset);
-			else if (4 > firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer5.LengthInBytes;
-			if (5 > firstNonEmpty && 5 < lastNonEmpty)
-				p6 = s.Pointer6;
-			else if (5 == firstNonEmpty && 5 == lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(offset, newLength);
-			else if (5 == firstNonEmpty && 5 < lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(offset);
-			else if (5 > firstNonEmpty && 5 == lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer6.LengthInBytes;
-			if (6 > firstNonEmpty && 6 < lastNonEmpty)
-				p7 = s.Pointer7;
-			else if (6 == firstNonEmpty && 6 == lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(offset, newLength);
-			else if (6 == firstNonEmpty && 6 < lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(offset);
-			else if (6 > firstNonEmpty && 6 == lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer7.LengthInBytes;
-			this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5; this.Pointer6 = p6; this.Pointer7 = p7;
-		}
-	}
-	#endregion
-
-
-	#region mixed storage of 8 locations
-	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 8 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
-	/// </summary>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
-	public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
-	{
-		/// <summary>
-		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
-		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; protected init; }
-
-		/// <summary>
-		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
-		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; protected init; }
-
-		/// <summary>
-		/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
-		/// </summary>
-		public PointerSegment<TP3> Pointer3 { get; protected init; }
-
-		/// <summary>
-		/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
-		/// </summary>
-		public PointerSegment<TP4> Pointer4 { get; protected init; }
-
-		/// <summary>
-		/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
-		/// </summary>
-		public PointerSegment<TP5> Pointer5 { get; protected init; }
-
-		/// <summary>
-		/// Get the sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> of this storage
-		/// </summary>
-		public PointerSegment<TP6> Pointer6 { get; protected init; }
-
-		/// <summary>
-		/// Get the seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> of this storage
-		/// </summary>
-		public PointerSegment<TP7> Pointer7 { get; protected init; }
-
-		/// <summary>
-		/// Get the eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> of this storage
-		/// </summary>
-		public PointerSegment<TP8> Pointer8 { get; protected init; }
-
-		/// <summary>
-		/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
-		/// <param name="pointer8">The eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> to create from</param>
-		protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7, PointerSegment<TP8> pointer8)
-		{
-			this.Pointer1 = pointer1;
-			this.Pointer2 = pointer2;
-			this.Pointer3 = pointer3;
-			this.Pointer4 = pointer4;
-			this.Pointer5 = pointer5;
-			this.Pointer6 = pointer6;
-			this.Pointer7 = pointer7;
-			this.Pointer8 = pointer8;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorageBase() { }
-	}
-
-	/// <summary>
-	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> and constrains data type to <typeparamref name="T"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
-	{
-		#region basic
-		/// <summary>
-		/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
-		/// <param name="pointer8">The eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> to create from</param>
-		protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7, PointerSegment<TP8> pointer8) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8) { }
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorage() : base() { }
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(null);
-		
-		/// <inheritdoc/>
-		public static DataType DataType => T.Type;
-		
-		/// <inheritdoc/>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location,  });
-		
-		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer8))!.GetGetMethod()!, };
-
-		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.SizeOfPointer(int i)
-		{
-			if (this.Disposed)
-				return 0;
-			return i switch
-			{
-				0 => this.Pointer1.IsValid() ? 1 : 0,
-				1 => this.Pointer2.IsValid() ? 1 : 0,
-				2 => this.Pointer3.IsValid() ? 1 : 0,
-				3 => this.Pointer4.IsValid() ? 1 : 0,
-				4 => this.Pointer5.IsValid() ? 1 : 0,
-				5 => this.Pointer6.IsValid() ? 1 : 0,
-				6 => this.Pointer7.IsValid() ? 1 : 0,
-				7 => this.Pointer8.IsValid() ? 1 : 0,
-				_ => throw new ArgumentOutOfRangeException(nameof(i)),
-			};
-		}
-		
-		/// <inheritdoc/>
-		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes + this.Pointer8.LengthInBytes;
-		
-		/// <inheritdoc/>
-		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).Length;
-		
-		/// <inheritdoc/>
-		public bool Disposed { get; private set; } = false;
-		
-		/// <inheritdoc/>
-		public virtual void Dispose(bool invokedByUser)
-		{
-			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>)
-			{
-				Mem.Free(this.Pointer1.Pointer);
-				Mem.Free(this.Pointer2.Pointer);
-				Mem.Free(this.Pointer3.Pointer);
-				Mem.Free(this.Pointer4.Pointer);
-				Mem.Free(this.Pointer5.Pointer);
-				Mem.Free(this.Pointer6.Pointer);
-				Mem.Free(this.Pointer7.Pointer);
-				Mem.Free(this.Pointer8.Pointer);
-			}
-			this.Disposed = true;
-		}
-
-		/// <inheritdoc/>
-		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
-		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid());
-		#endregion
-
-		#region reference
-		ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.GetPointerSizes(Span<long> sizes)
-		{
-			if (sizes.Length < 8)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
-			sizes[0] = this.Pointer1.LengthInBytes;
-			sizes[1] = this.Pointer2.LengthInBytes;
-			sizes[2] = this.Pointer3.LengthInBytes;
-			sizes[3] = this.Pointer4.LengthInBytes;
-			sizes[4] = this.Pointer5.LengthInBytes;
-			sizes[5] = this.Pointer6.LengthInBytes;
-			sizes[6] = this.Pointer7.LengthInBytes;
-			sizes[7] = this.Pointer8.LengthInBytes;
-			return sizes;
-		}
-
-		/// <inheritdoc/>
-		public bool OverlapWith(IStorage other)
-		{
-			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7) && this.Pointer8.OverlapWith(s.Pointer8);
-		}
-		
-		/// <inheritdoc/>
-		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> @ref)
-				return @ref;
-			else
-				return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
-		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7) || this.Pointer8.OverlapWith(other.Pointer8);
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
-		}
-
-		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of data type <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			if (typeof(TOut) == typeof(T))
-				return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>.Empty;
-			((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).CheckCast<TOut>();
-			return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(this);
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of given lengths.
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
-		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
-		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8)
-		{
-			if (length1 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
-			if (length2 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
-			if (length3 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
-			if (length4 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
-			if (length5 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
-			if (length6 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
-			if (length7 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
-			if (length8 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(length1, length2, length3, length4, length5, length6, length7,  length8);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Create(ReadOnlySpan<long> lengths)
-		{
-			if (lengths.Length != 8)
-				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6], lengths[7]);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.CreateAlike<T2, TS2>(TS2 storage)
-		{
-			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
-		}
-
-		/// <summary>
-		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> alike <paramref name="storage"/>.
-		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
-		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size, storage.Pointer8.LengthInBytes / T2.Size);
-		#endregion
-
-		#region operators
-		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, long>.AdditiveIdentity => 0;
-		
-		/// <inheritdoc/>
-		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-		
-		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-		
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>);
-		
-		/// <inheritdoc/>
-		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right)
-		{
-			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.StorageDiffBytes(left, right);
-			if (diffBytes % T.Size != 0)
-				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / T.Size;
-		}
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left.MakeReference(right);
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left.MakeReference(-right);
-		
-		/// <inheritdoc/>
-		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right) => left.Equals(right);
-		
-		/// <inheritdoc/>
-		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right) => !left.Equals(right);
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>);
-
-		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Length), nameof(Pointer1), nameof(Pointer2) };
-
-		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-		
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.ToString(this);
-		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.JsonConverter => new JsonConverter();
-
-		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
-		{
-			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7, string Data8);
-
-			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
-					throw new JsonException();
-
-				// read pointer 1
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data1 = reader.GetBytesFromBase64();
-				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 2
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data2 = reader.GetBytesFromBase64();
-				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 3
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data3 = reader.GetBytesFromBase64();
-				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 4
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data4 = reader.GetBytesFromBase64();
-				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 5
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data5 = reader.GetBytesFromBase64();
-				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 6
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data6 = reader.GetBytesFromBase64();
-				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP6>(pointer6, data6.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 7
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data7 = reader.GetBytesFromBase64();
-				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP7>(pointer7, data7.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 8
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data8) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data8 = reader.GetBytesFromBase64();
-				TP8 pointer8 = Mem.Allocate<TP8>(data8.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP8>(pointer8, data8.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-				
-				if (reader.TokenType != JsonTokenType.EndObject)
-					throw new JsonException();
-				reader.Read();
-				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8);
-			}
-
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> value, JsonSerializerOptions options)
-			{
-				if (!value.IsValid())
-					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, }.Max()];
-				int size;
-				writer.WriteStartObject();
-				
-				// write pointer 1
-				size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
-				
-				// write pointer 2
-				size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
-				
-				// write pointer 3
-				size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
-				
-				// write pointer 4
-				size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
-				
-				// write pointer 5
-				size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
-				
-				// write pointer 6
-				size = (int)Mem.ToManaged<UnsignedInt8, TP6>(value.Pointer6, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
-				
-				// write pointer 7
-				size = (int)Mem.ToManaged<UnsignedInt8, TP7>(value.Pointer7, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
-				
-				// write pointer 8
-				size = (int)Mem.ToManaged<UnsignedInt8, TP8>(value.Pointer8, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data8), new(temp, 0, size));
-				
-				writer.WriteEndObject();
-			}
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The actual storage class for a mixed storage on 8 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
-	{
-		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7, TP8 pointer8) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8)
-		{
-			// do nothing
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> from the given lengths of all locations
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
-		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
-		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative))
-		{
-			if (this.Length == 0)
-				throw new ArgumentException(ParameterError.CannotAllZero);
-		}
-		
-		/// <summary>
-		/// The deconstructor to be invoked by GC
-		/// </summary>
-		~ActualMixedStorage() => this.Dispose(false);
-	}
-
-	/// <summary>
-	/// The reference storage class for a mixed storage on 8 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
-	{
-		/// <inheritdoc/>
-		public IStorage? Reference { get; }
-		
-		/// <inheritdoc/>
-		public long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
-		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>(storage, offset, newLength);
-			if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> s)
-				return;
-
-			this.Reference = storage; this.TotalOffsetInBytes = offset;
-
-			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default; PointerSegment<TP8> p8 = default;
-			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes, s.Pointer8.LengthInBytes,  };
-			lenAccu.AccumulateSum(lenAccu, inclusive: false);
-			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
-
-			if (0 > firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1;
-			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset, newLength);
-			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset);
-			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer1.LengthInBytes;
-			if (1 > firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2;
-			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset, newLength);
-			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset);
-			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer2.LengthInBytes;
-			if (2 > firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3;
-			else if (2 == firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset, newLength);
-			else if (2 == firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset);
-			else if (2 > firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer3.LengthInBytes;
-			if (3 > firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4;
-			else if (3 == firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset, newLength);
-			else if (3 == firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset);
-			else if (3 > firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer4.LengthInBytes;
-			if (4 > firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5;
-			else if (4 == firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset, newLength);
-			else if (4 == firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset);
-			else if (4 > firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer5.LengthInBytes;
-			if (5 > firstNonEmpty && 5 < lastNonEmpty)
-				p6 = s.Pointer6;
-			else if (5 == firstNonEmpty && 5 == lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(offset, newLength);
-			else if (5 == firstNonEmpty && 5 < lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(offset);
-			else if (5 > firstNonEmpty && 5 == lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer6.LengthInBytes;
-			if (6 > firstNonEmpty && 6 < lastNonEmpty)
-				p7 = s.Pointer7;
-			else if (6 == firstNonEmpty && 6 == lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(offset, newLength);
-			else if (6 == firstNonEmpty && 6 < lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(offset);
-			else if (6 > firstNonEmpty && 6 == lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer7.LengthInBytes;
-			if (7 > firstNonEmpty && 7 < lastNonEmpty)
-				p8 = s.Pointer8;
-			else if (7 == firstNonEmpty && 7 == lastNonEmpty)
-				p8 = s.Pointer8.MoveBy(offset, newLength);
-			else if (7 == firstNonEmpty && 7 < lastNonEmpty)
-				p8 = s.Pointer8.MoveBy(offset);
-			else if (7 > firstNonEmpty && 7 == lastNonEmpty)
-				p8 = s.Pointer8.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer8.LengthInBytes;
-			this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5; this.Pointer6 = p6; this.Pointer7 = p7; this.Pointer8 = p8;
-		}
-	}
-	#endregion
-
-
-	#region mixed storage of 9 locations
-	/// <summary>
-	/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 9 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
-	/// </summary>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP9">The ninth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
-	public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
-	{
-		/// <summary>
-		/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
-		/// </summary>
-		public PointerSegment<TP1> Pointer1 { get; protected init; }
-
-		/// <summary>
-		/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
-		/// </summary>
-		public PointerSegment<TP2> Pointer2 { get; protected init; }
-
-		/// <summary>
-		/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
-		/// </summary>
-		public PointerSegment<TP3> Pointer3 { get; protected init; }
-
-		/// <summary>
-		/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
-		/// </summary>
-		public PointerSegment<TP4> Pointer4 { get; protected init; }
-
-		/// <summary>
-		/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
-		/// </summary>
-		public PointerSegment<TP5> Pointer5 { get; protected init; }
-
-		/// <summary>
-		/// Get the sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> of this storage
-		/// </summary>
-		public PointerSegment<TP6> Pointer6 { get; protected init; }
-
-		/// <summary>
-		/// Get the seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> of this storage
-		/// </summary>
-		public PointerSegment<TP7> Pointer7 { get; protected init; }
-
-		/// <summary>
-		/// Get the eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> of this storage
-		/// </summary>
-		public PointerSegment<TP8> Pointer8 { get; protected init; }
-
-		/// <summary>
-		/// Get the ninth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP9"/> of this storage
-		/// </summary>
-		public PointerSegment<TP9> Pointer9 { get; protected init; }
-
-		/// <summary>
-		/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
-		/// <param name="pointer8">The eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> to create from</param>
-		/// <param name="pointer9">The ninth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP9"/> to create from</param>
-		protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7, PointerSegment<TP8> pointer8, PointerSegment<TP9> pointer9)
-		{
-			this.Pointer1 = pointer1;
-			this.Pointer2 = pointer2;
-			this.Pointer3 = pointer3;
-			this.Pointer4 = pointer4;
-			this.Pointer5 = pointer5;
-			this.Pointer6 = pointer6;
-			this.Pointer7 = pointer7;
-			this.Pointer8 = pointer8;
-			this.Pointer9 = pointer9;
-		}
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorageBase() { }
-	}
-
-	/// <summary>
-	/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> and constrains data type to <typeparamref name="T"/>
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP9">The ninth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
-	{
-		#region basic
-		/// <summary>
-		/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with given <see cref="PointerSegment{T}"/>s
-		/// </summary>
-		/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
-		/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
-		/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
-		/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
-		/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
-		/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
-		/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
-		/// <param name="pointer8">The eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> to create from</param>
-		/// <param name="pointer9">The ninth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP9"/> to create from</param>
-		protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7, PointerSegment<TP8> pointer8, PointerSegment<TP9> pointer9) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9) { }
-
-		/// <summary>
-		/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
-		/// </summary>
-		protected MixedStorage() : base() { }
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(null);
-		
-		/// <inheritdoc/>
-		public static DataType DataType => T.Type;
-		
-		/// <inheritdoc/>
-		public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location, TP9.Location,  });
-		
-		static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer8))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer9))!.GetGetMethod()!, };
-
-		long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.SizeOfPointer(int i)
-		{
-			if (this.Disposed)
-				return 0;
-			return i switch
-			{
-				0 => this.Pointer1.IsValid() ? 1 : 0,
-				1 => this.Pointer2.IsValid() ? 1 : 0,
-				2 => this.Pointer3.IsValid() ? 1 : 0,
-				3 => this.Pointer4.IsValid() ? 1 : 0,
-				4 => this.Pointer5.IsValid() ? 1 : 0,
-				5 => this.Pointer6.IsValid() ? 1 : 0,
-				6 => this.Pointer7.IsValid() ? 1 : 0,
-				7 => this.Pointer8.IsValid() ? 1 : 0,
-				8 => this.Pointer9.IsValid() ? 1 : 0,
-				_ => throw new ArgumentOutOfRangeException(nameof(i)),
-			};
-		}
-		
-		/// <inheritdoc/>
-		public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes + this.Pointer8.LengthInBytes + this.Pointer9.LengthInBytes;
-		
-		/// <inheritdoc/>
-		public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).Length;
-		
-		/// <inheritdoc/>
-		public bool Disposed { get; private set; } = false;
-		
-		/// <inheritdoc/>
-		public virtual void Dispose(bool invokedByUser)
-		{
-			if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>)
-			{
-				Mem.Free(this.Pointer1.Pointer);
-				Mem.Free(this.Pointer2.Pointer);
-				Mem.Free(this.Pointer3.Pointer);
-				Mem.Free(this.Pointer4.Pointer);
-				Mem.Free(this.Pointer5.Pointer);
-				Mem.Free(this.Pointer6.Pointer);
-				Mem.Free(this.Pointer7.Pointer);
-				Mem.Free(this.Pointer8.Pointer);
-				Mem.Free(this.Pointer9.Pointer);
-			}
-			this.Disposed = true;
-		}
-
-		/// <inheritdoc/>
-		/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
-		public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid() || this.Pointer9.IsValid());
-		#endregion
-
-		#region reference
-		ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.GetPointerSizes(Span<long> sizes)
-		{
-			if (sizes.Length < 9)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
-			sizes[0] = this.Pointer1.LengthInBytes;
-			sizes[1] = this.Pointer2.LengthInBytes;
-			sizes[2] = this.Pointer3.LengthInBytes;
-			sizes[3] = this.Pointer4.LengthInBytes;
-			sizes[4] = this.Pointer5.LengthInBytes;
-			sizes[5] = this.Pointer6.LengthInBytes;
-			sizes[6] = this.Pointer7.LengthInBytes;
-			sizes[7] = this.Pointer8.LengthInBytes;
-			sizes[8] = this.Pointer9.LengthInBytes;
-			return sizes;
-		}
-
-		/// <inheritdoc/>
-		public bool OverlapWith(IStorage other)
-		{
-			return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7) && this.Pointer8.OverlapWith(s.Pointer8) && this.Pointer9.OverlapWith(s.Pointer9);
-		}
-		
-		/// <inheritdoc/>
-		public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> MakeReference(long offset = 0, long newLength = 0)
-		{
-			if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> @ref)
-				return @ref;
-			else
-				return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(this, offset, newLength);
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/>.
-		/// </summary>
-		/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> to check overlap</param>
-		/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
-		/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
-		public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7) || this.Pointer8.OverlapWith(other.Pointer8) || this.Pointer9.OverlapWith(other.Pointer9);
-		
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.RefFrom<TOut, TOther>(TOther storage)
-		{
-			return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
-		}
-
-		/// <summary>
-		/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
-		/// </summary>
-		/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
-		/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of data type <typeparamref name="TOut"/></returns>
-		/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
-		public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
-		{
-			if (typeof(TOut) == typeof(T))
-				return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>.Empty;
-			((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).CheckCast<TOut>();
-			return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(this);
-		}
-		#endregion
-
-		#region create
-		/// <summary>
-		/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of given lengths.
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
-		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
-		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
-		/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
-		/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
-		/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9)
-		{
-			if (length1 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
-			if (length2 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
-			if (length3 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
-			if (length4 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
-			if (length5 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
-			if (length6 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
-			if (length7 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
-			if (length8 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive);
-			if (length9 <= 0)
-				throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.MustPositive);
-			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(length1, length2, length3, length4, length5, length6, length7, length8,  length9);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Create(ReadOnlySpan<long> lengths)
-		{
-			if (lengths.Length != 9)
-				throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
-			return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6], lengths[7], lengths[8]);
-		}
-
-		static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.CreateAlike<T2, TS2>(TS2 storage)
-		{
-			return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
-		}
-
-		/// <summary>
-		/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> alike <paramref name="storage"/>.
-		/// </summary>
-		/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
-		/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> that likes <paramref name="storage"/></returns>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size, storage.Pointer8.LengthInBytes / T2.Size, storage.Pointer9.LengthInBytes / T2.Size);
-		#endregion
-
-		#region operators
-		static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, long>.AdditiveIdentity => 0;
-		
-		/// <inheritdoc/>
-		public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
-		
-		/// <inheritdoc/>
-		public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
-		
-		/// <inheritdoc/>
-		public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>);
-		
-		/// <inheritdoc/>
-		public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right)
-		{
-			long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.StorageDiffBytes(left, right);
-			if (diffBytes % T.Size != 0)
-				throw new InvalidOperationException(ArithmeticError.CannotDivide);
-			return diffBytes / T.Size;
-		}
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left.MakeReference(right);
-		
-		/// <inheritdoc/>
-		public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left.MakeReference(-right);
-		
-		/// <inheritdoc/>
-		public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right) => left.Equals(right);
-		
-		/// <inheritdoc/>
-		public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right) => !left.Equals(right);
-		#endregion
-
-		#region string
-		static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>);
-
-		static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Length), nameof(Pointer1), nameof(Pointer2) };
-
-		IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
-		
-		/// <inheritdoc/>
-		public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.ToString(this);
-		
-		static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.JsonConverter => new JsonConverter();
-
-		private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
-		{
-			private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7, string Data8, string Data9);
-
-			public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
-					throw new JsonException();
-
-				// read pointer 1
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data1 = reader.GetBytesFromBase64();
-				TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 2
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data2 = reader.GetBytesFromBase64();
-				TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 3
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data3 = reader.GetBytesFromBase64();
-				TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 4
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data4 = reader.GetBytesFromBase64();
-				TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 5
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data5 = reader.GetBytesFromBase64();
-				TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 6
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data6 = reader.GetBytesFromBase64();
-				TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP6>(pointer6, data6.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 7
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data7 = reader.GetBytesFromBase64();
-				TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP7>(pointer7, data7.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 8
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data8) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data8 = reader.GetBytesFromBase64();
-				TP8 pointer8 = Mem.Allocate<TP8>(data8.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP8>(pointer8, data8.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-
-				// read pointer 9
-				if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data9) || !reader.Read())
-					throw new JsonException();
-				if (reader.TokenType != JsonTokenType.String)
-					throw new JsonException();
-				byte[] data9 = reader.GetBytesFromBase64();
-				TP9 pointer9 = Mem.Allocate<TP9>(data9.LongLength);
-				Mem.FromManaged<UnsignedInt8, TP9>(pointer9, data9.AsAux());
-				if (!reader.Read())
-					throw new JsonException();
-				
-				if (reader.TokenType != JsonTokenType.EndObject)
-					throw new JsonException();
-				reader.Read();
-				return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9);
-			}
-
-			public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> value, JsonSerializerOptions options)
-			{
-				if (!value.IsValid())
-					throw new JsonException(ParameterError.InvalidValue);
-				byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, value.Pointer9.LengthInBytes, }.Max()];
-				int size;
-				writer.WriteStartObject();
-				
-				// write pointer 1
-				size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
-				
-				// write pointer 2
-				size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
-				
-				// write pointer 3
-				size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
-				
-				// write pointer 4
-				size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
-				
-				// write pointer 5
-				size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
-				
-				// write pointer 6
-				size = (int)Mem.ToManaged<UnsignedInt8, TP6>(value.Pointer6, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
-				
-				// write pointer 7
-				size = (int)Mem.ToManaged<UnsignedInt8, TP7>(value.Pointer7, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
-				
-				// write pointer 8
-				size = (int)Mem.ToManaged<UnsignedInt8, TP8>(value.Pointer8, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data8), new(temp, 0, size));
-				
-				// write pointer 9
-				size = (int)Mem.ToManaged<UnsignedInt8, TP9>(value.Pointer9, temp.AsAux());
-				writer.WriteBase64String(nameof(Repr.Data9), new(temp, 0, size));
-				
-				writer.WriteEndObject();
-			}
-		}
-		#endregion
-	}
-
-	/// <summary>
-	/// The actual storage class for a mixed storage on 9 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP9">The ninth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
-	{
-		internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7, TP8 pointer8, TP9 pointer9) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9)
-		{
-			// do nothing
-		}
-
-		/// <summary>
-		/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> from the given lengths of all locations
-		/// </summary>
-		/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
-		/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
-		/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
-		/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
-		/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
-		/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
-		/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
-		/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
-		/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
-		/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
-		public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative), length9 >= 0 ? Mem.Allocate<TP9>(length9 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.CannotNegative))
-		{
-			if (this.Length == 0)
-				throw new ArgumentException(ParameterError.CannotAllZero);
-		}
-		
-		/// <summary>
-		/// The deconstructor to be invoked by GC
-		/// </summary>
-		~ActualMixedStorage() => this.Dispose(false);
-	}
-
-	/// <summary>
-	/// The reference storage class for a mixed storage on 9 locations.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
-	/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	/// <typeparam name="TP9">The ninth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
-	public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
-		where T : unmanaged, IBaseNumber<T>
-		where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
-	{
-		/// <inheritdoc/>
-		public IStorage? Reference { get; }
-		
-		/// <inheritdoc/>
-		public long TotalOffsetInBytes { get; }
-
-		/// <summary>
-		/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
-		/// </summary>
-		/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
-		/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
-		/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
-		/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
-		public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
-		{
-			(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>(storage, offset, newLength);
-			if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> s)
-				return;
-
-			this.Reference = storage; this.TotalOffsetInBytes = offset;
-
-			PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default; PointerSegment<TP8> p8 = default; PointerSegment<TP9> p9 = default;
-			long offsetEnd = offset + newLength;
-			Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes, s.Pointer8.LengthInBytes, s.Pointer9.LengthInBytes,  };
-			lenAccu.AccumulateSum(lenAccu, inclusive: false);
-			int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
-
-			if (0 > firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1;
-			else if (0 == firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset, newLength);
-			else if (0 == firstNonEmpty && 0 < lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(offset);
-			else if (0 > firstNonEmpty && 0 == lastNonEmpty)
-				p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer1.LengthInBytes;
-			if (1 > firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2;
-			else if (1 == firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset, newLength);
-			else if (1 == firstNonEmpty && 1 < lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(offset);
-			else if (1 > firstNonEmpty && 1 == lastNonEmpty)
-				p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer2.LengthInBytes;
-			if (2 > firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3;
-			else if (2 == firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset, newLength);
-			else if (2 == firstNonEmpty && 2 < lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(offset);
-			else if (2 > firstNonEmpty && 2 == lastNonEmpty)
-				p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer3.LengthInBytes;
-			if (3 > firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4;
-			else if (3 == firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset, newLength);
-			else if (3 == firstNonEmpty && 3 < lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(offset);
-			else if (3 > firstNonEmpty && 3 == lastNonEmpty)
-				p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer4.LengthInBytes;
-			if (4 > firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5;
-			else if (4 == firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset, newLength);
-			else if (4 == firstNonEmpty && 4 < lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(offset);
-			else if (4 > firstNonEmpty && 4 == lastNonEmpty)
-				p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer5.LengthInBytes;
-			if (5 > firstNonEmpty && 5 < lastNonEmpty)
-				p6 = s.Pointer6;
-			else if (5 == firstNonEmpty && 5 == lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(offset, newLength);
-			else if (5 == firstNonEmpty && 5 < lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(offset);
-			else if (5 > firstNonEmpty && 5 == lastNonEmpty)
-				p6 = s.Pointer6.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer6.LengthInBytes;
-			if (6 > firstNonEmpty && 6 < lastNonEmpty)
-				p7 = s.Pointer7;
-			else if (6 == firstNonEmpty && 6 == lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(offset, newLength);
-			else if (6 == firstNonEmpty && 6 < lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(offset);
-			else if (6 > firstNonEmpty && 6 == lastNonEmpty)
-				p7 = s.Pointer7.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer7.LengthInBytes;
-			if (7 > firstNonEmpty && 7 < lastNonEmpty)
-				p8 = s.Pointer8;
-			else if (7 == firstNonEmpty && 7 == lastNonEmpty)
-				p8 = s.Pointer8.MoveBy(offset, newLength);
-			else if (7 == firstNonEmpty && 7 < lastNonEmpty)
-				p8 = s.Pointer8.MoveBy(offset);
-			else if (7 > firstNonEmpty && 7 == lastNonEmpty)
-				p8 = s.Pointer8.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer8.LengthInBytes;
-			if (8 > firstNonEmpty && 8 < lastNonEmpty)
-				p9 = s.Pointer9;
-			else if (8 == firstNonEmpty && 8 == lastNonEmpty)
-				p9 = s.Pointer9.MoveBy(offset, newLength);
-			else if (8 == firstNonEmpty && 8 < lastNonEmpty)
-				p9 = s.Pointer9.MoveBy(offset);
-			else if (8 > firstNonEmpty && 8 == lastNonEmpty)
-				p9 = s.Pointer9.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
-
-			offset -= s.Pointer9.LengthInBytes;
-			this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5; this.Pointer6 = p6; this.Pointer7 = p7; this.Pointer8 = p8; this.Pointer9 = p9;
-		}
-	}
-	#endregion
-
-
+	protected MixedStorageBase() { }
 }
+
+/// <summary>
+/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2}"/> and constrains data type to <typeparamref name="T"/>
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public abstract class MixedStorage<T, TP1, TP2> : MixedStorageBase<TP1, TP2>, IStorage<T, MixedStorage<T, TP1, TP2>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
+{
+	#region basic
+	/// <summary>
+	/// Create a new <see cref="MixedStorage{T, TP1, TP2}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2) : base(pointer1, pointer2) { }
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorage{T, TP1, TP2}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorage() : base() { }
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2> Empty => new ReferenceMixedStorage<T, TP1, TP2>(null);
+		
+	/// <inheritdoc/>
+	public static DataType DataType => T.Type;
+		
+	/// <inheritdoc/>
+	public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location,  });
+		
+	static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, };
+
+	long IStorage<MixedStorage<T, TP1, TP2>>.SizeOfPointer(int i)
+	{
+		if (this.Disposed)
+			return 0;
+		return i switch
+		{
+			0 => this.Pointer1.IsValid() ? 1 : 0,
+			1 => this.Pointer2.IsValid() ? 1 : 0,
+			_ => throw new ArgumentOutOfRangeException(nameof(i)),
+		};
+	}
+		
+	/// <inheritdoc/>
+	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes;
+		
+	/// <inheritdoc/>
+	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2>>)this).Length;
+		
+	/// <inheritdoc/>
+	public bool Disposed { get; private set; } = false;
+		
+	/// <inheritdoc/>
+	public virtual void Dispose(bool invokedByUser)
+	{
+		if (this is not ReferenceMixedStorage<T, TP1, TP2>)
+		{
+			Mem.Free(this.Pointer1.Pointer);
+			Mem.Free(this.Pointer2.Pointer);
+		}
+		this.Disposed = true;
+	}
+
+	/// <inheritdoc/>
+	/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2}"/></returns>
+	public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid());
+	#endregion
+
+	#region reference
+	ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2>>.GetPointerSizes(Span<long> sizes)
+	{
+		if (sizes.Length < 2)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+		sizes[0] = this.Pointer1.LengthInBytes;
+		sizes[1] = this.Pointer2.LengthInBytes;
+		return sizes;
+	}
+
+	/// <inheritdoc/>
+	public bool OverlapWith(IStorage other)
+	{
+		return other is MixedStorageBase<TP1, TP2> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2);
+	}
+		
+	/// <inheritdoc/>
+	public MixedStorage<T, TP1, TP2> MakeReference(long offset = 0, long newLength = 0)
+	{
+		if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2> @ref)
+			return @ref;
+		else
+			return new ReferenceMixedStorage<T, TP1, TP2>(this, offset, newLength);
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="MixedStorage{T, TP1, TP2}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2}"/>.
+	/// </summary>
+	/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2}"/> to check overlap</param>
+	/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+	/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
+	public bool OverlapWith(MixedStorage<T, TP1, TP2> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2);
+		
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.RefFrom<TOut, TOther>(TOther storage)
+	{
+		return (storage as MixedStorage<TOut, TP1, TP2> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
+	}
+
+	/// <summary>
+	/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
+	/// </summary>
+	/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+	/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2}"/> of data type <typeparamref name="TOut"/></returns>
+	/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+	public MixedStorage<TOut, TP1, TP2> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
+	{
+		if (typeof(TOut) == typeof(T))
+			return this.MakeReference() as MixedStorage<TOut, TP1, TP2> ?? MixedStorage<TOut, TP1, TP2>.Empty;
+		((IStorage<T, MixedStorage<T, TP1, TP2>>)this).CheckCast<TOut>();
+		return new ReferenceMixedStorage<TOut, TP1, TP2>(this);
+	}
+	#endregion
+
+	#region create
+	/// <summary>
+	/// Statically create a new <see cref="MixedStorage{T, TP1, TP2}"/> of given lengths.
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+	/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static MixedStorage<T, TP1, TP2> Create(long length1, long length2)
+	{
+		if (length1 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+		if (length2 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+		return new ActualMixedStorage<T, TP1, TP2>(length1,  length2);
+	}
+
+	static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.Create(ReadOnlySpan<long> lengths)
+	{
+		if (lengths.Length != 2)
+			throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
+		return Create(lengths[0], lengths[1]);
+	}
+
+	static MixedStorage<T, TP1, TP2> IStorage<T, MixedStorage<T, TP1, TP2>>.CreateAlike<T2, TS2>(TS2 storage)
+	{
+		return CreateAlike(storage as MixedStorage<T2, TP1, TP2> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+	}
+
+	/// <summary>
+	/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2}"/> alike <paramref name="storage"/>.
+	/// </summary>
+	/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
+	/// <returns>A new <see cref="MixedStorage{T, TP1, TP2}"/> that likes <paramref name="storage"/></returns>
+	public static MixedStorage<T, TP1, TP2> CreateAlike<T2>(MixedStorage<T2, TP1, TP2> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size);
+	#endregion
+
+	#region operators
+	static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2>, long>.AdditiveIdentity => 0;
+		
+	/// <inheritdoc/>
+	public bool Equals(MixedStorage<T, TP1, TP2>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
+		
+	/// <inheritdoc/>
+	public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
+		
+	/// <inheritdoc/>
+	public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2>);
+		
+	/// <inheritdoc/>
+	public static long operator -(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right)
+	{
+		long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2>>.StorageDiffBytes(left, right);
+		if (diffBytes % T.Size != 0)
+			throw new InvalidOperationException(ArithmeticError.CannotDivide);
+		return diffBytes / T.Size;
+	}
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2> operator +(MixedStorage<T, TP1, TP2> left, long right) => left.MakeReference(right);
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2> operator -(MixedStorage<T, TP1, TP2> left, long right) => left.MakeReference(-right);
+		
+	/// <inheritdoc/>
+	public static bool operator ==(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right) => left.Equals(right);
+		
+	/// <inheritdoc/>
+	public static bool operator !=(MixedStorage<T, TP1, TP2> left, MixedStorage<T, TP1, TP2> right) => !left.Equals(right);
+	#endregion
+
+	#region string
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.StringMain => nameof(MixedStorage<T, TP1, TP2>);
+
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2>>.Length), nameof(Pointer1), nameof(Pointer2) };
+
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+		
+	/// <inheritdoc/>
+	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.ToString(this);
+		
+	static JsonConverter<MixedStorage<T, TP1, TP2>> IStorage<T, MixedStorage<T, TP1, TP2>>.JsonConverter => new JsonConverter();
+
+	private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2>>
+	{
+		private record struct Repr(string Data1, string Data2);
+
+		public override MixedStorage<T, TP1, TP2> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+				throw new JsonException();
+
+			// read pointer 1
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data1 = reader.GetBytesFromBase64();
+			TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 2
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data2 = reader.GetBytesFromBase64();
+			TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+				
+			if (reader.TokenType != JsonTokenType.EndObject)
+				throw new JsonException();
+			reader.Read();
+			return new ActualMixedStorage<T, TP1, TP2>(pointer1, pointer2);
+		}
+
+		public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2> value, JsonSerializerOptions options)
+		{
+			if (!value.IsValid())
+				throw new JsonException(ParameterError.InvalidValue);
+			byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, }.Max()];
+			int size;
+			writer.WriteStartObject();
+				
+			// write pointer 1
+			size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+			// write pointer 2
+			size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+			writer.WriteEndObject();
+		}
+	}
+	#endregion
+}
+
+/// <summary>
+/// The actual storage class for a mixed storage on 2 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ActualMixedStorage<T, TP1, TP2> : MixedStorage<T, TP1, TP2>, IActualStorage<T, MixedStorage<T, TP1, TP2>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
+{
+	internal ActualMixedStorage(TP1 pointer1, TP2 pointer2) : base(pointer1, pointer2)
+	{
+		// do nothing
+	}
+
+	/// <summary>
+	/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2}"/> from the given lengths of all locations
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+	public ActualMixedStorage(long length1, long length2) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative))
+	{
+		if (this.Length == 0)
+			throw new ArgumentException(ParameterError.CannotAllZero);
+	}
+		
+	/// <summary>
+	/// The deconstructor to be invoked by GC
+	/// </summary>
+	~ActualMixedStorage() => this.Dispose(false);
+}
+
+/// <summary>
+/// The reference storage class for a mixed storage on 2 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ReferenceMixedStorage<T, TP1, TP2> : MixedStorage<T, TP1, TP2>, IReferenceStorage<T, MixedStorage<T, TP1, TP2>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> 
+{
+	/// <inheritdoc/>
+	public IStorage? Reference { get; }
+		
+	/// <inheritdoc/>
+	public long TotalOffsetInBytes { get; }
+
+	/// <summary>
+	/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+	/// </summary>
+	/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
+	/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+	/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+	/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+	public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
+	{
+		(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2>>.Create<MixedStorageBase<TP1, TP2>>(storage, offset, newLength);
+		if (storage is not MixedStorageBase<TP1, TP2> s)
+			return;
+
+		this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+		PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default;
+		long offsetEnd = offset + newLength;
+		Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes,  };
+		lenAccu.AccumulateSum(lenAccu, inclusive: false);
+		int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+		if (0 > firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1;
+		else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset, newLength);
+		else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset);
+		else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer1.LengthInBytes;
+		if (1 > firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2;
+		else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset, newLength);
+		else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset);
+		else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer2.LengthInBytes;
+		this.Pointer1 = p1; this.Pointer2 = p2;
+	}
+}
+#endregion
+
+
+#region mixed storage of 3 locations
+/// <summary>
+/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 3 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+/// </summary>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+public abstract class MixedStorageBase<TP1, TP2, TP3>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
+{
+	/// <summary>
+	/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
+	/// </summary>
+	public PointerSegment<TP1> Pointer1 { get; protected init; }
+
+	/// <summary>
+	/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
+	/// </summary>
+	public PointerSegment<TP2> Pointer2 { get; protected init; }
+
+	/// <summary>
+	/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
+	/// </summary>
+	public PointerSegment<TP3> Pointer3 { get; protected init; }
+
+	/// <summary>
+	/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3)
+	{
+		this.Pointer1 = pointer1;
+		this.Pointer2 = pointer2;
+		this.Pointer3 = pointer3;
+	}
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorageBase() { }
+}
+
+/// <summary>
+/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3}"/> and constrains data type to <typeparamref name="T"/>
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public abstract class MixedStorage<T, TP1, TP2, TP3> : MixedStorageBase<TP1, TP2, TP3>, IStorage<T, MixedStorage<T, TP1, TP2, TP3>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
+{
+	#region basic
+	/// <summary>
+	/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3) : base(pointer1, pointer2, pointer3) { }
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorage() : base() { }
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3>(null);
+		
+	/// <inheritdoc/>
+	public static DataType DataType => T.Type;
+		
+	/// <inheritdoc/>
+	public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location,  });
+		
+	static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, };
+
+	long IStorage<MixedStorage<T, TP1, TP2, TP3>>.SizeOfPointer(int i)
+	{
+		if (this.Disposed)
+			return 0;
+		return i switch
+		{
+			0 => this.Pointer1.IsValid() ? 1 : 0,
+			1 => this.Pointer2.IsValid() ? 1 : 0,
+			2 => this.Pointer3.IsValid() ? 1 : 0,
+			_ => throw new ArgumentOutOfRangeException(nameof(i)),
+		};
+	}
+		
+	/// <inheritdoc/>
+	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes;
+		
+	/// <inheritdoc/>
+	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).Length;
+		
+	/// <inheritdoc/>
+	public bool Disposed { get; private set; } = false;
+		
+	/// <inheritdoc/>
+	public virtual void Dispose(bool invokedByUser)
+	{
+		if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3>)
+		{
+			Mem.Free(this.Pointer1.Pointer);
+			Mem.Free(this.Pointer2.Pointer);
+			Mem.Free(this.Pointer3.Pointer);
+		}
+		this.Disposed = true;
+	}
+
+	/// <inheritdoc/>
+	/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
+	public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid());
+	#endregion
+
+	#region reference
+	ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.GetPointerSizes(Span<long> sizes)
+	{
+		if (sizes.Length < 3)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+		sizes[0] = this.Pointer1.LengthInBytes;
+		sizes[1] = this.Pointer2.LengthInBytes;
+		sizes[2] = this.Pointer3.LengthInBytes;
+		return sizes;
+	}
+
+	/// <inheritdoc/>
+	public bool OverlapWith(IStorage other)
+	{
+		return other is MixedStorageBase<TP1, TP2, TP3> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3);
+	}
+		
+	/// <inheritdoc/>
+	public MixedStorage<T, TP1, TP2, TP3> MakeReference(long offset = 0, long newLength = 0)
+	{
+		if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3> @ref)
+			return @ref;
+		else
+			return new ReferenceMixedStorage<T, TP1, TP2, TP3>(this, offset, newLength);
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3}"/>.
+	/// </summary>
+	/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3}"/> to check overlap</param>
+	/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+	/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
+	public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3);
+		
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.RefFrom<TOut, TOther>(TOther storage)
+	{
+		return (storage as MixedStorage<TOut, TP1, TP2, TP3> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
+	}
+
+	/// <summary>
+	/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
+	/// </summary>
+	/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+	/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of data type <typeparamref name="TOut"/></returns>
+	/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+	public MixedStorage<TOut, TP1, TP2, TP3> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
+	{
+		if (typeof(TOut) == typeof(T))
+			return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3> ?? MixedStorage<TOut, TP1, TP2, TP3>.Empty;
+		((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).CheckCast<TOut>();
+		return new ReferenceMixedStorage<TOut, TP1, TP2, TP3>(this);
+	}
+	#endregion
+
+	#region create
+	/// <summary>
+	/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> of given lengths.
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+	/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static MixedStorage<T, TP1, TP2, TP3> Create(long length1, long length2, long length3)
+	{
+		if (length1 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+		if (length2 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+		if (length3 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+		return new ActualMixedStorage<T, TP1, TP2, TP3>(length1, length2,  length3);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Create(ReadOnlySpan<long> lengths)
+	{
+		if (lengths.Length != 3)
+			throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
+		return Create(lengths[0], lengths[1], lengths[2]);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.CreateAlike<T2, TS2>(TS2 storage)
+	{
+		return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+	}
+
+	/// <summary>
+	/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> alike <paramref name="storage"/>.
+	/// </summary>
+	/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
+	/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3}"/> that likes <paramref name="storage"/></returns>
+	public static MixedStorage<T, TP1, TP2, TP3> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size);
+	#endregion
+
+	#region operators
+	static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3>, long>.AdditiveIdentity => 0;
+		
+	/// <inheritdoc/>
+	public bool Equals(MixedStorage<T, TP1, TP2, TP3>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
+		
+	/// <inheritdoc/>
+	public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
+		
+	/// <inheritdoc/>
+	public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3>);
+		
+	/// <inheritdoc/>
+	public static long operator -(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right)
+	{
+		long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.StorageDiffBytes(left, right);
+		if (diffBytes % T.Size != 0)
+			throw new InvalidOperationException(ArithmeticError.CannotDivide);
+		return diffBytes / T.Size;
+	}
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3> operator +(MixedStorage<T, TP1, TP2, TP3> left, long right) => left.MakeReference(right);
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3> operator -(MixedStorage<T, TP1, TP2, TP3> left, long right) => left.MakeReference(-right);
+		
+	/// <inheritdoc/>
+	public static bool operator ==(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right) => left.Equals(right);
+		
+	/// <inheritdoc/>
+	public static bool operator !=(MixedStorage<T, TP1, TP2, TP3> left, MixedStorage<T, TP1, TP2, TP3> right) => !left.Equals(right);
+	#endregion
+
+	#region string
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3>);
+
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Length), nameof(Pointer1), nameof(Pointer2) };
+
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+		
+	/// <inheritdoc/>
+	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.ToString(this);
+		
+	static JsonConverter<MixedStorage<T, TP1, TP2, TP3>> IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.JsonConverter => new JsonConverter();
+
+	private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3>>
+	{
+		private record struct Repr(string Data1, string Data2, string Data3);
+
+		public override MixedStorage<T, TP1, TP2, TP3> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+				throw new JsonException();
+
+			// read pointer 1
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data1 = reader.GetBytesFromBase64();
+			TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 2
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data2 = reader.GetBytesFromBase64();
+			TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 3
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data3 = reader.GetBytesFromBase64();
+			TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+				
+			if (reader.TokenType != JsonTokenType.EndObject)
+				throw new JsonException();
+			reader.Read();
+			return new ActualMixedStorage<T, TP1, TP2, TP3>(pointer1, pointer2, pointer3);
+		}
+
+		public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3> value, JsonSerializerOptions options)
+		{
+			if (!value.IsValid())
+				throw new JsonException(ParameterError.InvalidValue);
+			byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, }.Max()];
+			int size;
+			writer.WriteStartObject();
+				
+			// write pointer 1
+			size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+			// write pointer 2
+			size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+			// write pointer 3
+			size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+			writer.WriteEndObject();
+		}
+	}
+	#endregion
+}
+
+/// <summary>
+/// The actual storage class for a mixed storage on 3 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ActualMixedStorage<T, TP1, TP2, TP3> : MixedStorage<T, TP1, TP2, TP3>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
+{
+	internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3) : base(pointer1, pointer2, pointer3)
+	{
+		// do nothing
+	}
+
+	/// <summary>
+	/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3}"/> from the given lengths of all locations
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+	public ActualMixedStorage(long length1, long length2, long length3) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative))
+	{
+		if (this.Length == 0)
+			throw new ArgumentException(ParameterError.CannotAllZero);
+	}
+		
+	/// <summary>
+	/// The deconstructor to be invoked by GC
+	/// </summary>
+	~ActualMixedStorage() => this.Dispose(false);
+}
+
+/// <summary>
+/// The reference storage class for a mixed storage on 3 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3> : MixedStorage<T, TP1, TP2, TP3>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> 
+{
+	/// <inheritdoc/>
+	public IStorage? Reference { get; }
+		
+	/// <inheritdoc/>
+	public long TotalOffsetInBytes { get; }
+
+	/// <summary>
+	/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+	/// </summary>
+	/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
+	/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+	/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+	/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+	public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
+	{
+		(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Create<MixedStorageBase<TP1, TP2, TP3>>(storage, offset, newLength);
+		if (storage is not MixedStorageBase<TP1, TP2, TP3> s)
+			return;
+
+		this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+		PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default;
+		long offsetEnd = offset + newLength;
+		Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes,  };
+		lenAccu.AccumulateSum(lenAccu, inclusive: false);
+		int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+		if (0 > firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1;
+		else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset, newLength);
+		else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset);
+		else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer1.LengthInBytes;
+		if (1 > firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2;
+		else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset, newLength);
+		else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset);
+		else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer2.LengthInBytes;
+		if (2 > firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3;
+		else if (2 == firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset, newLength);
+		else if (2 == firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset);
+		else if (2 > firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer3.LengthInBytes;
+		this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3;
+	}
+}
+#endregion
+
+
+#region mixed storage of 4 locations
+/// <summary>
+/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 4 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+/// </summary>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+public abstract class MixedStorageBase<TP1, TP2, TP3, TP4>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
+{
+	/// <summary>
+	/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
+	/// </summary>
+	public PointerSegment<TP1> Pointer1 { get; protected init; }
+
+	/// <summary>
+	/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
+	/// </summary>
+	public PointerSegment<TP2> Pointer2 { get; protected init; }
+
+	/// <summary>
+	/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
+	/// </summary>
+	public PointerSegment<TP3> Pointer3 { get; protected init; }
+
+	/// <summary>
+	/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
+	/// </summary>
+	public PointerSegment<TP4> Pointer4 { get; protected init; }
+
+	/// <summary>
+	/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4)
+	{
+		this.Pointer1 = pointer1;
+		this.Pointer2 = pointer2;
+		this.Pointer3 = pointer3;
+		this.Pointer4 = pointer4;
+	}
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorageBase() { }
+}
+
+/// <summary>
+/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4}"/> and constrains data type to <typeparamref name="T"/>
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public abstract class MixedStorage<T, TP1, TP2, TP3, TP4> : MixedStorageBase<TP1, TP2, TP3, TP4>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
+{
+	#region basic
+	/// <summary>
+	/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4) : base(pointer1, pointer2, pointer3, pointer4) { }
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorage() : base() { }
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>(null);
+		
+	/// <inheritdoc/>
+	public static DataType DataType => T.Type;
+		
+	/// <inheritdoc/>
+	public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location,  });
+		
+	static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, };
+
+	long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4>>.SizeOfPointer(int i)
+	{
+		if (this.Disposed)
+			return 0;
+		return i switch
+		{
+			0 => this.Pointer1.IsValid() ? 1 : 0,
+			1 => this.Pointer2.IsValid() ? 1 : 0,
+			2 => this.Pointer3.IsValid() ? 1 : 0,
+			3 => this.Pointer4.IsValid() ? 1 : 0,
+			_ => throw new ArgumentOutOfRangeException(nameof(i)),
+		};
+	}
+		
+	/// <inheritdoc/>
+	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes;
+		
+	/// <inheritdoc/>
+	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).Length;
+		
+	/// <inheritdoc/>
+	public bool Disposed { get; private set; } = false;
+		
+	/// <inheritdoc/>
+	public virtual void Dispose(bool invokedByUser)
+	{
+		if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>)
+		{
+			Mem.Free(this.Pointer1.Pointer);
+			Mem.Free(this.Pointer2.Pointer);
+			Mem.Free(this.Pointer3.Pointer);
+			Mem.Free(this.Pointer4.Pointer);
+		}
+		this.Disposed = true;
+	}
+
+	/// <inheritdoc/>
+	/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
+	public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid());
+	#endregion
+
+	#region reference
+	ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.GetPointerSizes(Span<long> sizes)
+	{
+		if (sizes.Length < 4)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+		sizes[0] = this.Pointer1.LengthInBytes;
+		sizes[1] = this.Pointer2.LengthInBytes;
+		sizes[2] = this.Pointer3.LengthInBytes;
+		sizes[3] = this.Pointer4.LengthInBytes;
+		return sizes;
+	}
+
+	/// <inheritdoc/>
+	public bool OverlapWith(IStorage other)
+	{
+		return other is MixedStorageBase<TP1, TP2, TP3, TP4> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4);
+	}
+		
+	/// <inheritdoc/>
+	public MixedStorage<T, TP1, TP2, TP3, TP4> MakeReference(long offset = 0, long newLength = 0)
+	{
+		if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4> @ref)
+			return @ref;
+		else
+			return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4>(this, offset, newLength);
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/>.
+	/// </summary>
+	/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> to check overlap</param>
+	/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+	/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
+	public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4);
+		
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.RefFrom<TOut, TOther>(TOther storage)
+	{
+		return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
+	}
+
+	/// <summary>
+	/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
+	/// </summary>
+	/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+	/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of data type <typeparamref name="TOut"/></returns>
+	/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+	public MixedStorage<TOut, TP1, TP2, TP3, TP4> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
+	{
+		if (typeof(TOut) == typeof(T))
+			return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4>.Empty;
+		((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).CheckCast<TOut>();
+		return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4>(this);
+	}
+	#endregion
+
+	#region create
+	/// <summary>
+	/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> of given lengths.
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+	/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static MixedStorage<T, TP1, TP2, TP3, TP4> Create(long length1, long length2, long length3, long length4)
+	{
+		if (length1 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+		if (length2 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+		if (length3 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+		if (length4 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+		return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(length1, length2, length3,  length4);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Create(ReadOnlySpan<long> lengths)
+	{
+		if (lengths.Length != 4)
+			throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
+		return Create(lengths[0], lengths[1], lengths[2], lengths[3]);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.CreateAlike<T2, TS2>(TS2 storage)
+	{
+		return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+	}
+
+	/// <summary>
+	/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> alike <paramref name="storage"/>.
+	/// </summary>
+	/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
+	/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4}"/> that likes <paramref name="storage"/></returns>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size);
+	#endregion
+
+	#region operators
+	static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4>, long>.AdditiveIdentity => 0;
+		
+	/// <inheritdoc/>
+	public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
+		
+	/// <inheritdoc/>
+	public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
+		
+	/// <inheritdoc/>
+	public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4>);
+		
+	/// <inheritdoc/>
+	public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right)
+	{
+		long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.StorageDiffBytes(left, right);
+		if (diffBytes % T.Size != 0)
+			throw new InvalidOperationException(ArithmeticError.CannotDivide);
+		return diffBytes / T.Size;
+	}
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4> operator +(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left.MakeReference(right);
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4> operator -(MixedStorage<T, TP1, TP2, TP3, TP4> left, long right) => left.MakeReference(-right);
+		
+	/// <inheritdoc/>
+	public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right) => left.Equals(right);
+		
+	/// <inheritdoc/>
+	public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4> left, MixedStorage<T, TP1, TP2, TP3, TP4> right) => !left.Equals(right);
+	#endregion
+
+	#region string
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4>);
+
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Length), nameof(Pointer1), nameof(Pointer2) };
+
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+		
+	/// <inheritdoc/>
+	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.ToString(this);
+		
+	static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.JsonConverter => new JsonConverter();
+
+	private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4>>
+	{
+		private record struct Repr(string Data1, string Data2, string Data3, string Data4);
+
+		public override MixedStorage<T, TP1, TP2, TP3, TP4> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+				throw new JsonException();
+
+			// read pointer 1
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data1 = reader.GetBytesFromBase64();
+			TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 2
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data2 = reader.GetBytesFromBase64();
+			TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 3
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data3 = reader.GetBytesFromBase64();
+			TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 4
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data4 = reader.GetBytesFromBase64();
+			TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+				
+			if (reader.TokenType != JsonTokenType.EndObject)
+				throw new JsonException();
+			reader.Read();
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4>(pointer1, pointer2, pointer3, pointer4);
+		}
+
+		public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4> value, JsonSerializerOptions options)
+		{
+			if (!value.IsValid())
+				throw new JsonException(ParameterError.InvalidValue);
+			byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, }.Max()];
+			int size;
+			writer.WriteStartObject();
+				
+			// write pointer 1
+			size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+			// write pointer 2
+			size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+			// write pointer 3
+			size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+			// write pointer 4
+			size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+			writer.WriteEndObject();
+		}
+	}
+	#endregion
+}
+
+/// <summary>
+/// The actual storage class for a mixed storage on 4 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4> : MixedStorage<T, TP1, TP2, TP3, TP4>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
+{
+	internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4) : base(pointer1, pointer2, pointer3, pointer4)
+	{
+		// do nothing
+	}
+
+	/// <summary>
+	/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4}"/> from the given lengths of all locations
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+	public ActualMixedStorage(long length1, long length2, long length3, long length4) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative))
+	{
+		if (this.Length == 0)
+			throw new ArgumentException(ParameterError.CannotAllZero);
+	}
+		
+	/// <summary>
+	/// The deconstructor to be invoked by GC
+	/// </summary>
+	~ActualMixedStorage() => this.Dispose(false);
+}
+
+/// <summary>
+/// The reference storage class for a mixed storage on 4 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4> : MixedStorage<T, TP1, TP2, TP3, TP4>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> 
+{
+	/// <inheritdoc/>
+	public IStorage? Reference { get; }
+		
+	/// <inheritdoc/>
+	public long TotalOffsetInBytes { get; }
+
+	/// <summary>
+	/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+	/// </summary>
+	/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
+	/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+	/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+	/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+	public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
+	{
+		(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4>>(storage, offset, newLength);
+		if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4> s)
+			return;
+
+		this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+		PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default;
+		long offsetEnd = offset + newLength;
+		Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes,  };
+		lenAccu.AccumulateSum(lenAccu, inclusive: false);
+		int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+		if (0 > firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1;
+		else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset, newLength);
+		else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset);
+		else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer1.LengthInBytes;
+		if (1 > firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2;
+		else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset, newLength);
+		else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset);
+		else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer2.LengthInBytes;
+		if (2 > firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3;
+		else if (2 == firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset, newLength);
+		else if (2 == firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset);
+		else if (2 > firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer3.LengthInBytes;
+		if (3 > firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4;
+		else if (3 == firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset, newLength);
+		else if (3 == firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset);
+		else if (3 > firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer4.LengthInBytes;
+		this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4;
+	}
+}
+#endregion
+
+
+#region mixed storage of 5 locations
+/// <summary>
+/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 5 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+/// </summary>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
+{
+	/// <summary>
+	/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
+	/// </summary>
+	public PointerSegment<TP1> Pointer1 { get; protected init; }
+
+	/// <summary>
+	/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
+	/// </summary>
+	public PointerSegment<TP2> Pointer2 { get; protected init; }
+
+	/// <summary>
+	/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
+	/// </summary>
+	public PointerSegment<TP3> Pointer3 { get; protected init; }
+
+	/// <summary>
+	/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
+	/// </summary>
+	public PointerSegment<TP4> Pointer4 { get; protected init; }
+
+	/// <summary>
+	/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
+	/// </summary>
+	public PointerSegment<TP5> Pointer5 { get; protected init; }
+
+	/// <summary>
+	/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5)
+	{
+		this.Pointer1 = pointer1;
+		this.Pointer2 = pointer2;
+		this.Pointer3 = pointer3;
+		this.Pointer4 = pointer4;
+		this.Pointer5 = pointer5;
+	}
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorageBase() { }
+}
+
+/// <summary>
+/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5}"/> and constrains data type to <typeparamref name="T"/>
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
+{
+	#region basic
+	/// <summary>
+	/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5) : base(pointer1, pointer2, pointer3, pointer4, pointer5) { }
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorage() : base() { }
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(null);
+		
+	/// <inheritdoc/>
+	public static DataType DataType => T.Type;
+		
+	/// <inheritdoc/>
+	public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location,  });
+		
+	static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, };
+
+	long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.SizeOfPointer(int i)
+	{
+		if (this.Disposed)
+			return 0;
+		return i switch
+		{
+			0 => this.Pointer1.IsValid() ? 1 : 0,
+			1 => this.Pointer2.IsValid() ? 1 : 0,
+			2 => this.Pointer3.IsValid() ? 1 : 0,
+			3 => this.Pointer4.IsValid() ? 1 : 0,
+			4 => this.Pointer5.IsValid() ? 1 : 0,
+			_ => throw new ArgumentOutOfRangeException(nameof(i)),
+		};
+	}
+		
+	/// <inheritdoc/>
+	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes;
+		
+	/// <inheritdoc/>
+	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).Length;
+		
+	/// <inheritdoc/>
+	public bool Disposed { get; private set; } = false;
+		
+	/// <inheritdoc/>
+	public virtual void Dispose(bool invokedByUser)
+	{
+		if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>)
+		{
+			Mem.Free(this.Pointer1.Pointer);
+			Mem.Free(this.Pointer2.Pointer);
+			Mem.Free(this.Pointer3.Pointer);
+			Mem.Free(this.Pointer4.Pointer);
+			Mem.Free(this.Pointer5.Pointer);
+		}
+		this.Disposed = true;
+	}
+
+	/// <inheritdoc/>
+	/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
+	public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid());
+	#endregion
+
+	#region reference
+	ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.GetPointerSizes(Span<long> sizes)
+	{
+		if (sizes.Length < 5)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+		sizes[0] = this.Pointer1.LengthInBytes;
+		sizes[1] = this.Pointer2.LengthInBytes;
+		sizes[2] = this.Pointer3.LengthInBytes;
+		sizes[3] = this.Pointer4.LengthInBytes;
+		sizes[4] = this.Pointer5.LengthInBytes;
+		return sizes;
+	}
+
+	/// <inheritdoc/>
+	public bool OverlapWith(IStorage other)
+	{
+		return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5);
+	}
+		
+	/// <inheritdoc/>
+	public MixedStorage<T, TP1, TP2, TP3, TP4, TP5> MakeReference(long offset = 0, long newLength = 0)
+	{
+		if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5> @ref)
+			return @ref;
+		else
+			return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(this, offset, newLength);
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/>.
+	/// </summary>
+	/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> to check overlap</param>
+	/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+	/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
+	public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5);
+		
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.RefFrom<TOut, TOther>(TOther storage)
+	{
+		return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
+	}
+
+	/// <summary>
+	/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
+	/// </summary>
+	/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+	/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of data type <typeparamref name="TOut"/></returns>
+	/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+	public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
+	{
+		if (typeof(TOut) == typeof(T))
+			return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5>.Empty;
+		((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).CheckCast<TOut>();
+		return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5>(this);
+	}
+	#endregion
+
+	#region create
+	/// <summary>
+	/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> of given lengths.
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+	/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Create(long length1, long length2, long length3, long length4, long length5)
+	{
+		if (length1 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+		if (length2 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+		if (length3 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+		if (length4 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+		if (length5 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+		return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(length1, length2, length3, length4,  length5);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Create(ReadOnlySpan<long> lengths)
+	{
+		if (lengths.Length != 5)
+			throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
+		return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4]);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.CreateAlike<T2, TS2>(TS2 storage)
+	{
+		return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+	}
+
+	/// <summary>
+	/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> alike <paramref name="storage"/>.
+	/// </summary>
+	/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
+	/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> that likes <paramref name="storage"/></returns>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size);
+	#endregion
+
+	#region operators
+	static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, long>.AdditiveIdentity => 0;
+		
+	/// <inheritdoc/>
+	public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
+		
+	/// <inheritdoc/>
+	public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
+		
+	/// <inheritdoc/>
+	public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5>);
+		
+	/// <inheritdoc/>
+	public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right)
+	{
+		long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.StorageDiffBytes(left, right);
+		if (diffBytes % T.Size != 0)
+			throw new InvalidOperationException(ArithmeticError.CannotDivide);
+		return diffBytes / T.Size;
+	}
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left.MakeReference(right);
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, long right) => left.MakeReference(-right);
+		
+	/// <inheritdoc/>
+	public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right) => left.Equals(right);
+		
+	/// <inheritdoc/>
+	public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> right) => !left.Equals(right);
+	#endregion
+
+	#region string
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5>);
+
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Length), nameof(Pointer1), nameof(Pointer2) };
+
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+		
+	/// <inheritdoc/>
+	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.ToString(this);
+		
+	static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.JsonConverter => new JsonConverter();
+
+	private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
+	{
+		private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5);
+
+		public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+				throw new JsonException();
+
+			// read pointer 1
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data1 = reader.GetBytesFromBase64();
+			TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 2
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data2 = reader.GetBytesFromBase64();
+			TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 3
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data3 = reader.GetBytesFromBase64();
+			TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 4
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data4 = reader.GetBytesFromBase64();
+			TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 5
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data5 = reader.GetBytesFromBase64();
+			TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+				
+			if (reader.TokenType != JsonTokenType.EndObject)
+				throw new JsonException();
+			reader.Read();
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5>(pointer1, pointer2, pointer3, pointer4, pointer5);
+		}
+
+		public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5> value, JsonSerializerOptions options)
+		{
+			if (!value.IsValid())
+				throw new JsonException(ParameterError.InvalidValue);
+			byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, }.Max()];
+			int size;
+			writer.WriteStartObject();
+				
+			// write pointer 1
+			size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+			// write pointer 2
+			size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+			// write pointer 3
+			size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+			// write pointer 4
+			size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+			// write pointer 5
+			size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+			writer.WriteEndObject();
+		}
+	}
+	#endregion
+}
+
+/// <summary>
+/// The actual storage class for a mixed storage on 5 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
+{
+	internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5) : base(pointer1, pointer2, pointer3, pointer4, pointer5)
+	{
+		// do nothing
+	}
+
+	/// <summary>
+	/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> from the given lengths of all locations
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+	public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative))
+	{
+		if (this.Length == 0)
+			throw new ArgumentException(ParameterError.CannotAllZero);
+	}
+		
+	/// <summary>
+	/// The deconstructor to be invoked by GC
+	/// </summary>
+	~ActualMixedStorage() => this.Dispose(false);
+}
+
+/// <summary>
+/// The reference storage class for a mixed storage on 5 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> 
+{
+	/// <inheritdoc/>
+	public IStorage? Reference { get; }
+		
+	/// <inheritdoc/>
+	public long TotalOffsetInBytes { get; }
+
+	/// <summary>
+	/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+	/// </summary>
+	/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
+	/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+	/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+	/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+	public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
+	{
+		(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5>>(storage, offset, newLength);
+		if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5> s)
+			return;
+
+		this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+		PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default;
+		long offsetEnd = offset + newLength;
+		Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes,  };
+		lenAccu.AccumulateSum(lenAccu, inclusive: false);
+		int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+		if (0 > firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1;
+		else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset, newLength);
+		else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset);
+		else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer1.LengthInBytes;
+		if (1 > firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2;
+		else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset, newLength);
+		else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset);
+		else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer2.LengthInBytes;
+		if (2 > firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3;
+		else if (2 == firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset, newLength);
+		else if (2 == firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset);
+		else if (2 > firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer3.LengthInBytes;
+		if (3 > firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4;
+		else if (3 == firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset, newLength);
+		else if (3 == firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset);
+		else if (3 > firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer4.LengthInBytes;
+		if (4 > firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5;
+		else if (4 == firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset, newLength);
+		else if (4 == firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset);
+		else if (4 > firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer5.LengthInBytes;
+		this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5;
+	}
+}
+#endregion
+
+
+#region mixed storage of 6 locations
+/// <summary>
+/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 6 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+/// </summary>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
+{
+	/// <summary>
+	/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
+	/// </summary>
+	public PointerSegment<TP1> Pointer1 { get; protected init; }
+
+	/// <summary>
+	/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
+	/// </summary>
+	public PointerSegment<TP2> Pointer2 { get; protected init; }
+
+	/// <summary>
+	/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
+	/// </summary>
+	public PointerSegment<TP3> Pointer3 { get; protected init; }
+
+	/// <summary>
+	/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
+	/// </summary>
+	public PointerSegment<TP4> Pointer4 { get; protected init; }
+
+	/// <summary>
+	/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
+	/// </summary>
+	public PointerSegment<TP5> Pointer5 { get; protected init; }
+
+	/// <summary>
+	/// Get the sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> of this storage
+	/// </summary>
+	public PointerSegment<TP6> Pointer6 { get; protected init; }
+
+	/// <summary>
+	/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
+	protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6)
+	{
+		this.Pointer1 = pointer1;
+		this.Pointer2 = pointer2;
+		this.Pointer3 = pointer3;
+		this.Pointer4 = pointer4;
+		this.Pointer5 = pointer5;
+		this.Pointer6 = pointer6;
+	}
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorageBase() { }
+}
+
+/// <summary>
+/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6}"/> and constrains data type to <typeparamref name="T"/>
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
+{
+	#region basic
+	/// <summary>
+	/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
+	protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6) { }
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorage() : base() { }
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(null);
+		
+	/// <inheritdoc/>
+	public static DataType DataType => T.Type;
+		
+	/// <inheritdoc/>
+	public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location,  });
+		
+	static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, };
+
+	long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.SizeOfPointer(int i)
+	{
+		if (this.Disposed)
+			return 0;
+		return i switch
+		{
+			0 => this.Pointer1.IsValid() ? 1 : 0,
+			1 => this.Pointer2.IsValid() ? 1 : 0,
+			2 => this.Pointer3.IsValid() ? 1 : 0,
+			3 => this.Pointer4.IsValid() ? 1 : 0,
+			4 => this.Pointer5.IsValid() ? 1 : 0,
+			5 => this.Pointer6.IsValid() ? 1 : 0,
+			_ => throw new ArgumentOutOfRangeException(nameof(i)),
+		};
+	}
+		
+	/// <inheritdoc/>
+	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes;
+		
+	/// <inheritdoc/>
+	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).Length;
+		
+	/// <inheritdoc/>
+	public bool Disposed { get; private set; } = false;
+		
+	/// <inheritdoc/>
+	public virtual void Dispose(bool invokedByUser)
+	{
+		if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>)
+		{
+			Mem.Free(this.Pointer1.Pointer);
+			Mem.Free(this.Pointer2.Pointer);
+			Mem.Free(this.Pointer3.Pointer);
+			Mem.Free(this.Pointer4.Pointer);
+			Mem.Free(this.Pointer5.Pointer);
+			Mem.Free(this.Pointer6.Pointer);
+		}
+		this.Disposed = true;
+	}
+
+	/// <inheritdoc/>
+	/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
+	public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid());
+	#endregion
+
+	#region reference
+	ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.GetPointerSizes(Span<long> sizes)
+	{
+		if (sizes.Length < 6)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+		sizes[0] = this.Pointer1.LengthInBytes;
+		sizes[1] = this.Pointer2.LengthInBytes;
+		sizes[2] = this.Pointer3.LengthInBytes;
+		sizes[3] = this.Pointer4.LengthInBytes;
+		sizes[4] = this.Pointer5.LengthInBytes;
+		sizes[5] = this.Pointer6.LengthInBytes;
+		return sizes;
+	}
+
+	/// <inheritdoc/>
+	public bool OverlapWith(IStorage other)
+	{
+		return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6);
+	}
+		
+	/// <inheritdoc/>
+	public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> MakeReference(long offset = 0, long newLength = 0)
+	{
+		if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> @ref)
+			return @ref;
+		else
+			return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(this, offset, newLength);
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/>.
+	/// </summary>
+	/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> to check overlap</param>
+	/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+	/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
+	public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6);
+		
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.RefFrom<TOut, TOther>(TOther storage)
+	{
+		return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
+	}
+
+	/// <summary>
+	/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
+	/// </summary>
+	/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+	/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of data type <typeparamref name="TOut"/></returns>
+	/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+	public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
+	{
+		if (typeof(TOut) == typeof(T))
+			return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6>.Empty;
+		((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).CheckCast<TOut>();
+		return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6>(this);
+	}
+	#endregion
+
+	#region create
+	/// <summary>
+	/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> of given lengths.
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+	/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+	/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Create(long length1, long length2, long length3, long length4, long length5, long length6)
+	{
+		if (length1 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+		if (length2 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+		if (length3 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+		if (length4 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+		if (length5 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+		if (length6 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
+		return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(length1, length2, length3, length4, length5,  length6);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Create(ReadOnlySpan<long> lengths)
+	{
+		if (lengths.Length != 6)
+			throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
+		return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5]);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.CreateAlike<T2, TS2>(TS2 storage)
+	{
+		return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+	}
+
+	/// <summary>
+	/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> alike <paramref name="storage"/>.
+	/// </summary>
+	/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
+	/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> that likes <paramref name="storage"/></returns>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size);
+	#endregion
+
+	#region operators
+	static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, long>.AdditiveIdentity => 0;
+		
+	/// <inheritdoc/>
+	public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
+		
+	/// <inheritdoc/>
+	public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
+		
+	/// <inheritdoc/>
+	public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>);
+		
+	/// <inheritdoc/>
+	public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right)
+	{
+		long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.StorageDiffBytes(left, right);
+		if (diffBytes % T.Size != 0)
+			throw new InvalidOperationException(ArithmeticError.CannotDivide);
+		return diffBytes / T.Size;
+	}
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left.MakeReference(right);
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, long right) => left.MakeReference(-right);
+		
+	/// <inheritdoc/>
+	public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right) => left.Equals(right);
+		
+	/// <inheritdoc/>
+	public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> right) => !left.Equals(right);
+	#endregion
+
+	#region string
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>);
+
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Length), nameof(Pointer1), nameof(Pointer2) };
+
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+		
+	/// <inheritdoc/>
+	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.ToString(this);
+		
+	static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.JsonConverter => new JsonConverter();
+
+	private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
+	{
+		private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6);
+
+		public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+				throw new JsonException();
+
+			// read pointer 1
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data1 = reader.GetBytesFromBase64();
+			TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 2
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data2 = reader.GetBytesFromBase64();
+			TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 3
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data3 = reader.GetBytesFromBase64();
+			TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 4
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data4 = reader.GetBytesFromBase64();
+			TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 5
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data5 = reader.GetBytesFromBase64();
+			TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 6
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data6 = reader.GetBytesFromBase64();
+			TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP6>(pointer6, data6.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+				
+			if (reader.TokenType != JsonTokenType.EndObject)
+				throw new JsonException();
+			reader.Read();
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6);
+		}
+
+		public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> value, JsonSerializerOptions options)
+		{
+			if (!value.IsValid())
+				throw new JsonException(ParameterError.InvalidValue);
+			byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, }.Max()];
+			int size;
+			writer.WriteStartObject();
+				
+			// write pointer 1
+			size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+			// write pointer 2
+			size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+			// write pointer 3
+			size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+			// write pointer 4
+			size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+			// write pointer 5
+			size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+			// write pointer 6
+			size = (int)Mem.ToManaged<UnsignedInt8, TP6>(value.Pointer6, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
+				
+			writer.WriteEndObject();
+		}
+	}
+	#endregion
+}
+
+/// <summary>
+/// The actual storage class for a mixed storage on 6 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
+{
+	internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6)
+	{
+		// do nothing
+	}
+
+	/// <summary>
+	/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> from the given lengths of all locations
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+	public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative))
+	{
+		if (this.Length == 0)
+			throw new ArgumentException(ParameterError.CannotAllZero);
+	}
+		
+	/// <summary>
+	/// The deconstructor to be invoked by GC
+	/// </summary>
+	~ActualMixedStorage() => this.Dispose(false);
+}
+
+/// <summary>
+/// The reference storage class for a mixed storage on 6 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> 
+{
+	/// <inheritdoc/>
+	public IStorage? Reference { get; }
+		
+	/// <inheritdoc/>
+	public long TotalOffsetInBytes { get; }
+
+	/// <summary>
+	/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+	/// </summary>
+	/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
+	/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+	/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+	/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+	public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
+	{
+		(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6>>(storage, offset, newLength);
+		if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6> s)
+			return;
+
+		this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+		PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default;
+		long offsetEnd = offset + newLength;
+		Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes,  };
+		lenAccu.AccumulateSum(lenAccu, inclusive: false);
+		int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+		if (0 > firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1;
+		else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset, newLength);
+		else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset);
+		else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer1.LengthInBytes;
+		if (1 > firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2;
+		else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset, newLength);
+		else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset);
+		else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer2.LengthInBytes;
+		if (2 > firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3;
+		else if (2 == firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset, newLength);
+		else if (2 == firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset);
+		else if (2 > firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer3.LengthInBytes;
+		if (3 > firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4;
+		else if (3 == firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset, newLength);
+		else if (3 == firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset);
+		else if (3 > firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer4.LengthInBytes;
+		if (4 > firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5;
+		else if (4 == firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset, newLength);
+		else if (4 == firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset);
+		else if (4 > firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer5.LengthInBytes;
+		if (5 > firstNonEmpty && 5 < lastNonEmpty)
+			p6 = s.Pointer6;
+		else if (5 == firstNonEmpty && 5 == lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(offset, newLength);
+		else if (5 == firstNonEmpty && 5 < lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(offset);
+		else if (5 > firstNonEmpty && 5 == lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer6.LengthInBytes;
+		this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5; this.Pointer6 = p6;
+	}
+}
+#endregion
+
+
+#region mixed storage of 7 locations
+/// <summary>
+/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 7 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+/// </summary>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
+{
+	/// <summary>
+	/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
+	/// </summary>
+	public PointerSegment<TP1> Pointer1 { get; protected init; }
+
+	/// <summary>
+	/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
+	/// </summary>
+	public PointerSegment<TP2> Pointer2 { get; protected init; }
+
+	/// <summary>
+	/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
+	/// </summary>
+	public PointerSegment<TP3> Pointer3 { get; protected init; }
+
+	/// <summary>
+	/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
+	/// </summary>
+	public PointerSegment<TP4> Pointer4 { get; protected init; }
+
+	/// <summary>
+	/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
+	/// </summary>
+	public PointerSegment<TP5> Pointer5 { get; protected init; }
+
+	/// <summary>
+	/// Get the sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> of this storage
+	/// </summary>
+	public PointerSegment<TP6> Pointer6 { get; protected init; }
+
+	/// <summary>
+	/// Get the seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> of this storage
+	/// </summary>
+	public PointerSegment<TP7> Pointer7 { get; protected init; }
+
+	/// <summary>
+	/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
+	/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
+	protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7)
+	{
+		this.Pointer1 = pointer1;
+		this.Pointer2 = pointer2;
+		this.Pointer3 = pointer3;
+		this.Pointer4 = pointer4;
+		this.Pointer5 = pointer5;
+		this.Pointer6 = pointer6;
+		this.Pointer7 = pointer7;
+	}
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorageBase() { }
+}
+
+/// <summary>
+/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> and constrains data type to <typeparamref name="T"/>
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
+{
+	#region basic
+	/// <summary>
+	/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
+	/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
+	protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7) { }
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorage() : base() { }
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(null);
+		
+	/// <inheritdoc/>
+	public static DataType DataType => T.Type;
+		
+	/// <inheritdoc/>
+	public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location,  });
+		
+	static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, };
+
+	long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.SizeOfPointer(int i)
+	{
+		if (this.Disposed)
+			return 0;
+		return i switch
+		{
+			0 => this.Pointer1.IsValid() ? 1 : 0,
+			1 => this.Pointer2.IsValid() ? 1 : 0,
+			2 => this.Pointer3.IsValid() ? 1 : 0,
+			3 => this.Pointer4.IsValid() ? 1 : 0,
+			4 => this.Pointer5.IsValid() ? 1 : 0,
+			5 => this.Pointer6.IsValid() ? 1 : 0,
+			6 => this.Pointer7.IsValid() ? 1 : 0,
+			_ => throw new ArgumentOutOfRangeException(nameof(i)),
+		};
+	}
+		
+	/// <inheritdoc/>
+	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes;
+		
+	/// <inheritdoc/>
+	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).Length;
+		
+	/// <inheritdoc/>
+	public bool Disposed { get; private set; } = false;
+		
+	/// <inheritdoc/>
+	public virtual void Dispose(bool invokedByUser)
+	{
+		if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>)
+		{
+			Mem.Free(this.Pointer1.Pointer);
+			Mem.Free(this.Pointer2.Pointer);
+			Mem.Free(this.Pointer3.Pointer);
+			Mem.Free(this.Pointer4.Pointer);
+			Mem.Free(this.Pointer5.Pointer);
+			Mem.Free(this.Pointer6.Pointer);
+			Mem.Free(this.Pointer7.Pointer);
+		}
+		this.Disposed = true;
+	}
+
+	/// <inheritdoc/>
+	/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
+	public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid());
+	#endregion
+
+	#region reference
+	ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.GetPointerSizes(Span<long> sizes)
+	{
+		if (sizes.Length < 7)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+		sizes[0] = this.Pointer1.LengthInBytes;
+		sizes[1] = this.Pointer2.LengthInBytes;
+		sizes[2] = this.Pointer3.LengthInBytes;
+		sizes[3] = this.Pointer4.LengthInBytes;
+		sizes[4] = this.Pointer5.LengthInBytes;
+		sizes[5] = this.Pointer6.LengthInBytes;
+		sizes[6] = this.Pointer7.LengthInBytes;
+		return sizes;
+	}
+
+	/// <inheritdoc/>
+	public bool OverlapWith(IStorage other)
+	{
+		return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7);
+	}
+		
+	/// <inheritdoc/>
+	public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> MakeReference(long offset = 0, long newLength = 0)
+	{
+		if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> @ref)
+			return @ref;
+		else
+			return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(this, offset, newLength);
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/>.
+	/// </summary>
+	/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> to check overlap</param>
+	/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+	/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
+	public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7);
+		
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.RefFrom<TOut, TOther>(TOther storage)
+	{
+		return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
+	}
+
+	/// <summary>
+	/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
+	/// </summary>
+	/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+	/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of data type <typeparamref name="TOut"/></returns>
+	/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+	public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
+	{
+		if (typeof(TOut) == typeof(T))
+			return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7>.Empty;
+		((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).CheckCast<TOut>();
+		return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(this);
+	}
+	#endregion
+
+	#region create
+	/// <summary>
+	/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> of given lengths.
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+	/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+	/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+	/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7)
+	{
+		if (length1 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+		if (length2 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+		if (length3 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+		if (length4 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+		if (length5 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+		if (length6 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
+		if (length7 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
+		return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(length1, length2, length3, length4, length5, length6,  length7);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Create(ReadOnlySpan<long> lengths)
+	{
+		if (lengths.Length != 7)
+			throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
+		return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6]);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.CreateAlike<T2, TS2>(TS2 storage)
+	{
+		return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+	}
+
+	/// <summary>
+	/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> alike <paramref name="storage"/>.
+	/// </summary>
+	/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
+	/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> that likes <paramref name="storage"/></returns>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size);
+	#endregion
+
+	#region operators
+	static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, long>.AdditiveIdentity => 0;
+		
+	/// <inheritdoc/>
+	public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
+		
+	/// <inheritdoc/>
+	public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
+		
+	/// <inheritdoc/>
+	public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>);
+		
+	/// <inheritdoc/>
+	public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right)
+	{
+		long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.StorageDiffBytes(left, right);
+		if (diffBytes % T.Size != 0)
+			throw new InvalidOperationException(ArithmeticError.CannotDivide);
+		return diffBytes / T.Size;
+	}
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left.MakeReference(right);
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, long right) => left.MakeReference(-right);
+		
+	/// <inheritdoc/>
+	public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right) => left.Equals(right);
+		
+	/// <inheritdoc/>
+	public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> right) => !left.Equals(right);
+	#endregion
+
+	#region string
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>);
+
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Length), nameof(Pointer1), nameof(Pointer2) };
+
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+		
+	/// <inheritdoc/>
+	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.ToString(this);
+		
+	static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.JsonConverter => new JsonConverter();
+
+	private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
+	{
+		private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7);
+
+		public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+				throw new JsonException();
+
+			// read pointer 1
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data1 = reader.GetBytesFromBase64();
+			TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 2
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data2 = reader.GetBytesFromBase64();
+			TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 3
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data3 = reader.GetBytesFromBase64();
+			TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 4
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data4 = reader.GetBytesFromBase64();
+			TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 5
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data5 = reader.GetBytesFromBase64();
+			TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 6
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data6 = reader.GetBytesFromBase64();
+			TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP6>(pointer6, data6.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 7
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data7 = reader.GetBytesFromBase64();
+			TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP7>(pointer7, data7.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+				
+			if (reader.TokenType != JsonTokenType.EndObject)
+				throw new JsonException();
+			reader.Read();
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7);
+		}
+
+		public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> value, JsonSerializerOptions options)
+		{
+			if (!value.IsValid())
+				throw new JsonException(ParameterError.InvalidValue);
+			byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, }.Max()];
+			int size;
+			writer.WriteStartObject();
+				
+			// write pointer 1
+			size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+			// write pointer 2
+			size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+			// write pointer 3
+			size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+			// write pointer 4
+			size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+			// write pointer 5
+			size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+			// write pointer 6
+			size = (int)Mem.ToManaged<UnsignedInt8, TP6>(value.Pointer6, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
+				
+			// write pointer 7
+			size = (int)Mem.ToManaged<UnsignedInt8, TP7>(value.Pointer7, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
+				
+			writer.WriteEndObject();
+		}
+	}
+	#endregion
+}
+
+/// <summary>
+/// The actual storage class for a mixed storage on 7 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
+{
+	internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7)
+	{
+		// do nothing
+	}
+
+	/// <summary>
+	/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> from the given lengths of all locations
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+	/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+	public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative))
+	{
+		if (this.Length == 0)
+			throw new ArgumentException(ParameterError.CannotAllZero);
+	}
+		
+	/// <summary>
+	/// The deconstructor to be invoked by GC
+	/// </summary>
+	~ActualMixedStorage() => this.Dispose(false);
+}
+
+/// <summary>
+/// The reference storage class for a mixed storage on 7 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> 
+{
+	/// <inheritdoc/>
+	public IStorage? Reference { get; }
+		
+	/// <inheritdoc/>
+	public long TotalOffsetInBytes { get; }
+
+	/// <summary>
+	/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+	/// </summary>
+	/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
+	/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+	/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+	/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+	public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
+	{
+		(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7>>(storage, offset, newLength);
+		if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7> s)
+			return;
+
+		this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+		PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default;
+		long offsetEnd = offset + newLength;
+		Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes,  };
+		lenAccu.AccumulateSum(lenAccu, inclusive: false);
+		int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+		if (0 > firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1;
+		else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset, newLength);
+		else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset);
+		else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer1.LengthInBytes;
+		if (1 > firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2;
+		else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset, newLength);
+		else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset);
+		else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer2.LengthInBytes;
+		if (2 > firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3;
+		else if (2 == firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset, newLength);
+		else if (2 == firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset);
+		else if (2 > firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer3.LengthInBytes;
+		if (3 > firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4;
+		else if (3 == firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset, newLength);
+		else if (3 == firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset);
+		else if (3 > firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer4.LengthInBytes;
+		if (4 > firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5;
+		else if (4 == firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset, newLength);
+		else if (4 == firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset);
+		else if (4 > firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer5.LengthInBytes;
+		if (5 > firstNonEmpty && 5 < lastNonEmpty)
+			p6 = s.Pointer6;
+		else if (5 == firstNonEmpty && 5 == lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(offset, newLength);
+		else if (5 == firstNonEmpty && 5 < lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(offset);
+		else if (5 > firstNonEmpty && 5 == lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer6.LengthInBytes;
+		if (6 > firstNonEmpty && 6 < lastNonEmpty)
+			p7 = s.Pointer7;
+		else if (6 == firstNonEmpty && 6 == lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(offset, newLength);
+		else if (6 == firstNonEmpty && 6 < lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(offset);
+		else if (6 > firstNonEmpty && 6 == lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer7.LengthInBytes;
+		this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5; this.Pointer6 = p6; this.Pointer7 = p7;
+	}
+}
+#endregion
+
+
+#region mixed storage of 8 locations
+/// <summary>
+/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 8 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+/// </summary>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
+{
+	/// <summary>
+	/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
+	/// </summary>
+	public PointerSegment<TP1> Pointer1 { get; protected init; }
+
+	/// <summary>
+	/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
+	/// </summary>
+	public PointerSegment<TP2> Pointer2 { get; protected init; }
+
+	/// <summary>
+	/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
+	/// </summary>
+	public PointerSegment<TP3> Pointer3 { get; protected init; }
+
+	/// <summary>
+	/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
+	/// </summary>
+	public PointerSegment<TP4> Pointer4 { get; protected init; }
+
+	/// <summary>
+	/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
+	/// </summary>
+	public PointerSegment<TP5> Pointer5 { get; protected init; }
+
+	/// <summary>
+	/// Get the sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> of this storage
+	/// </summary>
+	public PointerSegment<TP6> Pointer6 { get; protected init; }
+
+	/// <summary>
+	/// Get the seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> of this storage
+	/// </summary>
+	public PointerSegment<TP7> Pointer7 { get; protected init; }
+
+	/// <summary>
+	/// Get the eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> of this storage
+	/// </summary>
+	public PointerSegment<TP8> Pointer8 { get; protected init; }
+
+	/// <summary>
+	/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
+	/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
+	/// <param name="pointer8">The eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> to create from</param>
+	protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7, PointerSegment<TP8> pointer8)
+	{
+		this.Pointer1 = pointer1;
+		this.Pointer2 = pointer2;
+		this.Pointer3 = pointer3;
+		this.Pointer4 = pointer4;
+		this.Pointer5 = pointer5;
+		this.Pointer6 = pointer6;
+		this.Pointer7 = pointer7;
+		this.Pointer8 = pointer8;
+	}
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorageBase() { }
+}
+
+/// <summary>
+/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> and constrains data type to <typeparamref name="T"/>
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
+{
+	#region basic
+	/// <summary>
+	/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
+	/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
+	/// <param name="pointer8">The eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> to create from</param>
+	protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7, PointerSegment<TP8> pointer8) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8) { }
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorage() : base() { }
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(null);
+		
+	/// <inheritdoc/>
+	public static DataType DataType => T.Type;
+		
+	/// <inheritdoc/>
+	public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location,  });
+		
+	static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetProperty(nameof(Pointer8))!.GetGetMethod()!, };
+
+	long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.SizeOfPointer(int i)
+	{
+		if (this.Disposed)
+			return 0;
+		return i switch
+		{
+			0 => this.Pointer1.IsValid() ? 1 : 0,
+			1 => this.Pointer2.IsValid() ? 1 : 0,
+			2 => this.Pointer3.IsValid() ? 1 : 0,
+			3 => this.Pointer4.IsValid() ? 1 : 0,
+			4 => this.Pointer5.IsValid() ? 1 : 0,
+			5 => this.Pointer6.IsValid() ? 1 : 0,
+			6 => this.Pointer7.IsValid() ? 1 : 0,
+			7 => this.Pointer8.IsValid() ? 1 : 0,
+			_ => throw new ArgumentOutOfRangeException(nameof(i)),
+		};
+	}
+		
+	/// <inheritdoc/>
+	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes + this.Pointer8.LengthInBytes;
+		
+	/// <inheritdoc/>
+	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).Length;
+		
+	/// <inheritdoc/>
+	public bool Disposed { get; private set; } = false;
+		
+	/// <inheritdoc/>
+	public virtual void Dispose(bool invokedByUser)
+	{
+		if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>)
+		{
+			Mem.Free(this.Pointer1.Pointer);
+			Mem.Free(this.Pointer2.Pointer);
+			Mem.Free(this.Pointer3.Pointer);
+			Mem.Free(this.Pointer4.Pointer);
+			Mem.Free(this.Pointer5.Pointer);
+			Mem.Free(this.Pointer6.Pointer);
+			Mem.Free(this.Pointer7.Pointer);
+			Mem.Free(this.Pointer8.Pointer);
+		}
+		this.Disposed = true;
+	}
+
+	/// <inheritdoc/>
+	/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
+	public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid());
+	#endregion
+
+	#region reference
+	ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.GetPointerSizes(Span<long> sizes)
+	{
+		if (sizes.Length < 8)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+		sizes[0] = this.Pointer1.LengthInBytes;
+		sizes[1] = this.Pointer2.LengthInBytes;
+		sizes[2] = this.Pointer3.LengthInBytes;
+		sizes[3] = this.Pointer4.LengthInBytes;
+		sizes[4] = this.Pointer5.LengthInBytes;
+		sizes[5] = this.Pointer6.LengthInBytes;
+		sizes[6] = this.Pointer7.LengthInBytes;
+		sizes[7] = this.Pointer8.LengthInBytes;
+		return sizes;
+	}
+
+	/// <inheritdoc/>
+	public bool OverlapWith(IStorage other)
+	{
+		return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7) && this.Pointer8.OverlapWith(s.Pointer8);
+	}
+		
+	/// <inheritdoc/>
+	public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> MakeReference(long offset = 0, long newLength = 0)
+	{
+		if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> @ref)
+			return @ref;
+		else
+			return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(this, offset, newLength);
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/>.
+	/// </summary>
+	/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> to check overlap</param>
+	/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+	/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
+	public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7) || this.Pointer8.OverlapWith(other.Pointer8);
+		
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.RefFrom<TOut, TOther>(TOther storage)
+	{
+		return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
+	}
+
+	/// <summary>
+	/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
+	/// </summary>
+	/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+	/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of data type <typeparamref name="TOut"/></returns>
+	/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+	public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
+	{
+		if (typeof(TOut) == typeof(T))
+			return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>.Empty;
+		((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).CheckCast<TOut>();
+		return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(this);
+	}
+	#endregion
+
+	#region create
+	/// <summary>
+	/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> of given lengths.
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+	/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+	/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+	/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+	/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8)
+	{
+		if (length1 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+		if (length2 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+		if (length3 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+		if (length4 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+		if (length5 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+		if (length6 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
+		if (length7 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
+		if (length8 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive);
+		return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(length1, length2, length3, length4, length5, length6, length7,  length8);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Create(ReadOnlySpan<long> lengths)
+	{
+		if (lengths.Length != 8)
+			throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
+		return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6], lengths[7]);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.CreateAlike<T2, TS2>(TS2 storage)
+	{
+		return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+	}
+
+	/// <summary>
+	/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> alike <paramref name="storage"/>.
+	/// </summary>
+	/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
+	/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> that likes <paramref name="storage"/></returns>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size, storage.Pointer8.LengthInBytes / T2.Size);
+	#endregion
+
+	#region operators
+	static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, long>.AdditiveIdentity => 0;
+		
+	/// <inheritdoc/>
+	public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
+		
+	/// <inheritdoc/>
+	public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
+		
+	/// <inheritdoc/>
+	public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>);
+		
+	/// <inheritdoc/>
+	public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right)
+	{
+		long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.StorageDiffBytes(left, right);
+		if (diffBytes % T.Size != 0)
+			throw new InvalidOperationException(ArithmeticError.CannotDivide);
+		return diffBytes / T.Size;
+	}
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left.MakeReference(right);
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, long right) => left.MakeReference(-right);
+		
+	/// <inheritdoc/>
+	public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right) => left.Equals(right);
+		
+	/// <inheritdoc/>
+	public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> right) => !left.Equals(right);
+	#endregion
+
+	#region string
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>);
+
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Length), nameof(Pointer1), nameof(Pointer2) };
+
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+		
+	/// <inheritdoc/>
+	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.ToString(this);
+		
+	static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.JsonConverter => new JsonConverter();
+
+	private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
+	{
+		private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7, string Data8);
+
+		public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+				throw new JsonException();
+
+			// read pointer 1
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data1 = reader.GetBytesFromBase64();
+			TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 2
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data2 = reader.GetBytesFromBase64();
+			TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 3
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data3 = reader.GetBytesFromBase64();
+			TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 4
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data4 = reader.GetBytesFromBase64();
+			TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 5
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data5 = reader.GetBytesFromBase64();
+			TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 6
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data6 = reader.GetBytesFromBase64();
+			TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP6>(pointer6, data6.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 7
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data7 = reader.GetBytesFromBase64();
+			TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP7>(pointer7, data7.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 8
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data8) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data8 = reader.GetBytesFromBase64();
+			TP8 pointer8 = Mem.Allocate<TP8>(data8.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP8>(pointer8, data8.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+				
+			if (reader.TokenType != JsonTokenType.EndObject)
+				throw new JsonException();
+			reader.Read();
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8);
+		}
+
+		public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> value, JsonSerializerOptions options)
+		{
+			if (!value.IsValid())
+				throw new JsonException(ParameterError.InvalidValue);
+			byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, }.Max()];
+			int size;
+			writer.WriteStartObject();
+				
+			// write pointer 1
+			size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+			// write pointer 2
+			size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+			// write pointer 3
+			size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+			// write pointer 4
+			size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+			// write pointer 5
+			size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+			// write pointer 6
+			size = (int)Mem.ToManaged<UnsignedInt8, TP6>(value.Pointer6, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
+				
+			// write pointer 7
+			size = (int)Mem.ToManaged<UnsignedInt8, TP7>(value.Pointer7, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
+				
+			// write pointer 8
+			size = (int)Mem.ToManaged<UnsignedInt8, TP8>(value.Pointer8, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data8), new(temp, 0, size));
+				
+			writer.WriteEndObject();
+		}
+	}
+	#endregion
+}
+
+/// <summary>
+/// The actual storage class for a mixed storage on 8 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
+{
+	internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7, TP8 pointer8) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8)
+	{
+		// do nothing
+	}
+
+	/// <summary>
+	/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> from the given lengths of all locations
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+	/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+	/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+	public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative))
+	{
+		if (this.Length == 0)
+			throw new ArgumentException(ParameterError.CannotAllZero);
+	}
+		
+	/// <summary>
+	/// The deconstructor to be invoked by GC
+	/// </summary>
+	~ActualMixedStorage() => this.Dispose(false);
+}
+
+/// <summary>
+/// The reference storage class for a mixed storage on 8 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> 
+{
+	/// <inheritdoc/>
+	public IStorage? Reference { get; }
+		
+	/// <inheritdoc/>
+	public long TotalOffsetInBytes { get; }
+
+	/// <summary>
+	/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+	/// </summary>
+	/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
+	/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+	/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+	/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+	public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
+	{
+		(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>(storage, offset, newLength);
+		if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> s)
+			return;
+
+		this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+		PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default; PointerSegment<TP8> p8 = default;
+		long offsetEnd = offset + newLength;
+		Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes, s.Pointer8.LengthInBytes,  };
+		lenAccu.AccumulateSum(lenAccu, inclusive: false);
+		int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+		if (0 > firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1;
+		else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset, newLength);
+		else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset);
+		else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer1.LengthInBytes;
+		if (1 > firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2;
+		else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset, newLength);
+		else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset);
+		else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer2.LengthInBytes;
+		if (2 > firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3;
+		else if (2 == firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset, newLength);
+		else if (2 == firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset);
+		else if (2 > firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer3.LengthInBytes;
+		if (3 > firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4;
+		else if (3 == firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset, newLength);
+		else if (3 == firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset);
+		else if (3 > firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer4.LengthInBytes;
+		if (4 > firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5;
+		else if (4 == firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset, newLength);
+		else if (4 == firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset);
+		else if (4 > firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer5.LengthInBytes;
+		if (5 > firstNonEmpty && 5 < lastNonEmpty)
+			p6 = s.Pointer6;
+		else if (5 == firstNonEmpty && 5 == lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(offset, newLength);
+		else if (5 == firstNonEmpty && 5 < lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(offset);
+		else if (5 > firstNonEmpty && 5 == lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer6.LengthInBytes;
+		if (6 > firstNonEmpty && 6 < lastNonEmpty)
+			p7 = s.Pointer7;
+		else if (6 == firstNonEmpty && 6 == lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(offset, newLength);
+		else if (6 == firstNonEmpty && 6 < lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(offset);
+		else if (6 > firstNonEmpty && 6 == lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer7.LengthInBytes;
+		if (7 > firstNonEmpty && 7 < lastNonEmpty)
+			p8 = s.Pointer8;
+		else if (7 == firstNonEmpty && 7 == lastNonEmpty)
+			p8 = s.Pointer8.MoveBy(offset, newLength);
+		else if (7 == firstNonEmpty && 7 < lastNonEmpty)
+			p8 = s.Pointer8.MoveBy(offset);
+		else if (7 > firstNonEmpty && 7 == lastNonEmpty)
+			p8 = s.Pointer8.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer8.LengthInBytes;
+		this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5; this.Pointer6 = p6; this.Pointer7 = p7; this.Pointer8 = p8;
+	}
+}
+#endregion
+
+
+#region mixed storage of 9 locations
+/// <summary>
+/// The abstract storage class as a base class for all storage classes whose <see cref="IStorage{TSelf}.LocationDescription"/>.<see cref="CombinationOfLocations.Count">Count</see> == 9 and its <see cref="CombinationOfLocations.Type"/> == <see cref="CombinationType.AllStored"/>.
+/// </summary>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP9">The ninth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <remarks>This class only servers as a type identifier which can not be used directly</remarks>
+public abstract class MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
+{
+	/// <summary>
+	/// Get the first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> of this storage
+	/// </summary>
+	public PointerSegment<TP1> Pointer1 { get; protected init; }
+
+	/// <summary>
+	/// Get the second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> of this storage
+	/// </summary>
+	public PointerSegment<TP2> Pointer2 { get; protected init; }
+
+	/// <summary>
+	/// Get the third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> of this storage
+	/// </summary>
+	public PointerSegment<TP3> Pointer3 { get; protected init; }
+
+	/// <summary>
+	/// Get the fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> of this storage
+	/// </summary>
+	public PointerSegment<TP4> Pointer4 { get; protected init; }
+
+	/// <summary>
+	/// Get the fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> of this storage
+	/// </summary>
+	public PointerSegment<TP5> Pointer5 { get; protected init; }
+
+	/// <summary>
+	/// Get the sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> of this storage
+	/// </summary>
+	public PointerSegment<TP6> Pointer6 { get; protected init; }
+
+	/// <summary>
+	/// Get the seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> of this storage
+	/// </summary>
+	public PointerSegment<TP7> Pointer7 { get; protected init; }
+
+	/// <summary>
+	/// Get the eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> of this storage
+	/// </summary>
+	public PointerSegment<TP8> Pointer8 { get; protected init; }
+
+	/// <summary>
+	/// Get the ninth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP9"/> of this storage
+	/// </summary>
+	public PointerSegment<TP9> Pointer9 { get; protected init; }
+
+	/// <summary>
+	/// Create a new <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
+	/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
+	/// <param name="pointer8">The eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> to create from</param>
+	/// <param name="pointer9">The ninth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP9"/> to create from</param>
+	protected MixedStorageBase(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7, PointerSegment<TP8> pointer8, PointerSegment<TP9> pointer9)
+	{
+		this.Pointer1 = pointer1;
+		this.Pointer2 = pointer2;
+		this.Pointer3 = pointer3;
+		this.Pointer4 = pointer4;
+		this.Pointer5 = pointer5;
+		this.Pointer6 = pointer6;
+		this.Pointer7 = pointer7;
+		this.Pointer8 = pointer8;
+		this.Pointer9 = pointer9;
+	}
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorageBase() { }
+}
+
+/// <summary>
+/// The abstract mixed storage class that inherits <see cref="MixedStorageBase{TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> and constrains data type to <typeparamref name="T"/>
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP9">The ninth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> : MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
+{
+	#region basic
+	/// <summary>
+	/// Create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with given <see cref="PointerSegment{T}"/>s
+	/// </summary>
+	/// <param name="pointer1">The first <see cref="PointerSegment{T}"/> of type <typeparamref name="TP1"/> to create from</param>
+	/// <param name="pointer2">The second <see cref="PointerSegment{T}"/> of type <typeparamref name="TP2"/> to create from</param>
+	/// <param name="pointer3">The third <see cref="PointerSegment{T}"/> of type <typeparamref name="TP3"/> to create from</param>
+	/// <param name="pointer4">The fourth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP4"/> to create from</param>
+	/// <param name="pointer5">The fifth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP5"/> to create from</param>
+	/// <param name="pointer6">The sixth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP6"/> to create from</param>
+	/// <param name="pointer7">The seventh <see cref="PointerSegment{T}"/> of type <typeparamref name="TP7"/> to create from</param>
+	/// <param name="pointer8">The eighth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP8"/> to create from</param>
+	/// <param name="pointer9">The ninth <see cref="PointerSegment{T}"/> of type <typeparamref name="TP9"/> to create from</param>
+	protected MixedStorage(PointerSegment<TP1> pointer1, PointerSegment<TP2> pointer2, PointerSegment<TP3> pointer3, PointerSegment<TP4> pointer4, PointerSegment<TP5> pointer5, PointerSegment<TP6> pointer6, PointerSegment<TP7> pointer7, PointerSegment<TP8> pointer8, PointerSegment<TP9> pointer9) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9) { }
+
+	/// <summary>
+	/// Create an empty <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> with <see cref="PointerSegment{T}"/>s to be set later by inherited classes
+	/// </summary>
+	protected MixedStorage() : base() { }
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Empty => new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(null);
+		
+	/// <inheritdoc/>
+	public static DataType DataType => T.Type;
+		
+	/// <inheritdoc/>
+	public static CombinationOfLocations LocationDescription => new(CombinationType.AllStored, stackalloc[] { TP1.Location, TP2.Location, TP3.Location, TP4.Location, TP5.Location, TP6.Location, TP7.Location, TP8.Location, TP9.Location,  });
+		
+	static MethodInfo[] IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PointerGetters => new[] { typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer1))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer2))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer3))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer4))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer5))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer6))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer7))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer8))!.GetGetMethod()!, typeof(MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetProperty(nameof(Pointer9))!.GetGetMethod()!, };
+
+	long IStorage<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.SizeOfPointer(int i)
+	{
+		if (this.Disposed)
+			return 0;
+		return i switch
+		{
+			0 => this.Pointer1.IsValid() ? 1 : 0,
+			1 => this.Pointer2.IsValid() ? 1 : 0,
+			2 => this.Pointer3.IsValid() ? 1 : 0,
+			3 => this.Pointer4.IsValid() ? 1 : 0,
+			4 => this.Pointer5.IsValid() ? 1 : 0,
+			5 => this.Pointer6.IsValid() ? 1 : 0,
+			6 => this.Pointer7.IsValid() ? 1 : 0,
+			7 => this.Pointer8.IsValid() ? 1 : 0,
+			8 => this.Pointer9.IsValid() ? 1 : 0,
+			_ => throw new ArgumentOutOfRangeException(nameof(i)),
+		};
+	}
+		
+	/// <inheritdoc/>
+	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes + this.Pointer8.LengthInBytes + this.Pointer9.LengthInBytes;
+		
+	/// <inheritdoc/>
+	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).Length;
+		
+	/// <inheritdoc/>
+	public bool Disposed { get; private set; } = false;
+		
+	/// <inheritdoc/>
+	public virtual void Dispose(bool invokedByUser)
+	{
+		if (this is not ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>)
+		{
+			Mem.Free(this.Pointer1.Pointer);
+			Mem.Free(this.Pointer2.Pointer);
+			Mem.Free(this.Pointer3.Pointer);
+			Mem.Free(this.Pointer4.Pointer);
+			Mem.Free(this.Pointer5.Pointer);
+			Mem.Free(this.Pointer6.Pointer);
+			Mem.Free(this.Pointer7.Pointer);
+			Mem.Free(this.Pointer8.Pointer);
+			Mem.Free(this.Pointer9.Pointer);
+		}
+		this.Disposed = true;
+	}
+
+	/// <inheritdoc/>
+	/// <returns>The validness of this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
+	public bool IsValid() => !this.Disposed && (this.Pointer1.IsValid() || this.Pointer2.IsValid() || this.Pointer3.IsValid() || this.Pointer4.IsValid() || this.Pointer5.IsValid() || this.Pointer6.IsValid() || this.Pointer7.IsValid() || this.Pointer8.IsValid() || this.Pointer9.IsValid());
+	#endregion
+
+	#region reference
+	ReadOnlySpan<long> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.GetPointerSizes(Span<long> sizes)
+	{
+		if (sizes.Length < 9)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(sizes));
+		sizes[0] = this.Pointer1.LengthInBytes;
+		sizes[1] = this.Pointer2.LengthInBytes;
+		sizes[2] = this.Pointer3.LengthInBytes;
+		sizes[3] = this.Pointer4.LengthInBytes;
+		sizes[4] = this.Pointer5.LengthInBytes;
+		sizes[5] = this.Pointer6.LengthInBytes;
+		sizes[6] = this.Pointer7.LengthInBytes;
+		sizes[7] = this.Pointer8.LengthInBytes;
+		sizes[8] = this.Pointer9.LengthInBytes;
+		return sizes;
+	}
+
+	/// <inheritdoc/>
+	public bool OverlapWith(IStorage other)
+	{
+		return other is MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> s && this.Pointer1.OverlapWith(s.Pointer1) && this.Pointer2.OverlapWith(s.Pointer2) && this.Pointer3.OverlapWith(s.Pointer3) && this.Pointer4.OverlapWith(s.Pointer4) && this.Pointer5.OverlapWith(s.Pointer5) && this.Pointer6.OverlapWith(s.Pointer6) && this.Pointer7.OverlapWith(s.Pointer7) && this.Pointer8.OverlapWith(s.Pointer8) && this.Pointer9.OverlapWith(s.Pointer9);
+	}
+		
+	/// <inheritdoc/>
+	public MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> MakeReference(long offset = 0, long newLength = 0)
+	{
+		if (offset == 0 && newLength == 0 && this is ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> @ref)
+			return @ref;
+		else
+			return new ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(this, offset, newLength);
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> overlaps with the <paramref name="other"/> <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/>.
+	/// </summary>
+	/// <param name="other">The other <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> to check overlap</param>
+	/// <returns>True if this overlaps with the <paramref name="other"/>, false otherwise</returns>
+	/// <remarks>This method does not consider a rather case that pointers can be of same type.</remarks>
+	public bool OverlapWith(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> other) => this.Pointer1.OverlapWith(other.Pointer1) || this.Pointer2.OverlapWith(other.Pointer2) || this.Pointer3.OverlapWith(other.Pointer3) || this.Pointer4.OverlapWith(other.Pointer4) || this.Pointer5.OverlapWith(other.Pointer5) || this.Pointer6.OverlapWith(other.Pointer6) || this.Pointer7.OverlapWith(other.Pointer7) || this.Pointer8.OverlapWith(other.Pointer8) || this.Pointer9.OverlapWith(other.Pointer9);
+		
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.RefFrom<TOut, TOther>(TOther storage)
+	{
+		return (storage as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? throw new InvalidOperationException(ParameterError.UnexpectedType)).As<T>();
+	}
+
+	/// <summary>
+	/// Create a referenced storage of data type <typeparamref name="TOut"/> over this storage
+	/// </summary>
+	/// <typeparam name="TOut">Any unmanaged number as the new data type</typeparam>
+	/// <returns>The referenced <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of data type <typeparamref name="TOut"/></returns>
+	/// <exception cref="InvalidCastException">If the <see cref="LengthInBytes"/> cannot be divided by the size of <typeparamref name="TOut"/></exception>
+	public MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> As<TOut>() where TOut : unmanaged, IBaseNumber<TOut>
+	{
+		if (typeof(TOut) == typeof(T))
+			return this.MakeReference() as MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? MixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>.Empty;
+		((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).CheckCast<TOut>();
+		return new ReferenceMixedStorage<TOut, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(this);
+	}
+	#endregion
+
+	#region create
+	/// <summary>
+	/// Statically create a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> of given lengths.
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+	/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+	/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+	/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
+	/// <returns>The created new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If the underlying allocation failed due to insufficient memory</exception>
+	/// <exception cref="InvalidOperationException">If underlying creation fails due to other reasons</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Create(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9)
+	{
+		if (length1 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.MustPositive);
+		if (length2 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.MustPositive);
+		if (length3 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.MustPositive);
+		if (length4 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.MustPositive);
+		if (length5 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.MustPositive);
+		if (length6 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.MustPositive);
+		if (length7 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.MustPositive);
+		if (length8 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.MustPositive);
+		if (length9 <= 0)
+			throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.MustPositive);
+		return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(length1, length2, length3, length4, length5, length6, length7, length8,  length9);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Create(ReadOnlySpan<long> lengths)
+	{
+		if (lengths.Length != 9)
+			throw new ArgumentException(ParameterError.WrongSize, nameof(lengths));
+		return Create(lengths[0], lengths[1], lengths[2], lengths[3], lengths[4], lengths[5], lengths[6], lengths[7], lengths[8]);
+	}
+
+	static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.CreateAlike<T2, TS2>(TS2 storage)
+	{
+		return CreateAlike(storage as MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> ?? throw new InvalidOperationException(ParameterError.UnexpectedType));
+	}
+
+	/// <summary>
+	/// Statically allocate and creates a new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> alike <paramref name="storage"/>.
+	/// </summary>
+	/// <param name="storage">The storage of data type <typeparamref name="T2"/> to mimic.</param>
+	/// <returns>A new <see cref="MixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> that likes <paramref name="storage"/></returns>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> CreateAlike<T2>(MixedStorage<T2, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> storage) where T2 : unmanaged, IBaseNumber<T2> => Create(storage.Pointer1.LengthInBytes / T2.Size, storage.Pointer2.LengthInBytes / T2.Size, storage.Pointer3.LengthInBytes / T2.Size, storage.Pointer4.LengthInBytes / T2.Size, storage.Pointer5.LengthInBytes / T2.Size, storage.Pointer6.LengthInBytes / T2.Size, storage.Pointer7.LengthInBytes / T2.Size, storage.Pointer8.LengthInBytes / T2.Size, storage.Pointer9.LengthInBytes / T2.Size);
+	#endregion
+
+	#region operators
+	static long System.Numerics.IAdditiveIdentity<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, long>.AdditiveIdentity => 0;
+		
+	/// <inheritdoc/>
+	public bool Equals(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>? other) => other is not null && this.Pointer1 == other.Pointer1 && this.Pointer2 == other.Pointer2;
+		
+	/// <inheritdoc/>
+	public override int GetHashCode() => HashCode.Combine(this.Pointer1, this.Pointer2);
+		
+	/// <inheritdoc/>
+	public override bool Equals(object? obj) => this.Equals(obj as MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>);
+		
+	/// <inheritdoc/>
+	public static long operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right)
+	{
+		long diffBytes = IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.StorageDiffBytes(left, right);
+		if (diffBytes % T.Size != 0)
+			throw new InvalidOperationException(ArithmeticError.CannotDivide);
+		return diffBytes / T.Size;
+	}
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> operator +(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left.MakeReference(right);
+		
+	/// <inheritdoc/>
+	public static MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> operator -(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, long right) => left.MakeReference(-right);
+		
+	/// <inheritdoc/>
+	public static bool operator ==(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right) => left.Equals(right);
+		
+	/// <inheritdoc/>
+	public static bool operator !=(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> left, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> right) => !left.Equals(right);
+	#endregion
+
+	#region string
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>);
+
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Length), nameof(Pointer1), nameof(Pointer2) };
+
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+		
+	/// <inheritdoc/>
+	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.ToString(this);
+		
+	static JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>> IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.JsonConverter => new JsonConverter();
+
+	private sealed class JsonConverter : JsonConverter<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
+	{
+		private record struct Repr(string Data1, string Data2, string Data3, string Data4, string Data5, string Data6, string Data7, string Data8, string Data9);
+
+		public override MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+		{
+			if (reader.TokenType != JsonTokenType.StartObject || !reader.Read())
+				throw new JsonException();
+
+			// read pointer 1
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data1) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data1 = reader.GetBytesFromBase64();
+			TP1 pointer1 = Mem.Allocate<TP1>(data1.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP1>(pointer1, data1.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 2
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data2) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data2 = reader.GetBytesFromBase64();
+			TP2 pointer2 = Mem.Allocate<TP2>(data2.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP2>(pointer2, data2.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 3
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data3) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data3 = reader.GetBytesFromBase64();
+			TP3 pointer3 = Mem.Allocate<TP3>(data3.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP3>(pointer3, data3.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 4
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data4) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data4 = reader.GetBytesFromBase64();
+			TP4 pointer4 = Mem.Allocate<TP4>(data4.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP4>(pointer4, data4.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 5
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data5) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data5 = reader.GetBytesFromBase64();
+			TP5 pointer5 = Mem.Allocate<TP5>(data5.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP5>(pointer5, data5.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 6
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data6) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data6 = reader.GetBytesFromBase64();
+			TP6 pointer6 = Mem.Allocate<TP6>(data6.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP6>(pointer6, data6.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 7
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data7) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data7 = reader.GetBytesFromBase64();
+			TP7 pointer7 = Mem.Allocate<TP7>(data7.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP7>(pointer7, data7.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 8
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data8) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data8 = reader.GetBytesFromBase64();
+			TP8 pointer8 = Mem.Allocate<TP8>(data8.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP8>(pointer8, data8.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+
+			// read pointer 9
+			if (reader.TokenType != JsonTokenType.PropertyName || reader.GetString() != nameof(Repr.Data9) || !reader.Read())
+				throw new JsonException();
+			if (reader.TokenType != JsonTokenType.String)
+				throw new JsonException();
+			byte[] data9 = reader.GetBytesFromBase64();
+			TP9 pointer9 = Mem.Allocate<TP9>(data9.LongLength);
+			Mem.FromManaged<UnsignedInt8, TP9>(pointer9, data9.AsAux());
+			if (!reader.Read())
+				throw new JsonException();
+				
+			if (reader.TokenType != JsonTokenType.EndObject)
+				throw new JsonException();
+			reader.Read();
+			return new ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9);
+		}
+
+		public override void Write(Utf8JsonWriter writer, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> value, JsonSerializerOptions options)
+		{
+			if (!value.IsValid())
+				throw new JsonException(ParameterError.InvalidValue);
+			byte[] temp = new byte[stackalloc[] { value.Pointer1.LengthInBytes, value.Pointer2.LengthInBytes, value.Pointer3.LengthInBytes, value.Pointer4.LengthInBytes, value.Pointer5.LengthInBytes, value.Pointer6.LengthInBytes, value.Pointer7.LengthInBytes, value.Pointer8.LengthInBytes, value.Pointer9.LengthInBytes, }.Max()];
+			int size;
+			writer.WriteStartObject();
+				
+			// write pointer 1
+			size = (int)Mem.ToManaged<UnsignedInt8, TP1>(value.Pointer1, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data1), new(temp, 0, size));
+				
+			// write pointer 2
+			size = (int)Mem.ToManaged<UnsignedInt8, TP2>(value.Pointer2, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data2), new(temp, 0, size));
+				
+			// write pointer 3
+			size = (int)Mem.ToManaged<UnsignedInt8, TP3>(value.Pointer3, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data3), new(temp, 0, size));
+				
+			// write pointer 4
+			size = (int)Mem.ToManaged<UnsignedInt8, TP4>(value.Pointer4, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data4), new(temp, 0, size));
+				
+			// write pointer 5
+			size = (int)Mem.ToManaged<UnsignedInt8, TP5>(value.Pointer5, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data5), new(temp, 0, size));
+				
+			// write pointer 6
+			size = (int)Mem.ToManaged<UnsignedInt8, TP6>(value.Pointer6, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data6), new(temp, 0, size));
+				
+			// write pointer 7
+			size = (int)Mem.ToManaged<UnsignedInt8, TP7>(value.Pointer7, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data7), new(temp, 0, size));
+				
+			// write pointer 8
+			size = (int)Mem.ToManaged<UnsignedInt8, TP8>(value.Pointer8, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data8), new(temp, 0, size));
+				
+			// write pointer 9
+			size = (int)Mem.ToManaged<UnsignedInt8, TP9>(value.Pointer9, temp.AsAux());
+			writer.WriteBase64String(nameof(Repr.Data9), new(temp, 0, size));
+				
+			writer.WriteEndObject();
+		}
+	}
+	#endregion
+}
+
+/// <summary>
+/// The actual storage class for a mixed storage on 9 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP9">The ninth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ActualMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, IActualStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
+{
+	internal ActualMixedStorage(TP1 pointer1, TP2 pointer2, TP3 pointer3, TP4 pointer4, TP5 pointer5, TP6 pointer6, TP7 pointer7, TP8 pointer8, TP9 pointer9) : base(pointer1, pointer2, pointer3, pointer4, pointer5, pointer6, pointer7, pointer8, pointer9)
+	{
+		// do nothing
+	}
+
+	/// <summary>
+	/// Create a new <see cref="ActualMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> from the given lengths of all locations
+	/// </summary>
+	/// <param name="length1">The length in <typeparamref name="T"/> of the first location</param>
+	/// <param name="length2">The length in <typeparamref name="T"/> of the second location</param>
+	/// <param name="length3">The length in <typeparamref name="T"/> of the third location</param>
+	/// <param name="length4">The length in <typeparamref name="T"/> of the fourth location</param>
+	/// <param name="length5">The length in <typeparamref name="T"/> of the fifth location</param>
+	/// <param name="length6">The length in <typeparamref name="T"/> of the sixth location</param>
+	/// <param name="length7">The length in <typeparamref name="T"/> of the seventh location</param>
+	/// <param name="length8">The length in <typeparamref name="T"/> of the eighth location</param>
+	/// <param name="length9">The length in <typeparamref name="T"/> of the ninth location</param>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the lengths ≤ 0</exception>
+	/// <exception cref="OutOfMemoryException">If any of the lengths is too large to be allocated</exception>
+	public ActualMixedStorage(long length1, long length2, long length3, long length4, long length5, long length6, long length7, long length8, long length9) : base(length1 >= 0 ? Mem.Allocate<TP1>(length1 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length1), ParameterError.CannotNegative), length2 >= 0 ? Mem.Allocate<TP2>(length2 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length2), ParameterError.CannotNegative), length3 >= 0 ? Mem.Allocate<TP3>(length3 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length3), ParameterError.CannotNegative), length4 >= 0 ? Mem.Allocate<TP4>(length4 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length4), ParameterError.CannotNegative), length5 >= 0 ? Mem.Allocate<TP5>(length5 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length5), ParameterError.CannotNegative), length6 >= 0 ? Mem.Allocate<TP6>(length6 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length6), ParameterError.CannotNegative), length7 >= 0 ? Mem.Allocate<TP7>(length7 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length7), ParameterError.CannotNegative), length8 >= 0 ? Mem.Allocate<TP8>(length8 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length8), ParameterError.CannotNegative), length9 >= 0 ? Mem.Allocate<TP9>(length9 * T.Size) : throw new ArgumentOutOfRangeException(nameof(length9), ParameterError.CannotNegative))
+	{
+		if (this.Length == 0)
+			throw new ArgumentException(ParameterError.CannotAllZero);
+	}
+		
+	/// <summary>
+	/// The deconstructor to be invoked by GC
+	/// </summary>
+	~ActualMixedStorage() => this.Dispose(false);
+}
+
+/// <summary>
+/// The reference storage class for a mixed storage on 9 locations.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number which implements <see cref="IBaseNumber{TSelf}"/> as the data type</typeparam>
+/// <typeparam name="TP1">The first pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP2">The second pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP3">The third pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP4">The fourth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP5">The fifth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP6">The sixth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP7">The seventh pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP8">The eighth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+/// <typeparam name="TP9">The ninth pointer type which implements <see cref="IPointer{TSelf}"/></typeparam>
+public sealed class ReferenceMixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> : MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>, IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>
+	where T : unmanaged, IBaseNumber<T>
+	where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where TP3 : notnull, IPointer<TP3> where TP4 : notnull, IPointer<TP4> where TP5 : notnull, IPointer<TP5> where TP6 : notnull, IPointer<TP6> where TP7 : notnull, IPointer<TP7> where TP8 : notnull, IPointer<TP8> where TP9 : notnull, IPointer<TP9> 
+{
+	/// <inheritdoc/>
+	public IStorage? Reference { get; }
+		
+	/// <inheritdoc/>
+	public long TotalOffsetInBytes { get; }
+
+	/// <summary>
+	/// Create a new <see cref="ReferenceMixedStorage{T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9}"/> from given base <paramref name="storage"/> and <paramref name="offset"/> and <paramref name="newLength"/>.
+	/// </summary>
+	/// <param name="storage">The base <see cref="IStorage"/> to refer to</param>
+	/// <param name="offset">The offset in <typeparamref name="T"/> compared to <paramref name="storage"/></param>
+	/// <param name="newLength">The new presenting length in <typeparamref name="T"/></param>
+	/// <exception cref="ArgumentException">If <paramref name="storage"/> is not a <see cref="PureStorageBase{TP}"/></exception>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offset"/> and <paramref name="newLength"/> are out of boundary</exception>
+	public ReferenceMixedStorage(IStorage? storage, long offset = 0, long newLength = 0)
+	{
+		(storage, offset, newLength) = IReferenceStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Create<MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>(storage, offset, newLength);
+		if (storage is not MixedStorageBase<TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9> s)
+			return;
+
+		this.Reference = storage; this.TotalOffsetInBytes = offset;
+
+		PointerSegment<TP1> p1 = default; PointerSegment<TP2> p2 = default; PointerSegment<TP3> p3 = default; PointerSegment<TP4> p4 = default; PointerSegment<TP5> p5 = default; PointerSegment<TP6> p6 = default; PointerSegment<TP7> p7 = default; PointerSegment<TP8> p8 = default; PointerSegment<TP9> p9 = default;
+		long offsetEnd = offset + newLength;
+		Span<long> lenAccu = stackalloc[] { s.Pointer1.LengthInBytes, s.Pointer2.LengthInBytes, s.Pointer3.LengthInBytes, s.Pointer4.LengthInBytes, s.Pointer5.LengthInBytes, s.Pointer6.LengthInBytes, s.Pointer7.LengthInBytes, s.Pointer8.LengthInBytes, s.Pointer9.LengthInBytes,  };
+		lenAccu.AccumulateSum(lenAccu, inclusive: false);
+		int firstNonEmpty = lenAccu.UpperBound(offset), lastNonEmpty = lenAccu.LowerBound(offsetEnd);
+
+		if (0 > firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1;
+		else if (0 == firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset, newLength);
+		else if (0 == firstNonEmpty && 0 < lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(offset);
+		else if (0 > firstNonEmpty && 0 == lastNonEmpty)
+			p1 = s.Pointer1.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer1.LengthInBytes;
+		if (1 > firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2;
+		else if (1 == firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset, newLength);
+		else if (1 == firstNonEmpty && 1 < lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(offset);
+		else if (1 > firstNonEmpty && 1 == lastNonEmpty)
+			p2 = s.Pointer2.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer2.LengthInBytes;
+		if (2 > firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3;
+		else if (2 == firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset, newLength);
+		else if (2 == firstNonEmpty && 2 < lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(offset);
+		else if (2 > firstNonEmpty && 2 == lastNonEmpty)
+			p3 = s.Pointer3.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer3.LengthInBytes;
+		if (3 > firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4;
+		else if (3 == firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset, newLength);
+		else if (3 == firstNonEmpty && 3 < lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(offset);
+		else if (3 > firstNonEmpty && 3 == lastNonEmpty)
+			p4 = s.Pointer4.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer4.LengthInBytes;
+		if (4 > firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5;
+		else if (4 == firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset, newLength);
+		else if (4 == firstNonEmpty && 4 < lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(offset);
+		else if (4 > firstNonEmpty && 4 == lastNonEmpty)
+			p5 = s.Pointer5.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer5.LengthInBytes;
+		if (5 > firstNonEmpty && 5 < lastNonEmpty)
+			p6 = s.Pointer6;
+		else if (5 == firstNonEmpty && 5 == lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(offset, newLength);
+		else if (5 == firstNonEmpty && 5 < lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(offset);
+		else if (5 > firstNonEmpty && 5 == lastNonEmpty)
+			p6 = s.Pointer6.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer6.LengthInBytes;
+		if (6 > firstNonEmpty && 6 < lastNonEmpty)
+			p7 = s.Pointer7;
+		else if (6 == firstNonEmpty && 6 == lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(offset, newLength);
+		else if (6 == firstNonEmpty && 6 < lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(offset);
+		else if (6 > firstNonEmpty && 6 == lastNonEmpty)
+			p7 = s.Pointer7.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer7.LengthInBytes;
+		if (7 > firstNonEmpty && 7 < lastNonEmpty)
+			p8 = s.Pointer8;
+		else if (7 == firstNonEmpty && 7 == lastNonEmpty)
+			p8 = s.Pointer8.MoveBy(offset, newLength);
+		else if (7 == firstNonEmpty && 7 < lastNonEmpty)
+			p8 = s.Pointer8.MoveBy(offset);
+		else if (7 > firstNonEmpty && 7 == lastNonEmpty)
+			p8 = s.Pointer8.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer8.LengthInBytes;
+		if (8 > firstNonEmpty && 8 < lastNonEmpty)
+			p9 = s.Pointer9;
+		else if (8 == firstNonEmpty && 8 == lastNonEmpty)
+			p9 = s.Pointer9.MoveBy(offset, newLength);
+		else if (8 == firstNonEmpty && 8 < lastNonEmpty)
+			p9 = s.Pointer9.MoveBy(offset);
+		else if (8 > firstNonEmpty && 8 == lastNonEmpty)
+			p9 = s.Pointer9.MoveBy(0, offsetEnd - lenAccu[lastNonEmpty - 1]);
+
+		offset -= s.Pointer9.LengthInBytes;
+		this.Pointer1 = p1; this.Pointer2 = p2; this.Pointer3 = p3; this.Pointer4 = p4; this.Pointer5 = p5; this.Pointer6 = p6; this.Pointer7 = p7; this.Pointer8 = p8; this.Pointer9 = p9;
+	}
+}
+#endregion
+
+

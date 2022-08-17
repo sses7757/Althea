@@ -39,10 +39,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool GetPointer<T, TS>(IBindedDevice api, TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice? api, TS s, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = default; length = 0;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (s is null || !s.IsValid())
 			throw new ArgumentNullException(sName);
@@ -57,10 +57,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool GetPointer<T, TS>(IBindedDevice api, TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice? api, TS s, long stride, out T* pointer, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = default; length = 0;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (s is null || !s.IsValid())
 			throw new ArgumentNullException(sName);
@@ -80,10 +80,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool GetPointer<T, TS>(IBindedDevice api, TS s, long stride, out T* pointer, out int length, out int inc, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice? api, TS s, long stride, out T* pointer, out int length, out int inc, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("stride")] string? strideName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = default; length = 0; inc = 0;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (s is null || !s.IsValid())
 			throw new ArgumentNullException(sName);
@@ -104,10 +104,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool GetPointer<T, TS>(IBindedDevice api, TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice? api, TS? s, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = default; mm = (int)m; nn = (int)n; lld = (int)ld;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (s is null || !s.IsValid())
 			return true;
@@ -132,7 +132,7 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool GetPointer<T, TS>(IBindedDevice api, TS? s, MatrixOperation op, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice? api, TS? s, MatrixOperation op, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (!op.CanInPlace())
 		{
@@ -142,7 +142,7 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool GetPointer<T, TS>(IBindedDevice api, TS? s, MatrixOperation op, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice? api, TS? s, MatrixOperation op, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (!op.CanInPlace())
 		{
@@ -152,10 +152,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool GetPointer<T, TS>(IBindedDevice api, TS? s, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static bool GetPointer<T, TS>(IBindedDevice? api, TS? s, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = default;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (s is null || !s.IsValid())
 			return true;
@@ -178,10 +178,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice api, TS s, TSInd sInd, out T* pointer, out TInd* pointerInd, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("sInd")] string? sIndName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice? api, TS s, TSInd sInd, out T* pointer, out TInd* pointerInd, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("sInd")] string? sIndName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		pointer = default; pointerInd = default; length = 0;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
 			return false;
@@ -206,10 +206,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice api, TS s, TSInd sInd1, TSInd sInd2, out T* pointer, out TInd* pointerInd1, out TInd* pointerInd2, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("sInd1")] string? sInd1Name = null, [CallerArgumentExpression("sInd2")] string? sInd2Name = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice? api, TS s, TSInd sInd1, TSInd sInd2, out T* pointer, out TInd* pointerInd1, out TInd* pointerInd2, out long length, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("sInd1")] string? sInd1Name = null, [CallerArgumentExpression("sInd2")] string? sInd2Name = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		pointer = default; pointerInd1 = default; pointerInd2 = default; length = 0;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
 			return false;
@@ -238,10 +238,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> vector, out T* pointer, out TInd* pointerInd, out long nnz, [CallerArgumentExpression("vector")] string? vectorName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice? api, ISparseArray<T, TInd, TS, TSInd> vector, out T* pointer, out TInd* pointerInd, out long nnz, [CallerArgumentExpression("vector")] string? vectorName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		pointer = default; pointerInd = default; nnz = 0;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
 			return false;
@@ -261,10 +261,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	public static unsafe bool GetPointer<T, TInd, TS, TSInd>(IBindedDevice? api, ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		pointer = default; pointerRow = pointerCol = default; nnz = 0;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
 			return false;
@@ -282,10 +282,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool GetPointerIncludeBlocked<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
+	public static bool GetPointerIncludeBlocked<T, TInd, TS, TSInd>(IBindedDevice? api, ISparseArray<T, TInd, TS, TSInd> matrix, out T* pointer, out TInd* pointerRow, out TInd* pointerCol, out long nnz, [CallerArgumentExpression("matrix")] string? matrixName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where TInd : unmanaged, IBinaryInt<TInd> where TSInd : class, IStorage<TInd, TSInd>
 	{
 		pointer = default; pointerRow = pointerCol = default; nnz = 0;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (sizeof(TInd) != sizeof(int) && sizeof(TInd) != sizeof(long))
 			return false;
@@ -305,10 +305,10 @@ internal static unsafe partial class MemoryPointerChecker
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe bool GetPointer<T, TS>(IBindedDevice api, TS s, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, out T* pointer,[CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("size")] string? sizeName = null, [CallerArgumentExpression("outerSize")] string? outerSizeName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public static unsafe bool GetPointer<T, TS>(IBindedDevice? api, TS s, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, out T* pointer,[CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("size")] string? sizeName = null, [CallerArgumentExpression("outerSize")] string? outerSizeName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		pointer = default;
-		if (api.BindedDeviceID != Runtime.CurrentDeviceID)
+		if (api is not null && api.BindedDeviceID != Runtime.CurrentDeviceID)
 			return false;
 		if (s is null || !s.IsValid())
 			throw new ArgumentNullException(sName);

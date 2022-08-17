@@ -29,7 +29,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				extremes = Vector.Abs(extremes);
 			Vector<UInd> indices = new(stackalloc UInd[Vector<U>.Count].FillWithRange(UInd.Zero));
 			Vector<UInd> extremeIndices = indices;
-			Vector<UInd> increment = new(INumber<UInd>.CreateSaturating(Vector<U>.Count));
+			Vector<UInd> increment = new(UInd.CreateSaturating(Vector<U>.Count));
 			// loop
 			U* end = x + length;
 			while (x + Vector<U>.Count <= end)
@@ -275,7 +275,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		{
 			index = -1;
 			if ((typeof(Test) == typeof(long) || typeof(Test) == typeof(ulong)) && T.IsComplexType)
-				throw new InvalidOperationException(string.Format(Resource.CompareComplex, typeof(T).GetGenericString()));
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotReal);
 			if (!GetPointer(x, strideX, out T* px, out int length, out int inc))
 				return false;
 			if (length == 0)
@@ -505,7 +505,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		{
 			extreme = default;
 			if ((typeof(Test) == typeof(long) || typeof(Test) == typeof(ulong)) && T.IsComplexType)
-				throw new InvalidOperationException(string.Format(Resource.CompareComplex, typeof(T).GetGenericString()));
+				throw new TypeMismatchException(typeof(T), TypeMismatchException.MismatchReason.NotReal);
 			if (!GetPointer(x, strideX, out T* px, out int length, out int inc))
 				return false;
 			if (length == 0)

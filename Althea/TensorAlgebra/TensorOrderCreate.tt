@@ -12,49 +12,48 @@ using Althea.Helpers;
 using Althea.Resources;
 
 
-namespace Althea.TensorAlgebra
+namespace Althea.TensorAlgebra;
+
+public readonly ref partial struct TensorOrder
 {
-	public readonly ref partial struct TensorOrder
-	{
 <# for (int i = 2; i <= 10; i++) {  #>
-		/// <summary>
-		/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
-		/// </summary>
-		/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
-		/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
-		/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
-		/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
-		/// <exception cref="NotSupportedException">If the total size &gt; max_rank</exception>
-		public static implicit operator TensorOrder((<# for (int j = 0; j < i - 1; j++) {  #>OrderElement a<#=j#>, <# } #>OrderElement a<#=i-1#>) elements)
-		{
-			FixedBuffer_64<Union> order = default;
-			byte n = 0;
+	/// <summary>
+	/// Create a new <see cref="TensorOrder"/> with given <see cref="OrderElement"/>s as the order.
+	/// </summary>
+	/// <param name="elements">The input tuple of <see cref="OrderElement"/>s in which <see cref="Range.All"/> represents all remaining indices</param>
+	/// <returns>The created <see cref="TensorOrder"/> from given <see cref="OrderElement"/>s.</returns>
+	/// <exception cref="ArgumentException">If the <see cref="OrderElement"/>s imply duplicate indices</exception>
+	/// <exception cref="ArgumentOutOfRangeException">If any of the parameter &lt; 0 or ≥ max_rank</exception>
+	/// <exception cref="NotSupportedException">If the total size &gt; max_rank</exception>
+	public static implicit operator TensorOrder((<# for (int j = 0; j < i - 1; j++) {  #>OrderElement a<#=j#>, <# } #>OrderElement a<#=i-1#>) elements)
+	{
+		FixedBuffer_64<Union> order = default;
+		byte n = 0;
 <# for (int j = 0; j < i; j++) {  #>
 
-			// add a<#=j#>
+		// add a<#=j#>
 <# if (j != 0) { #>
 <# if (j > 8) { #>
+		if (n >= MAX_RANK)
+			throw new NotSupportedException();
+<# } #>
+		if (order.AsSpan(n).Contains(elements.a<#=j#>.main))
+			throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
+<# } #>
+		order[n++] = elements.a<#=j#>.main;
+		if (elements.a<#=j#>.auxi != default)
+		{
+<# if (j >= 8) { #>
 			if (n >= MAX_RANK)
 				throw new NotSupportedException();
 <# } #>
-			if (order.AsSpan(n).Contains(elements.a<#=j#>.main))
+			if (order.AsSpan(n).Contains(elements.a<#=j#>.auxi))
 				throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
-<# } #>
-			order[n++] = elements.a<#=j#>.main;
-			if (elements.a<#=j#>.auxi != default)
-			{
-<# if (j >= 8) { #>
-				if (n >= MAX_RANK)
-					throw new NotSupportedException();
-<# } #>
-				if (order.AsSpan(n).Contains(elements.a<#=j#>.auxi))
-					throw new ArgumentException(ParameterError.DuplicateIndices, nameof(elements));
-				order[n++] = elements.a<#=j#>.auxi;
-			}
-<# } #>
-			return new(order);
+			order[n++] = elements.a<#=j#>.auxi;
 		}
+<# } #>
+		return new(order);
+	}
 
 <# } #>
-	}
 }

@@ -12,886 +12,885 @@ using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;
 using SpIdx = Althea.LinearAlgebra.Sparse.IndexOperationApiSelector;
 
 
-namespace Althea.Array
+namespace Althea.Array;
+
+/// <summary>
+/// The concrete element-wise coordinated sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+/// <typeparam name="TS">The storage type used by the value storage</typeparam>
+/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
+/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+public class CoordinateSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
+	where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
+	where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 {
+	#region basic
+	private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
+
+	private readonly bool rowMajor;
+
+	/// <inheritdoc/>
+	public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
+
 	/// <summary>
-	/// The concrete element-wise coordinated sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+	/// Get whether this matrix is of row major or column major.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
-	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
-	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	public class CoordinateSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
-		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
-		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+	public bool RowMajor => this.RowMajor;
+
+	/// <summary>
+	/// Create a new <see cref="CoordinateSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
+	/// </summary>
+	/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
+	/// <param name="defaultValue">The default value</param>
+	/// <param name="rows">The presenting number of rows</param>
+	/// <param name="cols">The presenting number of columns</param>
+	/// <param name="values">The original value array</param>
+	/// <param name="rowIndices">The original row index array</param>
+	/// <param name="colIndices">The original column index array</param>
+	/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+	/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
+	/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
+	public CoordinateSparseMatrix(bool rowMajor, long rows, long cols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
 	{
-		#region basic
-		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
-
-		private readonly bool rowMajor;
-
-		/// <inheritdoc/>
-		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
-
-		/// <summary>
-		/// Get whether this matrix is of row major or column major.
-		/// </summary>
-		public bool RowMajor => this.RowMajor;
-
-		/// <summary>
-		/// Create a new <see cref="CoordinateSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
-		/// </summary>
-		/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
-		/// <param name="defaultValue">The default value</param>
-		/// <param name="rows">The presenting number of rows</param>
-		/// <param name="cols">The presenting number of columns</param>
-		/// <param name="values">The original value array</param>
-		/// <param name="rowIndices">The original row index array</param>
-		/// <param name="colIndices">The original column index array</param>
-		/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
-		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoordinateSparseMatrix(bool rowMajor, long rows, long cols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		this.rowMajor = rowMajor;
+		if (rowIndices.Length != values.Length)
 		{
-			this.rowMajor = rowMajor;
-			if (rowIndices.Length != values.Length)
-			{
-				this.Dispose();
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowIndices));
-			}
-			if (colIndices.Length != values.Length)
-			{
-				this.Dispose();
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colIndices));
-			}
+			this.Dispose();
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowIndices));
 		}
-
-		internal CoordinateSparseMatrix() : base() { }
-
-		/// <inheritdoc/>
-		public override bool Equals(SparseMatrix<T, TInd, TS, TSInd>? other) => other is CoordinateSparseMatrix<T, TInd, TS, TSInd> m && base.Equals(m) && this.rowMajor == m.rowMajor;
-		#endregion
-
-		#region implementation
-		/// <inheritdoc/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool GetOffsets(long row, long col, Span<long> offsets)
+		if (colIndices.Length != values.Length)
 		{
-			TInd x = row.As<TInd>(), y = col.As<TInd>();
-			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
-			if (!this.rowMajor)
-			{
-				(x, y) = (y, x);
-				(xInd, yInd) = (yInd, xInd);
-			}
-			long find = SpIdx.BoundOf(xInd, 1, x, true);
-			if ((xInd + find).ToManaged<TInd, TSInd>() != x)
-			{
-				offsets[0] = find;
-				return false;
-			}
-			long lower = SpIdx.BoundOf(xInd, 1, x, true);
-			long upper = SpIdx.BoundOf(xInd, 1, x, false);
-			find = SpIdx.BoundOf(yInd.MakeReference(lower, upper - lower), 1, y, true);
-			bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
-			find += lower;
+			this.Dispose();
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colIndices));
+		}
+	}
+
+	internal CoordinateSparseMatrix() : base() { }
+
+	/// <inheritdoc/>
+	public override bool Equals(SparseMatrix<T, TInd, TS, TSInd>? other) => other is CoordinateSparseMatrix<T, TInd, TS, TSInd> m && base.Equals(m) && this.rowMajor == m.rowMajor;
+	#endregion
+
+	#region implementation
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected override bool GetOffsets(long row, long col, Span<long> offsets)
+	{
+		TInd x = row.As<TInd>(), y = col.As<TInd>();
+		TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
+		if (!this.rowMajor)
+		{
+			(x, y) = (y, x);
+			(xInd, yInd) = (yInd, xInd);
+		}
+		long find = SpIdx.BoundOf(xInd, 1, x, true);
+		if ((xInd + find).ToManaged<TInd, TSInd>() != x)
+		{
 			offsets[0] = find;
-			return success;
+			return false;
 		}
+		long lower = SpIdx.BoundOf(xInd, 1, x, true);
+		long upper = SpIdx.BoundOf(xInd, 1, x, false);
+		find = SpIdx.BoundOf(yInd.MakeReference(lower, upper - lower), 1, y, true);
+		bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
+		find += lower;
+		offsets[0] = find;
+		return success;
+	}
 
-		/// <inheritdoc/>
-		protected override bool TryInsert(long row, long col, Span<long> offsets, T value)
+	/// <inheritdoc/>
+	protected override bool TryInsert(long row, long col, Span<long> offsets, T value)
+	{
+		long offset = offsets[0];
+		long nnz = this.NStored;
+		if (nnz + 1 > this.MaxStored)
+			return false;
+		this.Storage.TryInsert(offset, stackalloc T[] { value });
+		this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { row.As<TInd>() });
+		this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { col.As<TInd>() });
+		this.NStored = nnz + 1;
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
+	{
+		if (destination is not CoordinateSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue || mat.rowMajor != this.rowMajor)
+			throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
+		if (mat.NRows != this.NRows || mat.NCols != this.NCols || mat.NStored != this.NStored)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
+		this.Storage.CopyTo<T, TS, TS>(destination.Storage);
+		this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
+		this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
+	}
+
+	/// <inheritdoc/>
+	public override CoordinateSparseMatrix<T, TInd, TS, TSInd> RefTranspose() => new(!this.rowMajor, this.NCols, this.NRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage, this.DefaultValue, this.NStored);
+
+	/// <inheritdoc/>
+	public override CoordinateSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike(), this.DefaultValue, 0);
+
+	/// <inheritdoc/>
+	public override string Print(PrintSettings? settings = null)
+	{
+		var ps = settings ?? Settings.PrintSetting;
+		int nnz = (int)Math.Min(this.NStored, ps.ArrayLength);
+		using var tempVal = nnz.CheckStackLimit<T>();
+		using var tempInd1 = nnz.CheckStackLimit<TInd>();
+		using var tempInd2 = nnz.CheckStackLimit<TInd>();
+		Span<T> values = tempVal.IsEmpty ? stackalloc T[nnz] : tempVal.Data;
+		Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
+		Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
+		this.Storage.ToManaged(values);
+		this.RowIndexStorage.ToManaged(rowInd);
+		this.ColIndexStorage.ToManaged(colInd);
+		return values.ToSparseMatrixString<T, TInd>(rowInd, colInd, ps.Precision) + (nnz == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - nnz));
+	}
+	#endregion
+
+	#region serialization
+	[JsonConstructor]
+	private CoordinateSparseMatrix(bool rowMajor, long nRows, long nCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
+
+	private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
+	{
+		matrix = null;
+		if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 0 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
+			return false;
+		long rows = wrapper.Size[0], cols = wrapper.Size[1];
+		TS values = wrapper.ValueStorages[0];
+		TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
+		if (values.Length > rows * cols)
+			return false;
+		if (values.Length != rowIndices.Length || values.Length != colIndices.Length)
+			return false;
+		matrix = new CoordinateSparseMatrix<T, TInd, TS, TSInd>(wrapper.Format.MajorType == SparseFormat.Major.Row, rows, cols, values, rowIndices, colIndices, wrapper.DefaultValue);
+		return true;
+	}
+
+	static CoordinateSparseMatrix()
+	{
+		Creators.Add(TryCreate);
+	}
+	#endregion
+}
+
+/// <summary>
+/// The concrete element-wise compressed sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+/// <typeparam name="TS">The storage type used by the value storage</typeparam>
+/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
+/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+public class CompressSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
+	where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
+	where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+{
+	#region basic
+	private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Compressed, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
+
+	private readonly bool rowMajor;
+
+	/// <summary>
+	/// Get whether this matrix is of row major or column major.
+	/// </summary>
+	public bool RowMajor => this.RowMajor;
+
+	/// <inheritdoc/>
+	public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : base.RowIndexStorage;
+	/// <inheritdoc/>
+	public override TSInd ColIndexStorage => this.rowMajor ? base.ColIndexStorage : this.colIndices.MakeReference();
+
+	/// <inheritdoc/>
+	public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
+
+	/// <summary>
+	/// Create a new <see cref="CompressSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
+	/// </summary>
+	/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
+	/// <param name="defaultValue">The default value</param>
+	/// <param name="rows">The presenting number of rows</param>
+	/// <param name="cols">The presenting number of columns</param>
+	/// <param name="values">The original value array</param>
+	/// <param name="rowIndices">The original row index array, shall be the row offsets whose first value is 0 when <paramref name="rowMajor"/></param>
+	/// <param name="colIndices">The original column index array, shall be the column offsets whose first value is 0 when not <paramref name="rowMajor"/></param>
+	/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+	/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
+	/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
+	public CompressSparseMatrix(bool rowMajor, long rows, long cols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+	{
+		this.rowMajor = rowMajor;
+		if (rowMajor && (colIndices.Length != values.Length || rowIndices.Length != rows + 1))
 		{
-			long offset = offsets[0];
-			long nnz = this.NStored;
-			if (nnz + 1 > this.MaxStored)
-				return false;
-			this.Storage.TryInsert(offset, stackalloc T[] { value });
-			this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { row.As<TInd>() });
+			this.Dispose();
+			throw new ArgumentException(Resources.ParameterError.WrongSize);
+		}
+		if (!rowMajor && (rowIndices.Length != values.Length || colIndices.Length != cols + 1))
+		{
+			this.Dispose();
+			throw new ArgumentException(Resources.ParameterError.WrongSize);
+		}
+	}
+
+	internal CompressSparseMatrix() : base() { }
+
+	/// <inheritdoc/>
+	public override bool Equals(SparseMatrix<T, TInd, TS, TSInd>? other) => other is CompressSparseMatrix<T, TInd, TS, TSInd> m && base.Equals(m) && this.rowMajor == m.rowMajor;
+	#endregion
+
+	#region implementation
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected override bool GetOffsets(long row, long col, Span<long> offsets)
+	{
+		if (this.NStored == 0)
+		{
+			offsets[0] = 0;
+			return false;
+		}
+		TInd x = row.As<TInd>(), y = col.As<TInd>();
+		TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
+		if (!this.rowMajor)
+		{
+			(row, _) = (col, row);
+			(_, y) = (y, x);
+			(xInd, yInd) = (yInd, xInd);
+		}
+		long rowStart = (xInd + row).ToManaged<TInd, TSInd>().AsInt64(),
+			rowEnd = (xInd + (row + 1)).ToManaged<TInd, TSInd>().AsInt64();
+		long find = SpIdx.BoundOf(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
+		bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
+		find += rowStart;
+		offsets[0] = find;
+		return success;
+	}
+
+	/// <inheritdoc/>
+	protected override bool TryInsert(long row, long col, Span<long> offsets, T value)
+	{
+		long offset = offsets[0];
+		long nnz = this.NStored;
+		if (nnz + 1 > this.MaxStored)
+			return false;
+		if (nnz == 0)
+			(this.rowMajor ? this.rowIndices : this.colIndices).FillWith(TInd.Zero);
+		this.Storage.TryInsert(offset, stackalloc T[] { value });
+		if (this.rowMajor)
+		{
 			this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { col.As<TInd>() });
-			this.NStored = nnz + 1;
-			return true;
+			ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.rowIndices + (row + 1), 1, this.rowIndices + (row + 1), 1);
 		}
-
-		/// <inheritdoc/>
-		public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
+		else
 		{
-			if (destination is not CoordinateSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue || mat.rowMajor != this.rowMajor)
-				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
-			if (mat.NRows != this.NRows || mat.NCols != this.NCols || mat.NStored != this.NStored)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
-			this.Storage.CopyTo<T, TS, TS>(destination.Storage);
-			this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
-			this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
+			this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { row.As<TInd>() });
+			ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.colIndices + (col + 1), 1, this.colIndices + (col + 1), 1);
 		}
+		this.NStored = nnz + 1;
+		return true;
+	}
 
-		/// <inheritdoc/>
-		public override CoordinateSparseMatrix<T, TInd, TS, TSInd> RefTranspose() => new(!this.rowMajor, this.NCols, this.NRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage, this.DefaultValue, this.NStored);
+	/// <inheritdoc/>
+	public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
+	{
+		if (destination is not CompressSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue || mat.rowMajor != this.rowMajor)
+			throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
+		if (mat.NRows != this.NRows || mat.NCols != this.NCols || mat.NStored != this.NStored)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
+		this.Storage.CopyTo<T, TS, TS>(destination.Storage);
+		this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
+		this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
+	}
 
-		/// <inheritdoc/>
-		public override CoordinateSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike(), this.DefaultValue, 0);
+	/// <inheritdoc/>
+	public override CompressSparseMatrix<T, TInd, TS, TSInd> RefTranspose() => new(!this.rowMajor, this.NCols, this.NRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage, this.DefaultValue, this.NStored);
 
-		/// <inheritdoc/>
-		public override string Print(PrintSettings? settings = null)
+	/// <inheritdoc/>
+	public override CompressSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike(), this.DefaultValue, 0);
+
+	/// <inheritdoc/>
+	public override string Print(PrintSettings? settings = null)
+	{
+		var ps = settings ?? Settings.PrintSetting;
+		int nnz = (int)Math.Min(this.NStored, ps.ArrayLength);
+		using var tempVal = nnz.CheckStackLimit<T>();
+		using var tempInd1 = nnz.CheckStackLimit<TInd>();
+		using var tempInd2 = nnz.CheckStackLimit<TInd>();
+		Span<T> values = tempVal.IsEmpty ? stackalloc T[nnz] : tempVal.Data;
+		Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
+		Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
+		this.Storage.ToManaged(values);
+		if (this.rowMajor)
 		{
-			var ps = settings ?? Settings.PrintSetting;
-			int nnz = (int)Math.Min(this.NStored, ps.ArrayLength);
-			using var tempVal = nnz.CheckStackLimit<T>();
-			using var tempInd1 = nnz.CheckStackLimit<TInd>();
-			using var tempInd2 = nnz.CheckStackLimit<TInd>();
-			Span<T> values = tempVal.IsEmpty ? stackalloc T[nnz] : tempVal.Data;
-			Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
-			Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
-			this.Storage.ToManaged(values);
-			this.RowIndexStorage.ToManaged(rowInd);
 			this.ColIndexStorage.ToManaged(colInd);
-			return values.ToSparseMatrixString<T, TInd>(rowInd, colInd, ps.Precision) + (nnz == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - nnz));
+			int rows = (int)SpIdx.BoundOf(this.rowIndices, 1, nnz.As<TInd>(), true);
+			using var temp = rows.CheckStackLimit<TInd>();
+			Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[rows] : temp.Data;
+			this.rowIndices.ToManaged(tempInd);
+			for (int i = 0; i < rows; i++)
+			{
+				int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
+				int end = tempInd[i].AsInt32();
+				rowInd[start..end].Fill(i.As<TInd>());
+			}
 		}
-		#endregion
-
-		#region serialization
-		[JsonConstructor]
-		private CoordinateSparseMatrix(bool rowMajor, long nRows, long nCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
-
-		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
+		else
 		{
-			matrix = null;
-			if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 0 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
-				return false;
-			long rows = wrapper.Size[0], cols = wrapper.Size[1];
-			TS values = wrapper.ValueStorages[0];
-			TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
-			if (values.Length > rows * cols)
-				return false;
-			if (values.Length != rowIndices.Length || values.Length != colIndices.Length)
-				return false;
-			matrix = new CoordinateSparseMatrix<T, TInd, TS, TSInd>(wrapper.Format.MajorType == SparseFormat.Major.Row, rows, cols, values, rowIndices, colIndices, wrapper.DefaultValue);
-			return true;
+			this.RowIndexStorage.ToManaged(rowInd);
+			int cols = (int)SpIdx.BoundOf(this.colIndices, 1, nnz.As<TInd>(), true);
+			using var temp = cols.CheckStackLimit<TInd>();
+			Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[cols] : temp.Data;
+			this.colIndices.ToManaged(tempInd);
+			for (int i = 0; i < cols; i++)
+			{
+				int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
+				int end = tempInd[i].AsInt32();
+				colInd[start..end].Fill(i.As<TInd>());
+			}
 		}
+		return values.ToSparseMatrixString<T, TInd>(rowInd, colInd, ps.Precision) + (nnz == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - nnz));
+	}
+	#endregion
 
-		static CoordinateSparseMatrix()
+	#region serialization
+	[JsonConstructor]
+	private CompressSparseMatrix(bool rowMajor, long nRows, long nCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
+
+	private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
+	{
+		matrix = null;
+		if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 0 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
+			return false;
+		bool rowMajor = wrapper.Format.MajorType == SparseFormat.Major.Row;
+		long rows = wrapper.Size[0], cols = wrapper.Size[1];
+		TS values = wrapper.ValueStorages[0];
+		TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
+		if (values.Length > rows * cols)
+			return false;
+		if (rowMajor)
 		{
-			Creators.Add(TryCreate);
+			if (values.Length != colIndices.Length || rows + 1 != rowIndices.Length)
+				return false;
 		}
-		#endregion
+		else
+		{
+			if (values.Length != rowIndices.Length || cols + 1 != colIndices.Length)
+				return false;
+		}
+		matrix = new CompressSparseMatrix<T, TInd, TS, TSInd>(rowMajor, rows, cols, values, rowIndices, colIndices, wrapper.DefaultValue);
+		return true;
 	}
 
-	/// <summary>
-	/// The concrete element-wise compressed sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
-	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
-	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	public class CompressSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
-		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
-		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+	static CompressSparseMatrix()
 	{
-		#region basic
-		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Compressed, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
+		Creators.Add(TryCreate);
+	}
+	#endregion
+}
 
-		private readonly bool rowMajor;
 
-		/// <summary>
-		/// Get whether this matrix is of row major or column major.
-		/// </summary>
-		public bool RowMajor => this.RowMajor;
+/// <summary>
+/// The concrete simple block coordinated sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+/// <typeparam name="TS">The storage type used by the value storage</typeparam>
+/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
+/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+[StructLayout(LayoutKind.Sequential)]
+public class CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
+	where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
+	where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+{
+	#region basic
+	private readonly long blockRows, blockCols;
 
-		/// <inheritdoc/>
-		public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : base.RowIndexStorage;
-		/// <inheritdoc/>
-		public override TSInd ColIndexStorage => this.rowMajor ? base.ColIndexStorage : this.colIndices.MakeReference();
+	private int BS => checked((int)(this.blockRows * this.blockCols));
 
-		/// <inheritdoc/>
-		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
+	ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockRows, 2);
 
-		/// <summary>
-		/// Create a new <see cref="CompressSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
-		/// </summary>
-		/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
-		/// <param name="defaultValue">The default value</param>
-		/// <param name="rows">The presenting number of rows</param>
-		/// <param name="cols">The presenting number of columns</param>
-		/// <param name="values">The original value array</param>
-		/// <param name="rowIndices">The original row index array, shall be the row offsets whose first value is 0 when <paramref name="rowMajor"/></param>
-		/// <param name="colIndices">The original column index array, shall be the column offsets whose first value is 0 when not <paramref name="rowMajor"/></param>
-		/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
-		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CompressSparseMatrix(bool rowMajor, long rows, long cols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+	private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, (SparseFormat.Major)byte.MaxValue);
+
+	private readonly bool rowMajor;
+
+	/// <summary>
+	/// Get whether this matrix is of row major or column major.
+	/// </summary>
+	public bool RowMajor => this.RowMajor;
+
+	/// <summary>
+	/// Get the number of rows of blocks of this matrix.
+	/// </summary>
+	public long BlockRows => this.blockRows;
+
+	/// <summary>
+	/// Get the number of columns of blocks of this matrix.
+	/// </summary>
+	public long BlockCols => this.blockCols;
+
+	/// <inheritdoc/>
+	public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
+
+	/// <inheritdoc/>
+	public override TSInd RowIndexStorage => this.rowIndices.MakeReference(0, this.NStored / this.blockRows);
+
+	/// <inheritdoc/>
+	public override TSInd ColIndexStorage => this.colIndices.MakeReference(0, this.NStored / this.blockCols);
+
+	/// <summary>
+	/// Create a new <see cref="CoordinateBlockSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
+	/// </summary>
+	/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
+	/// <param name="defaultValue">The default value</param>
+	/// <param name="rows">The presenting number of rows</param>
+	/// <param name="cols">The presenting number of columns</param>
+	/// <param name="blockRows">The number of rows of a block</param>
+	/// <param name="blockCols">The number of columns of a block</param>
+	/// <param name="values">The original value array</param>
+	/// <param name="rowIndices">The original row index of stored blocks</param>
+	/// <param name="colIndices">The original column index of stored blocks</param>
+	/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+	/// <exception cref="ArgumentException">If <paramref name="values"/> is too short or its length</exception>
+	/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
+	public CoordinateBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+	{
+		this.rowMajor = rowMajor;
+		this.blockRows = blockRows; this.blockCols = blockCols;
+		try
 		{
-			this.rowMajor = rowMajor;
-			if (rowMajor && (colIndices.Length != values.Length || rowIndices.Length != rows + 1))
-			{
-				this.Dispose();
-				throw new ArgumentException(Resources.ParameterError.WrongSize);
-			}
-			if (!rowMajor && (rowIndices.Length != values.Length || colIndices.Length != cols + 1))
-			{
-				this.Dispose();
-				throw new ArgumentException(Resources.ParameterError.WrongSize);
-			}
+			if (rowIndices.Length != values.Length)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowIndices));
+			if (colIndices.Length != values.Length)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colIndices));
+			if (rows % this.blockRows != 0)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockRows));
+			if (cols % this.blockCols != 0)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockCols));
+			if (values.Length != rowIndices.Length * this.BS)
+				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
+			if (this.NStored % this.BS != 0)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(nnz));
 		}
-
-		internal CompressSparseMatrix() : base() { }
-
-		/// <inheritdoc/>
-		public override bool Equals(SparseMatrix<T, TInd, TS, TSInd>? other) => other is CompressSparseMatrix<T, TInd, TS, TSInd> m && base.Equals(m) && this.rowMajor == m.rowMajor;
-		#endregion
-
-		#region implementation
-		/// <inheritdoc/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool GetOffsets(long row, long col, Span<long> offsets)
+		catch (Exception)
 		{
-			if (this.NStored == 0)
-			{
-				offsets[0] = 0;
-				return false;
-			}
-			TInd x = row.As<TInd>(), y = col.As<TInd>();
-			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
-			if (!this.rowMajor)
-			{
-				(row, _) = (col, row);
-				(_, y) = (y, x);
-				(xInd, yInd) = (yInd, xInd);
-			}
-			long rowStart = (xInd + row).ToManaged<TInd, TSInd>().AsInt64(),
-				rowEnd = (xInd + (row + 1)).ToManaged<TInd, TSInd>().AsInt64();
-			long find = SpIdx.BoundOf(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
-			bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
-			find += rowStart;
-			offsets[0] = find;
-			return success;
+			this.Dispose();
+			throw;
 		}
-
-		/// <inheritdoc/>
-		protected override bool TryInsert(long row, long col, Span<long> offsets, T value)
-		{
-			long offset = offsets[0];
-			long nnz = this.NStored;
-			if (nnz + 1 > this.MaxStored)
-				return false;
-			if (nnz == 0)
-				(this.rowMajor ? this.rowIndices : this.colIndices).FillWith(TInd.Zero);
-			this.Storage.TryInsert(offset, stackalloc T[] { value });
-			if (this.rowMajor)
-			{
-				this.ColIndexStorage.TryInsert(offset, stackalloc TInd[] { col.As<TInd>() });
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.rowIndices + (row + 1), 1, this.rowIndices + (row + 1), 1);
-			}
-			else
-			{
-				this.RowIndexStorage.TryInsert(offset, stackalloc TInd[] { row.As<TInd>() });
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.colIndices + (col + 1), 1, this.colIndices + (col + 1), 1);
-			}
-			this.NStored = nnz + 1;
-			return true;
-		}
-
-		/// <inheritdoc/>
-		public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
-		{
-			if (destination is not CompressSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue || mat.rowMajor != this.rowMajor)
-				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
-			if (mat.NRows != this.NRows || mat.NCols != this.NCols || mat.NStored != this.NStored)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
-			this.Storage.CopyTo<T, TS, TS>(destination.Storage);
-			this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
-			this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
-		}
-
-		/// <inheritdoc/>
-		public override CompressSparseMatrix<T, TInd, TS, TSInd> RefTranspose() => new(!this.rowMajor, this.NCols, this.NRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage, this.DefaultValue, this.NStored);
-
-		/// <inheritdoc/>
-		public override CompressSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike(), this.DefaultValue, 0);
-
-		/// <inheritdoc/>
-		public override string Print(PrintSettings? settings = null)
-		{
-			var ps = settings ?? Settings.PrintSetting;
-			int nnz = (int)Math.Min(this.NStored, ps.ArrayLength);
-			using var tempVal = nnz.CheckStackLimit<T>();
-			using var tempInd1 = nnz.CheckStackLimit<TInd>();
-			using var tempInd2 = nnz.CheckStackLimit<TInd>();
-			Span<T> values = tempVal.IsEmpty ? stackalloc T[nnz] : tempVal.Data;
-			Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
-			Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
-			this.Storage.ToManaged(values);
-			if (this.rowMajor)
-			{
-				this.ColIndexStorage.ToManaged(colInd);
-				int rows = (int)SpIdx.BoundOf(this.rowIndices, 1, nnz.As<TInd>(), true);
-				using var temp = rows.CheckStackLimit<TInd>();
-				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[rows] : temp.Data;
-				this.rowIndices.ToManaged(tempInd);
-				for (int i = 0; i < rows; i++)
-				{
-					int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
-					int end = tempInd[i].AsInt32();
-					rowInd[start..end].Fill(i.As<TInd>());
-				}
-			}
-			else
-			{
-				this.RowIndexStorage.ToManaged(rowInd);
-				int cols = (int)SpIdx.BoundOf(this.colIndices, 1, nnz.As<TInd>(), true);
-				using var temp = cols.CheckStackLimit<TInd>();
-				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[cols] : temp.Data;
-				this.colIndices.ToManaged(tempInd);
-				for (int i = 0; i < cols; i++)
-				{
-					int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
-					int end = tempInd[i].AsInt32();
-					colInd[start..end].Fill(i.As<TInd>());
-				}
-			}
-			return values.ToSparseMatrixString<T, TInd>(rowInd, colInd, ps.Precision) + (nnz == this.NStored ? "" : string.Format(Resources.Print.MoreStored, this.NStored - nnz));
-		}
-		#endregion
-
-		#region serialization
-		[JsonConstructor]
-		private CompressSparseMatrix(bool rowMajor, long nRows, long nCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
-
-		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
-		{
-			matrix = null;
-			if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 0 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
-				return false;
-			bool rowMajor = wrapper.Format.MajorType == SparseFormat.Major.Row;
-			long rows = wrapper.Size[0], cols = wrapper.Size[1];
-			TS values = wrapper.ValueStorages[0];
-			TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
-			if (values.Length > rows * cols)
-				return false;
-			if (rowMajor)
-			{
-				if (values.Length != colIndices.Length || rows + 1 != rowIndices.Length)
-					return false;
-			}
-			else
-			{
-				if (values.Length != rowIndices.Length || cols + 1 != colIndices.Length)
-					return false;
-			}
-			matrix = new CompressSparseMatrix<T, TInd, TS, TSInd>(rowMajor, rows, cols, values, rowIndices, colIndices, wrapper.DefaultValue);
-			return true;
-		}
-
-		static CompressSparseMatrix()
-		{
-			Creators.Add(TryCreate);
-		}
-		#endregion
 	}
 
+	internal CoordinateBlockSparseMatrix() : base() { }
 
-	/// <summary>
-	/// The concrete simple block coordinated sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
-	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
-	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
-	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	[StructLayout(LayoutKind.Sequential)]
-	public class CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
-		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
-		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+	/// <inheritdoc/>
+	public override bool Equals(SparseMatrix<T, TInd, TS, TSInd>? other) => other is CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> m && base.Equals(m) && this.rowMajor == m.rowMajor && this.blockRows == m.blockRows && this.blockCols == m.blockCols;
+	#endregion
+
+	#region implementation
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected override bool GetOffsets(long row, long col, Span<long> offsets)
 	{
-		#region basic
-		private readonly long blockRows, blockCols;
-
-		private int BS => checked((int)(this.blockRows * this.blockCols));
-
-		ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockRows, 2);
-
-		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Coordinated, SparseFormat.Blocking.Simple, (SparseFormat.Major)byte.MaxValue);
-
-		private readonly bool rowMajor;
-
-		/// <summary>
-		/// Get whether this matrix is of row major or column major.
-		/// </summary>
-		public bool RowMajor => this.RowMajor;
-
-		/// <summary>
-		/// Get the number of rows of blocks of this matrix.
-		/// </summary>
-		public long BlockRows => this.blockRows;
-
-		/// <summary>
-		/// Get the number of columns of blocks of this matrix.
-		/// </summary>
-		public long BlockCols => this.blockCols;
-
-		/// <inheritdoc/>
-		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
-
-		/// <inheritdoc/>
-		public override TSInd RowIndexStorage => this.rowIndices.MakeReference(0, this.NStored / this.blockRows);
-
-		/// <inheritdoc/>
-		public override TSInd ColIndexStorage => this.colIndices.MakeReference(0, this.NStored / this.blockCols);
-
-		/// <summary>
-		/// Create a new <see cref="CoordinateBlockSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
-		/// </summary>
-		/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
-		/// <param name="defaultValue">The default value</param>
-		/// <param name="rows">The presenting number of rows</param>
-		/// <param name="cols">The presenting number of columns</param>
-		/// <param name="blockRows">The number of rows of a block</param>
-		/// <param name="blockCols">The number of columns of a block</param>
-		/// <param name="values">The original value array</param>
-		/// <param name="rowIndices">The original row index of stored blocks</param>
-		/// <param name="colIndices">The original column index of stored blocks</param>
-		/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short or its length</exception>
-		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CoordinateBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		long rowOfBlock = row % this.blockRows, colOfBlock = col % this.blockCols;
+		TInd x = (row / this.blockRows).As<TInd>(), y = (col / this.blockCols).As<TInd>();
+		TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
+		if (!this.rowMajor)
 		{
-			this.rowMajor = rowMajor;
-			this.blockRows = blockRows; this.blockCols = blockCols;
-			try
-			{
-				if (rowIndices.Length != values.Length)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(rowIndices));
-				if (colIndices.Length != values.Length)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(colIndices));
-				if (rows % this.blockRows != 0)
-					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockRows));
-				if (cols % this.blockCols != 0)
-					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockCols));
-				if (values.Length != rowIndices.Length * this.BS)
-					throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(values));
-				if (this.NStored % this.BS != 0)
-					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(nnz));
-			}
-			catch (Exception)
-			{
-				this.Dispose();
-				throw;
-			}
+			(x, y) = (y, x);
+			(xInd, yInd) = (yInd, xInd);
+			(rowOfBlock, colOfBlock) = (colOfBlock, rowOfBlock);
 		}
-
-		internal CoordinateBlockSparseMatrix() : base() { }
-
-		/// <inheritdoc/>
-		public override bool Equals(SparseMatrix<T, TInd, TS, TSInd>? other) => other is CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> m && base.Equals(m) && this.rowMajor == m.rowMajor && this.blockRows == m.blockRows && this.blockCols == m.blockCols;
-		#endregion
-
-		#region implementation
-		/// <inheritdoc/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool GetOffsets(long row, long col, Span<long> offsets)
+		long insideBlockOffset = colOfBlock + (this.rowMajor ? this.blockCols : this.blockRows) * rowOfBlock;
+		long find = SpIdx.BoundOf(xInd, 1, x, true);
+		if ((xInd + find).ToManaged<TInd, TSInd>() != x)
 		{
-			long rowOfBlock = row % this.blockRows, colOfBlock = col % this.blockCols;
-			TInd x = (row / this.blockRows).As<TInd>(), y = (col / this.blockCols).As<TInd>();
-			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
-			if (!this.rowMajor)
-			{
-				(x, y) = (y, x);
-				(xInd, yInd) = (yInd, xInd);
-				(rowOfBlock, colOfBlock) = (colOfBlock, rowOfBlock);
-			}
-			long insideBlockOffset = colOfBlock + (this.rowMajor ? this.blockCols : this.blockRows) * rowOfBlock;
-			long find = SpIdx.BoundOf(xInd, 1, x, true);
-			if ((xInd + find).ToManaged<TInd, TSInd>() != x)
-			{
-				offsets[0] = find * this.BS + insideBlockOffset;
-				if (offsets.Length > 1)
-					offsets[1] = find;
-				return false;
-			}
-			long lower = SpIdx.BoundOf(xInd, 1, x, true);
-			long upper = SpIdx.BoundOf(xInd, 1, x, false);
-			find = SpIdx.BoundOf(yInd.MakeReference(lower, upper - lower), 1, y, true);
-			bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
-			find += lower;
 			offsets[0] = find * this.BS + insideBlockOffset;
 			if (offsets.Length > 1)
 				offsets[1] = find;
-			return success;
+			return false;
 		}
-
-		/// <inheritdoc/>
-		protected override bool TryInsert(long row, long col, Span<long> offsets, T value)
-		{
-			long offsetVal = offsets[0], offsetInd = offsets[1];
-			long nnz = this.NStored;
-			if (nnz + this.BS > this.MaxStored)
-				return false;
-			using var temp = this.BS.CheckStackLimit<T>();
-			Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
-			values.Fill(this.DefaultValue);
-			values[(int)(offsetVal % this.BS)] = value;
-			this.Storage.TryInsert(offsetVal, values);
-			this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { row.As<TInd>() });
-			this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { col.As<TInd>() });
-			this.NStored = nnz + 1;
-			return true;
-		}
-
-		/// <inheritdoc/>
-		public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
-		{
-			if (destination is not CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue)
-				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
-			if (mat.rowMajor != this.rowMajor || mat.blockRows != this.blockRows || mat.blockCols != this.blockCols)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
-			if (mat.NRows != this.NRows || mat.NCols != this.NCols || mat.NStored != this.NStored)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
-			this.Storage.CopyTo<T, TS, TS>(destination.Storage);
-			this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
-			this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
-		}
-
-		/// <inheritdoc/>
-		public override CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> RefTranspose() => new(!this.rowMajor, this.NCols, this.NRows, this.blockCols, this.blockRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage, this.DefaultValue, this.NStored);
-
-		/// <inheritdoc/>
-		public override CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.blockRows, this.blockCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike(), this.DefaultValue, 0);
-
-		/// <inheritdoc/>
-		public override string Print(PrintSettings? settings = null)
-		{
-			var ps = settings ?? Settings.PrintSetting;
-			int nnz = (int)Math.Min(this.NStored / this.BS, ps.ArrayLength);
-			int brThis = (int)this.blockRows, bcThis = (int)this.blockCols;
-			int br = Math.Min(brThis, ps.MatrixRow), bc = Math.Min(bcThis, ps.MatrixColumn);
-			using var tempVal = (br * bc).CheckStackLimit<T>();
-			using var tempInd1 = nnz.CheckStackLimit<TInd>();
-			using var tempInd2 = nnz.CheckStackLimit<TInd>();
-			Span<T> values = tempVal.IsEmpty ? stackalloc T[br * bc] : tempVal.Data;
-			Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
-			Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
-			this.RowIndexStorage.ToManaged(rowInd);
-			this.ColIndexStorage.ToManaged(colInd);
-			StringBuilder sb = new();
-			for (int i = 0; i < nnz; i++)
-			{
-				sb.AppendLine($"Matrix[{rowInd[i].AsInt32() * brThis}..{(rowInd[i].AsInt32() + 1) * brThis}, {colInd[i].AsInt32() * bcThis}..{(colInd[i].AsInt32() + 1) * bcThis}] = ");
-				if (this.rowMajor)
-				{
-					(this.Storage + i * this.BS).ToManaged2D(this.blockCols, values, bc, br);
-					sb.AppendLine(values.ToMatrixString(bc, true, this.blockRows - br, ps.Precision));
-				}
-				else
-				{
-					(this.Storage + i * this.BS).ToManaged2D(this.blockRows, values, br, bc);
-					sb.AppendLine(values.ToMatrixString(br, false, this.blockRows - br, ps.Precision));
-				}
-			}
-			if (nnz < this.NStored / this.BS)
-				sb.AppendFormat(Resources.Print.MoreStored, this.NStored / this.BS - nnz);
-			return sb.ToString();
-		}
-		#endregion
-
-		#region serialization
-		[JsonConstructor]
-		private CoordinateBlockSparseMatrix(bool rowMajor, long nRows, long nCols, long blockRows, long blockCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, blockRows, blockCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
-
-		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
-		{
-			matrix = null;
-			if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 2 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
-				return false;
-			long rows = wrapper.Size[0], cols = wrapper.Size[1];
-			long blockRows = wrapper.BlockSize[0], blockCols = wrapper.BlockSize[1];
-			TS values = wrapper.ValueStorages[0];
-			TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
-			if (values.Length > rows * cols)
-				return false;
-			if (rowIndices.Length != colIndices.Length || values.Length != rowIndices.Length * blockRows * blockCols)
-				return false;
-			matrix = new CoordinateBlockSparseMatrix<T, TInd, TS, TSInd>(wrapper.Format.MajorType == SparseFormat.Major.Row, rows, cols, blockRows, blockCols, values, rowIndices, colIndices, wrapper.DefaultValue);
-			return true;
-		}
-
-		static CoordinateBlockSparseMatrix()
-		{
-			Creators.Add(TryCreate);
-		}
-		#endregion
+		long lower = SpIdx.BoundOf(xInd, 1, x, true);
+		long upper = SpIdx.BoundOf(xInd, 1, x, false);
+		find = SpIdx.BoundOf(yInd.MakeReference(lower, upper - lower), 1, y, true);
+		bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
+		find += lower;
+		offsets[0] = find * this.BS + insideBlockOffset;
+		if (offsets.Length > 1)
+			offsets[1] = find;
+		return success;
 	}
+
+	/// <inheritdoc/>
+	protected override bool TryInsert(long row, long col, Span<long> offsets, T value)
+	{
+		long offsetVal = offsets[0], offsetInd = offsets[1];
+		long nnz = this.NStored;
+		if (nnz + this.BS > this.MaxStored)
+			return false;
+		using var temp = this.BS.CheckStackLimit<T>();
+		Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
+		values.Fill(this.DefaultValue);
+		values[(int)(offsetVal % this.BS)] = value;
+		this.Storage.TryInsert(offsetVal, values);
+		this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { row.As<TInd>() });
+		this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { col.As<TInd>() });
+		this.NStored = nnz + 1;
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
+	{
+		if (destination is not CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue)
+			throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
+		if (mat.rowMajor != this.rowMajor || mat.blockRows != this.blockRows || mat.blockCols != this.blockCols)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
+		if (mat.NRows != this.NRows || mat.NCols != this.NCols || mat.NStored != this.NStored)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
+		this.Storage.CopyTo<T, TS, TS>(destination.Storage);
+		this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
+		this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
+	}
+
+	/// <inheritdoc/>
+	public override CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> RefTranspose() => new(!this.rowMajor, this.NCols, this.NRows, this.blockCols, this.blockRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage, this.DefaultValue, this.NStored);
+
+	/// <inheritdoc/>
+	public override CoordinateBlockSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.blockRows, this.blockCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike(), this.DefaultValue, 0);
+
+	/// <inheritdoc/>
+	public override string Print(PrintSettings? settings = null)
+	{
+		var ps = settings ?? Settings.PrintSetting;
+		int nnz = (int)Math.Min(this.NStored / this.BS, ps.ArrayLength);
+		int brThis = (int)this.blockRows, bcThis = (int)this.blockCols;
+		int br = Math.Min(brThis, ps.MatrixRow), bc = Math.Min(bcThis, ps.MatrixColumn);
+		using var tempVal = (br * bc).CheckStackLimit<T>();
+		using var tempInd1 = nnz.CheckStackLimit<TInd>();
+		using var tempInd2 = nnz.CheckStackLimit<TInd>();
+		Span<T> values = tempVal.IsEmpty ? stackalloc T[br * bc] : tempVal.Data;
+		Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
+		Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
+		this.RowIndexStorage.ToManaged(rowInd);
+		this.ColIndexStorage.ToManaged(colInd);
+		StringBuilder sb = new();
+		for (int i = 0; i < nnz; i++)
+		{
+			sb.AppendLine($"Matrix[{rowInd[i].AsInt32() * brThis}..{(rowInd[i].AsInt32() + 1) * brThis}, {colInd[i].AsInt32() * bcThis}..{(colInd[i].AsInt32() + 1) * bcThis}] = ");
+			if (this.rowMajor)
+			{
+				(this.Storage + i * this.BS).ToManaged2D(this.blockCols, values, bc, br);
+				sb.AppendLine(values.ToMatrixString(bc, true, this.blockRows - br, ps.Precision));
+			}
+			else
+			{
+				(this.Storage + i * this.BS).ToManaged2D(this.blockRows, values, br, bc);
+				sb.AppendLine(values.ToMatrixString(br, false, this.blockRows - br, ps.Precision));
+			}
+		}
+		if (nnz < this.NStored / this.BS)
+			sb.AppendFormat(Resources.Print.MoreStored, this.NStored / this.BS - nnz);
+		return sb.ToString();
+	}
+	#endregion
+
+	#region serialization
+	[JsonConstructor]
+	private CoordinateBlockSparseMatrix(bool rowMajor, long nRows, long nCols, long blockRows, long blockCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, blockRows, blockCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
+
+	private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
+	{
+		matrix = null;
+		if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 2 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
+			return false;
+		long rows = wrapper.Size[0], cols = wrapper.Size[1];
+		long blockRows = wrapper.BlockSize[0], blockCols = wrapper.BlockSize[1];
+		TS values = wrapper.ValueStorages[0];
+		TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
+		if (values.Length > rows * cols)
+			return false;
+		if (rowIndices.Length != colIndices.Length || values.Length != rowIndices.Length * blockRows * blockCols)
+			return false;
+		matrix = new CoordinateBlockSparseMatrix<T, TInd, TS, TSInd>(wrapper.Format.MajorType == SparseFormat.Major.Row, rows, cols, blockRows, blockCols, values, rowIndices, colIndices, wrapper.DefaultValue);
+		return true;
+	}
+
+	static CoordinateBlockSparseMatrix()
+	{
+		Creators.Add(TryCreate);
+	}
+	#endregion
+}
+
+/// <summary>
+/// The concrete simple block compressed sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+/// </summary>
+/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+/// <typeparam name="TS">The storage type used by the value storage</typeparam>
+/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
+/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
+[StructLayout(LayoutKind.Sequential)]
+public class CompressBlockSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
+	where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
+	where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+{
+	#region basic
+	private readonly long blockRows, blockCols;
+
+	private int BS => checked((int)(this.blockRows * this.blockCols));
+
+	ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockRows, 2);
+
+	private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Compressed, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
+
+	private readonly bool rowMajor;
 
 	/// <summary>
-	/// The concrete simple block compressed sparse matrix class whose value storage is of type <typeparamref name="TS"/> and sorted index storage is of type <typeparamref name="TSInd"/>.
+	/// Get whether this matrix is of row major or column major.
 	/// </summary>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	/// <typeparam name="TS">The storage type used by the value storage</typeparam>
-	/// <typeparam name="TInd">Any unmanaged integer number as the index type</typeparam>
-	/// <typeparam name="TSInd">The index storage type that implements <see cref="IStorage{T, TSelf}"/></typeparam>
-	[StructLayout(LayoutKind.Sequential)]
-	public class CompressBlockSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>, ISparseArray<T, TInd, TS, TSInd>
-		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
-		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+	public bool RowMajor => this.RowMajor;
+
+	/// <summary>
+	/// Get the number of rows of blocks of this matrix.
+	/// </summary>
+	public long BlockRows => this.blockRows;
+
+	/// <summary>
+	/// Get the number of columns of blocks of this matrix.
+	/// </summary>
+	public long BlockCols => this.blockCols;
+
+	/// <inheritdoc/>
+	public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : this.rowIndices.MakeReference(0, this.NStored / this.blockRows);
+
+	/// <inheritdoc/>
+	public override TSInd ColIndexStorage => this.rowMajor ? this.colIndices.MakeReference(0, this.NStored / this.blockCols) : this.colIndices.MakeReference();
+
+	/// <inheritdoc/>
+	public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
+
+	/// <summary>
+	/// Create a new <see cref="CompressBlockSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
+	/// </summary>
+	/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
+	/// <param name="defaultValue">The default value</param>
+	/// <param name="rows">The presenting number of rows</param>
+	/// <param name="cols">The presenting number of columns</param>
+	/// <param name="blockRows">The number of rows of a block</param>
+	/// <param name="blockCols">The number of columns of a block</param>
+	/// <param name="values">The original value array</param>
+	/// <param name="rowIndices">The original row index of stored blocks, shall be the row offsets whose first value is 0 when <paramref name="rowMajor"/></param>
+	/// <param name="colIndices">The original column index of stored blocks, shall be the column offsets whose first value is 0 when not <paramref name="rowMajor"/></param>
+	/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
+	/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
+	/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
+	public CompressBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
 	{
-		#region basic
-		private readonly long blockRows, blockCols;
-
-		private int BS => checked((int)(this.blockRows * this.blockCols));
-
-		ReadOnlySpan<long> ISparseArray<T, TInd, TS, TSInd>.BlockSize => SpanHelper.CreateReadOnlySpan(in this.blockRows, 2);
-
-		private static readonly SparseFormat baseFormat = new(SparseFormat.Type.Compressed, SparseFormat.Blocking.Element, (SparseFormat.Major)byte.MaxValue);
-
-		private readonly bool rowMajor;
-
-		/// <summary>
-		/// Get whether this matrix is of row major or column major.
-		/// </summary>
-		public bool RowMajor => this.RowMajor;
-
-		/// <summary>
-		/// Get the number of rows of blocks of this matrix.
-		/// </summary>
-		public long BlockRows => this.blockRows;
-
-		/// <summary>
-		/// Get the number of columns of blocks of this matrix.
-		/// </summary>
-		public long BlockCols => this.blockCols;
-
-		/// <inheritdoc/>
-		public override TSInd RowIndexStorage => this.rowMajor ? this.rowIndices.MakeReference() : this.rowIndices.MakeReference(0, this.NStored / this.blockRows);
-
-		/// <inheritdoc/>
-		public override TSInd ColIndexStorage => this.rowMajor ? this.colIndices.MakeReference(0, this.NStored / this.blockCols) : this.colIndices.MakeReference();
-
-		/// <inheritdoc/>
-		public override SparseFormat Format => this.rowMajor ? baseFormat.WithRowMajor : baseFormat.WithColumnMajor;
-
-		/// <summary>
-		/// Create a new <see cref="CompressBlockSparseMatrix{T, TInd, TS, TSInd}"/> with given parameters.
-		/// </summary>
-		/// <param name="rowMajor">Whether the new sparse matrix is of row major or column major</param>
-		/// <param name="defaultValue">The default value</param>
-		/// <param name="rows">The presenting number of rows</param>
-		/// <param name="cols">The presenting number of columns</param>
-		/// <param name="blockRows">The number of rows of a block</param>
-		/// <param name="blockCols">The number of columns of a block</param>
-		/// <param name="values">The original value array</param>
-		/// <param name="rowIndices">The original row index of stored blocks, shall be the row offsets whose first value is 0 when <paramref name="rowMajor"/></param>
-		/// <param name="colIndices">The original column index of stored blocks, shall be the column offsets whose first value is 0 when not <paramref name="rowMajor"/></param>
-		/// <param name="nnz">The number of elements stored in <paramref name="values"/>, negative means all elements are stored</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rows"/> or <paramref name="cols"/> ≤ 0</exception>
-		/// <exception cref="ArgumentException">If <paramref name="values"/> is too short</exception>
-		/// <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
-		public CompressBlockSparseMatrix(bool rowMajor, long rows, long cols, long blockRows, long blockCols, TS values, TSInd rowIndices, TSInd colIndices, T defaultValue = default, long nnz = -1) : base(rows, cols, values, rowIndices, colIndices, defaultValue, nnz)
+		this.rowMajor = rowMajor;
+		this.blockRows = blockRows; this.blockCols = blockCols;
+		try
 		{
-			this.rowMajor = rowMajor;
-			this.blockRows = blockRows; this.blockCols = blockCols;
-			try
-			{
-				if (rows % this.blockRows != 0)
-					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockRows));
-				if (cols % this.blockCols != 0)
-					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockCols));
-				if (this.NStored % this.BS != 0)
-					throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(nnz));
-				if (rowMajor && (colIndices.Length * this.BS != values.Length || (rowIndices.Length - 1) * this.blockRows != rows))
-					throw new ArgumentException(Resources.ParameterError.WrongSize);
-				if (!rowMajor && (rowIndices.Length * this.BS != values.Length || (colIndices.Length - 1) * this.blockCols != cols))
-					throw new ArgumentException(Resources.ParameterError.WrongSize);
-			}
-			catch (Exception)
-			{
-				this.Dispose();
-				throw;
-			}
+			if (rows % this.blockRows != 0)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockRows));
+			if (cols % this.blockCols != 0)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(blockCols));
+			if (this.NStored % this.BS != 0)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(nnz));
+			if (rowMajor && (colIndices.Length * this.BS != values.Length || (rowIndices.Length - 1) * this.blockRows != rows))
+				throw new ArgumentException(Resources.ParameterError.WrongSize);
+			if (!rowMajor && (rowIndices.Length * this.BS != values.Length || (colIndices.Length - 1) * this.blockCols != cols))
+				throw new ArgumentException(Resources.ParameterError.WrongSize);
 		}
-
-		internal CompressBlockSparseMatrix() : base() { }
-
-		/// <inheritdoc/>
-		public override bool Equals(SparseMatrix<T, TInd, TS, TSInd>? other) => other is CompressBlockSparseMatrix<T, TInd, TS, TSInd> m && base.Equals(m) && this.rowMajor == m.rowMajor && this.blockRows == m.blockRows && this.blockCols == m.blockCols;
-		#endregion
-
-		#region implementation
-		/// <inheritdoc/>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected override bool GetOffsets(long row, long col, Span<long> offsets)
+		catch (Exception)
 		{
-			if (this.NStored == 0)
-			{
-				offsets[0] = 0;
-				if (offsets.Length > 1)
-					offsets[1] = 0;
-				return false;
-			}
-			long rowOfBlock = row % this.blockRows, colOfBlock = col % this.blockCols;
-			TInd x = row.As<TInd>(), y = col.As<TInd>();
-			TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
-			if (!this.rowMajor)
-			{
-				(row, _) = (col, row);
-				(_, y) = (y, x);
-				(xInd, yInd) = (yInd, xInd);
-				(rowOfBlock, colOfBlock) = (colOfBlock, rowOfBlock);
-			}
-			long insideBlockOffset = colOfBlock + (this.rowMajor ? this.blockCols : this.blockRows) * rowOfBlock;
-			long rowStart = (xInd + row).ToManaged<TInd, TSInd>().AsInt64(),
-				rowEnd = (xInd + (row + 1)).ToManaged<TInd, TSInd>().AsInt64();
-			long find = SpIdx.BoundOf(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
-			bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
-			find += rowStart;
-			offsets[0] = find * this.BS + insideBlockOffset;
-			if (offsets.Length > 1)
-				offsets[1] = find;
-			return success;
+			this.Dispose();
+			throw;
 		}
-
-		/// <inheritdoc/>
-		protected override bool TryInsert(long row, long col, Span<long> offsets, T value)
-		{
-			long offsetVal = offsets[0], offsetInd = offsets[1];
-			long nnz = this.NStored;
-			if (nnz + this.BS > this.MaxStored)
-				return false;
-			if (nnz == 0)
-				(this.rowMajor ? this.rowIndices : this.colIndices).FillWith(TInd.Zero);
-			using var temp = this.BS.CheckStackLimit<T>();
-			Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
-			values.Fill(this.DefaultValue);
-			values[(int)(offsetVal % this.BS)] = value;
-			this.Storage.TryInsert(offsetVal, values);
-			if (this.rowMajor)
-			{
-				this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (col / this.blockCols).As<TInd>() });
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.rowIndices + (row + 1), 1, this.rowIndices + (row + 1), 1);
-			}
-			else
-			{
-				this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (row / this.blockRows).As<TInd>() });
-				ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.colIndices + (col + 1), 1, this.colIndices + (col + 1), 1);
-			}
-			this.NStored = nnz + this.BS;
-			return true;
-		}
-
-		/// <inheritdoc/>
-		public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
-		{
-			if (destination is not CompressBlockSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue)
-				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
-			if (mat.rowMajor != this.rowMajor || mat.blockRows != this.blockRows || mat.blockCols != this.blockCols)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
-			if (mat.NRows != this.NRows || mat.NCols != this.NCols || mat.NStored != this.NStored)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
-			this.Storage.CopyTo<T, TS, TS>(destination.Storage);
-			this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
-			this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
-		}
-
-		/// <inheritdoc/>
-		public override CompressBlockSparseMatrix<T, TInd, TS, TSInd> RefTranspose() => new(!this.rowMajor, this.NCols, this.NRows, this.blockCols, this.blockRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage, this.DefaultValue, this.NStored);
-
-		/// <inheritdoc/>
-		public override CompressBlockSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.blockRows, this.blockCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike(), this.DefaultValue, 0);
-
-		/// <inheritdoc/>
-		public override string Print(PrintSettings? settings = null)
-		{
-			var ps = settings ?? Settings.PrintSetting;
-			int nnz = (int)Math.Min(this.NStored / this.BS, ps.ArrayLength);
-			int br = Math.Min((int)this.blockRows, ps.MatrixRow), bc = Math.Min((int)this.blockCols, ps.MatrixColumn);
-			using var tempVal = (br * bc).CheckStackLimit<T>();
-			using var tempInd1 = nnz.CheckStackLimit<TInd>();
-			using var tempInd2 = nnz.CheckStackLimit<TInd>();
-			Span<T> values = tempVal.IsEmpty ? stackalloc T[br * bc] : tempVal.Data;
-			Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
-			Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
-			if (this.rowMajor)
-			{
-				this.ColIndexStorage.ToManaged(colInd);
-				int rows = (int)SpIdx.BoundOf(this.rowIndices, 1, nnz.As<TInd>(), true);
-				using var temp = rows.CheckStackLimit<TInd>();
-				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[rows] : temp.Data;
-				this.rowIndices.ToManaged(tempInd);
-				for (int i = 0; i < rows; i++)
-				{
-					int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
-					int end = tempInd[i].AsInt32();
-					rowInd[start..end].Fill(i.As<TInd>());
-				}
-			}
-			else
-			{
-				this.RowIndexStorage.ToManaged(rowInd);
-				int cols = (int)SpIdx.BoundOf(this.colIndices, 1, nnz.As<TInd>(), true);
-				using var temp = cols.CheckStackLimit<TInd>();
-				Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[cols] : temp.Data;
-				this.colIndices.ToManaged(tempInd);
-				for (int i = 0; i < cols; i++)
-				{
-					int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
-					int end = tempInd[i].AsInt32();
-					colInd[start..end].Fill(i.As<TInd>());
-				}
-			}
-			StringBuilder sb = new();
-			for (int i = 0; i < nnz; i++)
-			{
-				sb.AppendLine($"[{rowInd[i].AsInt64() * this.blockRows}..{(rowInd[i].AsInt64() + 1) * this.blockRows}, {colInd[i].AsInt64() * this.blockCols}..{(colInd[i].AsInt64() + 1) * this.blockCols}] = ");
-				if (this.rowMajor)
-				{
-					(this.Storage + i * this.BS).ToManaged2D(this.blockCols, values, bc, br);
-					sb.AppendLine(values.ToMatrixString(bc, true, this.blockRows - br, ps.Precision));
-				}
-				else
-				{
-					(this.Storage + i * this.BS).ToManaged2D(this.blockRows, values, br, bc);
-					sb.AppendLine(values.ToMatrixString(br, false, this.blockRows - br, ps.Precision));
-				}
-			}
-			if (nnz < this.NStored / this.BS)
-				sb.AppendFormat(Resources.Print.MoreStored, this.NStored / this.BS - nnz);
-			return sb.ToString();
-		}
-		#endregion
-
-		#region serialization
-		[JsonConstructor]
-		private CompressBlockSparseMatrix(bool rowMajor, long nRows, long nCols, long blockRows, long blockCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, blockRows, blockCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
-
-		private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
-		{
-			matrix = null;
-			if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 2 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
-				return false;
-			bool rowMajor = wrapper.Format.MajorType == SparseFormat.Major.Row;
-			long rows = wrapper.Size[0], cols = wrapper.Size[1];
-			long blockRows = wrapper.BlockSize[0], blockCols = wrapper.BlockSize[1];
-			TS values = wrapper.ValueStorages[0];
-			TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
-			if (values.Length > rows * cols)
-				return false;
-			if (rowMajor)
-			{
-				if (values.Length != colIndices.Length * blockRows * blockCols || rows != (rowIndices.Length - 1) * blockRows)
-					return false;
-			}
-			else
-			{
-				if (values.Length != rowIndices.Length * blockRows * blockCols || cols != (colIndices.Length - 1) * blockCols)
-					return false;
-			}
-			matrix = new CompressBlockSparseMatrix<T, TInd, TS, TSInd>(rowMajor, rows, cols, blockRows, blockCols, values, rowIndices, colIndices, wrapper.DefaultValue);
-			return true;
-		}
-
-		static CompressBlockSparseMatrix()
-		{
-			Creators.Add(TryCreate);
-		}
-		#endregion
 	}
+
+	internal CompressBlockSparseMatrix() : base() { }
+
+	/// <inheritdoc/>
+	public override bool Equals(SparseMatrix<T, TInd, TS, TSInd>? other) => other is CompressBlockSparseMatrix<T, TInd, TS, TSInd> m && base.Equals(m) && this.rowMajor == m.rowMajor && this.blockRows == m.blockRows && this.blockCols == m.blockCols;
+	#endregion
+
+	#region implementation
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected override bool GetOffsets(long row, long col, Span<long> offsets)
+	{
+		if (this.NStored == 0)
+		{
+			offsets[0] = 0;
+			if (offsets.Length > 1)
+				offsets[1] = 0;
+			return false;
+		}
+		long rowOfBlock = row % this.blockRows, colOfBlock = col % this.blockCols;
+		TInd x = row.As<TInd>(), y = col.As<TInd>();
+		TSInd xInd = this.RowIndexStorage, yInd = this.ColIndexStorage;
+		if (!this.rowMajor)
+		{
+			(row, _) = (col, row);
+			(_, y) = (y, x);
+			(xInd, yInd) = (yInd, xInd);
+			(rowOfBlock, colOfBlock) = (colOfBlock, rowOfBlock);
+		}
+		long insideBlockOffset = colOfBlock + (this.rowMajor ? this.blockCols : this.blockRows) * rowOfBlock;
+		long rowStart = (xInd + row).ToManaged<TInd, TSInd>().AsInt64(),
+			rowEnd = (xInd + (row + 1)).ToManaged<TInd, TSInd>().AsInt64();
+		long find = SpIdx.BoundOf(yInd.MakeReference(rowStart, rowEnd - rowStart), 1, y, true);
+		bool success = (yInd + find).ToManaged<TInd, TSInd>() == y;
+		find += rowStart;
+		offsets[0] = find * this.BS + insideBlockOffset;
+		if (offsets.Length > 1)
+			offsets[1] = find;
+		return success;
+	}
+
+	/// <inheritdoc/>
+	protected override bool TryInsert(long row, long col, Span<long> offsets, T value)
+	{
+		long offsetVal = offsets[0], offsetInd = offsets[1];
+		long nnz = this.NStored;
+		if (nnz + this.BS > this.MaxStored)
+			return false;
+		if (nnz == 0)
+			(this.rowMajor ? this.rowIndices : this.colIndices).FillWith(TInd.Zero);
+		using var temp = this.BS.CheckStackLimit<T>();
+		Span<T> values = temp.IsEmpty ? stackalloc T[this.BS] : temp.Data;
+		values.Fill(this.DefaultValue);
+		values[(int)(offsetVal % this.BS)] = value;
+		this.Storage.TryInsert(offsetVal, values);
+		if (this.rowMajor)
+		{
+			this.ColIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (col / this.blockCols).As<TInd>() });
+			ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.rowIndices + (row + 1), 1, this.rowIndices + (row + 1), 1);
+		}
+		else
+		{
+			this.RowIndexStorage.TryInsert(offsetInd, stackalloc TInd[] { (row / this.blockRows).As<TInd>() });
+			ExtBlas.GeneralVectorBinaryScalar(LinearAlgebra.BinaryScalarOperation.Add, TInd.One, this.colIndices + (col + 1), 1, this.colIndices + (col + 1), 1);
+		}
+		this.NStored = nnz + this.BS;
+		return true;
+	}
+
+	/// <inheritdoc/>
+	public override void CopyTo(SparseMatrix<T, TInd, TS, TSInd> destination)
+	{
+		if (destination is not CompressBlockSparseMatrix<T, TInd, TS, TSInd> mat || mat.DefaultValue != this.DefaultValue)
+			throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(destination));
+		if (mat.rowMajor != this.rowMajor || mat.blockRows != this.blockRows || mat.blockCols != this.blockCols)
+			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(destination));
+		if (mat.NRows != this.NRows || mat.NCols != this.NCols || mat.NStored != this.NStored)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
+		this.Storage.CopyTo<T, TS, TS>(destination.Storage);
+		this.RowIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.RowIndexStorage);
+		this.ColIndexStorage.CopyTo<TInd, TSInd, TSInd>(destination.ColIndexStorage);
+	}
+
+	/// <inheritdoc/>
+	public override CompressBlockSparseMatrix<T, TInd, TS, TSInd> RefTranspose() => new(!this.rowMajor, this.NCols, this.NRows, this.blockCols, this.blockRows, this.Storage, this.ColIndexStorage, this.RowIndexStorage, this.DefaultValue, this.NStored);
+
+	/// <inheritdoc/>
+	public override CompressBlockSparseMatrix<T, TInd, TS, TSInd> CreateAlike() => new(this.rowMajor, this.NRows, this.NCols, this.blockRows, this.blockCols, this.Storage.CreateAlike(), this.ColIndexStorage.CreateAlike(), this.RowIndexStorage.CreateAlike(), this.DefaultValue, 0);
+
+	/// <inheritdoc/>
+	public override string Print(PrintSettings? settings = null)
+	{
+		var ps = settings ?? Settings.PrintSetting;
+		int nnz = (int)Math.Min(this.NStored / this.BS, ps.ArrayLength);
+		int br = Math.Min((int)this.blockRows, ps.MatrixRow), bc = Math.Min((int)this.blockCols, ps.MatrixColumn);
+		using var tempVal = (br * bc).CheckStackLimit<T>();
+		using var tempInd1 = nnz.CheckStackLimit<TInd>();
+		using var tempInd2 = nnz.CheckStackLimit<TInd>();
+		Span<T> values = tempVal.IsEmpty ? stackalloc T[br * bc] : tempVal.Data;
+		Span<TInd> rowInd = tempInd1.IsEmpty ? stackalloc TInd[nnz] : tempInd1.Data;
+		Span<TInd> colInd = tempInd2.IsEmpty ? stackalloc TInd[nnz] : tempInd2.Data;
+		if (this.rowMajor)
+		{
+			this.ColIndexStorage.ToManaged(colInd);
+			int rows = (int)SpIdx.BoundOf(this.rowIndices, 1, nnz.As<TInd>(), true);
+			using var temp = rows.CheckStackLimit<TInd>();
+			Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[rows] : temp.Data;
+			this.rowIndices.ToManaged(tempInd);
+			for (int i = 0; i < rows; i++)
+			{
+				int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
+				int end = tempInd[i].AsInt32();
+				rowInd[start..end].Fill(i.As<TInd>());
+			}
+		}
+		else
+		{
+			this.RowIndexStorage.ToManaged(rowInd);
+			int cols = (int)SpIdx.BoundOf(this.colIndices, 1, nnz.As<TInd>(), true);
+			using var temp = cols.CheckStackLimit<TInd>();
+			Span<TInd> tempInd = temp.IsEmpty ? stackalloc TInd[cols] : temp.Data;
+			this.colIndices.ToManaged(tempInd);
+			for (int i = 0; i < cols; i++)
+			{
+				int start = i == 0 ? 0 : tempInd[i - 1].AsInt32();
+				int end = tempInd[i].AsInt32();
+				colInd[start..end].Fill(i.As<TInd>());
+			}
+		}
+		StringBuilder sb = new();
+		for (int i = 0; i < nnz; i++)
+		{
+			sb.AppendLine($"[{rowInd[i].AsInt64() * this.blockRows}..{(rowInd[i].AsInt64() + 1) * this.blockRows}, {colInd[i].AsInt64() * this.blockCols}..{(colInd[i].AsInt64() + 1) * this.blockCols}] = ");
+			if (this.rowMajor)
+			{
+				(this.Storage + i * this.BS).ToManaged2D(this.blockCols, values, bc, br);
+				sb.AppendLine(values.ToMatrixString(bc, true, this.blockRows - br, ps.Precision));
+			}
+			else
+			{
+				(this.Storage + i * this.BS).ToManaged2D(this.blockRows, values, br, bc);
+				sb.AppendLine(values.ToMatrixString(br, false, this.blockRows - br, ps.Precision));
+			}
+		}
+		if (nnz < this.NStored / this.BS)
+			sb.AppendFormat(Resources.Print.MoreStored, this.NStored / this.BS - nnz);
+		return sb.ToString();
+	}
+	#endregion
+
+	#region serialization
+	[JsonConstructor]
+	private CompressBlockSparseMatrix(bool rowMajor, long nRows, long nCols, long blockRows, long blockCols, TS storage, TSInd rowIndexStorage, TSInd colIndexStorage, T defaultValue) : this(rowMajor, nRows, nCols, blockRows, blockCols, storage, rowIndexStorage, colIndexStorage, defaultValue, -1) { }
+
+	private static bool TryCreate(in SparseArrayWrapper<T, TInd, TS, TSInd> wrapper, [NotNullWhen(true)] out SparseMatrix<T, TInd, TS, TSInd>? matrix)
+	{
+		matrix = null;
+		if (wrapper.Size.Length != 2 || wrapper.BlockSize.Length != 2 || wrapper.ValueStorages.Length != 1 || wrapper.IndexStorages.Length != 2 || (wrapper.Format & baseFormat) == SparseFormat.None || (wrapper.Format.MajorType & (SparseFormat.Major.Row | SparseFormat.Major.Column)) == 0)
+			return false;
+		bool rowMajor = wrapper.Format.MajorType == SparseFormat.Major.Row;
+		long rows = wrapper.Size[0], cols = wrapper.Size[1];
+		long blockRows = wrapper.BlockSize[0], blockCols = wrapper.BlockSize[1];
+		TS values = wrapper.ValueStorages[0];
+		TSInd rowIndices = wrapper.IndexStorages[0], colIndices = wrapper.IndexStorages[1];
+		if (values.Length > rows * cols)
+			return false;
+		if (rowMajor)
+		{
+			if (values.Length != colIndices.Length * blockRows * blockCols || rows != (rowIndices.Length - 1) * blockRows)
+				return false;
+		}
+		else
+		{
+			if (values.Length != rowIndices.Length * blockRows * blockCols || cols != (colIndices.Length - 1) * blockCols)
+				return false;
+		}
+		matrix = new CompressBlockSparseMatrix<T, TInd, TS, TSInd>(rowMajor, rows, cols, blockRows, blockCols, values, rowIndices, colIndices, wrapper.DefaultValue);
+		return true;
+	}
+
+	static CompressBlockSparseMatrix()
+	{
+		Creators.Add(TryCreate);
+	}
+	#endregion
 }

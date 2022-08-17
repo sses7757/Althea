@@ -160,7 +160,7 @@ public readonly partial struct BrainHalf
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static BrainHalf Root(BrainHalf x, int n) => (BrainHalf)float.Root(x, n);
+	public static BrainHalf RootN(BrainHalf x, int n) => (BrainHalf)float.RootN(x, n);
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

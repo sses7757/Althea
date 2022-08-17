@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 
 using Althea.Backend.Cuda.TensorAlgebra.Dense;
 using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.Linq;
 using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;
@@ -34,7 +35,7 @@ namespace Althea.Backend.Cuda
 namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 {
 	#region operations
-	internal enum BinaryOperation
+	internal enum CuTensorBinary
 	{
 		/// <summary>
 		/// Addition of two elements
@@ -54,7 +55,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		Min = 7
 	}
 
-	internal enum UnaryOperation
+	internal enum CuTensorUnary
 	{
 		/// <summary>
 		/// Identity operator (i.e., elements are not changed)
@@ -156,27 +157,38 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 
 	internal static partial class Converter
 	{
-		internal static BinaryOperation ToCudaOp(this Althea.LinearAlgebra.BinaryOperation op)
+		internal static CuTensorBinary ToCudaOp(this BinaryOperation op)
 		{
 			return op switch
 			{
-				Althea.LinearAlgebra.BinaryOperation.Add => BinaryOperation.Add,
-				Althea.LinearAlgebra.BinaryOperation.Multiply => BinaryOperation.Mul,
-				Althea.LinearAlgebra.BinaryOperation.Maximum => BinaryOperation.Max,
-				Althea.LinearAlgebra.BinaryOperation.Mininum => BinaryOperation.Min,
+				BinaryOperation.Add => CuTensorBinary.Add,
+				BinaryOperation.Multiply => CuTensorBinary.Mul,
+				BinaryOperation.Maximum => CuTensorBinary.Max,
+				BinaryOperation.Mininum => CuTensorBinary.Min,
 				_ => 0,
 			};
 		}
 
-		internal static UnaryOperation ToCudaOp(this Althea.LinearAlgebra.UnaryOperation op)
+		internal static CuTensorBinary ToCudaOp(this ReduceOperation op)
 		{
 			return op switch
 			{
-				Althea.LinearAlgebra.UnaryOperation.Identity => UnaryOperation.Identity,
-				Althea.LinearAlgebra.UnaryOperation.Conjugate => UnaryOperation.Conjugate,
-				Althea.LinearAlgebra.UnaryOperation.Negate => UnaryOperation.Negate,
-				Althea.LinearAlgebra.UnaryOperation.AbsoluteValue => UnaryOperation.Abs,
-				> 0 => (UnaryOperation)op,
+				ReduceOperation.Add => CuTensorBinary.Add,
+				ReduceOperation.Multiply => CuTensorBinary.Mul,
+				ReduceOperation.Maximum => CuTensorBinary.Max,
+				ReduceOperation.Mininum => CuTensorBinary.Min,
+				_ => 0,
+			};
+		}
+		internal static CuTensorUnary ToCudaOp(this Althea.LinearAlgebra.UnaryOperation op)
+		{
+			return op switch
+			{
+				UnaryOperation.Identity => CuTensorUnary.Identity,
+				UnaryOperation.Conjugate => CuTensorUnary.Conjugate,
+				UnaryOperation.Negate => CuTensorUnary.Negate,
+				UnaryOperation.AbsoluteValue => CuTensorUnary.Abs,
+				> 0 => (CuTensorUnary)op,
 				_ => 0
 			};
 		}
@@ -306,8 +318,8 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 				CudaDataType.RealUInt32 or CudaDataType.ComplexUInt32 => ComputeType.UInt32,
 				CudaDataType.RealFloat32 or CudaDataType.ComplexFloat32 => ComputeType.Float32,
 				CudaDataType.RealFloat64 or CudaDataType.ComplexFloat64 => ComputeType.Float64,
-				CudaDataType.RealFloat16 or CudaDataType.ComplexFloat16 => ComputeType.Float16,
-				CudaDataType.RealBrainFloat16 or CudaDataType.ComplexBrainFloat16 => ComputeType.BrainFloat16,
+				CudaDataType.RealFloat16 or CudaDataType.ComplexFloat16 => ComputeType.Float32,
+				CudaDataType.RealBrainFloat16 or CudaDataType.ComplexBrainFloat16 => ComputeType.Float32,
 				// TensorFloat32 not supported
 				_ => 0,
 			};
@@ -366,7 +378,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	internal readonly struct CudaTensorHandle { }
 
 	[StructLayout(LayoutKind.Explicit, Size = 8 * 72)]
-	internal readonly record struct TensorDescription
+	internal readonly struct TensorDescription
 	{
 		[FieldOffset(4 * 4)]
 		private readonly int rank;
@@ -381,13 +393,7 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		private readonly FixedBuffer_64<int> strides;
 
 		[FieldOffset(38 * 4)]
-		private readonly UnaryOperation operation;
-
-		public readonly int Rank => this.rank;
-		public readonly CudaDataType DataType => this.dataType;
-		public readonly int[] Size => this.size.AsSpan(this.rank).ToArray();
-		public readonly int[] Strides => this.strides.AsSpan(this.rank).ToArray();
-		public readonly UnaryOperation Operation => this.operation;
+		private readonly CuTensorUnary operation;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryCreate<T, TS>(in CudaTensorHandle handle, DenseTensorWrapper<T, TS> tensor, out TensorDescription descr) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
@@ -469,10 +475,10 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			if (!TensorDescription.TryCreate(api.handle, C, dataType, out var descrC))
 				return false;
 
-			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pA, in descrA, out int alignA).Check();
-			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pB, in descrB, out int alignB).Check();
-			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pC, in descrC, out int alignC).Check();
-			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pD, in descrC, out int alignD).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pA, &descrA, out int alignA).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pB, &descrB, out int alignB).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pC, &descrC, out int alignC).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pD, &descrC, out int alignD).Check();
 
 			Span<char> labelA = stackalloc char[A.Rank], labelB = stackalloc char[B.Rank], labelC = stackalloc char[C.Rank];
 			info.GetLabels(ref labelA, ref labelB, ref labelC);
@@ -482,23 +488,17 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			if (computeType == 0)
 				computeType = dataType.ToComputeType();
 
-			var err = NativeMethods.cutensorInitContractionDescriptor(api.handle, out descr,
-				in descrA, modeA, alignA, in descrB, modeB, alignB,
-				in descrC, modeC, alignC, in descrC, modeC, alignD, computeType);
-			if (err == CudaTensorStatus.NotSupported &&
-				(computeType == ComputeType.Float16 || computeType == ComputeType.BrainFloat16 || computeType == ComputeType.TensorFloat32))
-			{	// try again using float32 as the computation type
-				computeType = ComputeType.Float32;
-				err = NativeMethods.cutensorInitContractionDescriptor(api.handle, out descr,
-					in descrA, modeA, alignA, in descrB, modeB, alignB,
-					in descrC, modeC, alignC, in descrC, modeC, alignD, computeType);
-			}
+			ContractDescription descr1 = default;
+			var err = NativeMethods.cutensorInitContractionDescriptor(api.handle, &descr1,
+				&descrA, modeA, alignA, &descrB, modeB, alignB,
+				&descrC, modeC, alignC, &descrC, modeC, alignD, computeType);
+			descr = descr1;
 			return err.Check();
 		}
 	}
 
 	[StructLayout(LayoutKind.Explicit, Size = 8 * 64)]
-	internal readonly record struct ContractFind : IEquatable<ContractFind>
+	internal readonly record struct ContractFind
 	{
 		[FieldOffset(4 * 4)]
 		private readonly ContractionAlgorithm algorithm;
@@ -521,22 +521,10 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			return NativeMethods.cutensorInitContractionFind(handle, out find, algorithm) == CudaTensorStatus.Success;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe bool Equals(ContractFind other)
+		public readonly bool Invalid
 		{
-			fixed (void* t = &this)
-			{
-				return new ReadOnlySpan<byte>(t, 8 * 64).SequenceEqual(new ReadOnlySpan<byte>(&other, 8 * 64));
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe override int GetHashCode()
-		{
-			fixed (void* t = &this)
-			{
-				return new ReadOnlySpan<int>(t, 2 * 64).HashCodeOfSpan();
-			}
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.algorithm == 0;
 		}
 	}
 
@@ -544,12 +532,12 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	internal readonly struct ContractPlan
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Create(CudaTensorHandle handle, in ContractDescription desc, in ContractFind find, out ContractPlan plan, out long workspaceSize)
+		public static unsafe bool TryCreate(in CudaTensorHandle handle, ContractDescription* desc, in ContractFind find, out ContractPlan plan, out long workspaceSize)
 		{
-			var err = NativeMethods.cutensorContractionGetWorkspace(handle, in desc, in find, WorkSpacePreference.Recommended, out workspaceSize);
+			var err = NativeMethods.cutensorContractionGetWorkspace(handle, desc, in find, WorkSpacePreference.Recommended, out workspaceSize);
 			if (!err.Check())
 				return false;
-			err = NativeMethods.cutensorInitContractionPlan(handle, out plan, in desc, in find, workspaceSize);
+			err = NativeMethods.cutensorInitContractionPlan(handle, out plan, desc, in find, workspaceSize);
 			return err.Check();
 		}
 	}

@@ -15,6 +15,15 @@ namespace Althea.SourceGenerator
 	/// <summary>
 	/// Tells the source generator that the marked class is one that contains native methods to be extended.
 	/// </summary>
+	/// <remarks>The marked native method class must lies within a name-space like
+	/// <code>
+	/// namespace MyNameSpace1
+	/// {
+	///		[<see cref="AbstractRuntimeApiAttribute"/>]
+	///		public static class NativeMethodsTemplate
+	///		{...}
+	///	}
+	/// </code></remarks>
 	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 	public sealed class NativeMethodClassAttribute : Attribute
 	{

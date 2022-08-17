@@ -13,7 +13,7 @@ namespace Althea.Numerics;
 /// </remarks>
 /// <typeparam name="TSelf">The actual type that implements this <see cref="IBaseNumber{TSelf}"/></typeparam>
 public interface IBaseNumber<TSelf> :
-	IComparisonOperators<TSelf, TSelf, bool>, IEquatable<TSelf>,
+	IComparisonOperators<TSelf, TSelf, bool>, IEquatable<TSelf>, IComparable<TSelf>,
 	IAdditionOperators<TSelf, TSelf, TSelf>, ISubtractionOperators<TSelf, TSelf, TSelf>,
 	IMultiplyOperators<TSelf, TSelf, TSelf>, IDivisionOperators<TSelf, TSelf, TSelf>,
 	IAdditiveIdentity<TSelf, TSelf>, IMultiplicativeIdentity<TSelf, TSelf>,

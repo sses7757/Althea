@@ -6,7 +6,7 @@ namespace Althea.Backend.Mkl.Random
 	/// <summary>
 	/// MKL Random Number Generator library API
 	/// </summary>
-	public static unsafe class NativeMethods
+	public static unsafe partial class NativeMethods
 	{
 		#region helpers
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
@@ -28,10 +28,10 @@ namespace Althea.Backend.Mkl.Random
 		internal static extern MklRngStatus vdRngGaussian(MklRngMethodGaussian method, IntPtr stream, MklInt n, double* array, double mean, double sigma);
 
 		// multidimensional Gaussian, covariance matrix = T Tᵀ, length(means) == dim
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklRngStatus vsRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, MklInt n, float** arrays, int dim, MklRngMatrixStorage storageT, in float means, in float matrixT);
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklRngStatus vdRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, MklInt n, double** arrays, int dim, MklRngMatrixStorage storageT, in double means, in double matrixT);
+		[LibraryImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static partial MklRngStatus vsRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, MklInt n, float** arrays, int dim, MklRngMatrixStorage storageT, ReadOnlySpan<float> means, ReadOnlySpan<float> matrixT);
+		[LibraryImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static partial MklRngStatus vdRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, MklInt n, double** arrays, int dim, MklRngMatrixStorage storageT, ReadOnlySpan<double> means, ReadOnlySpan<double> matrixT);
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklRngStatus vsRngExponential(MklRngMethodExponential method, IntPtr stream, MklInt n, float* array, float displacement, float beta);
@@ -119,8 +119,8 @@ namespace Althea.Backend.Mkl.Random
 		internal static extern MklRngStatus viRngNegbinomial(MklRngMethodNegativeBinomial method, IntPtr stream, MklInt n, int* array, double a, double p);
 
 		// multi-dimensional, length(p) == dim
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static extern MklRngStatus viRngMultinomial(MklRngMethodMultinomial method, IntPtr stream, MklInt n, int** arrays, int nTrial, int dim, in double p);
+		[LibraryImport(Mkl.NativeMethods.MKL_DLL_NAME)]
+		internal static partial MklRngStatus viRngMultinomial(MklRngMethodMultinomial method, IntPtr stream, MklInt n, int** arrays, int nTrial, int dim, ReadOnlySpan<double> p);
 		#endregion
 	}
 }

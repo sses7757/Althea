@@ -17,6 +17,15 @@ namespace Althea.SourceGenerator
 	/// <summary>
 	/// Tells the source generator that the marked interface is a runtime API class
 	/// </summary>
+	/// <remarks>The marked API interface must lies within a namespace like
+	/// <code>
+	/// namespace MyNameSpace1
+	/// {
+	///		[<see cref="AbstractRuntimeApiAttribute"/>]
+	///		public interface IApi1
+	///		{...}
+	///	}
+	/// </code></remarks>
 	[AttributeUsage(AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public sealed class AbstractRuntimeApiAttribute : Attribute
 	{

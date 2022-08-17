@@ -532,7 +532,6 @@ public readonly partial struct BrainHalf : IBinaryFloat<BrainHalf>
 		}
 		return 1;
 	}
-	int IComparable.CompareTo(object? obj) => obj is BrainHalf bh ? this.CompareTo(bh) : throw new NotSupportedException();
 	#endregion
 
 	#region string

@@ -179,39 +179,6 @@ internal static class Conjugater
 public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IHalfMatrixBlasAbstractApi, ILapackAbstractApi
 {
 	#region basic
-	static Api()
-	{
-		try
-		{
-			NativeMethodsTemplate.vmlClearErrorCallBack();
-			Valid = true;
-		}
-		catch (Exception)
-		{
-			Valid = false;
-		}
-	}
-
-	/// <summary>
-	/// Statically get or set the MKL VML error callback function.
-	/// </summary>
-	public static VmlErrorCallbackDelegate? VmlErrorCallback
-	{
-		get => NativeMethodsTemplate.vmlGetErrorCallBack();
-		set
-		{
-			if (value is null)
-				NativeMethodsTemplate.vmlClearErrorCallBack();
-			else
-				NativeMethodsTemplate.vmlSetErrorCallBack(value);
-		}
-	}
-
-	/// <summary>
-	/// Statically get whether the MKL back-end is valid or not.
-	/// </summary>
-	public static bool Valid { get; }
-
 	/// <inheritdoc/>
 	public void Dispose()
 	{

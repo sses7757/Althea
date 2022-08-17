@@ -65,15 +65,16 @@ namespace Althea.Backend.Cuda.Random
 				else
 					return false;
 				T scale = uniform.UpperBound - uniform.LowerBound;
+				T offset = uniform.LowerBound;
 				if (scale != T.One)
 				{
 					if (T.Type.IsInteger())
-						Modular(s, 1, scale);
-					else
-						Scale(s, 1, scale);
+						return false;
+					else if (LinearAlgebra.Dense.CustomNativeMethods.vecMulScalar(T.Type, length, &scale, s, 1, s, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+						return false;
 				}
-				if (uniform.LowerBound != T.Zero)
-					PointWiseAddScalar(s, 1, uniform.LowerBound);
+				if (uniform.LowerBound != T.Zero && LinearAlgebra.Dense.CustomNativeMethods.vecAddScalar(T.Type, length, &offset, s, 1, s, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+					return false;
 			}
 			else if (dist is NormalDistribution<T> normal)
 			{

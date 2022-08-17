@@ -59,19 +59,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			while (left <= right)
 			{
 				int mid = (int)((uint)(right + left) >> 1);
-				int compare = value.CompareTo(x[mid]);
-				if (compare == 0)
-				{
+				if (value == x[mid])
 					return mid;
-				}
-				if (compare > 0)
-				{
+				else if (value > x[mid])
 					left = mid + incx;
-				}
 				else
-				{
 					right = mid - incx;
-				}
 			}
 			return ~left;
 		}

@@ -177,18 +177,6 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		#endregion
 
 		#region vector math
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		[return: MarshalAs(UnmanagedType.FunctionPtr)]
-		internal static extern VmlErrorCallbackDelegate? vmlGetErrorCallBack();
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		[return: MarshalAs(UnmanagedType.FunctionPtr)]
-		internal static extern VmlErrorCallbackDelegate? vmlClearErrorCallBack();
-
-		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		[return: MarshalAs(UnmanagedType.FunctionPtr)]
-		internal static extern VmlErrorCallbackDelegate? vmlSetErrorCallBack([MarshalAs(UnmanagedType.FunctionPtr)] VmlErrorCallbackDelegate newCallback);
-
 		[NativeMethod(1)]
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern void vsAdd(MklInt n, void* a, void* b, void* y);
@@ -618,5 +606,14 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklLapackInfo LAPACKE_ctrsen(MklMatrixLayout matrix_layout, MklSchurReorderConditionNumberModeChar job, MklVectorModeChar compq, MklInt* select, MklInt n, void* T, MklInt ldt, void* Q, MklInt ldq, void* w, out MklInt selected, void* s = null, void* sep = null);
 		#endregion
+	}
+
+
+	/// <summary>
+	/// The static class for native methods of MKL BLAS and LAPACK library
+	/// </summary>
+	public static unsafe partial class NativeMethods
+	{
+
 	}
 }

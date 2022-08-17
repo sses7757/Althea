@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 using Althea.Backend.Storage;
@@ -7,6 +8,8 @@ using Althea.Linq;
 using Althea.Random;
 
 using static Althea.Backend.Mkl.MemoryPointerChecker;
+
+using NM = Althea.Backend.Mkl.Random.NativeMethods;
 
 
 namespace Althea.Backend.Mkl.Random
@@ -37,7 +40,7 @@ namespace Althea.Backend.Mkl.Random
 
 		private static (IntPtr, uint) InitializeGenerator()
 		{
-			NativeMethods.vslNewStream(out var stream, GeneratorType.SFMT19937, 0).Check();
+			NM.vslNewStream(out var stream, GeneratorType.SFMT19937, 0).Check();
 			return (stream, 0);
 		}
 
@@ -47,7 +50,7 @@ namespace Althea.Backend.Mkl.Random
 			uint s;
 			if (!newSeed.HasValue || (s = (uint)newSeed.Value) == this.generator.Value.seed)
 				return this.generator.Value.stream;
-			NativeMethods.vslNewStream(out var stream, GeneratorType.SFMT19937, s).Check();
+			NM.vslNewStream(out var stream, GeneratorType.SFMT19937, s).Check();
 			this.generator.Value = (stream, s);
 			return stream;
 		}
@@ -57,7 +60,7 @@ namespace Althea.Backend.Mkl.Random
 		{
 			foreach (var (stream, _) in this.generator.Values)
 			{
-				NativeMethods.vslDeleteStream(in stream);
+				NM.vslDeleteStream(in stream);
 			}
 			this.generator.Dispose();
 			this.Disposed = true;
@@ -167,125 +170,125 @@ namespace Althea.Backend.Mkl.Random
 					ref var uniform = ref SpanHelper.As<TDist, UniformDistribution<T>>(distribution);
 					T lb = uniform.LowerBound, ub = uniform.UpperBound;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsF4(), lb.AsF4(), ub.AsF4()).Check();
+						NM.vsRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsF4(), lb.AsF4(), ub.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsF8(), lb.AsF8(), ub.AsF8()).Check();
+						NM.vdRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsF8(), lb.AsF8(), ub.AsF8()).Check();
 					if (typeof(T) == typeof(SignedInt32) || (typeof(T) == typeof(UnsignedInt32) && ub.AsU4() <= int.MaxValue))
-						NativeMethods.viRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsI4(), lb.AsI4(), ub.AsI4()).Check();
+						NM.viRngUniform(MklRngMethodUniform.Standard, this.Stream, n, p.AsI4(), lb.AsI4(), ub.AsI4()).Check();
 					break;
 				case DistributionType.RandomBits:
 					if (sizeof(T) == sizeof(SignedInt32))
-						NativeMethods.viRngUniformBits32(MklRngMethodUniformBits.Standard, this.Stream, n, p.AsU4()).Check();
+						NM.viRngUniformBits32(MklRngMethodUniformBits.Standard, this.Stream, n, p.AsU4()).Check();
 					if (sizeof(T) == sizeof(SignedInt64))
-						NativeMethods.viRngUniformBits64(MklRngMethodUniformBits.Standard, this.Stream, n, p.AsU8()).Check();
+						NM.viRngUniformBits64(MklRngMethodUniformBits.Standard, this.Stream, n, p.AsU8()).Check();
 					break;
 
 				case DistributionType.Beta:
 					ref var beta = ref SpanHelper.As<TDist, BetaDistribution<T>>(distribution);
 					shape1 = beta.ShapeFactor; shape2 = beta.ShapeFactorOther; scale = beta.ScaleFactor; displace = beta.Displacement;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngBeta(MklRngMethodBeta.CJA, this.Stream, n, p.AsF4(), shape1.AsF4(), shape2.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngBeta(MklRngMethodBeta.CJA, this.Stream, n, p.AsF4(), shape1.AsF4(), shape2.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngBeta(MklRngMethodBeta.CJA, this.Stream, n, p.AsF8(), shape1.AsF8(), shape2.AsF8(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngBeta(MklRngMethodBeta.CJA, this.Stream, n, p.AsF8(), shape1.AsF8(), shape2.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Cauchy:
 					ref var cauchy =ref SpanHelper.As<TDist, CauchyDistribution<T>>(distribution);
 					scale = cauchy.ScaleFactor; displace = cauchy.Displacement;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngCauchy(MklRngMethodCauchy.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngCauchy(MklRngMethodCauchy.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngCauchy(MklRngMethodCauchy.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngCauchy(MklRngMethodCauchy.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.ChiSquare:
 					ref var chi2 = ref SpanHelper.As<TDist, ChiSquareDistribution<T>>(distribution);
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngChiSquare(MklRngMethodChiSquare.Chi2Gamma, this.Stream, n, p.AsF4(), chi2.DegreeOfFreedom).Check();
+						NM.vsRngChiSquare(MklRngMethodChiSquare.Chi2Gamma, this.Stream, n, p.AsF4(), chi2.DegreeOfFreedom).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngChiSquare(MklRngMethodChiSquare.Chi2Gamma, this.Stream, n, p.AsF8(), chi2.DegreeOfFreedom).Check();
+						NM.vdRngChiSquare(MklRngMethodChiSquare.Chi2Gamma, this.Stream, n, p.AsF8(), chi2.DegreeOfFreedom).Check();
 					break;
 				case DistributionType.Exponential:
 					ref var exp = ref SpanHelper.As<TDist, ExponentialDistribution<T>>(distribution);
 					scale = exp.ScaleFactor; displace = exp.Displacement;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngExponential(MklRngMethodExponential.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngExponential(MklRngMethodExponential.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngExponential(MklRngMethodExponential.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngExponential(MklRngMethodExponential.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Gamma:
 					ref var gamma = ref SpanHelper.As<TDist, GammaDistribution<T>>(distribution);
 					shape1 = gamma.ShapeFactor; scale = gamma.ScaleFactor; displace = gamma.Displacement;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngGamma(MklRngMethodGamma.GNorm, this.Stream, n, p.AsF4(), shape1.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngGamma(MklRngMethodGamma.GNorm, this.Stream, n, p.AsF4(), shape1.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngGamma(MklRngMethodGamma.GNorm, this.Stream, n, p.AsF8(), shape1.AsF8(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngGamma(MklRngMethodGamma.GNorm, this.Stream, n, p.AsF8(), shape1.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Gumbel:
 					ref var gumbel = ref SpanHelper.As<TDist, GumbelDistribution<T>>(distribution);
 					scale = gumbel.ScaleFactor; displace = gumbel.Displacement;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngGumbel(MklRngMethodGumbel.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngGumbel(MklRngMethodGumbel.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngGumbel(MklRngMethodGumbel.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngGumbel(MklRngMethodGumbel.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Laplace:
 					ref var laplace = ref SpanHelper.As<TDist, LaplaceDistribution<T>>(distribution);
 					scale = laplace.ScaleFactor; displace = laplace.Displacement;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngLaplace(MklRngMethodLaplace.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngLaplace(MklRngMethodLaplace.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngLaplace(MklRngMethodLaplace.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngLaplace(MklRngMethodLaplace.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.LogNormal:
 					ref var lognormal = ref SpanHelper.As<TDist, LogNormalDistribution<T>>(distribution);
 					scale = T.One; displace = T.Zero; mean = lognormal.Displacement; sigma = lognormal.ScaleFactor;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF4(), mean.AsF4(), sigma.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF4(), mean.AsF4(), sigma.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF4(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF4(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Normal:
 					ref var normal = ref SpanHelper.As<TDist, NormalDistribution<T>>(distribution);
 					mean = normal.Displacement; sigma = normal.ScaleFactor;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF4(), mean.AsF4(), sigma.AsF4()).Check();
+						NM.vsRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF4(), mean.AsF4(), sigma.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF4()).Check();
+						NM.vdRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF4()).Check();
 					break;
 				case DistributionType.Rayleigh:
 					ref var rayleigh = ref SpanHelper.As<TDist, RayleighDistribution<T>>(distribution);
 					scale = rayleigh.ScaleFactor; displace = rayleigh.Displacement;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngRayleigh(MklRngMethodRayleigh.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngRayleigh(MklRngMethodRayleigh.ICDF, this.Stream, n, p.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngRayleigh(MklRngMethodRayleigh.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngRayleigh(MklRngMethodRayleigh.ICDF, this.Stream, n, p.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 				case DistributionType.Weibull:
 					ref var weibull = ref SpanHelper.As<TDist, WeibullDistribution<T>>(distribution);
 					shape1 = weibull.ShapeFactor; scale = weibull.ScaleFactor; displace = weibull.Displacement;
 					if (typeof(T) == typeof(Float32))
-						NativeMethods.vsRngWeibull(MklRngMethodWeibull.ICDF, this.Stream, n, p.AsF4(), shape1.AsF4(), displace.AsF4(), scale.AsF4()).Check();
+						NM.vsRngWeibull(MklRngMethodWeibull.ICDF, this.Stream, n, p.AsF4(), shape1.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 					if (typeof(T) == typeof(Float64))
-						NativeMethods.vdRngWeibull(MklRngMethodWeibull.ICDF, this.Stream, n, p.AsF8(), shape1.AsF8(), displace.AsF8(), scale.AsF8()).Check();
+						NM.vdRngWeibull(MklRngMethodWeibull.ICDF, this.Stream, n, p.AsF8(), shape1.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 					break;
 
 				case DistributionType.Bernoulli:
-					NativeMethods.viRngBernoulli(MklRngMethodBernoulli.ICDF, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, BernoulliDistribution<T>>(distribution).Probability).Check();
+					NM.viRngBernoulli(MklRngMethodBernoulli.ICDF, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, BernoulliDistribution<T>>(distribution).Probability).Check();
 					break;
 				case DistributionType.Binomial:
-					NativeMethods.viRngBinomial(MklRngMethodBinomial.BTPE, this.Stream, n, p.AsI4(), SpanHelper.As<TDist, BinomialDistribution<T>>(distribution).NTrials, (double)SpanHelper.As<TDist, BinomialDistribution<T>>(distribution).Probability).Check();
+					NM.viRngBinomial(MklRngMethodBinomial.BTPE, this.Stream, n, p.AsI4(), SpanHelper.As<TDist, BinomialDistribution<T>>(distribution).NTrials, (double)SpanHelper.As<TDist, BinomialDistribution<T>>(distribution).Probability).Check();
 					break;
 				case DistributionType.NegativeBinomial:
-					NativeMethods.viRngNegbinomial(MklRngMethodNegativeBinomial.NBar, this.Stream, n, p.AsI4(), SpanHelper.As<TDist, NegativeBinomialDistribution<T>>(distribution).SuccessCount, (double)SpanHelper.As<TDist, NegativeBinomialDistribution<T>>(distribution).Probability).Check();
+					NM.viRngNegbinomial(MklRngMethodNegativeBinomial.NBar, this.Stream, n, p.AsI4(), SpanHelper.As<TDist, NegativeBinomialDistribution<T>>(distribution).SuccessCount, (double)SpanHelper.As<TDist, NegativeBinomialDistribution<T>>(distribution).Probability).Check();
 					break;
 				case DistributionType.Geometric:
-					NativeMethods.viRngGeometric(MklRngMethodGeometric.ICDF, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, GeometricDistribution<T>>(distribution).Probability).Check();
+					NM.viRngGeometric(MklRngMethodGeometric.ICDF, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, GeometricDistribution<T>>(distribution).Probability).Check();
 					break;
 				case DistributionType.Hypergeometric:
 					ref var hyper = ref SpanHelper.As<TDist, HypergeometricDistribution<T>>(distribution);
-					NativeMethods.viRngHypergeometric(MklRngMethodHypergeometric.H2PE, this.Stream, n, p.AsI4(), hyper.TotalSize, hyper.SampleSize, hyper.MarkSize).Check();
+					NM.viRngHypergeometric(MklRngMethodHypergeometric.H2PE, this.Stream, n, p.AsI4(), hyper.TotalSize, hyper.SampleSize, hyper.MarkSize).Check();
 					break;
 				case DistributionType.Poisson:
-					NativeMethods.viRngPoisson(MklRngMethodPoisson.PTPE, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, PoissonDistribution<T>>(distribution).Lambda).Check();
+					NM.viRngPoisson(MklRngMethodPoisson.PTPE, this.Stream, n, p.AsI4(), (double)SpanHelper.As<TDist, PoissonDistribution<T>>(distribution).Lambda).Check();
 					break;
 			}
 		}
@@ -299,54 +302,49 @@ namespace Althea.Backend.Mkl.Random
 				ref var nomial = ref SpanHelper.As<TDist, MultinomialDistribution<SignedInt32>>(distribution);
 				Span<double> prob = stackalloc double[nomial.Rank];
 				nomial.Probabilities.CopyTo(prob, static d => (double)d);
-				NativeMethods.viRngMultinomial(MklRngMethodMultinomial.MultiPoisson, this.Stream, length, (int**)p, nomial.NTrials, nomial.Rank, in prob[0]).Check();
+				NM.viRngMultinomial(MklRngMethodMultinomial.MultiPoisson, this.Stream, length, (int**)p, nomial.NTrials, nomial.Rank, prob).Check();
 			}
 			else if (distribution is BinormalDistribution<Float32> binormal)
 			{
-				Span<byte> data = stackalloc byte[MultiNormalDistribution<Float32>.DataSize(2)];
-				MultiNormalDistribution<Float32>.Create(data, stackalloc Float32[] { binormal.Mean1, binormal.Mean2 },
+				MultiNormalDistribution<Float32> dist = new(stackalloc Float32[] { binormal.Mean1, binormal.Mean2 },
 					stackalloc Float32[]
 					{
 						binormal.StandardDeviation1, 0f,
 						binormal.StandardDeviation2 * binormal.Correlation,
 						binormal.StandardDeviation2 * MathF.Sqrt(1.0f - binormal.Correlation * binormal.Correlation)
-					}, false, binormal.RandomSeed);
-				FillND(Unsafe.As<byte, MultiNormalDistribution<Float32>>(ref data[0]), pointers, length);
+				}, false, binormal.RandomSeed);
+				FillND(dist, pointers, length);
 				return;
 			}
 			else if (distribution is MultiNormalDistribution<Float32>)
 			{
-				ref var normal = ref SpanHelper.As<TDist, MultiNormalDistribution<Float32>>(distribution);
+				ref var normal = ref SpanHelper.As<TDist, MultiNormalDistribution<Float32>>(in distribution);
 				int rank = normal.Rank;
-				ReadOnlySpan<Float32> sigma;
+				Span<Float32> sigma = stackalloc Float32[rank * rank];
 				if (normal.OriginalCovarianceStored)
 				{
-					Span<Float32> temp = stackalloc Float32[rank * rank];
-					normal.GetCholesky(temp);
-					sigma = SpanHelper.CreateReadOnlySpan(in temp[0], temp.Length);
+					normal.GetCholesky(sigma);
 				}
 				else
 				{
-					sigma = normal.CovarianceMatrix;
+					sigma = MemoryMarshal.CreateSpan(ref normal.CovarianceMatrix.Ref(), rank * rank);
 				}
-				NativeMethods.vsRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (float**)p, rank, MklRngMatrixStorage.Full, in SpanHelper.As<Float32, float>(in normal.Means[0]), in SpanHelper.As<Float32, float>(in sigma[0])).Check();
+				NM.vsRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (float**)p, rank, MklRngMatrixStorage.Full, normal.Means.UncheckAs<Float32, float>(), sigma.UncheckAs<Float32, float>()).Check();
 			}
 			else if (distribution is MultiNormalDistribution<Float64>)
 			{
-				ref var normal = ref SpanHelper.As<TDist, MultiNormalDistribution<Float64>>(distribution);
+				ref var normal = ref SpanHelper.As<TDist, MultiNormalDistribution<Float64>>(in distribution);
 				int rank = normal.Rank;
-				ReadOnlySpan<Float64> sigma;
+				Span<Float64> sigma = stackalloc Float64[rank * rank];
 				if (normal.OriginalCovarianceStored)
 				{
-					Span<Float64> temp = stackalloc Float64[rank * rank];
-					normal.GetCholesky(temp);
-					sigma = SpanHelper.CreateReadOnlySpan(in temp[0], temp.Length);
+					normal.GetCholesky(sigma);
 				}
 				else
 				{
-					sigma = normal.CovarianceMatrix;
+					sigma = MemoryMarshal.CreateSpan(ref normal.CovarianceMatrix.Ref(), rank * rank);
 				}
-				NativeMethods.vdRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (double**)p, rank, MklRngMatrixStorage.Full, in SpanHelper.As<Float64, double>(in normal.Means[0]), in SpanHelper.As<Float64, double>(in sigma[0])).Check();
+				NM.vdRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (double**)p, rank, MklRngMatrixStorage.Full, normal.Means.UncheckAs<Float64, double>(), sigma.UncheckAs<Float64, double>()).Check();
 			}
 		}
 

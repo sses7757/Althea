@@ -1868,7 +1868,7 @@ public static unsafe class MatrixSolvers
 	/// <param name="eigenvalues">The input / output eigenvalues to be sorted by <paramref name="keys"/></param>
 	/// <param name="eigenvaluesImag">The input / output eigenvalues' imaginary parts to be sorted by <paramref name="keys"/></param>
 	/// <param name="workSpace">The additional working space, length ≥ 3 * matrix size when <typeparamref name="T"/> is complex, not required otherwise</param>
-	public static void ReorderSchurForm<T, TKey>(Span<TKey> keys, SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag = default, Span<T> workSpace = default) where T : unmanaged, IBinaryFloat<T> where TKey : IComparisonOperators<TKey, TKey>
+	public static void ReorderSchurForm<T, TKey>(Span<TKey> keys, SpanMatrix<T> matrix, SpanMatrix<T> transformer, Span<T> eigenvalues, Span<T> eigenvaluesImag = default, Span<T> workSpace = default) where T : unmanaged, IBinaryFloat<T> where TKey : IComparisonOperators<TKey, TKey, bool>
 	{
 		CheckGeneralEigen(matrix, transformer, eigenvalues, eigenvaluesImag, out int n, out int lda, out int ldq);
 		if (n == 0)
