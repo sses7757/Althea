@@ -3,19 +3,18 @@ using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.Linq;
 using Althea.Numerics;
 
 
 namespace Althea.GeneralSolvers.Krylov
 {
-	#region interface
-	/// <summary>
-	/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
-	/// </summary>
-	/// <typeparam name="TVec">The concrete vector type</typeparam>
-	/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-	public interface IKrylovVector<T, TVec> : ICreateAlike<TVec>, IDisposable
+    #region interface
+    /// <summary>
+    /// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
+    /// </summary>
+    /// <typeparam name="TVec">The concrete vector type</typeparam>
+    /// <typeparam name="T">Any unmanaged number as the data type</typeparam>
+    public interface IKrylovVector<T, TVec> : ICreateAlike<TVec>, IDisposable
 		where TVec : class, IKrylovVector<T, TVec>
 		where T : unmanaged, IBaseNumber<T>
 	{

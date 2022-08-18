@@ -3,7 +3,6 @@
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
-using Althea.Linq;
 using Althea.Storage;
 using Althea.TensorAlgebra;
 

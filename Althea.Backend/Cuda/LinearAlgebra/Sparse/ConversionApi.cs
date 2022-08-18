@@ -2,9 +2,9 @@
 
 using Althea.Array;
 using Althea.Backend.Cuda.Storage;
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Sparse;
-using Althea.Linq;
 
 using static Althea.Backend.Cuda.MemoryPointerChecker;
 

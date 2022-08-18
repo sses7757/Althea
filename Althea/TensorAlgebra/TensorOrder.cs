@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 
 using Althea.Array;
 using Althea.Helpers;
-using Althea.Linq;
 using Althea.Resources;
 
 

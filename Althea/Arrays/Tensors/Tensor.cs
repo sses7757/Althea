@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
-using Althea.Linq;
 
 
 namespace Althea.Array;

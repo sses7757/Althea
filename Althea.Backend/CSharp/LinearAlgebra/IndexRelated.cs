@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using Althea.Array;
 using Althea.Backend.Storage;
 using Althea.Helpers;
-using Althea.Linq;
+using Althea.Helpers;
 
 using static Althea.Backend.CSharp.MemoryPointerChecker;
 

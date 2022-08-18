@@ -7,14 +7,13 @@ using System.Text;
 using Althea.Backend.CSharp.LinearAlgebra;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.Linq;
 using Althea.Numerics;
 
 
 // Ignore Spelling: \dfrac \cdot \alpha \mathbf \varepsilon \begin \ddots \cdots
 namespace Althea.GeneralSolvers.Krylov.Backend
 {
-	internal static class LanczosBased
+    internal static class LanczosBased
 	{
 		#region restart info
 		private ref struct RestartBasicInfo<T, TVec> where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>

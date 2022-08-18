@@ -4,7 +4,6 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 using Althea.Helpers;
-using Althea.Linq;
 using Althea.Storage;
 
 using ExtBlas = Althea.LinearAlgebra.Dense.ExtendBlasApiSelector;

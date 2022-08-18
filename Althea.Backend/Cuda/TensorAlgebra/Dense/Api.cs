@@ -4,7 +4,6 @@ using Althea.Array;
 using Althea.Backend.Cuda.Storage;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.Linq;
 using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;
 

@@ -4,7 +4,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 using Althea.LinearAlgebra;
-using Althea.Linq;
+using Althea.Helpers;
 
 using static Althea.Backend.CSharp.MemoryPointerChecker;
 

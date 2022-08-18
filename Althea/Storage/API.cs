@@ -3,7 +3,6 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
-using Althea.Linq;
 using Althea.Resources;
 
 using Althea.SourceGenerator;
@@ -11,10 +10,10 @@ using Althea.SourceGenerator;
 
 namespace Althea.Storage
 {
-	/// <summary>
-	/// The abstract interface for runtime memory API routines 
-	/// </summary>
-	[AbstractRuntimeApi]
+    /// <summary>
+    /// The abstract interface for runtime memory API routines 
+    /// </summary>
+    [AbstractRuntimeApi]
 	public interface IAbstractApi : IAbstractRuntimeApi<IAbstractApi>
 	{
 		#region storage operations

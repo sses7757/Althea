@@ -3,15 +3,15 @@ using System.IO;
 using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
-using Althea.Linq;
+using Althea.Helpers;
 
 
 namespace Althea.Backend.Cuda.Storage
 {
-	/// <summary>
-	/// The CUDA back-end of the <see cref="IAbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABIs are found.
-	/// </summary>
-	public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
+    /// <summary>
+    /// The CUDA back-end of the <see cref="IAbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABIs are found.
+    /// </summary>
+    public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
 	{
 		#region basic
 		internal static readonly Api Default = new(false);

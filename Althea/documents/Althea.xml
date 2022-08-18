@@ -5308,6 +5308,446 @@
             <param name="to">The second mismatch type</param>
             <param name="reason">The mismatch reason</param>
         </member>
+        <member name="T:Althea.Helpers.ExtensionHelper">
+            <summary>
+            A static class that contains general purposed extension helper methods
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToOrdinal(System.Int32)">
+            <summary>
+            Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
+            </summary>
+            <param name="a">The input number</param>
+            <returns>The ordinal representation string</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToOrdinal(System.Int64)">
+            <summary>
+            Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
+            </summary>
+            <param name="a">The input number</param>
+            <returns>The ordinal representation string</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ReverseBits(System.Int32)">
+            <summary>
+            Reverse the bits of <paramref name="a"/>
+            </summary>
+            <param name="a">The <see cref="T:System.Int32"/> whose bits shall be reversed</param>
+            <returns>The <paramref name="a"/> after reversing bits</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ReverseBits(System.Int64)">
+            <summary>
+            Reverse the bits of <paramref name="a"/>
+            </summary>
+            <param name="a">The <see cref="T:System.Int64"/> whose bits shall be reversed</param>
+            <returns>The <paramref name="a"/> after reversing bits</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.IsPerfectSquare(System.Int64)">
+            <summary>
+            Is the input integer a perfect square or not.
+            </summary>
+            <param name="input">The input integer</param>
+            <returns>Whether <paramref name="input"/> is perfect square or not.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int32,System.Byte)">
+            <summary>
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            </summary>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.IsBitNotSet(System.Int32,System.Byte)">
+            <summary>
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0
+            </summary>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Int32,System.Byte)">
+            <summary>
+            Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 1
+            </summary>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 1</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ResetBit(System.Int32,System.Byte)">
+            <summary>
+            Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 0
+            </summary>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 0</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Byte,System.Byte)">
+            <summary>
+            Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 1
+            </summary>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 1</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ResetBit(System.Byte,System.Byte)">
+            <summary>
+            Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 0
+            </summary>
+            <param name="input">input number</param>
+            <param name="bit">bit position</param>
+            <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 0</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.TotalMinutesString(System.TimeSpan,System.String)">
+            <summary>
+            Convert a <see cref="T:System.TimeSpan"/> into a string representation of total minutes and rest of them (seconds and smaller ones).
+            </summary>
+            <param name="span">The time span</param>
+            <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
+            <returns>The string representation</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.TotalHoursString(System.TimeSpan,System.String)">
+            <summary>
+            Convert a <see cref="T:System.TimeSpan"/> into a string representation of total hours and rest of them (minutes, seconds and smaller ones).
+            </summary>
+            <param name="span">The time span</param>
+            <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
+            <returns>The string representation</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.Char)">
+            <summary>
+            Concatenates the members of a span, using the specified separator between each member.
+            </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.String)">
+            <summary>
+            Concatenates the members of a span, using the specified separator between each member.
+            </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.Char)">
+            <summary>
+            Concatenates the members of a span, using the specified separator between each member.
+            </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.String)">
+            <summary>
+            Concatenates the members of a span, using the specified separator between each member.
+            </summary>
+            <typeparam name="T">The type of the members of values.</typeparam>
+            <param name="span">A span that contains the objects to concatenate.</param>
+            <param name="seperator">The character to use as a separator</param>
+            <returns>A string that consists of the members of values delimited by the separator character.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.MultilinePrePostfix(System.String,System.String,System.String)">
+            <summary>
+            Concatenates the multi-line <see cref="T:System.String"/> <paramref name="s"/> with <paramref name="prefix"/> and <paramref name="postfix"/> line-by-line
+            </summary>
+            <param name="s">The <see cref="T:System.String"/> to be concatenated with pre- and post- fix</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
+            <returns>The concatenated <see cref="T:System.String"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="s"/> is null or empty</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.MultilineConcat(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Concatenates the multi-line <see cref="T:System.String"/>s <paramref name="left"/> and <paramref name="right"/> line-by-line
+            </summary>
+            <param name="left">The <see cref="T:System.String"/> to be concatenated at left</param>
+            <param name="right">The <see cref="T:System.String"/> to be concatenated at right</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
+            <param name="midfix">The mid-fix <see cref="T:System.String"/> to be added between each line of <paramref name="left"/> and <paramref name="right"/>, not used for lines with only <paramref name="left"/> or <paramref name="right"/></param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
+            <returns>The concatenated <see cref="T:System.String"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.MultilineConcat(System.String[],System.String,System.String,System.String)">
+            <summary>
+            Concatenates the multi-line <paramref name="strings"/> line-by-line
+            </summary>
+            <param name="strings">The array of <see cref="T:System.String"/>s to be concatenated in order</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
+            <param name="midfix">The mid-fix <see cref="T:System.String"/> to be added in between of each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
+            <returns>The concatenated <see cref="T:System.String"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="strings"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="strings"/> have different number of lines</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.PadLeft(System.Span{System.Char},System.Int32,System.Int32,System.Char)">
+            <summary>
+            Pad some characters indicated by <paramref name="padding"/> to the left of <paramref name="str"/> and push its original content to the right.
+            </summary>
+            <param name="str">The input/output string as a <see cref="T:System.Span`1"/> of <see cref="T:System.Char"/></param>
+            <param name="totalWidth">The total number of chars in <paramref name="str"/></param>
+            <param name="currentWidth">The current number of chars in <paramref name="str"/>. If it is larger than <paramref name="totalWidth"/>, this method simply returns true.</param>
+            <param name="padding">The character to pad, default space</param>
+            <returns>The padded string of length <paramref name="totalWidth"/> if padded, or <paramref name="str"/> if not.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.PadRight(System.Span{System.Char},System.Int32,System.Int32,System.Char)">
+            <summary>
+            Pad some characters indicated by <paramref name="padding"/> to the right of <paramref name="str"/>.
+            </summary>
+            <param name="str">The input/output string as a <see cref="T:System.Span`1"/> of <see cref="T:System.Char"/></param>
+            <param name="totalWidth">The total number of chars in <paramref name="str"/></param>
+            <param name="currentWidth">The current number of chars in <paramref name="str"/>. If it is larger than <paramref name="totalWidth"/>, this method simply returns true.</param>
+            <param name="padding">The character to pad, default space</param>
+            <returns>The padded string of length <paramref name="totalWidth"/> if padded, or <paramref name="str"/> if not.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToVectorString``1(System.Span{``0},System.Int32,System.String,System.String,System.IFormatProvider)">
+            <summary>
+            Print out 1D array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="input">The dense vector to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
+            <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
+            <exception cref="T:System.FormatException">If any value in <paramref name="input"/> cannot be formatted</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToVectorString``1(System.ReadOnlySpan{``0},System.Int32,System.String,System.String,System.IFormatProvider)">
+            <summary>
+            Print out 1D array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="input">The dense vector to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
+            <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
+            <exception cref="T:System.FormatException">If any value in <paramref name="input"/> cannot be formatted</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``2(System.Span{``0},System.ReadOnlySpan{``1},System.Int32,System.String,System.String,System.IFormatProvider)">
+            <summary>
+            Print out 1D sparse array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="TVal">The supported data type</typeparam>
+            <typeparam name="TInd">The supported index type</typeparam>
+            <param name="values">The values of the sparse vector to print</param>
+            <param name="indices">The indices of the sparse vector to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
+            <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
+            <exception cref="T:System.FormatException">If any value in <paramref name="values"/> or <paramref name="indices"/> cannot be formatted</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``2(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.Int32,System.String,System.String,System.IFormatProvider)">
+            <summary>
+            Print out 1D sparse array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="TVal">The supported data type</typeparam>
+            <typeparam name="TInd">The supported index type</typeparam>
+            <param name="values">The values of the sparse vector to print</param>
+            <param name="indices">The indices of the sparse vector to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
+            <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
+            <exception cref="T:System.FormatException">If any value in <paramref name="values"/> or <paramref name="indices"/> cannot be formatted</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToMatrixString``1(System.Span{``0},System.Int32,System.Boolean,System.Int64,System.Int32,System.String,System.String,System.IFormatProvider)">
+            <summary>
+            Print out 2D array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="matrix">The column-major values of the dense matrix to print</param>
+            <param name="leadDim">The leading dimension of the given matrix</param>
+            <param name="rowMajor">Whether <paramref name="leadDim"/> is number of rows or number of columns</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="more">The neglected number of elements of each row/column of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
+            <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is not a positive number</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="leadDim"/></exception>
+            <exception cref="T:System.FormatException">If any value in <paramref name="matrix"/> cannot be formatted</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToMatrixString``1(System.ReadOnlySpan{``0},System.Int32,System.Boolean,System.Int64,System.Int32,System.String,System.String,System.IFormatProvider)">
+            <summary>
+            Print out 2D array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="T">The supported data type</typeparam>
+            <param name="matrix">The column-major values of the dense matrix to print</param>
+            <param name="leadDim">The leading dimension of the given matrix</param>
+            <param name="rowMajor">Whether <paramref name="leadDim"/> is number of rows or number of columns</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="more">The neglected number of elements of each row/column of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
+            <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is not a positive number</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="leadDim"/></exception>
+            <exception cref="T:System.FormatException">If any value in <paramref name="matrix"/> cannot be formatted</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``2(System.Span{``0},System.ReadOnlySpan{``1},System.ReadOnlySpan{``1},System.Int32,System.String,System.String,System.IFormatProvider)">
+            <summary>
+            Print out 2D sparse array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="TVal">The supported data type</typeparam>
+            <typeparam name="TInd">The supported index type</typeparam>
+            <param name="values">The values of the sparse matrix to print</param>
+            <param name="indx">The row indices of the sparse matrix to print</param>
+            <param name="indy">The column indices of the sparse matrix to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
+            <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
+            <exception cref="T:System.FormatException">If any value in <paramref name="values"/> or <paramref name="indx"/> or <paramref name="indy"/> cannot be formatted</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``2(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.ReadOnlySpan{``1},System.Int32,System.String,System.String,System.IFormatProvider)">
+            <summary>
+            Print out 2D sparse array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
+            </summary>
+            <typeparam name="TVal">The supported data type</typeparam>
+            <typeparam name="TInd">The supported index type</typeparam>
+            <param name="values">The values of the sparse matrix to print</param>
+            <param name="indx">The row indices of the sparse matrix to print</param>
+            <param name="indy">The column indices of the sparse matrix to print</param>
+            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
+            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
+            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
+            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
+            <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
+            <exception cref="T:System.FormatException">If any value in <paramref name="values"/> or <paramref name="indx"/> or <paramref name="indy"/> cannot be formatted</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToClone``1(``0,System.Action{``0})">
+            <summary>
+            Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
+            </summary>
+            <typeparam name="T">The array that is <see cref="T:Althea.ICloneable`1"/> and <see cref="T:System.IDisposable"/></typeparam>
+            <param name="array">The array to be acted by <paramref name="action"/></param>
+            <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
+            <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToAlike``1(``0,System.Action{``0})">
+            <summary>
+            Safely apply <paramref name="action"/> to a new alike one created from <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
+            </summary>
+            <typeparam name="T">The array that is <see cref="T:Althea.ICreateAlike`1"/> and <see cref="T:System.IDisposable"/></typeparam>
+            <param name="array">The array to be acted by <paramref name="action"/></param>
+            <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
+            <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToClone``1(``0,System.Action{``0,``0})">
+            <summary>
+            Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
+            </summary>
+            <typeparam name="T">The array that is <see cref="T:Althea.ICloneable`1"/> and <see cref="T:System.IDisposable"/></typeparam>
+            <param name="array">The array to be acted by <paramref name="action"/></param>
+            <param name="action">The <see cref="T:System.Action`2"/> whose first input is <paramref name="array"/> and second input is its clone</param>
+            <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToAlike``1(``0,System.Action{``0,``0})">
+            <summary>
+            Safely apply <paramref name="action"/> to a new alike one created from <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
+            </summary>
+            <typeparam name="T">The array that is <see cref="T:Althea.ICreateAlike`1"/> and <see cref="T:System.IDisposable"/></typeparam>
+            <param name="array">The array to be acted by <paramref name="action"/></param>
+            <param name="action">The <see cref="T:System.Action`2"/> whose first input is <paramref name="array"/> and second input is its alike one</param>
+            <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.SwapRemove``1(System.Collections.Generic.List{``0},``0)">
+            <summary>
+            Remove the last occurrence of <paramref name="value"/> in <paramref name="list"/> if present by swapping it with the last element in <paramref name="list"/>.
+            </summary>
+            <typeparam name="T">The data type of <paramref name="list"/></typeparam>
+            <param name="list">The <see cref="T:System.Collections.Generic.List`1"/> whose last <paramref name="value"/> will be removed</param>
+            <param name="value">The value to remove</param>
+            <returns>Success or not.</returns>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.GetPosition(System.Index,System.Int64,System.Boolean)">
+            <summary>
+            Calculate the offset from the start using the giving collection length.
+            </summary>
+            <param name="index">The <see cref="T:System.Index"/></param>
+            <param name="length">The length of the collection that the Index will be used with. It has to be a positive value</param>
+            <param name="check">check parameters and result or not</param>
+            <remarks>This is a <see cref="T:System.Int64"/> version of <see cref="M:System.Index.GetOffset(System.Int32)"/>.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of [0, <paramref name="length"/>)</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.GetOffsetAndCount(System.Range,System.Int64,System.Boolean)">
+            <summary>
+            Calculate the start offset and length of range object using a collection length.
+            </summary>
+            <param name="range">The <see cref="T:System.Range"/></param>
+            <param name="length">The length of the collection that the range will be used with. It has to be a positive value.</param>
+            <param name="check">check parameters and result or not</param>
+            <returns>The offset and length of <paramref name="range"/> under <paramref name="length"/></returns>
+            <remarks>This is a <see cref="T:System.Int64"/> version of <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/> at x64 platforms.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="range"/> is out of [0, <paramref name="length"/>)</exception>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Span{``0})">
+            <summary>
+            Dispose and clear a general span
+            </summary>
+            <typeparam name="T">The disposable type</typeparam>
+            <param name="span">The span to clear</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Dispose and clear a general span
+            </summary>
+            <typeparam name="T">The disposable type</typeparam>
+            <param name="span">The span to clear</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(``0[])">
+            <summary>
+            Dispose and clear a general array
+            </summary>
+            <typeparam name="T">The disposable type</typeparam>
+            <param name="array">The array to clear</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Collections.Generic.List{``0})">
+            <summary>
+            Dispose and clear a general list
+            </summary>
+            <typeparam name="T">The disposable type</typeparam>
+            <param name="list">The list to clear</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Collections.Generic.IReadOnlyList{``0})">
+            <summary>
+            Dispose a general read-only list
+            </summary>
+            <typeparam name="T">The disposable type</typeparam>
+            <param name="list">The read-only list to dispose</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.ClearDict``2(System.Collections.Generic.IReadOnlyDictionary{``0,``1})">
+            <summary>
+            Dispose a general dictionary
+            </summary>
+            <typeparam name="T">The dictionary key type</typeparam>
+            <typeparam name="TD">The disposable type</typeparam>
+            <param name="dict">The dictionary to dispose</param>
+        </member>
+        <member name="M:Althea.Helpers.ExtensionHelper.GetGenericString(System.Type)">
+            <summary>
+            Get the name string representation of given <paramref name="type"/> together with its generic parameters
+            </summary>
+            <param name="type">The given <see cref="T:System.Type"/> to get name</param>
+            <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
+        </member>
         <member name="T:Althea.Helpers.IFixedBuffer`1">
             <summary>
             The interface for fixed buffer structures
@@ -6558,438 +6998,86 @@
         <member name="M:Althea.Helpers.FixedBuffer_120`1.ToString">
             <inheritdoc/>
         </member>
-        <member name="T:Althea.Helpers.ExtensionHelper">
+        <member name="T:Althea.Helpers.LogLevel">
             <summary>
-            A static class that contains general purposed extension helper methods
+            The flag for logging levels
             </summary>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToOrdinal(System.Int32)">
+        <member name="F:Althea.Helpers.LogLevel.Trace">
             <summary>
-            Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
+            The most detailed level of logging message
             </summary>
-            <param name="a">The input number</param>
-            <returns>The ordinal representation string</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToOrdinal(System.Int64)">
+        <member name="F:Althea.Helpers.LogLevel.Information">
             <summary>
-            Output an integer as a cardinality number, e.g. 0 -> 1st, 51 -> 52nd
+            The normal information logging message
             </summary>
-            <param name="a">The input number</param>
-            <returns>The ordinal representation string</returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="a"/> is smaller than 0</exception>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ReverseBits(System.Int32)">
+        <member name="F:Althea.Helpers.LogLevel.Warning">
             <summary>
-            Reverse the bits of <paramref name="a"/>
+            The warning message
             </summary>
-            <param name="a">The <see cref="T:System.Int32"/> whose bits shall be reversed</param>
-            <returns>The <paramref name="a"/> after reversing bits</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ReverseBits(System.Int64)">
+        <member name="F:Althea.Helpers.LogLevel.Error">
             <summary>
-            Reverse the bits of <paramref name="a"/>
+            The error message
             </summary>
-            <param name="a">The <see cref="T:System.Int64"/> whose bits shall be reversed</param>
-            <returns>The <paramref name="a"/> after reversing bits</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsPerfectSquare(System.Int64)">
+        <member name="F:Althea.Helpers.LogLevel.Debug">
             <summary>
-            Is the input integer a perfect square or not.
+            The debug message
             </summary>
-            <param name="input">The input integer</param>
-            <returns>Whether <paramref name="input"/> is perfect square or not.</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int32,System.Byte)">
+        <member name="T:Althea.Helpers.Log">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
+            The static class provides basic write log file and output to console feature
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsBitNotSet(System.Int32,System.Byte)">
+        <member name="M:Althea.Helpers.Log.IsValid(Althea.Helpers.LogLevel)">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0
+            Check whether the given <see cref="T:Althea.Helpers.LogLevel"/> <paramref name="flags"/> is a valid one
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0</returns>
+            <param name="flags">The <see cref="T:Althea.Helpers.LogLevel"/> flags to check</param>
+            <returns>Whether <paramref name="flags"/> is a valid one or not</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Int32,System.Byte)">
+        <member name="P:Althea.Helpers.Log.SuppressLog">
             <summary>
-            Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 1
+            Get or set whether the log file output should be suppressed
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ResetBit(System.Int32,System.Byte)">
+        <member name="P:Althea.Helpers.Log.FilePath">
             <summary>
-            Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 0
+            Get or set the directory and file name of the log file
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 0</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Byte,System.Byte)">
+        <member name="P:Althea.Helpers.Log.BufferSize">
             <summary>
-            Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 1
+            Get or set the buffer size used for output
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ResetBit(System.Byte,System.Byte)">
+        <member name="P:Althea.Helpers.Log.WrapLimit">
             <summary>
-            Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 0
+            Get or set the maximum width (in characters) of a printed line
             </summary>
-            <param name="input">input number</param>
-            <param name="bit">bit position</param>
-            <returns>The <paramref name="input"/> with bit at <paramref name="bit"/> set to 0</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.TotalMinutesString(System.TimeSpan,System.String)">
+        <member name="P:Althea.Helpers.Log.PrintLevels">
             <summary>
-            Convert a <see cref="T:System.TimeSpan"/> into a string representation of total minutes and rest of them (seconds and smaller ones).
+            Get or set the <see cref="T:Althea.Helpers.LogLevel"/>s to print to console immediately
             </summary>
-            <param name="span">The time span</param>
-            <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
-            <returns>The string representation</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.TotalHoursString(System.TimeSpan,System.String)">
+        <member name="P:Althea.Helpers.Log.BufferLevels">
             <summary>
-            Convert a <see cref="T:System.TimeSpan"/> into a string representation of total hours and rest of them (minutes, seconds and smaller ones).
+            Get or set the <see cref="T:Althea.Helpers.LogLevel"/>s to buffer
             </summary>
-            <param name="span">The time span</param>
-            <param name="restFormat">an optional format string of the rest, see <see cref="M:System.TimeSpan.ToString(System.String)"/></param>
-            <returns>The string representation</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.Char)">
+        <member name="M:Althea.Helpers.Log.Write(System.String,System.String,Althea.Helpers.LogLevel)">
             <summary>
-            Concatenates the members of a span, using the specified separator between each member.
+            Asynchronously write the message of certain category and message level.
             </summary>
-            <typeparam name="T">The type of the members of values.</typeparam>
-            <param name="span">A span that contains the objects to concatenate.</param>
-            <param name="seperator">The character to use as a separator</param>
-            <returns>A string that consists of the members of values delimited by the separator character.</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.Span{``0},System.String)">
-            <summary>
-            Concatenates the members of a span, using the specified separator between each member.
-            </summary>
-            <typeparam name="T">The type of the members of values.</typeparam>
-            <param name="span">A span that contains the objects to concatenate.</param>
-            <param name="seperator">The character to use as a separator</param>
-            <returns>A string that consists of the members of values delimited by the separator character.</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.Char)">
-            <summary>
-            Concatenates the members of a span, using the specified separator between each member.
-            </summary>
-            <typeparam name="T">The type of the members of values.</typeparam>
-            <param name="span">A span that contains the objects to concatenate.</param>
-            <param name="seperator">The character to use as a separator</param>
-            <returns>A string that consists of the members of values delimited by the separator character.</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SpanJoin``1(System.ReadOnlySpan{``0},System.String)">
-            <summary>
-            Concatenates the members of a span, using the specified separator between each member.
-            </summary>
-            <typeparam name="T">The type of the members of values.</typeparam>
-            <param name="span">A span that contains the objects to concatenate.</param>
-            <param name="seperator">The character to use as a separator</param>
-            <returns>A string that consists of the members of values delimited by the separator character.</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.MultilinePrePostfix(System.String,System.String,System.String)">
-            <summary>
-            Concatenates the multi-line <see cref="T:System.String"/> <paramref name="s"/> with <paramref name="prefix"/> and <paramref name="postfix"/> line-by-line
-            </summary>
-            <param name="s">The <see cref="T:System.String"/> to be concatenated with pre- and post- fix</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
-            <returns>The concatenated <see cref="T:System.String"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="s"/> is null or empty</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.MultilineConcat(System.String,System.String,System.String,System.String,System.String)">
-            <summary>
-            Concatenates the multi-line <see cref="T:System.String"/>s <paramref name="left"/> and <paramref name="right"/> line-by-line
-            </summary>
-            <param name="left">The <see cref="T:System.String"/> to be concatenated at left</param>
-            <param name="right">The <see cref="T:System.String"/> to be concatenated at right</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
-            <param name="midfix">The mid-fix <see cref="T:System.String"/> to be added between each line of <paramref name="left"/> and <paramref name="right"/>, not used for lines with only <paramref name="left"/> or <paramref name="right"/></param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
-            <returns>The concatenated <see cref="T:System.String"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> is null or empty</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.MultilineConcat(System.String[],System.String,System.String,System.String)">
-            <summary>
-            Concatenates the multi-line <paramref name="strings"/> line-by-line
-            </summary>
-            <param name="strings">The array of <see cref="T:System.String"/>s to be concatenated in order</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to be added at the start of each line</param>
-            <param name="midfix">The mid-fix <see cref="T:System.String"/> to be added in between of each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to be added at the end of each line</param>
-            <returns>The concatenated <see cref="T:System.String"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="strings"/> is null or empty</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="strings"/> have different number of lines</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.PadLeft(System.Span{System.Char},System.Int32,System.Int32,System.Char)">
-            <summary>
-            Pad some characters indicated by <paramref name="padding"/> to the left of <paramref name="str"/> and push its original content to the right.
-            </summary>
-            <param name="str">The input/output string as a <see cref="T:System.Span`1"/> of <see cref="T:System.Char"/></param>
-            <param name="totalWidth">The total number of chars in <paramref name="str"/></param>
-            <param name="currentWidth">The current number of chars in <paramref name="str"/>. If it is larger than <paramref name="totalWidth"/>, this method simply returns true.</param>
-            <param name="padding">The character to pad, default space</param>
-            <returns>The padded string of length <paramref name="totalWidth"/> if padded, or <paramref name="str"/> if not.</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.PadRight(System.Span{System.Char},System.Int32,System.Int32,System.Char)">
-            <summary>
-            Pad some characters indicated by <paramref name="padding"/> to the right of <paramref name="str"/>.
-            </summary>
-            <param name="str">The input/output string as a <see cref="T:System.Span`1"/> of <see cref="T:System.Char"/></param>
-            <param name="totalWidth">The total number of chars in <paramref name="str"/></param>
-            <param name="currentWidth">The current number of chars in <paramref name="str"/>. If it is larger than <paramref name="totalWidth"/>, this method simply returns true.</param>
-            <param name="padding">The character to pad, default space</param>
-            <returns>The padded string of length <paramref name="totalWidth"/> if padded, or <paramref name="str"/> if not.</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToVectorString``1(System.Span{``0},System.Int32,System.String,System.String,System.IFormatProvider)">
-            <summary>
-            Print out 1D array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="input">The dense vector to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
-            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
-            <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
-            <exception cref="T:System.FormatException">If any value in <paramref name="input"/> cannot be formatted</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToVectorString``1(System.ReadOnlySpan{``0},System.Int32,System.String,System.String,System.IFormatProvider)">
-            <summary>
-            Print out 1D array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="input">The dense vector to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
-            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
-            <returns>The string representation of dense vector <paramref name="input"/> at <paramref name="precision"/></returns>
-            <exception cref="T:System.FormatException">If any value in <paramref name="input"/> cannot be formatted</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``2(System.Span{``0},System.ReadOnlySpan{``1},System.Int32,System.String,System.String,System.IFormatProvider)">
-            <summary>
-            Print out 1D sparse array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="TVal">The supported data type</typeparam>
-            <typeparam name="TInd">The supported index type</typeparam>
-            <param name="values">The values of the sparse vector to print</param>
-            <param name="indices">The indices of the sparse vector to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
-            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
-            <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
-            <exception cref="T:System.FormatException">If any value in <paramref name="values"/> or <paramref name="indices"/> cannot be formatted</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseVectorString``2(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.Int32,System.String,System.String,System.IFormatProvider)">
-            <summary>
-            Print out 1D sparse array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="TVal">The supported data type</typeparam>
-            <typeparam name="TInd">The supported index type</typeparam>
-            <param name="values">The values of the sparse vector to print</param>
-            <param name="indices">The indices of the sparse vector to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
-            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
-            <returns>The string representation of sparse vector (<paramref name="values"/>, <paramref name="indices"/>) at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indices"/> have different lengths</exception>
-            <exception cref="T:System.FormatException">If any value in <paramref name="values"/> or <paramref name="indices"/> cannot be formatted</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToMatrixString``1(System.Span{``0},System.Int32,System.Boolean,System.Int64,System.Int32,System.String,System.String,System.IFormatProvider)">
-            <summary>
-            Print out 2D array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="matrix">The column-major values of the dense matrix to print</param>
-            <param name="leadDim">The leading dimension of the given matrix</param>
-            <param name="rowMajor">Whether <paramref name="leadDim"/> is number of rows or number of columns</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="more">The neglected number of elements of each row/column of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
-            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
-            <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is not a positive number</exception>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="leadDim"/></exception>
-            <exception cref="T:System.FormatException">If any value in <paramref name="matrix"/> cannot be formatted</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToMatrixString``1(System.ReadOnlySpan{``0},System.Int32,System.Boolean,System.Int64,System.Int32,System.String,System.String,System.IFormatProvider)">
-            <summary>
-            Print out 2D array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="T">The supported data type</typeparam>
-            <param name="matrix">The column-major values of the dense matrix to print</param>
-            <param name="leadDim">The leading dimension of the given matrix</param>
-            <param name="rowMajor">Whether <paramref name="leadDim"/> is number of rows or number of columns</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="more">The neglected number of elements of each row/column of <paramref name="matrix"/>, ≤ 0 means no more elements</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
-            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
-            <returns>The string representation of dense matrix <paramref name="matrix"/> at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="leadDim"/> is not a positive number</exception>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="matrix"/> cannot be divided by <paramref name="leadDim"/></exception>
-            <exception cref="T:System.FormatException">If any value in <paramref name="matrix"/> cannot be formatted</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``2(System.Span{``0},System.ReadOnlySpan{``1},System.ReadOnlySpan{``1},System.Int32,System.String,System.String,System.IFormatProvider)">
-            <summary>
-            Print out 2D sparse array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="TVal">The supported data type</typeparam>
-            <typeparam name="TInd">The supported index type</typeparam>
-            <param name="values">The values of the sparse matrix to print</param>
-            <param name="indx">The row indices of the sparse matrix to print</param>
-            <param name="indy">The column indices of the sparse matrix to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
-            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
-            <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
-            <exception cref="T:System.FormatException">If any value in <paramref name="values"/> or <paramref name="indx"/> or <paramref name="indy"/> cannot be formatted</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ToSparseMatrixString``2(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.ReadOnlySpan{``1},System.Int32,System.String,System.String,System.IFormatProvider)">
-            <summary>
-            Print out 2D sparse array by <see cref="T:Althea.Settings"/> or the override <paramref name="precision"/> settings.
-            </summary>
-            <typeparam name="TVal">The supported data type</typeparam>
-            <typeparam name="TInd">The supported index type</typeparam>
-            <param name="values">The values of the sparse matrix to print</param>
-            <param name="indx">The row indices of the sparse matrix to print</param>
-            <param name="indy">The column indices of the sparse matrix to print</param>
-            <param name="precision">If <paramref name="precision"/> ≤ 0, the global setting is used</param>
-            <param name="prefix">The prefix <see cref="T:System.String"/> to add at each line</param>
-            <param name="postfix">The postfix <see cref="T:System.String"/> to add at each line</param>
-            <param name="provider">The <see cref="T:System.IFormatProvider"/> used in formatting</param>
-            <returns>The string representation of sparse matrix (<paramref name="values"/>, <paramref name="indx"/>, <paramref name="indy"/>) at <paramref name="precision"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="values"/> and <paramref name="indx"/> and <paramref name="indy"/> have different lengths</exception>
-            <exception cref="T:System.FormatException">If any value in <paramref name="values"/> or <paramref name="indx"/> or <paramref name="indy"/> cannot be formatted</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToClone``1(``0,System.Action{``0})">
-            <summary>
-            Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
-            </summary>
-            <typeparam name="T">The array that is <see cref="T:Althea.ICloneable`1"/> and <see cref="T:System.IDisposable"/></typeparam>
-            <param name="array">The array to be acted by <paramref name="action"/></param>
-            <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
-            <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToAlike``1(``0,System.Action{``0})">
-            <summary>
-            Safely apply <paramref name="action"/> to a new alike one created from <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
-            </summary>
-            <typeparam name="T">The array that is <see cref="T:Althea.ICreateAlike`1"/> and <see cref="T:System.IDisposable"/></typeparam>
-            <param name="array">The array to be acted by <paramref name="action"/></param>
-            <param name="action">The <see cref="T:System.Action`1"/> to apply</param>
-            <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToClone``1(``0,System.Action{``0,``0})">
-            <summary>
-            Safely apply <paramref name="action"/> to a clone of <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
-            </summary>
-            <typeparam name="T">The array that is <see cref="T:Althea.ICloneable`1"/> and <see cref="T:System.IDisposable"/></typeparam>
-            <param name="array">The array to be acted by <paramref name="action"/></param>
-            <param name="action">The <see cref="T:System.Action`2"/> whose first input is <paramref name="array"/> and second input is its clone</param>
-            <returns>The cloned <paramref name="array"/> after applying <paramref name="action"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ApplyToAlike``1(``0,System.Action{``0,``0})">
-            <summary>
-            Safely apply <paramref name="action"/> to a new alike one created from <paramref name="array"/>. When <paramref name="action"/> throws error, the new copied array will be safely disposed.
-            </summary>
-            <typeparam name="T">The array that is <see cref="T:Althea.ICreateAlike`1"/> and <see cref="T:System.IDisposable"/></typeparam>
-            <param name="array">The array to be acted by <paramref name="action"/></param>
-            <param name="action">The <see cref="T:System.Action`2"/> whose first input is <paramref name="array"/> and second input is its alike one</param>
-            <returns>The alike <paramref name="array"/> after applying <paramref name="action"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.SwapRemove``1(System.Collections.Generic.List{``0},``0)">
-            <summary>
-            Remove the last occurrence of <paramref name="value"/> in <paramref name="list"/> if present by swapping it with the last element in <paramref name="list"/>.
-            </summary>
-            <typeparam name="T">The data type of <paramref name="list"/></typeparam>
-            <param name="list">The <see cref="T:System.Collections.Generic.List`1"/> whose last <paramref name="value"/> will be removed</param>
-            <param name="value">The value to remove</param>
-            <returns>Success or not.</returns>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.GetPosition(System.Index,System.Int64,System.Boolean)">
-            <summary>
-            Calculate the offset from the start using the giving collection length.
-            </summary>
-            <param name="index">The <see cref="T:System.Index"/></param>
-            <param name="length">The length of the collection that the Index will be used with. It has to be a positive value</param>
-            <param name="check">check parameters and result or not</param>
-            <remarks>This is a <see cref="T:System.Int64"/> version of <see cref="M:System.Index.GetOffset(System.Int32)"/>.</remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="index"/> is out of [0, <paramref name="length"/>)</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.GetOffsetAndCount(System.Range,System.Int64,System.Boolean)">
-            <summary>
-            Calculate the start offset and length of range object using a collection length.
-            </summary>
-            <param name="range">The <see cref="T:System.Range"/></param>
-            <param name="length">The length of the collection that the range will be used with. It has to be a positive value.</param>
-            <param name="check">check parameters and result or not</param>
-            <returns>The offset and length of <paramref name="range"/> under <paramref name="length"/></returns>
-            <remarks>This is a <see cref="T:System.Int64"/> version of <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/> at x64 platforms.</remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">if <paramref name="range"/> is out of [0, <paramref name="length"/>)</exception>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Span{``0})">
-            <summary>
-            Dispose and clear a general span
-            </summary>
-            <typeparam name="T">The disposable type</typeparam>
-            <param name="span">The span to clear</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Dispose and clear a general span
-            </summary>
-            <typeparam name="T">The disposable type</typeparam>
-            <param name="span">The span to clear</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(``0[])">
-            <summary>
-            Dispose and clear a general array
-            </summary>
-            <typeparam name="T">The disposable type</typeparam>
-            <param name="array">The array to clear</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Collections.Generic.List{``0})">
-            <summary>
-            Dispose and clear a general list
-            </summary>
-            <typeparam name="T">The disposable type</typeparam>
-            <param name="list">The list to clear</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearList``1(System.Collections.Generic.IReadOnlyList{``0})">
-            <summary>
-            Dispose a general read-only list
-            </summary>
-            <typeparam name="T">The disposable type</typeparam>
-            <param name="list">The read-only list to dispose</param>
-        </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.ClearDict``2(System.Collections.Generic.IReadOnlyDictionary{``0,``1})">
-            <summary>
-            Dispose a general dictionary
-            </summary>
-            <typeparam name="T">The dictionary key type</typeparam>
-            <typeparam name="TD">The disposable type</typeparam>
-            <param name="dict">The dictionary to dispose</param>
+            <param name="msg">The message to write</param>
+            <param name="category">If <paramref name="category"/> is empty or null, the calling method name will be filled; if <paramref name="category"/> is an empty string, the prefix will not be printed to console</param>
+            <param name="level">The message <see cref="T:Althea.Helpers.LogLevel"/>, must be atomic</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="level"/> is of invalid value</exception>
         </member>
         <member name="T:Althea.Helpers.SpanHelper">
             <summary>
@@ -7131,93 +7219,870 @@
             <returns>The casted <see cref="T:System.Span`1"/> of <typeparamref name="T"/></returns>
             <remarks>The <paramref name="span"/> shall NOT point to a memory block which is not fixed during the usage of the returned span. Usually, the <paramref name="span"/> can be generated by stack allocation.</remarks>
         </member>
-        <member name="M:Althea.Helpers.SpanHelper.GetGenericString(System.Type)">
+        <member name="T:Althea.Helpers.SpanLinq">
             <summary>
-            Get the name string representation of given <paramref name="type"/> together with its generic parameters
-            </summary>
-            <param name="type">The given <see cref="T:System.Type"/> to get name</param>
-            <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
-        </member>
-        <member name="T:Althea.Helpers.LogLevel">
-            <summary>
-            The flag for logging levels
+            A replacement of <see cref="T:System.Linq.Enumerable"/> based on <see cref="T:System.Span`1"/> and <see cref="T:System.ReadOnlySpan`1"/>
             </summary>
         </member>
-        <member name="F:Althea.Helpers.LogLevel.Trace">
+        <member name="M:Althea.Helpers.SpanLinq.CopyTo``2(System.Span{``0},System.Span{``1},System.Converter{``0,``1})">
             <summary>
-            The most detailed level of logging message
+            Copy <paramref name="span"/> to <paramref name="array"/>.
             </summary>
+            <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
+            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> to be copied from</param>
+            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
+            <param name="selector">The converter to each element</param>
         </member>
-        <member name="F:Althea.Helpers.LogLevel.Information">
+        <member name="M:Althea.Helpers.SpanLinq.CopyTo``2(System.ReadOnlySpan{``0},System.Span{``1},System.Converter{``0,``1})">
             <summary>
-            The normal information logging message
+            Copy <paramref name="span"/> to <paramref name="array"/>.
             </summary>
+            <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
+            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
+            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
+            <param name="selector">The converter to each element</param>
         </member>
-        <member name="F:Althea.Helpers.LogLevel.Warning">
+        <member name="M:Althea.Helpers.SpanLinq.Zip``3(System.Span{``0},System.ReadOnlySpan{``1},System.Span{``2},System.Func{``0,``1,``2})">
             <summary>
-            The warning message
+            Zip convert the <paramref name="span1"/> and <paramref name="span2"/> to <paramref name="array"/>.
             </summary>
+            <typeparam name="TIn1">The type of <paramref name="span1"/></typeparam>
+            <typeparam name="TIn2">The type of <paramref name="span2"/></typeparam>
+            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+            <param name="span1">The <see cref="T:System.Span`1"/> to be copied from</param>
+            <param name="span2">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
+            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
+            <param name="selector">The converter to each element</param>
         </member>
-        <member name="F:Althea.Helpers.LogLevel.Error">
+        <member name="M:Althea.Helpers.SpanLinq.Zip``3(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.Span{``2},System.Func{``0,``1,``2})">
             <summary>
-            The error message
+            Zip convert the <paramref name="span1"/> and <paramref name="span2"/> to <paramref name="array"/>.
             </summary>
+            <typeparam name="TIn1">The type of <paramref name="span1"/></typeparam>
+            <typeparam name="TIn2">The type of <paramref name="span2"/></typeparam>
+            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
+            <param name="span1">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
+            <param name="span2">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
+            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
+            <param name="selector">The converter to each element</param>
         </member>
-        <member name="F:Althea.Helpers.LogLevel.Debug">
+        <member name="M:Althea.Helpers.SpanLinq.Max``1(System.Span{``0})">
             <summary>
-            The debug message
+            Find the maximum item of <paramref name="span"/>.
             </summary>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find maximum</param>
+            <returns>The maximum item</returns>
         </member>
-        <member name="T:Althea.Helpers.Log">
+        <member name="M:Althea.Helpers.SpanLinq.Max``1(System.ReadOnlySpan{``0})">
             <summary>
-            The static class provides basic write log file and output to console feature
+            Find the maximum item of <paramref name="span"/>.
             </summary>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find maximum</param>
+            <returns>The maximum item</returns>
         </member>
-        <member name="M:Althea.Helpers.Log.IsValid(Althea.Helpers.LogLevel)">
+        <member name="M:Althea.Helpers.SpanLinq.Min``1(System.Span{``0})">
             <summary>
-            Check whether the given <see cref="T:Althea.Helpers.LogLevel"/> <paramref name="flags"/> is a valid one
+            Find the minimum item of <paramref name="span"/>.
             </summary>
-            <param name="flags">The <see cref="T:Althea.Helpers.LogLevel"/> flags to check</param>
-            <returns>Whether <paramref name="flags"/> is a valid one or not</returns>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find minimum</param>
+            <returns>The minimum item</returns>
         </member>
-        <member name="P:Althea.Helpers.Log.SuppressLog">
+        <member name="M:Althea.Helpers.SpanLinq.Min``1(System.ReadOnlySpan{``0})">
             <summary>
-            Get or set whether the log file output should be suppressed
+            Find the minimum item of <paramref name="span"/>.
             </summary>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find minimum</param>
+            <returns>The minimum item</returns>
         </member>
-        <member name="P:Althea.Helpers.Log.FilePath">
+        <member name="M:Althea.Helpers.SpanLinq.Max``2(System.Span{``0},System.Converter{``0,``1})">
             <summary>
-            Get or set the directory and file name of the log file
+            Find the maximum item of <paramref name="span"/> after <paramref name="selector"/>.
             </summary>
+            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find maximum</param>
+            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+            <returns>The maximum item</returns>
         </member>
-        <member name="P:Althea.Helpers.Log.BufferSize">
+        <member name="M:Althea.Helpers.SpanLinq.Max``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
             <summary>
-            Get or set the buffer size used for output
+            Find the maximum item of <paramref name="span"/> after <paramref name="selector"/>.
             </summary>
+            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find maximum</param>
+            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+            <returns>The maximum item</returns>
         </member>
-        <member name="P:Althea.Helpers.Log.WrapLimit">
+        <member name="M:Althea.Helpers.SpanLinq.Min``2(System.Span{``0},System.Converter{``0,``1})">
             <summary>
-            Get or set the maximum width (in characters) of a printed line
+            Find the minimum item of <paramref name="span"/> after <paramref name="selector"/>.
             </summary>
+            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find minimum</param>
+            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+            <returns>The minimum item</returns>
         </member>
-        <member name="P:Althea.Helpers.Log.PrintLevels">
+        <member name="M:Althea.Helpers.SpanLinq.Min``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
             <summary>
-            Get or set the <see cref="T:Althea.Helpers.LogLevel"/>s to print to console immediately
+            Find the minimum item of <paramref name="span"/> after <paramref name="selector"/>.
             </summary>
+            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
+            <typeparam name="T">The data type of array that can be compared</typeparam>
+            <param name="span">The span to find minimum</param>
+            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
+            <returns>The minimum item</returns>
         </member>
-        <member name="P:Althea.Helpers.Log.BufferLevels">
+        <member name="M:Althea.Helpers.SpanLinq.ReOrderTo``1(System.Span{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
-            Get or set the <see cref="T:Althea.Helpers.LogLevel"/>s to buffer
+            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
             </summary>
+            <typeparam name="T">any type</typeparam>
+            <param name="array">The array to order</param>
+            <param name="target">The array to put the reordered result</param>
+            <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
         </member>
-        <member name="M:Althea.Helpers.Log.Write(System.String,System.String,Althea.Helpers.LogLevel)">
+        <member name="M:Althea.Helpers.SpanLinq.ReOrderTo``1(System.ReadOnlySpan{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
             <summary>
-            Asynchronously write the message of certain category and message level.
+            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
             </summary>
-            <param name="msg">The message to write</param>
-            <param name="category">If <paramref name="category"/> is empty or null, the calling method name will be filled; if <paramref name="category"/> is an empty string, the prefix will not be printed to console</param>
-            <param name="level">The message <see cref="T:Althea.Helpers.LogLevel"/>, must be atomic</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="level"/> is of invalid value</exception>
+            <typeparam name="T">any type</typeparam>
+            <param name="array">The array to order</param>
+            <param name="target">The array to put the reordered result</param>
+            <param name="indices">The indices to order, if this is empty, <paramref name="array"/> will be returned</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.InverseOrderTo``1(System.Span{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
+            <summary>
+            Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
+            </summary>
+            <typeparam name="T">any type</typeparam>
+            <param name="array">The array to order</param>
+            <param name="target">The array to put the reordered result</param>
+            <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.InverseOrderTo``1(System.ReadOnlySpan{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
+            <summary>
+            Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
+            </summary>
+            <typeparam name="T">any type</typeparam>
+            <param name="array">The array to order</param>
+            <param name="target">The array to put the reordered result</param>
+            <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FindPermutationTo``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
+            <summary>
+            Find the permutation order such that <c><paramref name="array"/>[<paramref name="perm"/>] == <paramref name="target"/></c> at exit
+            </summary>
+            <typeparam name="T">any type</typeparam>
+            <param name="array">The array before permutation</param>
+            <param name="target">The array after the permutation</param>
+            <param name="perm">The result permutation order to put in as a <see cref="T:System.Span`1"/>, may be overwritten by undesired values if there is no such permutation</param>
+            <returns>The success or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FindPermutationTo``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
+            <summary>
+            Find the permutation order such that <c><paramref name="array"/>[<paramref name="perm"/>] == <paramref name="target"/></c> at exit
+            </summary>
+            <typeparam name="T">any type</typeparam>
+            <param name="array">The array before permutation</param>
+            <param name="target">The array after the permutation</param>
+            <param name="perm">The result permutation order to put in as a <see cref="T:System.Span`1"/>, may be overwritten by undesired values if there is no such permutation</param>
+            <returns>The success or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.InversePermutationTo(System.Span{System.Int32},System.Span{System.Int32})">
+            <summary>
+            Find the inverse permutation of <paramref name="perm"/> such that <c><paramref name="perm"/>[<paramref name="inv"/>] == <paramref name="inv"/>[<paramref name="perm"/>] == identity permutation</c> at exit
+            </summary>
+            <param name="perm">The input permutation</param>
+            <param name="inv">The output inverse permutation of <paramref name="perm"/></param>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.InversePermutationTo(System.ReadOnlySpan{System.Int32},System.Span{System.Int32})">
+            <summary>
+            Find the inverse permutation of <paramref name="perm"/> such that <c><paramref name="perm"/>[<paramref name="inv"/>] == <paramref name="inv"/>[<paramref name="perm"/>] == identity permutation</c> at exit
+            </summary>
+            <param name="perm">The input permutation</param>
+            <param name="inv">The output inverse permutation of <paramref name="perm"/></param>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AccumulateSum``1(System.Span{``0},System.Span{``0},``0,System.Boolean)">
+            <summary>
+            List accumulate summation.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
+            <param name="init">The initial value</param>
+            <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
+            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AccumulateProd``1(System.Span{``0},System.Span{``0},``0,System.Boolean)">
+            <summary>
+            List accumulate product.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
+            <param name="init">The initial value, default 0 will be replaced by 1</param>
+            <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
+            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Sum``1(System.Span{``0})">
+            <summary>
+            List summation.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <returns>The summation result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Prod``1(System.Span{``0})">
+            <summary>
+            List product.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <returns>The product result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Sum``2(System.Span{``0},System.Converter{``0,``1})">
+            <summary>
+            List summation by <paramref name="selector"/>.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <param name="selector">The selector to apply to each element</param>
+            <returns>The summation result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Prod``2(System.Span{``0},System.Converter{``0,``1})">
+            <summary>
+            List product by <paramref name="selector"/>.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <param name="selector">The selector to apply to each element</param>
+            <returns>The product result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AndAll``1(System.Span{``0})">
+            <summary>
+            List bitwise-and.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <returns>The bitwise-and result for all elements in <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.OrAll``1(System.Span{``0})">
+            <summary>
+            List bitwise-or.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <returns>The bitwise-or result for all elements in <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AccumulateSum``1(System.ReadOnlySpan{``0},System.Span{``0},``0,System.Boolean)">
+            <summary>
+            List accumulate summation.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
+            <param name="init">The initial value</param>
+            <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
+            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AccumulateProd``1(System.ReadOnlySpan{``0},System.Span{``0},``0,System.Boolean)">
+            <summary>
+            List accumulate product.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
+            <param name="init">The initial value, default 0 will be replaced by 1</param>
+            <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
+            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> + 1)]</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Sum``1(System.ReadOnlySpan{``0})">
+            <summary>
+            List summation.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <returns>The summation result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Prod``1(System.ReadOnlySpan{``0})">
+            <summary>
+            List product.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <returns>The product result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Sum``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
+            <summary>
+            List summation by <paramref name="selector"/>.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <param name="selector">The selector to apply to each element</param>
+            <returns>The summation result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Prod``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
+            <summary>
+            List product by <paramref name="selector"/>.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <param name="selector">The selector to apply to each element</param>
+            <returns>The product result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AndAll``1(System.ReadOnlySpan{``0})">
+            <summary>
+            List bitwise-and.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <returns>The bitwise-and result for all elements in <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.OrAll``1(System.ReadOnlySpan{``0})">
+            <summary>
+            List bitwise-or.
+            </summary>
+            <param name="span">The span to accumulate</param>
+            <returns>The bitwise-or result for all elements in <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.IndexOf``1(System.Span{``0},System.Predicate{``0})">
+            <summary>
+            Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="predicator">The predicator to check occurrence</param>
+            <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.IndexOf``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
+            <summary>
+            Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="predicator">The predicator to check occurrence</param>
+            <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.IndexOf``1(System.Span{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
+            <summary>
+            Find the index of the first occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="value">The value to find</param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
+            <returns>The index of the first occurrence of <paramref name="value"/> or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.IndexOf``1(System.ReadOnlySpan{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
+            <summary>
+            Find the index of the first occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="value">The value to find</param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
+            <returns>The index of the first occurrence of <paramref name="value"/> or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.LastIndexOf``1(System.Span{``0},System.Predicate{``0})">
+            <summary>
+            Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="predicator">The predicator to check occurrence</param>
+            <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.LastIndexOf``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
+            <summary>
+            Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="predicator">The predicator to check occurrence</param>
+            <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.LastIndexOf``1(System.Span{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
+            <summary>
+            Find the index of the last occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="value">The value to find</param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
+            <returns>The index of the last occurrence of <paramref name="value"/> or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.LastIndexOf``1(System.ReadOnlySpan{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
+            <summary>
+            Find the index of the last occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="value">The value to find</param>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
+            <returns>The index of the last occurrence of <paramref name="value"/> or -1 if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.LowerBound``1(System.Span{``0},``0)">
+            <summary>
+            Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="sortedSpan">The sorted span to find in</param>
+            <param name="value">The value to find</param>
+            <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.UpperBound``1(System.Span{``0},``0)">
+            <summary>
+            Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than <paramref name="value"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="sortedSpan">The sorted span to find in</param>
+            <param name="value">The value to find</param>
+            <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.LowerBound``1(System.ReadOnlySpan{``0},``0)">
+            <summary>
+            Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="sortedSpan">The sorted span to find in</param>
+            <param name="value">The value to find</param>
+            <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.UpperBound``1(System.ReadOnlySpan{``0},``0)">
+            <summary>
+            Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than <paramref name="value"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="sortedSpan">The sorted span to find in</param>
+            <param name="value">The value to find</param>
+            <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AllBytesSame``1(``0)">
+            <summary>
+            Check if all bytes in the given <paramref name="value"/> are the same.
+            </summary>
+            <typeparam name="T">The data type whose address can be obtained</typeparam>
+            <param name="value">The input value to check</param>
+            <returns>True if all bytes in the given <paramref name="value"/> are the same; false otherwise.</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FastAllZeros``1(System.Span{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are zeros by checking if all the bytes in <paramref name="span"/> are 0
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are zeros</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FastAllZeros``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are zeros by checking if all the bytes in <paramref name="span"/> are 0
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are zeros</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AllZeros``1(System.Span{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are zeros by comparing elements in <paramref name="span"/> individually
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are zeros</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AllZeros``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are zeros by comparing elements in <paramref name="span"/> individually
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are zeros</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AllSame``1(System.Span{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are the same
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are the same</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AllSame``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> are the same
+            </summary>
+            <param name="span">The span to check</param>
+            <returns>All elements in <paramref name="span"/> are the same</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.All``1(System.Span{``0},System.Predicate{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
+            </summary>
+            <param name="span">The span to predicate</param>
+            <param name="predicator">The predicator delegate</param>
+            <returns>Predicate result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.All``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
+            <summary>
+            Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
+            </summary>
+            <param name="span">The span to predicate</param>
+            <param name="predicator">The predicator delegate</param>
+            <returns>Predicate result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Any``1(System.Span{``0},System.Predicate{``0})">
+            <summary>
+            Check if any element of <paramref name="span"/> fits the <paramref name="predicator"/>
+            </summary>
+            <param name="span">The span to predicate</param>
+            <param name="predicator">The predicator delegate</param>
+            <returns>Predicate result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Any``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
+            <summary>
+            Check if any element of <paramref name="span"/> fits the <paramref name="predicator"/>
+            </summary>
+            <param name="span">The span to predicate</param>
+            <param name="predicator">The predicator delegate</param>
+            <returns>Predicate result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AnyNonPositive``1(System.Span{``0})">
+            <summary>
+            Check if any element of <paramref name="span"/> is less than or equals to 0
+            </summary>
+            <param name="span">The span to predicate</param>
+            <returns>Predicate result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.AnyNonPositive``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Check if any element of <paramref name="span"/> is less than or equals to 0
+            </summary>
+            <param name="span">The span to predicate</param>
+            <returns>Predicate result</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SequenceEqual``2(System.Span{``0},System.ReadOnlySpan{``1},System.Func{``0,``1,System.Boolean})">
+            <summary>
+            Check if <paramref name="span"/>'s all elements are sequentially equal to <paramref name="other"/>'s
+            </summary>
+            <typeparam name="TL">The left input type</typeparam>
+            <typeparam name="TR">The right input type</typeparam>
+            <param name="span">The span to compare</param>
+            <param name="other">The other span to compare</param>
+            <param name="equalityComparer">The function used to compare equality</param>
+            <returns>Sequentially equals or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SequenceEqual``2(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.Func{``0,``1,System.Boolean})">
+            <summary>
+            Check if <paramref name="span"/>'s all elements are sequentially equal to <paramref name="other"/>'s
+            </summary>
+            <typeparam name="TL">The left input type</typeparam>
+            <typeparam name="TR">The right input type</typeparam>
+            <param name="span">The span to compare</param>
+            <param name="other">The other span to compare</param>
+            <param name="equalityComparer">The function used to compare equality</param>
+            <returns>Sequentially equals or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SequenceLargerEqualThan``1(System.Span{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Check if <paramref name="span"/>'s all elements are sequentially larger or equal than <paramref name="other"/>'s
+            </summary>
+            <param name="span">The span to compare</param>
+            <param name="other">The other span to compare</param>
+            <returns>Sequentially larger or equals or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SequenceLargerEqualThan``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Check if <paramref name="span"/>'s all elements are sequentially larger or equal than <paramref name="other"/>'s
+            </summary>
+            <param name="span">The span to compare</param>
+            <param name="other">The other span to compare</param>
+            <returns>Sequentially larger or equals or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FirstOrDefault``1(System.Span{``0},System.Predicate{``0})">
+            <summary>
+            Get the first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found
+            </summary>
+            <typeparam name="T">Any struct as the data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="predicate">The <see cref="T:System.Predicate`1"/> used to find the element</param>
+            <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FirstOrDefault``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
+            <summary>
+            Get the first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found
+            </summary>
+            <typeparam name="T">Any struct as the data type</typeparam>
+            <param name="span">The span to find in</param>
+            <param name="predicate">The <see cref="T:System.Predicate`1"/> used to find the element</param>
+            <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetValue``1(System.Span{``0},``0)">
+            <summary>
+            Set the first element of <see cref="T:System.Span`1"/> to the given <paramref name="value"/>
+            </summary>
+            <typeparam name="T">any data type</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> to set</param>
+            <param name="value">The value of type <typeparamref name="T"/></param>
+            <returns>The <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetValue``1(System.Span{``0},``0,``0)">
+            <summary>
+            Set the first and the second element of <see cref="T:System.Span`1"/> to the given <paramref name="value1"/> and <paramref name="value2"/>
+            </summary>
+            <typeparam name="T">any data type</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> to set</param>
+            <param name="value1">The first value of type <typeparamref name="T"/></param>
+            <param name="value2">The second value of type <typeparamref name="T"/></param>
+            <returns>The <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetValue``1(System.Span{``0},``0,``0,``0)">
+            <summary>
+            Set the first to the third element of <see cref="T:System.Span`1"/> to the given <paramref name="value1"/> and <paramref name="value2"/>
+            </summary>
+            <typeparam name="T">any data type</typeparam>
+            <param name="span">The <see cref="T:System.Span`1"/> to set</param>
+            <param name="value1">The first value of type <typeparamref name="T"/></param>
+            <param name="value2">The second value of type <typeparamref name="T"/></param>
+            <param name="value3">The third value of type <typeparamref name="T"/></param>
+            <returns>The <paramref name="span"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.HashCodeOfSpan``1(System.Span{``0})">
+            <summary>
+            Get the hash code of an span using CRC method
+            </summary>
+            <typeparam name="T">any struct</typeparam>
+            <param name="span">The span to get hash code</param>
+            <returns>The hash code of <paramref name="span"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.HashCodeOfSpan``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Get the hash code of an span using CRC method
+            </summary>
+            <typeparam name="T">any struct</typeparam>
+            <param name="span">The span to get hash code</param>
+            <returns>The hash code of <paramref name="span"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.ElementsUnique``1(System.Span{``0})">
+            <summary>
+            Check if <paramref name="span"/>'s elements are unique
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to pick</param>
+            <returns><paramref name="span"/>'s elements are unique or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.ElementsUnique``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Check if <paramref name="span"/>'s elements are unique
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The span to pick</param>
+            <returns><paramref name="span"/>'s elements are unique or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.HashCodeOfSet``1(System.Span{``0})">
+            <summary>
+            Get the hash code of a set (order-independent) using ADD method
+            </summary>
+            <typeparam name="T">any struct</typeparam>
+            <param name="set">The set to get hash code</param>
+            <returns>The hash code of <paramref name="set"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.HashCodeOfSet``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Get the hash code of a set (order-independent) using ADD method
+            </summary>
+            <typeparam name="T">any struct</typeparam>
+            <param name="set">The set to get hash code</param>
+            <returns>The hash code of <paramref name="set"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.DistinctCount``1(System.Span{``0})">
+            <summary>
+            Count the distinct element(s) in <paramref name="span"/>
+            </summary>
+            <param name="span">The span to pick</param>
+            <returns>The number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.DistinctCount``1(System.ReadOnlySpan{``0})">
+            <summary>
+            Count the distinct element(s) in <paramref name="span"/>
+            </summary>
+            <param name="span">The span to pick</param>
+            <returns>The number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetExept``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set minus of <paramref name="set"/> and <paramref name="except"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="except">The set whose elements presented in <paramref name="set"/> will not be copied to <paramref name="output"/></param>
+            <param name="set">The set whose elements not presented in <paramref name="except"/> will be copied to <paramref name="output"/></param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetExept``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set minus of <paramref name="set"/> and <paramref name="except"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="except">The set whose elements presented in <paramref name="set"/> will not be copied to <paramref name="output"/></param>
+            <param name="set">The set whose elements not presented in <paramref name="except"/> will be copied to <paramref name="output"/></param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FirstOfSetExept``1(System.Span{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Get the first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="except">The set to be subtracted from <paramref name="set"/></param>
+            <param name="set">The set to be subtracted by <paramref name="except"/></param>
+            <returns>The first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FirstOfSetExept``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Get the first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="except">The set to be subtracted from <paramref name="set"/></param>
+            <param name="set">The set to be subtracted by <paramref name="except"/></param>
+            <returns>The first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found</returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetIntersect``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetIntersect``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetIntersectIndex``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == intersect_set</c>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="outpuIndex">The output indices</param>
+            <returns><paramref name="outpuIndex"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetIntersectIndex``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == intersect_set</c>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="outpuIndex">The output indices</param>
+            <returns><paramref name="outpuIndex"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetIntersectWithIndex``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0}@,System.Span{System.Int32}@)">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/> and result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == <paramref name="output"/></c>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="output">The output set, replaced by <paramref name="output"/>[..return] at exit</param>
+            <param name="outpuIndex">The output indices, replaced by <paramref name="outpuIndex"/>[..return] at exit</param>
+            <returns>The real length of <paramref name="output"/> and <paramref name="outpuIndex"/></returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetIntersectWithIndex``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0}@,System.Span{System.Int32}@)">
+            <summary>
+            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/> and result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == <paramref name="output"/></c>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get intersection set</param>
+            <param name="set2">The second set to get intersection set</param>
+            <param name="output">The output set, replaced by <paramref name="output"/>[..return] at exit</param>
+            <param name="outpuIndex">The output indices, replaced by <paramref name="outpuIndex"/>[..return] at exit</param>
+            <returns>The real length of <paramref name="output"/> and <paramref name="outpuIndex"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetUnion``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set union of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get union set</param>
+            <param name="set2">The second set to get union set</param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetUnion``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
+            <summary>
+            Compute the set union of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to get union set</param>
+            <param name="set2">The second set to get union set</param>
+            <param name="output">The output set</param>
+            <returns><paramref name="output"/>[..real_length]</returns>
+            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetEquals``1(System.Span{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Check whether the given <paramref name="set1"/> and <paramref name="set2"/> represent the same set
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to check set equals</param>
+            <param name="set2">The second set to check set equals</param>
+            <returns><paramref name="set1"/> and <paramref name="set2"/> represent the same set or not</returns>
+            <remarks>This method assumes that both <paramref name="set1"/> and <paramref name="set2"/> are actually sets.</remarks>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.SetEquals``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
+            <summary>
+            Check whether the given <paramref name="set1"/> and <paramref name="set2"/> represent the same set
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="set1">The first set to check set equals</param>
+            <param name="set2">The second set to check set equals</param>
+            <returns><paramref name="set1"/> and <paramref name="set2"/> represent the same set or not</returns>
+            <remarks>This method assumes that both <paramref name="set1"/> and <paramref name="set2"/> are actually sets.</remarks>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.FillWithRange``1(System.Span{``0},``0,``0)">
+            <summary>
+            Generate range of type <typeparamref name="T"/> to the target <paramref name="span"/>
+            </summary>
+            <typeparam name="T">Any unmanaged type as the data type</typeparam>
+            <param name="span">The span to fill</param>
+            <param name="start">The start value of the range</param>
+            <param name="step">The step of the range, default 0 will be replaced by 1</param>
+            <returns>The input <paramref name="span"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.ForEach``1(System.Span{``0},System.Action{``0})">
+            <summary>
+            Act on each element of a span.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The input span to be operated</param>
+            <param name="action">The action whose parameter is the element in the span</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.ForEach``1(System.ReadOnlySpan{``0},System.Action{``0})">
+            <summary>
+            Act on each element of a span.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+            <param name="span">The input span to be operated</param>
+            <param name="action">The action whose parameter is the element in the span</param>
+        </member>
+        <member name="M:Althea.Helpers.SpanLinq.Scale``1(System.Span{``0},``0)">
+            <summary>
+            Scale the values in <paramref name="span"/> by <paramref name="scalar"/> in-place
+            </summary>
+            <typeparam name="T">Any supported unmanaged number as the data type</typeparam>
+            <param name="span">The span to be scaled in-place</param>
+            <param name="scalar">The scalar to multiply to each element in <paramref name="span"/></param>
         </member>
         <member name="T:Althea.Helpers.SpanList`1">
             <summary>
@@ -16798,871 +17663,6 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="key"/> or any of <paramref name="values"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideKey"/> or  any of <paramref name="strideValues"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
-        </member>
-        <member name="T:Althea.Linq.SpanLinq">
-            <summary>
-            A replacement of <see cref="T:System.Linq.Enumerable"/> based on <see cref="T:System.Span`1"/> and <see cref="T:System.ReadOnlySpan`1"/>
-            </summary>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.CopyTo``2(System.Span{``0},System.Span{``1},System.Converter{``0,``1})">
-            <summary>
-            Copy <paramref name="span"/> to <paramref name="array"/>.
-            </summary>
-            <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
-            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to be copied from</param>
-            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
-            <param name="selector">The converter to each element</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.CopyTo``2(System.ReadOnlySpan{``0},System.Span{``1},System.Converter{``0,``1})">
-            <summary>
-            Copy <paramref name="span"/> to <paramref name="array"/>.
-            </summary>
-            <typeparam name="TIn">The type of <paramref name="span"/></typeparam>
-            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
-            <param name="span">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
-            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
-            <param name="selector">The converter to each element</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Zip``3(System.Span{``0},System.ReadOnlySpan{``1},System.Span{``2},System.Func{``0,``1,``2})">
-            <summary>
-            Zip convert the <paramref name="span1"/> and <paramref name="span2"/> to <paramref name="array"/>.
-            </summary>
-            <typeparam name="TIn1">The type of <paramref name="span1"/></typeparam>
-            <typeparam name="TIn2">The type of <paramref name="span2"/></typeparam>
-            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
-            <param name="span1">The <see cref="T:System.Span`1"/> to be copied from</param>
-            <param name="span2">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
-            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
-            <param name="selector">The converter to each element</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Zip``3(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.Span{``2},System.Func{``0,``1,``2})">
-            <summary>
-            Zip convert the <paramref name="span1"/> and <paramref name="span2"/> to <paramref name="array"/>.
-            </summary>
-            <typeparam name="TIn1">The type of <paramref name="span1"/></typeparam>
-            <typeparam name="TIn2">The type of <paramref name="span2"/></typeparam>
-            <typeparam name="TOut">The type of <paramref name="array"/></typeparam>
-            <param name="span1">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
-            <param name="span2">The <see cref="T:System.ReadOnlySpan`1"/> to be copied from</param>
-            <param name="array">The destination <see cref="T:System.Span`1"/> to be copied into</param>
-            <param name="selector">The converter to each element</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Max``1(System.Span{``0})">
-            <summary>
-            Find the maximum item of <paramref name="span"/>.
-            </summary>
-            <typeparam name="T">The data type of array that can be compared</typeparam>
-            <param name="span">The span to find maximum</param>
-            <returns>The maximum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Max``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Find the maximum item of <paramref name="span"/>.
-            </summary>
-            <typeparam name="T">The data type of array that can be compared</typeparam>
-            <param name="span">The span to find maximum</param>
-            <returns>The maximum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Min``1(System.Span{``0})">
-            <summary>
-            Find the minimum item of <paramref name="span"/>.
-            </summary>
-            <typeparam name="T">The data type of array that can be compared</typeparam>
-            <param name="span">The span to find minimum</param>
-            <returns>The minimum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Min``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Find the minimum item of <paramref name="span"/>.
-            </summary>
-            <typeparam name="T">The data type of array that can be compared</typeparam>
-            <param name="span">The span to find minimum</param>
-            <returns>The minimum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Max``2(System.Span{``0},System.Converter{``0,``1})">
-            <summary>
-            Find the maximum item of <paramref name="span"/> after <paramref name="selector"/>.
-            </summary>
-            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
-            <typeparam name="T">The data type of array that can be compared</typeparam>
-            <param name="span">The span to find maximum</param>
-            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
-            <returns>The maximum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Max``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
-            <summary>
-            Find the maximum item of <paramref name="span"/> after <paramref name="selector"/>.
-            </summary>
-            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
-            <typeparam name="T">The data type of array that can be compared</typeparam>
-            <param name="span">The span to find maximum</param>
-            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
-            <returns>The maximum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Min``2(System.Span{``0},System.Converter{``0,``1})">
-            <summary>
-            Find the minimum item of <paramref name="span"/> after <paramref name="selector"/>.
-            </summary>
-            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
-            <typeparam name="T">The data type of array that can be compared</typeparam>
-            <param name="span">The span to find minimum</param>
-            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
-            <returns>The minimum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Min``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
-            <summary>
-            Find the minimum item of <paramref name="span"/> after <paramref name="selector"/>.
-            </summary>
-            <typeparam name="TOrg">The data type of <paramref name="span"/></typeparam>
-            <typeparam name="T">The data type of array that can be compared</typeparam>
-            <param name="span">The span to find minimum</param>
-            <param name="selector">The selector to apply to each element of <paramref name="span"/></param>
-            <returns>The minimum item</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.Span{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
-            <summary>
-            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order, if this is null or empty, <paramref name="array"/> will be returned</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ReOrderTo``1(System.ReadOnlySpan{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
-            <summary>
-            Re-order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="array"/>[indices] = <paramref name="target"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order, if this is empty, <paramref name="array"/> will be returned</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.Span{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
-            <summary>
-            Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.InverseOrderTo``1(System.ReadOnlySpan{``0},System.Span{``0},System.ReadOnlySpan{System.Int32})">
-            <summary>
-            Inverse order the <paramref name="array"/> by <paramref name="indices"/> out-of-place such that <c><paramref name="target"/>[<paramref name="indices"/>] = <paramref name="array"/></c>.
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array to order</param>
-            <param name="target">The array to put the reordered result</param>
-            <param name="indices">The indices to order. May has less elements than <paramref name="array"/>. If so, the rest elements in <paramref name="target"/> remains unchanged.</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FindPermutationTo``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
-            <summary>
-            Find the permutation order such that <c><paramref name="array"/>[<paramref name="perm"/>] == <paramref name="target"/></c> at exit
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array before permutation</param>
-            <param name="target">The array after the permutation</param>
-            <param name="perm">The result permutation order to put in as a <see cref="T:System.Span`1"/>, may be overwritten by undesired values if there is no such permutation</param>
-            <returns>The success or not</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FindPermutationTo``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
-            <summary>
-            Find the permutation order such that <c><paramref name="array"/>[<paramref name="perm"/>] == <paramref name="target"/></c> at exit
-            </summary>
-            <typeparam name="T">any type</typeparam>
-            <param name="array">The array before permutation</param>
-            <param name="target">The array after the permutation</param>
-            <param name="perm">The result permutation order to put in as a <see cref="T:System.Span`1"/>, may be overwritten by undesired values if there is no such permutation</param>
-            <returns>The success or not</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.InversePermutationTo(System.Span{System.Int32},System.Span{System.Int32})">
-            <summary>
-            Find the inverse permutation of <paramref name="perm"/> such that <c><paramref name="perm"/>[<paramref name="inv"/>] == <paramref name="inv"/>[<paramref name="perm"/>] == identity permutation</c> at exit
-            </summary>
-            <param name="perm">The input permutation</param>
-            <param name="inv">The output inverse permutation of <paramref name="perm"/></param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.InversePermutationTo(System.ReadOnlySpan{System.Int32},System.Span{System.Int32})">
-            <summary>
-            Find the inverse permutation of <paramref name="perm"/> such that <c><paramref name="perm"/>[<paramref name="inv"/>] == <paramref name="inv"/>[<paramref name="perm"/>] == identity permutation</c> at exit
-            </summary>
-            <param name="perm">The input permutation</param>
-            <param name="inv">The output inverse permutation of <paramref name="perm"/></param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AccumulateSum``1(System.Span{``0},System.Span{``0},``0,System.Boolean)">
-            <summary>
-            List accumulate summation.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
-            <param name="init">The initial value</param>
-            <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AccumulateProd``1(System.Span{``0},System.Span{``0},``0,System.Boolean)">
-            <summary>
-            List accumulate product.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
-            <param name="init">The initial value, default 0 will be replaced by 1</param>
-            <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Sum``1(System.Span{``0})">
-            <summary>
-            List summation.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <returns>The summation result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Prod``1(System.Span{``0})">
-            <summary>
-            List product.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <returns>The product result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Sum``2(System.Span{``0},System.Converter{``0,``1})">
-            <summary>
-            List summation by <paramref name="selector"/>.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <param name="selector">The selector to apply to each element</param>
-            <returns>The summation result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Prod``2(System.Span{``0},System.Converter{``0,``1})">
-            <summary>
-            List product by <paramref name="selector"/>.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <param name="selector">The selector to apply to each element</param>
-            <returns>The product result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AndAll``1(System.Span{``0})">
-            <summary>
-            List bitwise-and.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <returns>The bitwise-and result for all elements in <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentNullException"></exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.OrAll``1(System.Span{``0})">
-            <summary>
-            List bitwise-or.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <returns>The bitwise-or result for all elements in <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentNullException"></exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AccumulateSum``1(System.ReadOnlySpan{``0},System.Span{``0},``0,System.Boolean)">
-            <summary>
-            List accumulate summation.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
-            <param name="init">The initial value</param>
-            <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see> + 1)]</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AccumulateProd``1(System.ReadOnlySpan{``0},System.Span{``0},``0,System.Boolean)">
-            <summary>
-            List accumulate product.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <param name="result">The output accumulated result. If this has length larger than <paramref name="span"/>, both end will be preserved</param>
-            <param name="init">The initial value, default 0 will be replaced by 1</param>
-            <param name="inclusive">Whether to include lower-index end (true) or the upper-index end (false)</param>
-            <returns><paramref name="result"/>[..<paramref name="span"/>.<see cref="P:System.Span`1.Length">Length</see>] or <paramref name="result"/>[..(<paramref name="span"/>.<see cref="P:System.ReadOnlySpan`1.Length">Length</see> + 1)]</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Sum``1(System.ReadOnlySpan{``0})">
-            <summary>
-            List summation.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <returns>The summation result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Prod``1(System.ReadOnlySpan{``0})">
-            <summary>
-            List product.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <returns>The product result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Sum``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
-            <summary>
-            List summation by <paramref name="selector"/>.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <param name="selector">The selector to apply to each element</param>
-            <returns>The summation result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Prod``2(System.ReadOnlySpan{``0},System.Converter{``0,``1})">
-            <summary>
-            List product by <paramref name="selector"/>.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <param name="selector">The selector to apply to each element</param>
-            <returns>The product result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AndAll``1(System.ReadOnlySpan{``0})">
-            <summary>
-            List bitwise-and.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <returns>The bitwise-and result for all elements in <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentNullException"></exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.OrAll``1(System.ReadOnlySpan{``0})">
-            <summary>
-            List bitwise-or.
-            </summary>
-            <param name="span">The span to accumulate</param>
-            <returns>The bitwise-or result for all elements in <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentNullException"></exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.IndexOf``1(System.Span{``0},System.Predicate{``0})">
-            <summary>
-            Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="predicator">The predicator to check occurrence</param>
-            <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.IndexOf``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
-            <summary>
-            Find the index of the first occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="predicator">The predicator to check occurrence</param>
-            <returns>The index of the first occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.IndexOf``1(System.Span{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
-            <summary>
-            Find the index of the first occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="value">The value to find</param>
-            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
-            <returns>The index of the first occurrence of <paramref name="value"/> or -1 if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.IndexOf``1(System.ReadOnlySpan{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
-            <summary>
-            Find the index of the first occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="value">The value to find</param>
-            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
-            <returns>The index of the first occurrence of <paramref name="value"/> or -1 if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.Span{``0},System.Predicate{``0})">
-            <summary>
-            Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="predicator">The predicator to check occurrence</param>
-            <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
-            <summary>
-            Find the index of the last occurrence where <paramref name="predicator"/> gives true for all elements in <paramref name="span"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="predicator">The predicator to check occurrence</param>
-            <returns>The index of the last occurrence where <paramref name="predicator"/> gives true or -1 if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.Span{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
-            <summary>
-            Find the index of the last occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="value">The value to find</param>
-            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
-            <returns>The index of the last occurrence of <paramref name="value"/> or -1 if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.LastIndexOf``1(System.ReadOnlySpan{``0},``0,System.Collections.Generic.EqualityComparer{``0})">
-            <summary>
-            Find the index of the last occurrence of <paramref name="value"/> in <paramref name="span"/> compared by the given <paramref name="comparer"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="value">The value to find</param>
-            <param name="comparer">The <see cref="T:System.Collections.Generic.EqualityComparer`1"/> used to compare elements</param>
-            <returns>The index of the last occurrence of <paramref name="value"/> or -1 if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.LowerBound``1(System.Span{``0},``0)">
-            <summary>
-            Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="sortedSpan">The sorted span to find in</param>
-            <param name="value">The value to find</param>
-            <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.UpperBound``1(System.Span{``0},``0)">
-            <summary>
-            Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than <paramref name="value"/>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="sortedSpan">The sorted span to find in</param>
-            <param name="value">The value to find</param>
-            <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.LowerBound``1(System.ReadOnlySpan{``0},``0)">
-            <summary>
-            Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="sortedSpan">The sorted span to find in</param>
-            <param name="value">The value to find</param>
-            <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than or equals to <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.UpperBound``1(System.ReadOnlySpan{``0},``0)">
-            <summary>
-            Find the index of the first occurrence in a <paramref name="sortedSpan"/> which is larger than <paramref name="value"/>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="sortedSpan">The sorted span to find in</param>
-            <param name="value">The value to find</param>
-            <returns>The first occurrence in <paramref name="sortedSpan"/> which is larger than <paramref name="value"/> or the length of <paramref name="sortedSpan"/> if there is no such element.</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AllBytesSame``1(``0)">
-            <summary>
-            Check if all bytes in the given <paramref name="value"/> are the same.
-            </summary>
-            <typeparam name="T">The data type whose address can be obtained</typeparam>
-            <param name="value">The input value to check</param>
-            <returns>True if all bytes in the given <paramref name="value"/> are the same; false otherwise.</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FastAllZeros``1(System.Span{``0})">
-            <summary>
-            Check if all elements of <paramref name="span"/> are zeros by checking if all the bytes in <paramref name="span"/> are 0
-            </summary>
-            <param name="span">The span to check</param>
-            <returns>All elements in <paramref name="span"/> are zeros</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FastAllZeros``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Check if all elements of <paramref name="span"/> are zeros by checking if all the bytes in <paramref name="span"/> are 0
-            </summary>
-            <param name="span">The span to check</param>
-            <returns>All elements in <paramref name="span"/> are zeros</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AllZeros``1(System.Span{``0})">
-            <summary>
-            Check if all elements of <paramref name="span"/> are zeros by comparing elements in <paramref name="span"/> individually
-            </summary>
-            <param name="span">The span to check</param>
-            <returns>All elements in <paramref name="span"/> are zeros</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AllZeros``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Check if all elements of <paramref name="span"/> are zeros by comparing elements in <paramref name="span"/> individually
-            </summary>
-            <param name="span">The span to check</param>
-            <returns>All elements in <paramref name="span"/> are zeros</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AllSame``1(System.Span{``0})">
-            <summary>
-            Check if all elements of <paramref name="span"/> are the same
-            </summary>
-            <param name="span">The span to check</param>
-            <returns>All elements in <paramref name="span"/> are the same</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AllSame``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Check if all elements of <paramref name="span"/> are the same
-            </summary>
-            <param name="span">The span to check</param>
-            <returns>All elements in <paramref name="span"/> are the same</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.All``1(System.Span{``0},System.Predicate{``0})">
-            <summary>
-            Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
-            </summary>
-            <param name="span">The span to predicate</param>
-            <param name="predicator">The predicator delegate</param>
-            <returns>Predicate result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.All``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
-            <summary>
-            Check if all elements of <paramref name="span"/> fits the <paramref name="predicator"/>
-            </summary>
-            <param name="span">The span to predicate</param>
-            <param name="predicator">The predicator delegate</param>
-            <returns>Predicate result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Any``1(System.Span{``0},System.Predicate{``0})">
-            <summary>
-            Check if any element of <paramref name="span"/> fits the <paramref name="predicator"/>
-            </summary>
-            <param name="span">The span to predicate</param>
-            <param name="predicator">The predicator delegate</param>
-            <returns>Predicate result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Any``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
-            <summary>
-            Check if any element of <paramref name="span"/> fits the <paramref name="predicator"/>
-            </summary>
-            <param name="span">The span to predicate</param>
-            <param name="predicator">The predicator delegate</param>
-            <returns>Predicate result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AnyNonPositive``1(System.Span{``0})">
-            <summary>
-            Check if any element of <paramref name="span"/> is less than or equals to 0
-            </summary>
-            <param name="span">The span to predicate</param>
-            <returns>Predicate result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.AnyNonPositive``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Check if any element of <paramref name="span"/> is less than or equals to 0
-            </summary>
-            <param name="span">The span to predicate</param>
-            <returns>Predicate result</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SequenceEqual``2(System.Span{``0},System.ReadOnlySpan{``1},System.Func{``0,``1,System.Boolean})">
-            <summary>
-            Check if <paramref name="span"/>'s all elements are sequentially equal to <paramref name="other"/>'s
-            </summary>
-            <typeparam name="TL">The left input type</typeparam>
-            <typeparam name="TR">The right input type</typeparam>
-            <param name="span">The span to compare</param>
-            <param name="other">The other span to compare</param>
-            <param name="equalityComparer">The function used to compare equality</param>
-            <returns>Sequentially equals or not</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SequenceEqual``2(System.ReadOnlySpan{``0},System.ReadOnlySpan{``1},System.Func{``0,``1,System.Boolean})">
-            <summary>
-            Check if <paramref name="span"/>'s all elements are sequentially equal to <paramref name="other"/>'s
-            </summary>
-            <typeparam name="TL">The left input type</typeparam>
-            <typeparam name="TR">The right input type</typeparam>
-            <param name="span">The span to compare</param>
-            <param name="other">The other span to compare</param>
-            <param name="equalityComparer">The function used to compare equality</param>
-            <returns>Sequentially equals or not</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SequenceLargerEqualThan``1(System.Span{``0},System.ReadOnlySpan{``0})">
-            <summary>
-            Check if <paramref name="span"/>'s all elements are sequentially larger or equal than <paramref name="other"/>'s
-            </summary>
-            <param name="span">The span to compare</param>
-            <param name="other">The other span to compare</param>
-            <returns>Sequentially larger or equals or not</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SequenceLargerEqualThan``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
-            <summary>
-            Check if <paramref name="span"/>'s all elements are sequentially larger or equal than <paramref name="other"/>'s
-            </summary>
-            <param name="span">The span to compare</param>
-            <param name="other">The other span to compare</param>
-            <returns>Sequentially larger or equals or not</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FirstOrDefault``1(System.Span{``0},System.Predicate{``0})">
-            <summary>
-            Get the first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found
-            </summary>
-            <typeparam name="T">Any struct as the data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="predicate">The <see cref="T:System.Predicate`1"/> used to find the element</param>
-            <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FirstOrDefault``1(System.ReadOnlySpan{``0},System.Predicate{``0})">
-            <summary>
-            Get the first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found
-            </summary>
-            <typeparam name="T">Any struct as the data type</typeparam>
-            <param name="span">The span to find in</param>
-            <param name="predicate">The <see cref="T:System.Predicate`1"/> used to find the element</param>
-            <returns>The first element in <paramref name="span"/> who fits the <paramref name="predicate"/> or the default value if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetValue``1(System.Span{``0},``0)">
-            <summary>
-            Set the first element of <see cref="T:System.Span`1"/> to the given <paramref name="value"/>
-            </summary>
-            <typeparam name="T">any data type</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to set</param>
-            <param name="value">The value of type <typeparamref name="T"/></param>
-            <returns>The <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="span"/> is empty</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetValue``1(System.Span{``0},``0,``0)">
-            <summary>
-            Set the first and the second element of <see cref="T:System.Span`1"/> to the given <paramref name="value1"/> and <paramref name="value2"/>
-            </summary>
-            <typeparam name="T">any data type</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to set</param>
-            <param name="value1">The first value of type <typeparamref name="T"/></param>
-            <param name="value2">The second value of type <typeparamref name="T"/></param>
-            <returns>The <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetValue``1(System.Span{``0},``0,``0,``0)">
-            <summary>
-            Set the first to the third element of <see cref="T:System.Span`1"/> to the given <paramref name="value1"/> and <paramref name="value2"/>
-            </summary>
-            <typeparam name="T">any data type</typeparam>
-            <param name="span">The <see cref="T:System.Span`1"/> to set</param>
-            <param name="value1">The first value of type <typeparamref name="T"/></param>
-            <param name="value2">The second value of type <typeparamref name="T"/></param>
-            <param name="value3">The third value of type <typeparamref name="T"/></param>
-            <returns>The <paramref name="span"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="span"/> has length smaller than 2</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.HashCodeOfSpan``1(System.Span{``0})">
-            <summary>
-            Get the hash code of an span using CRC method
-            </summary>
-            <typeparam name="T">any struct</typeparam>
-            <param name="span">The span to get hash code</param>
-            <returns>The hash code of <paramref name="span"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.HashCodeOfSpan``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Get the hash code of an span using CRC method
-            </summary>
-            <typeparam name="T">any struct</typeparam>
-            <param name="span">The span to get hash code</param>
-            <returns>The hash code of <paramref name="span"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ElementsUnique``1(System.Span{``0})">
-            <summary>
-            Check if <paramref name="span"/>'s elements are unique
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to pick</param>
-            <returns><paramref name="span"/>'s elements are unique or not</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ElementsUnique``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Check if <paramref name="span"/>'s elements are unique
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The span to pick</param>
-            <returns><paramref name="span"/>'s elements are unique or not</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.HashCodeOfSet``1(System.Span{``0})">
-            <summary>
-            Get the hash code of a set (order-independent) using ADD method
-            </summary>
-            <typeparam name="T">any struct</typeparam>
-            <param name="set">The set to get hash code</param>
-            <returns>The hash code of <paramref name="set"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.HashCodeOfSet``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Get the hash code of a set (order-independent) using ADD method
-            </summary>
-            <typeparam name="T">any struct</typeparam>
-            <param name="set">The set to get hash code</param>
-            <returns>The hash code of <paramref name="set"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.DistinctCount``1(System.Span{``0})">
-            <summary>
-            Count the distinct element(s) in <paramref name="span"/>
-            </summary>
-            <param name="span">The span to pick</param>
-            <returns>The number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.DistinctCount``1(System.ReadOnlySpan{``0})">
-            <summary>
-            Count the distinct element(s) in <paramref name="span"/>
-            </summary>
-            <param name="span">The span to pick</param>
-            <returns>The number of distinct element(s) <see cref="T:System.Collections.Generic.IReadOnlyList`1"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetExept``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
-            <summary>
-            Compute the set minus of <paramref name="set"/> and <paramref name="except"/> and store the result in <paramref name="output"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="except">The set whose elements presented in <paramref name="set"/> will not be copied to <paramref name="output"/></param>
-            <param name="set">The set whose elements not presented in <paramref name="except"/> will be copied to <paramref name="output"/></param>
-            <param name="output">The output set</param>
-            <returns><paramref name="output"/>[..real_length]</returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetExept``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
-            <summary>
-            Compute the set minus of <paramref name="set"/> and <paramref name="except"/> and store the result in <paramref name="output"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="except">The set whose elements presented in <paramref name="set"/> will not be copied to <paramref name="output"/></param>
-            <param name="set">The set whose elements not presented in <paramref name="except"/> will be copied to <paramref name="output"/></param>
-            <param name="output">The output set</param>
-            <returns><paramref name="output"/>[..real_length]</returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FirstOfSetExept``1(System.Span{``0},System.ReadOnlySpan{``0})">
-            <summary>
-            Get the first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="except">The set to be subtracted from <paramref name="set"/></param>
-            <param name="set">The set to be subtracted by <paramref name="except"/></param>
-            <returns>The first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FirstOfSetExept``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
-            <summary>
-            Get the first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="except">The set to be subtracted from <paramref name="set"/></param>
-            <param name="set">The set to be subtracted by <paramref name="except"/></param>
-            <returns>The first element in the set minus of <paramref name="set"/> and <paramref name="except"/> or default value if not found</returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetIntersect``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
-            <summary>
-            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to get intersection set</param>
-            <param name="set2">The second set to get intersection set</param>
-            <param name="output">The output set</param>
-            <returns><paramref name="output"/>[..real_length]</returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetIntersect``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
-            <summary>
-            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to get intersection set</param>
-            <param name="set2">The second set to get intersection set</param>
-            <param name="output">The output set</param>
-            <returns><paramref name="output"/>[..real_length]</returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetIntersectIndex``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
-            <summary>
-            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == intersect_set</c>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to get intersection set</param>
-            <param name="set2">The second set to get intersection set</param>
-            <param name="outpuIndex">The output indices</param>
-            <returns><paramref name="outpuIndex"/>[..real_length]</returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetIntersectIndex``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{System.Int32})">
-            <summary>
-            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == intersect_set</c>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to get intersection set</param>
-            <param name="set2">The second set to get intersection set</param>
-            <param name="outpuIndex">The output indices</param>
-            <returns><paramref name="outpuIndex"/>[..real_length]</returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetIntersectWithIndex``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0}@,System.Span{System.Int32}@)">
-            <summary>
-            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/> and result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == <paramref name="output"/></c>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to get intersection set</param>
-            <param name="set2">The second set to get intersection set</param>
-            <param name="output">The output set, replaced by <paramref name="output"/>[..return] at exit</param>
-            <param name="outpuIndex">The output indices, replaced by <paramref name="outpuIndex"/>[..return] at exit</param>
-            <returns>The real length of <paramref name="output"/> and <paramref name="outpuIndex"/></returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetIntersectWithIndex``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0}@,System.Span{System.Int32}@)">
-            <summary>
-            Compute the set intersection of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/> and result indices in <paramref name="outpuIndex"/> which makes <c><paramref name="set1"/>[<paramref name="outpuIndex"/>] == <paramref name="output"/></c>.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to get intersection set</param>
-            <param name="set2">The second set to get intersection set</param>
-            <param name="output">The output set, replaced by <paramref name="output"/>[..return] at exit</param>
-            <param name="outpuIndex">The output indices, replaced by <paramref name="outpuIndex"/>[..return] at exit</param>
-            <returns>The real length of <paramref name="output"/> and <paramref name="outpuIndex"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetUnion``1(System.Span{``0},System.ReadOnlySpan{``0},System.Span{``0})">
-            <summary>
-            Compute the set union of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to get union set</param>
-            <param name="set2">The second set to get union set</param>
-            <param name="output">The output set</param>
-            <returns><paramref name="output"/>[..real_length]</returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetUnion``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},System.Span{``0})">
-            <summary>
-            Compute the set union of <paramref name="set1"/> and <paramref name="set2"/> and store the result in <paramref name="output"/>
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to get union set</param>
-            <param name="set2">The second set to get union set</param>
-            <param name="output">The output set</param>
-            <returns><paramref name="output"/>[..real_length]</returns>
-            <exception cref="T:System.ArgumentException">If the lengths are incompatible</exception>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetEquals``1(System.Span{``0},System.ReadOnlySpan{``0})">
-            <summary>
-            Check whether the given <paramref name="set1"/> and <paramref name="set2"/> represent the same set
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to check set equals</param>
-            <param name="set2">The second set to check set equals</param>
-            <returns><paramref name="set1"/> and <paramref name="set2"/> represent the same set or not</returns>
-            <remarks>This method assumes that both <paramref name="set1"/> and <paramref name="set2"/> are actually sets.</remarks>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.SetEquals``1(System.ReadOnlySpan{``0},System.ReadOnlySpan{``0})">
-            <summary>
-            Check whether the given <paramref name="set1"/> and <paramref name="set2"/> represent the same set
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="set1">The first set to check set equals</param>
-            <param name="set2">The second set to check set equals</param>
-            <returns><paramref name="set1"/> and <paramref name="set2"/> represent the same set or not</returns>
-            <remarks>This method assumes that both <paramref name="set1"/> and <paramref name="set2"/> are actually sets.</remarks>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.FillWithRange``1(System.Span{``0},``0,``0)">
-            <summary>
-            Generate range of type <typeparamref name="T"/> to the target <paramref name="span"/>
-            </summary>
-            <typeparam name="T">Any unmanaged type as the data type</typeparam>
-            <param name="span">The span to fill</param>
-            <param name="start">The start value of the range</param>
-            <param name="step">The step of the range, default 0 will be replaced by 1</param>
-            <returns>The input <paramref name="span"/></returns>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ForEach``1(System.Span{``0},System.Action{``0})">
-            <summary>
-            Act on each element of a span.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The input span to be operated</param>
-            <param name="action">The action whose parameter is the element in the span</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.ForEach``1(System.ReadOnlySpan{``0},System.Action{``0})">
-            <summary>
-            Act on each element of a span.
-            </summary>
-            <typeparam name="T">The data type</typeparam>
-            <param name="span">The input span to be operated</param>
-            <param name="action">The action whose parameter is the element in the span</param>
-        </member>
-        <member name="M:Althea.Linq.SpanLinq.Scale``1(System.Span{``0},``0)">
-            <summary>
-            Scale the values in <paramref name="span"/> by <paramref name="scalar"/> in-place
-            </summary>
-            <typeparam name="T">Any supported unmanaged number as the data type</typeparam>
-            <param name="span">The span to be scaled in-place</param>
-            <param name="scalar">The scalar to multiply to each element in <paramref name="span"/></param>
         </member>
         <member name="T:Althea.Numerics.IComplexNumber`1">
             <summary>

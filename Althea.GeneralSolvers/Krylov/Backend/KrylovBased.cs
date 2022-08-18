@@ -4,14 +4,13 @@ using System.Runtime.CompilerServices;
 
 using Althea.Backend.CSharp.LinearAlgebra;
 using Althea.Helpers;
-using Althea.Linq;
 using Althea.Numerics;
 
 
 // Ignore Spelling: \mathbf \overset \longrightarrow \mathrm \cdot \left \right \varepsilon \mathbb \begin \times \le
 namespace Althea.GeneralSolvers.Krylov.Backend
 {
-	internal static class KrylovBased
+    internal static class KrylovBased
 	{
 		#region common
 

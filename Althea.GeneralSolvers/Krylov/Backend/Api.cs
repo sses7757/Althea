@@ -3,16 +3,15 @@ using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.Linq;
 using Althea.Numerics;
 
 
 namespace Althea.GeneralSolvers.Krylov.Backend
 {
-	/// <summary>
-	/// The C# back-end of <see cref="IAbstractApi"/> that utilizes other APIs and thus has no specific supporting storage locations
-	/// </summary>
-	public class Api : IAbstractApi
+    /// <summary>
+    /// The C# back-end of <see cref="IAbstractApi"/> that utilizes other APIs and thus has no specific supporting storage locations
+    /// </summary>
+    public class Api : IAbstractApi
 	{
 		#region basic
 		void IDisposable.Dispose()

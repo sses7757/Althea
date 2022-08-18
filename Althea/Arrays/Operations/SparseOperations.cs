@@ -1,5 +1,5 @@
-﻿using Althea.LinearAlgebra;
-using Althea.Linq;
+﻿using Althea.Helpers;
+using Althea.LinearAlgebra;
 using Althea.Storage;
 using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;

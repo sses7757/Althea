@@ -2,12 +2,12 @@
 
 using Althea.Array;
 using Althea.Backend.Storage;
-using Althea.Linq;
+using Althea.Helpers;
 
 
 namespace Althea.Backend.CSharp
 {
-	internal static class MemoryPointerChecker
+    internal static class MemoryPointerChecker
 	{
 		#region C# back-end
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -63,7 +63,7 @@ namespace Althea.Backend.CSharp
 
 namespace Althea.Backend.Mkl
 {
-	internal static class MemoryPointerChecker
+    internal static class MemoryPointerChecker
 	{
 		#region MKL back-end
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

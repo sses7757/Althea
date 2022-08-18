@@ -3,7 +3,6 @@
 using Althea.Array;
 using Althea.Backend.Cuda.Storage;
 using Althea.Helpers;
-using Althea.Linq;
 
 using static Althea.Backend.Cuda.MemoryPointerChecker;
 

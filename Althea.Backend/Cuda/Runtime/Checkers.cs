@@ -3,8 +3,8 @@ using System.Runtime.CompilerServices;
 
 using Althea.Array;
 using Althea.Backend.Storage;
+using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.Linq;
 using Althea.Storage;
 
 using static Althea.Backend.Cuda.LinearAlgebra.Sparse.NativeMethods;

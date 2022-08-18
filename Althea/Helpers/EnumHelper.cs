@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-using Althea.Linq;
+using Althea.Helpers;
 
 
 namespace Althea.Helpers;
