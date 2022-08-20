@@ -12,7 +12,7 @@ using static Althea.Backend.CSharp.MemoryPointerChecker;
 
 namespace Althea.Backend.CSharp.LinearAlgebra
 {
-    public unsafe partial class Api
+	public unsafe partial class Api
 	{
 		#region vector argument (absolute) min / max
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

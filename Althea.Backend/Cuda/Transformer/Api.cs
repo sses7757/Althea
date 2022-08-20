@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 using Althea.Array;
 using Althea.Backend.Cuda.Storage;
@@ -16,26 +17,35 @@ namespace Althea.Backend.Cuda.Transformer;
 /// </summary>
 public unsafe class Api : Althea.Transformer.IAbstractApi
 {
-	// TODO: limited-sized cache
 	#region basic
+	/// <summary>
+	/// The default constructor of <see cref="Api"/> with simple FFT plan cache of size 16
+	/// </summary>
+	public Api()
+	{
+		this.cacher = new(16);
+	}
+
 	/// <inheritdoc/>
 	public bool Disposed { get; protected set; }
 
 	/// <inheritdoc/>
 	public virtual void Dispose()
 	{
-		lock (this)
-		{
-			foreach (var kv in this.planCache)
-			{
-				NM.cufftDestroy(kv.Value.plan);
-			}
-		}
+		this.cacher.Dispose();
 		this.Disposed = true;
 		GC.SuppressFinalize(this);
 	}
 
-	private readonly Dictionary<FftInfo, (int plan, long workSize)> planCache = new();
+	private record FftPlan(int Id, long WorkSize) : IDisposable
+	{
+		public void Dispose()
+		{
+			// do nothing
+		}
+	}
+
+	private LimitSizedCacher<FftInfo, FftPlan> cacher;
 
 	private readonly struct FftInfo : IEquatable<FftInfo>
 	{
@@ -168,25 +178,23 @@ public unsafe class Api : Althea.Transformer.IAbstractApi
 
 	#region methods
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private bool GetPlanAndBufferSize<T, U, TS, US>(DenseArrayWrapper<T, TS> input, DenseArrayWrapper<U, US> output, out int plan, out long workSize) where T : unmanaged, IBinaryFloat<T> where U : unmanaged, IBinaryFloat<U> where TS : class, IStorage<T, TS> where US : class, IStorage<U, US>
+	private bool GetPlanAndBufferSize<T, U, TS, US>(DenseArrayWrapper<T, TS> input, DenseArrayWrapper<U, US> output, [MaybeNullWhen(false)] out FftPlan plan) where T : unmanaged, IBinaryFloat<T> where U : unmanaged, IBinaryFloat<U> where TS : class, IStorage<T, TS> where US : class, IStorage<U, US>
 	{
-		plan = 0; workSize = 0;
+		plan = default;
 		if (!FftInfo.TryCreate(input, output, out var info))
 			return false;
-		if (!this.planCache.TryGetValue(info, out var value))
-		{
-			if (!NM.cufftCreate(out value.plan).Check())
-				return false;
-			Span<long> size = stackalloc long[input.Rank], outerIn = stackalloc long[input.Rank], outerOut = stackalloc long[input.Rank];
-			info.Deconstruct(size, ref outerIn, ref outerOut, out var typeIn, out var typeOut, out var typeCompute);
-			if (!NM.cufftXtMakePlanMany(value.plan, input.Rank, size, outerIn, 1, 0, typeIn, outerOut, 1, 0, typeOut, 1, out value.workSize, typeCompute).Check())
-				return false;
-			if (!NM.cufftSetAutoAllocation(value.plan, 0).Check())
-				return false;
-			this.planCache.Add(info, value);
-		}
-		(plan, workSize) = value;
-		return true;
+		if (this.cacher.TryGetValue(info, out plan))
+			return true;
+		if (!NM.cufftCreate(out var planId).Check())
+			return false;
+		Span<long> size = stackalloc long[input.Rank], outerIn = stackalloc long[input.Rank], outerOut = stackalloc long[input.Rank];
+		info.Deconstruct(size, ref outerIn, ref outerOut, out var typeIn, out var typeOut, out var typeCompute);
+		if (!NM.cufftXtMakePlanMany(planId, input.Rank, size, outerIn, 1, 0, typeIn, outerOut, 1, 0, typeOut, 1, out var workSize, typeCompute).Check())
+			return false;
+		if (!NM.cufftSetAutoAllocation(planId, 0).Check())
+			return false;
+		plan = new(planId, workSize);
+		return this.cacher.Add(info, plan);
 	}
 
 	/// <inheritdoc/>
@@ -196,12 +204,15 @@ public unsafe class Api : Althea.Transformer.IAbstractApi
 			return false;
 		if (!GetPointer(null, output.ValueStorage, output.Size, output.OuterSize, out T* pOut))
 			return false;
-		if (!GetPlanAndBufferSize(input, output, out var plan, out var workSize))
+		if (!GetPlanAndBufferSize(input, output, out var plan))
 			return false;
-		using var buf = CudaBuffer.Create(workSize);
-		if (!NM.cufftSetWorkArea(plan, buf).Check())
-			return false;
-		return NM.cufftXtExec(plan, pIn, pOut, forward ? FftDirection.Forward : FftDirection.Backward).Check();
+		lock (plan)
+		{
+			using var buf = CudaBuffer.Create(plan.WorkSize);
+			if (!NM.cufftSetWorkArea(plan.Id, buf).Check())
+				return false;
+			return NM.cufftXtExec(plan.Id, pIn, pOut, forward ? FftDirection.Forward : FftDirection.Backward).Check();
+		}
 	}
 
 	/// <inheritdoc/>
@@ -211,12 +222,15 @@ public unsafe class Api : Althea.Transformer.IAbstractApi
 			return false;
 		if (!GetPointer(null, output.ValueStorage, output.Size, output.OuterSize, out Complex<T>* pOut))
 			return false;
-		if (!GetPlanAndBufferSize(input, output, out var plan, out var workSize))
+		if (!GetPlanAndBufferSize(input, output, out var plan))
 			return false;
-		using var buf = CudaBuffer.Create(workSize);
-		if (!NM.cufftSetWorkArea(plan, buf).Check())
-			return false;
-		return NM.cufftXtExec(plan, pIn, pOut, FftDirection.Forward).Check();
+		lock (plan)
+		{
+			using var buf = CudaBuffer.Create(plan.WorkSize);
+			if (!NM.cufftSetWorkArea(plan.Id, buf).Check())
+				return false;
+			return NM.cufftXtExec(plan.Id, pIn, pOut, FftDirection.Forward).Check();
+		}
 	}
 
 	/// <inheritdoc/>
@@ -226,12 +240,15 @@ public unsafe class Api : Althea.Transformer.IAbstractApi
 			return false;
 		if (!GetPointer(null, output.ValueStorage, output.Size, output.OuterSize, out T* pOut))
 			return false;
-		if (!GetPlanAndBufferSize(input, output, out var plan, out var workSize))
+		if (!GetPlanAndBufferSize(input, output, out var plan))
 			return false;
-		using var buf = CudaBuffer.Create(workSize);
-		if (!NM.cufftSetWorkArea(plan, buf).Check())
-			return false;
-		return NM.cufftXtExec(plan, pIn, pOut, FftDirection.Backward).Check();
+		lock (plan)
+		{
+			using var buf = CudaBuffer.Create(plan.WorkSize);
+			if (!NM.cufftSetWorkArea(plan.Id, buf).Check())
+				return false;
+			return NM.cufftXtExec(plan.Id, pIn, pOut, FftDirection.Backward).Check();
+		}
 	}
 	#endregion
 }

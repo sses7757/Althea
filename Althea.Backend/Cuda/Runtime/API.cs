@@ -9,6 +9,25 @@ namespace Althea.Backend.Cuda
 	public static class Runtime
 	{
 		/// <summary>
+		/// Check whether CUDA is available or not
+		/// </summary>
+		public static bool Available
+		{
+			get
+			{
+				try
+				{
+					var (major, minor) = GetDeviceComputeCapability(0);
+					return major > 0;
+				}
+				catch (Exception)
+				{
+					return false;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Get the CUDA device's compute capability
 		/// </summary>
 		/// <param name="deviceID">The CDUA device ID</param>

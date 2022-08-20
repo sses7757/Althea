@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Threading;
 
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
@@ -179,22 +178,82 @@ internal static class Conjugater
 public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IHalfMatrixBlasAbstractApi, ILapackAbstractApi
 {
 	#region basic
+	/// <summary>
+	/// The default constructor of <see cref="Api"/> that sets the <see cref="GemmJitThreshold"/> to 100
+	/// </summary>
+	public Api() : this(100) { }
+
+	/// <summary>
+	/// The constructor of <see cref="Api"/> that indicates the <see cref="GemmJitThreshold"/>
+	/// </summary>
+	/// <param name="gemmJitThreshold">If this value ≤ 0, JIT will be disabled</param>
+	public Api(int gemmJitThreshold)
+	{
+		if (gemmJitThreshold <= 0)
+		{
+			this.cacher = default;
+		}
+		else
+		{
+			this.cacher = new(16, 128, gemmJitThreshold, JitCompileGemm);
+		}
+	}
+
+#pragma warning disable IDE1006
+	private readonly record struct GemmInfo(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc, DataType type);
+#pragma warning restore IDE1006
+
+	private readonly record struct GemmJitter(IntPtr Handle) : IDisposable
+	{
+		public readonly void Dispose() => NM.mkl_jit_destroy(this.Handle);
+
+		public readonly delegate* unmanaged<IntPtr, T*, T*, T*, void> GetFunc<T>() where T : unmanaged
+		{
+			delegate*<IntPtr, delegate* unmanaged<IntPtr, T*, T*, T*, void>> getGemmFunc = default(T) switch
+			{
+				Float32 => &NM.mkl_jit_get_sgemm_ptr,
+				Float64 => &NM.mkl_jit_get_dgemm_ptr,
+				Complex<Float32> => &NM.mkl_jit_get_cgemm_ptr,
+				Complex<Float64> => &NM.mkl_jit_get_zgemm_ptr,
+				_ => null,
+			};
+			if (getGemmFunc is null)
+				return null;
+			return getGemmFunc(this.Handle);
+		}
+	}
+
+	private static bool JitCompileGemm(in GemmInfo info, out GemmJitter jitter)
+	{
+		IntPtr handle;
+		switch (info.type)
+		{
+			case DataType.RealFloat32:
+				NM.mkl_jit_create_sgemm(out handle, MklMatrixLayout.ColMajor, info.opA.ToMkl(), info.opB.ToMkl(), info.m, info.n, info.k, info.α.Real.As<Float64, Float32>(), info.lda, info.ldb, info.β.Real.As<Float64, Float32>(), info.ldc);
+				break;
+			case DataType.RealFloat64:
+				NM.mkl_jit_create_dgemm(out handle, MklMatrixLayout.ColMajor, info.opA.ToMkl(), info.opB.ToMkl(), info.m, info.n, info.k, info.α.Real, info.lda, info.ldb, info.β.Real, info.ldc);
+				break;
+			case DataType.ComplexFloat32:
+				NM.mkl_jit_create_cgemm(out handle, MklMatrixLayout.ColMajor, info.opA.ToMkl(), info.opB.ToMkl(), info.m, info.n, info.k, info.α.As<Complex<Float64>, Complex<Float32>>(), info.lda, info.ldb, info.β.As<Complex<Float64>, Complex<Float32>>(), info.ldc);
+				break;
+			case DataType.ComplexFloat64:
+				NM.mkl_jit_create_zgemm(out handle, MklMatrixLayout.ColMajor, info.opA.ToMkl(), info.opB.ToMkl(), info.m, info.n, info.k, info.α, info.lda, info.ldb, info.β, info.ldc);
+				break;
+			default:
+				handle = default;
+				break;
+		}
+		jitter = new(handle);
+		return handle != default;
+	}
+
+	private Helpers.CandidateCacher<GemmInfo, GemmJitter> cacher;
+
 	/// <inheritdoc/>
 	public void Dispose()
 	{
-		foreach (var kv in this.compiled)
-		{
-			kv.Value.locker.EnterWriteLock();
-			try
-			{
-				NM.mkl_jit_destroy(kv.Value.jitter);
-			}
-			finally
-			{
-				kv.Value.locker.ExitWriteLock();
-				kv.Value.locker.Dispose();
-			}
-		}
+		this.cacher.Dispose();
 		this.Disposed = true;
 		GC.SuppressFinalize(this);
 	}
@@ -203,23 +262,23 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IHal
 	public bool Disposed { get; protected set; } = false;
 
 	/// <summary>
-	/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").
-	/// </summary>
-	public bool ComplexGemmUseGemm3M { get; set; } = true;
-
-	/// <summary>
 	/// Whether this implementation shall MKL GEMM JIT compiler to cache the frequently used GEMMs or not. If it is enabled, <see cref="ComplexGemmUseGemm3M"/> will be ignored. Default false.
 	/// </summary>
 	/// <remarks>It will only be better than the traditional ones when the GEMMs with same parameters are invoked more than several hundred of times.</remarks>
-	public bool GemmJitCache { get; set; } = false;
+	public bool GemmJitCache => this.cacher.IsValid();
+
+	/// <summary>
+	/// Get the threshold of number of invocations before start MKL GEMM JIT compile the GEMM with certain parameters.
+	/// </summary>
+	public int GemmJitThreshold => this.cacher.HitCountThreshold;
 
 	/// <summary>
 	/// Get or set the maximum queue size of the MKL GEMM JIT candidates of the GEMMs with different parameter setup.
 	/// </summary>
 	public int GemmJitCandidateSize
 	{
-		get => this.candidates.EnsureCapacity(1);
-		set => this.candidates.EnsureCapacity(value);
+		get => this.cacher.CandidateCapacity;
+		set => this.cacher.CandidateCapacity = value;
 	}
 
 	/// <summary>
@@ -227,20 +286,14 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IHal
 	/// </summary>
 	public int GemmJitSize
 	{
-		get => this.compiled.EnsureCapacity(1);
-		set => this.compiled.EnsureCapacity(value);
+		get => this.cacher.CacheCapacity;
+		set => this.cacher.CacheCapacity = value;
 	}
 
 	/// <summary>
-	/// Get or set the threshold of number of invocations before start MKL GEMM JIT compile the GEMM with certain parameters.
+	/// Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").
 	/// </summary>
-	public int GemmJitThreshold { get; set; } = 100;
-
-	private readonly Dictionary<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc), int> candidates = new(128);
-	private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc)> candidatesQueue = new(128);
-
-	private readonly Dictionary<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc), (IntPtr jitter, ReaderWriterLockSlim locker)> compiled = new(16);
-	private readonly Queue<(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc)> compiledQueue = new(16);
+	public bool ComplexGemmUseGemm3M { get; set; } = true;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static void RealToComp<TComp>(TComp* real, TComp* comp, long n) where TComp : unmanaged, IBaseNumber<TComp>

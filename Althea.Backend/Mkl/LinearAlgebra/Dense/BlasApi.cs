@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Threading;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -433,6 +432,8 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		{
 			if (α == T.Zero)
 				throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
+			if (typeof(T) != typeof(Float32) && typeof(T) != typeof(Float64) && typeof(T) != typeof(Complex<Float32>) && typeof(T) != typeof(Complex<Float64>))
+				return false;
 			opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
 			if (!GetPointer(A, opA.CanInPlace() ? m : k, opA.CanInPlace() ? k : m, lda, out T* pA))
 				return false;
@@ -441,133 +442,48 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 			if (!GetPointer(C, m, n, ldc, out T* pC))
 				return false;
 
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			bool NoJitGemm()
-			{
-				var funcRe = default(T) switch
-				{
-					Float32 => new NM.cblas_gemm<Float32>(NM.cblas_sgemm) as NM.cblas_gemm<T>,
-					Float64 => new NM.cblas_gemm<Float64>(NM.cblas_dgemm) as NM.cblas_gemm<T>,
-					_ => null,
-				};
-				var funcCm = default(T) switch
-				{
-					Complex<Float32> when !this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<Float32>>(NM.cblas_cgemm) as NM.cblas_gemm_comp<T>,
-					Complex<Float32> when this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<Float32>>(NM.cblas_cgemm3m) as NM.cblas_gemm_comp<T>,
-					Complex<Float64> when !this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<Float64>>(NM.cblas_zgemm) as NM.cblas_gemm_comp<T>,
-					Complex<Float64> when this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<Float64>>(NM.cblas_zgemm3m) as NM.cblas_gemm_comp<T>,
-					_ => null,
-				};
-				if (opA == MatrixOperation.Conjugate && opB == MatrixOperation.Conjugate)
-				{
-					funcRe?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
-					funcCm?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
-					Conjugater.Conjugate(pC, m, n, ldc);
-				}
-				else
-				{
-					using var conjA = Conjugater.Create(pA, opA.CanInPlace() ? m : k, opA.CanInPlace() ? k : m, lda, ref opA);
-					using var conjB = Conjugater.Create(pB, opB.CanInPlace() ? k : n, opB.CanInPlace() ? n : k, ldb, ref opB);
-					funcRe?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
-					funcCm?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
-				}
-				return funcRe != null || funcCm != null;
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			bool JitGemm((MatrixOperation opA, MatrixOperation opB, long m, long n, long k, Complex<Float64> α, Complex<Float64> β, long lda, long ldb, long ldc) key, (IntPtr jitter, ReaderWriterLockSlim locker) jit)
-			{
-				// compute
-				jit.locker.EnterReadLock();
-				try
-				{
-					delegate*<IntPtr, delegate* unmanaged<IntPtr, T*, T*, T*, void>> getGemmFunc = default(T) switch
-					{
-						Float32 => &NM.mkl_jit_get_sgemm_ptr,
-						Float64 => &NM.mkl_jit_get_dgemm_ptr,
-						Complex<Float32> => &NM.mkl_jit_get_cgemm_ptr,
-						Complex<Float64> => &NM.mkl_jit_get_zgemm_ptr,
-						_ => null,
-					};
-					if (getGemmFunc is null)
-						return false;
-					var func = getGemmFunc(jit.jitter);
-					func(jit.jitter, pA, pB, pC);
-				}
-				finally
-				{
-					jit.locker.ExitReadLock();
-				}
-				// dispose old if necessary
-				lock (this)
-				{
-					this.compiledQueue.Enqueue(key);
-					if (this.compiledQueue.Count >= this.GemmJitSize)
-					{
-						key = this.compiledQueue.Dequeue();
-						this.compiled.Remove(key, out jit);
-						jit.locker.EnterWriteLock();
-						try
-						{
-							var err = NM.mkl_jit_destroy(jit.jitter);
-							if (err != MklJitStatus.Success)
-								throw new StatusException(err);
-						}
-						finally
-						{
-							jit.locker.ExitWriteLock();
-							jit.locker.Dispose();
-						}
-					}
-				}
-				return true;
-			}
-
 			if (!this.GemmJitCache || opA == MatrixOperation.Conjugate || opB == MatrixOperation.Conjugate)
 			{
-				return NoJitGemm();
+				goto NoJitGemm;
 			}
 			else
 			{
-				var key = (opA, opB, m, n, k, α.As<T, Complex<Float64>>(), β.As<T, Complex<Float64>>(), lda, ldb, ldc);
-				if (this.candidates.TryGetValue(key, out int hitCount))
-					this.candidates[key] = ++hitCount;
-				else if (!this.compiled.TryGetValue(key, out var jit))
-				{
-					this.candidatesQueue.Enqueue(key);
-					this.candidates[key] = hitCount = 1;
-					if (this.candidatesQueue.Count >= this.GemmJitCandidateSize)
-					{
-						var keyNew = this.candidatesQueue.Dequeue();
-						this.candidates.Remove(keyNew);
-					}
-				}
-				else
-					return JitGemm(key, jit);
-				if (hitCount < this.GemmJitThreshold)
-					return NoJitGemm();
-				// compile
-				var funcRe = default(T) switch
-				{
-					Float32 => new NM.mkl_jit_create_gemm<Float32>(NM.mkl_jit_create_sgemm) as NM.mkl_jit_create_gemm<T>,
-					Float64 => new NM.mkl_jit_create_gemm<Float64>(NM.mkl_jit_create_dgemm) as NM.mkl_jit_create_gemm<T>,
-					_ => null,
-				};
-				var funcCm = default(T) switch
-				{
-					Complex<Float32> => new NM.mkl_jit_create_gemm_comp<Complex<Float32>>(NM.mkl_jit_create_cgemm) as NM.mkl_jit_create_gemm_comp<T>,
-					Complex<Float64> => new NM.mkl_jit_create_gemm_comp<Complex<Float64>>(NM.mkl_jit_create_zgemm) as NM.mkl_jit_create_gemm_comp<T>,
-					_ => null,
-				};
-				if (funcRe == null && funcCm == null)
-					return false;
-				IntPtr jitter = default;
-				funcRe?.Invoke(out jitter, MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, lda, ldb, β, ldc);
-				funcCm?.Invoke(out jitter, MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, lda, ldb, β, ldc);
-				this.candidates.Remove(key);
-				var jitNew = (jitter, new ReaderWriterLockSlim());
-				return JitGemm(key, jitNew);
+				var key = new GemmInfo(opA, opB, m, n, k, α.As<T, Complex<Float64>>(), β.As<T, Complex<Float64>>(), lda, ldb, ldc, T.Type);
+				if (!this.cacher.TryGetValue(key, out var jitter))
+					goto NoJitGemm;
+				var func = jitter.GetFunc<T>();
+				func(jitter.Handle, pA, pB, pC);
+				return true;
 			}
+		NoJitGemm:
+			var funcRe = default(T) switch
+			{
+				Float32 => new NM.cblas_gemm<Float32>(NM.cblas_sgemm) as NM.cblas_gemm<T>,
+				Float64 => new NM.cblas_gemm<Float64>(NM.cblas_dgemm) as NM.cblas_gemm<T>,
+				_ => null,
+			};
+			var funcCm = default(T) switch
+			{
+				Complex<Float32> when !this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<Float32>>(NM.cblas_cgemm) as NM.cblas_gemm_comp<T>,
+				Complex<Float32> when this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<Float32>>(NM.cblas_cgemm3m) as NM.cblas_gemm_comp<T>,
+				Complex<Float64> when !this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<Float64>>(NM.cblas_zgemm) as NM.cblas_gemm_comp<T>,
+				Complex<Float64> when this.ComplexGemmUseGemm3M => new NM.cblas_gemm_comp<Complex<Float64>>(NM.cblas_zgemm3m) as NM.cblas_gemm_comp<T>,
+				_ => null,
+			};
+			if (opA == MatrixOperation.Conjugate && opB == MatrixOperation.Conjugate)
+			{
+				funcRe?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
+				funcCm?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
+				Conjugater.Conjugate(pC, m, n, ldc);
+			}
+			else
+			{
+				using var conjA = Conjugater.Create(pA, opA.CanInPlace() ? m : k, opA.CanInPlace() ? k : m, lda, ref opA);
+				using var conjB = Conjugater.Create(pB, opB.CanInPlace() ? k : n, opB.CanInPlace() ? n : k, ldb, ref opB);
+				funcRe?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
+				funcCm?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
+			}
+			return funcRe != null || funcCm != null;
 		}
 
 		/// <inheritdoc/>

@@ -274,5 +274,69 @@ namespace Althea.Backend
 		/// <inheritdoc/>
 		public Random.IAbstractApi? Random => RN;
 	}
+
+	/// <summary>
+	/// The back-ends for CUDA implementations.
+	/// </summary>
+	public sealed class CudaBackend : IBackends
+	{
+		/// <inheritdoc/>
+		public bool Available => Cuda.Runtime.Available;
+
+		private readonly Cuda.Storage.Api ST = new();
+		private readonly Cuda.LinearAlgebra.Dense.Api LAD = new();
+		private readonly Cuda.LinearAlgebra.Sparse.Api LAS = new();
+		private readonly Cuda.Random.Api RN = new();
+		private readonly Cuda.Transformer.Api TF = new();
+		private readonly Cuda.TensorAlgebra.Dense.Api TAD = new();
+
+		/// <inheritdoc/>
+		public Althea.Storage.IAbstractApi? Storage => ST;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IExtendBlasAbstractApi? LinearAlgebraDenseExtendBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IBlasAbstractApi? LinearAlgebraDenseBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.ICopyAbstractApi? LinearAlgebraDenseCopy => ST;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.ILapackAbstractApi? LinearAlgebraDenseLapack => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IConversionAbstractApi? LinearAlgebraSparseConversion => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IIndexOperationAbstractApi? LinearAlgebraSparseIndexOperation => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IComputationAbstractApi? LinearAlgebraSparseComputation => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi? LinearAlgebraSparseDynamicIndexOperation => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IBaseAbstractApi? TensorAlgebraDenseBase => TAD;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IDynamicExtendAbstractApi? TensorAlgebraDenseDynamicExtend => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IExtendAbstractApi? TensorAlgebraDenseExtend => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Sparse.IAbstractApi? TensorAlgebraSparse => null;
+
+		/// <inheritdoc/>
+		public Transformer.IAbstractApi? Transformer => TF;
+
+		/// <inheritdoc/>
+		public Random.IAbstractApi? Random => RN;
+	}
 	#endregion
 }

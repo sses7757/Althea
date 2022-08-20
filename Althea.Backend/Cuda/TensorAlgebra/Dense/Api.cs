@@ -19,15 +19,15 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense;
 /// </summary>
 public unsafe class Api : IBindedDevice, IBaseAbstractApi
 {
-	// TODO: limited-sized cache
 	#region basic
 	internal readonly CudaTensorHandle handle;
 
 	/// <summary>
-	/// Default constructor
+	/// Default constructor that enables simple contraction plan cacher with cache size = 16
 	/// </summary>
 	public Api()
 	{
+		this.cacher = new(16);
 		NM.cutensorInit(out this.handle).Check();
 		this.ContractAlgorithm = ContractionAlgorithm.Default;
 		this.BindedDeviceID = Runtime.CurrentDeviceID;
@@ -42,12 +42,20 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 	/// <inheritdoc/>
 	public virtual void Dispose()
 	{
-		lock (this)
-		{
-			this.contractCache.Clear();
-		}
+		this.cacher.Dispose();
 		this.Disposed = true;
 		GC.SuppressFinalize(this);
+	}
+
+	private LimitSizedCacher<ContractionInfo, ContractPlanFinal> cacher;
+
+	/// <summary>
+	/// Get or set the capacity of contract plan cacher
+	/// </summary>
+	public int ContractPlanCacheSize
+	{
+		get => this.cacher.Capacity;
+		set => this.cacher.Capacity = value;
 	}
 
 	/// <summary>
@@ -159,7 +167,13 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		public unsafe override int GetHashCode() => HashCode.Combine(this.A, this.B, this.C, this.info, this.algorithm);
 	}
 
-	private readonly Dictionary<ContractionInfo, (ContractPlan plan, long workspace)> contractCache = new();
+	private readonly record struct ContractPlanFinal(ContractPlan Plan, long WorkSpace) : IDisposable
+	{
+		public void Dispose()
+		{
+			// do nothing
+		}
+	}
 	#endregion
 
 	#region methods
@@ -253,15 +267,15 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		if (!GetPointer(this, destination.ValueStorage, destination.Size, destination.OuterSize, out T* pC))
 			return false;
 		var key = ContractionInfo.Create(left, right, destination, info, this.ContractAlgorithm);
-		if (!contractCache.ContainsKey(key))
+		if (!this.cacher.TryGetValue(key, out var value))
 		{
 			if (!ContractDescription.TryCreate(this, left, right, destination, destination, info, out var descr))
 				return false;
 			if (!ContractPlan.TryCreate(this.handle, &descr, in this._algorithmFind, out var plan0, out long workspace0))
 				return false;
-			contractCache.Add(key, (plan0, workspace0));
+			this.cacher.Add(key, new(plan0, workspace0));
 		}
-		var (plan, workspace) = contractCache[key];
+		var (plan, workspace) = value;
 		using var buffer = CudaBuffer.Create(workspace);
 		T alpha = left.Scalar * right.Scalar, beta = destination.Scalar;
 		return NM.cutensorContraction(this.handle, in plan, &alpha, pA, pB, &beta, pC, pC, buffer, workspace, null).Check();

@@ -23,7 +23,7 @@ namespace Althea.GeneralSolvers.Krylov
 		/// <remarks>Only <paramref name="info"/>'s <see cref="KrylovSubspaceSolveInfo{T, TVec}.MatrixFunction"/>, <see cref="KrylovSubspaceSolveInfo{T, TVec}.InitialVector"/> and <see cref="KrylovSubspaceSolveInfo{T, TVec}.MaxRestarts"/> are used as inputs. Its <see cref="KrylovSubspaceSolveInfo{T, TVec}.OtherVector"/> is used as the output eigenvector.</remarks>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> contains invalid value</exception>
 		[AbstractApiMethod]
-		public abstract bool NaiveKrylovSubspaceEigenHermitain<T, TVec>(ref KrylovSubspaceSolveInfo<T, TVec> info, out (double Value, TVec Vector) eigen) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>;
+		public abstract bool NaiveKrylovSubspaceEigenHermitain<T, TVec>(ref KrylovSubspaceSolveInfo<T, TVec> info, out (T Value, TVec Vector) eigen) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.

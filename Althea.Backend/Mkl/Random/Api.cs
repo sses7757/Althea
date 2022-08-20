@@ -13,13 +13,13 @@ using NM = Althea.Backend.Mkl.Random.NativeMethods;
 
 namespace Althea.Backend.Mkl.Random
 {
-    /// <summary>
-    /// The MKL back-end of the <see cref="Althea.Random.IAbstractApi"/> that supports filling CPU arrays with a variety kinds of distributions.
-    /// </summary>
-    /// <remarks>Only use the <see cref="GeneratorType.SFMT19937"/> is used currently, but the other generator type's support can be easily added.<br/>
-    /// Only the default generating algorithms are used currently, but other ones can be easily added.<br/>
-    /// Since using the same MKL VSL stream results to thread blockage, this class utilizes a <see cref="ThreadLocal{T}"/> generator to make sure that multi-threading in C# works properly.</remarks>
-    public unsafe class Api : Althea.Random.IAbstractApi
+	/// <summary>
+	/// The MKL back-end of the <see cref="Althea.Random.IAbstractApi"/> that supports filling CPU arrays with a variety kinds of distributions.
+	/// </summary>
+	/// <remarks>Only use the <see cref="GeneratorType.SFMT19937"/> is used currently, but the other generator type's support can be easily added.<br/>
+	/// Only the default generating algorithms are used currently, but other ones can be easily added.<br/>
+	/// Since using the same MKL VSL stream results to thread blockage, this class utilizes a <see cref="ThreadLocal{T}"/> generator to make sure that multi-threading in C# works properly.</remarks>
+	public unsafe class Api : Althea.Random.IAbstractApi
 	{
 		#region basic
 		private readonly ThreadLocal<(IntPtr stream, uint seed)> generator;

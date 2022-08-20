@@ -208,8 +208,8 @@ public struct CandidateCacher<TKey, TValue> : ICacher<TKey, TValue>
 	/// The delegate which will be invoked to generate a <typeparamref name="TValue"/> from given  <typeparamref name="TKey"/>.
 	/// </summary>
 	/// <param name="key">The key used to generate <typeparamref name="TValue"/></param>
-	/// <returns>The generated <typeparamref name="TValue"/>.</returns>
-	public delegate TValue ValueFactory(in TKey key);
+	/// <param name="value">The generated <typeparamref name="TValue"/>.</param>
+	public delegate bool ValueFactory(in TKey key, [MaybeNullWhen(false)] out TValue value);
 
 	/// <summary>
 	/// Create a new <see cref="CandidateCacher{TKey, TValue}"/> with given initial <paramref name="cacheSize"/> and <paramref name="candidateSize"/> and constant <paramref name="hitCountThreshold"/>.
@@ -295,7 +295,8 @@ public struct CandidateCacher<TKey, TValue> : ICacher<TKey, TValue>
 			{
 				this.candidates[key] = ++hitCount;
 			}
-			value = this.factory.Invoke(in key);
+			if (!this.factory.Invoke(in key, out value))
+				return false;
 			return hitCount < this.HitCountThreshold || this.cached.Add(in key, value);
 		}
 	}

@@ -8,10 +8,10 @@ using Althea.Helpers;
 
 namespace Althea.Backend.Cuda.Storage
 {
-    /// <summary>
-    /// The CUDA back-end of the <see cref="IAbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABIs are found.
-    /// </summary>
-    public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
+	/// <summary>
+	/// The CUDA back-end of the <see cref="IAbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABIs are found.
+	/// </summary>
+	public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
 	{
 		#region basic
 		internal static readonly Api Default = new(false);
@@ -19,7 +19,12 @@ namespace Althea.Backend.Cuda.Storage
 		private readonly ConcurrentDictionary<IntPtr, IntPtr>? fileBuffers;
 
 		/// <summary>
-		/// Create a <see cref="Api"/> with given meta data
+		/// The default constructor of <see cref="Api"/> that does not support CUDA File
+		/// </summary>
+		public Api() : this(false) { }
+
+		/// <summary>
+		/// Create a <see cref="Api"/> with <paramref name="supportCuFile"/> or not
 		/// </summary>
 		/// <param name="supportCuFile">Whether this class shall enables CUDA GPUDirect Storage or not</param>
 		/// <remarks>If the invocation of <see cref="NativeMethods.cuFileDriverOpen"/> failed, the caller must invoke that method when available later</remarks>

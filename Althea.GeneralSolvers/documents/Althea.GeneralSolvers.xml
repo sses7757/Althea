@@ -1,0 +1,625 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Althea.GeneralSolvers</name>
+    </assembly>
+    <members>
+        <member name="T:Althea.GeneralSolvers.Kronecker.IAbstractApi">
+            <summary>
+            The abstract interface for runtime Kronecker multiply related API routines 
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Kronecker.IAbstractApi.KroneckerMultiplyVector``3(System.Boolean,``0,``1,``1,``2@,``0)">
+            <summary>
+            When implemented by a derived class, compute the product of the Kronecker Multiply or Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> op <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c> where '<c>op</c>' is '⨁' if <paramref name="multiply"/> is false or '⨂' otherwise.
+            </summary>
+            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.GeneralSolvers.Kronecker.IConvertibleMatrix`3"/></typeparam>
+            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.GeneralSolvers.Kronecker.IConvertibleVector`3"/></typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <param name="multiply">Whether to perform Kronecker multiply or Kronecker sum</param>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="leftMatrix">The input left matrix to perform the Kronecker multiply/sum</param>
+            <param name="rightMatrix">The input right matrix to perform the Kronecker multiply/sum</param>
+            <param name="vector">The input / output vector</param>
+            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Kronecker.Backend.Api">
+            <summary>
+            The C# back-end of <see cref="T:Althea.GeneralSolvers.Kronecker.IAbstractApi"/> that utilizes other APIs and thus has no specific supporting storage locations
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Kronecker.Backend.Api.Disposed">
+            <inheritdoc/>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Kronecker.Backend.Api.Default">
+            <summary>
+            Get the default <see cref="T:Althea.GeneralSolvers.Kronecker.Backend.Api"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Kronecker.Backend.Api.KroneckerMultiplyVector``3(System.Boolean,``0,``1,``1,``2@,``0)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Kronecker.IConvertibleMatrix`3">
+            <summary>
+            The interface of matrices that can be converted to vectors.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TMat">The concrete matrix type</typeparam>
+            <typeparam name="TVec">The concrete vector type</typeparam>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Kronecker.IConvertibleMatrix`3.ToVector">
+            <summary>
+            When implemented by a derived class, convert this matrix to a vector of type <typeparamref name="TVec"/>
+            </summary>
+            <returns>The converted vector as a <typeparamref name="TVec"/> that shall NOT contain any referenced storage.</returns>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Kronecker.IConvertibleVector`3">
+            <summary>
+            The interface of vectors that can be converted to matrices.
+            </summary>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <typeparam name="TMat">The concrete matrix type</typeparam>
+            <typeparam name="TVec">The concrete vector type</typeparam>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Kronecker.IConvertibleVector`3.ToMatrix(System.Int64)">
+            <summary>
+            When implemented by a derived class, convert this vector to a matrix of type <typeparamref name="TMat"/>
+            </summary>
+            <param name="rows">The number of rows of the target matrix</param>
+            <returns>The converted matrix as a <typeparamref name="TMat"/> that shall NOT contain any referenced storage.</returns>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.IAbstractApi">
+            <summary>
+            The abstract interface for runtime general Krylov subspace matrix solver API routines 
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IAbstractApi.NaiveKrylovSubspaceEigenHermitain``2(Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{``0,``1}@)">
+            <summary>
+            When implemented by a derived class, perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolvers.Krylov.IKrylovVector`2"/></typeparam>
+            <param name="info">The <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <param name="eigen">The output approximate lowest eigenvalue and corresponding eigenvector</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks>Only <paramref name="info"/>'s <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.MatrixFunction"/>, <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.InitialVector"/> and <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.MaxRestarts"/> are used as inputs. Its <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output eigenvector.</remarks>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IAbstractApi.RestartKrylovSubspaceEigen``2(System.Boolean,Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@,System.Int32@)">
+            <summary>
+            When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolvers.Krylov.IKrylovVector`2"/></typeparam>
+            <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
+            <param name="info">The <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <param name="converged">Output the number of converged eigen-pairs</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> are not used</remarks>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IAbstractApi.RestartKrylovSubspaceLinearSolve``2(System.Nullable{System.Boolean},Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{``1,System.Double}@)">
+            <summary>
+            When implemented by a derived class, perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolvers.Krylov.IKrylovVector`2"/></typeparam>
+            <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
+            <param name="info">The <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <param name="solve">Output the solve vector and the corresponding relative error</param>
+            <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
+            <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output solve.</remarks>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.Backend.Api">
+            <summary>
+            The C# back-end of <see cref="T:Althea.GeneralSolvers.Krylov.IAbstractApi"/> that utilizes other APIs and thus has no specific supporting storage locations
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Backend.Api.Disposed">
+            <inheritdoc/>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.Backend.Api.Default">
+            <summary>
+            Get the default <see cref="T:Althea.GeneralSolvers.Krylov.Backend.Api"/>.
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Backend.Api.InfoLogInterval">
+            <summary>
+            Get or set the interval between two <see cref="M:Althea.Helpers.Log.Write(System.String,System.String,Althea.Helpers.LogLevel)"/> with <see cref="F:Althea.Helpers.LogLevel.Information"/> when using Krylov subspace algorithms
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Backend.Api.MaxStagnationSteps">
+            <summary>
+            Get or set the maximum number of stagnation steps allowed for Krylov subspace linear system solvers.
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.Backend.Api.NaiveKrylovSubspaceEigenHermitain``2(Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{``0,``1}@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.Backend.Api.RestartKrylovSubspaceEigen``2(System.Boolean,Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@,System.Int32@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.Backend.Api.RestartKrylovSubspaceLinearSolve``2(System.Nullable{System.Boolean},Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{``1,System.Double}@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.IKrylovVector`2">
+            <summary>
+            The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
+            </summary>
+            <typeparam name="TVec">The concrete vector type</typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.IKrylovVector`2.Length">
+            <summary>
+            When implemented by a derived class, get the total presenting length of this vector
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IKrylovVector`2.FillWith(`0)">
+            <summary>
+            When implemented by a derived class, fill this vector with the given <paramref name="value"/>
+            </summary>
+            <param name="value">The value to fill</param>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IKrylovVector`2.Scale(`0)">
+            <summary>
+            When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
+            </summary>
+            <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IKrylovVector`2.Norm">
+            <summary>
+            When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
+            </summary>
+            <returns>The 2-norm of this vector</returns>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IKrylovVector`2.Normalize">
+            <summary>
+            When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
+            </summary>
+            <exception cref="T:System.DivideByZeroException">If the 2-norm of this array is 0</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IKrylovVector`2.Dot(`1)">
+            <summary>
+            When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
+            </summary>
+            <param name="other">The other <typeparamref name="TVec"/> to perform the dot product</param>
+            <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IKrylovVector`2.AddBy(`1,`0)">
+            <summary>
+            When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
+            </summary>
+            <param name="other">The other <typeparamref name="TVec"/> to add</param>
+            <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IKrylovVector`2.ReplaceBy(`1)">
+            <summary>
+            When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
+            </summary>
+            <param name="other">The other <typeparamref name="TVec"/> to replace from</param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+            <exception cref="T:System.InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.IKrylovVector`2.Empty">
+            <summary>
+            When implemented by a derived class, statically get an empty <typeparamref name="TVec"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IKrylovVector`2.OperateOn(System.ReadOnlySpan{`1},System.ReadOnlySpan{`0})">
+            <summary>
+            Statically multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="T:System.ReadOnlySpan`1"/> and obtain the result vector as a <typeparamref name="TVec"/>.
+            </summary>
+            <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
+            <param name="input">The input dense vector to be multiplied as a <see cref="T:System.ReadOnlySpan`1"/></param>
+            <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <typeparamref name="TVec"/></returns>
+            <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
+            <exception cref="T:System.ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.RestartStrategy">
+            <summary>
+            The <see cref="T:Althea.GeneralSolvers.Krylov.RestartStrategy"/> indicates which strategy shall be adopted by the thick restart Krylov subspace algorithms.
+            </summary>
+            <remarks>Other non built-in strategies are possible and they work as long as there exists implementation supporting them.</remarks>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.RestartStrategy.Naive">
+            <summary>
+            The naïve strategy which only preserve the lowest Ritz eigen-pair and converged ones.
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.RestartStrategy.IndexBased">
+            <summary>
+            Based on the index of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
+            $$k=n_c+\min{\left\{n_{\mathrm{eig}},\left(p-n_c\right)\left(\frac{2}{5}+\frac{n_{\mathrm{eig}}}{10p}\right)\right\}}$$
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.RestartStrategy.CurrentResidualBest">
+            <summary>
+            Based on the residual of Ritz eigen-pairs, preserve the smallest $k$ ones: <br/>
+            $$k=\underset{i}{\mathrm{argmax}}\left( \left| s_{n,i} \right| &lt; \max\left\{ \sqrt{\left| s_{n,n_{\mathrm{eig}}} \right|\max_{j}\left| s_{n,j} \right|},2\left| s_{n,n_{\mathrm{eig}}} \right| \right\} \right)$$
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.RestartStrategy.OneStepResidualImprove">
+            <summary>
+            Based on the improvement of residual of Ritz eigen-pairs of single iteration after the restart, preserve the smallest $k$ ones: <br/>
+            $$k=\max{\left\{n_{\mathrm{eig}},\frac{3p+2n_c}{5}\right\}}$$
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.RestartStrategy.WholeIterResidualImprove">
+            <summary>
+            Based on the improvement of residual of Ritz eigen-pairs of all iterations after the restart, preserve the smallest $k$ ones: <br/>
+            $$k=\underset{k}{\max}{\left(p-k\right)\frac{\lambda_{k+1}-\lambda_1}{\lambda_m-\lambda_1}}$$
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.RestartStrategy.KrylovSchur">
+            <summary>
+            The heuristic used by Krylov-Schur algorithm to prevent stagnating
+            </summary>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod">
+            <summary>
+            The <see cref="T:Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod"/> indicates which method shall be used to re-orthogonalize with the previous basis in Krylov subspace algorithms.
+            </summary>
+            <remarks>Other non built-in methods are possible and they work as long as there exists implementation supporting them.</remarks>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod.None">
+            <summary>
+            Do not perform re-orthogonalization, <b>this may lead to serious problems, e.g. Lanczos may never converge</b>
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod.Selective">
+            <summary>
+            Selective re-orthogonalize, let the internal heuristic to determine when and which basis to re-orthogonalize
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod.Full">
+            <summary>
+            Perform full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="F:Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod.Selective"/> one does not perform well
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod.RobustFull">
+            <summary>
+            Perform robust full re-orthogonalization at each iteration, this may lead to extra performance loss, especially when the problem size is small. You can use this method when the <see cref="F:Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod.Selective"/> one does not perform well
+            </summary>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.WhichEigenvalues">
+            <summary>
+            The <see cref="T:Althea.GeneralSolvers.Krylov.WhichEigenvalues"/> indicates which eigen-pairs are desired in Krylov subspace algorithms of non-hermitian matrices.
+            </summary>
+            <remarks>Other non built-in desired parts are possible and they work as long as there exists implementation supporting them.</remarks>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.WhichEigenvalues.LargestAbsolute">
+            <summary>
+            The eigenvalues with largest absolute values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.WhichEigenvalues.LargestReal">
+            <summary>
+            The eigenvalues with largest real part values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.WhichEigenvalues.LargestAbsoluteImaginary">
+            <summary>
+            The eigenvalues with largest imaginary part's absolute values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.WhichEigenvalues.SmallestAbsolute">
+            <summary>
+            The eigenvalues with smallest absolute values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.WhichEigenvalues.SmallestReal">
+            <summary>
+            The eigenvalues with smallest real part values are desired
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.WhichEigenvalues.SmallestAbsoluteImaginary">
+            <summary>
+            The eigenvalues with smallest imaginary part's absolute values are desired
+            </summary>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.IPreserveSelector">
+            <summary>
+            The interface for a user-defined (or a built in) restart strategy
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.IPreserveSelector.Strategy">
+            <summary>
+            When implemented by a derived class, get the <see cref="T:Althea.GeneralSolvers.Krylov.RestartStrategy"/> of this selector
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.IPreserveSelector.PreserveSelect``1(Althea.GeneralSolvers.Krylov.WhichEigenvalues,System.ReadOnlySpan{``0},System.ReadOnlySpan{``0},Althea.Helpers.ReadOnlySpanMatrix{``0},System.Int32,System.Int32,System.Int32,System.Span{System.Int32},System.Boolean)">
+            <summary>
+            When implemented by a derived class, compute which Ritz pairs to preserve according to the current restart strategy.
+            </summary>
+            <typeparam name="T">Any unmanaged floating point number as the data type</typeparam>
+            <param name="which">The <see cref="T:Althea.GeneralSolvers.Krylov.WhichEigenvalues"/> to indicate which eigenvalues are desired</param>
+            <param name="estimateEigvals">The Ritz values, with or without converged ones</param>
+            <param name="estimateEigvalsImag"><paramref name="estimateEigvals"/>'s imaginary part if the eigenvalues are complexes or empty otherwise</param>
+            <param name="estimateEigvecs">The Ritz vectors, with or without converged ones. This shall be a square matrix of column major.</param>
+            <param name="nConverged">The number of converged eigen-pairs</param>
+            <param name="nTarget">The number of smallest eigen-pairs wanted</param>
+            <param name="maxIter">The maximum number of iteration (per restart)</param>
+            <param name="selectOrder">The span used to put the result: the <paramref name="estimateEigvals"/>[i] with larger <paramref name="selectOrder"/>[i] will be selected</param>
+            <param name="withConverged">Whether <paramref name="estimateEigvals"/> and <paramref name="estimateEigvecs"/> contains the first <paramref name="nConverged"/> ones</param>
+            <returns>The number of eigen-pairs which shall be selected.</returns>
+            <remarks>This method will only be invoked internally.</remarks>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2">
+            <summary>
+            The information ref struct used as input and output of Krylov subspace methods.
+            </summary>
+            <typeparam name="T">Any floating point number as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolvers.Krylov.IKrylovVector`2"/></typeparam>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.MatrixFunction">
+            <summary>
+            The function that represents the multiplication of the target matrix and any input vector <typeparamref name="TVec"/> which returns the multiplication result as a <typeparamref name="TVec"/>
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.PreconditionMatrixFunction">
+            <summary>
+            The function that represents the hermitian positive definite preconditioner's matrix-solve function which returns the result of its inverse multiplying the input vector <typeparamref name="TVec"/>
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.InitialVector">
+            <summary>
+            The initial vector as a <typeparamref name="TVec"/>
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.OtherVector">
+            <summary>
+            The other vector used as a <typeparamref name="TVec"/>
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.Tolerance">
+            <summary>
+            The tolerance of the convergence, default 0 means <c><see cref="P:Althea.Numerics.IBaseNumber`1.MachinePrecision"/> ^ 0.9</c>
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.PreserveSelector">
+            <summary>
+            The <see cref="T:Althea.GeneralSolvers.Krylov.IPreserveSelector"/> used for selecting the preservation Ritz pairs, default null means <c>new <see cref="M:Althea.GeneralSolvers.Krylov.BuiltInPreserveSelector.#ctor(Althea.GeneralSolvers.Krylov.RestartStrategy)">BuiltInRestartStrategy</see>(<see cref="T:Althea.GeneralSolvers.Krylov.RestartStrategy"/>)</c>.
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.Eigenvalues">
+            <summary>
+            The output converged eigenvalues sorted by the given order of <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>. The length will be set to the number of converged eigenvalues at exit.
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag">
+            <summary>
+            Another <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.Eigenvalues"/> if the matrix is not hermitian and <typeparamref name="T"/> is not a complex.
+            </summary>
+            <remarks>When <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i] is not, <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i + 1] shall be its negation.</remarks>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.Eigenvectors">
+            <summary>
+            The output converged eigenvectors, sorted with <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.Eigenvalues"/> or <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>.
+            </summary>
+            <remarks>For real-typed <typeparamref name="T"/>, when <c><see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i]</c> is not 0, <c><see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i]</c> will contain the corresponding real parts of the actual <c>eigenvector[i]</c> and <c>eigenvector[i + 1]</c>, while <c><see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/>[i + 1]</c> will contain the imaginary parts for <c>eigenvector[i]</c> and <c>-eigenvector[i + 1]</c>.</remarks>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.NumberEigenvaluesDesired">
+            <summary>
+            Only the top <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.NumberEigenvaluesDesired"/> eigen-pairs of <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/> are the targets. DO NOT set a large value since the Krylov subspace algorithms are not designed for it.
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.MaxRestarts">
+            <summary>
+            The maximum number of restarts, must be positive. Or the total number of iterations if the implementation solver does not restarts.
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.IterationsPerRestart">
+            <summary>
+            The iteration number per restart, default 0 means letting internal implementation determine
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.ReorthogonalizeMethod">
+            <summary>
+            The <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.ReorthogonalizeMethod"/> to indicate which re-orthogonalization method to use
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired">
+            <summary>
+            The <see cref="T:Althea.GeneralSolvers.Krylov.WhichEigenvalues"/> to indicate which kind of eigenvalues (and the corresponding eigenvectors) are desired
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.UseGapEstimation">
+            <summary>
+            Whether to use the estimated gap in the convergence criteria or use the matrix norm, default true. If the gap can be especially difficult to estimate, this shall be set to false.
+            </summary>
+        </member>
+        <member name="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.CheckMatrixFunction">
+            <summary>
+            Whether to check the <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.MatrixFunction"/> with <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.InitialVector"/> at first. If true, there will be some performance loss.
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Int32,System.Boolean)">
+            <summary>
+            Create a <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> of the given naïve hermitian matrix eigen-solve problem
+            </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">I  <paramref name="maxIter"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Span{`0},System.Span{`0},System.Span{`1},System.Int32,Althea.GeneralSolvers.Krylov.WhichEigenvalues,System.Int32,System.Int32,System.Double,Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod,Althea.GeneralSolvers.Krylov.IPreserveSelector,System.Boolean,System.Boolean)">
+            <summary>
+            Create a <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> of the given non-hermitian matrix eigen-solve problem
+            </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+            <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/>, <paramref name="outputRealEigenvectors"/> is too short</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,System.Span{`0},System.Span{`1},System.Int32,System.Int32,System.Int32,System.Double,Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod,Althea.GeneralSolvers.Krylov.IPreserveSelector,System.Boolean,System.Boolean)">
+            <summary>
+            Create a <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> of the given hermitian matrix eigen-solve problem
+            </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/>, <paramref name="nEig"/> or <paramref name="tolerance"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+            <exception cref="T:System.ArgumentException">If any of <paramref name="outputEigenvalues"/> or <paramref name="outputEigenvectors"/> is too short</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},`1,`1,System.Func{`1,`1},System.Int32,System.Int32,System.Double,Althea.GeneralSolvers.Krylov.ReorthogonalizeMethod,Althea.GeneralSolvers.Krylov.IPreserveSelector,System.Boolean,System.Boolean)">
+            <summary>
+            Create a <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> of the given (non-)hermitian matrix solve problem.<br/>
+            The hermitian positive definite preconditioner <paramref name="M"/> can be null to represent no preconditioning.<br/>
+            The solver shall effectively solve the linear system <c>Hˉ¹ * A * (H')ˉ¹ * y == Hˉ¹ * b</c> for <c>y</c> where <c>y = H' * <paramref name="rightSide"/></c> and <c>M = H * H'</c>.
+            </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="iterPerRestart"/>, <paramref name="maxRestarts"/> or <paramref name="tolerance"/> is out of range</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="rightSide"/> or <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.#ctor(System.Func{`1,`1},System.Func{`1,`1},`1,`1,Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{`0,`1}@)">
+            <summary>
+            Create a <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> from an <paramref name="old"/> one
+            </summary>
+            <exception cref="T:Althea.Helpers.TypeMismatchException">If <typeparamref name="T"/> is not a floating-point type</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="initial"/> or <paramref name="matrixFunction"/> is null</exception>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.Resource">
+            <summary>
+              一个强类型的资源类，用于查找本地化的字符串等。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.ResourceManager">
+            <summary>
+              返回此类使用的缓存的 ResourceManager 实例。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.Culture">
+            <summary>
+              重写当前线程的 CurrentUICulture 属性，对
+              使用此强类型资源类的所有资源查找执行重写。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.CompareComplex">
+            <summary>
+              查找类似 Cannot compare complex numbers of type {0}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.GenericNotNormalReal">
+            <summary>
+              查找类似 The (complex) number {0} is not close enough to a normal real number. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.GMRESConverge">
+            <summary>
+              查找类似 Generalized Minimal Residual algorithm converged after {0} restarts. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.GMRESFail">
+            <summary>
+              查找类似 Generalized Minimal Residual algorithm failed to converged after {0} restarts, current residual = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.GMRESStart">
+            <summary>
+              查找类似 Generalized Minimal Residual algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.InsufficientCudaCapability">
+            <summary>
+              查找类似 The CUDA compute capability {0} of current CUDA device is less than required {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.IterationAndTimeInfo">
+            <summary>
+              查找类似 Krylov subspace algorithm: now at iteration {0}, {1} passed since last output. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.KrylovSchurConverge">
+            <summary>
+              查找类似 Krylov-Schur algorithm converged after {0} restarts. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.KrylovSchurFail">
+            <summary>
+              查找类似 Krylov-Schur algorithm failed to converged after {0} restarts, still {1} eigen-pairs left. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.KrylovSchurStart">
+            <summary>
+              查找类似 Krylov-Schur algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.LanczosConvergeOnePair">
+            <summary>
+              查找类似 Restarting Lanczos algorithm found that the {0} eigen-pair converges. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.MinResFinish">
+            <summary>
+              查找类似 Preconditioned Minimal Residual algorithm main calculation finishes, relative error = {0} (desired = {1}). 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.MinResStart">
+            <summary>
+              查找类似 Preconditioned Minimal Residual algorithm statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.NaiveLanczosFinish">
+            <summary>
+              查找类似 Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.NaiveLanczosStart">
+            <summary>
+              查找类似 Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.NotPositiveDefinite">
+            <summary>
+              查找类似 The given matrix is not a hermitian-positive-definite matrix. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.PCGFinish">
+            <summary>
+              查找类似 Preconditioned Conjugate Gradient algorithm main calculation finishes, relative error = {0} (desired = {1}). 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.PCGStart">
+            <summary>
+              查找类似 Preconditioned Conjugate Gradient algorithm statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.RestartLanczosConverge">
+            <summary>
+              查找类似 Restarting Lanczos algorithm converged after {0} restarts. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.RestartLanczosFail">
+            <summary>
+              查找类似 Restarting Lanczos algorithm failed to converged after {0} restarts, still {1} eigen-pairs left. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.RestartLanczosStart">
+            <summary>
+              查找类似 Restarting Lanczos algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.RestartWarn1">
+            <summary>
+              查找类似 Restarting with only one preserved Ritz pair may never improve the result. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.RestartWarn2">
+            <summary>
+              查找类似 Restarting while preserving more than half Ritz pairs may not improve the result. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Resource.TooMuchEigenvaluesRequired">
+            <summary>
+              查找类似 The number of smallest eigenvalues required ({0}) is larger than the desired value, maybe the native eigen solver is a better option. 的本地化字符串。
+            </summary>
+        </member>
+    </members>
+</doc>

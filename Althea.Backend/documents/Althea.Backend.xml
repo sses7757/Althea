@@ -169,6 +169,62 @@
         <member name="P:Althea.Backend.MklBackend.Random">
             <inheritdoc/>
         </member>
+        <member name="T:Althea.Backend.CudaBackend">
+            <summary>
+            The back-ends for CUDA implementations.
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.Available">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.Storage">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraDenseHalfMatrixBlas">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraDenseExtendBlas">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraDenseBlas">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraDenseCopy">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraDenseLapack">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraSparseConversion">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraSparseIndexOperation">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraSparseComputation">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.LinearAlgebraSparseDynamicIndexOperation">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.TensorAlgebraDenseBase">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.TensorAlgebraDenseDynamicExtend">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.TensorAlgebraDenseExtend">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.TensorAlgebraSparse">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.Transformer">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.CudaBackend.Random">
+            <inheritdoc/>
+        </member>
         <member name="T:Althea.Backend.CSharp.LinearAlgebra.Api">
             <summary>
             The C# back-end of <see cref="T:Althea.LinearAlgebra.Dense.IBlasAbstractApi"/> that utilizes <see cref="N:System.Runtime.Intrinsics"/> and <see cref="T:System.Numerics.Vector`1"/>.<br/>
@@ -1708,6 +1764,11 @@
         <member name="T:Althea.Backend.Cuda.Runtime">
             <summary>
             The static class for static global methods and properties of 
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Cuda.Runtime.Available">
+            <summary>
+            Check whether CUDA is available or not
             </summary>
         </member>
         <member name="M:Althea.Backend.Cuda.Runtime.GetDeviceComputeCapability(System.Int32)">
@@ -3697,9 +3758,14 @@
             The CUDA back-end of the <see cref="T:Althea.Storage.IAbstractApi"/> that supports data transfer between GPU, CPU and managed memories. May support GPUDirect® Storage that directly transfer data between files and GPU if the corresponding ABIs are found.
             </summary>
         </member>
+        <member name="M:Althea.Backend.Cuda.Storage.Api.#ctor">
+            <summary>
+            The default constructor of <see cref="T:Althea.Backend.Cuda.Storage.Api"/> that does not support CUDA File
+            </summary>
+        </member>
         <member name="M:Althea.Backend.Cuda.Storage.Api.#ctor(System.Boolean)">
             <summary>
-            Create a <see cref="T:Althea.Backend.Cuda.Storage.Api"/> with given meta data
+            Create a <see cref="T:Althea.Backend.Cuda.Storage.Api"/> with <paramref name="supportCuFile"/> or not
             </summary>
             <param name="supportCuFile">Whether this class shall enables CUDA GPUDirect Storage or not</param>
             <remarks>If the invocation of <see cref="M:Althea.Backend.Cuda.Storage.NativeMethods.cuFileDriverOpen"/> failed, the caller must invoke that method when available later</remarks>
@@ -4429,7 +4495,7 @@
         </member>
         <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.#ctor">
             <summary>
-            Default constructor
+            Default constructor that enables simple contraction plan cacher with cache size = 16
             </summary>
         </member>
         <member name="P:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.BindedDeviceID">
@@ -4440,6 +4506,11 @@
         </member>
         <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.ContractPlanCacheSize">
+            <summary>
+            Get or set the capacity of contract plan cacher
+            </summary>
         </member>
         <member name="P:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.ContractAlgorithm">
             <summary>
@@ -4779,6 +4850,11 @@
             The CUDA back-end of the dense tensor algebra <see cref="T:Althea.Transformer.IAbstractApi"/> that utilizes cuFFT
             </summary>
         </member>
+        <member name="M:Althea.Backend.Cuda.Transformer.Api.#ctor">
+            <summary>
+            The default constructor of <see cref="T:Althea.Backend.Cuda.Transformer.Api"/> with simple FFT plan cache of size 16
+            </summary>
+        </member>
         <member name="P:Althea.Backend.Cuda.Transformer.Api.Disposed">
             <inheritdoc/>
         </member>
@@ -4895,22 +4971,33 @@
             </summary>
             <remarks>The general SVD and general Schur decompositions are not supported, but can be added simply.</remarks>
         </member>
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.#ctor">
+            <summary>
+            The default constructor of <see cref="T:Althea.Backend.Mkl.LinearAlgebra.Dense.Api"/> that sets the <see cref="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GemmJitThreshold"/> to 100
+            </summary>
+        </member>
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.#ctor(System.Int32)">
+            <summary>
+            The constructor of <see cref="T:Althea.Backend.Mkl.LinearAlgebra.Dense.Api"/> that indicates the <see cref="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GemmJitThreshold"/>
+            </summary>
+            <param name="gemmJitThreshold">If this value ≤ 0, JIT will be disabled</param>
+        </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.Dispose">
             <inheritdoc/>
         </member>
         <member name="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.Disposed">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.ComplexGemmUseGemm3M">
-            <summary>
-            Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").
-            </summary>
-        </member>
         <member name="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GemmJitCache">
             <summary>
             Whether this implementation shall MKL GEMM JIT compiler to cache the frequently used GEMMs or not. If it is enabled, <see cref="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.ComplexGemmUseGemm3M"/> will be ignored. Default false.
             </summary>
             <remarks>It will only be better than the traditional ones when the GEMMs with same parameters are invoked more than several hundred of times.</remarks>
+        </member>
+        <member name="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GemmJitThreshold">
+            <summary>
+            Get the threshold of number of invocations before start MKL GEMM JIT compile the GEMM with certain parameters.
+            </summary>
         </member>
         <member name="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GemmJitCandidateSize">
             <summary>
@@ -4922,9 +5009,9 @@
             Get or set the maximum number of the MKL GEMM JIT compiled parameter setups.
             </summary>
         </member>
-        <member name="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GemmJitThreshold">
+        <member name="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.ComplexGemmUseGemm3M">
             <summary>
-            Get or set the threshold of number of invocations before start MKL GEMM JIT compile the GEMM with certain parameters.
+            Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").
             </summary>
         </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HorizontalAbsoluteValueArgMinMax``2(System.Boolean,``1,System.Int32,System.Int64@)">

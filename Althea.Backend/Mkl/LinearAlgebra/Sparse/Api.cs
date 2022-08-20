@@ -20,32 +20,15 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse;
 public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractApi, IIndexOperationAbstractApi
 {
 	#region basic
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void FreeSparseMatrix(IntPtr handle)
-	{
-		var err = NM.mkl_sparse_destroy(handle);
-		if (err != MklSparseBlasError.Success)
-			Helpers.Log.Write($"Error in disposing MKL Sparse BLAS and LAPACK library: {err}", level: Helpers.LogLevel.Error);
-	}
-
 	/// <inheritdoc/>
-	public void Dispose()
+	public virtual void Dispose()
 	{
-		foreach (var kv in this.mvCache)
-			FreeSparseMatrix(kv.Value);
-		foreach (var kv in this.mmCache)
-			FreeSparseMatrix(kv.Value);
 		this.Disposed = true;
 		GC.SuppressFinalize(this);
 	}
 
 	/// <inheritdoc/>
 	public bool Disposed { get; protected set; } = false;
-
-	private readonly Dictionary<(object matrix, MatrixOp trans), IntPtr> mvCache = new();
-	private readonly Dictionary<(object matrix, MatrixOp trans, long cols), IntPtr> mmCache = new();
-
-	// TODO: support cache
 	#endregion
 
 	#region vector conversion

@@ -13,7 +13,7 @@ using static Althea.Backend.Cuda.MemoryPointerChecker;
 
 namespace Althea.Backend.Cuda
 {
-    public static partial class StatusExtension
+	public static partial class StatusExtension
 	{
 		/// <summary>
 		/// Check whether the input <see cref="CudaTensorStatus"/> is success or not and throw exception if it is not
@@ -33,8 +33,8 @@ namespace Althea.Backend.Cuda
 
 namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 {
-    #region operations
-    internal enum CuTensorBinary
+	#region operations
+	internal enum CuTensorBinary
 	{
 		/// <summary>
 		/// Addition of two elements

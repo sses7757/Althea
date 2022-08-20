@@ -7083,7 +7083,7 @@
             The delegate which will be invoked to generate a <typeparamref name="TValue"/> from given  <typeparamref name="TKey"/>.
             </summary>
             <param name="key">The key used to generate <typeparamref name="TValue"/></param>
-            <returns>The generated <typeparamref name="TValue"/>.</returns>
+            <param name="value">The generated <typeparamref name="TValue"/>.</param>
         </member>
         <member name="M:Althea.Helpers.CandidateCacher`2.#ctor(System.Int32,System.Int32,System.Int32,Althea.Helpers.CandidateCacher{`0,`1}.ValueFactory)">
             <summary>
@@ -8608,6 +8608,221 @@
         <member name="T:Althea.Helpers.SpanMatrix`1.ColumnSwapping">
             <summary>
             The struct used for storing and swapping columns of <see cref="T:Althea.Helpers.SpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="T:Althea.Helpers.ReadOnlySpanMatrix`1">
+            <summary>
+            The matrix-like read-only span of column major whose internal implementation simply utilizes a fixed-sized <see cref="T:System.ReadOnlySpan`1"/>.
+            </summary>
+            <typeparam name="T">The data type</typeparam>
+        </member>
+        <member name="T:Althea.Helpers.ReadOnlySpanMatrix`1.Enumerator">
+            <summary>
+            The enumerator for a <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Enumerator.Current">
+            <summary>
+            Get the current
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.Enumerator.MoveNext">
+            <summary>
+            Move to the next element
+            </summary>
+            <returns>Whether there is a next element or not</returns>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Rows">
+            <summary>
+            Get the presenting number of rows of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Cols">
+            <summary>
+            Get the presenting number of columns of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.LeadDim">
+            <summary>
+            Get the leading dimension (the actual number of rows) of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.PresentingLength">
+            <summary>
+            Get the presenting length of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.IsEmpty">
+            <summary>
+            Check whether this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> is empty or not
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.UnderlyingReadOnlySpan">
+            <summary>
+            Get the underlying <see cref="T:System.ReadOnlySpan`1"/> of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Empty">
+            <summary>
+            Get an empty <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> without underlying <see cref="T:System.ReadOnlySpan`1"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.#ctor(System.ReadOnlySpan{`0},System.Int32,System.Int32)">
+            <summary>
+            Create an empty <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> with the underlying <see cref="T:System.ReadOnlySpan`1"/> as the input <paramref name="span"/> and the given <paramref name="leadingDim"/>
+            </summary>
+            <param name="span">The input underlying <see cref="T:System.ReadOnlySpan`1"/></param>
+            <param name="rows">The number of desired rows. (The number of columns are calculated.)</param>
+            <param name="leadingDim">The leading dimension of <paramref name="span"/>, default 0 means <paramref name="rows"/></param>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Item(System.Int32,System.Int32)">
+            <summary>
+            Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+            <param name="row">The row index of the element to get reference</param>
+            <param name="col">The column index of the element to get reference</param>
+            <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Item(System.Index,System.Index)">
+            <summary>
+            Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+            <param name="row">The row index of the element to get reference</param>
+            <param name="col">The column index of the element to get reference</param>
+            <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Item(System.Int32)">
+            <summary>
+            Get the column at <paramref name="columnIndex"/> of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> as a <see cref="T:System.ReadOnlySpan`1"/>
+            </summary>
+            <param name="columnIndex">The index of the column to get</param>
+            <returns>The column at <paramref name="columnIndex"/> as a <see cref="T:System.ReadOnlySpan`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.Slice(System.Int32,System.Int32)">
+            <summary>
+            Forms a slice out of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> staring at a specified <paramref name="column"/> for a specified <paramref name="count"/> of columns
+            </summary>
+            <param name="column">The index of the column at which to begin this slice</param>
+            <param name="count">The desired number of columns for the slice</param>
+            <returns>A <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> that consists of <paramref name="count"/> columns from the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> starting at the <paramref name="column"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="column"/> or <paramref name="count"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Count">
+            <summary>
+            Get the number of columns of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.SliceRow(System.Int32,System.Int32)">
+            <summary>
+            Forms a slice out of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> staring at a specified <paramref name="row"/> for a specified <paramref name="count"/> of rows
+            </summary>
+            <param name="row">The index of the row at which to begin this slice</param>
+            <param name="count">The desired number of columns for the slice</param>
+            <returns>A <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> that consists of <paramref name="count"/> rows from the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> starting at the <paramref name="row"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="count"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.SliceRow(System.Range)">
+            <summary>
+            Forms a slice out of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> with the given <paramref name="range"/> of rows
+            </summary>
+            <param name="range">The range of the rows to slice</param>
+            <returns>A <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> that consists of rows of <paramref name="range"/> of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="range"/> is out of range</exception>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.SubMatrix(System.Range,System.Range)">
+            <summary>
+            Forms a referenced sub-matrix of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+            </summary>
+            <param name="rowRange">The range of the rows to slice</param>
+            <param name="colRange">The range of the columns to slice</param>
+            <returns>A <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/></returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="rowRange"/> or <paramref name="colRange"/> is out of range</exception>
+        </member>
+        <member name="P:Althea.Helpers.ReadOnlySpanMatrix`1.Item(System.Range,System.Range)">
+            <summary>
+            Get the referenced sub-matrix of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+            </summary>
+            <param name="rowRange">The range of the rows to slice</param>
+            <param name="colRange">The range of the columns to slice</param>
+            <returns>A <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.op_Equality(Althea.Helpers.ReadOnlySpanMatrix{`0},Althea.Helpers.ReadOnlySpanMatrix{`0})">
+            <summary>
+            Equality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.op_Inequality(Althea.Helpers.ReadOnlySpanMatrix{`0},Althea.Helpers.ReadOnlySpanMatrix{`0})">
+            <summary>
+            Inequality operator
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.Equals(System.Object)">
+            <summary>
+            Checks whether the given <paramref name="obj"/> is the same as this one
+            </summary>
+            <param name="obj">The given object</param>
+            <returns>Equals or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.GetHashCode">
+            <summary>
+            Get the hash code of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+            <returns>The hash code</returns>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.GetEnumerator">
+            <summary>
+            Get the <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1.Enumerator"/> of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+            <returns>The enumerator of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.CopyRowTo(System.Int32,System.Span{`0})">
+            <summary>
+            Copy a specific <paramref name="row"/> of the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> to the <paramref name="destination"/> <see cref="T:System.ReadOnlySpan`1"/>
+            </summary>
+            <param name="row">The index of the row to copy</param>
+            <param name="destination">The <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is too short</exception>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.CopyTo(System.Span{`0})">
+            <summary>
+            Copy the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> to the <paramref name="destination"/> <see cref="T:System.ReadOnlySpan`1"/> column-by-column
+            </summary>
+            <param name="destination">The <see cref="T:System.ReadOnlySpan`1"/> to copy to</param>
+            <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is too short</exception>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.CopyTo(Althea.Helpers.SpanMatrix{`0})">
+            <summary>
+            Copy the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> to the <paramref name="destination"/> <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> column-by-column
+            </summary>
+            <param name="destination">The <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> to copy to</param>
+            <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is of different size</exception>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.CopyTo``1(System.Span{``0},System.Converter{`0,``0})">
+            <summary>
+            Copy the current <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> to the <paramref name="destination"/> <see cref="T:System.Span`1"/> column-by-column
+            </summary>
+            <param name="destination">The <see cref="T:System.Span`1"/> to copy to</param>
+            <param name="converter">The <see cref="T:System.Converter`2"/> used to change the data type</param>
+            <exception cref="T:System.ArgumentException">If <paramref name="destination"/> is too short</exception>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.ToString">
+            <summary>
+            Get the string representation of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
+            </summary>
+            <returns>The string representation of this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.ToArray">
+            <summary>
+            Convert this <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/> to an array of column arrays of type <typeparamref name="T"/>
+            </summary>
+            <returns>An array of column arrays of type <typeparamref name="T"/> holding the same values as this <see cref="T:Althea.Helpers.SpanList`1"/></returns>
+        </member>
+        <member name="M:Althea.Helpers.ReadOnlySpanMatrix`1.op_Implicit(Althea.Helpers.SpanMatrix{`0})~Althea.Helpers.ReadOnlySpanMatrix{`0}">
+            <summary>
+            Implicitly convert a <see cref="T:Althea.Helpers.SpanMatrix`1"/> to a <see cref="T:Althea.Helpers.ReadOnlySpanMatrix`1"/>
             </summary>
         </member>
         <member name="T:Althea.Helpers.ISwapper`1">

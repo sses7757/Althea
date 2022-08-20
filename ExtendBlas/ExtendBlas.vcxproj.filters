@@ -1,36 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CudaCompile Include="DenseVector.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
-    <CudaCompile Include="Matrix.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
-    <CudaCompile Include="SparseVector.cu">
-      <Filter>源文件</Filter>
-    </CudaCompile>
+	<CudaCompile Include="DenseVector.cu">
+	  <Filter>源文件</Filter>
+	</CudaCompile>
+	<CudaCompile Include="Matrix.cu">
+	  <Filter>源文件</Filter>
+	</CudaCompile>
+	<CudaCompile Include="SparseVector.cu">
+	  <Filter>源文件</Filter>
+	</CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="头文件">
-      <UniqueIdentifier>{37378cee-1cbf-4e86-9cb9-4bd3b72ad87f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件">
-      <UniqueIdentifier>{71873926-14b8-40e3-b7a7-30854b55add6}</UniqueIdentifier>
-    </Filter>
+	<Filter Include="头文件">
+	  <UniqueIdentifier>{37378cee-1cbf-4e86-9cb9-4bd3b72ad87f}</UniqueIdentifier>
+	</Filter>
+	<Filter Include="源文件">
+	  <UniqueIdentifier>{71873926-14b8-40e3-b7a7-30854b55add6}</UniqueIdentifier>
+	</Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="datatype.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="complex.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="blasSupp.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
+	<ClInclude Include="datatype.h">
+	  <Filter>头文件</Filter>
+	</ClInclude>
+	<ClInclude Include="complex.h">
+	  <Filter>头文件</Filter>
+	</ClInclude>
+	<ClInclude Include="blasSupp.h">
+	  <Filter>头文件</Filter>
+	</ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="cpp.hint" />
+	<None Include="cpp.hint" />
   </ItemGroup>
 </Project>
