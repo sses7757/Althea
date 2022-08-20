@@ -141,6 +141,9 @@
   <data name="EnumNotFlag" xml:space="preserve">
     <value>The given enum parameter must be a bit flag.</value>
   </data>
+  <data name="InvalidRank" xml:space="preserve">
+    <value>The given parameter has invalid / incorrect rank.</value>
+  </data>
   <data name="InvalidValue" xml:space="preserve">
     <value>The given parameter has invalid value.</value>
   </data>

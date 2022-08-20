@@ -3,7 +3,6 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
-using Althea.NativeTypes;
 using Althea.Resources;
 using Althea.SourceGenerator;
 using Althea.Storage;
@@ -41,7 +40,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// or <c><paramref name="destinationLD"/> and <paramref name="width"/> indicate size larger than <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
 		[AbstractApiMethod]
-		public abstract bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
+		public abstract bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth) where T : unmanaged, IBaseNumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
 
 		/// <summary>
 		/// When implemented by a derived class, copy the <paramref name="source"/> storage to <paramref name="destination"/> storage with given strides.<br/>
@@ -60,7 +59,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, long strideSource, PointerSegment<TP2> destination, long strideDestination, out long actualCopied) where T : unmanaged, INumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
+		public abstract bool StridedCopy<T, TP1, TP2>(PointerSegment<TP1> source, long strideSource, PointerSegment<TP2> destination, long strideDestination, out long actualCopied) where T : unmanaged, IBaseNumber<T> where TP1 : IPointer<TP1> where TP2 : IPointer<TP2>;
 		#endregion
 	}
 
@@ -71,13 +70,12 @@ namespace Althea.LinearAlgebra.Dense
 	public static class StorageExtension
 	{
 		#region method generators
-#pragma warning disable CS8601
-		internal static readonly MethodInfo SizeOfPointerMethod = typeof(IStorage).GetMethod(nameof(IStorage.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null);
-#pragma warning restore CS8601
-		private static Action<TS1, TS2, long, long, long, long> GetCopy2DMethod<T, TS1, TS2>() where T : unmanaged, INumber<T> where TS1 : class, IStorage where TS2 : class, IStorage
+		private static Action<TS1, TS2, long, long, long, long> GetCopy2DMethod<T, TS1, TS2>() where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<TS1> where TS2 : class, IStorage<TS2>
 		{
 			Type type1 = typeof(TS1), type2 = typeof(TS2);
-			MethodInfo[] pointerGetters1 = TS2.PointerGetters, pointerGetters2 = TS2.PointerGetters;
+			MethodInfo SizeOfPointerMethod1 = type1.GetMethod(nameof(IStorage<ManagedPureStorage<Float32>>.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null)!;
+			MethodInfo SizeOfPointerMethod2 = type2.GetMethod(nameof(IStorage<ManagedPureStorage<Float32>>.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null)!;
+			MethodInfo[] pointerGetters1 = TS1.PointerGetters, pointerGetters2 = TS2.PointerGetters;
 			MethodInfo[] pointerLen1 = new MethodInfo[pointerGetters1.Length], pointerMove1 = new MethodInfo[pointerGetters1.Length];
 			MethodInfo[] pointerLen2 = new MethodInfo[pointerGetters2.Length], pointerMove2 = new MethodInfo[pointerGetters2.Length];
 			MethodInfo[,] pointerCopy2D = new MethodInfo[pointerGetters1.Length, pointerGetters2.Length];
@@ -135,7 +133,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Ldc_I4, i);
-				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod);
+				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod1);
 				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, i); // long sizeSrcPointerI = src.SizeOfPointer(i);
 			}
@@ -143,7 +141,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				IL.Emit(OpCodes.Ldarg_1);
 				IL.Emit(OpCodes.Ldc_I4, j);
-				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod);
+				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod2);
 				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, j + pointerGetters1.Length); // long sizeDstPointerJ = dst.SizeOfPointer(i);
 			}
@@ -523,9 +521,11 @@ namespace Althea.LinearAlgebra.Dense
 		}
 
 
-		private static Action<TS1, TS2, long, long> GetCopyStridedMethod<T, TS1, TS2>() where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		private static Action<TS1, TS2, long, long> GetCopyStridedMethod<T, TS1, TS2>() where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			Type type1 = typeof(TS1), type2 = typeof(TS2);
+			MethodInfo SizeOfPointerMethod1 = type1.GetMethod(nameof(IStorage<ManagedPureStorage<Float32>>.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null)!;
+			MethodInfo SizeOfPointerMethod2 = type2.GetMethod(nameof(IStorage<ManagedPureStorage<Float32>>.SizeOfPointer), 0, BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(int) }, null)!;
 			MethodInfo[] pointerGetters1 = TS2.PointerGetters, pointerGetters2 = TS2.PointerGetters;
 			MethodInfo[] pointerLen1 = new MethodInfo[pointerGetters1.Length], pointerMove1 = new MethodInfo[pointerGetters1.Length];
 			MethodInfo[] pointerLen2 = new MethodInfo[pointerGetters2.Length], pointerMove2 = new MethodInfo[pointerGetters2.Length];
@@ -584,7 +584,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				IL.Emit(OpCodes.Ldarg_0);
 				IL.Emit(OpCodes.Ldc_I4, i);
-				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod);
+				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod1);
 				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, i); // long sizeSrcPointerI = src.SizeOfPointer(i);
 			}
@@ -592,7 +592,7 @@ namespace Althea.LinearAlgebra.Dense
 			{
 				IL.Emit(OpCodes.Ldarg_1);
 				IL.Emit(OpCodes.Ldc_I4, j);
-				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod);
+				IL.Emit(OpCodes.Callvirt, SizeOfPointerMethod2);
 				IL.DeclareLocal(typeof(long));
 				IL.Emit(OpCodes.Stloc_S, j + pointerGetters1.Length); // long sizeDstPointerJ = dst.SizeOfPointer(i);
 			}
@@ -974,8 +974,8 @@ namespace Althea.LinearAlgebra.Dense
 		/// or <c><paramref name="sourceLD"/> and <paramref name="width"/> indicate size larger than <paramref name="source"/>.<see cref="IStorage.LengthInBytes">Length</see></c>, 
 		/// or <c><paramref name="destinationLD"/> and <paramref name="width"/> indicate size larger than <paramref name="destination"/>.<see cref="IStorage.LengthInBytes">Length</see></c>
 		/// </exception>
-		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
-		public static void Copy2DTo<T, TS1, TS2>(this TS1 source, long sourceLD, TS2 destination, long destinationLD, long height, long width) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		/// <exception cref="InvalidOperationException">If <paramref name="source"/> overlaps with <paramref name="destination"/> or the <see cref="IStorage{TSelf}.PointerGetters"/> of <typeparamref name="TS1"/> or <typeparamref name="TS2"/> are not correct pointer property names</exception>
+		public static void Copy2DTo<T, TS1, TS2>(this TS1 source, long sourceLD, TS2 destination, long destinationLD, long height, long width) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -1005,7 +1005,7 @@ namespace Althea.LinearAlgebra.Dense
 			copier = GetCopy2DMethod<T, TS1, TS2>();
 			copy2DFunc[(handle1, handle2)] = copier;
 		FINAL:
-			((Action<TS1, TS2, long, long, long, long>)copier).Invoke(source, destination, sourceLD * Unmanaged<T>.Size, destinationLD * Unmanaged<T>.Size, height, width);
+			((Action<TS1, TS2, long, long, long, long>)copier).Invoke(source, destination, sourceLD * T.Size, destinationLD * T.Size, height, width);
 		}
 
 		/// <summary>
@@ -1019,7 +1019,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="destinationLD">The destination array's actual height (actual leading dimension) in <typeparamref name="T"/>, default 0 means the same as <paramref name="height"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/></param>
-		public static unsafe void ToManaged2D<T, TS>(this TS source, long sourceLD, Span<T> destination, long height, long width, long destinationLD = 0) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static unsafe void ToManaged2D<T, TS>(this TS source, long sourceLD, Span<T> destination, long height, long width, long destinationLD = 0) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (destinationLD == 0)
 				destinationLD = height;
@@ -1042,7 +1042,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="destinationLD">The destination array's actual height (actual leading dimension) in <typeparamref name="T"/></param>
 		/// <param name="height">The height to copy in <typeparamref name="T"/></param>
 		/// <param name="width">The width to copy in <typeparamref name="T"/></param>
-		public static unsafe void FromManaged2D<T, TS>(this Span<T> source, long destinationLD, TS destination, long height, long width, long sourceLD = 0) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static unsafe void FromManaged2D<T, TS>(this Span<T> source, long destinationLD, TS destination, long height, long width, long sourceLD = 0) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			if (sourceLD == 0)
 				sourceLD = height;
@@ -1071,7 +1071,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
-		public static long StridedCopyTo<T, TS1, TS2>(this TS1 source, long strideSource, TS2 destination, long strideDestination) where T : unmanaged, INumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public static long StridedCopyTo<T, TS1, TS2>(this TS1 source, long strideSource, TS2 destination, long strideDestination) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			if (!source.IsValid())
 				throw new ArgumentNullException(nameof(source));
@@ -1114,7 +1114,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
-		public static unsafe long ToManagedStride<T, TS>(this TS source, long strideSource, Span<T> destination, long strideDestination = 1) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static unsafe long ToManagedStride<T, TS>(this TS source, long strideSource, Span<T> destination, long strideDestination = 1) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			fixed (T* dst = destination)
 			{
@@ -1138,7 +1138,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <returns>The number of elements (in <typeparamref name="T"/>) actually copied.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
-		public static unsafe long FromManagedStride<T, TS>(this Span<T> source, long strideSource, TS destination, long strideDestination) where T : unmanaged, INumber<T> where TS : class, IStorage<T, TS>
+		public static unsafe long FromManagedStride<T, TS>(this Span<T> source, long strideSource, TS destination, long strideDestination) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			fixed (T* src = source)
 			{

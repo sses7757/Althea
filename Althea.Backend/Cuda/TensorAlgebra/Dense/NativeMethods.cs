@@ -1,71 +1,86 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 
-#pragma warning disable IDE1006 // 命名样式
-namespace Althea.Backend.Cuda.TensorAlgebra.Dense
+namespace Althea.Backend.Cuda.TensorAlgebra.Dense;
+
+/// <summary>
+/// The CUDA Tensor library native methods
+/// </summary>
+public static unsafe partial class NativeMethods
 {
-	/// <summary>
-	/// The CUDA Tensor library native methods
-	/// </summary>
-	public static class NativeMethods
-	{
-		/// <summary>
-		/// The CUDA Tensor library name
-		/// </summary>
-		public const string CUTENSOR_DLL_NAME = @"cutensor";
+	#region initialize
+	[DllImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static extern CudaTensorStatus cutensorInit(out CudaTensorHandle handle);
 
-		#region initialize
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorInit(ref byte handle);
+	[DllImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static extern CudaTensorStatus cutensorInitTensorDescriptor(in CudaTensorHandle handle, out TensorDescription desc, int numModes, in long extent, in long stride, CudaDataType dataType, CuTensorUnary unaryOp);
 
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorInitTensorDescriptor(CudaTensorHandle handle, out TensorDescription desc, int numModes, in long extent, in long stride, CudaDataType dataType, UnaryOperation unaryOp);
+	[DllImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static extern CudaTensorStatus cutensorGetAlignmentRequirement(in CudaTensorHandle handle, void* ptr, TensorDescription* desc, out int alignmentRequirement);
+	#endregion
 
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorGetAlignmentRequirement(CudaTensorHandle handle, IntPtr ptr, in TensorDescription desc, out int alignmentRequirement);
-		#endregion
+	#region permute
+	[LibraryImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static partial CudaTensorStatus cutensorPermutation(in CudaTensorHandle handle,
+		void* alpha, void* A, TensorDescription* descA, Span<int> modeA,
+		void* B, TensorDescription* descB, Span<int> modeB,
+		CudaDataType type, void* stream);
+	#endregion
 
-		#region permute
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static unsafe extern CudaTensorStatus cutensorPermutation(CudaTensorHandle handle, void* alpha, IntPtr A, in TensorDescription descA, in int modeA, IntPtr B, in TensorDescription descB, in int modeB, CudaDataType type, IntPtr stream);
-		#endregion
+	#region point-wise
+	[LibraryImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static partial CudaTensorStatus cutensorElementwiseBinary(in CudaTensorHandle handle,
+		void* alpha, void* A, TensorDescription* descA, Span<int> modeA,
+		void* gamma, void* C, TensorDescription* descC, Span<int> modeC,
+		void* D, TensorDescription* descD, Span<int> modeD,
+		CuTensorBinary opAC, CudaDataType typeScalar, void* stream);
 
-		#region point-wise
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static unsafe extern CudaTensorStatus cutensorElementwiseBinary(CudaTensorHandle handle, void* alpha, IntPtr A, in TensorDescription descA, in int modeA, void* gamma, IntPtr C, in TensorDescription descC, in int modeC, IntPtr D, in TensorDescription descD, in int modeD, BinaryOperation opAC, CudaDataType typeScalar, IntPtr stream);
+	[LibraryImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static partial CudaTensorStatus cutensorElementwiseTrinary(in CudaTensorHandle handle,
+		void* alpha, void* A, TensorDescription* descA, Span<int> modeA,
+		void* beta, void* B, TensorDescription* descB, Span<int> modeB,
+		void* gamma, void* C, TensorDescription* descC, Span<int> modeC,
+		void* D, TensorDescription* descD, Span<int> modeD,
+		CuTensorBinary opAB, CuTensorBinary opABC, CudaDataType typeScalar, void* stream);
+	#endregion
 
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static unsafe extern CudaTensorStatus cutensorElementwiseTrinary(CudaTensorHandle handle, void* alpha, IntPtr A, in TensorDescription descA, in int modeA, void* beta, IntPtr B, in TensorDescription descB, in int modeB, void* gamma, IntPtr C, in TensorDescription descC, in int modeC, IntPtr D, in TensorDescription descD, in int modeD, BinaryOperation opAB, BinaryOperation opABC, CudaDataType typeScalar, IntPtr stream);
-		#endregion
+	#region contraction
+	[LibraryImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static partial CudaTensorStatus cutensorInitContractionDescriptor(in CudaTensorHandle handle, ContractDescription* desc,
+		TensorDescription* descA, Span<int> modeA, int alignmentRequirementA,
+		TensorDescription* descB, Span<int> modeB, int alignmentRequirementB,
+		TensorDescription* descC, Span<int> modeC, int alignmentRequirementC,
+		TensorDescription* descD, Span<int> modeD, int alignmentRequirementD, ComputeType computeType);
 
-		#region contraction
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorInitContractionDescriptor(CudaTensorHandle handle, out ContractDescription desc,
-			in TensorDescription descA, in int modeA, int alignmentRequirementA,
-			in TensorDescription descB, in int modeB, int alignmentRequirementB,
-			in TensorDescription descC, in int modeC, int alignmentRequirementC,
-			in TensorDescription descD, in int modeD, int alignmentRequirementD, ComputeType computeType);
+	[DllImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static extern CudaTensorStatus cutensorInitContractionFind(in CudaTensorHandle handle, out ContractFind find, ContractionAlgorithm algo);
 
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorInitContractionFind(CudaTensorHandle handle, out ContractFind find, ContractionAlgorithm algo);
+	[DllImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static extern CudaTensorStatus cutensorContractionGetWorkspace(in CudaTensorHandle handle, ContractDescription* desc, in ContractFind find, WorkSpacePreference pref, out long workspaceSize);
 
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorContractionGetWorkspace(CudaTensorHandle handle, in ContractDescription desc, in ContractFind find, WorkSpacePreference pref, out long workspaceSize);
+	[DllImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static extern CudaTensorStatus cutensorInitContractionPlan(in CudaTensorHandle handle, out ContractPlan plan, ContractDescription* desc, in ContractFind find, long workspaceSize);
 
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorInitContractionPlan(CudaTensorHandle handle, out ContractPlan plan, in ContractDescription desc, in ContractFind find, long workspaceSize);
+	[LibraryImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static partial CudaTensorStatus cutensorContraction(in CudaTensorHandle handle, in ContractPlan plan,
+		void* alpha, void* A, void* B,
+		void* beta, void* C, void* D,
+		void* workspace, long workspaceSize, void* stream);
+	#endregion
 
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static unsafe extern CudaTensorStatus cutensorContraction(CudaTensorHandle handle, in ContractPlan plan, void* alpha, IntPtr A, IntPtr B, void* beta, IntPtr C, IntPtr D, IntPtr workspace, long workspaceSize, IntPtr stream);
-		#endregion
+	#region reduction
+	[LibraryImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static partial CudaTensorStatus cutensorReductionGetWorkspace(in CudaTensorHandle handle,
+		void* A, TensorDescription* descA, Span<int> modeA,
+		void* C, TensorDescription* descC, Span<int> modeC,
+		void* D, TensorDescription* descD, Span<int> modeD,
+		CuTensorBinary opReduce, ComputeType typeCompute, out long workspaceSize);
 
-		#region reduction
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static extern CudaTensorStatus cutensorReductionGetWorkspace(CudaTensorHandle handle, IntPtr A, in TensorDescription descA, in int modeA, IntPtr C, in TensorDescription descC, in int modeC, IntPtr D, in TensorDescription descD, in int modeD, BinaryOperation opReduce, ComputeType typeCompute, out long workspaceSize);
-
-		[DllImport(CUTENSOR_DLL_NAME)]
-		internal static unsafe extern CudaTensorStatus cutensorReduction(CudaTensorHandle handle, void* alpha, IntPtr A, in TensorDescription descA, in int modeA, void* beta, IntPtr C, in TensorDescription descC, in int modeC, IntPtr D, in TensorDescription descD, in int modeD, BinaryOperation opReduce, ComputeType typeCompute, IntPtr workspace, long workspaceSize, IntPtr stream);
-		#endregion
-	}
+	[LibraryImport(Cuda.NativeMethods.CUTENSOR_DLL_NAME)]
+	internal static partial CudaTensorStatus cutensorReduction(in CudaTensorHandle handle,
+		void* alpha, void* A, TensorDescription* descA, Span<int> modeA,
+		void* beta, void* C, TensorDescription* descC, Span<int> modeC,
+		void* D, TensorDescription* descD, Span<int> modeD,
+		CuTensorBinary opReduce, ComputeType typeCompute, void* workspace, long workspaceSize, void* stream);
+	#endregion
 }

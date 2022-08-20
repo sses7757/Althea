@@ -29,7 +29,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="sub"/>'s size is out of range</exception>
 		[AbstractApiMethod]
-		public abstract bool GetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ReadOnlySpan<long> offsets, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> sub) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+		public abstract bool GetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ReadOnlySpan<long> offsets, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> sub) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
 		/// When implemented by a derived class, set the sparse tensor <paramref name="source"/>'s slice indicated by <paramref name="offsets"/> and lengths in <paramref name="sub"/> of each dimension with the values of <paramref name="sub"/> sparse tensor.
@@ -48,7 +48,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="sub"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="offsets"/> or <paramref name="sub"/>'s size is out of range</exception>
 		[AbstractApiMethod]
-		public abstract bool SetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ReadOnlySpan<long> offsets, ISparseArray<T, TInd2, TS2, TSInd2> sub) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+		public abstract bool SetSlice<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, ReadOnlySpan<long> offsets, ISparseArray<T, TInd2, TS2, TSInd2> sub) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the sparse tensor <paramref name="source"/> to a dense tensor whose storage is <paramref name="destination"/> and outer size if <paramref name="outerSize"/>.
@@ -65,7 +65,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="outerSize"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="outerSize"/> is smaller than <paramref name="source"/> or its product is larger than <paramref name="destination"/>'s length</exception>
 		[AbstractApiMethod]
-		public abstract bool ToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> source, TS2 destination, ReadOnlySpan<long> outerSize) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool ToDense<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> source, TS2 destination, ReadOnlySpan<long> outerSize) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, convert the given dense tensor <paramref name="source"/> to a sparse tensor of the given format of <paramref name="destination"/>.
@@ -77,7 +77,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or format of <paramref name="destination"/> is not atomic</exception>
 		[AbstractApiMethod]
-		public abstract bool FromDense<T, TInd, TS1, TS2, TSInd>(DenseArrayWrapper<T, TS1> source, ref SparseArrayWrapper<T, TInd, TS2, TSInd> destination, double threshold = 0) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool FromDense<T, TInd, TS1, TS2, TSInd>(DenseArrayWrapper<T, TS1> source, ref SparseArrayWrapper<T, TInd, TS2, TSInd> destination, double threshold = 0) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and overwrite the result multiplied by <paramref name="scalar"/> to <paramref name="destination"/>.
@@ -96,7 +96,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
 		[AbstractApiMethod]
-		public abstract bool Permute<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> source, T scalar, UnaryOperation op, ReadOnlySpan<int> permutationOrder, DenseArrayWrapper<T, TS2> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Permute<T, TInd, TS1, TS2, TSInd>(ISparseArray<T, TInd, TS1, TSInd> source, T scalar, UnaryOperation op, ReadOnlySpan<int> permutationOrder, DenseArrayWrapper<T, TS2> destination) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and output the result multiplied by <paramref name="scalar"/> to <paramref name="destination"/>.
@@ -118,7 +118,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="permutationOrder"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
 		[AbstractApiMethod]
-		public abstract bool Permute<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, T scalar, UnaryOperation op, ReadOnlySpan<int> permutationOrder, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> destination) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+		public abstract bool Permute<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ISparseArray<T, TInd1, TS1, TSInd1> source, T scalar, UnaryOperation op, ReadOnlySpan<int> permutationOrder, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> destination) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
@@ -140,7 +140,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool OperationBinary<T, TInd, TS1, TS2, TS3, TSInd>(BinaryOperation binary, ISparseArray<T, TInd, TS1, TSInd>? left, ReadOnlySpan<int> leftPerm, T scalarLeft, UnaryOperation opLeft, Dense.DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool OperationBinary<T, TInd, TS1, TS2, TS3, TSInd>(BinaryOperation binary, ISparseArray<T, TInd, TS1, TSInd>? left, ReadOnlySpan<int> leftPerm, T scalarLeft, UnaryOperation opLeft, Dense.DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
@@ -168,7 +168,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool OperationBinary<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(BinaryOperation binary, ISparseArray<T, TInd1, TS1, TSInd1>? left, ReadOnlySpan<int> leftPerm, T scalarLeft, UnaryOperation opLeft, ISparseArray<T, TInd2, TS2, TSInd2>? right, ReadOnlySpan<int> rightPerm, T scalarRight, UnaryOperation opRight, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> destination) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TInd3 : unmanaged, IBinaryInteger<TInd3> where TS3 : class, IStorage<T, TS3> where TSInd3 : class, IStorage<TInd3, TSInd3>;
+		public abstract bool OperationBinary<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(BinaryOperation binary, ISparseArray<T, TInd1, TS1, TSInd1>? left, ReadOnlySpan<int> leftPerm, T scalarLeft, UnaryOperation opLeft, ISparseArray<T, TInd2, TS2, TSInd2>? right, ReadOnlySpan<int> rightPerm, T scalarRight, UnaryOperation opRight, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> destination) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS3 : class, IStorage<T, TS3> where TSInd3 : class, IStorage<TInd3, TSInd3>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and overwrite the result to <paramref name="destination"/>:<br/>
@@ -189,7 +189,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Reduce<T, TInd, TS1, TS2, TSInd>(ReduceOperation reduce, ISparseArray<T, TInd, TS1, TSInd> source, T α, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, Dense.DenseTensorWrapper<T, TS2> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool Reduce<T, TInd, TS1, TS2, TSInd>(ReduceOperation reduce, ISparseArray<T, TInd, TS1, TSInd> source, T α, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, Dense.DenseTensorWrapper<T, TS2> destination) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>:<br/>
@@ -212,7 +212,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
 		[AbstractApiMethod]
-		public abstract bool Reduce<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ReduceOperation reduce, ISparseArray<T, TInd1, TS1, TSInd1> source, T scalar, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> destination) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
+		public abstract bool Reduce<T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2>(ReduceOperation reduce, ISparseArray<T, TInd1, TS1, TSInd1> source, T scalar, UnaryOperation op, ReadOnlySpan<int> reduceDimensions, ref SparseArrayWrapper<T, TInd2, TS2, TSInd2> destination) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
@@ -233,7 +233,7 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="info"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
 		[AbstractApiMethod]
-		public abstract bool Contract<T, TInd, TS1, TS2, TS3, TSInd>(ISparseArray<T, TInd, TS1, TSInd> left, UnaryOperation opLeft, Dense.DenseTensorWrapper<T, TS2> right, TensorContractInfo info, Dense.DenseTensorWrapper<T, TS3> destination) where T : unmanaged, INumber<T> where TInd : unmanaged, IBinaryInteger<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool Contract<T, TInd, TS1, TS2, TS3, TSInd>(ISparseArray<T, TInd, TS1, TSInd> left, UnaryOperation opLeft, Dense.DenseTensorWrapper<T, TS2> right, TensorContractInfo info, Dense.DenseTensorWrapper<T, TS3> destination) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS1 : class, IStorage<T, TS1> where TSInd : class, IStorage<TInd, TSInd> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
@@ -262,6 +262,6 @@ namespace Althea.TensorAlgebra.Sparse
 		/// <exception cref="ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="info"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
 		[AbstractApiMethod]
-		public abstract bool Contract<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(T α, ISparseArray<T, TInd1, TS1, TSInd1> left, UnaryOperation opLeft, ISparseArray<T, TInd2, TS2, TSInd2> right, UnaryOperation opRight, in StorableContractInfo info, T β, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> destination, UnaryOperation opDst) where T : unmanaged, INumber<T> where TInd1 : unmanaged, IBinaryInteger<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInteger<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TInd3 : unmanaged, IBinaryInteger<TInd3> where TS3 : class, IStorage<T, TS3> where TSInd3 : class, IStorage<TInd3, TSInd3>;
+		public abstract bool Contract<T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3>(T α, ISparseArray<T, TInd1, TS1, TSInd1> left, UnaryOperation opLeft, ISparseArray<T, TInd2, TS2, TSInd2> right, UnaryOperation opRight, in StorableContractInfo info, T β, ref SparseArrayWrapper<T, TInd3, TS3, TSInd3> destination, UnaryOperation opDst) where T : unmanaged, IBaseNumber<T> where TInd1 : unmanaged, IBinaryInt<TInd1> where TS1 : class, IStorage<T, TS1> where TSInd1 : class, IStorage<TInd1, TSInd1> where TInd2 : unmanaged, IBinaryInt<TInd2> where TS2 : class, IStorage<T, TS2> where TSInd2 : class, IStorage<TInd2, TSInd2> where TInd3 : unmanaged, IBinaryInt<TInd3> where TS3 : class, IStorage<T, TS3> where TSInd3 : class, IStorage<TInd3, TSInd3>;
 	}
 }

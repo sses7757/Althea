@@ -391,6 +391,66 @@ namespace Datatype
 	} while (0)
 #endif
 
+#ifndef HAS_LDBL
+#define AUTO_REALTYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
+		{ \
+		case Datatype::RealSingle: \
+			return funcName<float>(__VA_ARGS__); \
+		case Datatype::RealDouble: \
+			return funcName<double>(__VA_ARGS__); \
+		case Datatype::RealInt8: \
+			return funcName<int8_t>(__VA_ARGS__); \
+		case Datatype::RealInt16: \
+			return funcName<int16_t>(__VA_ARGS__); \
+		case Datatype::RealInt32: \
+			return funcName<int32_t>(__VA_ARGS__); \
+		case Datatype::RealInt64: \
+			return funcName<int64_t>(__VA_ARGS__); \
+		case Datatype::RealUInt8: \
+			return funcName<uint8_t>(__VA_ARGS__); \
+		case Datatype::RealUInt16: \
+			return funcName<uint16_t>(__VA_ARGS__); \
+		case Datatype::RealUInt32: \
+			return funcName<uint32_t>(__VA_ARGS__); \
+		case Datatype::RealUInt64: \
+			return funcName<uint64_t>(__VA_ARGS__); \
+		default: \
+			UNSUPPORT(funcName, dataType, returnType); \
+		} \
+	} while (0)
+#else
+#define AUTO_REALTYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
+		{ \
+		case Datatype::RealSingle: \
+			return funcName<float>(__VA_ARGS__); \
+		case Datatype::RealDouble: \
+			return funcName<double>(__VA_ARGS__); \
+		case Datatype::RealLongDouble: \
+			return funcName<long double>(__VA_ARGS__); \
+		case Datatype::RealInt8: \
+			return funcName<int8_t>(__VA_ARGS__); \
+		case Datatype::RealInt16: \
+			return funcName<int16_t>(__VA_ARGS__); \
+		case Datatype::RealInt32: \
+			return funcName<int32_t>(__VA_ARGS__); \
+		case Datatype::RealInt64: \
+			return funcName<int64_t>(__VA_ARGS__); \
+		case Datatype::RealUInt8: \
+			return funcName<uint8_t>(__VA_ARGS__); \
+		case Datatype::RealUInt16: \
+			return funcName<uint16_t>(__VA_ARGS__); \
+		case Datatype::RealUInt32: \
+			return funcName<uint32_t>(__VA_ARGS__); \
+		case Datatype::RealUInt64: \
+			return funcName<uint64_t>(__VA_ARGS__); \
+		default: \
+			UNSUPPORT(funcName, dataType, returnType); \
+		} \
+	} while (0)
+#endif
+
 // automatically generate float and integer complex type switch functions
 #ifndef HAS_LDBL
 #define AUTO_COMPLEX_TYPE_FUNC(funcName, dataType, returnType, ...) do { \

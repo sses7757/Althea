@@ -3,6 +3,7 @@ global using System.Linq;
 global using System.Collections.Generic;
 
 global using Althea.Storage;
+global using Althea.Numerics;
 
 using System.Diagnostics;
 
@@ -160,9 +161,10 @@ namespace Althea.Backend
 		private readonly CSharp.Storage.Api ST = new();
 		private readonly CSharp.LinearAlgebra.Api LA = new();
 		private readonly CSharp.Random.Api RN = new();
+		private readonly CSharp.Transformer.Api TF = new();
 
 		/// <inheritdoc/>
-		public TensorAlgebra.Dense.IBaseAbstractApi? TensorAlgebraDenseBase => null;
+		public Althea.Storage.IAbstractApi? Storage => ST;
 
 		/// <inheritdoc/>
 		public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => null;
@@ -174,34 +176,167 @@ namespace Althea.Backend
 		public LinearAlgebra.Dense.IBlasAbstractApi? LinearAlgebraDenseBlas => LA;
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Sparse.IConversionAbstractApi? LinearAlgebraSparseConversion => LA;
-
-		/// <inheritdoc/>
-		public GeneralSolver.IAbstractApi? GeneralSolver => throw new NotImplementedException();
-
-		/// <inheritdoc/>
-		public Transformer.IAbstractApi? Transformer => null;
-
-		/// <inheritdoc/>
 		public LinearAlgebra.Dense.ICopyAbstractApi? LinearAlgebraDenseCopy => ST;
 
 		/// <inheritdoc/>
-		public Althea.Storage.IAbstractApi? Storage => ST;
+		public LinearAlgebra.Dense.ILapackAbstractApi? LinearAlgebraDenseLapack => LA;
 
 		/// <inheritdoc/>
-		public TensorAlgebra.Sparse.IAbstractApi? TensorAlgebraSparse => null;
+		public LinearAlgebra.Sparse.IConversionAbstractApi? LinearAlgebraSparseConversion => LA;
 
 		/// <inheritdoc/>
-		public LinearAlgebra.Dense.ILapackAbstractApi? LinearAlgebraDenseLapack => null;
+		public LinearAlgebra.Sparse.IIndexOperationAbstractApi? LinearAlgebraSparseIndexOperation => LA;
 
 		/// <inheritdoc/>
-		public Althea.Random.IAbstractApi? Random => RN;
+		public LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi? LinearAlgebraSparseDynamicIndexOperation => null;
 
 		/// <inheritdoc/>
 		public LinearAlgebra.Sparse.IComputationAbstractApi? LinearAlgebraSparseComputation => null;
 
 		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IBaseAbstractApi? TensorAlgebraDenseBase => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IDynamicExtendAbstractApi? TensorAlgebraDenseDynamicExtend => null;
+
+		/// <inheritdoc/>
 		public TensorAlgebra.Dense.IExtendAbstractApi? TensorAlgebraDenseExtend => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Sparse.IAbstractApi? TensorAlgebraSparse => null;
+
+		/// <inheritdoc/>
+		public Transformer.IAbstractApi? Transformer => TF;
+
+		/// <inheritdoc/>
+		public Random.IAbstractApi? Random => RN;
+	}
+
+	/// <summary>
+	/// The back-ends for MKL implementations.
+	/// </summary>
+	public sealed class MklBackend : IBackends
+	{
+		/// <inheritdoc/>
+		public bool Available => Mkl.Runtime.Available;
+
+		private readonly Mkl.Storage.Api ST = new();
+		private readonly Mkl.LinearAlgebra.Dense.Api LAD = new();
+		private readonly Mkl.LinearAlgebra.Sparse.Api LAS = new();
+		private readonly Mkl.Random.Api RN = new();
+		private readonly Mkl.Transformer.Api TF = new();
+
+		/// <inheritdoc/>
+		public Althea.Storage.IAbstractApi? Storage => ST;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IExtendBlasAbstractApi? LinearAlgebraDenseExtendBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IBlasAbstractApi? LinearAlgebraDenseBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.ICopyAbstractApi? LinearAlgebraDenseCopy => ST;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.ILapackAbstractApi? LinearAlgebraDenseLapack => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IConversionAbstractApi? LinearAlgebraSparseConversion => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IIndexOperationAbstractApi? LinearAlgebraSparseIndexOperation => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IComputationAbstractApi? LinearAlgebraSparseComputation => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi? LinearAlgebraSparseDynamicIndexOperation => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IBaseAbstractApi? TensorAlgebraDenseBase => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IDynamicExtendAbstractApi? TensorAlgebraDenseDynamicExtend => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IExtendAbstractApi? TensorAlgebraDenseExtend => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Sparse.IAbstractApi? TensorAlgebraSparse => null;
+
+		/// <inheritdoc/>
+		public Transformer.IAbstractApi? Transformer => TF;
+
+		/// <inheritdoc/>
+		public Random.IAbstractApi? Random => RN;
+	}
+
+	/// <summary>
+	/// The back-ends for CUDA implementations.
+	/// </summary>
+	public sealed class CudaBackend : IBackends
+	{
+		/// <inheritdoc/>
+		public bool Available => Cuda.Runtime.Available;
+
+		private readonly Cuda.Storage.Api ST = new();
+		private readonly Cuda.LinearAlgebra.Dense.Api LAD = new();
+		private readonly Cuda.LinearAlgebra.Sparse.Api LAS = new();
+		private readonly Cuda.Random.Api RN = new();
+		private readonly Cuda.Transformer.Api TF = new();
+		private readonly Cuda.TensorAlgebra.Dense.Api TAD = new();
+
+		/// <inheritdoc/>
+		public Althea.Storage.IAbstractApi? Storage => ST;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IExtendBlasAbstractApi? LinearAlgebraDenseExtendBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.IBlasAbstractApi? LinearAlgebraDenseBlas => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.ICopyAbstractApi? LinearAlgebraDenseCopy => ST;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Dense.ILapackAbstractApi? LinearAlgebraDenseLapack => LAD;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IConversionAbstractApi? LinearAlgebraSparseConversion => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IIndexOperationAbstractApi? LinearAlgebraSparseIndexOperation => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IComputationAbstractApi? LinearAlgebraSparseComputation => LAS;
+
+		/// <inheritdoc/>
+		public LinearAlgebra.Sparse.IDynamicIndexOperationAbstractApi? LinearAlgebraSparseDynamicIndexOperation => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IBaseAbstractApi? TensorAlgebraDenseBase => TAD;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IDynamicExtendAbstractApi? TensorAlgebraDenseDynamicExtend => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Dense.IExtendAbstractApi? TensorAlgebraDenseExtend => null;
+
+		/// <inheritdoc/>
+		public TensorAlgebra.Sparse.IAbstractApi? TensorAlgebraSparse => null;
+
+		/// <inheritdoc/>
+		public Transformer.IAbstractApi? Transformer => TF;
+
+		/// <inheritdoc/>
+		public Random.IAbstractApi? Random => RN;
 	}
 	#endregion
 }

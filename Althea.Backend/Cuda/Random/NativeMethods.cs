@@ -1,31 +1,24 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 
-#pragma warning disable IDE1006 // 命名样式
 namespace Althea.Backend.Cuda.Random
 {
 	/// <summary>
 	/// CUDA random number generator API
 	/// </summary>
-	public static class NativeMethods
+	public static unsafe class NativeMethods
 	{
-		/// <summary>
-		/// The CUDA Rand library name
-		/// </summary>
-		public const string CURAND_API_DLL_NAME = @"curand";
-
-		[DllImport(CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandCreateGenerator(out IntPtr generator, GeneratorType rngType);
 
-		[DllImport(CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandDestroyGenerator(IntPtr generator);
 
 		/// <summary>
 		/// Set the seed value of the pseudo-random number generator. All values of seed are valid. Different seeds will produce different sequences. Different seeds will often not be statistically correlated with each other, but some pairs of seed values may generate sequences which are statistically correlated.
 		/// </summary>
 		/// <returns>CudaRandomError</returns>
-		[DllImport(CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandSetPseudoRandomGeneratorSeed(IntPtr generator, ulong seed);
 
 		/// <summary>
@@ -33,7 +26,7 @@ namespace Althea.Backend.Cuda.Random
 		/// <br/>
 		/// All values of offset are valid.  The offset position is absolute, not relative to the current position in the sequence.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandSetGeneratorOffset(IntPtr generator, ulong offset);
 
 		/// <summary>
@@ -53,7 +46,7 @@ namespace Althea.Backend.Cuda.Random
 		/// </list>
 		/// </param>
 		/// <param name="order">Legal values of order for quasi-random generator is <see cref="Ordering.QuasiDefault"/></param>
-		[DllImport(CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandSetGeneratorOrdering(IntPtr generator, Ordering order);
 
 		/// <summary>
@@ -61,7 +54,7 @@ namespace Althea.Backend.Cuda.Random
 		/// <para/>
 		/// Legal values for <paramref name="dimensions"/> are 1 to 20000.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
 		internal static extern CudaRandomError curandSetQuasiRandomGeneratorDimensions(IntPtr generator, uint dimensions);
 
 		/// <summary>
@@ -69,71 +62,71 @@ namespace Althea.Backend.Cuda.Random
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="uint"/>s with every bit random.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGenerate(IntPtr generator, IntPtr deviceArray, long size);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGenerate(IntPtr generator, void* deviceArray, long size);
 
 		/// <summary>
 		/// Use generator to generate <paramref name="size"/> 64-bit unsigned integer results into the device memory at <paramref name="deviceArray"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="ulong"/>s with every bit random.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGenerateLongLong(IntPtr generator, IntPtr deviceArray, long size);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGenerateLongLong(IntPtr generator, void* deviceArray, long size);
 
 		/// <summary>
 		/// Use generator to generate <paramref name="size"/> single precision float results into the device memory at <paramref name="deviceArray"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="float"/>s between 0.0f and 1.0f, (0.0f, 1.0f] for specify.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGenerateUniform(IntPtr generator, IntPtr deviceArray, long size);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGenerateUniform(IntPtr generator, void* deviceArray, long size);
 
 		/// <summary>
 		/// Use <paramref name="generator"/> to generate <paramref name="size"/> double precision float results into the device memory at <paramref name="deviceArray"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="double"/>s between 0.0d and 1.0d, (0.0d, 1.0d] for specify.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGenerateUniformDouble(IntPtr generator, IntPtr deviceArray, long size);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGenerateUniformDouble(IntPtr generator, void* deviceArray, long size);
 
 		/// <summary>
 		/// Use generator to generate <paramref name="size"/> single precision float results into the device memory at <paramref name="deviceArray"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="float"/>s sampled from the normal distribution with given <paramref name="mean"/> and <paramref name="standardDeviation"/>.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGenerateNormal(IntPtr generator, IntPtr deviceArray, long size, float mean, float standardDeviation);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGenerateNormal(IntPtr generator, void* deviceArray, long size, float mean, float standardDeviation);
 
 		/// <summary>
 		/// Use generator to generate <paramref name="size"/> single precision float results into the device memory at <paramref name="deviceArray"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="float"/>s sampled from the log normal distribution with given <paramref name="mean"/> and <paramref name="standardDeviation"/>.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGenerateLogNormal(IntPtr generator, IntPtr deviceArray, long size, float mean, float standardDeviation);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGenerateLogNormal(IntPtr generator, void* deviceArray, long size, float mean, float standardDeviation);
 
 		/// <summary>
 		/// Use generator to generate <paramref name="size"/> double precision float results into the device memory at <paramref name="deviceArray"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="double"/>s sampled from the normal distribution with given <paramref name="mean"/> and <paramref name="standardDeviation"/>.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGenerateNormalDouble(IntPtr generator, IntPtr deviceArray, long size, double mean, double standardDeviation);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGenerateNormalDouble(IntPtr generator, void* deviceArray, long size, double mean, double standardDeviation);
 
 		/// <summary>
 		/// Use generator to generate <paramref name="size"/> double precision float results into the device memory at <paramref name="deviceArray"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="double"/>s sampled from the log normal distribution with given <paramref name="mean"/> and <paramref name="standardDeviation"/>.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGenerateLogNormalDouble(IntPtr generator, IntPtr deviceArray, long size, double mean, double standardDeviation);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGenerateLogNormalDouble(IntPtr generator, void* deviceArray, long size, double mean, double standardDeviation);
 
 		/// <summary>
 		/// Use generator to generate <paramref name="size"/> 32-bit unsigned integer results into the device memory at <paramref name="deviceArray"/>. The device memory must have been previously allocated and be large enough to hold all the results. <br/>
 		/// Launches are done with the stream or the null stream if no stream has been set.<para/>
 		/// <paramref name="deviceArray"/> will be filled by <see cref="uint"/>s sampled from the Poisson distribution with given <paramref name="lambda"/>.
 		/// </summary>
-		[DllImport(CURAND_API_DLL_NAME)]
-		internal static extern CudaRandomError curandGeneratePoisson(IntPtr generator, IntPtr deviceArray, long size, double lambda);
+		[DllImport(Cuda.NativeMethods.CURAND_DLL_NAME)]
+		internal static extern CudaRandomError curandGeneratePoisson(IntPtr generator, void* deviceArray, long size, double lambda);
 	}
 }

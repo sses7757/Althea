@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Althea.SourceGenerator;
+using Althea.Numerics;
 
 
 namespace Althea.GeneralSolvers.Kronecker
@@ -36,6 +37,6 @@ namespace Althea.GeneralSolvers.Kronecker
 		/// <exception cref="ArgumentException">If the sizes mismatch</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
 		[AbstractApiMethod]
-		public abstract bool KroneckerMultiplyVector<T, TMat, TVec>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default) where T : unmanaged, INumber<T> where TMat : class, IConvertibleMatrix<T, TMat, TVec> where TVec : class, IConvertibleVector<T, TVec, TMat>;
+		public abstract bool KroneckerMultiplyVector<T, TMat, TVec>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default) where T : unmanaged, IBaseNumber<T> where TMat : class, IConvertibleMatrix<T, TMat, TVec> where TVec : class, IConvertibleVector<T, TVec, TMat>;
 	}
 }

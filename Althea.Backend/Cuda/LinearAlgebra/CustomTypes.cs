@@ -1,94 +1,118 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
+using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
-using Althea.NativeTypes;
 
+using static Althea.Backend.Cuda.MemoryPointerChecker;
 
-namespace Althea.Backend.Cuda.LinearAlgebra
+namespace Althea.Backend.Cuda.LinearAlgebra;
+
+#region buffer
+internal unsafe static class SignalErrorBufferExtension
 {
-	/// <summary>
-	/// The <see cref="CuBlasOperation"/> enum indicates which operation needs to be performed with the dense matrix.<br/>
-	/// Its values correspond to Fortran characters ‘N’ or ‘n’ (non-transpose), ‘T’ or ‘t’ (transpose) and ‘C’ or ‘c’ (conjugate transpose) that are often used as parameters to legacy BLAS implementations.
-	/// </summary>
-	internal enum CuBlasOperation
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ErrorStateBuffer<T, TS> Create<T, TS>(this long size, ref bool hasError) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
-		/// <summary>
-		/// the non-transpose operation is selected
-		/// </summary>
-		None = 0,
-		/// <summary>
-		/// the transpose operation is selected
-		/// </summary>
-		Transpose = 1,
-		/// <summary>
-		/// the conjugate transpose operation is selected
-		/// </summary>
-		ConjugateTranspose = 2,
-		/// <summary>
-		/// the conjugate alone operation, not used in cuBLAS, shall be further dealt with
-		/// </summary>
-		ConjugateAlone = 3,
+		if (!Check<T, TS>())
+			return default;
+		TS val = TS.Create(stackalloc[] { size });
+		T* ptr = val.GetPointerDirect<T, TS>();
+		return new(val, ptr, ref hasError);
 	}
 
-	internal static class Conversions
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ErrorStateBuffer<T, TS> Create<T, TS>(this TS array, ref bool hasError) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static sbyte ToChar(this SVDStore store)
-		{
-			return store switch
-			{
-				SVDStore.All => (sbyte)'A',
-				SVDStore.Economic => (sbyte)'S',
-				SVDStore.Overwrite => (sbyte)'O',
-				SVDStore.None => (sbyte)'N',
-				_ => 0,
-			};
-		}
+		if (!GetPointer(array, out T* ptr, out _))
+			return default;
+		return new(array.MakeReference(), ptr, ref hasError);
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static CuBlasOperation ToCuda(this Althea.LinearAlgebra.MatrixOperation op, bool? hermitian = null)
-		{
-			return op switch
-			{
-				Althea.LinearAlgebra.MatrixOperation.Transpose => CuBlasOperation.Transpose,
-				Althea.LinearAlgebra.MatrixOperation.Conjugate => hermitian.HasValue && hermitian.Value ? CuBlasOperation.Transpose : CuBlasOperation.ConjugateAlone,
-				Althea.LinearAlgebra.MatrixOperation.ConjugateTranspose => CuBlasOperation.ConjugateTranspose,
-				_ => CuBlasOperation.None,
-			};
-		}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ErrorStateBuffer<T, TS> CreateFromFirst<T, TS>(this ReadOnlySpan<TS> span, long size, ref bool hasError) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		return span.Length >= 1 && span[0] is not null ? Create<T, TS>(span[0], ref hasError) : Create<T, TS>(size, ref hasError);
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CheckBaseSupport(this DataType type)
-		{
-			return type switch
-			{
-				DataType.RealSingle or DataType.RealDouble or
-				DataType.ComplexSingle or DataType.ComplexDouble => true,
-				_ => false,
-			};
-		}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ErrorStateBuffer<T, TS> CreateFromSecond<T, TS>(this ReadOnlySpan<TS> span, long size, ref bool hasError) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		return span.Length >= 2 && span[1] is not null ? Create<T, TS>(span[1], ref hasError) : Create<T, TS>(size, ref hasError);
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CheckExSupport(this DataType type)
-		{
-			return type switch
-			{
-				DataType.RealSingle or DataType.RealDouble or DataType.RealHalf or
-				DataType.ComplexSingle or DataType.ComplexDouble or DataType.ComplexHalf => true,
-				_ => false,
-			};
-		}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ErrorStateBuffer<U, TS> Create<T, TS, U>(this long size, ref bool hasError) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where U : unmanaged
+	{
+		if (!Check<T, TS>())
+			return default;
+		TS val = TS.Create(stackalloc[] { size });
+		T* ptr = val.GetPointerDirect<T, TS>();
+		return new(val, ptr, ref hasError);
+	}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CheckEx2Support(this DataType type)
-		{
-			return type switch
-			{
-				DataType.RealSingle or DataType.RealDouble or DataType.RealHalf or BrainFloatConst.RealBrainFloat16 or
-				DataType.ComplexSingle or DataType.ComplexDouble or DataType.ComplexHalf or BrainFloatConst.ComplexBrainFloat16 => true,
-				_ => false,
-			};
-		}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ErrorStateBuffer<U, TS> Create<T, TS, U>(this TS array, ref bool hasError) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> where U : unmanaged
+	{
+		if (!GetPointer(array, out T* ptr, out _))
+			return default;
+		return new(array.MakeReference(), ptr, ref hasError);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool Update<T, TS>(this in ErrorStateBuffer<T, TS> buffer, long size) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	{
+		if (!Check<T, TS>())
+			return false;
+		var val = TS.Create(stackalloc[] { size });
+		var ptr = val.GetPointerDirect<T, TS>();
+		buffer.Update(val, ptr);
+		return true;
 	}
 }
+#endregion
+
+#region BLAS Op
+internal enum CuBlasOperation
+{
+	None = 0,
+	Transpose = 1,
+	ConjugateTranspose = 2,
+	Conjugate = 3,
+}
+
+internal static class Conversions
+{
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static unsafe sbyte ToSvdChar<T>(T* matrix, T* svd, bool full) where T : unmanaged, IBaseNumber<T>
+	{
+		if (svd is null)
+			return (sbyte)'N';
+		if (svd == matrix)
+			return (sbyte)'O';
+		return full ? (sbyte)'A' : (sbyte)'S';
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static CuBlasOperation ToCuda(this MatrixOperation op, bool? hermitian = null)
+	{
+		return op switch
+		{
+			MatrixOperation.Transpose => CuBlasOperation.Transpose,
+			MatrixOperation.Conjugate => hermitian.HasValue && hermitian.Value ? CuBlasOperation.Transpose : CuBlasOperation.Conjugate,
+			MatrixOperation.ConjugateTranspose => CuBlasOperation.ConjugateTranspose,
+			_ => CuBlasOperation.None,
+		};
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static bool CheckBaseSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
+	{
+		return value switch
+		{
+			Float32 or Float64 or
+			Complex<Float32> or Complex<Float64> => true,
+			_ => false,
+		};
+	}
+}
+#endregion

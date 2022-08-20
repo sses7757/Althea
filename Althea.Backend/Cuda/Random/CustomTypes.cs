@@ -71,7 +71,7 @@ namespace Althea.Backend.Cuda.Random
 	/// <summary>
 	/// The CUDA Random generator types
 	/// </summary>
-	internal enum GeneratorType
+	public enum GeneratorType
 	{
 		/// <summary>
 		/// 
@@ -126,7 +126,7 @@ namespace Althea.Backend.Cuda.Random
 	/// <summary>
 	/// The CUDA Random orderings of results in memory
 	/// </summary>
-	internal enum Ordering
+	public enum Ordering
 	{
 		/// <summary>
 		/// Best ordering for pseudo-random results.
@@ -150,9 +150,6 @@ namespace Althea.Backend.Cuda.Random
 
 namespace Althea.Backend.Cuda
 {
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaRandomError"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>

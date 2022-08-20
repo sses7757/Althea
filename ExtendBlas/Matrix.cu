@@ -4,44 +4,44 @@
 #pragma region sparse vector to/from COO matrix
 struct intModulus_functor
 {
-	const int mod;
-	intModulus_functor(const int m) : mod(m) {}
+	const MKL_INT mod;
+	intModulus_functor(const MKL_INT m) : mod(m) {}
 
-	__host__ __device__ int operator()(const int x) const
+	__host__ __device__ MKL_INT operator()(const MKL_INT x) const
 	{
 		return x % mod;
 	}
 };
 struct intDivide_functor
 {
-	const int div;
-	intDivide_functor(const int d) : div(d) {}
+	const MKL_INT div;
+	intDivide_functor(const MKL_INT d) : div(d) {}
 
-	__host__ __device__ int operator()(const int x) const
+	__host__ __device__ MKL_INT operator()(const MKL_INT x) const
 	{
 		return x / div;
 	}
 };
 struct intFMA_functor
 {
-	const int mul;
-	intFMA_functor(const int m) : mul(m) {}
+	const MKL_INT mul;
+	intFMA_functor(const MKL_INT m) : mul(m) {}
 
-	__host__ __device__ int operator()(const int x, const int y) const
+	__host__ __device__ MKL_INT operator()(const MKL_INT x, const MKL_INT y) const
 	{
 		return x + y * mul;
 	}
 };
 
 DLLEXP
-void spVecIndToCooInds(const int* index, int* rowIdx, int* colIdx, const size_t N, const int ld)
+void spVecIdxToCooIdxs(const MKL_INT* index, MKL_INT* rowIdx, MKL_INT* colIdx, const size_t N, const MKL_INT ld)
 {
 	thrust::transform(THRUST_PAR, index, index + N, rowIdx, intModulus_functor(ld));
 	thrust::transform(THRUST_PAR, index, index + N, colIdx, intDivide_functor(ld));
 }
 
 DLLEXP
-void CooIndxToSpVecInd(int* index, const int* rowIdx, const int* colIdx, const size_t N, const int ld)
+void cooIdxsToSpVecIdx(MKL_INT* index, const MKL_INT* rowIdx, const MKL_INT* colIdx, const size_t N, const MKL_INT ld)
 {
 	thrust::transform(THRUST_PAR, rowIdx, rowIdx + N, colIdx, index, intFMA_functor(ld));
 }
@@ -51,46 +51,46 @@ void CooIndxToSpVecInd(int* index, const int* rowIdx, const int* colIdx, const s
 #pragma region CSR matrix get non-empty row indexes
 struct intLessThanZero_functor
 {
-	__host__ __device__ bool operator()(const int x) const
+	__host__ __device__ bool operator()(const MKL_INT x) const
 	{
 		return x < 0;
 	}
 };
 struct intCSRGetNER_functor
 {
-	__host__ __device__ int operator()(const thrust::tuple<int, int, int> t) const
+	__host__ __device__ MKL_INT operator()(const thrust::tuple<MKL_INT, MKL_INT, MKL_INT> t) const
 	{
 		return t.get<1>() == t.get<2>() ? -1 : t.get<0>();
 	}
 };
 
 DLLEXP
-size_t CSRGetNerBuffer(const int rows)
+size_t CSRGetNerBuffer(const MKL_INT rows)
 {
-	return sizeof(int) * ((size_t)rows - 1);
+	return sizeof(MKL_INT) * ((size_t)rows - 1);
 }
 
 DLLEXP
-size_t CSRGetNerNnz(const int* csrRowPtr, const int rows, int* buffer)
+size_t CSRGetNerNnz(const MKL_INT* csrRowPtr, const MKL_INT rows, MKL_INT* buffer)
 {
-	const int N = rows - 1;
+	const MKL_INT N = rows - 1;
 
 	// get indexes
 	auto zip = thrust::make_zip_iterator(thrust::make_tuple(csrRowPtr, csrRowPtr + 1, thrust::make_counting_iterator(0)));
 	thrust::transform(THRUST_PAR, zip, zip + N, buffer, intCSRGetNER_functor());
 
 	// remove negative indexes
-	int* tempEnd = thrust::remove_if(THRUST_PAR, buffer, buffer + N, intLessThanZero_functor());
+	MKL_INT* tempEnd = thrust::remove_if(THRUST_PAR, buffer, buffer + N, intLessThanZero_functor());
 	size_t nnz = tempEnd - buffer;
 	return nnz;
 }
 
-DLLEXP ERROR_RETURN CSRGetNerCal(const int* buffer, const size_t nnz, int* nerOut)
+DLLEXP ERROR_RETURN CSRGetNerCal(const MKL_INT* buffer, const size_t nnz, MKL_INT* nerOut)
 {
 #ifdef CPU
-	memcpy(nerOut, buffer, sizeof(int) * nnz);
+	memcpy(nerOut, buffer, sizeof(MKL_INT) * nnz);
 #else
-	cudaError err = cudaMemcpy(nerOut, buffer, sizeof(int) * nnz, cudaMemcpyDeviceToDevice);
+	cudaError err = cudaMemcpy(nerOut, buffer, sizeof(MKL_INT) * nnz, cudaMemcpyDeviceToDevice);
 	return err;
 #endif // CPU
 }
@@ -162,8 +162,8 @@ inline void matricesKronecker(
 	const T alpha = *((const T*)alphav);
 	const T beta = *((const T*)betav);
 
-	const unsigned int rowsD = rowsA * rowsB;
-	const unsigned int colsD = colsA * colsB;
+	const unsigned MKL_INT rowsD = rowsA * rowsB;
+	const unsigned MKL_INT colsD = colsA * colsB;
 
 #define KRON_CODE(bool1, bool2, bool3) thrust::for_each_n(THRUST_PAR, count_iter, rowsD * colsD, kronecker_functor<T, bool1, bool2, bool3>(alpha, beta, ldA, ldB, colsB, ldD, rowsD, A, B, D))
 
@@ -394,14 +394,14 @@ void matTriClear(const Datatype::DataType type, void* A, const size_t ld, const 
 template <typename T, bool conj>
 struct sparseVectorsOuter_functor
 {
-	const T* valA; const int* indA; const size_t nnzA;
-	const T* valB; const int* indB;
-	T* valC; int* rowC; int* colC;
+	const T* valA; const MKL_INT* indA; const size_t nnzA;
+	const T* valB; const MKL_INT* indB;
+	T* valC; MKL_INT* rowC; MKL_INT* colC;
 
 	sparseVectorsOuter_functor(
-		const T* valA, const int* indA, const size_t nnzA,
-		const T* valB, const int* indB,
-		T* valC, int* rowC, int* colC) :
+		const T* valA, const MKL_INT* indA, const size_t nnzA,
+		const T* valB, const MKL_INT* indB,
+		T* valC, MKL_INT* rowC, MKL_INT* colC) :
 		valA(valA), indA(indA), nnzA(nnzA),
 		valB(valB), indB(indB),
 		valC(valC), rowC(rowC), colC(colC)
@@ -420,10 +420,21 @@ struct sparseVectorsOuter_functor
 };
 
 template<typename T>
-void sparseVectorsOuter(
-	const void* valAv, const int* indA, const size_t nnzA,
-	const void* valBv, const int* indB, const size_t nnzB,
-	void* valCv, int* rowC, int* colC, const bool conj)
+int sparseVectorsOuterCheck()
+{
+	return 0;
+}
+
+DLLEXP int spVecOuterCheck(const Datatype::DataType type)
+{
+	AUTO_ALLTYPE_FUNC(sparseVectorsOuterCheck, type, int);
+}
+
+template<typename T>
+int sparseVectorsOuter(
+	const void* valAv, const MKL_INT* indA, const size_t nnzA,
+	const void* valBv, const MKL_INT* indB, const size_t nnzB,
+	void* valCv, MKL_INT* rowC, MKL_INT* colC, const bool conj)
 {
 	const T* valA = (const T*)valAv;
 	const T* valB = (const T*)valBv;
@@ -435,14 +446,16 @@ void sparseVectorsOuter(
 		SPARSE_VECTOR_OUTER_CODE(true);
 	else
 		SPARSE_VECTOR_OUTER_CODE(false);
+
+	return 0;
 }
 
-DLLEXP void spVecOuter(const Datatype::DataType type,
-	const void* valA, const int* indA, const size_t nnzA,
-	const void* valB, const int* indB, const size_t nnzB,
-	void* valC, int* rowC, int* colC, const bool conj)
+DLLEXP int spVecOuter(const Datatype::DataType type,
+	const void* valA, const MKL_INT* indA, const size_t nnzA,
+	const void* valB, const MKL_INT* indB, const size_t nnzB,
+	void* valC, MKL_INT* rowC, MKL_INT* colC, const bool conj)
 {
-	AUTO_ALLTYPE_FUNC(sparseVectorsOuter, type, void, valA, indA, nnzA, valB, indB, nnzB, valC, rowC, colC, conj);
+	AUTO_ALLTYPE_FUNC(sparseVectorsOuter, type, int, valA, indA, nnzA, valB, indB, nnzB, valC, rowC, colC, conj);
 }
 #pragma endregion
 
@@ -451,14 +464,14 @@ DLLEXP void spVecOuter(const Datatype::DataType type,
 template <typename T>
 struct CooMatricesKronecker_functor
 {
-	const T* valA; const int* rowA; const int* colA;
-	const T* valB; const int* rowB; const int* colB; const size_t nnzB; const size_t rowsB; const size_t colsB;
-	T* valC; int* rowC; int* colC;
+	const T* valA; const MKL_INT* rowA; const MKL_INT* colA;
+	const T* valB; const MKL_INT* rowB; const MKL_INT* colB; const size_t nnzB; const size_t rowsB; const size_t colsB;
+	T* valC; MKL_INT* rowC; MKL_INT* colC;
 
 	CooMatricesKronecker_functor(
-		const T* valA, const int* rowA, const int* colA,
-		const T* valB, const int* rowB, const int* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
-		T* valC, int* rowC, int* colC) :
+		const T* valA, const MKL_INT* rowA, const MKL_INT* colA,
+		const T* valB, const MKL_INT* rowB, const MKL_INT* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
+		T* valC, MKL_INT* rowC, MKL_INT* colC) :
 		valA(valA), rowA(rowA), colA(colA),
 		valB(valA), rowB(rowA), colB(colB), nnzB(nnzB), rowsB(rowsB), colsB(colsB),
 		valC(valC), rowC(rowC), colC(colC)
@@ -475,7 +488,7 @@ struct CooMatricesKronecker_functor
 
 struct cooMatrixSortByColumn_functor
 {
-	__host__ __device__ bool operator()(const thrust::tuple<int, int> lhs, const thrust::tuple<int, int> rhs) const
+	__host__ __device__ bool operator()(const thrust::tuple<MKL_INT, MKL_INT> lhs, const thrust::tuple<MKL_INT, MKL_INT> rhs) const
 	{
 		if (lhs.get<1>() < rhs.get<1>())
 			return true;
@@ -487,10 +500,10 @@ struct cooMatrixSortByColumn_functor
 };
 
 template<typename T>
-void CooMatricesKronecker(
-	const void* valAv, const int* rowA, const int* colA, const size_t nnzA,
-	const void* valBv, const int* rowB, const int* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
-	void* valCv, int* rowC, int* colC)
+int CooMatricesKronecker(
+	const void* valAv, const MKL_INT* rowA, const MKL_INT* colA, const size_t nnzA,
+	const void* valBv, const MKL_INT* rowB, const MKL_INT* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
+	void* valCv, MKL_INT* rowC, MKL_INT* colC)
 {
 	const T* valA = (const T*)valAv;
 	const T* valB = (const T*)valBv;
@@ -502,13 +515,14 @@ void CooMatricesKronecker(
 	// sort column wise
 	auto rowColC = thrust::make_zip_iterator(thrust::make_tuple(rowC, colC));
 	thrust::sort_by_key(THRUST_PAR, rowColC, rowColC + nnzC, valC, cooMatrixSortByColumn_functor());
+	return 0;
 }
 
-DLLEXP void COOMatKron(const Datatype::DataType type,
-	const void* valA, const int* rowA, const int* colA, const size_t nnzA,
-	const void* valB, const int* rowB, const int* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
-	void* valC, int* rowC, int* colC)
+DLLEXP int CooMatKron(const Datatype::DataType type,
+	const void* valA, const MKL_INT* rowA, const MKL_INT* colA, const size_t nnzA,
+	const void* valB, const MKL_INT* rowB, const MKL_INT* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
+	void* valC, MKL_INT* rowC, MKL_INT* colC)
 {
-	AUTO_ALLTYPE_FUNC(CooMatricesKronecker, type, void, valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, rowsB, colsB, valC, rowC, colC);
+	AUTO_ALLTYPE_FUNC(CooMatricesKronecker, type, int, valA, rowA, colA, nnzA, valB, rowB, colB, nnzB, rowsB, colsB, valC, rowC, colC);
 }
 #pragma endregion

@@ -11,11 +11,18 @@
 #pragma warning Unknown dynamic link import/export semantics.
 #endif
 
+#ifdef MKL_ILP64
+#define MKL_INT long long
+#else
+#define MKL_INT int
+#endif // MKL_ILP64
+
 
 // CUDA includes
-
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <cutensor.h>
+
 // math and complex
 #include <math.h>
 #include "complex.h"
@@ -35,6 +42,7 @@
 #include <thrust/scan.h>
 #include <thrust/sort.h>
 #include <thrust/equal.h>
+#include <thrust/iterator/discard_iterator.h>
 
 // self-defined data type
 #include "datatype.h"
@@ -46,9 +54,9 @@
 // nvcc -o SupplementOMP.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj -openmp"
 #undef THRUST_DEVICE_SYSTEM
 #ifdef CPU
-#include <thrust/system/omp/execution_policy.h>
-#define THRUST_PAR thrust::omp::par
-#define ERROR_RETURN void
+#include <thrust/system/tbb/execution_policy.h>
+#define THRUST_PAR thrust::tbb::par
+#define ERROR_RETURN int
 #define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP
 #else
 #define THRUST_PAR thrust::cuda::par

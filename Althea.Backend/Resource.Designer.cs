@@ -19,7 +19,7 @@ namespace Althea.Backend {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resource {
@@ -79,20 +79,11 @@ namespace Althea.Backend {
         }
         
         /// <summary>
-        ///   查找类似 The CUDA device ID changes from {0} to {1}. 的本地化字符串。
+        ///   查找类似 The given CUDA device ID is not supported yet. 的本地化字符串。
         /// </summary>
-        internal static string ChangeDevice {
+        internal static string CudaDeviceNotSupport {
             get {
-                return ResourceManager.GetString("ChangeDevice", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Cannot compare complex numbers of type {0}. 的本地化字符串。
-        /// </summary>
-        internal static string CompareComplex {
-            get {
-                return ResourceManager.GetString("CompareComplex", resourceCulture);
+                return ResourceManager.GetString("CudaDeviceNotSupport", resourceCulture);
             }
         }
         
@@ -106,209 +97,11 @@ namespace Althea.Backend {
         }
         
         /// <summary>
-        ///   查找类似 The (complex) number {0} is not close enough to a normal real number. 的本地化字符串。
-        /// </summary>
-        internal static string GenericNotNormalReal {
-            get {
-                return ResourceManager.GetString("GenericNotNormalReal", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Generalized Minimal Residual algorithm converged after {0} restarts. 的本地化字符串。
-        /// </summary>
-        internal static string GMRESConverge {
-            get {
-                return ResourceManager.GetString("GMRESConverge", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Generalized Minimal Residual algorithm failed to converged after {0} restarts, current residual = {1}. 的本地化字符串。
-        /// </summary>
-        internal static string GMRESFail {
-            get {
-                return ResourceManager.GetString("GMRESFail", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Generalized Minimal Residual algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
-        /// </summary>
-        internal static string GMRESStart {
-            get {
-                return ResourceManager.GetString("GMRESStart", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 The CUDA compute capability {0} of current CUDA device is less than required {1}. 的本地化字符串。
         /// </summary>
         internal static string InsufficientCudaCapability {
             get {
                 return ResourceManager.GetString("InsufficientCudaCapability", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Krylov subspace algorithm: now at iteration {0}, {1} passed since last output. 的本地化字符串。
-        /// </summary>
-        internal static string IterationAndTimeInfo {
-            get {
-                return ResourceManager.GetString("IterationAndTimeInfo", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Krylov-Schur algorithm converged after {0} restarts. 的本地化字符串。
-        /// </summary>
-        internal static string KrylovSchurConverge {
-            get {
-                return ResourceManager.GetString("KrylovSchurConverge", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Krylov-Schur algorithm failed to converged after {0} restarts, still {1} eigen-pairs left. 的本地化字符串。
-        /// </summary>
-        internal static string KrylovSchurFail {
-            get {
-                return ResourceManager.GetString("KrylovSchurFail", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Krylov-Schur algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
-        /// </summary>
-        internal static string KrylovSchurStart {
-            get {
-                return ResourceManager.GetString("KrylovSchurStart", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Restarting Lanczos algorithm found that the {0} eigen-pair converges. 的本地化字符串。
-        /// </summary>
-        internal static string LanczosConvergeOnePair {
-            get {
-                return ResourceManager.GetString("LanczosConvergeOnePair", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Preconditioned Minimal Residual algorithm main calculation finishes, relative error = {0} (desired = {1}). 的本地化字符串。
-        /// </summary>
-        internal static string MinResFinish {
-            get {
-                return ResourceManager.GetString("MinResFinish", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Preconditioned Minimal Residual algorithm statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
-        /// </summary>
-        internal static string MinResStart {
-            get {
-                return ResourceManager.GetString("MinResStart", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Naïve Lanczos algorithm main calculation finishes, α = {0}, β = {1}. 的本地化字符串。
-        /// </summary>
-        internal static string NaiveLanczosFinish {
-            get {
-                return ResourceManager.GetString("NaiveLanczosFinish", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Naïve Lanczos algorithm without restarting statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
-        /// </summary>
-        internal static string NaiveLanczosStart {
-            get {
-                return ResourceManager.GetString("NaiveLanczosStart", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The given matrix is not a hermitian-positive-definite matrix. 的本地化字符串。
-        /// </summary>
-        internal static string NotPositiveDefinite {
-            get {
-                return ResourceManager.GetString("NotPositiveDefinite", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Preconditioned Conjugate Gradient algorithm main calculation finishes, relative error = {0} (desired = {1}). 的本地化字符串。
-        /// </summary>
-        internal static string PCGFinish {
-            get {
-                return ResourceManager.GetString("PCGFinish", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Preconditioned Conjugate Gradient algorithm statrs with matrix size = {0} and maximum number of iterations = {1}. 的本地化字符串。
-        /// </summary>
-        internal static string PCGStart {
-            get {
-                return ResourceManager.GetString("PCGStart", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Restarting Lanczos algorithm converged after {0} restarts. 的本地化字符串。
-        /// </summary>
-        internal static string RestartLanczosConverge {
-            get {
-                return ResourceManager.GetString("RestartLanczosConverge", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Restarting Lanczos algorithm failed to converged after {0} restarts, still {1} eigen-pairs left. 的本地化字符串。
-        /// </summary>
-        internal static string RestartLanczosFail {
-            get {
-                return ResourceManager.GetString("RestartLanczosFail", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Restarting Lanczos algorithm statrs with matrix size = {0} and maximum number of restarts = {1}. 的本地化字符串。
-        /// </summary>
-        internal static string RestartLanczosStart {
-            get {
-                return ResourceManager.GetString("RestartLanczosStart", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Restarting with only one preserved Ritz pair may never improve the result. 的本地化字符串。
-        /// </summary>
-        internal static string RestartWarn1 {
-            get {
-                return ResourceManager.GetString("RestartWarn1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 Restarting while preserving more than half Ritz pairs may not improve the result. 的本地化字符串。
-        /// </summary>
-        internal static string RestartWarn2 {
-            get {
-                return ResourceManager.GetString("RestartWarn2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似 The number of smallest eigenvalues required ({0}) is larger than the desired value, maybe the native eigen solver is a better option. 的本地化字符串。
-        /// </summary>
-        internal static string TooMuchEigenvaluesRequired {
-            get {
-                return ResourceManager.GetString("TooMuchEigenvaluesRequired", resourceCulture);
             }
         }
     }

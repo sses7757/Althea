@@ -17,7 +17,7 @@ namespace Althea.Backend.Mkl
 		/// <summary>
 		/// The custom BLAS library name
 		/// </summary>
-		public const string CUSTOM_DLL_NAME = "SupplementTBB";
+		public const string CUSTOM_DLL_NAME = "ExtendBlasTBB";
 
 		/// <summary>
 		/// Set number of threads used by MKL library

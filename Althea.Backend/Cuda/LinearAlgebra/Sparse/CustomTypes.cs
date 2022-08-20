@@ -1,20 +1,14 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Backend.Cuda.LinearAlgebra.Dense;
+using Althea.Array;
 using Althea.Backend.Cuda.LinearAlgebra.Sparse;
-using Althea.Helpers;
-using Althea.LinearAlgebra;
-using Althea.LinearAlgebra.Sparse;
-using Althea.NativeTypes;
+using Althea.Backend.Mkl.LinearAlgebra.Sparse;
+
 
 namespace Althea.Backend.Cuda
 {
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaBlasStatus"/> and <see cref="CudaSolverStatus"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>
@@ -22,26 +16,66 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		/// <param name="err">The <see cref="CudaSparseStatus"/> to be checked</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaSparseStatus err)
+		public static bool Check(this CudaSparseStatus err)
 		{
+			if (err == CudaSparseStatus.NotSupported)
+				return false;
 			if (err != CudaSparseStatus.Success)
-			{
 				throw new StatusException(err, new StackTrace(0));
-			}
+			return true;
 		}
-
-		// TODO: sparse API
-		////[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		////internal static DenseVectorWrapper ToWrapper<T>(this Arrays.DenseVector<T> vector, SparseApi api) where T : unmanaged, INumber<T>
-		////{
-		////	api.GetPointer(vector.Storage, out IntPtr p, out long length);
-		////	return new(api.InternalInfo, length, p, Const<T>.DataType.ToCudaDataType());
-		////}
 	}
 }
 
 namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 {
+	internal static class Conversions
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool CheckBaseSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
+		{
+			return value switch
+			{
+				Float32 or Float64 or
+				Complex<Float32> or Complex<Float64> => true,
+				_ => false,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool CheckExSupport<T>(this T value) where T : unmanaged, IBaseNumber<T>
+		{
+			return value switch
+			{
+				Float32 or Float64 or Float16 or
+				Complex<Float32> or Complex<Float64> or Complex<Float16> => true,
+				_ => false,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static bool CheckEx2Support<T>(this T value) where T : unmanaged, IBaseNumber<T>
+		{
+			return value switch
+			{
+				Float32 or Float64 or Float16 or BrainHalf or
+				Complex<Float32> or Complex<Float64> or Complex<Float16> or Complex<BrainHalf> => true,
+				_ => false,
+			};
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static CudaDataType ToComputeType(this CudaDataType type)
+		{
+			return type switch
+			{
+				CudaDataType.RealFloat16 or CudaDataType.RealBrainFloat16 => CudaDataType.RealFloat32,
+				CudaDataType.ComplexFloat16 or CudaDataType.ComplexBrainFloat16 => CudaDataType.ComplexFloat32,
+				_ => type
+			};
+		}
+	}
+
 	/// <summary>
 	/// The returned status (errors) of the cuSparse (CUDA Sparse) API calls
 	/// </summary>
@@ -56,7 +90,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		/// </summary>
 		NotInitialized = 1,
 		/// <summary>
-		///  "Resource allocation failed inside the CUSPARSE library. This is usually caused by a <see cref="Storage.NativeMethods.cudaMalloc(out IntPtr, long)"/> failure. To correct: prior to the function call, deallocate previously allocated memory as much as possible.
+		///  "Resource allocation failed inside the CUSPARSE library. This is usually caused by a <see cref="Storage.NativeMethods.cudaMalloc(out void*, long)"/> failure. To correct: prior to the function call, deallocate previously allocated memory as much as possible.
 		/// </summary>
 		AllocFailed = 2,
 		/// <summary>
@@ -76,7 +110,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		/// </summary>
 		ExecutionFailed = 6,
 		/// <summary>
-		/// An internal CUDA Sparse operation failed. This error is usually caused by a <see cref="Storage.NativeMethods.cudaMalloc(out IntPtr, long)"/> failure. To correct: check that the hardware, an appropriate version of the driver, and the CUDA Sparse library are correctly installed. Also, check that the memory passed as a parameter to the routine is not being deallocated prior to the routine’s completion.
+		/// An internal CUDA Sparse operation failed. This error is usually caused by a <see cref="Storage.NativeMethods.cudaMalloc(out void*, long)"/> failure. To correct: check that the hardware, an appropriate version of the driver, and the CUDA Sparse library are correctly installed. Also, check that the memory passed as a parameter to the routine is not being deallocated prior to the routine’s completion.
 		/// </summary>
 		InternalError = 7,
 		/// <summary>
@@ -97,102 +131,304 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		InsufficientResource = 11,
 	}
 
-	/// <summary>
-	/// This type indicates the type of matrix stored in sparse storage. Notice that for symmetric, Hermitian and triangular matrices only their lower or upper part is assumed to be stored.
-	/// </summary>
+	internal enum PointerMode
+	{
+		Host = 0,
+		Device = 1
+	}
+
+	internal enum SparseToDenseAlgorithm
+	{
+		Default = 0,
+	}
+	internal enum DenseToSparseAlgorithm
+	{
+		Default = 0,
+	}
+
+	internal enum SparseMVAlgorithm
+	{
+		Default = 0,
+		CsrAlgorithm1 = 2,
+		CsrAlgorithm2 = 3,
+		CooAlgorithm1 = 1,
+		CooAlgorithm2 = 4
+	}
+
+	internal enum SparseMMAlgorithm
+	{
+		Default = 0,
+		CooAlgorithm1 = 1,
+		CooAlgorithm2 = 2,
+		CooAlgorithm3 = 3,
+		CooAlgorithm4 = 5,
+		CsrAlgorithm1 = 4,
+		CsrAlgorithm2 = 6,
+		CsrAlgorithm3 = 12,
+		BlockEllAlgorithm1 = 13
+	}
+
+	internal enum SparseGemmAlgorithm {
+		Default = 0,
+		CsrDeterministic = 1,
+		CsrNonDeterministic = 2
+	}
+
+	internal enum Csr2CscAlgorithm
+	{
+		Algorithm1 = 1, // faster than V2 (in general), deterministic
+		Algorithm2 = 2  // low memory requirement, non-deterministic
+	}
+
 	internal enum MatrixType
 	{
-		/// <summary>
-		/// the matrix is general.
-		/// </summary>
 		General = 0,
-		/// <summary>
-		/// the matrix is symmetric.
-		/// </summary>
 		Symmetric = 1,
-		/// <summary>
-		/// the matrix is Hermitian.
-		/// </summary>
 		Hermitian = 2,
-		/// <summary>
-		/// the matrix is triangular.
-		/// </summary>
 		Triangular = 3
 	}
 
-	/// <summary>
-	/// This enum indicates if the base of the matrix indices is zero or one.
-	/// </summary>
+	internal enum SparseAction
+	{
+		OnlyIndices = 0,
+		ValuesAndIndices = 1,
+	}
+
 	internal enum IndexBase
 	{
-		/// <summary>
-		/// the base index is zero.
-		/// </summary>
 		Zero = 0,
-		/// <summary>
-		/// the base index is one.
-		/// </summary>
 		One = 1
 	}
 
-	/// <summary>
-	/// This enum indicates the index type for representing the sparse matrix indices.
-	/// </summary>
 	internal enum IndexType
 	{
-		/// <summary>
-		/// 16-bit unsigned integer [0, 65535]
-		/// </summary>
 		UnsignedInt16 = 1,
-		/// <summary>
-		/// 32-bit signed integer [0, 2^31 - 1]
-		/// </summary>
 		Integer32 = 2,
-		/// <summary>
-		/// 64-bit signed integer [0, 2^63 - 1]
-		/// </summary>
 		Integer64 = 3
 	}
 
-	/// <summary>
-	/// This enum indicates the format of the sparse matrix.
-	/// </summary>
-	internal enum CudaSparseMatrixFormat
+	internal enum MatrixFormat
 	{
-		/// <summary>
-		/// The matrix is stored in Compressed Sparse Row (CSR) format
-		/// </summary>
-		CompressedRowMajor = 1,
-		/// <summary>
-		/// The matrix is stored in Compressed Sparse Column (CSC) format
-		/// </summary>
-		CompressedColumnMajor = 2,
-		/// <summary>
-		/// The matrix is stored in Coordinate (COO) format organized in Structure of Arrays (SoA) layout
-		/// </summary>
-		Coordinate = 3,
-		/// <summary>
-		/// The matrix is stored in Coordinate (COO) format organized in Arrays of Structures (AoS) layout
-		/// </summary>
-		CoordinateAoS = 4,
+		CSR = 1,
+		CSC = 2,
+		Coo = 3,
+		CooAoS = 4,
+		BlockedEll = 5
 	}
-	
-	/// <summary>
-	/// This enum indicates the memory layout of a dense matrix. Currently, only column-major layout is supported.
-	/// </summary>
-	public enum DenseMatrixOrder
+
+	internal enum DenseMatrixOrder
 	{
-		/// <summary>
-		/// The matrix is stored in column-major
-		/// </summary>
 		Column = 1,
-		/// <summary>
-		/// The matrix is stored in row-major
-		/// </summary>
 		Row = 2
 	}
 
+	internal enum SparseMatrixOrder
+	{
+		Row = 0,
+		Column = 1
+	}
 
+	internal readonly unsafe ref struct DenseVectorWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private DenseVectorWrapper(IntPtr handle) => this.handle = handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroyDnVec(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DenseVectorWrapper Create<T>(T* values, long size, out bool success) where T : unmanaged, IBaseNumber<T>
+		{
+			success = NativeMethods.cusparseCreateDnVec(out IntPtr descr, size, values, T.Type.ToCudaDataType()).Check();
+			return success ? new(descr) : default;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DenseVectorWrapper Create<T, TS>(IBindedDevice api, TS array, out bool success) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		{
+			success = false;
+			if (!MemoryPointerChecker.GetPointer(api, array,  out T* p, out var n))
+				return default;
+			return Create(p, n, out success);
+		}
+	}
+
+	internal readonly unsafe ref struct DenseMatrixWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private DenseMatrixWrapper(IntPtr handle) => this.handle = handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroyDnMat(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static DenseMatrixWrapper Create<T>(T* values, long rows, long cols, long ld, bool transpose, out bool success) where T : unmanaged, IBaseNumber<T>
+		{
+			DenseMatrixOrder order = DenseMatrixOrder.Column;
+			if (transpose)
+			{
+				order = DenseMatrixOrder.Row;
+				(rows, cols) = (cols, rows);
+			}
+			success = NativeMethods.cusparseCreateDnMat(out IntPtr descr, rows, cols, ld, values, T.Type.ToCudaDataType(), order).Check();
+			return success ? new(descr) : default;
+		}
+	}
+
+	internal readonly unsafe ref struct SparseVectorWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private SparseVectorWrapper(IntPtr handle) => this.handle = handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroySpVec(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseVectorWrapper Create<T, TInd>(T* values, TInd* indices, long size, long nnz, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBaseNumber<TInd>
+		{
+			var idxType = sizeof(TInd) == sizeof(int) ? IndexType.Integer32 : IndexType.Integer64;
+			success = NativeMethods.cusparseCreateSpVec(out IntPtr descr, size, nnz, indices, values, idxType, IndexBase.Zero, T.Type.ToCudaDataType()).Check();
+			return success ? new(descr) : default;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseVectorWrapper Create<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> vector, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			if (!MemoryPointerChecker.GetPointer(api, vector, out T* vals, out TInd* inds, out long nnz))
+			{
+				success = false;
+				return default;
+			}
+			return Create(vals, inds, vector.Size[0], nnz, out success);
+		}
+	}
+
+	internal readonly unsafe ref struct BaseMatrixWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroyMatDescr(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public BaseMatrixWrapper()
+		{
+			NativeMethods.cusparseCreateMatDescr(out this.handle).Check();
+		}
+	}
+
+	internal readonly unsafe ref struct SparseMatrixWrapper
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private SparseMatrixWrapper(IntPtr handle) => this.handle = handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseDestroySpMat(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixWrapper Create<T, TInd>(SparseFormat format, long rows, long cols, long nnz, T* vals, TInd* rowInd, TInd* colInd, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
+		{
+			IntPtr descr;
+			var idxType = sizeof(TInd) == sizeof(int) ? IndexType.Integer32 : IndexType.Integer64;
+			if (format.Class == SparseFormat.Type.Coordinated)
+				success = NativeMethods.cusparseCreateCoo(out descr, rows, cols, nnz, rowInd, colInd, vals, idxType, IndexBase.Zero, T.Type.ToCudaDataType()).Check();
+			else if (format.MajorType == SparseFormat.Major.Row)
+				success = NativeMethods.cusparseCreateCsr(out descr, rows, cols, nnz, rowInd, colInd, vals, idxType, idxType, IndexBase.Zero, T.Type.ToCudaDataType()).Check();
+			else
+				success = NativeMethods.cusparseCreateCsc(out descr, rows, cols, nnz, colInd, rowInd, vals, idxType, idxType, IndexBase.Zero, T.Type.ToCudaDataType()).Check();
+			return success ? new(descr) : default;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixWrapper Create<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out bool success, out long nnz, out T* vals, out TInd* rowInd, out TInd* colInd) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			if (!MemoryPointerChecker.GetPointer(api, matrix, out vals, out rowInd, out colInd, out nnz))
+			{
+				success = false;
+				return default;
+			}
+			return Create(matrix.Format, matrix.Size[0], matrix.Size[1], nnz, vals, rowInd, colInd, out success);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static SparseMatrixWrapper Create<T, TInd, TS, TSInd>(IBindedDevice api, ISparseArray<T, TInd, TS, TSInd> matrix, out bool success) where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd> where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+		{
+			return Create(api, matrix, out success, out _, out _, out _, out _);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool GetSizes(out long rows, out long cols, out long nnz)
+		{
+			return NativeMethods.cusparseSpMatGetSize(this.handle, out rows, out cols, out nnz).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public readonly bool SetPointers(SparseFormat format, void* values, void* rows, void* cols)
+		{
+			if (format.Class == SparseFormat.Type.Coordinated)
+				return NativeMethods.cusparseCooSetPointers(this.handle, rows, cols, values).Check();
+			if (!format.IsCompressed)
+				return false;
+			if (format.IsRowMajor)
+				return NativeMethods.cusparseCsrSetPointers(this.handle, rows, cols, values).Check();
+			else
+				return NativeMethods.cusparseCscSetPointers(this.handle, cols, rows, values).Check();
+		}
+	}
+
+	internal readonly unsafe ref struct SparseGemmDescriptor
+	{
+		private readonly IntPtr handle;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
+		{
+			if (this.handle == default)
+				return;
+			NativeMethods.cusparseSpGEMM_destroyDescr(this.handle).Check();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SparseGemmDescriptor()
+		{
+			NativeMethods.cusparseSpGEMM_createDescr(out this.handle).Check();
+		}
+	}
+
+	/*
 	// The following sparse/dense vector/matrix descriptors are guessed from the cuSparse 11.3 APIs.
 	// Since the APIs always allocate them on unmanaged heap which is unnecessary in most cases and may cause performance loss,
 	//   using a structure that can be allocated on stack is a better option.
@@ -212,8 +448,8 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		public DenseVectorWrapper(long cuSparseHandleInfo, long length, IntPtr values, CudaDataType dataType)
 		{
-			this.cuSparseHandleInfo = cuSparseHandleInfo; this.Length = length; this.PtrValues = values; this.DataType = dataType;
-			this.__align = 0;
+			this.cuSparseHandleInfo = cuSparseHandleInfo; Length = length; PtrValues = values; DataType = dataType;
+			__align = 0;
 		}
 	}
 
@@ -242,9 +478,9 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		public DenseMatrixWrapper(long cuSparseHandleInfo, long rows, long cols, long ld, IntPtr values, CudaDataType dataType, DenseMatrixOrder order)
 		{
-			this.cuSparseHandleInfo = cuSparseHandleInfo; this.Rows = rows; this.Cols = cols; this.LeadDim = ld;
-			this.preserve1 = 1; this.__align = 0; this.preserve0 = 0;
-			this.PtrValues = values; this.DataType = dataType; this.MemoryOrder = order;
+			this.cuSparseHandleInfo = cuSparseHandleInfo; Rows = rows; Cols = cols; LeadDim = ld;
+			preserve1 = 1; __align = 0; preserve0 = 0;
+			PtrValues = values; DataType = dataType; MemoryOrder = order;
 		}
 	}
 
@@ -271,10 +507,10 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		public SparseVectorWrapper(long cuSparseHandleInfo, long length, IntPtr values, CudaDataType dataType, long nnz, IntPtr indices, IndexType indexType, IndexBase indexBase)
 		{
-			this.cuSparseHandleInfo = cuSparseHandleInfo; this.Length = length; this.PtrValues = values; this.DataType = dataType;
-			this.NonZeros = nnz; this.PtrIndices = indices; this.IndexType = indexType; this.IndexBase = indexBase;
-			this.__align = 0;
+			this.cuSparseHandleInfo = cuSparseHandleInfo; Length = length; PtrValues = values; DataType = dataType;
+			NonZeros = nnz; PtrIndices = indices; IndexType = indexType; IndexBase = indexBase;
+			__align = 0;
 		}
 	}
-
+	*/
 }

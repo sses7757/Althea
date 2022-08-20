@@ -12,9 +12,19 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Althea.SourceGenerator
 {
+	// Ignore Spelling: namepsace
 	/// <summary>
 	/// Tells the source generator that the marked class is one that contains native methods to be extended.
 	/// </summary>
+	/// <remarks>The marked native method class must lies within a name-space like
+	/// <code>
+	/// namespace MyNameSpace1
+	/// {
+	///		[<see cref="AbstractRuntimeApiAttribute"/>]
+	///		public static class NativeMethodsTemplate
+	///		{...}
+	///	}
+	/// </code></remarks>
 	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 	public sealed class NativeMethodClassAttribute : Attribute
 	{
@@ -34,7 +44,7 @@ namespace Althea.SourceGenerator
 		/// <param name="refComplexType">Whether the complex scalar input parameters shall have <c>in</c> modifiers or not</param>
 		/// <param name="returnRealType">Whether to return real scalar type instead of complex scalar type</param>
 		/// <param name="onlyReal">Whether to include only real types (true) or only complex types (false) or both (leave empty)</param>
-		/// <remarks>This means that the types are <c>float, double, Complex&lt;float&gt;, Complex&lt;double&gt;</c> with type character <c>s, d, c, z</c>, respectively.</remarks>
+		/// <remarks>This means that the types are <c>Float32, Float64, Complex&lt;Float32&gt;, Complex&lt;Float64&gt;</c> with type character <c>s, d, c, z</c>, respectively.</remarks>
 		public NativeMethodAttribute(int typeCharPosition, bool typeCharUpper = false, bool refComplexType = false, bool returnRealType = false, bool onlyReal = false)
 		{
 		}
@@ -47,10 +57,10 @@ namespace Althea.SourceGenerator
 	public sealed class CustomNativeMethodAttribute : Attribute
 	{
 		/// <summary>
-		/// Create a new <see cref="NativeMethodAttribute"/> by indicating the type character position and the full type names and characters.
+		/// Create a new <see cref="CustomNativeMethodAttribute"/> by indicating the type character position and the full type names and characters.
 		/// </summary>
 		/// <param name="typeCharPosition">The variable type character position, such as 6 for <c>cblas_?copy</c>. Must be the same across multiple attributes.</param>
-		/// <param name="typeName">The full variable type name, such as <c>Complex&lt;float&gt;</c></param>
+		/// <param name="typeName">The full variable type name, such as <c>Complex&lt;Float32&gt;</c></param>
 		/// <param name="typeChar">The variable type character in the method identifier</param>
 		/// <param name="inputModifier">The input parameter modifier</param>
 		/// <param name="returnName">The full return type name, empty means <paramref name="typeName"/></param>
@@ -63,11 +73,25 @@ namespace Althea.SourceGenerator
 	[Generator]
 	public class NativeMethodsGenerator : ISourceGenerator
 	{
-		private static readonly DiagnosticDescriptor InvalidNativeMethodError =
 #pragma warning disable RS2008
-			new DiagnosticDescriptor("GENAPI002",
+		private static readonly DiagnosticDescriptor InvalidNativeMethodError =
+			new DiagnosticDescriptor("GNM001",
 									"Target method is not a native method",
 									"Couldn't generate other native methods of '{0}' since it is not a valid native method",
+									"Native Methods Generator",
+									DiagnosticSeverity.Error,
+									true);
+		private static readonly DiagnosticDescriptor NotSupportedNamespaceError =
+			new DiagnosticDescriptor("GNM002",
+									"Target API class is not in a supported namespace syntax",
+									"Couldn't generate native method class of '{0}' since it is not in a supported namespace syntax",
+									"Native Methods Generator",
+									DiagnosticSeverity.Error,
+									true);
+		private static readonly DiagnosticDescriptor InternalError =
+			new DiagnosticDescriptor("GNM999",
+									"Target method cannot be generated due to internal error(s)",
+									"Couldn't generate native method '{0}' due to internal error(s), this is usually caused by syntax error",
 									"Native Methods Generator",
 									DiagnosticSeverity.Error,
 									true);
@@ -82,6 +106,81 @@ namespace Althea.SourceGenerator
 			context.RegisterForSyntaxNotifications(() => new NativeMethodClassSyntaxReceiver());
 		}
 
+		static void AddMethods(MethodDeclarationSyntax method, int typeCharPos, string[] typeNames, string[] typeChars, string[] typeInputModifer, string[] typeReturn, bool[] typeRefReturn, string attributeName, ref string generated)
+		{
+			int orgInd = 0;
+			for (int i = 0; i < typeNames.Length; i++)
+			{
+				if (method.Identifier.ToString().Substring(typeCharPos, typeChars[i].Length) == typeChars[i])
+				{
+					orgInd = i;
+					break;
+				}
+			}
+			bool removeReturn = false;
+			string methodMain = null, identifier = null;
+			for (int i = 0; i < typeNames.Length; i++)
+			{
+				// change identifier
+				identifier = method.Identifier.ToString();
+				identifier = identifier.Substring(0, typeCharPos) + typeChars[i] + identifier.Substring(typeCharPos + typeChars[orgInd].Length);
+				// add method declaration
+				var newAttrs = method.RemoveAttribute(attributeName);
+				var newMethod = method.WithAttributeLists(newAttrs);
+				methodMain = newMethod.ToString();
+				methodMain = methodMain.Replace(method.Identifier.ToString() + "(", identifier + "(")
+									   .Replace(", " + typeNames[orgInd], ", " + typeNames[i])
+									   .Replace("," + typeNames[orgInd], ", " + typeNames[i])
+									   .Replace("(" + typeNames[orgInd], "(" + typeNames[i]);
+				if (typeInputModifer[i] != "")
+				{
+					methodMain = Regex.Replace(methodMain, @", ?" + typeNames[i] + @"([^\*])", ", " + typeInputModifer[i] + typeNames[i] + @"$1");
+					methodMain = Regex.Replace(methodMain, @"\(" + typeNames[i] + @"([^\*])", "(" + typeInputModifer[i] + typeNames[i] + @"$1");
+				}
+				if (typeRefReturn[i])
+				{
+					methodMain = methodMain.Replace(");", $", out {typeReturn[i]} result);")
+										   .Replace(typeReturn[orgInd] + " " + identifier, "void " + identifier);
+					removeReturn = true;
+				}
+				else
+				{
+					methodMain = methodMain.Replace(typeReturn[orgInd] + " " + identifier, typeReturn[i] + " " + identifier);
+				}
+				methodMain = Regex.Replace(methodMain, @"\[\]\r?\n", "");
+				methodMain = Regex.Replace(methodMain, @"\t{3,}", "\t\t");
+				generated += methodMain + Environment.NewLine + Environment.NewLine;
+			}
+			if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains("in " + typeNames[typeNames.Length - 1]))
+			{
+				string newIdentifier = method.Identifier.ToString();
+				newIdentifier = newIdentifier.Substring(0, typeCharPos) + newIdentifier.Substring(typeCharPos + typeChars[orgInd].Length);
+				string newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
+				newParams = newParams.Substring(0, newParams.Length - 1)
+									 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
+									 .Replace("in " + typeNames[typeNames.Length - 1], "T");
+				generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, IBaseNumber<T>;";
+				generated += Environment.NewLine + Environment.NewLine;
+				newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
+				newParams = newParams.Substring(0, newParams.Length - 1)
+									 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
+									 .Replace("in " + typeNames[typeNames.Length - 1], "in T");
+				generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}_comp<T>{newParams} where T : unmanaged, IBaseNumber<T>;";
+				generated += Environment.NewLine + Environment.NewLine;
+			}
+			else if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains(", " + typeNames[typeNames.Length - 1]))
+			{
+				string newIdentifier = method.Identifier.ToString();
+				newIdentifier = newIdentifier.Substring(0, typeCharPos) + newIdentifier.Substring(typeCharPos + typeChars[orgInd].Length);
+				string newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
+				newParams = newParams.Substring(0, newParams.Length - 1)
+									 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
+									 .Replace("in " + typeNames[typeNames.Length - 1], "T");
+				generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, IBaseNumber<T>;";
+				generated += Environment.NewLine + Environment.NewLine;
+			}
+		}
+
 		public void Execute(GeneratorExecutionContext context)
 		{
 			NativeMethodClassSyntaxReceiver syntaxReceiver = (NativeMethodClassSyntaxReceiver)context.SyntaxReceiver;
@@ -92,7 +191,11 @@ namespace Althea.SourceGenerator
 			foreach (var (c, id) in classes.Zip(ids, (a, b) => (a, b)))
 			{
 				string className = c.Identifier.ToString().Replace("Template", "");
-				var ns = c.Parent as NamespaceDeclarationSyntax;
+				if (!(c.Parent is NamespaceDeclarationSyntax ns))
+				{
+					context.ReportDiagnostic(Diagnostic.Create(NotSupportedNamespaceError, c.GetLocation(), c.Identifier));
+					continue;
+				}
 				var usings = (ns.Parent as CompilationUnitSyntax).Usings;
 				string usingStatements = string.Join(Environment.NewLine, usings.Where(u => !u.ToString().Contains("Althea.SourceGenerator")));
 				string generated = $@"{usingStatements}
@@ -102,81 +205,6 @@ namespace {ns.Name}
 	public static unsafe partial class {className}
 	{{
 ";
-				void AddMethods(MethodDeclarationSyntax method, int typeCharPos, string[] typeNames, string[] typeChars, string[] typeInputModifer, string[] typeReturn, bool[] typeRefReturn, string attributeName)
-				{
-					int orgInd = 0;
-					for (int i = 0; i < typeNames.Length; i++)
-					{
-						if (method.Identifier.ToString().Substring(typeCharPos, typeChars[i].Length) == typeChars[i])
-						{
-							orgInd = i;
-							break;
-						}
-					}
-					bool removeReturn = false;
-					string methodMain = null, identifier = null;
-					for (int i = 0; i < typeNames.Length; i++)
-					{
-						// change identifier
-						identifier = method.Identifier.ToString();
-						identifier = identifier.Substring(0, typeCharPos) + typeChars[i] + identifier.Substring(typeCharPos + typeChars[orgInd].Length);
-						// add method declaration
-						var newAttrs = method.RemoveAttribute(attributeName);
-						var newMethod = method.WithAttributeLists(newAttrs);
-						methodMain = newMethod.ToString();
-						methodMain = methodMain.Replace(method.Identifier.ToString() + "(", identifier + "(")
-											   .Replace(", " + typeNames[orgInd], ", " + typeNames[i])
-											   .Replace("," + typeNames[orgInd], ", " + typeNames[i])
-											   .Replace("(" + typeNames[orgInd], "(" + typeNames[i]);
-						if (typeInputModifer[i] != "")
-						{
-							methodMain = Regex.Replace(methodMain, @", ?" + typeNames[i] + @"([^\*])", ", " + typeInputModifer[i] + typeNames[i] + @"$1");
-							methodMain = Regex.Replace(methodMain, @"\(" + typeNames[i] + @"([^\*])", "(" + typeInputModifer[i] + typeNames[i] + @"$1");
-						}
-						if (typeRefReturn[i])
-						{
-							methodMain = methodMain.Replace(");", $", out {typeReturn[i]} result);")
-												   .Replace(typeReturn[orgInd] + " " + identifier, "void " + identifier);
-							removeReturn = true;
-						}
-						else
-						{
-							methodMain = methodMain.Replace(typeReturn[orgInd] + " " + identifier, typeReturn[i] + " " + identifier);
-						}
-						methodMain = Regex.Replace(methodMain, @"\[\]\r?\n", "");
-						methodMain = Regex.Replace(methodMain, @"\t{3,}", "\t\t");
-						generated += methodMain + Environment.NewLine + Environment.NewLine;
-					}
-					if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains("in " + typeNames[typeNames.Length - 1]))
-					{
-						string newIdentifier = method.Identifier.ToString();
-						newIdentifier = newIdentifier.Substring(0, typeCharPos) + newIdentifier.Substring(typeCharPos + typeChars[orgInd].Length);
-						string newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
-						newParams = newParams.Substring(0, newParams.Length - 1)
-											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
-											 .Replace("in " + typeNames[typeNames.Length - 1], "T");
-						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, INumber<T>;";
-						generated += Environment.NewLine + Environment.NewLine;
-						newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
-						newParams = newParams.Substring(0, newParams.Length - 1)
-											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
-											 .Replace("in " + typeNames[typeNames.Length - 1], "in T");
-						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}_comp<T>{newParams} where T : unmanaged, INumber<T>;";
-						generated += Environment.NewLine + Environment.NewLine;
-					}
-					else if (attributeName == nameof(NativeMethodAttribute) && methodMain.Contains(", " + typeNames[typeNames.Length - 1]))
-					{
-						string newIdentifier = method.Identifier.ToString();
-						newIdentifier = newIdentifier.Substring(0, typeCharPos) + newIdentifier.Substring(typeCharPos + typeChars[orgInd].Length);
-						string newParams = methodMain.Substring(methodMain.IndexOf(identifier + "(") + identifier.Length);
-						newParams = newParams.Substring(0, newParams.Length - 1)
-											 .Replace(", " + typeNames[typeNames.Length - 1], ", T")
-											 .Replace("in " + typeNames[typeNames.Length - 1], "T");
-						generated += $"\t\tinternal delegate {(removeReturn ? "void" : method.ReturnType.ToString())} {newIdentifier}<T>{newParams} where T : unmanaged, INumber<T>;";
-						generated += Environment.NewLine + Environment.NewLine;
-					}
-				}
-
 
 				var methods = c.ChildNodes().Where(s => s is MethodDeclarationSyntax m && m.HasAttribute(nameof(NativeMethodAttribute)));
 				foreach (var methodNode in methods)
@@ -204,7 +232,7 @@ namespace {ns.Name}
 					}
 					if (attr.ArgumentList.Arguments.Count >= 1)
 					{
-						typeNames = new[] { "float", "double", "Complex<float>", "Complex<double>" };
+						typeNames = new[] { "Float32", "Float64", "Complex<Float32>", "Complex<Float64>" };
 						typeChars = new[] { "s", "d", "c", "z" };
 						typeInputModifer = new[] { "", "", "", "" };
 						typeReturn = typeNames;
@@ -242,8 +270,8 @@ namespace {ns.Name}
 						}
 						if (retReal)
 						{
-							typeReturn = new[] { "float", "double", "float", "double" };
-							typeChars = upper ? new[] { "S", "D", "SC", "DZ" } : new[] { "s", "d", "sc", "dz" };
+							typeReturn = new[] { "Float32", "Float64", "Float32", "Float64" };
+							typeChars = upper ? new[] { "S", "D", "Sc", "Dz" } : new[] { "s", "d", "sc", "dz" };
 						}
 					}
 					if (attr.ArgumentList.Arguments.Count == 5)
@@ -268,7 +296,15 @@ namespace {ns.Name}
 						errLoc = attr.ArgumentList.GetLocation();
 						goto ERROR;
 					}
-					AddMethods(method, typeCharPos, typeNames, typeChars, typeInputModifer, typeReturn, typeRefReturn, nameof(NativeMethodAttribute));
+					string old = generated;
+					try
+					{
+						AddMethods(method, typeCharPos, typeNames, typeChars, typeInputModifer, typeReturn, typeRefReturn, nameof(NativeMethodAttribute), ref generated);
+						continue;
+					}
+					catch (Exception) { }
+					context.ReportDiagnostic(Diagnostic.Create(InternalError, method.GetLocation(), method.Identifier));
+					generated = old;
 					continue;
 
 				ERROR:
@@ -359,7 +395,15 @@ namespace {ns.Name}
 								typeRefReturn[i] = false;
 						}
 					}
-					AddMethods(method, typeCharPos, typeNames, typeChars, typeInputModifer, typeReturn, typeRefReturn, nameof(CustomNativeMethodAttribute));
+					string old = generated;
+					try
+					{
+						AddMethods(method, typeCharPos, typeNames, typeChars, typeInputModifer, typeReturn, typeRefReturn, nameof(CustomNativeMethodAttribute), ref generated);
+						continue;
+					}
+					catch (Exception) { }
+					context.ReportDiagnostic(Diagnostic.Create(InternalError, method.GetLocation(), method.Identifier));
+					generated = old;
 					continue;
 
 				ERROR:

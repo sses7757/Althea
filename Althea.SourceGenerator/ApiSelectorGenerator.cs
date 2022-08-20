@@ -17,6 +17,15 @@ namespace Althea.SourceGenerator
 	/// <summary>
 	/// Tells the source generator that the marked interface is a runtime API class
 	/// </summary>
+	/// <remarks>The marked API interface must lies within a namespace like
+	/// <code>
+	/// namespace MyNameSpace1
+	/// {
+	///		[<see cref="AbstractRuntimeApiAttribute"/>]
+	///		public interface IApi1
+	///		{...}
+	///	}
+	/// </code></remarks>
 	[AttributeUsage(AttributeTargets.Interface, Inherited = false, AllowMultiple = false)]
 	public sealed class AbstractRuntimeApiAttribute : Attribute
 	{
@@ -48,11 +57,25 @@ namespace Althea.SourceGenerator
 	[Generator]
 	public class ApiSelectorGenerator : ISourceGenerator
 	{
-		private static readonly DiagnosticDescriptor MultipleReturnsError =
 #pragma warning disable RS2008
+		private static readonly DiagnosticDescriptor MultipleReturnsError =
 			new DiagnosticDescriptor("GENAPI001",
 									"Target API method has multiple returns",
 									"Couldn't generate API selector method of '{0}' since it has multiple return parameters",
+									"API Selector Generator",
+									DiagnosticSeverity.Error,
+									true);
+		private static readonly DiagnosticDescriptor NotSupportedNamespaceError =
+			new DiagnosticDescriptor("GENAPI002",
+									"Target API class is not in a supported namespace syntax",
+									"Couldn't generate API selector class of '{0}' since it is not in a supported namespace syntax",
+									"API Selector Generator",
+									DiagnosticSeverity.Error,
+									true);
+		private static readonly DiagnosticDescriptor InternalError =
+			new DiagnosticDescriptor("GENAPI999",
+									"Target method cannot be generated due to internal error(s)",
+									"Couldn't generate API selector method '{0}' due to internal error(s), this is usually caused by syntax error",
 									"API Selector Generator",
 									DiagnosticSeverity.Error,
 									true);
@@ -97,143 +120,160 @@ namespace Althea.SourceGenerator
 			foreach (var apiClass in apiClasses)
 			{
 				string classText = apiClass.ToString();
-				var ns = apiClass.Parent as NamespaceDeclarationSyntax;
+				if (!(apiClass.Parent is NamespaceDeclarationSyntax ns))
+				{
+					context.ReportDiagnostic(Diagnostic.Create(NotSupportedNamespaceError, apiClass.GetLocation(), apiClass.Identifier));
+					continue;
+				}
+				string nsName = ns.Name.ToString(), nsFull = ns.ToString();
 				var usings = (ns.Parent as CompilationUnitSyntax).Usings;
 				string selectorName = apiClass.Identifier.ToString().Replace("Abstract", "") + "Selector";
 				if (selectorName[0] == 'I')
 					selectorName = selectorName.Substring(1);
 				string usingStatements = string.Join(Environment.NewLine, usings.Where(u => !u.ToString().Contains("Althea.SourceGenerator")));
-				if (!usingStatements.Contains("using Althea.NativeTypes;"))
-					usingStatements += Environment.NewLine + "using Althea.NativeTypes;";
 				if (!usingStatements.Contains("using Althea.Resources;"))
 					usingStatements += Environment.NewLine + "using Althea.Resources;";
-				int classDocStart = ns.ToString().IndexOf("/// <summary>"), classDocEnd = ns.ToString().IndexOf("	/// </summary>");
+				int classDocStart = nsFull.IndexOf("/// <summary>"), classDocEnd = nsFull.IndexOf("/// </summary>");
 				string generated = $@"{usingStatements}
 
-namespace {ns.Name}
+namespace {nsName}
 {{
-	{ns.ToString().Substring(classDocStart, classDocEnd - classDocStart).Replace("abstract interface", "selector class")}	/// </summary>
+	{nsFull.Substring(classDocStart, classDocEnd - classDocStart).Replace("abstract interface", "selector class")}	/// </summary>
 	public sealed partial class {selectorName} : AbstractApiSelector<{apiClass.Identifier}>
 	{{
 ";
 				var methods = apiClass.ChildNodes().Where(s => s is MethodDeclarationSyntax m && m.HasAttribute(nameof(AbstractApiMethodAttribute)));
 				foreach (var methodNode in methods)
 				{
-					// basic info
-					var method = (MethodDeclarationSyntax)methodNode;
-					var attr = method.GetAttribute(nameof(AbstractApiMethodAttribute));
-					bool duplicateT = attr.ArgumentList != null && attr.ArgumentList.Arguments.Count == 1 && attr.ArgumentList.Arguments[0].ToString() == "true";
-					var allParams = method.ParameterList.Parameters;
-					var orgTypeParams = method.TypeParameterList;
-				RESTART:
-					var returnParams = allParams.Where(p => p.Modifiers.Count == 1 && p.Modifiers[0].Text == "out");
-					if (returnParams.Count() > 1)
+					string old = generated;
+					try
 					{
-						context.ReportDiagnostic(Diagnostic.Create(MultipleReturnsError, returnParams.Skip(1).First().GetLocation(), method.Identifier));
-						continue;
+						if (AddMethod(methodNode, in context, voidType, typeT, typeTConstraint, classText, ref generated))
+							continue;
 					}
-					bool hasReturn = returnParams.Any();
-					var returnParam = returnParams.FirstOrDefault();
-
-					// add document
-					int methodPos = classText.IndexOf(method.ToString());
-					string document = classText.Substring(0, methodPos);
-					int docStart = document.LastIndexOf("\t\t/// <summary>");
-					document = document.Substring(docStart);
-					if (duplicateT)
-					{
-						document = document.Replace("in bytes", @"in <typeparamref name=""T""/>")
-										   .Replace("</summary>", @"</summary>
-		/// <typeparam name=""T"">Any unmanaged number struct as the data type</typeparam>");
-					}
-					if (hasReturn)
-					{
-						string retDoc = Regex.Match(document, $@"<param name=""{returnParam.Identifier}"">(.+?)</param>").Groups[1].Value;
-						document = Regex.Replace(document, @"<returns>.+?</returns>", $@"<returns>{retDoc}.</returns>");
-						document = Regex.Replace(document, $@"\r?\n\t+/// ?<param name=""{returnParam.Identifier}"">.+?</param>", "");
-					}
-					else
-					{
-						document = Regex.Replace(document, @"\r?\n\t+/// ?<returns>.+?</returns>", "");
-					}
-					var upperCaseMatch = Regex.Match(document, @"When implemented by a derived class, (\w)").Groups[1].Value.ToUpper();
-					document = Regex.Replace(document, @"When implemented by a derived class, \w", upperCaseMatch);
-					generated += document + @"/// <exception cref=""InvalidOperationException"">If an error occurred during selecting the implementation</exception>" + Environment.NewLine;
-
-					// add method declaration
-					var newAttrs = method.RemoveAttribute(nameof(AbstractApiMethodAttribute));
-					var retType = hasReturn ? returnParam.Type : voidType;
-					var newParams = hasReturn ? allParams.Remove(returnParam) : allParams;
-					var typeParams = duplicateT ? orgTypeParams.WithParameters(default).AddParameters(typeT).AddParameters(orgTypeParams.Parameters.ToArray()) : orgTypeParams;
-					var typeParamsConstrain = duplicateT ? new SyntaxList<TypeParameterConstraintClauseSyntax>().Add(typeTConstraint).AddRange(method.ConstraintClauses) : method.ConstraintClauses;
-					method = method.WithAttributeLists(newAttrs)
-								   .WithReturnType(retType)
-								   .WithParameterList(method.ParameterList.WithParameters(newParams))
-								   .WithTypeParameterList(typeParams)
-								   .WithConstraintClauses(typeParamsConstrain)
-								   .WithBody(null).WithExpressionBody(null);
-					string methodMain = method.ToString()
-											   .Replace(" abstract ", " static ")
-											   .Replace(" virtual ", " static ")
-											   .Replace("unsafe ", "")
-											   .Replace(",T", ", T")
-											   .Replace(" ;", ";")
-											   .Replace($"[DuplicateTParameter] ", "");
-					methodMain = Regex.Replace(methodMain, @"<T,([^ ])", @"<T, $1");
-					methodMain = Regex.Replace(methodMain, @"([^ ])where", @"$1 where");
-					methodMain = Regex.Replace(methodMain, @"\[\]\r?\n", "");
-					if (methodMain.EndsWith(";"))
-						methodMain = methodMain.Substring(0, methodMain.Length - 1);
-					string newParamsInvoke = string.Join(", ", newParams.Select(p => duplicateT && p.HasAttribute(nameof(DuplicateTParameterAttribute)) ? $"{p.Identifier} * Unmanaged<T>.Size" : p.InvokeRepr()));
-					if (duplicateT)
-					{
-						methodMain += $" => {method.Identifier}{orgTypeParams}({newParamsInvoke})" + (hasReturn && returnParam.HasAttribute(nameof(DuplicateTParameterAttribute)) ? " * Unmanaged<T>.Size;" : ";");
-					}
-					else if (hasReturn)
-					{
-						string allParamsInvoke = string.Join(", ", allParams.Select(p => p == returnParam ? $"out {p.Type} {p.Identifier}" : p.InvokeRepr()));
-						string body = $@"
-		{{
-			foreach (var api in ApiEnumerable)
-			{{
-				if (api.{method.Identifier}{orgTypeParams}({allParamsInvoke}))
-					return {returnParam.Identifier};
-			}}
-			throw new InvalidOperationException(BackendError.NotAvailable);
-		}}";
-						methodMain += body;
-					}
-					else
-					{
-						string allParamsInvoke = string.Join(", ", allParams.Select(p => p.InvokeRepr()));
-						string body = $@"
-		{{
-			foreach (var api in ApiEnumerable)
-			{{
-				if (api.{method.Identifier}{orgTypeParams}({allParamsInvoke}))
-					return;
-			}}
-			throw new InvalidOperationException(BackendError.NotAvailable);
-		}}";
-						methodMain += body;
-					}
-					generated += methodMain + Environment.NewLine + Environment.NewLine;
-
-					// restart with no additional T
-					if (duplicateT)
-					{
-						duplicateT = false;
-						method = (MethodDeclarationSyntax)methodNode;
-						goto RESTART;
-					}
+					catch (Exception) { }
+					context.ReportDiagnostic(Diagnostic.Create(MultipleReturnsError, methodNode.GetLocation(), ((MethodDeclarationSyntax)methodNode).Identifier));
+					generated = old;
 				}
-
 				generated += "	}" + Environment.NewLine + "}";
 				// add the generated implementation to the compilation
 				SourceText sourceText = SourceText.From(generated, Encoding.UTF8);
 				context.AddSource($"{ns.Name}.{selectorName}.cs", sourceText);
 			}
 		}
+
+		static bool AddMethod(SyntaxNode methodNode, in GeneratorExecutionContext context, TypeSyntax voidType, TypeParameterSyntax typeT, TypeParameterConstraintClauseSyntax typeTConstraint, string classText, ref string generated)
+		{
+			// basic info
+			var method = (MethodDeclarationSyntax)methodNode;
+			var attr = method.GetAttribute(nameof(AbstractApiMethodAttribute));
+			bool duplicateT = attr.ArgumentList != null && attr.ArgumentList.Arguments.Count == 1 && attr.ArgumentList.Arguments[0].ToString() == "true";
+			var allParams = method.ParameterList.Parameters;
+			var orgTypeParams = method.TypeParameterList;
+		RESTART:
+			var returnParams = allParams.Where(p => p.Modifiers.Count == 1 && p.Modifiers[0].Text == "out");
+			if (returnParams.Count() > 1)
+			{
+				context.ReportDiagnostic(Diagnostic.Create(MultipleReturnsError, returnParams.Skip(1).First().GetLocation(), method.Identifier));
+				return false;
+			}
+			bool hasReturn = returnParams.Any();
+			var returnParam = returnParams.FirstOrDefault();
+
+			// add document
+			int methodPos = classText.IndexOf(method.ToString());
+			string document = classText.Substring(0, methodPos);
+			int docStart = document.LastIndexOf("\t\t/// <summary>");
+			document = document.Substring(docStart);
+			if (duplicateT)
+			{
+				document = document.Replace("in bytes", @"in <typeparamref name=""T""/>")
+								   .Replace("</summary>", @"</summary>
+		/// <typeparam name=""T"">Any unmanaged number struct as the data type</typeparam>");
+			}
+			if (hasReturn)
+			{
+				string retDoc = Regex.Match(document, $@"<param name=""{returnParam.Identifier}"">(.+?)</param>").Groups[1].Value;
+				document = Regex.Replace(document, @"<returns>.+?</returns>", $@"<returns>{retDoc}.</returns>");
+				document = Regex.Replace(document, $@"\r?\n\t+/// ?<param name=""{returnParam.Identifier}"">.+?</param>", "");
+			}
+			else
+			{
+				document = Regex.Replace(document, @"\r?\n\t+/// ?<returns>.+?</returns>", "");
+			}
+			var upperCaseMatch = Regex.Match(document, @"When implemented by a derived class, (\w)").Groups[1].Value.ToUpper();
+			document = Regex.Replace(document, @"When implemented by a derived class, \w", upperCaseMatch);
+			generated += document + @"/// <exception cref=""InvalidOperationException"">If an error occurred during selecting the implementation</exception>" + Environment.NewLine;
+
+			// add method declaration
+			var newAttrs = method.RemoveAttribute(nameof(AbstractApiMethodAttribute));
+			var retType = hasReturn ? returnParam.Type : voidType;
+			var newParams = hasReturn ? allParams.Remove(returnParam) : allParams;
+			var typeParams = duplicateT ? orgTypeParams.WithParameters(default).AddParameters(typeT).AddParameters(orgTypeParams.Parameters.ToArray()) : orgTypeParams;
+			var typeParamsConstrain = duplicateT ? new SyntaxList<TypeParameterConstraintClauseSyntax>().Add(typeTConstraint).AddRange(method.ConstraintClauses) : method.ConstraintClauses;
+			method = method.WithAttributeLists(newAttrs)
+						   .WithReturnType(retType)
+						   .WithParameterList(method.ParameterList.WithParameters(newParams))
+						   .WithTypeParameterList(typeParams)
+						   .WithConstraintClauses(typeParamsConstrain)
+						   .WithBody(null).WithExpressionBody(null);
+			string methodMain = method.ToString()
+									   .Replace(" abstract ", " static ")
+									   .Replace(" virtual ", " static ")
+									   .Replace("unsafe ", "")
+									   .Replace(",T", ", T")
+									   .Replace(" ;", ";")
+									   .Replace($"[DuplicateTParameter] ", "");
+			methodMain = Regex.Replace(methodMain, @"<T,([^ ])", @"<T, $1");
+			methodMain = Regex.Replace(methodMain, @"([^ ])where", @"$1 where");
+			methodMain = Regex.Replace(methodMain, @"\[\]\r?\n", "");
+			if (methodMain.EndsWith(";"))
+				methodMain = methodMain.Substring(0, methodMain.Length - 1);
+			string newParamsInvoke = string.Join(", ", newParams.Select(p => duplicateT && p.HasAttribute(nameof(DuplicateTParameterAttribute)) ? $"{p.Identifier} * Unmanaged<T>.Size" : p.InvokeRepr()));
+			if (duplicateT)
+			{
+				methodMain += $" => {method.Identifier}{orgTypeParams}({newParamsInvoke})" + (hasReturn && returnParam.HasAttribute(nameof(DuplicateTParameterAttribute)) ? " * Unmanaged<T>.Size;" : ";");
+			}
+			else if (hasReturn)
+			{
+				string allParamsInvoke = string.Join(", ", allParams.Select(p => p == returnParam ? $"out {p.Type} {p.Identifier}" : p.InvokeRepr()));
+				string body = $@"
+		{{
+			foreach (var api in ApiEnumerable)
+			{{
+				if (api.{method.Identifier}{orgTypeParams}({allParamsInvoke}))
+					return {returnParam.Identifier};
+			}}
+			throw new InvalidOperationException(BackendError.NotAvailable + string.Join("", "", ApiEnumerable.CurrentApis));
+		}}";
+				methodMain += body;
+			}
+			else
+			{
+				string allParamsInvoke = string.Join(", ", allParams.Select(p => p.InvokeRepr()));
+				string body = $@"
+		{{
+			foreach (var api in ApiEnumerable)
+			{{
+				if (api.{method.Identifier}{orgTypeParams}({allParamsInvoke}))
+					return;
+			}}
+			throw new InvalidOperationException(BackendError.NotAvailable + string.Join("", "", ApiEnumerable.CurrentApis));
+		}}";
+				methodMain += body;
+			}
+			generated += methodMain + Environment.NewLine + Environment.NewLine;
+
+			// restart with no additional T
+			if (duplicateT)
+			{
+				duplicateT = false;
+				method = (MethodDeclarationSyntax)methodNode;
+				goto RESTART;
+			}
+			return true;
+		}
+
 
 		public void AddSettings(GeneratorExecutionContext context, List<InterfaceDeclarationSyntax> apiClasses)
 		{
@@ -252,51 +292,6 @@ namespace {ns.Name}
 		/// </summary>
 		bool Available { get; }";
 
-
-			string implSetting = @"using System.Text.Json;
-using System.Text.Json.Serialization;
-
-
-namespace Althea
-{
-	internal record struct ImplementationSettings
-	{
-		public ImplementationSettings() : this(Settings.GetInternalBackend(""CSharp""))
-		{ }
-
-		public bool DisposeNotCurrentImplementation { get; set; }";
-			string implSettingSet = @"
-
-		internal void SetBackends()
-		{";
-			string implSettingBackend = @"
-
-		internal ImplementationSettings(IBackends impls)
-		{
-			this.DisposeNotCurrentImplementation = false;";
-			string implSettingJson = @"
-
-		[JsonConstructor]
-		internal ImplementationSettings(bool disposeNotCurrentImplementation";
-			string implSettingJson2 = @"
-		{
-			this.DisposeNotCurrentImplementation = disposeNotCurrentImplementation;
-			Type? type;";
-			string implSettingJson3 = @"
-
-		internal sealed class JsonConverter : JsonConverter<ImplementationSettings>
-		{
-			public override ImplementationSettings Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				return JsonSerializer.Deserialize<ImplementationSettings>(ref reader);
-			}
-
-			public override void Write(Utf8JsonWriter writer, ImplementationSettings value, JsonSerializerOptions options)
-			{
-				writer.WriteStartObject();
-				writer.WriteBoolean(nameof(DisposeNotCurrentImplementation), value.DisposeNotCurrentImplementation);
-				writer.WriteString(nameof(LinearAlgebraDenseBlas), value.LinearAlgebraDenseBlas?.GetType()?.AssemblyQualifiedName);";
-
 			foreach (var apiClass in apiClasses)
 			{
 				var ns = apiClass.Parent as NamespaceDeclarationSyntax;
@@ -313,44 +308,11 @@ namespace Althea
 		/// The API implementation of <see cref=""{ns.Name}.{apiClass.Identifier}""/>.
 		/// </summary>
 		{ns.Name}.{apiClass.Identifier}? {propertyName} {{ get; }}";
-
-				implSetting += $@"
-
-		public {ns.Name}.{apiClass.Identifier}? {propertyName} {{ get; set; }}";
-				implSettingBackend += $@"
-			this.{propertyName} = impls.{propertyName};";
-				implSettingSet += $@"
-			if (this.{propertyName} is not null)
-				{ns.Name}.{selectorName}.SetImplementation(this.{propertyName});";
-				implSettingJson += $@", string? {propertyNameFirstLower}";
-				implSettingJson2 += $@"
-			if ({propertyNameFirstLower} is null)
-			{{
-				this.{propertyName} = null;
-			}}
-			else
-			{{
-				type = Type.GetType({propertyNameFirstLower});
-				if (type is null)
-					throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof({propertyNameFirstLower}));
-				this.{propertyName} = IAbstractRuntimeApi<{ns.Name}.{apiClass.Identifier}>.Create(type);
-			}}";
-				implSettingJson3 += $@"
-				writer.WriteString(nameof({propertyName}), value.{propertyName}?.GetType()?.AssemblyQualifiedName);";
 			}
 
 			backendInterface += Environment.NewLine + "\t}" + Environment.NewLine + "}";
 			SourceText sourceText = SourceText.From(backendInterface, Encoding.UTF8);
 			context.AddSource($"IBackends.cs", sourceText);
-
-			implSetting += implSettingSet + Environment.NewLine + "\t\t}" + implSettingBackend + Environment.NewLine + "\t\t}" + implSettingJson + ")" + implSettingJson2 + Environment.NewLine + "\t\t}" + implSettingJson3 + @"
-				writer.WriteEndObject();
-			}
-		}
-	}
-}";
-			sourceText = SourceText.From(implSetting, Encoding.UTF8);
-			context.AddSource($"ImplementationSettings.cs", sourceText);
 		}
 
 		public void Execute(GeneratorExecutionContext context)

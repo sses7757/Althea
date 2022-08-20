@@ -1,5 +1,4 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 using Althea.Backend.Cuda.LinearAlgebra.Dense;
@@ -9,9 +8,6 @@ using Althea.LinearAlgebra;
 
 namespace Althea.Backend.Cuda
 {
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaBlasStatus"/> and <see cref="CudaSolverStatus"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>
@@ -41,14 +37,14 @@ namespace Althea.Backend.Cuda
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static unsafe void CheckDeviceInfo(this SolveMethodKind kind, IntPtr deviceInfo)
+		internal static unsafe void CheckDeviceInfo(this SolveMethodKind kind, void* deviceInfo)
 		{
 			int info;
-			Storage.NativeMethods.cudaMemcpy((IntPtr)(&info), deviceInfo, sizeof(int), Storage.MemoryCopyKind.DeviceToHost).Check();
+			Storage.NativeMethods.cudaMemcpy(&info, deviceInfo, sizeof(int), Storage.MemoryCopyKind.DeviceToHost).Check();
 			if (info > 0)
 				throw new MatrixSolveAlgorithmException(kind, info);
 			if (info < 0)
-				throw new ArgumentException(Resources.Parameter.InvalidValue, (-info).ToOrdinal());
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, (-info).ToOrdinal());
 		}
 	}
 }
@@ -210,6 +206,12 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		InvalidLicense = 11
 	}
 
+	internal enum CuSolverEigMode
+	{
+		NoVector = 0,
+		Vector = 1
+	}
+
 	/// <summary>
 	/// The <see cref="CuBlasPointerMode"/> enum indicates whether the scalar values are passed by reference on the host or device.<br/>
 	/// It is important to point out that if several scalar values are present in the function call, all of them must conform to the same single pointer mode.<br/>
@@ -301,7 +303,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// </summary>
 		Compute16F = 64,
 		/// <summary>
-		/// This mode uses 16-bit half precision floating point standardized arithmetic for all phases of calculations and is primarily intended for numerical robustness studies, testing, and debugging. This mode might not be as performant as the other modes since it disables use of tensor cores.
+		/// This mode uses 16-bit half precision floating point standardized arithmetic for all phases of calculations and is primarily intended for numerical robustness studies, testing, and debugging. This mode might not perform as good as the other modes since it disables use of tensor cores.
 		/// </summary>
 		Compute16F_Pedantic = 65,
 		/// <summary>

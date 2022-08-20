@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
 using Althea.Random;
-using Althea.Backend.Random;
 using Althea.Backend.Mkl.Random;
 
 
@@ -302,6 +301,10 @@ namespace Althea.Backend.Mkl.Random
 		/// <see cref="LogNormalDistribution{T}"/>
 		/// </summary>
 		LogNormal,
+		/// <summary>
+		/// <see cref="BinormalDistribution{T}"/>
+		/// </summary>
+		Binormal,
 		/// <summary>
 		/// <see cref="MultinomialDistribution{T}"/>
 		/// </summary>
@@ -625,9 +628,6 @@ namespace Althea.Backend.Mkl.Random
 
 namespace Althea.Backend.Mkl
 {
-	/// <summary>
-	/// The static class for checking <see cref="MklRngStatus"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>

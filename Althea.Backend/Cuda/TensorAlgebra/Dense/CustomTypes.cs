@@ -1,21 +1,18 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using Althea.Linq;
+using Althea.Backend.Cuda.TensorAlgebra.Dense;
 using Althea.Helpers;
-using Althea.NativeTypes;
+using Althea.LinearAlgebra;
 using Althea.TensorAlgebra;
 using Althea.TensorAlgebra.Dense;
-using Althea.Backend.Cuda.TensorAlgebra.Dense;
+
+using static Althea.Backend.Cuda.MemoryPointerChecker;
 
 
 namespace Althea.Backend.Cuda
 {
-	/// <summary>
-	/// The static class containing extension methods for <see cref="CudaTensorStatus"/> and <see cref="CudaTensorStatus"/>
-	/// </summary>
 	public static partial class StatusExtension
 	{
 		/// <summary>
@@ -23,79 +20,175 @@ namespace Althea.Backend.Cuda
 		/// </summary>
 		/// <param name="err">The <see cref="CudaTensorStatus"/> to be checked</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Check(this CudaTensorStatus err)
+		public static bool Check(this CudaTensorStatus err)
 		{
+			if (err == CudaTensorStatus.NotSupported)
+				return false;
 			if (err != CudaTensorStatus.Success)
-			{
 				throw new StatusException(err, new StackTrace(0));
-			}
+			return true;
 		}
 	}
 }
 
 namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 {
-	#region compute type
-	/// <summary>
-	/// This enum encodes the cuTENSOR’s compute type
-	/// </summary>
-	[Flags]
-	public enum ComputeType
+	#region operations
+	internal enum CuTensorBinary
 	{
 		/// <summary>
-		/// <see cref="DataTypeClassification.FloatPoint_IEEE754"/> binary-16 floating point number (a.k.a. <see cref="System.Half"/>)
+		/// Addition of two elements
 		/// </summary>
-		Half = 1 << 0,
+		Add = 3,
 		/// <summary>
-		/// <see cref="BrainFloatConst.BrainFloat"/> binary-16 floating point number (a.k.a. <see cref="Cuda.BrainHalf"/>)
+		/// Multiplication of two elements
 		/// </summary>
-		BrainHalf = 1 << 10,
+		Mul = 5,
 		/// <summary>
-		/// The floating point number with 8-bit exponent and 10-bit mantissa, not supported in current implementation
+		/// Maximum of two elements
 		/// </summary>
-		TensorFloat32 = 1 << 3,
+		Max = 6,
 		/// <summary>
-		/// <see cref="DataTypeClassification.FloatPoint_IEEE754"/> binary-32 floating point number (a.k.a. <see cref="float"/>) 
+		/// Minimum of two elements
 		/// </summary>
-		Single = 1 << 2,
+		Min = 7
+	}
+
+	internal enum CuTensorUnary
+	{
 		/// <summary>
-		/// <see cref="DataTypeClassification.FloatPoint_IEEE754"/> binary-64 floating point number (a.k.a. <see cref="Double"/>) 
+		/// Identity operator (i.e., elements are not changed)
 		/// </summary>
-		Double = 1 << 4,
+		Identity = 1,
 		/// <summary>
-		/// The 8-bit unsigned integer (a.k.a. <see cref="byte"/>)
+		/// Square root
 		/// </summary>
-		UnsignedByte = 1 << 6,
+		Sqrt = 2,
 		/// <summary>
-		/// The 8-bit signed integer (a.k.a. <see cref="sbyte"/>)
+		/// Rectified linear unit (x if x > 0, otherwise 0)
 		/// </summary>
-		SignedByte = 1 << 8,
+		ReLU = 8,
 		/// <summary>
-		/// The 32-bit unsigned integer (a.k.a. <see cref="uint"/>)
+		/// Complex conjugate
 		/// </summary>
-		UnsignedInteger = 1 << 7,
+		Conjugate = 9,
 		/// <summary>
-		/// The 32-bit signed integer (a.k.a. <see cref="int"/>)
+		/// Reciprocal
 		/// </summary>
-		SignedInteger = 1 << 9
+		Reciprocate = 10,
+		/// <summary>
+		/// Logistic sigmoid function: <c>y = 1 / (1 + exp(-x))</c>
+		/// </summary>
+		Sigmoid = 11,
+		/// <summary>
+		/// <c>y = tanh(x)</c>
+		/// </summary>
+		Tanh = 12,
+		/// <summary>
+		/// <c>y = exp(x)</c>
+		/// </summary>
+		Exp = 22,
+		/// <summary>
+		/// Base <c>e</c> logarithm
+		/// </summary>
+		Log = 23,
+		/// <summary>
+		/// Absolute value
+		/// </summary>
+		Abs = 24,
+		/// <summary>
+		/// Negation
+		/// </summary>
+		Negate = 25,
+		/// <summary>
+		/// Sine function
+		/// </summary>
+		Sin = 26,
+		/// <summary>
+		/// Cosine function
+		/// </summary>
+		Cos = 27,
+		/// <summary>
+		/// Tangent function
+		/// </summary>
+		Tan = 28,
+		/// <summary>
+		/// Hyperbolic sine
+		/// </summary>
+		Sinh = 29,
+		/// <summary>
+		/// Hyperbolic cosine
+		/// </summary>
+		Cosh = 30,
+		/// <summary>
+		/// Inverse sine
+		/// </summary>
+		ArcSin = 31,
+		/// <summary>
+		/// Inverse cosine
+		/// </summary>
+		ArcCos = 32,
+		/// <summary>
+		/// Inverse tangent
+		/// </summary>
+		ArcTan = 33,
+		/// <summary>
+		/// Inverse hyperbolic sine
+		/// </summary>
+		ArcSinh = 34,
+		/// <summary>
+		/// Inverse hyperbolic cosine
+		/// </summary>
+		ArcCosh = 35,
+		/// <summary>
+		/// Inverse hyperbolic tangent
+		/// </summary>
+		ArcTanh = 36,
+		/// <summary>
+		/// Ceiling function
+		/// </summary>
+		Ceil = 37,
+		/// <summary>
+		/// Floor function
+		/// </summary>
+		Floor = 38,
 	}
 
 	internal static partial class Converter
 	{
-		internal static ComputeType ToComputeType(this CudaDataType type)
+		internal static CuTensorBinary ToCudaOp(this BinaryOperation op)
 		{
-			return type switch
+			return op switch
 			{
-				CudaDataType.RealInt8 or CudaDataType.ComplexInt8 => ComputeType.SignedByte,
-				CudaDataType.RealInt32 or CudaDataType.ComplexInt32 => ComputeType.SignedInteger,
-				CudaDataType.RealUInt8 or CudaDataType.ComplexUInt8 => ComputeType.UnsignedByte,
-				CudaDataType.RealUInt32 or CudaDataType.ComplexUInt32 => ComputeType.UnsignedInteger,
-				CudaDataType.RealFloat32 or CudaDataType.ComplexFloat32 => ComputeType.Single,
-				CudaDataType.RealFloat64 or CudaDataType.ComplexFloat64 => ComputeType.Double,
-				CudaDataType.RealFloat16 or CudaDataType.ComplexFloat16 => ComputeType.Half,
-				CudaDataType.RealBrainFloat16 or CudaDataType.ComplexBrainFloat16 => ComputeType.BrainHalf,
-				// TensorFloat32 not supported
+				BinaryOperation.Add => CuTensorBinary.Add,
+				BinaryOperation.Multiply => CuTensorBinary.Mul,
+				BinaryOperation.Maximum => CuTensorBinary.Max,
+				BinaryOperation.Mininum => CuTensorBinary.Min,
 				_ => 0,
+			};
+		}
+
+		internal static CuTensorBinary ToCudaOp(this ReduceOperation op)
+		{
+			return op switch
+			{
+				ReduceOperation.Add => CuTensorBinary.Add,
+				ReduceOperation.Multiply => CuTensorBinary.Mul,
+				ReduceOperation.Maximum => CuTensorBinary.Max,
+				ReduceOperation.Mininum => CuTensorBinary.Min,
+				_ => 0,
+			};
+		}
+		internal static CuTensorUnary ToCudaOp(this Althea.LinearAlgebra.UnaryOperation op)
+		{
+			return op switch
+			{
+				UnaryOperation.Identity => CuTensorUnary.Identity,
+				UnaryOperation.Conjugate => CuTensorUnary.Conjugate,
+				UnaryOperation.Negate => CuTensorUnary.Negate,
+				UnaryOperation.AbsoluteValue => CuTensorUnary.Abs,
+				> 0 => (CuTensorUnary)op,
+				_ => 0
 			};
 		}
 	}
@@ -170,12 +263,80 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	}
 	#endregion
 
+	#region compute type
+	[Flags]
+	internal enum ComputeType
+	{
+		/// <summary>
+		/// <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> binary-16 floating point number (a.k.a. <see cref="System.Half"/>)
+		/// </summary>
+		Float16 = 1 << 0,
+		/// <summary>
+		/// <see cref="BrainHalf.RealBrainHalfType"/> binary-16 floating point number (a.k.a. <see cref="Cuda.BrainHalf"/>)
+		/// </summary>
+		BrainFloat16 = 1 << 10,
+		/// <summary>
+		/// The floating point number with 8-bit exponent and 10-bit mantissa, not supported in current implementation
+		/// </summary>
+		TensorFloat32 = 1 << 3,
+		/// <summary>
+		/// <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> binary-32 floating point number (a.k.a. <see cref="float"/>) 
+		/// </summary>
+		Float32 = 1 << 2,
+		/// <summary>
+		/// <see cref="DataTypeClassification.BinaryFloat_IEEE754"/> binary-64 floating point number (a.k.a. <see cref="double"/>) 
+		/// </summary>
+		Float64 = 1 << 4,
+		/// <summary>
+		/// The 8-bit unsigned integer (a.k.a. <see cref="byte"/>)
+		/// </summary>
+		UInt8 = 1 << 6,
+		/// <summary>
+		/// The 8-bit signed integer (a.k.a. <see cref="sbyte"/>)
+		/// </summary>
+		SInt8 = 1 << 8,
+		/// <summary>
+		/// The 32-bit unsigned integer (a.k.a. <see cref="uint"/>)
+		/// </summary>
+		UInt32 = 1 << 7,
+		/// <summary>
+		/// The 32-bit signed integer (a.k.a. <see cref="int"/>)
+		/// </summary>
+		SInt32 = 1 << 9
+	}
+
+	internal static partial class Converter
+	{
+		internal static ComputeType ToComputeType(this CudaDataType type)
+		{
+			return type switch
+			{
+				CudaDataType.RealInt8 or CudaDataType.ComplexInt8 => ComputeType.SInt8,
+				CudaDataType.RealInt32 or CudaDataType.ComplexInt32 => ComputeType.SInt32,
+				CudaDataType.RealUInt8 or CudaDataType.ComplexUInt8 => ComputeType.UInt8,
+				CudaDataType.RealUInt32 or CudaDataType.ComplexUInt32 => ComputeType.UInt32,
+				CudaDataType.RealFloat32 or CudaDataType.ComplexFloat32 => ComputeType.Float32,
+				CudaDataType.RealFloat64 or CudaDataType.ComplexFloat64 => ComputeType.Float64,
+				CudaDataType.RealFloat16 or CudaDataType.ComplexFloat16 => ComputeType.Float32,
+				CudaDataType.RealBrainFloat16 or CudaDataType.ComplexBrainFloat16 => ComputeType.Float32,
+				// TensorFloat32 not supported
+				_ => 0,
+			};
+		}
+	}
+	#endregion
+
 	#region other enum
 	/// <summary>
-	/// This enum gives users finer control over which algorithm should be executed by tensor contraction. Values >= 0 correspond to certain sub-algorithms of <see cref="GETT"/>.
+	/// This enum gives users finer control over which algorithm should be executed by tensor contraction.
 	/// </summary>
+	/// <remarks>Values >= 0 correspond to certain sub-algorithms of <see cref="GETT"/>.</remarks>
 	public enum ContractionAlgorithm
 	{
+		/// <summary>
+		/// The more accurate but also more time-consuming performance model
+		/// </summary>
+		DefaultPatient = -6,
 		/// <summary>
 		/// Let the internal heuristic choose among all GETT algorithms
 		/// </summary>
@@ -194,9 +355,6 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		Default = -1
 	}
 
-	/// <summary>
-	/// The work space preference used by tensor contraction.
-	/// </summary>
 	internal enum WorkSpacePreference
 	{
 		/// <summary>
@@ -214,181 +372,11 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	}
 	#endregion
 
-	#region operations
-	/// <summary>
-	/// Binary operations supported by tensor point-wise operations
-	/// </summary>
-	public enum BinaryOperation
-	{
-		/// <summary>
-		/// Addition of two elements
-		/// </summary>
-		Add = 3,
-		/// <summary>
-		/// Multiplication of two elements
-		/// </summary>
-		Mul = 5,
-		/// <summary>
-		/// Maximum of two elements
-		/// </summary>
-		Max = 6,
-		/// <summary>
-		/// Minimum of two elements
-		/// </summary>
-		Min = 7
-	}
-
-	/// <summary>
-	/// Unary operations supported by tensor point-wise operations
-	/// </summary>
-	public enum UnaryOperation
-	{
-		/// <summary>
-		/// Identity operator (i.e., elements are not changed)
-		/// </summary>
-		Identity = 1,
-		/// <summary>
-		/// Square root
-		/// </summary>
-		Sqrt = 2,
-		/// <summary>
-		/// Rectified linear unit (x if x > 0, otherwise 0)
-		/// </summary>
-		ReLU = 8,
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
-		Conjugate = 9,
-		/// <summary>
-		/// Reciprocal
-		/// </summary>
-		Reciprocate = 10,
-		/// <summary>
-		/// Logistic sigmoid function: <c>y = 1 / (1 + exp(-x))</c>
-		/// </summary>
-		Sigmoid = 11,
-		/// <summary>
-		/// Exponentiation
-		/// </summary>
-		Exp = 22,
-		/// <summary>
-		/// Base <c>e</c> logarithm
-		/// </summary>
-		Log = 23,
-		/// <summary>
-		/// Absolute value
-		/// </summary>
-		Abs = 24,
-		/// <summary>
-		/// Negation
-		/// </summary>
-		Negate = 25,
-		/// <summary>
-		/// Sine function
-		/// </summary>
-		Sin = 26,
-		/// <summary>
-		/// Cosine function
-		/// </summary>
-		Cos = 27,
-		/// <summary>
-		/// Tangent function
-		/// </summary>
-		Tan = 28,
-		/// <summary>
-		/// Hyperbolic sine
-		/// </summary>
-		Sinh = 29,
-		/// <summary>
-		/// Hyperbolic cosine
-		/// </summary>
-		Cosh = 30,
-		/// <summary>
-		/// Hyperbolic tangent function
-		/// </summary>
-		Tanh = 12,
-		/// <summary>
-		/// Inverse sine
-		/// </summary>
-		ArcSin = 31,
-		/// <summary>
-		/// Inverse cosine
-		/// </summary>
-		ArcCos = 32,
-		/// <summary>
-		/// Inverse tangent
-		/// </summary>
-		ArcTan = 33,
-		/// <summary>
-		/// Inverse hyperbolic sine
-		/// </summary>
-		ArcSinh = 34,
-		/// <summary>
-		/// Inverse hyperbolic cosine
-		/// </summary>
-		ArcCosh = 35,
-		/// <summary>
-		/// Inverse hyperbolic tangent
-		/// </summary>
-		ArcTanh = 36,
-		/// <summary>
-		/// Ceiling function
-		/// </summary>
-		Ceil = 37,
-		/// <summary>
-		/// Floor function
-		/// </summary>
-		Floor = 38,
-	}
-
-	internal static partial class Converter
-	{
-		internal static BinaryOperation ToCudaOp(this Althea.TensorAlgebra.BinaryOperation op)
-		{
-			return op switch
-			{
-				Althea.TensorAlgebra.BinaryOperation.Addition => BinaryOperation.Add,
-				Althea.TensorAlgebra.BinaryOperation.Multiply => BinaryOperation.Mul,
-				Althea.TensorAlgebra.BinaryOperation.Maximum => BinaryOperation.Max,
-				Althea.TensorAlgebra.BinaryOperation.Mininum => BinaryOperation.Min,
-				_ => 0,
-			};
-		}
-
-		internal static UnaryOperation ToCudaOp(this Althea.TensorAlgebra.UnaryOperation op)
-		{
-			return op switch
-			{
-				Althea.TensorAlgebra.UnaryOperation.Identity => UnaryOperation.Identity,
-				Althea.TensorAlgebra.UnaryOperation.Conjugate => UnaryOperation.Conjugate,
-				Althea.TensorAlgebra.UnaryOperation.Negate => UnaryOperation.Negate,
-				_ => 0,
-			};
-		}
-	}
-	#endregion
-
 	#region wrapper
-	/// <summary>
-	/// The cuTENSOR's handle wrapper
-	/// </summary>
-	[StructLayout(LayoutKind.Sequential, Size = 8 * 512)]
-	internal sealed class CudaTensorHandle
-	{
-		private readonly long data;
+	[StructLayout(LayoutKind.Explicit, Size = 8 * 512)]
+	internal readonly struct CudaTensorHandle { }
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CudaTensorHandle()
-		{
-			this.data = default;
-			NativeMethods.cutensorInit(ref Unsafe.As<long, byte>(ref this.data)).Check();
-		}
-	}
-
-	/// <summary>
-	/// The structure for the CUDA Tensor library's tensor descriptor
-	/// </summary>
-	[StructLayout(LayoutKind.Explicit, Size = 8 * 64)]
+	[StructLayout(LayoutKind.Explicit, Size = 8 * 72)]
 	internal readonly struct TensorDescription
 	{
 		[FieldOffset(4 * 4)]
@@ -404,12 +392,17 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 		private readonly FixedBuffer_64<int> strides;
 
 		[FieldOffset(38 * 4)]
-		private readonly UnaryOperation operation;
+		private readonly CuTensorUnary operation;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> tensor, out TensorDescription descr) where T : unmanaged, INumber<T>
+		public static bool TryCreate<T, TS>(in CudaTensorHandle handle, DenseTensorWrapper<T, TS> tensor, out TensorDescription descr) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
-			var dataType = Const<T>.DataType.ToCudaDataType();
+			return TryCreate(handle, tensor, T.Type.ToCudaDataType(), out descr);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryCreate<T, TS>(in CudaTensorHandle handle, DenseTensorWrapper<T, TS> tensor, CudaDataType type, out TensorDescription descr) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		{
 			var op = tensor.Operation.ToCudaOp();
 			if (tensor.IsInvalid() || op == 0)
 			{
@@ -418,88 +411,73 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			CudaTensorStatus err;
 			if (tensor.Strides.IsEmpty)
 			{
-				err = NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in Unsafe.NullRef<long>(), dataType, op);
+				err = NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in Unsafe.NullRef<long>(), type, op);
 			}
 			else
 			{
-				err = NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in tensor.Strides[0], dataType, op);
+				err = NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in tensor.Strides[0], type, op);
 			}
-			if (err == CudaTensorStatus.NotSupported || err == CudaTensorStatus.InvalidValue)
-				return false;
-			err.Check();
-			return true;
-		}
-
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static TensorDescription Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> tensor, CudaDataType dataType) where T : unmanaged, INumber<T>
-		{
-			TensorDescription descr;
-			if (tensor.Strides.IsEmpty)
-			{
-				NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in Unsafe.NullRef<long>(), dataType, tensor.Operation.ToCudaOp()).Check();
-			}
-			else
-			{
-				NativeMethods.cutensorInitTensorDescriptor(handle, out descr, tensor.Rank, in tensor.Size[0], in tensor.Strides[0], dataType, tensor.Operation.ToCudaOp()).Check();
-			}
-			return descr;
-		}
-
-		// The string representation of the <b>guessed</b> underlying structure
-		public override string ToString()
-		{
-			return nameof(TensorDescription) + $"[DataType={this.dataType}, Rank={this.rank}, Operation={this.operation}, Size={this.size.AsSpan(this.rank).SpanJoin('x')}, Strides={{{this.strides.AsSpan(this.rank).SpanJoin(',')}}}]";
+			return err.Check();
 		}
 	}
 
-	/// <summary>
-	/// The structure for the CUDA Tensor library's contraction descriptor
-	/// </summary>
-	[StructLayout(LayoutKind.Explicit, Size = 8 * 256)]
-	internal readonly struct ContractDescription
+	[StructLayout(LayoutKind.Explicit, Size = 8 * 288)]
+	internal readonly unsafe record struct ContractDescription
 	{
-		[FieldOffset(4 * 4)]
+		// TODO: test fields
+		[FieldOffset(16)]
 		private readonly TensorDescription descrA;
-
-		[FieldOffset(46 * 4)]
+		[FieldOffset(8 * 72 + 16)]
 		private readonly TensorDescription descrB;
-
-		[FieldOffset(88 * 4)]
+		[FieldOffset(8 * 72 * 2 + 16)]
 		private readonly TensorDescription descrCD;
 
-		[FieldOffset(178 * 4)]
+		[FieldOffset(1168)]
 		private readonly int alignA;
-		[FieldOffset(179 * 4)]
+		[FieldOffset(1168 + 4)]
 		private readonly int alignB;
-		[FieldOffset(180 * 4)]
+		[FieldOffset(1168 + 4 * 2)]
 		private readonly int alignC;
-		[FieldOffset(181 * 4)]
+		[FieldOffset(1168 + 4 * 3)]
 		private readonly int alignD;
 
-		// return supported or not
+		public readonly TensorDescription DescriptionA => this.descrA;
+		public readonly TensorDescription DescriptionB => this.descrB;
+		public readonly TensorDescription DescriptionCD => this.descrCD;
+		public readonly int AlignmentA => this.alignA;
+		public readonly int AlignmentB => this.alignB;
+		public readonly int AlignmentC => this.alignC;
+		public readonly int AlignmentD => this.alignD;
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Create<T>(CudaTensorHandle handle, DenseTensorWrapper<T> A, DenseTensorWrapper<T> B, DenseTensorWrapper<T> C, DenseTensorWrapper<T> D, TensorContractInfo info, out ContractDescription descr, ComputeType computeType = 0) where T : unmanaged, INumber<T>
+		public static bool TryCreate<T, TS1, TS2, TS3>(Api api, DenseTensorWrapper<T, TS1> A, DenseTensorWrapper<T, TS2> B, DenseTensorWrapper<T, TS3> C, DenseTensorWrapper<T, TS3> D, TensorContractInfo info, out ContractDescription descr, ComputeType computeType = 0) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
 			descr = default;
 			if (info.IsInvalid())
 				return false;
-			IntPtr	pA = DenseApi.GetPointer(A.ValueStorage), pB = DenseApi.GetPointer(B.ValueStorage),
-					pC = DenseApi.GetPointer(C.ValueStorage), pD = DenseApi.GetPointer(D.ValueStorage);
-			if (pA == default || pB == default || pC == default || pD == default)
-				return false;
 			if (!C.SizeEquals(D))
 				return false;
+			if (!GetPointer(api, A.ValueStorage, A.Size, A.OuterSize, out T* pA))
+				return false;
+			if (!GetPointer(api, B.ValueStorage, B.Size, B.OuterSize, out T* pB))
+				return false;
+			if (!GetPointer(api, C.ValueStorage, C.Size, C.OuterSize, out T* pC))
+				return false;
+			if (!GetPointer(api, D.ValueStorage, D.Size, D.OuterSize, out T* pD))
+				return false;
 
-			var dataType = Const<T>.DataType.ToCudaDataType();
-			var descrA = TensorDescription.Create(handle, A, dataType);
-			var descrB = TensorDescription.Create(handle, B, dataType);
-			var descrC = TensorDescription.Create(handle, C, dataType);
+			var dataType = T.Type.ToCudaDataType();
+			if (!TensorDescription.TryCreate(api.handle, A, dataType, out var descrA))
+				return false;
+			if (!TensorDescription.TryCreate(api.handle, B, dataType, out var descrB))
+				return false;
+			if (!TensorDescription.TryCreate(api.handle, C, dataType, out var descrC))
+				return false;
 
-			NativeMethods.cutensorGetAlignmentRequirement(handle, pA, in descrA, out int alignA).Check();
-			NativeMethods.cutensorGetAlignmentRequirement(handle, pB, in descrB, out int alignB).Check();
-			NativeMethods.cutensorGetAlignmentRequirement(handle, pC, in descrC, out int alignC).Check();
-			NativeMethods.cutensorGetAlignmentRequirement(handle, pD, in descrC, out int alignD).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pA, &descrA, out int alignA).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pB, &descrB, out int alignB).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pC, &descrC, out int alignC).Check();
+			NativeMethods.cutensorGetAlignmentRequirement(api.handle, pD, &descrC, out int alignD).Check();
 
 			Span<char> labelA = stackalloc char[A.Rank], labelB = stackalloc char[B.Rank], labelC = stackalloc char[C.Rank];
 			info.GetLabels(ref labelA, ref labelB, ref labelC);
@@ -509,104 +487,57 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			if (computeType == 0)
 				computeType = dataType.ToComputeType();
 
-			var err = NativeMethods.cutensorInitContractionDescriptor(handle, out descr,
-				in descrA, in modeA[0], alignA, in descrB, in modeB[0], alignB,
-				in descrC, in modeC[0], alignC, in descrC, in modeC[0], alignD, computeType);
-			if (err == CudaTensorStatus.NotSupported &&
-				(computeType == ComputeType.Half || computeType == ComputeType.BrainHalf || computeType == ComputeType.TensorFloat32))
-			{	// try again using float32 as the computation type
-				computeType = ComputeType.Single;
-				err = NativeMethods.cutensorInitContractionDescriptor(handle, out descr,
-					in descrA, in modeA[0], alignA, in descrB, in modeB[0], alignB,
-					in descrC, in modeC[0], alignC, in descrC, in modeC[0], alignD, computeType);
-			}
-			if (err == CudaTensorStatus.InvalidValue || err == CudaTensorStatus.NotSupported)
-				return false;
-			else
-				err.Check();
-			return true;
-		}
-
-		// The string representation of the <b>guessed</b> underlying structure
-		public override string ToString()
-		{
-			return nameof(ContractDescription) + $"[AlignmentsABCD={{{this.alignA}, {this.alignB}, {this.alignC}, {this.alignD}}}, DescriptionA={this.descrA}, DescriptionB={this.descrB}, DescriptionCD={this.descrCD}]";
+			ContractDescription descr1 = default;
+			var err = NativeMethods.cutensorInitContractionDescriptor(api.handle, &descr1,
+				&descrA, modeA, alignA, &descrB, modeB, alignB,
+				&descrC, modeC, alignC, &descrC, modeC, alignD, computeType);
+			descr = descr1;
+			return err.Check();
 		}
 	}
 
-	/// <summary>
-	/// The structure for the CUDA Tensor library's contraction algorithm
-	/// </summary>
 	[StructLayout(LayoutKind.Explicit, Size = 8 * 64)]
-	internal readonly struct ContractFind : IEquatable<ContractFind>
+	internal readonly record struct ContractFind
 	{
 		[FieldOffset(4 * 4)]
-		internal readonly ContractionAlgorithm algorithm;
+		private readonly ContractionAlgorithm algorithm;
 
 		[FieldOffset(5 * 4)]
-		internal readonly int GETTSpecificAlgorithm;
+		private readonly int GETTSpecificAlgorithm;
+
+		public readonly ContractionAlgorithm Algorithm => this.algorithm;
+		public readonly int GETTAlgorithm => this.GETTSpecificAlgorithm;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ContractFind(CudaTensorHandle handle, ContractionAlgorithm algorithm)
+		public ContractFind(in CudaTensorHandle handle, ContractionAlgorithm algorithm)
 		{
 			NativeMethods.cutensorInitContractionFind(handle, out this, algorithm).Check();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool TryCreate(CudaTensorHandle handle, ContractionAlgorithm algorithm, out ContractFind find)
+		public static bool TryCreate(in CudaTensorHandle handle, ContractionAlgorithm algorithm, out ContractFind find)
 		{
 			return NativeMethods.cutensorInitContractionFind(handle, out find, algorithm) == CudaTensorStatus.Success;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe bool Equals(ContractFind other)
+		public readonly bool Invalid
 		{
-			fixed (void* t = &this)
-			{
-				return new ReadOnlySpan<byte>(t, 8 * 64).SequenceEqual(new ReadOnlySpan<byte>(&other, 8 * 64));
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public override bool Equals(object? obj)
-		{
-			return obj is ContractFind find && this.Equals(find);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe override int GetHashCode()
-		{
-			fixed (void* t = &this)
-			{
-				return new ReadOnlySpan<int>(t, 2 * 64).HashCodeOfSpan();
-			}
-		}
-
-		// The string representation of the <b>guessed</b> underlying structure
-		public override string ToString()
-		{
-			return nameof(ContractFind) + $"[Algorithm={this.algorithm}" + (this.GETTSpecificAlgorithm < 0 ? "]" : $", SpecificAlgorithm={this.GETTSpecificAlgorithm}]");
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => this.algorithm == 0;
 		}
 	}
 
-	/// <summary>
-	/// The structure for the CUDA Tensor library's final contraction plan
-	/// </summary>
-	[StructLayout(LayoutKind.Explicit, Size = 8 * 640)]
+	[StructLayout(LayoutKind.Explicit, Size = 8 * 1408)]
 	internal readonly struct ContractPlan
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Create(CudaTensorHandle handle, in ContractDescription desc, in ContractFind find, out ContractPlan plan, out long workspaceSize)
+		public static unsafe bool TryCreate(in CudaTensorHandle handle, ContractDescription* desc, in ContractFind find, out ContractPlan plan, out long workspaceSize)
 		{
-			var err = NativeMethods.cutensorContractionGetWorkspace(handle, in desc, in find, WorkSpacePreference.Recommended, out workspaceSize);
-			if (err == CudaTensorStatus.NotSupported || err == CudaTensorStatus.InvalidValue)
+			var err = NativeMethods.cutensorContractionGetWorkspace(handle, desc, in find, WorkSpacePreference.Recommended, out workspaceSize);
+			if (!err.Check())
 				return false;
-			err.Check();
-			err = NativeMethods.cutensorInitContractionPlan(handle, out plan, in desc, in find, workspaceSize);
-			if (err == CudaTensorStatus.NotSupported || err == CudaTensorStatus.InvalidValue)
-				return false;
-			err.Check();
-			return true;
+			err = NativeMethods.cutensorInitContractionPlan(handle, out plan, desc, in find, workspaceSize);
+			return err.Check();
 		}
 	}
 	#endregion

@@ -898,7 +898,8 @@ ERROR_RETURN vecDataConvert(const Datatype::DataType srcType, const Datatype::Da
 			return vecDataConvert(Datatype::realCorrespond(srcType), Datatype::realCorrespond(dstType), srcInc, dstInc, N * 2, strideSrc * 2, strideDst * 2, true);
 		}
 	}
-
+#undef CONVERT_OUTER_SWITCH
+#undef CONVERT_INNER_SWITCH
 	// calculate
 	convertFunc(src, dst, N, strideSrc, strideDst, toRealByAbs);
 }
@@ -1438,54 +1439,296 @@ int vecParProd(const Datatype::DataType type, const void* src, void* dst, const 
 
 
 #pragma region int operations
-DLLEXP
-ERROR_RETURN intMinMax(const int* v, const size_t N, int& min, int& max)
+template<typename T>
+inline int vectorSort(void* vec, const size_t N, const unsigned int stride)
 {
-	auto result = thrust::minmax_element(THRUST_PAR, v, v + N);
-#ifdef CPU
-	max = *result.first;
-	max = *result.second;
+	T* v = (T*)vec;
+	if (stride == 1)
+	{
+		thrust::sort(THRUST_PAR, v, v + N);
+	}
+	else
+	{
+		auto stridedVec = make_strided_range(v, N, stride);
+		thrust::sort(THRUST_PAR, stridedVec.begin(), stridedVec.end());
+	}
+	return 0;
+}
+
+DLLEXP
+int vecSort(const Datatype::DataType type, void* vec, const size_t N, const unsigned int stride)
+{
+	AUTO_REALTYPE_FUNC(vectorSort, type, int, vec, N, stride);
+}
+
+template<typename TKey, typename TVal>
+inline int vectorSortBy(void* keys, void* vals, const size_t N, const unsigned int strideKey, const unsigned int strideVal)
+{
+	TKey* k = (TKey*)keys;
+	TVal* v = (TVal*)vals;
+	if (strideKey == 1 && strideVal == 1)
+	{
+		thrust::sort_by_key(THRUST_PAR, k, k + N, v);
+	}
+	else if (strideKey == 1 && strideVal != 1)
+	{
+		auto stridedVal = make_strided_range(v, N, strideVal);
+		thrust::sort_by_key(THRUST_PAR, k, k + N, stridedVal.begin());
+	}
+	else if (strideKey != 1 && strideVal == 1)
+	{
+		auto stridedKey = make_strided_range(k, N, strideKey);
+		thrust::sort_by_key(THRUST_PAR, stridedKey.begin(), stridedKey.end(), v);
+	}
+	else
+	{
+		auto stridedKey = make_strided_range(k, N, strideKey);
+		auto stridedVal = make_strided_range(v, N, strideVal);
+		thrust::sort_by_key(THRUST_PAR, stridedKey.begin(), stridedKey.end(), stridedVal.begin());
+	}
+	return 0;
+}
+
+template<typename T>
+inline int vectorSortBy(const Datatype::DataType valType, void* keys, void* vals, const size_t N, const unsigned int strideKey, const unsigned int strideVal)
+{
+#ifndef HAS_LDBL
+#define __ALLTYPE_FUNC(dataType, ...) do { \
+		switch (dataType) \
+		{ \
+		case Datatype::RealSingle: \
+			return vectorSortBy<T, float>(__VA_ARGS__); \
+		case Datatype::RealDouble: \
+			return vectorSortBy<T, double>(__VA_ARGS__); \
+		case Datatype::ComplexSingle: \
+			return vectorSortBy<T, BlasSupp::complex<float>>(__VA_ARGS__); \
+		case Datatype::ComplexDouble: \
+			return vectorSortBy<T, BlasSupp::complex<double>>(__VA_ARGS__); \
+		case Datatype::RealInt8: \
+			return vectorSortBy<T, int8_t>(__VA_ARGS__); \
+		case Datatype::RealInt16: \
+			return vectorSortBy<T, int16_t>(__VA_ARGS__); \
+		case Datatype::RealInt32: \
+			return vectorSortBy<T, int32_t>(__VA_ARGS__); \
+		case Datatype::RealInt64: \
+			return vectorSortBy<T, int64_t>(__VA_ARGS__); \
+		case Datatype::RealUInt8: \
+			return vectorSortBy<T, uint8_t>(__VA_ARGS__); \
+		case Datatype::RealUInt16: \
+			return vectorSortBy<T, uint16_t>(__VA_ARGS__); \
+		case Datatype::RealUInt32: \
+			return vectorSortBy<T, uint32_t>(__VA_ARGS__); \
+		case Datatype::RealUInt64: \
+			return vectorSortBy<T, uint64_t>(__VA_ARGS__); \
+		case Datatype::ComplexInt8: \
+			return vectorSortBy<T, BlasSupp::complex<int8_t>>(__VA_ARGS__); \
+		case Datatype::ComplexInt16: \
+			return vectorSortBy<T, BlasSupp::complex<int16_t>>(__VA_ARGS__); \
+		case Datatype::ComplexInt32: \
+			return vectorSortBy<T, BlasSupp::complex<int32_t>>(__VA_ARGS__); \
+		case Datatype::ComplexInt64: \
+			return vectorSortBy<T, BlasSupp::complex<int64_t>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt8: \
+			return vectorSortBy<T, BlasSupp::complex<uint8_t>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt16: \
+			return vectorSortBy<T, BlasSupp::complex<uint16_t>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt32: \
+			return vectorSortBy<T, BlasSupp::complex<uint32_t>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt64: \
+			return vectorSortBy<T, BlasSupp::complex<uint64_t>>(__VA_ARGS__); \
+		default: \
+			UNSUPPORT(vectorSortBy, dataType, int); \
+		} \
+	} while (0)
 #else
-	cudaError err = cudaMemcpy(&min, result.first, sizeof(int), cudaMemcpyDeviceToHost);
-	if (err != 0) return err;
-	err = cudaMemcpy(&max, result.second, sizeof(int), cudaMemcpyDeviceToHost);
-	return err;
-#endif // CPU
+#define __ALLTYPE_FUNC(funcName, dataType, returnType, ...) do { \
+		switch (dataType) \
+		{ \
+		case Datatype::RealSingle: \
+			return vectorSortBy<T, float>(__VA_ARGS__); \
+		case Datatype::RealDouble: \
+			return vectorSortBy<T, double>(__VA_ARGS__); \
+		case Datatype::RealLongDouble: \
+			return vectorSortBy<T, long double>(__VA_ARGS__); \
+		case Datatype::ComplexSingle: \
+			return vectorSortBy<T, BlasSupp::complex<float>>(__VA_ARGS__); \
+		case Datatype::ComplexDouble: \
+			return vectorSortBy<T, BlasSupp::complex<double>>(__VA_ARGS__); \
+		case Datatype::ComplexLongDouble: \
+			return vectorSortBy<T, BlasSupp::complex<long double>>(__VA_ARGS__); \
+		case Datatype::RealInt8: \
+			return vectorSortBy<T, int8_t>(__VA_ARGS__); \
+		case Datatype::RealInt16: \
+			return vectorSortBy<T, int16_t>(__VA_ARGS__); \
+		case Datatype::RealInt32: \
+			return vectorSortBy<T, int32_t>(__VA_ARGS__); \
+		case Datatype::RealInt64: \
+			return vectorSortBy<T, int64_t>(__VA_ARGS__); \
+		case Datatype::RealUInt8: \
+			return vectorSortBy<T, uint8_t>(__VA_ARGS__); \
+		case Datatype::RealUInt16: \
+			return vectorSortBy<T, uint16_t>(__VA_ARGS__); \
+		case Datatype::RealUInt32: \
+			return vectorSortBy<T, uint32_t>(__VA_ARGS__); \
+		case Datatype::RealUInt64: \
+			return vectorSortBy<T, uint64_t>(__VA_ARGS__); \
+		case Datatype::ComplexInt8: \
+			return vectorSortBy<T, BlasSupp::complex<int8_t>>(__VA_ARGS__); \
+		case Datatype::ComplexInt16: \
+			return vectorSortBy<T, BlasSupp::complex<int16_t>>(__VA_ARGS__); \
+		case Datatype::ComplexInt32: \
+			return vectorSortBy<T, BlasSupp::complex<int32_t>>(__VA_ARGS__); \
+		case Datatype::ComplexInt64: \
+			return vectorSortBy<T, BlasSupp::complex<int64_t>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt8: \
+			return vectorSortBy<T, BlasSupp::complex<uint8_t>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt16: \
+			return vectorSortBy<T, BlasSupp::complex<uint16_t>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt32: \
+			return vectorSortBy<T, BlasSupp::complex<uint32_t>>(__VA_ARGS__); \
+		case Datatype::ComplexUInt64: \
+			return vectorSortBy<T, BlasSupp::complex<uint64_t>>(__VA_ARGS__); \
+		default: \
+			UNSUPPORT(vectorSortBy, dataType, int); \
+		} \
+	} while (0)
+#endif
+	
+__ALLTYPE_FUNC(valType, keys, vals, N, strideKey, strideVal);
+
+#undef __ALLTYPE_FUNC
 }
 
 DLLEXP
-ERROR_RETURN intMax(const int* v, const size_t N, int& max)
+int vecSortBy(const Datatype::DataType keyType, const Datatype::DataType valType, void* keys, void* vals, const size_t N, const unsigned int strideKey, const unsigned int strideVal)
 {
-	const int* result = thrust::max_element(THRUST_PAR, v, v + N);
-#ifdef CPU
-	max = *result;
-#else
-	cudaError err = cudaMemcpy(&max, result, sizeof(int), cudaMemcpyDeviceToHost);
-	return err;
-#endif // CPU
+	AUTO_REALTYPE_FUNC(vectorSortBy, keyType, int, valType, keys, vals, N, strideKey, strideVal);
+}
+
+template<typename T>
+inline int vectorFind(const void* vec, const size_t N, const unsigned int stride, const void* find, ptrdiff_t& index)
+{
+	const T* v = (const T*)vec;
+	const T f = *(const T*)find;
+	if (stride == 1)
+	{
+		index = thrust::find(THRUST_PAR, v, v + N, f) - v;
+		if (index == N)
+			index = -1;
+	}
+	else
+	{
+		auto stridedVec = make_strided_range(v, N, stride);
+		index = thrust::find(THRUST_PAR, stridedVec.begin(), stridedVec.end(), f) - stridedVec.begin();
+		if (index == N)
+			index = -1;
+	}
+	return 0;
+}
+template<typename T>
+inline int vectorSortedFind(const void* vec, const size_t N, const unsigned int stride, const void* find, ptrdiff_t& index)
+{
+	const T* v = (const T*)vec;
+	const T f = *(const T*)find;
+	if (stride == 1)
+	{
+		bool found = thrust::binary_search(THRUST_PAR, v, v + N, f);
+		index = thrust::upper_bound(THRUST_PAR, v, v + N, f) - v;
+		if (!found)
+			index = ~index;
+	}
+	else
+	{
+		auto stridedVec = make_strided_range(v, N, stride);
+		bool found = thrust::binary_search(THRUST_PAR, stridedVec.begin(), stridedVec.end(), f);
+		index = thrust::upper_bound(THRUST_PAR, stridedVec.begin(), stridedVec.end(), f) - stridedVec.begin();
+		if (!found)
+			index = ~index;
+	}
+	return 0;
 }
 
 DLLEXP
-int intLowerBound(const int* v, const size_t N, const int lower)
+int vecFind(const Datatype::DataType type, const bool sorted, const void* v, const size_t N, const unsigned int stride, const void* toFind, ptrdiff_t& index)
 {
-	return thrust::lower_bound(THRUST_PAR, v, v + N, lower) - v;
+	if (sorted)
+	{
+		AUTO_REALTYPE_FUNC(vectorSortedFind, type, int, v, N, stride, toFind, index);
+	}
+	else
+	{
+		AUTO_REALTYPE_FUNC(vectorFind, type, int, v, N, stride, toFind, index);
+	}
+}
+
+
+template<typename T>
+inline int vectorFillRange(void* vec, const size_t N, const unsigned int stride, const void* start, const void* step)
+{
+	T* v = (T*)vec;
+	const T s = *(const T*)start, d = *(const T*)step;
+	if (stride == 1)
+	{
+		thrust::sequence(THRUST_PAR, v, v + N, s, d);
+	}
+	else
+	{
+		auto stridedVec = make_strided_range(v, N, stride);
+		thrust::sequence(THRUST_PAR, stridedVec.begin(), stridedVec.end(), s, d);
+	}
+	return 0;
 }
 
 DLLEXP
-int intUpperBound(const int* v, const size_t N, const int upper)
+int vecFillRange(const Datatype::DataType type, void* v, const size_t N, const unsigned int stride, const void* start, const void* step)
 {
-	return thrust::upper_bound(THRUST_PAR, v, v + N, upper) - v;
+	AUTO_ALLTYPE_FUNC(vectorFillRange, type, int, v, N, stride, start, step);
+}
+
+
+template<typename T>
+inline int vectorUpperBound(const void* vec, const size_t N, const unsigned int stride, const void* find, ptrdiff_t& index)
+{
+	const T* v = (const T*)vec;
+	const T f = *(const T*)find;
+	if (stride == 1)
+	{
+		index = thrust::upper_bound(THRUST_PAR, v, v + N, f) - v;
+	}
+	else
+	{
+		auto stridedVec = make_strided_range(v, N, stride);
+		index = thrust::upper_bound(THRUST_PAR, stridedVec.begin(), stridedVec.end(), f) - stridedVec.begin();
+	}
+	return 0;
+}
+template<typename T>
+inline int vectorLowerBound(const void* vec, const size_t N, const unsigned int stride, const void* find, ptrdiff_t& index)
+{
+	const T* v = (const T*)vec;
+	const T f = *(const T*)find;
+	if (stride == 1)
+	{
+		index = thrust::lower_bound(THRUST_PAR, v, v + N, f) - v;
+	}
+	else
+	{
+		auto stridedVec = make_strided_range(v, N, stride);
+		index = thrust::lower_bound(THRUST_PAR, stridedVec.begin(), stridedVec.end(), f) - stridedVec.begin();
+	}
+	return 0;
 }
 
 DLLEXP
-int intFind(const int* v, const size_t N, const int toFind)
+int vecBound(const Datatype::DataType type, const bool lower, const void* v, const size_t N, const unsigned int stride, const void* find, ptrdiff_t& index)
 {
-	return thrust::find(THRUST_PAR, v, v + N, toFind) - v;
-}
-
-DLLEXP
-int intFillRange(int* v, const size_t N, const int start, const int step)
-{
-	thrust::sequence(THRUST_PAR, v, v + N, start, step);
+	if (lower)
+	{
+		AUTO_REALTYPE_FUNC(vectorLowerBound, type, int, v, N, stride, find, index);
+	}
+	else
+	{
+		AUTO_REALTYPE_FUNC(vectorUpperBound, type, int, v, N, stride, find, index);
+	}
 }
 #pragma endregion

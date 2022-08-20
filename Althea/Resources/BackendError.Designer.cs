@@ -70,7 +70,7 @@ namespace Althea.Resources {
         }
         
         /// <summary>
-        ///   查找类似 There is no suitable backend implementation currently available. 的本地化字符串。
+        ///   查找类似 There is no suitable backend implementation currently available. The tested APIs are:  的本地化字符串。
         /// </summary>
         internal static string NotAvailable {
             get {

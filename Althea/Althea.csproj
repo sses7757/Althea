@@ -1,206 +1,285 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
-    <LangVersion>preview</LangVersion>
-    <Platforms>x64</Platforms>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Nullable>enable</Nullable>
+	<OutputType>Library</OutputType>
+	<TargetFramework>net7.0</TargetFramework>
+	<LangVersion>preview</LangVersion>
+	<EnablePreviewFeatures>True</EnablePreviewFeatures>
+	<Platforms>x64</Platforms>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup>
-    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-    <RootNamespace>Althea</RootNamespace>
-    <AssemblyName>Althea</AssemblyName>
-    <AnalysisLevel>latest</AnalysisLevel>
+	<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+	<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+	<RootNamespace>Althea</RootNamespace>
+	<AssemblyName>Althea</AssemblyName>
+	<AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
+	<None Include="LinearAlgebra\Dense\DynamicExtendBlasAPI.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>DynamicExtendBlasAPI.tt</DependentUpon>
+	</None>
+	<None Include="LinearAlgebra\Sparse\ExtendIndexAPI.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>ExtendIndexAPI.tt</DependentUpon>
+	</None>
+	<None Include="Numerics\Conversions.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>Conversions.tt</DependentUpon>
+	</None>
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
   </ItemGroup>
 
   <PropertyGroup>
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-    <RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
+	<DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+	<RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
-    <DefineConstants>TRACE</DefineConstants>
+	<DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+	<DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
-    <NoWarn>1701;1702</NoWarn>
-    <Optimize>False</Optimize>
+	<DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
+	<NoWarn>1701;1702</NoWarn>
+	<Optimize>False</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
-    <LangVersion>preview</LangVersion>
+	<DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
+	<LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Update="Helpers\FixedClassBuffer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>FixedClassBuffer.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Helpers\FixedUnmanagedBuffer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>FixedUnmanagedBuffer.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Helpers\SwapSort.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>SwapSort.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Random\API.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>API.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Random\BaseDistributions.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>BaseDistributions.tt</DependentUpon>
-    </Compile>
-    <Compile Update="Storage\MixedStorage.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>MixedStorage.tt</DependentUpon>
-    </Compile>
-    <Compile Update="TensorAlgebra\TensorOrderCreate.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TensorOrderCreate.tt</DependentUpon>
-    </Compile>
+	<Compile Update="Helpers\FixedClassBuffer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>FixedClassBuffer.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Helpers\FixedUnmanagedBuffer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>FixedUnmanagedBuffer.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Helpers\SwapSort.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>SwapSort.tt</DependentUpon>
+	</Compile>
+	<Compile Update="LinearAlgebra\Dense\DynamicExtendBlasAPI.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>DynamicExtendBlasAPI.tt</DependentUpon>
+	</Compile>
+	<Compile Update="LinearAlgebra\Dense\ExpressionExtendBlasAPI.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>ExpressionExtendBlasAPI.tt</DependentUpon>
+	</Compile>
+	<Compile Update="LinearAlgebra\Sparse\ExtendIndexAPI.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>ExtendIndexAPI.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Numerics\Conversions.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>Conversions.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Numerics\IntegerTypes.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>IntegerTypes.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Numerics\RealTypes.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>RealTypes.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Numerics\Real2Types.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>Real2Types.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Numerics\RealTypes.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>RealTypes.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Random\API.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>API.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Random\BaseDistributions.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>BaseDistributions.tt</DependentUpon>
+	</Compile>
+	<Compile Update="Storage\MixedStorage.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>MixedStorage.tt</DependentUpon>
+	</Compile>
+	<Compile Update="TensorAlgebra\TensorOrderCreate.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>TensorOrderCreate.tt</DependentUpon>
+	</Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\ArithmeticError.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ArithmeticError.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\OtherError.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>OtherError.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\FileError.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>FileError.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\BackendError.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>BackendError.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\ParameterError.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>ParameterError.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\Print.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Print.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\SparseError.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>SparseError.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Resources\StorageError.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>StorageError.resx</DependentUpon>
-    </Compile>
+	<Compile Update="Resources\ArithmeticError.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>ArithmeticError.resx</DependentUpon>
+	</Compile>
+	<Compile Update="Resources\OtherError.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>OtherError.resx</DependentUpon>
+	</Compile>
+	<Compile Update="Resources\FileError.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>FileError.resx</DependentUpon>
+	</Compile>
+	<Compile Update="Resources\BackendError.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>BackendError.resx</DependentUpon>
+	</Compile>
+	<Compile Update="Resources\ParameterError.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>ParameterError.resx</DependentUpon>
+	</Compile>
+	<Compile Update="Resources\Print.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>Print.resx</DependentUpon>
+	</Compile>
+	<Compile Update="Resources\SparseError.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>SparseError.resx</DependentUpon>
+	</Compile>
+	<Compile Update="Resources\StorageError.Designer.cs">
+	  <DesignTime>True</DesignTime>
+	  <AutoGen>True</AutoGen>
+	  <DependentUpon>StorageError.resx</DependentUpon>
+	</Compile>
   </ItemGroup>
   
   <ItemGroup>
-    <EmbeddedResource Update="Resources\ArithmeticError.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>ArithmeticError.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\OtherError.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>OtherError.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\FileError.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>FileError.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\BackendError.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>BackendError.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\ParameterError.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>ParameterError.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\Print.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Print.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\SparseError.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>SparseError.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Resources\StorageError.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>StorageError.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+	<EmbeddedResource Update="Resources\ArithmeticError.resx">
+	  <Generator>PublicResXFileCodeGenerator</Generator>
+	  <LastGenOutput>ArithmeticError.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
+	<EmbeddedResource Update="Resources\OtherError.resx">
+	  <Generator>ResXFileCodeGenerator</Generator>
+	  <LastGenOutput>OtherError.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
+	<EmbeddedResource Update="Resources\FileError.resx">
+	  <Generator>ResXFileCodeGenerator</Generator>
+	  <LastGenOutput>FileError.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
+	<EmbeddedResource Update="Resources\BackendError.resx">
+	  <Generator>ResXFileCodeGenerator</Generator>
+	  <LastGenOutput>BackendError.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
+	<EmbeddedResource Update="Resources\ParameterError.resx">
+	  <Generator>PublicResXFileCodeGenerator</Generator>
+	  <LastGenOutput>ParameterError.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
+	<EmbeddedResource Update="Resources\Print.resx">
+	  <Generator>ResXFileCodeGenerator</Generator>
+	  <LastGenOutput>Print.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
+	<EmbeddedResource Update="Resources\SparseError.resx">
+	  <Generator>ResXFileCodeGenerator</Generator>
+	  <LastGenOutput>SparseError.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
+	<EmbeddedResource Update="Resources\StorageError.resx">
+	  <Generator>ResXFileCodeGenerator</Generator>
+	  <LastGenOutput>StorageError.Designer.cs</LastGenOutput>
+	</EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Althea.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Helpers\FixedClassBuffer.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>FixedClassBuffer.cs</LastGenOutput>
-    </None>
-    <None Update="Helpers\FixedUnmanagedBuffer.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>FixedUnmanagedBuffer.cs</LastGenOutput>
-    </None>
-    <None Update="Helpers\SwapSort.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>SwapSort.cs</LastGenOutput>
-    </None>
-    <None Update="Random\API.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>API.cs</LastGenOutput>
-    </None>
-    <None Update="Random\BaseDistributions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>BaseDistributions.cs</LastGenOutput>
-    </None>
-    <None Update="Storage\MixedStorage.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>MixedStorage.cs</LastGenOutput>
-    </None>
-    <None Update="TensorAlgebra\TensorOrderCreate.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TensorOrderCreate.cs</LastGenOutput>
-    </None>
+	<None Update="Althea.Settings.json">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</None>
+	<None Update="Helpers\FixedClassBuffer.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>FixedClassBuffer.cs</LastGenOutput>
+	</None>
+	<None Update="Helpers\FixedUnmanagedBuffer.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>FixedUnmanagedBuffer.cs</LastGenOutput>
+	</None>
+	<None Update="Helpers\SwapSort.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>SwapSort.cs</LastGenOutput>
+	</None>
+	<None Update="LinearAlgebra\Dense\DynamicExtendBlasAPI.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>DynamicExtendBlasAPI.cs</LastGenOutput>
+	</None>
+	<None Update="LinearAlgebra\Sparse\ExtendIndexAPI.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>ExtendIndexAPI.cs</LastGenOutput>
+	</None>
+	<None Update="Numerics\Conversions.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>Conversions.cs</LastGenOutput>
+	</None>
+	<None Update="Numerics\RealTypes.tt">
+	  <LastGenOutput>RealTypes.cs</LastGenOutput>
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	</None>
+	<None Update="Numerics\IntegerTypes.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>IntegerTypes.cs</LastGenOutput>
+	</None>
+	<None Update="Random\API.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>API.cs</LastGenOutput>
+	</None>
+	<None Update="Random\BaseDistributions.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>BaseDistributions.cs</LastGenOutput>
+	</None>
+	<None Update="Storage\MixedStorage.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>MixedStorage.cs</LastGenOutput>
+	</None>
+	<None Update="TensorAlgebra\TensorOrderCreate.tt">
+	  <Generator>TextTemplatingFileGenerator</Generator>
+	  <LastGenOutput>TensorOrderCreate.cs</LastGenOutput>
+	</None>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+	<ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
   </ItemGroup>
 
   <ItemGroup>
-    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>

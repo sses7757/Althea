@@ -2,9 +2,9 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Althea.Backend.Mkl.LinearAlgebra.Dense;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
-using Althea.NativeTypes;
 
 
 namespace Althea.Backend.Mkl.LinearAlgebra.Dense
@@ -210,36 +210,17 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool CheckBaseSupport(this DataType type)
-		{
-			return type switch
-			{
-				DataType.RealSingle or DataType.RealDouble or
-				DataType.ComplexSingle or DataType.ComplexDouble => true,
-				_ => false,
-			};
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static MklFillModeChar ToChar(this bool fillUpper)
 		{
 			return fillUpper ? MklFillModeChar.Upper : MklFillModeChar.Lower;
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static void Check(this MklLapackInfo info, SolveMethodKind kind)
-		{
-			if (info.status > 0)
-				throw new MatrixSolveAlgorithmException(kind, info.status);
-			if (info.status < 0)
-				throw new ArgumentException(Resources.ParameterError.InvalidValue, (-info.status).ToOrdinal());
-		}
 	}
 
-	internal readonly struct MklLapackInfo
-	{
-		internal readonly long status;
-	}
+	/// <summary>
+	/// The MKL LAPACK return info
+	/// </summary>
+	/// <param name="Status">The underlying info as a <see cref="long"/></param>
+	public readonly record struct MklLapackInfo(long Status);
 
 	internal enum MklMatrixLayout
 	{
@@ -350,5 +331,25 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 		Eigenvalues = (byte)'E',
 		InvariantSubspace = (byte)'V',
 		Both = (byte)'B'
+	}
+}
+
+namespace Althea.Backend.Mkl
+{
+	public static partial class StatusExtension
+	{
+		/// <summary>
+		/// Check the given <see cref="MklLapackInfo"/> with <see cref="SolveMethodKind"/>
+		/// </summary>
+		/// <param name="info">The given <see cref="MklLapackInfo"/> to be checked</param>
+		/// <param name="kind">The given <see cref="SolveMethodKind"/> to be checked with</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Check(this MklLapackInfo info, SolveMethodKind kind)
+		{
+			if (info.Status > 0)
+				throw new MatrixSolveAlgorithmException(kind, info.Status);
+			if (info.Status < 0)
+				throw new ArgumentException(Resources.ParameterError.InvalidValue, (-info.Status).ToOrdinal());
+		}
 	}
 }

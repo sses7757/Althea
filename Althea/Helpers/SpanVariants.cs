@@ -2,977 +2,1440 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Althea.Helpers;
 
-using Althea.Linq;
+namespace Althea.Helpers;
 
-
-namespace Althea.Helpers
+#region debug
+internal sealed class SpanListDebugView<T> where T : notnull
 {
-	#region debug
-	internal sealed class SpanListDebugView<T> where T : notnull
+	private readonly T[] _array;
+
+	[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+	public T[] Items => _array;
+
+	public SpanListDebugView(SpanList<T> span)
 	{
-		private readonly T[] _array;
+		_array = span.ToArray();
+	}
+}
 
-		[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-		public T[] Items => _array;
+internal sealed class SpanMatrixDebugView<T> where T : notnull
+{
+	private readonly T[][] _columns;
 
-		public SpanListDebugView(SpanList<T> span)
-		{
-			_array = span.ToArray();
-		}
+	[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+	public T[][] Columns => _columns;
+
+	public SpanMatrixDebugView(SpanMatrix<T> span)
+	{
+		_columns = span.ToArray();
+	}
+	public SpanMatrixDebugView(ReadOnlySpanMatrix<T> span)
+	{
+		_columns = span.ToArray();
+	}
+}
+#endregion
+
+/// <summary>
+/// The list-like span that supports addition and removal. Its internal implementation simply utilizes a fixed-sized <see cref="Span{T}"/>.
+/// </summary>
+/// <typeparam name="T">The data type</typeparam>
+[DebuggerTypeProxy(typeof(SpanListDebugView<>))]
+[DebuggerDisplay("{ToString(),raw}")]
+public ref struct SpanList<T> where T : notnull
+{
+	#region basic
+	private readonly Span<T> _span;
+
+	private int _size;
+
+	/// <summary>
+	/// Check whether this <see cref="SpanList{T}"/> is empty or not
+	/// </summary>
+	public readonly bool IsEmpty {
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._size > 0;
 	}
 
-	internal sealed class SpanMatrixDebugView<T> where T : notnull
+	/// <summary>
+	/// Get an empty <see cref="SpanList{T}"/> without underlying <see cref="Span{T}"/>
+	/// </summary>
+	public static SpanList<T> Empty => default;
+
+	/// <summary>
+	/// Create an empty <see cref="SpanList{T}"/> with the underlying <see cref="Span{T}"/> as the input <paramref name="span"/>
+	/// </summary>
+	/// <param name="span">The input underlying <see cref="Span{T}"/></param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public SpanList(Span<T> span)
 	{
-		private readonly T[][] _columns;
+		this._span = span;
+		this._size = 0;
+	}
 
-		[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-		public T[][] Columns => _columns;
-
-		public SpanMatrixDebugView(SpanMatrix<T> span)
-		{
-			_columns = span.ToArray();
-		}
+	/// <summary>
+	/// Get the underlying <see cref="Span{T}"/> of this <see cref="SpanList{T}"/>
+	/// </summary>
+	public readonly Span<T> UnderlyingSpan {
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._span;
 	}
 	#endregion
 
+	#region indexer
 	/// <summary>
-	/// The list-like span that supports addition and removal. Its internal implementation simply utilizes a fixed-sized <see cref="Span{T}"/>.
+	/// Get the reference of the element at <paramref name="index"/> of this <see cref="SpanList{T}"/>
 	/// </summary>
-	/// <typeparam name="T">The data type</typeparam>
-	[DebuggerTypeProxy(typeof(SpanListDebugView<>))]
-	[DebuggerDisplay("{ToString(),raw}")]
-	public ref struct SpanList<T> where T : notnull
+	/// <param name="index">The index of the element to get reference</param>
+	/// <returns>The reference of the element at <paramref name="index"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+	public readonly ref T this[int index] {
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get {
+			if (index >= this._size)
+				throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
+			return ref this._span[index];
+		}
+	}
+
+	/// <summary>
+	/// Forms a slice out of the current <see cref="SpanList{T}"/> <paramref name="start"/> at a specified index for a specified <paramref name="count"/>
+	/// </summary>
+	/// <param name="start">The index at which to begin this slice</param>
+	/// <param name="count">The desired length for the slice</param>
+	/// <returns>A <see cref="Span{T}"/> that consists of <paramref name="count"/> elements from the current <see cref="SpanList{T}"/> starting at <paramref name="start"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> or <paramref name="count"/> is out of range</exception>
+	public readonly Span<T> Slice(int start, int count)
 	{
-		#region basic
-		private readonly Span<T> _span;
+		if (start >= this._size)
+			throw new ArgumentOutOfRangeException(nameof(start), start, Resources.ParameterError.InvalidValue);
+		if (start + count >= this._size)
+			throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
+		return this._span.Slice(start, count);
+	}
 
-		private int _size;
-
-		/// <summary>
-		/// Check whether this <see cref="SpanList{T}"/> is empty or not
-		/// </summary>
-		public readonly bool IsEmpty {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._size > 0;
-		}
-
-		/// <summary>
-		/// Get an empty <see cref="SpanList{T}"/> without underlying <see cref="Span{T}"/>
-		/// </summary>
-		public static SpanList<T> Empty => default;
-
-		/// <summary>
-		/// Create an empty <see cref="SpanList{T}"/> with the underlying <see cref="Span{T}"/> as the input <paramref name="span"/>
-		/// </summary>
-		/// <param name="span">The input underlying <see cref="Span{T}"/></param>
+	/// <summary>
+	/// Get the number of filled elements of this <see cref="SpanList{T}"/>
+	/// </summary>
+	public readonly int Count {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SpanList(Span<T> span)
-		{
-			this._span = span;
-			this._size = 0;
-		}
+		get => this._size;
+	}
 
-		/// <summary>
-		/// Get the underlying <see cref="Span{T}"/> of this <see cref="SpanList{T}"/>
-		/// </summary>
-		public readonly Span<T> UnderlyingSpan {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._span;
-		}
-		#endregion
-
-		#region indexer
-		/// <summary>
-		/// Get the reference of the element at <paramref name="index"/> of this <see cref="SpanList{T}"/>
-		/// </summary>
-		/// <param name="index">The index of the element to get reference</param>
-		/// <returns>The reference of the element at <paramref name="index"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		public readonly ref T this[int index] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get {
-				if (index >= this._size)
-					throw new ArgumentOutOfRangeException(nameof(index), index, Resources.ParameterError.InvalidValue);
-				return ref this._span[index];
-			}
-		}
-
-		/// <summary>
-		/// Forms a slice out of the current <see cref="SpanList{T}"/> <paramref name="start"/> at a specified index for a specified <paramref name="count"/>
-		/// </summary>
-		/// <param name="start">The index at which to begin this slice</param>
-		/// <param name="count">The desired length for the slice</param>
-		/// <returns>A <see cref="Span{T}"/> that consists of <paramref name="count"/> elements from the current <see cref="SpanList{T}"/> starting at <paramref name="start"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="start"/> or <paramref name="count"/> is out of range</exception>
-		public readonly Span<T> Slice(int start, int count)
-		{
-			if (start >= this._size)
-				throw new ArgumentOutOfRangeException(nameof(start), start, Resources.ParameterError.InvalidValue);
-			if (start + count >= this._size)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
-			return this._span.Slice(start, count);
-		}
-
-		/// <summary>
-		/// Get the number of filled elements of this <see cref="SpanList{T}"/>
-		/// </summary>
-		public readonly int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._size;
-		}
-
-		/// <summary>
-		/// Get the maximum number of elements allowed of this <see cref="SpanList{T}"/>
-		/// </summary>
-		public readonly int Capacity {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._span.Length;
-		}
-
-		/// <summary>
-		/// Get the equivalent <see cref="Span{T}"/> of the current <see cref="SpanList{T}"/> (with the same size)
-		/// </summary>
-		/// <returns>The equivalent <see cref="Span{T}"/> of the current <see cref="SpanList{T}"/></returns>
+	/// <summary>
+	/// Get the maximum number of elements allowed of this <see cref="SpanList{T}"/>
+	/// </summary>
+	public readonly int Capacity {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly Span<T> AsSpan() => this._span[..this._size];
+		get => this._span.Length;
+	}
+
+	/// <summary>
+	/// Get the equivalent <see cref="Span{T}"/> of the current <see cref="SpanList{T}"/> (with the same size)
+	/// </summary>
+	/// <returns>The equivalent <see cref="Span{T}"/> of the current <see cref="SpanList{T}"/></returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly Span<T> AsSpan() => this._span[..this._size];
+
+	/// <summary>
+	/// Append the given <paramref name="value"/> to this <see cref="SpanList{T}"/>
+	/// </summary>
+	/// <param name="value">The value of type <typeparamref name="T"/> to be added</param>
+	/// <exception cref="InvalidOperationException">If the <paramref name="value"/> cannot be appended</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void Add(T value)
+	{
+		if (this._size == this._span.Length)
+			throw new InvalidOperationException(Resources.StorageError.StorageFull);
+		this._span[this._size++] = value;
+	}
+
+	/// <summary>
+	/// Append the given <paramref name="values"/> to this <see cref="SpanList{T}"/>
+	/// </summary>
+	/// <param name="values">The values as a <see cref="ReadOnlySpan{T}"/> of <typeparamref name="T"/> to be appended</param>
+	/// <exception cref="InvalidOperationException">If the <paramref name="values"/> cannot be appended</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void AddRange(ReadOnlySpan<T> values)
+	{
+		if (values.IsEmpty)
+			return;
+		if (this._size + values.Length > this._span.Length)
+			throw new InvalidOperationException(Resources.StorageError.StorageFull);
+		values.CopyTo(this._span[this._size..]);
+		this._size += values.Length;
+	}
+
+	/// <summary>
+	/// Remove the element at <paramref name="index"/> of this <see cref="SpanList{T}"/>
+	/// </summary>
+	/// <param name="index">The index of the element to be removed</param>
+	/// <returns>The removed element</returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public unsafe T RemoveAt(int index)
+	{
+		if (index < 0 || index >= this._size)
+			throw new ArgumentOutOfRangeException(nameof(index));
+		this._size--;
+		// shortcut
+		if (index == this._size)
+		{
+			return this._span[this._size];
+		}
+		// otherwise
+		T value = this._span[index];
+		// allocate temp
+		using var tempArray = this._size.CheckStackLimit<T>();
+		Span<T> temp;
+		if (tempArray.IsEmpty)
+		{
+			byte* ptr = stackalloc byte[this._size * Unsafe.SizeOf<T>()];
+			temp = SpanHelper.CreateSpan(ref Unsafe.AsRef<T>(ptr), this._size);
+		}
+		else
+		{
+			temp = tempArray.Data;
+		}
+		// copy
+		if (index > 0)
+			this._span[..index].CopyTo(temp);
+		this._span[(index + 1)..(this._size + 1)].CopyTo(temp[index..]);
+		temp.CopyTo(this._span);
+		// return
+		return value;
+	}
+
+	/// <summary>
+	/// Remove the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>
+	/// </summary>
+	/// <param name="val">The value to be removed</param>
+	/// <returns>True if <paramref name="val"/> is present in this <see cref="SpanList{T}"/> and the removal succeeded, false otherwise</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public bool Remove(T val)
+	{
+		int find = this.IndexOf(val);
+		if (find >= 0)
+		{
+			this.RemoveAt(find);
+			return true;
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Find the index of the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>
+	/// </summary>
+	/// <param name="val">The value to find</param>
+	/// <returns>The index of the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>; or -1 if not found.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public unsafe int IndexOf(T val)
+	{
+		// this implementation is similar to System.Array.IndexOf
+		if (this._size == 0)
+			return -1;
+		int sizeT = Unsafe.SizeOf<T>();
+		if (sizeT == 1)
+		{
+			var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref this._span[0]), this._size);
+			return span.IndexOf(Unsafe.As<T, byte>(ref val));
+		}
+		if (sizeT == 2)
+		{
+			var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, char>(ref this._span[0]), this._size);
+			return span.IndexOf(Unsafe.As<T, char>(ref val));
+		}
+		if (sizeT == 4)
+		{
+			var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, int>(ref this._span[0]), this._size);
+			return span.IndexOf(Unsafe.As<T, int>(ref val));
+		}
+		if (sizeT == 8)
+		{
+			var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, long>(ref this._span[0]), this._size);
+			return span.IndexOf(Unsafe.As<T, long>(ref val));
+		}
+		if (sizeT == 16)
+		{
+			var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, (long, long)>(ref this._span[0]), this._size);
+			return span.IndexOf(Unsafe.As<T, (long, long)>(ref val));
+		}
+		return this.AsSpan().IndexOf(val, EqualityComparer<T>.Default);
+	}
+
+	/// <summary>
+	/// Clear this <see cref="SpanList{T}"/> and set the size to 0
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void Clear()
+	{
+		this._span.Clear();
+		this._size = 0;
+	}
+
+	/// <summary>
+	/// Clear this <see cref="SpanList{T}"/> with clear <paramref name="action"/> and set the size to 0
+	/// </summary>
+	/// <param name="action">The <see cref="Action{T}"/> used to clear the elements</param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void Clear(Action<T> action)
+	{
+		foreach (var item in this)
+		{
+			action.Invoke(item);
+		}
+		this._span.Clear();
+		this._size = 0;
+	}
+	#endregion
+
+	#region equality
+	/// <summary>
+	/// Equality operator
+	/// </summary>
+	public static bool operator ==(SpanList<T> left, SpanList<T> right)
+	{
+		return left._span == right._span && left._size == right._size;
+	}
+
+	/// <summary>
+	/// Inequality operator
+	/// </summary>
+	public static bool operator !=(SpanList<T> left, SpanList<T> right)
+	{
+		return !(left == right);
+	}
+
+#pragma warning disable CS0809
+	/// <summary>
+	/// Checks whether the given <paramref name="obj"/> is the same as this one
+	/// </summary>
+	/// <param name="obj">The given object</param>
+	/// <returns>Equals or not</returns>
+	[Obsolete("Equals() on SpanList will always throw an exception. Use == instead.")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public override readonly bool Equals(object? obj)
+	{
+		throw new NotSupportedException();
+	}
+
+	/// <summary>
+	/// Get the hash code of this <see cref="SpanList{T}"/>
+	/// </summary>
+	/// <returns>The hash code</returns>
+	[Obsolete("GetHashCode() on SpanList will always throw an exception.")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public override readonly int GetHashCode()
+	{
+		throw new NotSupportedException();
+	}
+#pragma warning restore CS0809
+
+	/// <summary>
+	/// Get the enumerator (a <see cref="Span{T}.Enumerator"/>) of this <see cref="SpanList{T}"/>
+	/// </summary>
+	/// <returns>The enumerator of this <see cref="SpanList{T}"/></returns>
+	public readonly Span<T>.Enumerator GetEnumerator()
+	{
+		return this.AsSpan().GetEnumerator();
+	}
+	#endregion
+
+	#region convert
+	/// <summary>
+	/// Copy the current <see cref="SpanList{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/>
+	/// </summary>
+	/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyTo(Span<T> destination)
+	{
+		this.AsSpan().CopyTo(destination);
+	}
+
+	/// <summary>
+	/// Implicitly convert the given <paramref name="list"/> to a <see cref="Span{T}"/>
+	/// </summary>
+	/// <param name="list">The <see cref="SpanList{T}"/> to be converted</param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Span<T>(SpanList<T> list)
+	{
+		return list.AsSpan();
+	}
+
+	/// <summary>
+	/// Implicitly convert the given <paramref name="list"/> to a <see cref="ReadOnlySpan{T}"/>
+	/// </summary>
+	/// <param name="list">The <see cref="SpanList{T}"/> to be converted</param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator ReadOnlySpan<T>(SpanList<T> list)
+	{
+		return list.AsSpan();
+	}
+
+	/// <summary>
+	/// Get the string representation of this <see cref="SpanList{T}"/>
+	/// </summary>
+	/// <returns>The string representation of this <see cref="SpanList{T}"/></returns>
+	public override readonly string ToString()
+	{
+		return $"{nameof(SpanList<T>)}<{typeof(T).Name}>[{this._size}]";
+	}
+
+	/// <summary>
+	/// Convert this <see cref="SpanList{T}"/> to an array of type <typeparamref name="T"/>
+	/// </summary>
+	/// <returns>An array of type <typeparamref name="T"/> holding the same values as this <see cref="SpanList{T}"/></returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly unsafe T[] ToArray()
+	{
+		if (this._size == 0)
+		{
+			return System.Array.Empty<T>();
+		}
+		T[] array = new T[this._size];
+		Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(array)), ref Unsafe.As<T, byte>(ref this._span[0]), (uint)this._size);
+		return array;
+	}
+
+	/// <summary>
+	/// Convert this <see cref="SpanList{T}"/> to a <see cref="List{T}"/> of <typeparamref name="T"/>
+	/// </summary>
+	/// <returns>A <see cref="List{T}"/> of <typeparamref name="T"/> <typeparamref name="T"/> holding the same values as this <see cref="SpanList{T}"/></returns>
+	public readonly List<T> ToList()
+	{
+		List<T> list = new(this.Capacity);
+		this.AsSpan().CopyTo(CollectionsMarshal.AsSpan(list));
+		return list;
+	}
+	#endregion
+}
+
+
+/// <summary>
+/// The matrix-like span of column major whose internal implementation simply utilizes a fixed-sized <see cref="Span{T}"/>.
+/// </summary>
+/// <typeparam name="T">The data type</typeparam>
+[DebuggerTypeProxy(typeof(SpanMatrixDebugView<>))]
+[DebuggerDisplay("{ToString(),raw}")]
+public readonly ref struct SpanMatrix<T> where T : notnull
+{
+	#region enumerating
+	/// <summary>
+	/// The enumerator for a <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	public ref struct Enumerator
+	{
+		private readonly SpanMatrix<T> _matrix;
+
+		private int _index;
 
 		/// <summary>
-		/// Append the given <paramref name="value"/> to this <see cref="SpanList{T}"/>
+		/// Get the current
 		/// </summary>
-		/// <param name="value">The value of type <typeparamref name="T"/> to be added</param>
-		/// <exception cref="InvalidOperationException">If the <paramref name="value"/> cannot be appended</exception>
+		public ref T Current {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ref this._matrix._span[this._index];
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(T value)
+		internal Enumerator(SpanMatrix<T> span)
 		{
-			if (this._size == this._span.Length)
-				throw new InvalidOperationException(Resources.StorageError.StorageFull);
-			this._span[this._size++] = value;
+			_matrix = span;
+			_index = -1;
 		}
 
 		/// <summary>
-		/// Append the given <paramref name="values"/> to this <see cref="SpanList{T}"/>
+		/// Move to the next element
 		/// </summary>
-		/// <param name="values">The values as a <see cref="ReadOnlySpan{T}"/> of <typeparamref name="T"/> to be appended</param>
-		/// <exception cref="InvalidOperationException">If the <paramref name="values"/> cannot be appended</exception>
+		/// <returns>Whether there is a next element or not</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void AddRange(ReadOnlySpan<T> values)
+		public bool MoveNext()
 		{
-			if (values.IsEmpty)
-				return;
-			if (this._size + values.Length > this._span.Length)
-				throw new InvalidOperationException(Resources.StorageError.StorageFull);
-			values.CopyTo(this._span[this._size..]);
-			this._size += values.Length;
-		}
-
-		/// <summary>
-		/// Remove the element at <paramref name="index"/> of this <see cref="SpanList{T}"/>
-		/// </summary>
-		/// <param name="index">The index of the element to be removed</param>
-		/// <returns>The removed element</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe T RemoveAt(int index)
-		{
-			if (index < 0 || index >= this._size)
-				throw new ArgumentOutOfRangeException(nameof(index));
-			this._size--;
-			// shortcut
-			if (index == this._size)
+			int num = _index + 1;
+			int ld = this._matrix._leadDim;
+			if (num % ld > this._matrix._rows)
+				num = (num / ld + 1) * ld;
+			if (num < ld * this._matrix._cols)
 			{
-				return this._span[this._size];
-			}
-			// otherwise
-			T value = this._span[index];
-			// allocate temp
-			using var tempArray = this._size.CheckStackLimit<T>();
-			Span<T> temp;
-			if (tempArray.IsEmpty)
-			{
-				byte* ptr = stackalloc byte[this._size * Unsafe.SizeOf<T>()];
-				temp = SpanHelper.CreateSpan(ref Unsafe.AsRef<T>(ptr), this._size);
-			}
-			else
-			{
-				temp = tempArray.Data;
-			}
-			// copy
-			if (index > 0)
-				this._span[..index].CopyTo(temp);
-			this._span[(index + 1)..(this._size + 1)].CopyTo(temp[index..]);
-			temp.CopyTo(this._span);
-			// return
-			return value;
-		}
-
-		/// <summary>
-		/// Remove the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>
-		/// </summary>
-		/// <param name="val">The value to be removed</param>
-		/// <returns>True if <paramref name="val"/> is present in this <see cref="SpanList{T}"/> and the removal succeeded, false otherwise</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Remove(T val)
-		{
-			int find = this.IndexOf(val);
-			if (find >= 0)
-			{
-				this.RemoveAt(find);
+				_index = num;
 				return true;
 			}
 			return false;
 		}
-
-		/// <summary>
-		/// Find the index of the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>
-		/// </summary>
-		/// <param name="val">The value to find</param>
-		/// <returns>The index of the first occurrence of <paramref name="val"/> in this <see cref="SpanList{T}"/>; or -1 if not found.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe int IndexOf(T val)
-		{
-			// this implementation is similar to System.Array.IndexOf
-			if (this._size == 0)
-				return -1;
-			int sizeT = Unsafe.SizeOf<T>();
-			if (sizeT == 1)
-			{
-				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, byte>(ref this._span[0]), this._size);
-				return span.IndexOf(Unsafe.As<T, byte>(ref val));
-			}
-			if (sizeT == 2)
-			{
-				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, char>(ref this._span[0]), this._size);
-				return span.IndexOf(Unsafe.As<T, char>(ref val));
-			}
-			if (sizeT == 4)
-			{
-				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, int>(ref this._span[0]), this._size);
-				return span.IndexOf(Unsafe.As<T, int>(ref val));
-			}
-			if (sizeT == 8)
-			{
-				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, long>(ref this._span[0]), this._size);
-				return span.IndexOf(Unsafe.As<T, long>(ref val));
-			}
-			if (sizeT == 16)
-			{
-				var span = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.As<T, (long, long)>(ref this._span[0]), this._size);
-				return span.IndexOf(Unsafe.As<T, (long, long)>(ref val));
-			}
-			return this.AsSpan().IndexOf(val, EqualityComparer<T>.Default);
-		}
-
-		/// <summary>
-		/// Clear this <see cref="SpanList{T}"/> and set the size to 0
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear()
-		{
-			this._span.Clear();
-			this._size = 0;
-		}
-
-		/// <summary>
-		/// Clear this <see cref="SpanList{T}"/> with clear <paramref name="action"/> and set the size to 0
-		/// </summary>
-		/// <param name="action">The <see cref="Action{T}"/> used to clear the elements</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Clear(Action<T> action)
-		{
-			foreach (var item in this)
-			{
-				action.Invoke(item);
-			}
-			this._span.Clear();
-			this._size = 0;
-		}
-		#endregion
-
-		#region equality
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		public static bool operator ==(SpanList<T> left, SpanList<T> right)
-		{
-			return left._span == right._span && left._size == right._size;
-		}
-
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		public static bool operator !=(SpanList<T> left, SpanList<T> right)
-		{
-			return !(left == right);
-		}
-
-#pragma warning disable CS0809
-		/// <summary>
-		/// Checks whether the given <paramref name="obj"/> is the same as this one
-		/// </summary>
-		/// <param name="obj">The given object</param>
-		/// <returns>Equals or not</returns>
-		[Obsolete("Equals() on SpanList will always throw an exception. Use == instead.")]
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public override readonly bool Equals(object? obj)
-		{
-			throw new NotSupportedException();
-		}
-
-		/// <summary>
-		/// Get the hash code of this <see cref="SpanList{T}"/>
-		/// </summary>
-		/// <returns>The hash code</returns>
-		[Obsolete("GetHashCode() on SpanList will always throw an exception.")]
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public override readonly int GetHashCode()
-		{
-			throw new NotSupportedException();
-		}
-#pragma warning restore CS0809
-
-		/// <summary>
-		/// Get the enumerator (a <see cref="Span{T}.Enumerator"/>) of this <see cref="SpanList{T}"/>
-		/// </summary>
-		/// <returns>The enumerator of this <see cref="SpanList{T}"/></returns>
-		public readonly Span<T>.Enumerator GetEnumerator()
-		{
-			return this.AsSpan().GetEnumerator();
-		}
-		#endregion
-
-		#region convert
-		/// <summary>
-		/// Copy the current <see cref="SpanList{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/>
-		/// </summary>
-		/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void CopyTo(Span<T> destination)
-		{
-			this.AsSpan().CopyTo(destination);
-		}
-
-		/// <summary>
-		/// Implicitly convert the given <paramref name="list"/> to a <see cref="Span{T}"/>
-		/// </summary>
-		/// <param name="list">The <see cref="SpanList{T}"/> to be converted</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator Span<T>(SpanList<T> list)
-		{
-			return list.AsSpan();
-		}
-
-		/// <summary>
-		/// Implicitly convert the given <paramref name="list"/> to a <see cref="ReadOnlySpan{T}"/>
-		/// </summary>
-		/// <param name="list">The <see cref="SpanList{T}"/> to be converted</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static implicit operator ReadOnlySpan<T>(SpanList<T> list)
-		{
-			return list.AsSpan();
-		}
-
-		/// <summary>
-		/// Get the string representation of this <see cref="SpanList{T}"/>
-		/// </summary>
-		/// <returns>The string representation of this <see cref="SpanList{T}"/></returns>
-		public override readonly string ToString()
-		{
-			return $"{nameof(SpanList<T>)}<{typeof(T).Name}>[{this._size}]";
-		}
-
-		/// <summary>
-		/// Convert this <see cref="SpanList{T}"/> to an array of type <typeparamref name="T"/>
-		/// </summary>
-		/// <returns>An array of type <typeparamref name="T"/> holding the same values as this <see cref="SpanList{T}"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly T[] ToArray()
-		{
-			if (this._size == 0)
-			{
-				return System.Array.Empty<T>();
-			}
-			T[] array = new T[this._size];
-			Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(array)), ref Unsafe.As<T, byte>(ref this._span[0]), (uint)this._size);
-			return array;
-		}
-
-		/// <summary>
-		/// Convert this <see cref="SpanList{T}"/> to a <see cref="List{T}"/> of <typeparamref name="T"/>
-		/// </summary>
-		/// <returns>A <see cref="List{T}"/> of <typeparamref name="T"/> <typeparamref name="T"/> holding the same values as this <see cref="SpanList{T}"/></returns>
-		public readonly List<T> ToList()
-		{
-			List<T> list = new(this.Capacity);
-			this.AsSpan().CopyTo(CollectionsMarshal.AsSpan(list));
-			return list;
-		}
-		#endregion
 	}
+	#endregion
 
+	#region basic
+	private readonly Span<T> _span;
+
+	private readonly int _rows, _cols, _leadDim;
 
 	/// <summary>
-	/// The matrix-like span of column major whose internal implementation simply utilizes a fixed-sized <see cref="Span{T}"/>.
+	/// Get the presenting number of rows of this <see cref="SpanMatrix{T}"/>
 	/// </summary>
-	/// <typeparam name="T">The data type</typeparam>
-	[DebuggerTypeProxy(typeof(SpanMatrixDebugView<>))]
-	[DebuggerDisplay("{ToString(),raw}")]
-	public readonly ref struct SpanMatrix<T> where T : notnull
+	public readonly int Rows
 	{
-		#region enumerating
-		/// <summary>
-		/// The enumerator for a <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		public ref struct Enumerator
-		{
-			private readonly SpanMatrix<T> _matrix;
-
-			private int _index;
-
-			/// <summary>
-			/// Get the current
-			/// </summary>
-			public ref T Current {
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				get => ref this._matrix._span[this._index];
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			internal Enumerator(SpanMatrix<T> span)
-			{
-				_matrix = span;
-				_index = -1;
-			}
-
-			/// <summary>
-			/// Move to the next element
-			/// </summary>
-			/// <returns>Whether there is a next element or not</returns>
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public bool MoveNext()
-			{
-				int num = _index + 1;
-				int ld = this._matrix._leadDim;
-				if (num % ld > this._matrix._rows)
-					num = (num / ld + 1) * ld;
-				if (num < ld * this._matrix._cols)
-				{
-					_index = num;
-					return true;
-				}
-				return false;
-			}
-		}
-		#endregion
-
-		#region basic
-		private readonly Span<T> _span;
-
-		private readonly int _rows, _cols, _leadDim;
-
-		/// <summary>
-		/// Get the presenting number of rows of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		public readonly int Rows
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._rows;
-		}
-		/// <summary>
-		/// Get the presenting number of columns of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		public readonly int Cols
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._cols;
-		}
-		/// <summary>
-		/// Get the leading dimension (the actual number of rows) of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		public readonly int LeadDim
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._rows;
-		}
-		/// <summary>
-		/// Get the presenting length of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		public readonly int PresentingLength
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._rows * this._cols;
-		}
-
-		/// <summary>
-		/// Check whether this <see cref="SpanMatrix{T}"/> is empty or not
-		/// </summary>
-		public readonly bool IsEmpty
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._leadDim > 0;
-		}
-
-		/// <summary>
-		/// Get the underlying <see cref="Span{T}"/> of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		public readonly Span<T> UnderlyingSpan
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._span;
-		}
-
-		/// <summary>
-		/// Get an empty <see cref="SpanMatrix{T}"/> without underlying <see cref="Span{T}"/>
-		/// </summary>
-		public static SpanMatrix<T> Empty => default;
-
-		/// <summary>
-		/// Create an empty <see cref="SpanMatrix{T}"/> with the underlying <see cref="Span{T}"/> as the input <paramref name="span"/> and the given <paramref name="leadingDim"/>
-		/// </summary>
-		/// <param name="span">The input underlying <see cref="Span{T}"/></param>
-		/// <param name="rows">The number of desired rows. (The number of columns are calculated.)</param>
-		/// <param name="leadingDim">The leading dimension of <paramref name="span"/>, default 0 means <paramref name="rows"/></param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SpanMatrix(Span<T> span, int rows, int leadingDim = 0)
-		{
-			if (rows < 0)
-				throw new ArgumentOutOfRangeException(nameof(rows), rows, Resources.ParameterError.MustPositive);
-			if (leadingDim < 0)
-				throw new ArgumentOutOfRangeException(nameof(leadingDim), leadingDim, Resources.ParameterError.CannotNegative);
-			if (leadingDim == 0)
-				leadingDim = rows;
-			this._cols = span.Length / leadingDim;
-			if (span.Length % leadingDim != 0 && this._cols * leadingDim + rows < span.Length)
-				throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(leadingDim));
-
-			this._span = span;
-			this._rows = rows;
-			this._leadDim = leadingDim;
-			if (span.Length % leadingDim != 0)
-				this._cols++;
-		}
-		#endregion
-
-		#region indexer
-		/// <summary>
-		/// Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		/// <param name="row">The row index of the element to get reference</param>
-		/// <param name="col">The column index of the element to get reference</param>
-		/// <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
-		public readonly ref T this[int row, int col] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				if (row < 0 || row >= this._rows)
-					throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
-				if (col < 0 || col >= this._cols)
-					throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
-				return ref this._span[row + col * this._leadDim];
-			}
-		}
-
-		/// <summary>
-		/// Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		/// <param name="row">The row index of the element to get reference</param>
-		/// <param name="col">The column index of the element to get reference</param>
-		/// <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
-		public readonly ref T this[Index row, Index col] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				return ref this[row.GetOffset(this._rows), col.GetOffset(this._cols)];
-			}
-		}
-
-		/// <summary>
-		/// Get the column at <paramref name="columnIndex"/> of this <see cref="SpanMatrix{T}"/> as a <see cref="Span{T}"/>
-		/// </summary>
-		/// <param name="columnIndex">The index of the column to get</param>
-		/// <returns>The column at <paramref name="columnIndex"/> as a <see cref="Span{T}"/></returns>
-		public readonly Span<T> this[int columnIndex] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
-				if (columnIndex < 0 || columnIndex >= this._cols)
-					throw new ArgumentOutOfRangeException(nameof(columnIndex), columnIndex, Resources.ParameterError.InvalidValue);
-				return this._span[(columnIndex * this._leadDim)..(columnIndex * this._leadDim + this._rows)];
-			}
-		}
-
-		/// <summary>
-		/// Forms a slice out of the current <see cref="SpanMatrix{T}"/> staring at a specified <paramref name="column"/> for a specified <paramref name="count"/> of columns
-		/// </summary>
-		/// <param name="column">The index of the column at which to begin this slice</param>
-		/// <param name="count">The desired number of columns for the slice</param>
-		/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="count"/> columns from the current <see cref="SpanMatrix{T}"/> starting at the <paramref name="column"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="column"/> or <paramref name="count"/> is out of range</exception>
+		get => this._rows;
+	}
+	/// <summary>
+	/// Get the presenting number of columns of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	public readonly int Cols
+	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SpanMatrix<T> Slice(int column, int count)
-		{
-			if (column < 0 || column >= this._cols)
-				throw new ArgumentOutOfRangeException(nameof(column), column, Resources.ParameterError.InvalidValue);
-			if (count < 0 || column + count >= this._cols)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
-			return new(this._span[(column * this._leadDim)..((column + count) * this._leadDim)], this._rows, this._leadDim);
-		}
-
-		/// <summary>
-		/// Get the number of columns of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		public readonly int Count {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this._cols;
-		}
-
-		/// <summary>
-		/// Forms a slice out of the current <see cref="SpanMatrix{T}"/> staring at a specified <paramref name="row"/> for a specified <paramref name="count"/> of rows
-		/// </summary>
-		/// <param name="row">The index of the row at which to begin this slice</param>
-		/// <param name="count">The desired number of columns for the slice</param>
-		/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="count"/> rows from the current <see cref="SpanMatrix{T}"/> starting at the <paramref name="row"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="count"/> is out of range</exception>
+		get => this._cols;
+	}
+	/// <summary>
+	/// Get the leading dimension (the actual number of rows) of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	public readonly int LeadDim
+	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SpanMatrix<T> SliceRow(int row, int count)
+		get => this._leadDim;
+	}
+	/// <summary>
+	/// Get the presenting length of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	public readonly int PresentingLength
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._rows * this._cols;
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="SpanMatrix{T}"/> is empty or not
+	/// </summary>
+	public readonly bool IsEmpty
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._leadDim > 0;
+	}
+
+	/// <summary>
+	/// Get the underlying <see cref="Span{T}"/> of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	public readonly Span<T> UnderlyingSpan
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._span;
+	}
+
+	/// <summary>
+	/// Get an empty <see cref="SpanMatrix{T}"/> without underlying <see cref="Span{T}"/>
+	/// </summary>
+	public static SpanMatrix<T> Empty => default;
+
+	/// <summary>
+	/// Create an empty <see cref="SpanMatrix{T}"/> with the underlying <see cref="Span{T}"/> as the input <paramref name="span"/> and the given <paramref name="leadingDim"/>
+	/// </summary>
+	/// <param name="span">The input underlying <see cref="Span{T}"/></param>
+	/// <param name="rows">The number of desired rows. (The number of columns are calculated.)</param>
+	/// <param name="leadingDim">The leading dimension of <paramref name="span"/>, default 0 means <paramref name="rows"/></param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public SpanMatrix(Span<T> span, int rows, int leadingDim = 0)
+	{
+		if (rows < 0)
+			throw new ArgumentOutOfRangeException(nameof(rows), rows, Resources.ParameterError.MustPositive);
+		if (leadingDim < 0)
+			throw new ArgumentOutOfRangeException(nameof(leadingDim), leadingDim, Resources.ParameterError.CannotNegative);
+		if (leadingDim == 0)
+			leadingDim = rows;
+		this._cols = span.Length / leadingDim;
+		if (span.Length % leadingDim != 0 && this._cols * leadingDim + rows < span.Length)
+			throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(leadingDim));
+
+		this._span = span;
+		this._rows = rows;
+		this._leadDim = leadingDim;
+		if (span.Length % leadingDim != 0)
+			this._cols++;
+	}
+	#endregion
+
+	#region indexer
+	/// <summary>
+	/// Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	/// <param name="row">The row index of the element to get reference</param>
+	/// <param name="col">The column index of the element to get reference</param>
+	/// <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+	public readonly ref T this[int row, int col] {
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get
 		{
 			if (row < 0 || row >= this._rows)
 				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
-			if (count < 0 || row + count >= this._rows)
-				throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
-			return new(this._span[row..^(this._leadDim - row - count)], count, this._leadDim);
+			if (col < 0 || col >= this._cols)
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
+			return ref this._span[row + col * this._leadDim];
 		}
+	}
 
-		/// <summary>
-		/// Forms a slice out of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="range"/> of rows
-		/// </summary>
-		/// <param name="range">The range of the rows to slice</param>
-		/// <returns>A <see cref="SpanMatrix{T}"/> that consists of rows of <paramref name="range"/> of the current <see cref="SpanMatrix{T}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="range"/> is out of range</exception>
+	/// <summary>
+	/// Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	/// <param name="row">The row index of the element to get reference</param>
+	/// <param name="col">The column index of the element to get reference</param>
+	/// <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+	public readonly ref T this[Index row, Index col] {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SpanMatrix<T> SliceRow(Range range)
+		get
 		{
-			var (off, len) = range.GetOffsetAndLength(this._rows);
-			return this.SliceRow(off, len);
+			return ref this[row.GetOffset(this._rows), col.GetOffset(this._cols)];
 		}
+	}
 
-		/// <summary>
-		/// Forms a referenced sub-matrix of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
-		/// </summary>
-		/// <param name="rowRange">The range of the rows to slice</param>
-		/// <param name="colRange">The range of the columns to slice</param>
-		/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="SpanMatrix{T}"/></returns>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowRange"/> or <paramref name="colRange"/> is out of range</exception>
+	/// <summary>
+	/// Get the column at <paramref name="columnIndex"/> of this <see cref="SpanMatrix{T}"/> as a <see cref="Span{T}"/>
+	/// </summary>
+	/// <param name="columnIndex">The index of the column to get</param>
+	/// <returns>The column at <paramref name="columnIndex"/> as a <see cref="Span{T}"/></returns>
+	public readonly Span<T> this[int columnIndex] {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly SpanMatrix<T> SubMatrix(Range rowRange, Range colRange)
+		get
 		{
-			var (off, len) = rowRange.GetOffsetAndLength(this._rows);
-			var rowSlice = this.SliceRow(off, len);
-			(off, len) = colRange.GetOffsetAndLength(this._cols);
-			return rowSlice.Slice(off, len);
+			if (columnIndex < 0 || columnIndex >= this._cols)
+				throw new ArgumentOutOfRangeException(nameof(columnIndex), columnIndex, Resources.ParameterError.InvalidValue);
+			return this._span[(columnIndex * this._leadDim)..(columnIndex * this._leadDim + this._rows)];
 		}
+	}
 
-		/// <summary>
-		/// Get the referenced sub-matrix of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
-		/// </summary>
-		/// <param name="rowRange">The range of the rows to slice</param>
-		/// <param name="colRange">The range of the columns to slice</param>
-		/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="SpanMatrix{T}"/></returns>
-		public readonly SpanMatrix<T> this[Range rowRange, Range colRange] {
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => this.SubMatrix(rowRange, colRange);
-		}
-		#endregion
+	/// <summary>
+	/// Forms a slice out of the current <see cref="SpanMatrix{T}"/> staring at a specified <paramref name="column"/> for a specified <paramref name="count"/> of columns
+	/// </summary>
+	/// <param name="column">The index of the column at which to begin this slice</param>
+	/// <param name="count">The desired number of columns for the slice</param>
+	/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="count"/> columns from the current <see cref="SpanMatrix{T}"/> starting at the <paramref name="column"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="column"/> or <paramref name="count"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly SpanMatrix<T> Slice(int column, int count)
+	{
+		if (column < 0 || column >= this._cols)
+			throw new ArgumentOutOfRangeException(nameof(column), column, Resources.ParameterError.InvalidValue);
+		if (count < 0 || column + count >= this._cols)
+			throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
+		return new(this._span[(column * this._leadDim)..((column + count) * this._leadDim)], this._rows, this._leadDim);
+	}
 
-		#region equality
-		/// <summary>
-		/// Equality operator
-		/// </summary>
-		public static bool operator ==(SpanMatrix<T> left, SpanMatrix<T> right)
-		{
-			return left._span == right._span && left._rows == right._rows && left._leadDim == right._leadDim;
-		}
+	/// <summary>
+	/// Get the number of columns of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	public readonly int Count {
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._cols;
+	}
 
-		/// <summary>
-		/// Inequality operator
-		/// </summary>
-		public static bool operator !=(SpanMatrix<T> left, SpanMatrix<T> right)
-		{
-			return !(left == right);
-		}
+	/// <summary>
+	/// Forms a slice out of the current <see cref="SpanMatrix{T}"/> staring at a specified <paramref name="row"/> for a specified <paramref name="count"/> of rows
+	/// </summary>
+	/// <param name="row">The index of the row at which to begin this slice</param>
+	/// <param name="count">The desired number of columns for the slice</param>
+	/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="count"/> rows from the current <see cref="SpanMatrix{T}"/> starting at the <paramref name="row"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="count"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly SpanMatrix<T> SliceRow(int row, int count)
+	{
+		if (row < 0 || row >= this._rows)
+			throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
+		if (count < 0 || row + count >= this._rows)
+			throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
+		return new(this._span[row..^(this._leadDim - row - count)], count, this._leadDim);
+	}
+
+	/// <summary>
+	/// Forms a slice out of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="range"/> of rows
+	/// </summary>
+	/// <param name="range">The range of the rows to slice</param>
+	/// <returns>A <see cref="SpanMatrix{T}"/> that consists of rows of <paramref name="range"/> of the current <see cref="SpanMatrix{T}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="range"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly SpanMatrix<T> SliceRow(Range range)
+	{
+		var (off, len) = range.GetOffsetAndLength(this._rows);
+		return this.SliceRow(off, len);
+	}
+
+	/// <summary>
+	/// Forms a referenced sub-matrix of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+	/// </summary>
+	/// <param name="rowRange">The range of the rows to slice</param>
+	/// <param name="colRange">The range of the columns to slice</param>
+	/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="SpanMatrix{T}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowRange"/> or <paramref name="colRange"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly SpanMatrix<T> SubMatrix(Range rowRange, Range colRange)
+	{
+		var (off, len) = rowRange.GetOffsetAndLength(this._rows);
+		var rowSlice = this.SliceRow(off, len);
+		(off, len) = colRange.GetOffsetAndLength(this._cols);
+		return rowSlice.Slice(off, len);
+	}
+
+	/// <summary>
+	/// Get the referenced sub-matrix of the current <see cref="SpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+	/// </summary>
+	/// <param name="rowRange">The range of the rows to slice</param>
+	/// <param name="colRange">The range of the columns to slice</param>
+	/// <returns>A <see cref="SpanMatrix{T}"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="SpanMatrix{T}"/></returns>
+	public readonly SpanMatrix<T> this[Range rowRange, Range colRange] {
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this.SubMatrix(rowRange, colRange);
+	}
+	#endregion
+
+	#region equality
+	/// <summary>
+	/// Equality operator
+	/// </summary>
+	public static bool operator ==(SpanMatrix<T> left, SpanMatrix<T> right)
+	{
+		return left._span == right._span && left._rows == right._rows && left._leadDim == right._leadDim;
+	}
+
+	/// <summary>
+	/// Inequality operator
+	/// </summary>
+	public static bool operator !=(SpanMatrix<T> left, SpanMatrix<T> right)
+	{
+		return !(left == right);
+	}
 
 #pragma warning disable CS0809
-		/// <summary>
-		/// Checks whether the given <paramref name="obj"/> is the same as this one
-		/// </summary>
-		/// <param name="obj">The given object</param>
-		/// <returns>Equals or not</returns>
-		[Obsolete("Equals() on SpanMatrix will always throw an exception. Use == instead.")]
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public override readonly bool Equals(object? obj)
-		{
-			throw new NotSupportedException();
-		}
+	/// <summary>
+	/// Checks whether the given <paramref name="obj"/> is the same as this one
+	/// </summary>
+	/// <param name="obj">The given object</param>
+	/// <returns>Equals or not</returns>
+	[Obsolete("Equals() on SpanMatrix will always throw an exception. Use == instead.")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public override readonly bool Equals(object? obj)
+	{
+		throw new NotSupportedException();
+	}
 
-		/// <summary>
-		/// Get the hash code of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		/// <returns>The hash code</returns>
-		[Obsolete("GetHashCode() on SpanMatrix will always throw an exception.")]
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public override readonly int GetHashCode()
-		{
-			throw new NotSupportedException();
-		}
+	/// <summary>
+	/// Get the hash code of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	/// <returns>The hash code</returns>
+	[Obsolete("GetHashCode() on SpanMatrix will always throw an exception.")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public override readonly int GetHashCode()
+	{
+		throw new NotSupportedException();
+	}
 #pragma warning restore CS0809
 
-		/// <summary>
-		/// Get the <see cref="Enumerator"/> of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		/// <returns>The enumerator of this <see cref="SpanMatrix{T}"/></returns>
-		public readonly Enumerator GetEnumerator()
-		{
-			return new Enumerator(this);
-		}
-		#endregion
-
-		#region convert
-		/// <summary>
-		/// Copy a specific <paramref name="row"/> of the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/>
-		/// </summary>
-		/// <param name="row">The index of the row to copy</param>
-		/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void CopyRowTo(int row, Span<T> destination)
-		{
-			if (this.IsEmpty)
-				return;
-			if (row < 0 || row >= this._rows)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
-			if (destination.Length < this._cols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
-
-			for (int i = 0; i < this._cols; i++)
-			{
-				destination[i] = this._span[row + i * this._leadDim];
-			}
-		}
-
-		/// <summary>
-		/// Overwrite a specific <paramref name="row"/> of the current <see cref="SpanMatrix{T}"/> by the values of <paramref name="destination"/> <see cref="ReadOnlySpan{T}"/>
-		/// </summary>
-		/// <param name="row">The index of the row to be overwritten</param>
-		/// <param name="destination">The <see cref="Span{T}"/> to copy from</param>
-		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void SetRowFrom(int row, ReadOnlySpan<T> destination)
-		{
-			if (this.IsEmpty)
-				return;
-			if (row < 0 || row >= this._rows)
-				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
-			if (destination.Length < this._cols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
-
-			for (int i = 0; i < this._cols; i++)
-			{
-				this._span[row + i * this._leadDim] = destination[i];
-			}
-		}
-
-		/// <summary>
-		/// Copy the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/> column-by-column
-		/// </summary>
-		/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void CopyTo(Span<T> destination)
-		{
-			if (this.IsEmpty)
-				return;
-			if (this._leadDim == this._rows)
-			{
-				this._span[..(this._rows * this._cols)].CopyTo(destination);
-				return;
-			}
-			// otherwise
-			if (destination.Length < this._rows * this._cols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
-			for (int i = 0; i < this._cols; i++)
-			{
-				var dst = destination[(i * this._rows)..];
-				this._span[(i * this._leadDim)..(i * this._leadDim + this._rows)].CopyTo(dst);
-			}
-		}
-
-		/// <summary>
-		/// Copy the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="SpanMatrix{T}"/> column-by-column
-		/// </summary>
-		/// <param name="destination">The <see cref="SpanMatrix{T}"/> to copy to</param>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is of different size</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void CopyTo(SpanMatrix<T> destination)
-		{
-			if (this.IsEmpty)
-				return;
-			if (destination._rows != this._rows || destination._cols != this._cols)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
-			if (this._leadDim == this._rows && destination._leadDim == destination._rows)
-			{
-				this._span[..(this._rows * this._cols)].CopyTo(destination._span);
-				return;
-			}
-			// otherwise
-			for (int i = 0; i < this._cols; i++)
-			{
-				var dst = destination._span[(i * destination._leadDim)..];
-				this._span[(i * this._leadDim)..(i * this._leadDim + this._rows)].CopyTo(dst);
-			}
-		}
-
-		/// <summary>
-		/// Copy the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/> column-by-column
-		/// </summary>
-		/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
-		/// <param name="converter">The <see cref="Converter{TInput, TOutput}"/> used to change the data type</param>
-		/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly void CopyTo<TOut>(Span<TOut> destination, Converter<T, TOut> converter)
-		{
-			if (this.IsEmpty)
-				return;
-			if (this._leadDim == this._rows)
-			{
-				this._span.CopyTo(destination, converter);
-				return;
-			}
-			// otherwise
-			if (destination.Length < this._rows * this._cols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
-			for (int i = 0; i < this._cols; i++)
-			{
-				var dst = destination[(i * this._rows)..];
-				this._span[(i * this._leadDim)..(i * this._leadDim + this._rows)].CopyTo(dst, converter);
-			}
-		}
-
-		/// <summary>
-		/// Get the string representation of this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		/// <returns>The string representation of this <see cref="SpanMatrix{T}"/></returns>
-		public override readonly string ToString()
-		{
-			return $"{nameof(SpanMatrix<T>)}<{typeof(T).Name}>[Size = {this._rows}x{this._cols}, {nameof(LeadDim)} = {this._leadDim}]";
-		}
-
-		/// <summary>
-		/// Convert this <see cref="SpanMatrix{T}"/> to an array of column arrays of type <typeparamref name="T"/>
-		/// </summary>
-		/// <returns>An array of column arrays of type <typeparamref name="T"/> holding the same values as this <see cref="SpanList{T}"/></returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public readonly T[][] ToArray()
-		{
-			if (this.IsEmpty)
-				return System.Array.Empty<T[]>();
-
-			uint size = (uint)(this._rows * Unsafe.SizeOf<T>());
-			T[][] array = new T[this._cols][];
-			for (int i = 0; i < this._cols; i++)
-			{
-				T[] column = new T[this._rows];
-				Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
-								 ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
-								 size);
-			}
-			return array;
-		}
-
-		/// <summary>
-		/// Copy the values from the given <paramref name="array"/> of column arrays of type <typeparamref name="T"/> to this <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		/// <param name="array">The array of column arrays of type <typeparamref name="T"/> to be copied from</param>
-		/// <exception cref="ArgumentNullException">If any of <paramref name="array"/> or itself is null</exception>
-		/// <exception cref="ArgumentException">If the size of <paramref name="array"/> is not the same as this one</exception>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void FromArray(T[][] array)
-		{
-			if (this.IsEmpty)
-				return;
-			if (array is null)
-				throw new ArgumentNullException(nameof(array));
-			if (array.Length != this._cols)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(array));
-
-			uint size = (uint)(this._rows * Unsafe.SizeOf<T>());
-			for (int i = 0; i < this._cols; i++)
-			{
-				T[] column = array[i];
-				if (column is null || column.Length == 0)
-					throw new ArgumentNullException(nameof(array));
-				if (column.Length != this._rows)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(array));
-				Unsafe.CopyBlock(ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
-								 ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
-								 size);
-			}
-		}
-		#endregion
-
-		#region sort related
-		/// <summary>
-		/// Get the <see cref="ColumnSwapping"/>s for this <see cref="SpanMatrix{T}"/> and stores them to <paramref name="columns"/>.
-		/// </summary>
-		/// <param name="fixedSpan">The fixed pointer of <see cref="UnderlyingSpan"/></param>
-		/// <param name="columns">The <see cref="Span{T}"/> of <see cref="ColumnSwapping"/>s used to store the result</param>
-		/// <returns><paramref name="columns"/> of correct length.</returns>
-		/// <exception cref="ArgumentException">If <paramref name="columns"/> is too small</exception>
-		public unsafe readonly Span<ColumnSwapping> AsColumnSwappings(IntPtr fixedSpan, Span<ColumnSwapping> columns)
-		{
-			if (columns.Length < this._cols)
-				throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(columns));
-			for (int i = 0; i < this._cols; i++)
-			{
-				columns[i] = new(this, fixedSpan, i);
-			}
-			return columns[..this._cols];
-		}
-
-		/// <summary>
-		/// The struct used for storing and swapping columns of <see cref="SpanMatrix{T}"/>
-		/// </summary>
-		public unsafe readonly struct ColumnSwapping : ISwapper<ColumnSwapping>
-		{
-			private readonly int rows;
-
-			private readonly void* colStart;
-
-			internal ColumnSwapping(SpanMatrix<T> mat, IntPtr start, int column)
-			{
-				this.rows = mat._rows * Unsafe.SizeOf<T>();
-				int ld = mat._leadDim * Unsafe.SizeOf<T>();
-				this.colStart = column * ld + (byte*)start.ToPointer();
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static void ISwapper<ColumnSwapping>.Swap(ref ColumnSwapping a, ref ColumnSwapping b)
-			{
-#if DEBUG
-				if (a.rows != b.rows)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize);
-#endif
-				using var temp = a.rows.CheckStackLimit<byte>();
-				Span<byte> buf = temp.IsEmpty ? stackalloc byte[a.rows] : temp.Data;
-				Span<byte> aa = new(a.colStart, a.rows), bb = new(b.colStart, b.rows);
-				aa.CopyTo(buf);
-				bb.CopyTo(aa);
-				buf[..a.rows].CopyTo(bb);
-			}
-		}
-		#endregion
+	/// <summary>
+	/// Get the <see cref="Enumerator"/> of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	/// <returns>The enumerator of this <see cref="SpanMatrix{T}"/></returns>
+	public readonly Enumerator GetEnumerator()
+	{
+		return new Enumerator(this);
 	}
+	#endregion
+
+	#region convert
+	/// <summary>
+	/// Copy a specific <paramref name="row"/> of the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/>
+	/// </summary>
+	/// <param name="row">The index of the row to copy</param>
+	/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyRowTo(int row, Span<T> destination)
+	{
+		if (this.IsEmpty)
+			return;
+		if (row < 0 || row >= this._rows)
+			throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
+		if (destination.Length < this._cols)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
+
+		for (int i = 0; i < this._cols; i++)
+		{
+			destination[i] = this._span[row + i * this._leadDim];
+		}
+	}
+
+	/// <summary>
+	/// Overwrite a specific <paramref name="row"/> of the current <see cref="SpanMatrix{T}"/> by the values of <paramref name="destination"/> <see cref="ReadOnlySpan{T}"/>
+	/// </summary>
+	/// <param name="row">The index of the row to be overwritten</param>
+	/// <param name="destination">The <see cref="Span{T}"/> to copy from</param>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void SetRowFrom(int row, ReadOnlySpan<T> destination)
+	{
+		if (this.IsEmpty)
+			return;
+		if (row < 0 || row >= this._rows)
+			throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
+		if (destination.Length < this._cols)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
+
+		for (int i = 0; i < this._cols; i++)
+		{
+			this._span[row + i * this._leadDim] = destination[i];
+		}
+	}
+
+	/// <summary>
+	/// Copy the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/> column-by-column
+	/// </summary>
+	/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyTo(Span<T> destination)
+	{
+		if (this.IsEmpty)
+			return;
+		if (this._leadDim == this._rows)
+		{
+			this._span[..(this._rows * this._cols)].CopyTo(destination);
+			return;
+		}
+		// otherwise
+		if (destination.Length < this._rows * this._cols)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
+		for (int i = 0; i < this._cols; i++)
+		{
+			var dst = destination[(i * this._rows)..];
+			this[i].CopyTo(dst);
+		}
+	}
+
+	/// <summary>
+	/// Copy the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="SpanMatrix{T}"/> column-by-column
+	/// </summary>
+	/// <param name="destination">The <see cref="SpanMatrix{T}"/> to copy to</param>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is of different size</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyTo(SpanMatrix<T> destination)
+	{
+		if (this.IsEmpty)
+			return;
+		if (destination._rows != this._rows || destination._cols != this._cols)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
+		if (this._leadDim == this._rows && destination._leadDim == destination._rows)
+		{
+			this._span[..(this._rows * this._cols)].CopyTo(destination._span);
+			return;
+		}
+		// otherwise
+		for (int i = 0; i < this._cols; i++)
+		{
+			this[i].CopyTo(destination[i]);
+		}
+	}
+
+	/// <summary>
+	/// Copy the current <see cref="SpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/> column-by-column
+	/// </summary>
+	/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
+	/// <param name="converter">The <see cref="Converter{TInput, TOutput}"/> used to change the data type</param>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyTo<TOut>(Span<TOut> destination, Converter<T, TOut> converter)
+	{
+		if (this.IsEmpty)
+			return;
+		if (this._leadDim == this._rows)
+		{
+			this._span.CopyTo(destination, converter);
+			return;
+		}
+		// otherwise
+		if (destination.Length < this._rows * this._cols)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
+		for (int i = 0; i < this._cols; i++)
+		{
+			var dst = destination[(i * this._rows)..];
+			this[i].CopyTo(dst, converter);
+		}
+	}
+
+	/// <summary>
+	/// Get the string representation of this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	/// <returns>The string representation of this <see cref="SpanMatrix{T}"/></returns>
+	public override readonly string ToString()
+	{
+		return $"{nameof(SpanMatrix<T>)}<{typeof(T).Name}>[Size = {this._rows}x{this._cols}, {nameof(LeadDim)} = {this._leadDim}]";
+	}
+
+	/// <summary>
+	/// Convert this <see cref="SpanMatrix{T}"/> to an array of column arrays of type <typeparamref name="T"/>
+	/// </summary>
+	/// <returns>An array of column arrays of type <typeparamref name="T"/> holding the same values as this <see cref="SpanList{T}"/></returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly T[][] ToArray()
+	{
+		if (this.IsEmpty)
+			return System.Array.Empty<T[]>();
+
+		T[][] array = new T[this._cols][];
+		for (int i = 0; i < this._cols; i++)
+		{
+			array[i] = this[i].ToArray();
+		}
+		return array;
+	}
+
+	/// <summary>
+	/// Copy the values from the given <paramref name="array"/> of column arrays of type <typeparamref name="T"/> to this <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	/// <param name="array">The array of column arrays of type <typeparamref name="T"/> to be copied from</param>
+	/// <exception cref="ArgumentNullException">If any of <paramref name="array"/> or itself is null</exception>
+	/// <exception cref="ArgumentException">If the size of <paramref name="array"/> is not the same as this one</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public void FromArray(T[][] array)
+	{
+		if (this.IsEmpty)
+			return;
+		if (array is null)
+			throw new ArgumentNullException(nameof(array));
+		if (array.Length != this._cols)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(array));
+
+		uint size = (uint)(this._rows * Unsafe.SizeOf<T>());
+		for (int i = 0; i < this._cols; i++)
+		{
+			T[] column = array[i];
+			if (column is null || column.Length == 0)
+				throw new ArgumentNullException(nameof(array));
+			if (column.Length != this._rows)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(array));
+			Unsafe.CopyBlockUnaligned(ref Unsafe.As<T, byte>(ref this._span[i * this._leadDim]),
+									  ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(column)),
+									  size);
+		}
+	}
+	#endregion
+
+	#region sort related
+	/// <summary>
+	/// Get the <see cref="ColumnSwapping"/>s for this <see cref="SpanMatrix{T}"/> and stores them to <paramref name="columns"/>.
+	/// </summary>
+	/// <param name="fixedSpan">The fixed pointer of <see cref="UnderlyingSpan"/></param>
+	/// <param name="columns">The <see cref="Span{T}"/> of <see cref="ColumnSwapping"/>s used to store the result</param>
+	/// <returns><paramref name="columns"/> of correct length.</returns>
+	/// <exception cref="ArgumentException">If <paramref name="columns"/> is too small</exception>
+	public unsafe readonly Span<ColumnSwapping> AsColumnSwappings(IntPtr fixedSpan, Span<ColumnSwapping> columns)
+	{
+		if (columns.Length < this._cols)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(columns));
+		for (int i = 0; i < this._cols; i++)
+		{
+			columns[i] = new(this, fixedSpan, i);
+		}
+		return columns[..this._cols];
+	}
+
+	/// <summary>
+	/// The struct used for storing and swapping columns of <see cref="SpanMatrix{T}"/>
+	/// </summary>
+	public unsafe readonly struct ColumnSwapping : ISwapper<ColumnSwapping>
+	{
+		private readonly int rows;
+
+		private readonly void* colStart;
+
+		internal ColumnSwapping(SpanMatrix<T> mat, IntPtr start, int column)
+		{
+			this.rows = mat._rows * Unsafe.SizeOf<T>();
+			int ld = mat._leadDim * Unsafe.SizeOf<T>();
+			this.colStart = column * ld + (byte*)start.ToPointer();
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static void ISwapper<ColumnSwapping>.Swap(ref ColumnSwapping a, ref ColumnSwapping b)
+		{
+#if DEBUG
+			if (a.rows != b.rows)
+				throw new ArgumentException(Resources.ParameterError.NotSameSize);
+#endif
+			using var temp = a.rows.CheckStackLimit<byte>();
+			Span<byte> buf = temp.IsEmpty ? stackalloc byte[a.rows] : temp.Data;
+			Span<byte> aa = new(a.colStart, a.rows), bb = new(b.colStart, b.rows);
+			aa.CopyTo(buf);
+			bb.CopyTo(aa);
+			buf[..a.rows].CopyTo(bb);
+		}
+	}
+	#endregion
+}
+
+
+/// <summary>
+/// The matrix-like read-only span of column major whose internal implementation simply utilizes a fixed-sized <see cref="ReadOnlySpan{T}"/>.
+/// </summary>
+/// <typeparam name="T">The data type</typeparam>
+[DebuggerTypeProxy(typeof(SpanMatrixDebugView<>))]
+[DebuggerDisplay("{ToString(),raw}")]
+public readonly ref struct ReadOnlySpanMatrix<T> where T : notnull
+{
+	#region enumerating
+	/// <summary>
+	/// The enumerator for a <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	public ref struct Enumerator
+	{
+		private readonly ReadOnlySpanMatrix<T> _matrix;
+
+		private int _index;
+
+		/// <summary>
+		/// Get the current
+		/// </summary>
+		public readonly ref readonly T Current
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => ref this._matrix._span[this._index];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal Enumerator(ReadOnlySpanMatrix<T> span)
+		{
+			_matrix = span;
+			_index = -1;
+		}
+
+		/// <summary>
+		/// Move to the next element
+		/// </summary>
+		/// <returns>Whether there is a next element or not</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool MoveNext()
+		{
+			int num = _index + 1;
+			int ld = this._matrix._leadDim;
+			if (num % ld > this._matrix._rows)
+				num = (num / ld + 1) * ld;
+			if (num < ld * this._matrix._cols)
+			{
+				_index = num;
+				return true;
+			}
+			return false;
+		}
+	}
+	#endregion
+
+	#region basic
+	private readonly ReadOnlySpan<T> _span;
+
+	private readonly int _rows, _cols, _leadDim;
+
+	/// <summary>
+	/// Get the presenting number of rows of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	public readonly int Rows
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._rows;
+	}
+	/// <summary>
+	/// Get the presenting number of columns of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	public readonly int Cols
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._cols;
+	}
+	/// <summary>
+	/// Get the leading dimension (the actual number of rows) of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	public readonly int LeadDim
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._leadDim;
+	}
+	/// <summary>
+	/// Get the presenting length of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	public readonly int PresentingLength
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._rows * this._cols;
+	}
+
+	/// <summary>
+	/// Check whether this <see cref="ReadOnlySpanMatrix{T}"/> is empty or not
+	/// </summary>
+	public readonly bool IsEmpty
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._leadDim > 0;
+	}
+
+	/// <summary>
+	/// Get the underlying <see cref="ReadOnlySpan{T}"/> of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	public readonly ReadOnlySpan<T> UnderlyingReadOnlySpan
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._span;
+	}
+
+	/// <summary>
+	/// Get an empty <see cref="ReadOnlySpanMatrix{T}"/> without underlying <see cref="ReadOnlySpan{T}"/>
+	/// </summary>
+	public static ReadOnlySpanMatrix<T> Empty => default;
+
+	/// <summary>
+	/// Create an empty <see cref="ReadOnlySpanMatrix{T}"/> with the underlying <see cref="ReadOnlySpan{T}"/> as the input <paramref name="span"/> and the given <paramref name="leadingDim"/>
+	/// </summary>
+	/// <param name="span">The input underlying <see cref="ReadOnlySpan{T}"/></param>
+	/// <param name="rows">The number of desired rows. (The number of columns are calculated.)</param>
+	/// <param name="leadingDim">The leading dimension of <paramref name="span"/>, default 0 means <paramref name="rows"/></param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public ReadOnlySpanMatrix(ReadOnlySpan<T> span, int rows, int leadingDim = 0)
+	{
+		if (rows < 0)
+			throw new ArgumentOutOfRangeException(nameof(rows), rows, Resources.ParameterError.MustPositive);
+		if (leadingDim < 0)
+			throw new ArgumentOutOfRangeException(nameof(leadingDim), leadingDim, Resources.ParameterError.CannotNegative);
+		if (leadingDim == 0)
+			leadingDim = rows;
+		this._cols = span.Length / leadingDim;
+		if (span.Length % leadingDim != 0 && this._cols * leadingDim + rows < span.Length)
+			throw new ArgumentException(Resources.ArithmeticError.CannotDivide, nameof(leadingDim));
+
+		this._span = span;
+		this._rows = rows;
+		this._leadDim = leadingDim;
+		if (span.Length % leadingDim != 0)
+			this._cols++;
+	}
+	#endregion
+
+	#region indexer
+	/// <summary>
+	/// Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	/// <param name="row">The row index of the element to get reference</param>
+	/// <param name="col">The column index of the element to get reference</param>
+	/// <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+	public readonly ref readonly T this[int row, int col]
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get
+		{
+			if (row < 0 || row >= this._rows)
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
+			if (col < 0 || col >= this._cols)
+				throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
+			return ref this._span[row + col * this._leadDim];
+		}
+	}
+
+	/// <summary>
+	/// Get the reference of the element at (<paramref name="row"/>, <paramref name="col"/>) of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	/// <param name="row">The row index of the element to get reference</param>
+	/// <param name="col">The column index of the element to get reference</param>
+	/// <returns>The reference of the element at (<paramref name="row"/>, <paramref name="col"/>)</returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="col"/> is out of range</exception>
+	public readonly ref readonly T this[Index row, Index col]
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get
+		{
+			return ref this[row.GetOffset(this._rows), col.GetOffset(this._cols)];
+		}
+	}
+
+	/// <summary>
+	/// Get the column at <paramref name="columnIndex"/> of this <see cref="ReadOnlySpanMatrix{T}"/> as a <see cref="ReadOnlySpan{T}"/>
+	/// </summary>
+	/// <param name="columnIndex">The index of the column to get</param>
+	/// <returns>The column at <paramref name="columnIndex"/> as a <see cref="ReadOnlySpan{T}"/></returns>
+	public readonly ReadOnlySpan<T> this[int columnIndex]
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get
+		{
+			if (columnIndex < 0 || columnIndex >= this._cols)
+				throw new ArgumentOutOfRangeException(nameof(columnIndex), columnIndex, Resources.ParameterError.InvalidValue);
+			return this._span[(columnIndex * this._leadDim)..(columnIndex * this._leadDim + this._rows)];
+		}
+	}
+
+	/// <summary>
+	/// Forms a slice out of the current <see cref="ReadOnlySpanMatrix{T}"/> staring at a specified <paramref name="column"/> for a specified <paramref name="count"/> of columns
+	/// </summary>
+	/// <param name="column">The index of the column at which to begin this slice</param>
+	/// <param name="count">The desired number of columns for the slice</param>
+	/// <returns>A <see cref="ReadOnlySpanMatrix{T}"/> that consists of <paramref name="count"/> columns from the current <see cref="ReadOnlySpanMatrix{T}"/> starting at the <paramref name="column"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="column"/> or <paramref name="count"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly ReadOnlySpanMatrix<T> Slice(int column, int count)
+	{
+		if (column < 0 || column >= this._cols)
+			throw new ArgumentOutOfRangeException(nameof(column), column, Resources.ParameterError.InvalidValue);
+		if (count < 0 || column + count >= this._cols)
+			throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
+		return new(this._span[(column * this._leadDim)..((column + count) * this._leadDim)], this._rows, this._leadDim);
+	}
+
+	/// <summary>
+	/// Get the number of columns of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	public readonly int Count
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this._cols;
+	}
+
+	/// <summary>
+	/// Forms a slice out of the current <see cref="ReadOnlySpanMatrix{T}"/> staring at a specified <paramref name="row"/> for a specified <paramref name="count"/> of rows
+	/// </summary>
+	/// <param name="row">The index of the row at which to begin this slice</param>
+	/// <param name="count">The desired number of columns for the slice</param>
+	/// <returns>A <see cref="ReadOnlySpanMatrix{T}"/> that consists of <paramref name="count"/> rows from the current <see cref="ReadOnlySpanMatrix{T}"/> starting at the <paramref name="row"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> or <paramref name="count"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly ReadOnlySpanMatrix<T> SliceRow(int row, int count)
+	{
+		if (row < 0 || row >= this._rows)
+			throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
+		if (count < 0 || row + count >= this._rows)
+			throw new ArgumentOutOfRangeException(nameof(count), count, Resources.ParameterError.InvalidValue);
+		return new(this._span[row..^(this._leadDim - row - count)], count, this._leadDim);
+	}
+
+	/// <summary>
+	/// Forms a slice out of the current <see cref="ReadOnlySpanMatrix{T}"/> with the given <paramref name="range"/> of rows
+	/// </summary>
+	/// <param name="range">The range of the rows to slice</param>
+	/// <returns>A <see cref="ReadOnlySpanMatrix{T}"/> that consists of rows of <paramref name="range"/> of the current <see cref="ReadOnlySpanMatrix{T}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="range"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly ReadOnlySpanMatrix<T> SliceRow(Range range)
+	{
+		var (off, len) = range.GetOffsetAndLength(this._rows);
+		return this.SliceRow(off, len);
+	}
+
+	/// <summary>
+	/// Forms a referenced sub-matrix of the current <see cref="ReadOnlySpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+	/// </summary>
+	/// <param name="rowRange">The range of the rows to slice</param>
+	/// <param name="colRange">The range of the columns to slice</param>
+	/// <returns>A <see cref="ReadOnlySpanMatrix{T}"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="ReadOnlySpanMatrix{T}"/></returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="rowRange"/> or <paramref name="colRange"/> is out of range</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly ReadOnlySpanMatrix<T> SubMatrix(Range rowRange, Range colRange)
+	{
+		var (off, len) = rowRange.GetOffsetAndLength(this._rows);
+		var rowSlice = this.SliceRow(off, len);
+		(off, len) = colRange.GetOffsetAndLength(this._cols);
+		return rowSlice.Slice(off, len);
+	}
+
+	/// <summary>
+	/// Get the referenced sub-matrix of the current <see cref="ReadOnlySpanMatrix{T}"/> with the given <paramref name="rowRange"/> and <paramref name="colRange"/>
+	/// </summary>
+	/// <param name="rowRange">The range of the rows to slice</param>
+	/// <param name="colRange">The range of the columns to slice</param>
+	/// <returns>A <see cref="ReadOnlySpanMatrix{T}"/> that consists of <paramref name="rowRange"/> and <paramref name="colRange"/> of the current <see cref="ReadOnlySpanMatrix{T}"/></returns>
+	public readonly ReadOnlySpanMatrix<T> this[Range rowRange, Range colRange]
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => this.SubMatrix(rowRange, colRange);
+	}
+	#endregion
+
+	#region equality
+	/// <summary>
+	/// Equality operator
+	/// </summary>
+	public static bool operator ==(ReadOnlySpanMatrix<T> left, ReadOnlySpanMatrix<T> right)
+	{
+		return left._span == right._span && left._rows == right._rows && left._leadDim == right._leadDim;
+	}
+
+	/// <summary>
+	/// Inequality operator
+	/// </summary>
+	public static bool operator !=(ReadOnlySpanMatrix<T> left, ReadOnlySpanMatrix<T> right)
+	{
+		return !(left == right);
+	}
+
+#pragma warning disable CS0809
+	/// <summary>
+	/// Checks whether the given <paramref name="obj"/> is the same as this one
+	/// </summary>
+	/// <param name="obj">The given object</param>
+	/// <returns>Equals or not</returns>
+	[Obsolete("Equals() on ReadOnlySpanMatrix will always throw an exception. Use == instead.")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public override readonly bool Equals(object? obj)
+	{
+		throw new NotSupportedException();
+	}
+
+	/// <summary>
+	/// Get the hash code of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	/// <returns>The hash code</returns>
+	[Obsolete("GetHashCode() on ReadOnlySpanMatrix will always throw an exception.")]
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public override readonly int GetHashCode()
+	{
+		throw new NotSupportedException();
+	}
+#pragma warning restore CS0809
+
+	/// <summary>
+	/// Get the <see cref="Enumerator"/> of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	/// <returns>The enumerator of this <see cref="ReadOnlySpanMatrix{T}"/></returns>
+	public readonly Enumerator GetEnumerator()
+	{
+		return new Enumerator(this);
+	}
+	#endregion
+
+	#region convert
+	/// <summary>
+	/// Copy a specific <paramref name="row"/> of the current <see cref="ReadOnlySpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="ReadOnlySpan{T}"/>
+	/// </summary>
+	/// <param name="row">The index of the row to copy</param>
+	/// <param name="destination">The <see cref="ReadOnlySpan{T}"/> to copy to</param>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="row"/> is out of range</exception>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyRowTo(int row, Span<T> destination)
+	{
+		if (this.IsEmpty)
+			return;
+		if (row < 0 || row >= this._rows)
+			throw new ArgumentOutOfRangeException(nameof(row), row, Resources.ParameterError.InvalidValue);
+		if (destination.Length < this._cols)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
+
+		for (int i = 0; i < this._cols; i++)
+		{
+			destination[i] = this._span[row + i * this._leadDim];
+		}
+	}
+
+	/// <summary>
+	/// Copy the current <see cref="ReadOnlySpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="ReadOnlySpan{T}"/> column-by-column
+	/// </summary>
+	/// <param name="destination">The <see cref="ReadOnlySpan{T}"/> to copy to</param>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyTo(Span<T> destination)
+	{
+		if (this.IsEmpty)
+			return;
+		if (this._leadDim == this._rows)
+		{
+			this._span[..(this._rows * this._cols)].CopyTo(destination);
+			return;
+		}
+		// otherwise
+		if (destination.Length < this._rows * this._cols)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
+		for (int i = 0; i < this._cols; i++)
+		{
+			var dst = destination[(i * this._rows)..];
+			this[i].CopyTo(dst);
+		}
+	}
+
+	/// <summary>
+	/// Copy the current <see cref="ReadOnlySpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="ReadOnlySpanMatrix{T}"/> column-by-column
+	/// </summary>
+	/// <param name="destination">The <see cref="ReadOnlySpanMatrix{T}"/> to copy to</param>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is of different size</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyTo(SpanMatrix<T> destination)
+	{
+		if (this.IsEmpty)
+			return;
+		if (destination.Rows != this._rows || destination.Rows != this._cols)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(destination));
+		if (this._leadDim == this._rows && destination.LeadDim == destination.Rows)
+		{
+			this._span[..(this._rows * this._cols)].CopyTo(destination.UnderlyingSpan);
+			return;
+		}
+		// otherwise
+		for (int i = 0; i < this._cols; i++)
+		{
+			this[i].CopyTo(destination[i]);
+		}
+	}
+
+	/// <summary>
+	/// Copy the current <see cref="ReadOnlySpanMatrix{T}"/> to the <paramref name="destination"/> <see cref="Span{T}"/> column-by-column
+	/// </summary>
+	/// <param name="destination">The <see cref="Span{T}"/> to copy to</param>
+	/// <param name="converter">The <see cref="Converter{TInput, TOutput}"/> used to change the data type</param>
+	/// <exception cref="ArgumentException">If <paramref name="destination"/> is too short</exception>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly void CopyTo<TOut>(Span<TOut> destination, Converter<T, TOut> converter)
+	{
+		if (this.IsEmpty)
+			return;
+		if (this._leadDim == this._rows)
+		{
+			this._span.CopyTo(destination, converter);
+			return;
+		}
+		// otherwise
+		if (destination.Length < this._rows * this._cols)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(destination));
+		for (int i = 0; i < this._cols; i++)
+		{
+			var dst = destination[(i * this._rows)..];
+			this[i].CopyTo(dst, converter);
+		}
+	}
+
+	/// <summary>
+	/// Get the string representation of this <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	/// <returns>The string representation of this <see cref="ReadOnlySpanMatrix{T}"/></returns>
+	public override readonly string ToString()
+	{
+		return $"{nameof(ReadOnlySpanMatrix<T>)}<{typeof(T).Name}>[Size = {this._rows}x{this._cols}, {nameof(LeadDim)} = {this._leadDim}]";
+	}
+
+	/// <summary>
+	/// Convert this <see cref="ReadOnlySpanMatrix{T}"/> to an array of column arrays of type <typeparamref name="T"/>
+	/// </summary>
+	/// <returns>An array of column arrays of type <typeparamref name="T"/> holding the same values as this <see cref="SpanList{T}"/></returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public readonly T[][] ToArray()
+	{
+		if (this.IsEmpty)
+			return System.Array.Empty<T[]>();
+
+		T[][] array = new T[this._cols][];
+		for (int i = 0; i < this._cols; i++)
+		{
+			array[i] = this[i].ToArray();
+		}
+		return array;
+	}
+
+	/// <summary>
+	/// Implicitly convert a <see cref="SpanMatrix{T}"/> to a <see cref="ReadOnlySpanMatrix{T}"/>
+	/// </summary>
+	public static implicit operator ReadOnlySpanMatrix<T>(SpanMatrix<T> matrix) => new(matrix.UnderlyingSpan, matrix.Rows, matrix.LeadDim);
+	#endregion
 }
