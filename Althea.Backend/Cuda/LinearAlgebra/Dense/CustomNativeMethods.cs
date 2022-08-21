@@ -31,6 +31,12 @@ public unsafe class CustomNativeMethods
 {
 	#region vector
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+	internal static extern CustomStatus vecFillVal(DataType type, void* array, void* value, long N, long stride);
+
+	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
+	internal static extern CudaError vecStridedCopy(DataType type, void* src, void* dst, long N, long strideSrc, long strideDst);
+
+	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern CustomStatus vecDataConvert(DataType srcType, DataType dstType, bool toRealByAbs, long n, void* src, long strideSrc, void* dst, long strideDst);
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]

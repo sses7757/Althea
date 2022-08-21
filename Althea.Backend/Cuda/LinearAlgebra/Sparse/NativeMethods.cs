@@ -352,19 +352,19 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		#region other
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecSort(DataType type, void* array, long N, int stride);
+		internal static extern int vecSort(DataType type, long N, void* array, long stride);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecSortBy(DataType keyType, DataType valType, void* keys, void* vals, long N, int strideKey, int strideVal);
+		internal static extern int vecSortBy(DataType keyType, DataType valType, long N, void* keys, long strideKey, void* vals, long strideVal);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecFind(DataType type, bool sorted, void* array, long N, int stride, void* toFind, out long index);
+		internal static extern int vecFind(DataType type, bool sorted, long N, void* array, long stride, void* toFind, out long index);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecFillRange(DataType type, void* array, long N, int stride, void* start, void* step);
+		internal static extern int vecFillRange(DataType type, long N, void* array, long stride, void* start, void* step);
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecBound(DataType type, bool lower, void* array, long N, int stride, void* toFind, out long index);
+		internal static extern int vecBound(DataType type, bool lower, long N, void* array, long stride, void* toFind, out long index);
 		#endregion
 	}
 }

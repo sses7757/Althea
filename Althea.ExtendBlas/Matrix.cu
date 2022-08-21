@@ -1,4 +1,4 @@
-#include "blasSupp.h"
+#include "extblas.h"
 
 
 #pragma region sparse vector to/from COO matrix
@@ -192,7 +192,7 @@ inline void matricesKronecker(
 }
 
 DLLEXP
-void matKron(const Datatype::DataType type,
+void matKron(const extblas::DataType type,
 	const void* A, const size_t ldA, const size_t rowsA, const size_t colsA,
 	const void* B, const size_t ldB, const size_t rowsB, const size_t colsB,
 	void* dest, const size_t ldD, const void* alpha, const void* beta)
@@ -210,7 +210,7 @@ struct makeHerm_functor2
 	T* A;
 
 	// used for compute the actual row and column position
-	const double onePlus2NHalf, onePlus2NSquare;
+	const double onePlus2NFloat16, onePlus2NSquare;
 	const size_t TwoNMinusOne;
 	// Ignore Spelling: lfloor
 	//tex:Since for number of rows $n$, column index $c$ and iteration index $i$: $$\sum_{i=0}^c (n - i) = \frac12 (1 + c)(2n - c)$$
@@ -223,14 +223,14 @@ struct makeHerm_functor2
 	makeHerm_functor2(const size_t ld, T* A) :
 		ld(ld), A(A),
 		TwoNMinusOne(2 * ld - 1),
-		onePlus2NHalf(0.5 * (2 * ld + 1)),
+		onePlus2NFloat16(0.5 * (2 * ld + 1)),
 		onePlus2NSquare((2 * ld + 1) * (double)(2 * ld + 1))
 	{}
 
 	__host__ __device__ void operator()(const size_t ind) const
 	{
 		// get offset
-		const size_t col = (size_t)(onePlus2NHalf * (1.0 - std::sqrt(1.0 - 8 * ind / onePlus2NSquare)));
+		const size_t col = (size_t)(onePlus2NFloat16 * (1.0 - std::sqrt(1.0 - 8 * ind / onePlus2NSquare)));
 		const size_t row = ind - 1 - (col * (TwoNMinusOne - col)) / 2;
 		const size_t offsetLower = row + col * ld, offsetUpper = col + row * ld;
 		// copy
@@ -377,13 +377,13 @@ void matrixClearTriangular(void* Av, const size_t ld, const size_t rows, const b
 }
 
 DLLEXP
-void matMakeHerm(const Datatype::DataType type, void* A, const size_t ld, const size_t rows, const bool upperStored, const bool hermA)
+void matMakeHerm(const extblas::DataType type, void* A, const size_t ld, const size_t rows, const bool upperStored, const bool hermA)
 {
 	AUTO_SIGNED_TYPE_FUNC(matrixMakeHermitian, type, void, A, ld, rows, upperStored, hermA);
 }
 
 DLLEXP
-void matTriClear(const Datatype::DataType type, void* A, const size_t ld, const size_t rows, const bool clearLower)
+void matTriClear(const extblas::DataType type, void* A, const size_t ld, const size_t rows, const bool clearLower)
 {
 	AUTO_SIGNED_TYPE_FUNC(matrixClearTriangular, type, void, A, ld, rows, clearLower);
 }
@@ -425,7 +425,7 @@ int sparseVectorsOuterCheck()
 	return 0;
 }
 
-DLLEXP int spVecOuterCheck(const Datatype::DataType type)
+DLLEXP int spVecOuterCheck(const extblas::DataType type)
 {
 	AUTO_ALLTYPE_FUNC(sparseVectorsOuterCheck, type, int);
 }
@@ -450,7 +450,7 @@ int sparseVectorsOuter(
 	return 0;
 }
 
-DLLEXP int spVecOuter(const Datatype::DataType type,
+DLLEXP int spVecOuter(const extblas::DataType type,
 	const void* valA, const MKL_INT* indA, const size_t nnzA,
 	const void* valB, const MKL_INT* indB, const size_t nnzB,
 	void* valC, MKL_INT* rowC, MKL_INT* colC, const bool conj)
@@ -518,7 +518,7 @@ int CooMatricesKronecker(
 	return 0;
 }
 
-DLLEXP int CooMatKron(const Datatype::DataType type,
+DLLEXP int CooMatKron(const extblas::DataType type,
 	const void* valA, const MKL_INT* rowA, const MKL_INT* colA, const size_t nnzA,
 	const void* valB, const MKL_INT* rowB, const MKL_INT* colB, const size_t nnzB, const size_t rowsB, const size_t colsB,
 	void* valC, MKL_INT* rowC, MKL_INT* colC)

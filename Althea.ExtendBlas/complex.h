@@ -1,13 +1,16 @@
 #pragma once
 
 #include <cuda_runtime.h>
+
+#include <cstddef>
 #include <cmath>
 #include <type_traits>
 #include <stdint.h>
+#include <math_functions.h>
 
 
 // CUDA has a problem that gives false warnings for CONSTEXPR IF
-namespace BlasSupp
+namespace extblas
 {
 	template <typename T>
 	__host__ __device__ inline static T inf()
@@ -145,94 +148,94 @@ namespace std
 
 #pragma region define complex operators
 template <typename T>
-__host__ __device__ inline static BlasSupp::complex<T> operator*(const BlasSupp::complex<T> left, const BlasSupp::complex<T> right)
+__host__ __device__ inline static extblas::complex<T> operator*(const extblas::complex<T> left, const extblas::complex<T> right)
 {
 	const T real = left.real() * right.real() - left.imag() * right.imag();
 	const T imag = left.real() * right.imag() + left.imag() * right.real();
-	return BlasSupp::complex<T>(real, imag);
+	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
-__host__ __device__ inline static BlasSupp::complex<T> operator*(const BlasSupp::complex<T> left, const T right)
+__host__ __device__ inline static extblas::complex<T> operator*(const extblas::complex<T> left, const T right)
 {
 	const T real = left.real() * right;
 	const T imag = left.imag() * right;
-	return BlasSupp::complex<T>(real, imag);
+	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
-__host__ __device__ inline static BlasSupp::complex<T> operator*(const T left, const BlasSupp::complex<T> right)
+__host__ __device__ inline static extblas::complex<T> operator*(const T left, const extblas::complex<T> right)
 {
 	const T real = right.real() * left;
 	const T imag = right.imag() * left;
-	return BlasSupp::complex<T>(real, imag);
+	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
-__host__ __device__ inline static BlasSupp::complex<T> operator/(const BlasSupp::complex<T> left, const T right)
+__host__ __device__ inline static extblas::complex<T> operator/(const extblas::complex<T> left, const T right)
 {
 	const T real = left.real() / right;
 	const T imag = left.imag() / right;
-	return BlasSupp::complex<T>(real, imag);
+	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
-__host__ __device__ inline static BlasSupp::complex<T> operator/(const T left, const BlasSupp::complex<T> right)
+__host__ __device__ inline static extblas::complex<T> operator/(const T left, const extblas::complex<T> right)
 {
 	const T real = right.real() / left;
 	const T imag = right.imag() / left;
-	return BlasSupp::complex<T>(real, imag);
+	return extblas::complex<T>(real, imag);
 }
 
 // direct approach of div operator
 template <typename T>
-__host__ __device__ inline static BlasSupp::complex<T> operator/(const BlasSupp::complex<T> x, const BlasSupp::complex<T> y)
+__host__ __device__ inline static extblas::complex<T> operator/(const extblas::complex<T> x, const extblas::complex<T> y)
 {
 	const T squareAbsY = y.absSquare();
 	const T acbd = x.real() * y.real() + x.imag() * y.imag();
 	const T bcad = x.imag() * y.real() - x.real() * y.imag();
-	return BlasSupp::complex<T>(acbd / squareAbsY, bcad / squareAbsY);
+	return extblas::complex<T>(acbd / squareAbsY, bcad / squareAbsY);
 }
 
 template <typename T>
-__host__ __device__ inline static BlasSupp::complex<T> operator+(const BlasSupp::complex<T> left, const BlasSupp::complex<T> right)
+__host__ __device__ inline static extblas::complex<T> operator+(const extblas::complex<T> left, const extblas::complex<T> right)
 {
 	const T real = left._real + right._real;
 	const T imag = left._imag + right._imag;
-	return BlasSupp::complex<T>(real, imag);
+	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
-__host__ __device__ inline static BlasSupp::complex<T> operator-(const BlasSupp::complex<T> left, const BlasSupp::complex<T> right)
+__host__ __device__ inline static extblas::complex<T> operator-(const extblas::complex<T> left, const extblas::complex<T> right)
 {
 	const T real = left._real - right._real;
 	const T imag = left._imag - right._imag;
-	return BlasSupp::complex<T>(real, imag);
+	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
-__host__ __device__ inline static bool operator==(const BlasSupp::complex<T> left, const BlasSupp::complex<T> right)
+__host__ __device__ inline static bool operator==(const extblas::complex<T> left, const extblas::complex<T> right)
 {
 	return left._real == right._real && left._imag == right._imag;
 }
 
 template <typename T>
-__host__ __device__ inline static bool operator!=(const BlasSupp::complex<T> left, const BlasSupp::complex<T> right)
+__host__ __device__ inline static bool operator!=(const extblas::complex<T> left, const extblas::complex<T> right)
 {
 	return left._real != right._real || left._imag != right._imag;
 }
 
 template <typename T>
-__host__ __device__ inline static bool operator==(const BlasSupp::complex<T> left, const T right)
+__host__ __device__ inline static bool operator==(const extblas::complex<T> left, const T right)
 {
 	return left.imag() == 0 && left.real() == right;
 }
 
 template <typename T, typename U>
-__host__ __device__ inline static bool operator==(const BlasSupp::complex<T> left, const U right)
+__host__ __device__ inline static bool operator==(const extblas::complex<T> left, const U right)
 {
 	if constexpr (std::is_scalar<U>::value)
-		return left == BlasSupp::complex<T>((T)right);
+		return left == extblas::complex<T>((T)right);
 	else
 		return false;
 	// false return at end to suppress NVCC problem
@@ -256,39 +259,39 @@ namespace std
 	}
 
 	template <typename T>
-	__host__ __device__ static inline T abs(const BlasSupp::complex<T> x)
+	__host__ __device__ static inline T abs(const extblas::complex<T> x)
 	{
 		return hypot(x.real(), x.imag());
 	}
 	
 	#pragma region integer type conversions
 	template <typename T, typename U>
-	__host__ __device__ static inline BlasSupp::complex<T> _interger_op(BlasSupp::complex<U>(*func)(BlasSupp::complex<U>), BlasSupp::complex<T> left)
+	__host__ __device__ static inline extblas::complex<T> _interger_op(extblas::complex<U>(*func)(extblas::complex<U>), extblas::complex<T> left)
 	{
-		const BlasSupp::complex<U> result = func(BlasSupp::complex<U>((U)left.real(), (U)left.imag()));
-		return BlasSupp::complex<T>((T)result.real(), (T)result.imag());
+		const extblas::complex<U> result = func(extblas::complex<U>((U)left.real(), (U)left.imag()));
+		return extblas::complex<T>((T)result.real(), (T)result.imag());
 	}
 
 	template <typename T, typename U>
-	__host__ __device__ static inline BlasSupp::complex<T> _interger_op(BlasSupp::complex<U>(*func)(BlasSupp::complex<U>, U), BlasSupp::complex<T> left, T right)
+	__host__ __device__ static inline extblas::complex<T> _interger_op(extblas::complex<U>(*func)(extblas::complex<U>, U), extblas::complex<T> left, T right)
 	{
-		const BlasSupp::complex<U> result = func(BlasSupp::complex<U>((U)left.real(), (U)left.imag()), (U)right);
-		return BlasSupp::complex<T>((T)result.real(), (T)result.imag());
+		const extblas::complex<U> result = func(extblas::complex<U>((U)left.real(), (U)left.imag()), (U)right);
+		return extblas::complex<T>((T)result.real(), (T)result.imag());
 	}
 
 	template <typename T, typename U>
-	__host__ __device__ static inline BlasSupp::complex<T> _interger_op(BlasSupp::complex<U>(*func)(BlasSupp::complex<U>, BlasSupp::complex<U>), BlasSupp::complex<T> left, BlasSupp::complex<T> right)
+	__host__ __device__ static inline extblas::complex<T> _interger_op(extblas::complex<U>(*func)(extblas::complex<U>, extblas::complex<U>), extblas::complex<T> left, extblas::complex<T> right)
 	{
-		const BlasSupp::complex<U> result = func(BlasSupp::complex<U>((U)left.real(), (U)left.imag()), BlasSupp::complex<U>((U)right.real(), (U)right.imag()));
-		return BlasSupp::complex<T>((T)result.real(), (T)result.imag());
+		const extblas::complex<U> result = func(extblas::complex<U>((U)left.real(), (U)left.imag()), extblas::complex<U>((U)right.real(), (U)right.imag()));
+		return extblas::complex<T>((T)result.real(), (T)result.imag());
 	}
 	#pragma endregion
 
 	// direct log implementation
 	template <typename T>
-	__host__ __device__ static inline BlasSupp::complex<T> log(const BlasSupp::complex<T> comp)
+	__host__ __device__ static inline extblas::complex<T> log(const extblas::complex<T> comp)
 	{
-		// Ignore Spelling: mathtt hypot
+		// Ignore Spelling: \mathtt hypot \mathrm \cdot
 		//tex:$\log(a+b\mathtt{i}) = \log(\mathrm{hypot}(a,b))+\mathtt{i}\cdot\mathrm{atan2}(a,b)$
 
 		if constexpr (!is_floating_point<T>::value)
@@ -298,21 +301,21 @@ namespace std
 			else
 				return _interger_op(log<double>, comp);
 			// false return at end to suppress NVCC problem
-			return BlasSupp::complex<T>();
+			return extblas::complex<T>();
 		}
 		else
 		{
 			const T real = log(abs(comp));
 			const T imag = atan2(comp.real(), comp.imag());
-			return BlasSupp::complex<T>(real, imag);
+			return extblas::complex<T>(real, imag);
 		}
 		// false return at end to suppress NVCC problem
-		return BlasSupp::complex<T>();
+		return extblas::complex<T>();
 	}
 
 	// direct exp implementation
 	template <typename T>
-	__host__ __device__ static inline BlasSupp::complex<T> exp(const BlasSupp::complex<T> comp)
+	__host__ __device__ static inline extblas::complex<T> exp(const extblas::complex<T> comp)
 	{
 		if constexpr (!is_floating_point<T>::value)
 		{	// integer types need conversions
@@ -321,20 +324,20 @@ namespace std
 			else
 				return _interger_op(exp<double>, comp);
 			// false return at end to suppress NVCC problem
-			return BlasSupp::complex<T>();
+			return extblas::complex<T>();
 		}
 		else
 		{
 			const T real = exp(comp.real()), imag = comp.imag();
-			return BlasSupp::complex<T>(real * cos(imag), real * sin(imag));
+			return extblas::complex<T>(real * cos(imag), real * sin(imag));
 		}
 		// false return at end to suppress NVCC problem
-		return BlasSupp::complex<T>();
+		return extblas::complex<T>();
 	}
 
 	// pow implementation from MSVC
 	template <typename T>
-	__host__ __device__ static inline BlasSupp::complex<T> pow(const BlasSupp::complex<T> base, const T p)
+	__host__ __device__ static inline extblas::complex<T> pow(const extblas::complex<T> base, const T p)
 	{
 		if constexpr (!is_floating_point<T>::value)
 		{	// integer types need conversions
@@ -343,14 +346,14 @@ namespace std
 			else
 				return _interger_op(pow<double>, base, p);
 			// false return at end to suppress NVCC problem
-			return BlasSupp::complex<T>();
+			return extblas::complex<T>();
 		}
 		else
 		{
 			if (base.imag() == 0)
 			{
 				T real = std::pow(base.real(), p);
-				return BlasSupp::complex<T>(real, base.imag());
+				return extblas::complex<T>(real, base.imag());
 			}
 			else
 			{
@@ -358,12 +361,12 @@ namespace std
 			}
 		}
 		// false return at end to suppress NVCC problem
-		return BlasSupp::complex<T>();
+		return extblas::complex<T>();
 	}
 
 	// pow implementation from MSVC
 	template <typename T>
-	__host__ __device__ static inline BlasSupp::complex<T> pow(const BlasSupp::complex<T> base, const BlasSupp::complex<T> p)
+	__host__ __device__ static inline extblas::complex<T> pow(const extblas::complex<T> base, const extblas::complex<T> p)
 	{
 		if constexpr (!is_floating_point<T>::value)
 		{	// integer types need conversions
@@ -372,7 +375,7 @@ namespace std
 			else
 				return _interger_op(pow<double>, base, p);
 			// false return at end to suppress NVCC problem
-			return BlasSupp::complex<T>();
+			return extblas::complex<T>();
 		}
 		else
 		{
@@ -390,7 +393,7 @@ namespace std
 			}
 		}
 		// false return at end to suppress NVCC problem
-		return BlasSupp::complex<T>();
+		return extblas::complex<T>();
 	}
 }
 #pragma endregion

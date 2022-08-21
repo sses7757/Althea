@@ -11,9 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.Backend", "Althea.Ba
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.SourceGenerator", "Althea.SourceGenerator\Althea.SourceGenerator.csproj", "{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExtendBlas", "ExtendBlas\ExtendBlas.vcxproj", "{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.GeneralSolvers", "Althea.GeneralSolvers\Althea.GeneralSolvers.csproj", "{0F08AF51-31F4-4C13-9930-50F166BDF7D5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Althea.ExtendBlas", "Althea.ExtendBlas\Althea.ExtendBlas.vcxproj", "{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,14 +35,14 @@ Global
 		{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}.Debug|x64.ActiveCfg = Release|x64
 		{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}.Debug|x64.Build.0 = Release|x64
 		{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}.Release|x64.ActiveCfg = Release|x64
-		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Debug|x64.ActiveCfg = Debug|x64
-		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Debug|x64.Build.0 = Debug|x64
-		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x64.ActiveCfg = Release|x64
-		{3C0F92FD-00D3-41DF-8D70-39FC22BA7663}.Release|x64.Build.0 = Release|x64
 		{0F08AF51-31F4-4C13-9930-50F166BDF7D5}.Debug|x64.ActiveCfg = Debug|x64
 		{0F08AF51-31F4-4C13-9930-50F166BDF7D5}.Debug|x64.Build.0 = Debug|x64
 		{0F08AF51-31F4-4C13-9930-50F166BDF7D5}.Release|x64.ActiveCfg = Release|x64
 		{0F08AF51-31F4-4C13-9930-50F166BDF7D5}.Release|x64.Build.0 = Release|x64
+		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Debug|x64.ActiveCfg = Debug|x64
+		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Debug|x64.Build.0 = Debug|x64
+		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Release|x64.ActiveCfg = Release|x64
+		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

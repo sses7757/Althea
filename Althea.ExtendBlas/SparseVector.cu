@@ -1,4 +1,5 @@
-#include "blasSupp.h"
+#include "extblas.h"
+using namespace extblas;
 
 
 #pragma region set av values at positions
@@ -13,7 +14,7 @@ inline int vectorSetValuesAt(void* dst, const void* value, const MKL_INT* pos, c
 }
 
 DLLEXP
-int vecSetValAt(const Datatype::DataType type, void* a, const void* value, const MKL_INT* pos, const size_t posN)
+int vecSetValAt(const extblas::DataType type, void* a, const void* value, const MKL_INT* pos, const size_t posN)
 {
 	AUTO_ALLTYPE_FUNC(vectorSetValuesAt, type, int, a, value, pos, posN);
 }
@@ -43,7 +44,7 @@ inline ptrdiff_t vecPruneBuffer(const size_t N)
 }
 
 DLLEXP
-ptrdiff_t vecPruneBuffer(const Datatype::DataType type, const size_t N)
+ptrdiff_t vecPruneBuffer(const extblas::DataType type, const size_t N)
 {
 	AUTO_ALLTYPE_FUNC(vecPruneBuffer, type, ptrdiff_t, N);
 }
@@ -77,7 +78,7 @@ inline size_t vectorPruneNonZeros(const void* av, const void* threshold, const s
 }
 
 DLLEXP
-size_t vecPruneNnz(const Datatype::DataType type, const void* a, const void* threshold, const size_t N, void* buffer)
+size_t vecPruneNnz(const extblas::DataType type, const void* a, const void* threshold, const size_t N, void* buffer)
 {
 	AUTO_ALLTYPE_FUNC(vectorPruneNonZeros, type, size_t, a, threshold, N, buffer);
 }
@@ -122,7 +123,7 @@ inline ptrdiff_t vectorPruneDirect(const void* av, const void* threshold, const 
 }
 
 DLLEXP
-ptrdiff_t vecPruneDirect(const Datatype::DataType type, const void* a, const void* threshold, const size_t N, MKL_INT* idxOut, void* valOut, const bool safe, const size_t nnz)
+ptrdiff_t vecPruneDirect(const extblas::DataType type, const void* a, const void* threshold, const size_t N, MKL_INT* idxOut, void* valOut, const bool safe, const size_t nnz)
 {
 	AUTO_ALLTYPE_FUNC(vectorPruneDirect, type, ptrdiff_t, a, threshold, N, idxOut, valOut, safe, nnz);
 }
@@ -151,7 +152,7 @@ inline ERROR_RETURN vecPruneCalculate(const void* buffer, const size_t N, size_t
 }
 
 DLLEXP
-ERROR_RETURN vecPruneCal(const Datatype::DataType type, const size_t N, const void* buffer, size_t nnz, MKL_INT* indexOut, void* valueOut)
+ERROR_RETURN vecPruneCal(const extblas::DataType type, const size_t N, const void* buffer, size_t nnz, MKL_INT* indexOut, void* valueOut)
 {
 	AUTO_ALLTYPE_FUNC(vecPruneCalculate, type, ERROR_RETURN, buffer, N, nnz, indexOut, valueOut);
 }
@@ -175,7 +176,7 @@ inline void vectorSparseMultipliedDividedByDense(void* sparsev, const MKL_INT* i
 }
 
 DLLEXP
-void vecSpMulDivDn(const Datatype::DataType type, void* sparse, const MKL_INT* index, const size_t nnz, const void* dense, bool multiply)
+void vecSpMulDivDn(const extblas::DataType type, void* sparse, const MKL_INT* index, const size_t nnz, const void* dense, bool multiply)
 {
 	AUTO_ALLTYPE_FUNC(vectorSparseMultipliedDividedByDense, type, void, sparse, index, nnz, dense, multiply);
 }
@@ -194,7 +195,7 @@ inline ptrdiff_t vectorSpAddBuffer(const size_t nnzA, const size_t nnzB)
 }
 
 DLLEXP
-ptrdiff_t vecSpAddBuffer(const Datatype::DataType type, const size_t nnzA, const size_t nnzB)
+ptrdiff_t vecSpAddBuffer(const extblas::DataType type, const size_t nnzA, const size_t nnzB)
 {
 	AUTO_ALLTYPE_FUNC(vectorSpAddBuffer, type, ptrdiff_t, nnzA, nnzB);
 }
@@ -251,7 +252,7 @@ inline size_t vectorSparseAddGetNonzero(const MKL_INT* indA, const void* valAv, 
 }
 
 DLLEXP
-size_t vecSpAddNnz(const Datatype::DataType type,
+size_t vecSpAddNnz(const extblas::DataType type,
 	const MKL_INT* indA, const void* valA, const size_t nnzA,
 	const MKL_INT* indB, const void* valB, const size_t nnzB,
 	const void* alpha, void* buffer)
@@ -275,7 +276,7 @@ inline int vectorSparseAddCalculate(const void* buffer, size_t nnzAB, size_t nnz
 }
 
 DLLEXP
-int vecSpAddCal(const Datatype::DataType type, const void* buffer, size_t nnzAB, size_t nnzC, MKL_INT* C_index, void* C_value)
+int vecSpAddCal(const extblas::DataType type, const void* buffer, size_t nnzAB, size_t nnzC, MKL_INT* C_index, void* C_value)
 {
 	AUTO_ALLTYPE_FUNC(vectorSparseAddCalculate, type, int, buffer, nnzAB, nnzC, C_index, C_value);
 }
@@ -316,7 +317,7 @@ inline void vectorDenseAddBySparse(void* densev, const void* sparsev, const MKL_
 }
 
 DLLEXP
-void vecDnAddSp(const Datatype::DataType type, void* dense, const void* sparse, const MKL_INT* index, const size_t nnz, const void* alpha)
+void vecDnAddSp(const extblas::DataType type, void* dense, const void* sparse, const MKL_INT* index, const size_t nnz, const void* alpha)
 {
 	AUTO_ALLTYPE_FUNC(vectorDenseAddBySparse, type, void, dense, sparse, index, nnz, alpha);
 }

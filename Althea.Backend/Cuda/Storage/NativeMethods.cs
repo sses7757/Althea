@@ -182,31 +182,4 @@ public static unsafe class NativeMethods
 	[DllImport(Cuda.NativeMethods.CUFILE_DLL_NAME)]
 	internal static extern long cuFileWrite(IntPtr fileHandle, void* devPtr, long size, long fileOffset, long devPtrOffset);
 	#endregion
-
-	#region custom
-	/// <summary>
-	/// Fill the GPU <paramref name="array"/> with given <paramref name="value"/> of <paramref name="type"/>
-	/// </summary>
-	/// <param name="type">The data type of the GPU array and value</param>
-	/// <param name="array">The GPU array to be filled</param>
-	/// <param name="value">The pointer to the value of <paramref name="type"/> to be filled</param>
-	/// <param name="N">The number of elements of <paramref name="array"/>, in <paramref name="type"/></param>
-	/// <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
-	/// <remarks>Strided filling reduce the performance greatly.</remarks>
-	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-	internal static unsafe extern int vecFillVal(DataType type, void* array, void* value, long N, int stride);
-
-	/// <summary>
-	/// Strided copy the <paramref name="src"/> GPU array to the <paramref name="dst"/> GPU array
-	/// </summary>
-	/// <param name="type">The data type of the GPU array and value</param>
-	/// <param name="src">The source GPU array to copy from</param>
-	/// <param name="dst">The destination GPU array to copy to</param>
-	/// <param name="N">The number of elements to copy, counted in <paramref name="type"/></param>
-	/// <param name="strideSrc">The stride between two consecutive elements to be copied in <paramref name="src"/></param>
-	/// <param name="strideDst">The stride between two consecutive elements to be overwritten in <paramref name="dst"/></param>
-	/// <remarks>Strided copying reduce the performance greatly.</remarks>
-	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-	internal static extern int vecStridedCopy(DataType type, void* src, void* dst, long N, int strideSrc, int strideDst);
-	#endregion
 }

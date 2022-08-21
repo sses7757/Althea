@@ -1,10 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 using Althea.Array;
 using Althea.Backend.Cuda.LinearAlgebra.Sparse;
-using Althea.Backend.Mkl.LinearAlgebra.Sparse;
 
 
 namespace Althea.Backend.Cuda

@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-using Althea.Array;
+﻿using Althea.Array;
 using Althea.Backend.Storage;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -755,7 +753,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 	{
 		if (!GetPointer(array, stride, out T* ptr, out var n))
 			return false;
-		return NMC.vecSort(T.Type, ptr, n, (int)stride) == 0;
+		return NMC.vecSort(T.Type, n, ptr, (int)stride) == 0;
 	}
 
 	/// <inheritdoc/>
@@ -767,7 +765,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 			return false;
 		if (n2 != n)
 			throw new ArgumentException(Resources.ParameterError.NotSameSize);
-		return NMC.vecSortBy(T.Type, TOther.Type, pk, pv, n, (int)strideKeys, (int)strideValues) == 0;
+		return NMC.vecSortBy(T.Type, TOther.Type, n, pk, strideKeys, pv, strideValues) == 0;
 	}
 
 	/// <inheritdoc/>
@@ -776,7 +774,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 		find = -1;
 		if (!GetPointer(array, stride, out T* ptr, out var n))
 			return false;
-		return NMC.vecFind(T.Type, sorted, ptr, n, (int)stride, &value, out find) == 0;
+		return NMC.vecFind(T.Type, sorted, n, ptr, stride, &value, out find) == 0;
 	}
 
 	/// <inheritdoc/>
@@ -785,7 +783,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 		index = -1;
 		if (!GetPointer(array, stride, out T* ptr, out var n))
 			return false;
-		return NMC.vecBound(T.Type, lowerBound, ptr, n, (int)stride, &value, out index) == 0;
+		return NMC.vecBound(T.Type, lowerBound, n, ptr, stride, &value, out index) == 0;
 	}
 
 	/// <inheritdoc/>
@@ -793,7 +791,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 	{
 		if (!GetPointer(array, stride, out T* ptr, out var n))
 			return false;
-		return NMC.vecFillRange(T.Type, ptr, n, (int)stride, &start, &step) == 0;
+		return NMC.vecFillRange(T.Type, n, ptr, stride, &start, &step) == 0;
 	}
 	#endregion
 }

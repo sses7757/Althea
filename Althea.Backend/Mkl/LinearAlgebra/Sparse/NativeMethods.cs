@@ -188,6 +188,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 	/// </summary>
 	public static unsafe class CustomNativeMethods
 	{
+		#region index
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int vecSetValAt(DataType type, void* a, void* value, MklInt* pos, long posN);
 
@@ -226,20 +227,23 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern int cooMatKron(DataType type, void* valA, MklInt* rowA, MklInt* colA, long nnzA, void* valB, MklInt* rowB, MklInt* colB, long nnzB, long rowsB, long colsB, void* valC, MklInt* rowC, MklInt* colC);
+		#endregion
+
+		#region other
+		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
+		internal static extern int vecSort(DataType type, long N, void* array, long stride);
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecSort(DataType type, void* array, long N, int stride);
+		internal static extern int vecSortBy(DataType keyType, DataType valType, long N, void* keys, long strideKey, void* vals, long strideVal);
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecSortBy(DataType keyType, DataType valType, void* keys, void* vals, long N, int strideKey, int strideVal);
+		internal static extern int vecFind(DataType type, bool sorted, long N, void* array, long stride, void* toFind, out long index);
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecFind(DataType type, bool sorted, void* array, long N, int stride, void* toFind, out long index);
+		internal static extern int vecFillRange(DataType type, long N, void* array, long stride, void* start, void* step);
 
 		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecFillRange(DataType type, void* array, long N, int stride, void* start, void* step);
-
-		[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-		internal static extern int vecBound(DataType type, bool lower, void* array, long N, int stride, void* toFind, out long index);
+		internal static extern int vecBound(DataType type, bool lower, long N, void* array, long stride, void* toFind, out long index);
+		#endregion
 	}
 }
