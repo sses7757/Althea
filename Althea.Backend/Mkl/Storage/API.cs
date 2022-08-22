@@ -39,7 +39,7 @@ public unsafe class Api : CSharp.Storage.Api
 			func(count, source, strideSource, destination, strideDestination);
 			return true;
 		}
-		return LinearAlgebra.Dense.CustomNativeMethods.vecStridedCopy(T.Type, source, destination, count, (int)strideSource, (int)strideDestination) != LinearAlgebra.Dense.CustomStatus.NotSupported;
+		return LinearAlgebra.Dense.CustomNativeMethods.vecStridedCopy(T.Type, count, source, strideSource, destination, strideDestination) != LinearAlgebra.Dense.CustomStatus.NotSupported;
 	}
 
 	/// <inheritdoc/>

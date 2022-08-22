@@ -13,13 +13,16 @@
   <ItemGroup>
     <CudaCompile Include="DenseVector.cu" />
     <CudaCompile Include="Matrix.cu" />
-    <CudaCompile Include="SparseVector.cu" />
+    <CudaCompile Include="Sparse.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="complex.h" />
     <ClInclude Include="datatype.h" />
     <ClInclude Include="extblas.h" />
     <ClInclude Include="stride.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}</ProjectGuid>

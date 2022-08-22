@@ -211,7 +211,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 		var (gpu, file) = pointer.Pointer.FromGeneric();
 		if (gpu.IsValid())
 		{
-			if (LinearAlgebra.Dense.CustomNativeMethods.vecFillVal(T.Type, gpu.NativePointer(pointer), &value, pointer.LengthInBytes / sizeof(T), 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+			if (LinearAlgebra.Dense.CustomNativeMethods.vecFillVal(T.Type, pointer.LengthInBytes / sizeof(T), &value, gpu.NativePointer(pointer),  1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
 				return false;
 		}
 		else if (file.IsValid())
@@ -219,7 +219,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 			if (!file.CanWrite)
 				throw new InvalidOperationException();
 			using var buffer = CudaBuffer.Create(4096 + sizeof(T), 0, false);
-			if (LinearAlgebra.Dense.CustomNativeMethods.vecFillVal(T.Type, buffer.DeviceBuffer, &value, 4096 / sizeof(T) + 1, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+			if (LinearAlgebra.Dense.CustomNativeMethods.vecFillVal(T.Type, 4096 / sizeof(T) + 1, &value, buffer.DeviceBuffer, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
 				return false;
 			using CudaFileBuffer buf = buffer;
 			long end = pointer.LengthInBytes + pointer.OffsetInBytes, start = (pointer.OffsetInBytes + 4095) >> 12 << 12;
@@ -403,7 +403,11 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 				LinearAlgebra.Dense.NativeMethods.cublasGetVector((int)copies, sizeof(T), source, incrementSource, destination, incrementDestination).Check();
 				break;
 			case MemoryCopyKind.DeviceToDevice:
-				return LinearAlgebra.Dense.CustomNativeMethods.vecStridedCopy(T.Type, source, destination, copies, incrementSource, incrementDestination).Check();
+				var err = LinearAlgebra.Dense.CustomNativeMethods.vecStridedCopy(T.Type, copies, source, incrementSource, destination, incrementDestination);
+				err.Check();
+				if (err == (CudaError)(-1))
+					return false;
+				break;
 			case MemoryCopyKind.HostToHost:
 				if (copies > int.MaxValue)
 					return false;

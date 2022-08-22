@@ -7,6 +7,161 @@
 
 namespace extblas
 {
+#pragma region operation enum
+	/// <summary>
+	/// Binary operations used by array point-wise binary operations.
+	/// </summary>
+	/// <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+	enum BinaryOperation
+	{
+		/// <summary>
+		/// Operation that returns the addition of two input parameters
+		/// </summary>
+		Add = -1,
+		/// <summary>
+		/// Operation that returns the multiplication of two input parameters
+		/// </summary>
+		Multiply = -2,
+		/// <summary>
+		/// Operation that returns the division of two input parameters
+		/// </summary>
+		Divide = -3,
+		/// <summary>
+		/// Operation that returns the power of the first input parameter to the second one
+		/// </summary>
+		Power = -4,
+		/// <summary>
+		/// Operation that returns the maximum of two input parameters
+		/// </summary>
+		Maximum = -5,
+		/// <summary>
+		/// Operation that returns the minimum of two input parameters
+		/// </summary>
+		Mininum = -6,
+		/// <summary>
+		/// Operation that returns the maximum of the absolute values two input parameters
+		/// </summary>
+		AbsoluteMaximum = -7,
+		/// <summary>
+		/// Operation that returns the minimum of the absolute values two input parameters
+		/// </summary>
+		AbsoluteMininum = -8,
+	};
+
+	/// <summary>
+	/// Binary operations used by array point-wise binary operations with a scalar.
+	/// </summary>
+	/// <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+	enum BinaryScalarOperation
+	{
+		/// <summary>
+		/// Operation that returns the addition of two input parameters
+		/// </summary>
+		Add = -1,
+		/// <summary>
+		/// Operation that returns the multiplication of two input parameters
+		/// </summary>
+		Multiply = -2,
+		/// <summary>
+		/// Operation that returns the power of the first input parameter to the second one
+		/// </summary>
+		Power = -3,
+		/// <summary>
+		/// Operation that simply returns the second input parameter
+		/// </summary>
+		Fill = -4,
+		/// <summary>
+		/// Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
+		/// </summary>
+		Truncate = -5,
+		/// <summary>
+		/// Operation that returns the maximum of two input parameters
+		/// </summary>
+		Maximum = -6,
+		/// <summary>
+		/// Operation that returns the minimum of two input parameters
+		/// </summary>
+		Mininum = -7,
+		/// <summary>
+		/// Operation that returns the maximum of the absolute values two input parameters
+		/// </summary>
+		AbsoluteMaximum = -8,
+		/// <summary>
+		/// Operation that returns the minimum of the absolute values two input parameters
+		/// </summary>
+		AbsoluteMininum = -9,
+	};
+
+	/// <summary>
+	/// Binary reduce operations used by array point-wise reduce operations whose first input is the element in array and the second one is the partial reduction result.
+	/// </summary>
+	/// <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+	enum ReduceOperation
+	{
+		/// <summary>
+		/// Operation that returns the addition of two input parameters
+		/// </summary>
+		Add = -2,
+		/// <summary>
+		/// Operation that returns the addition of the absolute value of the first input parameter and the second parameter
+		/// </summary>
+		AddAbsolute = -3,
+		/// <summary>
+		/// Operation that returns the multiplication of two input parameters
+		/// </summary>
+		Multiply = -4,
+		/// <summary>
+		/// Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
+		/// </summary>
+		MultiplyAbsolute = -5,
+		/// <summary>
+		/// Operation that returns the addition of the square of the first input parameter and the second parameter; and sqrt the result before exit
+		/// </summary>
+		Norm = -6,
+		/// <summary>
+		/// Operation that returns the maximum of two input parameters
+		/// </summary>
+		Maximum = -7,
+		/// <summary>
+		/// Operation that returns the minimum of two input parameters
+		/// </summary>
+		Mininum = -8,
+		/// <summary>
+		/// Operation that returns the maximum of the absolute values two input parameters
+		/// </summary>
+		AbsoluteMaximum = -9,
+		/// <summary>
+		/// Operation that returns the minimum of the absolute values two input parameters
+		/// </summary>
+		AbsoluteMininum = -10,
+	};
+
+	/// <summary>
+	/// Unitary operations of array point-wise unary operations.
+	/// </summary>
+	/// <remarks>All implementations shall support these pre-defined unary operations, but a implementation can add support for more unary operations.</remarks>
+	enum UnaryOperation
+	{
+		/// <summary>
+		/// Identity operator (i.e., elements are not changed)
+		/// </summary>
+		Identity = 0,
+		/// <summary>
+		/// Complex conjugate operator (real-typed elements are not changed)
+		/// </summary>
+		Conjugate = -1,
+		/// <summary>
+		/// Negation operator
+		/// </summary>
+		Negate = -2,
+		/// <summary>
+		/// Absolute operator
+		/// </summary>
+		AbsoluteValue = -3
+	};
+#pragma endregion
+
+
 #pragma region data type enum
 	/// <summary>
 	/// The enumeration for number of sub-elements in one element

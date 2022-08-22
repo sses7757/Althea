@@ -35,7 +35,7 @@ internal static unsafe class CustomNativeMethods
 	internal static extern CustomStatus vecFillVal(DataType type, long n, void* value, void* array, long stride);
 
 	[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
-	internal static extern CustomStatus vecStridedCopy(DataType type, void* src, void* dst, long N, long strideSrc, long strideDst);
+	internal static extern CustomStatus vecStridedCopy(DataType type, long N, void* src, long strideSrc, void* dst, long strideDst);
 
 	[DllImport(Mkl.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern CustomStatus vecClip(DataType type, long n, void* threshold, void* a, long strideA, void* b, long strideB);

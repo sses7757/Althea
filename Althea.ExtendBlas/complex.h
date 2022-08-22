@@ -24,6 +24,18 @@ namespace extblas
 		// false return at end to suppress NVCC problem
 		return T();
 	}
+	template <typename T>
+	__host__ __device__ inline static T neginf()
+	{
+		if constexpr (std::is_floating_point<T>::value)
+			return -(T)(INFINITY);
+		else if constexpr (std::is_integral<T>::value)
+			return (T)(LLONG_MIN);
+		else
+			return T();
+		// false return at end to suppress NVCC problem
+		return T();
+	}
 
 	template <typename T>
 	__host__ __device__ inline static bool isinf(const T a)
@@ -93,6 +105,18 @@ namespace extblas
 		{
 			return _real * _real + _imag * _imag;
 		}
+	};
+
+	template <typename T>
+	struct late
+	{
+		using type = typename T::value_type;
+	};
+
+	template <typename T>
+	struct real_type
+	{
+		using type = std::conditional_t<std::is_scalar_v<T>, T, late<T>::type>
 	};
 }
 
@@ -210,6 +234,14 @@ __host__ __device__ inline static extblas::complex<T> operator-(const extblas::c
 {
 	const T real = left._real - right._real;
 	const T imag = left._imag - right._imag;
+	return extblas::complex<T>(real, imag);
+}
+
+template <typename T>
+__host__ __device__ inline static extblas::complex<T> operator-(const extblas::complex<T> left)
+{
+	const T real = -left._real;
+	const T imag = -left._imag;
 	return extblas::complex<T>(real, imag);
 }
 

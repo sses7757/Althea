@@ -292,7 +292,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern void cooIdxsToSpVecIdx_i32(int* index, int* rowIdx, int* colIdx, long N, long ld);
-
+		
 		[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 		internal static extern long vecSpAddBuffer_i32(DataType type, long nnzA, long nnzB);
 

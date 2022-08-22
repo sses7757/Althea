@@ -11,12 +11,6 @@
 #pragma warning Unknown dynamic link import/export semantics.
 #endif
 
-#ifdef MKL_ILP64
-#define MKL_INT long long
-#else
-#define MKL_INT int
-#endif // MKL_ILP64
-
 
 #include <cuda_runtime.h>
 
@@ -25,6 +19,8 @@
 #include "complex.h"
 #include "datatype.h"
 #include "stride.h"
+
+#include <functional>
 
 #include <thrust/for_each.h>
 #include <thrust/fill.h>
@@ -55,6 +51,11 @@
 #define THRUST_PAR thrust::tbb::par
 #define ERROR_RETURN int
 #define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP
+#ifdef MKL_ILP64
+#define MKL_INT long long
+#else
+#define MKL_INT int
+#endif // MKL_ILP64
 #else
 #define THRUST_PAR thrust::cuda::par
 #define ERROR_RETURN cudaError

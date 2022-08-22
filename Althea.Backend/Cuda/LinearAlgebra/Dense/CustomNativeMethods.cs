@@ -31,10 +31,10 @@ public unsafe class CustomNativeMethods
 {
 	#region vector
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-	internal static extern CustomStatus vecFillVal(DataType type, void* array, void* value, long N, long stride);
+	internal static extern CudaError vecStridedCopy(DataType type, long n, void* src, long strideSrc, void* dst, long strideDst);
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-	internal static extern CudaError vecStridedCopy(DataType type, void* src, void* dst, long N, long strideSrc, long strideDst);
+	internal static extern CustomStatus vecFillVal(DataType type, long n, void* value, void* array, long stride);
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern CustomStatus vecDataConvert(DataType srcType, DataType dstType, bool toRealByAbs, long n, void* src, long strideSrc, void* dst, long strideDst);
@@ -44,9 +44,6 @@ public unsafe class CustomNativeMethods
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern CustomStatus vecAbs(DataType type, long n, void* a, long strideA, void* b, long strideB);
-
-	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
-	internal static extern CustomStatus vecFillVal(DataType type, long n, void* value, void* array, long stride);
 
 	[DllImport(Cuda.NativeMethods.CUSTOM_DLL_NAME)]
 	internal static extern CustomStatus vecClip(DataType type, long n, void* threshold, void* a, long strideA, void* b, long strideB);
