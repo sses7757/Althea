@@ -481,14 +481,14 @@ inline int vectorNorm(const void* av, const size_t n, const size_t sa, void* res
 	if (sa == 1)
 	{
 		if constexpr (std::is_scalar_v<T>)
-			*((T*)result) = thrust::inner_product(THRUST_PAR, a, a + n, a, T());
+			*((T*)result) = thrust::inner_product(THRUST_PAR, a, a + n, a, T{});
 		else
 			*((typename T::value_type*)result) = thrust::inner_product(THRUST_PAR, a, a + n, a, typename T::value_type{}, plus_functor<typename T::value_type>(), [] PREFIX(const T a1, const T a2) { return a1.absSquare(); });
 	}
 	else
 	{
 		if constexpr (std::is_scalar_v<T>)
-			*((T*)result) = thrust::inner_product(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), T());
+			*((T*)result) = thrust::inner_product(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), T{});
 		else
 			*((typename T::value_type*)result) = thrust::inner_product(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), typename T::value_type{}, plus_functor<typename T::value_type>(), [] PREFIX(const T a1, const T a2) { return a1.absSquare(); });
 	}

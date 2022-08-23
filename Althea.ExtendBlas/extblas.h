@@ -13,6 +13,7 @@
 
 
 #include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 
 #define PREFIX __host__ __device__
 
@@ -68,7 +69,7 @@
 template <typename T>
 struct plus_functor
 {
-	__host__ __device__ const T operator()(const T& x, const T& y) const
+	PREFIX const T operator()(const T& x, const T& y) const
 	{
 		return x + y;
 	}

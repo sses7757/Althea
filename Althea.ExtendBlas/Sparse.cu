@@ -292,7 +292,7 @@ struct sparseVectorsOuter_functor
 		valC(valC), rowC(rowC), colC(colC)
 	{}
 
-	__host__ __device__ void operator()(const size_t idx) const
+	PREFIX void operator()(const size_t idx) const
 	{
 		const size_t n = idx % nnzA, m = idx / nnzA;
 		rowC[idx] = indA[n];
@@ -361,7 +361,7 @@ struct CooMatricesKronecker_functor
 		valC(valC), rowC(rowC), colC(colC)
 	{}
 
-	__host__ __device__ void operator()(const size_t idx) const
+	PREFIX void operator()(const size_t idx) const
 	{
 		const size_t n = idx / nnzB, m = idx % nnzB;
 		rowC[idx] = rowA[n] * rowsB + rowB[m];
@@ -372,7 +372,7 @@ struct CooMatricesKronecker_functor
 
 struct cooMatrixSortByColumn_functor
 {
-	__host__ __device__ bool operator()(const thrust::tuple<MKL_INT, MKL_INT> lhs, const thrust::tuple<MKL_INT, MKL_INT> rhs) const
+	PREFIX bool operator()(const thrust::tuple<MKL_INT, MKL_INT> lhs, const thrust::tuple<MKL_INT, MKL_INT> rhs) const
 	{
 		if (lhs.get<1>() < rhs.get<1>())
 			return true;
@@ -691,7 +691,7 @@ struct sparseVectorsOuter_functor
 		valC(valC), rowC(rowC), colC(colC)
 	{}
 
-	__host__ __device__ void operator()(const size_t idx) const
+	PREFIX void operator()(const size_t idx) const
 	{
 		const size_t n = idx % nnzA, m = idx / nnzA;
 		rowC[idx] = indA[n];
@@ -760,7 +760,7 @@ struct CooMatricesKronecker_functor
 		valC(valC), rowC(rowC), colC(colC)
 	{}
 
-	__host__ __device__ void operator()(const size_t idx) const
+	PREFIX void operator()(const size_t idx) const
 	{
 		const size_t n = idx / nnzB, m = idx % nnzB;
 		rowC[idx] = rowA[n] * rowsB + rowB[m];
@@ -771,7 +771,7 @@ struct CooMatricesKronecker_functor
 
 struct cooMatrixSortByColumn_functor
 {
-	__host__ __device__ bool operator()(const thrust::tuple<int, int> lhs, const thrust::tuple<int, int> rhs) const
+	PREFIX bool operator()(const thrust::tuple<int, int> lhs, const thrust::tuple<int, int> rhs) const
 	{
 		if (lhs.get<1>() < rhs.get<1>())
 			return true;
@@ -1092,7 +1092,7 @@ struct sparseVectorsOuter_functor
 		valC(valC), rowC(rowC), colC(colC)
 	{}
 
-	__host__ __device__ void operator()(const size_t idx) const
+	PREFIX void operator()(const size_t idx) const
 	{
 		const size_t n = idx % nnzA, m = idx / nnzA;
 		rowC[idx] = indA[n];
@@ -1161,7 +1161,7 @@ struct CooMatricesKronecker_functor
 		valC(valC), rowC(rowC), colC(colC)
 	{}
 
-	__host__ __device__ void operator()(const size_t idx) const
+	PREFIX void operator()(const size_t idx) const
 	{
 		const size_t n = idx / nnzB, m = idx % nnzB;
 		rowC[idx] = rowA[n] * rowsB + rowB[m];
@@ -1172,7 +1172,7 @@ struct CooMatricesKronecker_functor
 
 struct cooMatrixSortByColumn_functor
 {
-	__host__ __device__ bool operator()(const thrust::tuple<long long, long long> lhs, const thrust::tuple<long long, long long> rhs) const
+	PREFIX bool operator()(const thrust::tuple<long long, long long> lhs, const thrust::tuple<long long, long long> rhs) const
 	{
 		if (lhs.get<1>() < rhs.get<1>())
 			return true;

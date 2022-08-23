@@ -4,3 +4,5 @@
 #define DLLEXP extern "C" __declspec(dllexport)
 #define DLLEXP extern "C" __attribute__((visibility("default")))
 #define DLLEXP
+#define PREFIX
+#define __global__ __location__(global)

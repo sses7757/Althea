@@ -1,14 +1,120 @@
 #include "extblas.h"
 using namespace extblas;
 
+
+#pragma region template
+template <typename TIn, typename TOut, typename Func>
+inline int matrixConvert(const TIn* src, TOut* dst, const size_t m, const size_t n, const size_t lds, const size_t ldd, Func func)
+{
+	auto ssrc = make_leadDim_range(src, m, n, lds);
+	auto sdst = make_leadDim_range(dst, m, n, ldd);
+	if (lds == m && ldd == m)
+	{
+		thrust::transform(THRUST_PAR, src, src + m * n, dst, func);
+	}
+	else if (lds == m && ldd != m)
+	{
+		thrust::transform(THRUST_PAR, src, src + m * n, sdst.begin(), func);
+	}
+	else if (lds != m && ldd == m)
+	{
+		thrust::transform(THRUST_PAR, ssrc.begin(), ssrc.end(), dst, func);
+	}
+	else
+	{
+		thrust::transform(THRUST_PAR, ssrc.begin(), ssrc.end(), sdst.begin(), func);
+	}
+	return 0;
+}
+
+template <typename T1, typename T2, typename TOut, typename Func>
+inline int matrixConvert(const T1* a, const T2* b, TOut* dst, const size_t m, const size_t n, const size_t lda, const size_t ldb, const size_t ldd, Func func)
+{
+	auto sa = make_leadDim_range(a, m, n, lda);
+	auto sb = make_leadDim_range(b, m, n, ldb);
+	auto sdst = make_strided_range(dst, n, ldd);
+	if (lda == m && ldb == m && ldd == m)
+		thrust::transform(THRUST_PAR, a, a + m * n, b, dst, func);
+	else if (lda == m && ldb == m && ldd != m)
+		thrust::transform(THRUST_PAR, a, a + m * n, b, sdst.begin(), func);
+	else if (lda == m && ldb != m && ldd == m)
+		thrust::transform(THRUST_PAR, a, a + m * n, sb.begin(), sdst.begin(), func);
+	else if (lda == m && ldb != m && ldd != m)
+		thrust::transform(THRUST_PAR, a, a + m * n, sb.begin(), sdst.begin(), func);
+	else if (lda != m && ldb == m && ldd == m)
+		thrust::transform(THRUST_PAR, sa.begin(), sa.end(), b, dst, func);
+	else if (lda != m && ldb == m && ldd != m)
+		thrust::transform(THRUST_PAR, sa.begin(), sa.end(), b, sdst.begin(), func);
+	else if (lda != m && ldb != m && ldd == m)
+		thrust::transform(THRUST_PAR, sa.begin(), sa.end(), sb.begin(), dst, func);
+	else
+		thrust::transform(THRUST_PAR, sa.begin(), sa.end(), sb.begin(), sdst.begin(), func);
+	return 0;
+}
+
+template <typename T, typename Ret, typename Func>
+inline Ret matrixReduce(const T* src, const size_t m, const size_t n, const size_t lds, const T init, Func func)
+{
+	auto ssrc = make_leadDim_range(asrc, m, n, lds);
+	if (lds == m)
+	{
+		return thrust::reduce(THRUST_PAR, src, src + m * n, init, func);
+	}
+	else
+	{
+		return thrust::reduce(THRUST_PAR, ssrc.begin(), ssrc.end(), init, func);
+	}
+	return 0;
+}
+
+template <typename TIn, typename TOut, typename Func>
+inline int matrixScan(const bool inclusive, const TIn* src, TOut* dst, const size_t m, const size_t n, const size_t lds, const size_t ldd, Func func)
+{
+	auto ssrc = make_leadDim_range(src, m, n, lds);
+	auto sdst = make_leadDim_range(dst, m, n, ldd);
+	if (lds == m && ldd == m)
+	{
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, src, src + m * n, dst, func);
+		else
+			thrust::exclusive_scan(THRUST_PAR, src, src + m * n, dst, func);
+	}
+	else if (lds == m && ldd != m)
+	{
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, src, src + m * n, sdst.begin(), func);
+		else
+			thrust::exclusive_scan(THRUST_PAR, src, src + m * n, sdst.begin(), func);
+	}
+	else if (lds != m && ldd == m)
+	{
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), dst, func);
+		else
+			thrust::exclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), dst, func);
+	}
+	else
+	{
+		if (inclusive)
+			thrust::inclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), sdst.begin(), func);
+		else
+			thrust::exclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), sdst.begin(), func);
+	}
+	return 0;
+}
+
+#pragma endregion
+
+
+
 #pragma region dense matrices Kronecker
-// Ignore spelling: mathbb
+// Ignore spelling: \mathbb \times \otimes
 //tex: The number of cache miss for $A\in \mathbb{R}^{N\times N} \otimes B\in \mathbb{R}^{N\times N} = C\in \mathbb{R}^{N^2\times N^2}$ is: $\\$
 // 1. $O(N^2+N)$ for contiguously access $C$ $\\$
 // 2. $O(N^2)$ for contiguously access $B$ $\\$ 
 
 // The Kronecker product of two matrices can be achieved by
-//	1. outer product of two matrices' column vectors
+//	1. outer product of two matrices' column matrixs
 //	2. reshape the matrix to a proper rank-4 tensor
 //	3. permute the tensor [3,1,4,2] (may be)
 //	4. reshape the tensor to the output matrix
@@ -25,7 +131,7 @@ struct kronecker_functor
 	kronecker_functor(const T alpha, const T beta, const size_t ldA, const size_t ldB, const size_t colsB, const size_t ldD, const size_t rowsD, const T* A, const T* B, T* D) :
 		alpha(alpha), beta(beta), ldA(ldA), ldB(ldB), colsB(colsB), ldD(ldD), rowsD(rowsD), A(A), B(B), D(D) {}
 
-	__host__ __device__ void operator()(const size_t indD) const
+	PREFIX void operator()(const size_t indD) const
 	{
 		// get offsets
 		const size_t rowD = indD / rowsD, colD = indD % rowsD;
@@ -72,22 +178,22 @@ inline void matricesKronecker(
 
 	if (rowsD == ldD)
 	{
-		if (alpha == T(1) && beta == T(0))
+		if (alpha == T{1} && beta == T{0})
 			KRON_CODE(false, false, false);
-		else if (alpha == T(1))
+		else if (alpha == T{1})
 			KRON_CODE(false, false, true);
-		else if (beta == T(0))
+		else if (beta == T{0})
 			KRON_CODE(false, true, false);
 		else
 			KRON_CODE(false, true, true);
 	}
 	else
 	{
-		if (alpha == T(1) && beta == T(0))
+		if (alpha == T{1} && beta == T{0})
 			KRON_CODE(true, false, false);
-		else if (alpha == T(1))
+		else if (alpha == T{1})
 			KRON_CODE(true, false, true);
-		else if (beta == T(0))
+		else if (beta == T{0})
 			KRON_CODE(true, true, false);
 		else
 			KRON_CODE(true, true, true);
@@ -130,7 +236,7 @@ struct makeHerm_functor2
 		onePlus2NSquare((2 * ld + 1) * (double)(2 * ld + 1))
 	{}
 
-	__host__ __device__ void operator()(const size_t ind) const
+	PREFIX void operator()(const size_t ind) const
 	{
 		// get offset
 		const size_t col = (size_t)(onePlus2NFloat16 * (1.0 - std::sqrt(1.0 - 8 * ind / onePlus2NSquare)));
@@ -171,7 +277,7 @@ struct makeHerm_functor
 		ld(ld), rows(rows), A(A)
 	{}
 
-	__host__ __device__ void operator()(const size_t ind) const
+	PREFIX void operator()(const size_t ind) const
 	{
 		// get offset
 		const lldiv_t div = std::lldiv(ind, rows);
@@ -221,7 +327,7 @@ struct clearPart_functor
 		ld(ld), rows(rows), A(A)
 	{}
 
-	__host__ __device__ void operator()(const size_t ind) const
+	PREFIX void operator()(const size_t ind) const
 	{
 		// get offset
 		const lldiv_t div = std::lldiv(ind, rows);
@@ -237,7 +343,7 @@ struct clearPart_functor
 			if (row <= col)
 				return;
 		}
-		A[row + col * ld] = T();
+		A[row + col * ld] = T{};
 	}
 };
 
