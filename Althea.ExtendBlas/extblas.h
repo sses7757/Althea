@@ -19,9 +19,7 @@
 
 #include "complex.h"
 #include "datatype.h"
-#include "stride.h"
-
-#include <functional>
+#include "ranges.h"
 
 #include <thrust/for_each.h>
 #include <thrust/fill.h>
@@ -44,8 +42,8 @@
 
 // compile options
 // ignore spelling: nvcc Xcompiler bigobj openmp
-// nvcc -o SupplementCUDA.dll --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj"
-// nvcc -o SupplementOMP.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj -openmp"
+// nvcc -o extblasCUDA.dll --shared DenseVector.cu --shared DenseMatrix.cu --shared Sparse.cu -std=c++17 -Xcompiler "-bigobj" -extended-lambda
+// nvcc -o extblasOMP.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj -openmp"
 #undef THRUST_DEVICE_SYSTEM
 #ifdef CPU
 #include <thrust/system/tbb/execution_policy.h>
@@ -64,7 +62,7 @@
 #endif // CPU
 
 
-#pragma region plus functor
+#pragma region functor
 // thrust::plus<T> have bug? Use this instead.
 template <typename T>
 struct plus_functor
@@ -72,6 +70,111 @@ struct plus_functor
 	PREFIX const T operator()(const T& x, const T& y) const
 	{
 		return x + y;
+	}
+};
+
+template <typename T>
+struct larger_functor
+{
+	const T v;
+
+	PREFIX larger_functor(const T& val) : v(val){}
+
+	PREFIX const bool operator()(const T& x) const
+	{
+		return x > v;
+	}
+};
+template <typename T>
+struct smaller_functor
+{
+	const T v;
+
+	PREFIX smaller_functor(const T& val) : v(val) {}
+
+	PREFIX const bool operator()(const T& x) const
+	{
+		return x < v;
+	}
+};
+
+template <typename T, typename U>
+struct abslarger_functor
+{
+	const U v;
+
+	PREFIX abslarger_functor(const U& val) : v(val) {}
+
+	PREFIX const T operator()(const T& x) const
+	{
+		return std::abs(x) > v ? (T)std::abs(x) : (T)v;
+	}
+};
+template <typename T, typename U>
+struct abssmaller_functor
+{
+	const U v;
+
+	PREFIX abssmaller_functor(const U& val) : v(val) {}
+
+	PREFIX const T operator()(const T& x) const
+	{
+		return std::abs(x) < v ? (T)std::abs(x) : (T)v;
+	}
+};
+template <typename T, typename U>
+struct truncate_functor
+{
+	const U v;
+
+	PREFIX truncate_functor(const U& val) : v(val) {}
+
+	PREFIX const T operator()(const T& x) const
+	{
+		return std::abs(x) <= v ? T{} : x;
+	}
+};
+
+template <typename T>
+struct largerOne_functor
+{
+	PREFIX const T& operator()(const T& x, const T& y) const
+	{
+		return x > y ? x : y;
+	}
+};
+template <typename T>
+struct smallerOne_functor
+{
+	PREFIX const T& operator()(const T& x, const T& y) const
+	{
+		return x < y ? x : y;
+	}
+};
+
+template <typename T>
+struct largerThan_functor
+{
+	PREFIX const bool operator()(const T& x, const T& y) const
+	{
+		return x > y;
+	}
+};
+template <typename T>
+struct smallerThan_functor
+{
+	PREFIX const bool operator()(const T& x, const T& y) const
+	{
+		return x < y;
+	}
+};
+
+template <typename T>
+struct norm_functor
+{
+	PREFIX const typename T::value_type operator()(const T& x, const T& y) const
+	{
+		return x.absSquare();
 	}
 };
 #pragma endregion

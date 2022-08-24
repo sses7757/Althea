@@ -173,9 +173,9 @@ internal static class Conjugater
 
 
 /// <summary>
-/// The MKL back-end of <see cref="IBlasAbstractApi"/>, <see cref="IExtendBlasAbstractApi"/>, <see cref="IHalfMatrixBlasAbstractApi"/>, <see cref="ILapackAbstractApi"/> that supports storage locations of CPU memory.
+/// The MKL back-end of <see cref="IBlasAbstractApi"/>, <see cref="IExtendBlasAbstractApi"/> and <see cref="ILapackAbstractApi"/> that supports storage locations of CPU memory.
 /// </summary>
-public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IHalfMatrixBlasAbstractApi, ILapackAbstractApi
+public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ILapackAbstractApi
 {
 	#region basic
 	/// <summary>

@@ -67,7 +67,7 @@ inline Ret vectorReduce(const T* src, const size_t n, const size_t stride, const
 }
 
 template <typename TIn, typename TOut, typename Func>
-inline int vectorScan(const bool inclusive, const TIn* src, TOut* dst, const size_t n, const size_t s1, const size_t s2, Func func)
+inline int vectorScan(const bool inclusive, const TIn* src, TOut* dst, const size_t n, const size_t s1, const size_t s2, const TOut init, Func func)
 {
 	auto ssrc = make_strided_range(src, n, s1);
 	auto sdst = make_strided_range(dst, n, s2);
@@ -76,34 +76,77 @@ inline int vectorScan(const bool inclusive, const TIn* src, TOut* dst, const siz
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, src, src + n, dst, func);
 		else
-			thrust::exclusive_scan(THRUST_PAR, src, src + n, dst, func);
+			thrust::exclusive_scan(THRUST_PAR, src, src + n, dst, init, func);
 	}
 	else if (s1 == 1 && s2 != 1)
 	{
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, src, src + n, sdst.begin(), func);
 		else
-			thrust::exclusive_scan(THRUST_PAR, src, src + n, sdst.begin(), func);
+			thrust::exclusive_scan(THRUST_PAR, src, src + n, sdst.begin(), init, func);
 	}
 	else if (s1 != 1 && s2 == 1)
 	{
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), dst, func);
 		else
-			thrust::exclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), dst, func);
+			thrust::exclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), dst, init, func);
 	}
 	else
 	{
 		if (inclusive)
 			thrust::inclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), sdst.begin(), func);
 		else
-			thrust::exclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), sdst.begin(), func);
+			thrust::exclusive_scan(THRUST_PAR, ssrc.begin(), ssrc.end(), sdst.begin(), init, func);
 	}
 	return 0;
 }
 
 #pragma endregion
 
+
+#pragma region strided copy
+template <typename T>
+inline int vectorStridedCopy(const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst)
+{
+	if (strideSrc == 1 && strideDst == 1)
+	{
+#ifdef CPU
+		memcpy(dstv, srcv, n * sizeof(T));
+		return 0;
+#else
+		auto err = cudaMemcpy(dstv, srcv, n * sizeof(T), cudaMemcpyDeviceToDevice);
+		if (err == cudaError::cudaErrorNotSupported)
+			return -1;
+		else
+			return (int)err;
+#endif // CPU
+	}
+	const T* src = (const T*)srcv;
+	T* dst = (T*)dstv;
+	auto ssrc = make_strided_range(src, n, strideDst);
+	auto sdst = make_strided_range(dst, n, strideDst);
+	if (strideSrc == 1 && strideDst != 1)
+	{
+		thrust::copy_n(THRUST_PAR, src, n, sdst.begin());
+	}
+	else if (strideSrc != 1 && strideDst == 1)
+	{
+		thrust::copy_n(THRUST_PAR, ssrc.begin(), n, dst);
+	}
+	else
+	{
+		thrust::copy_n(THRUST_PAR, ssrc.begin(), n, sdst.begin());
+	}
+	return ERROR_RETURN{};
+}
+
+DLLEXP
+int vecStridedCopy(const DataType type, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
+{
+	AUTO_ALLTYPE_FUNC(vectorStridedCopy, type, int, src, dst, n, strideSrc, strideDst);
+}
+#pragma endregion
 
 #pragma region data type cast
 template <typename RealIn, typename RealOut>
@@ -142,7 +185,7 @@ inline int vectorRealConvert(const void* srcv, void* dstv, const size_t n, const
 }
 
 DLLEXP
-int vecDataConvert(const DataType srcType, const DataType dstType, const void* src, void* dst, const size_t n, const size_t strideSrc, const size_t strideDst, const bool toRealByAbs)
+int vecDataConvert(const DataType srcType, const DataType dstType, const bool toRealByAbs, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
 {
 	// copy if no data conversion
 	if (srcType == dstType)
@@ -246,20 +289,20 @@ int vecDataConvert(const DataType srcType, const DataType dstType, const void* s
 	{	// all complex, use the real convert of each part instead
 		if (strideSrc == 1 && strideDst == 1)
 		{
-			return vecDataConvert(real_correspond(srcType), real_correspond(dstType), src, dst, n * 2, 1, 1, true);
+			return vecDataConvert(real_correspond(srcType), real_correspond(dstType), true, n * 2, src, 1, dst, 1);
 		}
 		else
 		{
 			// the real parts
-			auto ret1 = vecDataConvert(real_correspond(srcType), real_correspond(dstType), src, dst, n * 2, strideSrc * 2, strideDst * 2, true);
-			if (ret1 != ERROR_RETURN{})
+			auto ret1 = vecDataConvert(real_correspond(srcType), real_correspond(dstType), true, n * 2, src, strideSrc * 2, dst, strideDst * 2);
+			if (ret1 != 0)
 				return ret1;
 			// increase pointers
 			const int sizeSrc = size(srcType), sizeDst = size(dstType);
 			const void* srcInc = (const char*)src + sizeSrc;
 			void* dstInc = (char*)dst + sizeDst;
 			// the imaginary parts
-			return vecDataConvert(real_correspond(srcType), real_correspond(dstType), srcInc, dstInc, n * 2, strideSrc * 2, strideDst * 2, true);
+			return vecDataConvert(real_correspond(srcType), real_correspond(dstType), true, n * 2, srcInc, strideSrc * 2, dstInc, strideDst * 2);
 		}
 	}
 #undef CONVERT_OUTER_SWITCH
@@ -269,7 +312,7 @@ int vecDataConvert(const DataType srcType, const DataType dstType, const void* s
 }
 #pragma endregion
 
-#pragma region fill array with value
+#pragma region fill with value
 template<typename T>
 inline int vectorFillWith(void* av, const void* valv, const size_t n, const size_t stride)
 {
@@ -282,7 +325,7 @@ inline int vectorFillWith(void* av, const void* valv, const size_t n, const size
 	else
 	{
 		auto sa = make_strided_range(a, n, stride);
-		thrust::fill_n(THRUST_PAR, sa, n, val);
+		thrust::fill_n(THRUST_PAR, sa.begin(), n, val);
 	}
 	return 0;
 }
@@ -294,61 +337,61 @@ int vecFillVal(const DataType type, const size_t n, const void* val, void* a, co
 }
 #pragma endregion
 
-#pragma region strided copy
-template <typename T>
-inline ERROR_RETURN vectorStridedCopy(const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst)
+#pragma region equal
+template<typename T>
+inline int vectorsEqual(const void* av, const void* bv, const size_t n, const size_t sa, const size_t sb, bool& eqs)
 {
-	if (strideSrc == 1 && strideDst == 1)
+	if (av == bv && sa == sb)
 	{
-#ifdef CPU
-		memcpy(dstv, srcv, n * sizeof(T));
+		eqs = true;
 		return 0;
-#else
-		return cudaMemcpy(dstv, srcv, n * sizeof(T), cudaMemcpyDeviceToDevice);
-#endif // CPU
 	}
-	const T* src = (const T*)srcv;
-	T* dst = (T*)dstv;
-	auto ssrc = make_strided_range(src, n, strideDst);
-	auto sdst = make_strided_range(dst, n, strideDst);
-	if (strideSrc == 1 && strideDst != 1)
+	const T* a = (const T*)av;
+	const T* b = (const T*)bv;
+	auto strideA = make_strided_range(a, n, sa);
+	auto strideB = make_strided_range(b, n, sb);
+	if (sa == 1 && sb == 1)
 	{
-		thrust::copy_n(THRUST_PAR, src, n, sdst.begin());
+		eqs = thrust::equal(THRUST_PAR, a, a + n, b, [] PREFIX(const T x, const T y) { return x == y; });
 	}
-	else if (strideSrc != 1 && strideDst == 1)
+	else if (sa == 1 && sb != 1)
 	{
-		thrust::copy_n(THRUST_PAR, ssrc.begin(), n, dst);
+		eqs = thrust::equal(THRUST_PAR, a, a + n, strideB.begin(), [] PREFIX(const T x, const T y) { return x == y; });
+	}
+	else if (sa != 1 && sb == 1)
+	{
+		eqs = thrust::equal(THRUST_PAR, strideA.begin(), strideA.end(), b, [] PREFIX(const T x, const T y) { return x == y; });
 	}
 	else
 	{
-		thrust::copy_n(THRUST_PAR, ssrc.begin(), n, sdst.begin());
+		eqs = thrust::equal(THRUST_PAR, strideA.begin(), strideA.end(), strideB.begin(), [] PREFIX(const T x, const T y) { return x == y; });
 	}
-	return ERROR_RETURN{};
+	return 0;
 }
 
 DLLEXP
-ERROR_RETURN vecStridedCopy(const DataType type, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
+int vecsEq(const DataType type, const size_t n, const void* a, const size_t strideA, const void* b, const size_t strideB, bool& eqs)
 {
-	AUTO_ALLTYPE_FUNC(vectorStridedCopy, type, ERROR_RETURN, src, dst, n, strideSrc, strideDst);
+	AUTO_ALLTYPE_FUNC(vectorsEqual, type, int, a, b, n, strideA, strideB, eqs);
 }
 #pragma endregion
 
 #pragma region unary without scalar
 template <typename T>
-inline int vectorUnary(const UnaryOperation op, const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst)
+inline int vectorUnary(const unaryOp::UnaryOperation op, const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst)
 {
-	std::function<T(T)> func;
+	FUNC<T(T)> func;
 	switch (op)
 	{
-	case UnaryOperation::AbsoluteValue:
+	case unaryOp::UnaryOperation::AbsoluteValue:
 		func = [] PREFIX(const T v) { return (T)std::abs(v); };
 		break;
-	case UnaryOperation::Conjugate:
+	case unaryOp::UnaryOperation::Conjugate:
 		if constexpr (std::is_scalar_v<T>)
 			return -1;
 		func = [] PREFIX(const T v) { return std::conj(v); };
 		break;
-	case UnaryOperation::Negate:
+	case unaryOp::UnaryOperation::Negate:
 		func = [] PREFIX(const T v) { return -v; };
 		break;
 	default:
@@ -360,7 +403,7 @@ inline int vectorUnary(const UnaryOperation op, const void* srcv, void* dstv, co
 }
 
 DLLEXP
-int vecUnary(const DataType type, const UnaryOperation op, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
+int vecUnary(const DataType type, const unaryOp::UnaryOperation op, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
 {
 	AUTO_ALLTYPE_FUNC(vectorUnary, type, int, op, src, dst, n, strideSrc, strideDst);
 }
@@ -368,45 +411,66 @@ int vecUnary(const DataType type, const UnaryOperation op, const size_t n, const
 
 #pragma region binary scalar
 template <typename T>
-inline int vectorBinaryScalar(const BinaryScalarOperation op, const void* scalarv, const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst)
+inline int vectorBinaryScalar(const binaryOp::BinaryOperation op, const void* scalarv, const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst)
 {
 	const T scalar = *(const T*)scalarv;
-	const typename real_type<T>::type scalarAbs = std::abs(scalar);
-	std::function<T(T)> func;
+	FUNC<T(T)> func;
 	switch (op)
 	{
-	case BinaryScalarOperation::AbsoluteMaximum:
-		func = [=] PREFIX(const T v) { return std::abs(v) > scalarAbs ? (T)std::abs(v) : (T)scalarAbs; };
-		break;
-	case BinaryScalarOperation::AbsoluteMininum:
-		func = [=] PREFIX(const T v) { return std::abs(v) < scalarAbs ? (T)std::abs(v) : (T)scalarAbs; };
-		break;
-	case BinaryScalarOperation::Add:
+	case binaryOp::BinaryOperation::Add:
 		func = [=] PREFIX(const T v) { return v + scalar; };
 		break;
-	case BinaryScalarOperation::Maximum:
-		if constexpr (!std::is_scalar_v<T>)
-			return -1;
-		else
-			func = [=] PREFIX(const T v) { return v > scalar ? v : scalar; };
-		break;
-	case BinaryScalarOperation::Mininum:
-		if constexpr (!std::is_scalar_v<T>)
-			return -1;
-		else
-			func = [=] PREFIX(const T v) { return v < scalar ? v : scalar; };
-		break;
-	case BinaryScalarOperation::Multiply:
+	case binaryOp::BinaryOperation::Multiply:
 		func = [=] PREFIX(const T v) { return v * scalar; };
 		break;
-	case BinaryScalarOperation::Power:
+	case binaryOp::BinaryOperation::Divide:
+		func = [=] PREFIX(const T v) { return v / scalar; };
+		break;
+	case binaryOp::BinaryOperation::Power:
 		func = [=] PREFIX(const T v) { return std::pow(v, scalar); };
 		break;
-	case BinaryScalarOperation::Truncate:
-		func = [=] PREFIX(const T v) { return std::abs(v) > scalarAbs ? v : T{0}; };
-		break;
-	default:
-		return -1;
+	}
+	if constexpr (std::is_scalar_v<T>)
+	{
+		const T scalarAbs = std::abs(scalar);
+		switch (op)
+		{
+		case binaryOp::BinaryOperation::AbsoluteMaximum:
+			func = abslarger_functor<T, T>(scalarAbs);
+			break;
+		case binaryOp::BinaryOperation::AbsoluteMininum:
+			func = abssmaller_functor<T, T>(scalarAbs);
+			break;
+		case binaryOp::BinaryOperation::Maximum:
+			func = larger_functor(scalar);
+			break;
+		case binaryOp::BinaryOperation::Mininum:
+			func = smaller_functor(scalar);
+			break;
+		case binaryOp::BinaryOperation::Truncate:
+			func = truncate_functor<T, T>(scalarAbs);
+			break;
+		default:
+			return -1;
+		}
+	}
+	else
+	{
+		const typename T::value_type scalarAbs = std::abs(scalar);
+		switch (op)
+		{
+		case binaryOp::BinaryOperation::AbsoluteMaximum:
+			func = abslarger_functor<T, typename T::value_type>(scalarAbs);
+			break;
+		case binaryOp::BinaryOperation::AbsoluteMininum:
+			func = abssmaller_functor<T, typename T::value_type>(scalarAbs);
+			break;
+		case binaryOp::BinaryOperation::Truncate:
+			func = truncate_functor<T, typename T::value_type>(scalarAbs);
+			break;
+		default:
+			return -1;
+		}
 	}
 	const T* src = (const T*)srcv;
 	T* dst = (T*)dstv;
@@ -414,7 +478,7 @@ inline int vectorBinaryScalar(const BinaryScalarOperation op, const void* scalar
 }
 
 DLLEXP
-int vecBinaryScalar(const DataType type, const BinaryScalarOperation op, const void* scalar, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
+int vecBinaryScalar(const DataType type, const binaryOp::BinaryOperation op, const void* scalar, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
 {
 	AUTO_ALLTYPE_FUNC(vectorBinaryScalar, type, int, op, scalar, src, dst, n, strideSrc, strideDst);
 }
@@ -422,39 +486,39 @@ int vecBinaryScalar(const DataType type, const BinaryScalarOperation op, const v
 
 #pragma region binary
 template <typename T>
-inline int vectorsBinary(const BinaryOperation op, const void* av, const void* bv, void* dstv, const size_t n, const size_t strideA, const size_t strideB, const size_t strideDst)
+inline int vectorsBinary(const binaryOp::BinaryOperation op, const void* av, const void* bv, void* dstv, const size_t n, const size_t strideA, const size_t strideB, const size_t strideDst)
 {
-	std::function<T(T, T)> func;
+	FUNC<T(T, T)> func;
 	switch (op)
 	{
-	case BinaryOperation::AbsoluteMaximum:
+	case binaryOp::BinaryOperation::AbsoluteMaximum:
 		func = [=] PREFIX(const T v1, const T v2) { return std::abs(v1) > std::abs(v2) ? (T)std::abs(v1) : (T)std::abs(v2); };
 		break;
-	case BinaryOperation::AbsoluteMininum:
+	case binaryOp::BinaryOperation::AbsoluteMininum:
 		func = [=] PREFIX(const T v1, const T v2) { return std::abs(v1) < std::abs(v2) ? (T)std::abs(v1) : (T)std::abs(v2); };
 		break;
-	case BinaryOperation::Add:
+	case binaryOp::BinaryOperation::Add:
 		func = [=] PREFIX(const T v1, const T v2) { return v1 + v2; };
 		break;
-	case BinaryOperation::Maximum:
+	case binaryOp::BinaryOperation::Maximum:
 		if constexpr (!std::is_scalar_v<T>)
 			return -1;
 		else
-			func = [=] PREFIX(const T v1, const T v2) { return v1 > v2 ? v1 : v2; };
+			func = largerOne_functor<T>();
 		break;
-	case BinaryOperation::Mininum:
+	case binaryOp::BinaryOperation::Mininum:
 		if constexpr (!std::is_scalar_v<T>)
 			return -1;
 		else
-			func = [=] PREFIX(const T v1, const T v2) { return v1 < v2 ? v1 : v2; };
+			func = smallerOne_functor<T>();
 		break;
-	case BinaryOperation::Multiply:
+	case binaryOp::BinaryOperation::Multiply:
 		func = [=] PREFIX(const T v1, const T v2) { return v1 * v2; };
 		break;
-	case BinaryOperation::Power:
+	case binaryOp::BinaryOperation::Power:
 		func = [=] PREFIX(const T v, const T p) { return std::pow(v, p); };
 		break;
-	case BinaryOperation::Divide:
+	case binaryOp::BinaryOperation::Divide:
 		func = [=] PREFIX(const T v1, const T v2) { return v1 / v2; };
 		break;
 	default:
@@ -466,13 +530,13 @@ inline int vectorsBinary(const BinaryOperation op, const void* av, const void* b
 }
 
 DLLEXP
-int vecsBinary(const DataType type, const BinaryOperation op, const size_t n, const void* a, const size_t strideA, const void* b, const size_t strideB, void* dst, const size_t strideDst)
+int vecsBinary(const DataType type, const binaryOp::BinaryOperation op, const size_t n, const void* a, const size_t strideA, const void* b, const size_t strideB, void* dst, const size_t strideDst)
 {
 	AUTO_ALLTYPE_FUNC(vectorsBinary, type, int, op, a, b, dst, n, strideA, strideB, strideDst);
 }
 #pragma endregion
 
-#pragma region vector norm
+#pragma region norm
 template<typename T>
 inline int vectorNorm(const void* av, const size_t n, const size_t sa, void* result)
 {
@@ -483,14 +547,14 @@ inline int vectorNorm(const void* av, const size_t n, const size_t sa, void* res
 		if constexpr (std::is_scalar_v<T>)
 			*((T*)result) = thrust::inner_product(THRUST_PAR, a, a + n, a, T{});
 		else
-			*((typename T::value_type*)result) = thrust::inner_product(THRUST_PAR, a, a + n, a, typename T::value_type{}, plus_functor<typename T::value_type>(), [] PREFIX(const T a1, const T a2) { return a1.absSquare(); });
+			*((typename T::value_type*)result) = thrust::inner_product(THRUST_PAR, a, a + n, a, typename T::value_type{}, plus_functor<typename T::value_type>(), norm_functor<T>());
 	}
 	else
 	{
 		if constexpr (std::is_scalar_v<T>)
 			*((T*)result) = thrust::inner_product(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), T{});
 		else
-			*((typename T::value_type*)result) = thrust::inner_product(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), typename T::value_type{}, plus_functor<typename T::value_type>(), [] PREFIX(const T a1, const T a2) { return a1.absSquare(); });
+			*((typename T::value_type*)result) = thrust::inner_product(THRUST_PAR, strideA.begin(), strideA.end(), strideA.begin(), typename T::value_type{}, plus_functor<typename T::value_type>(), norm_functor<T>());
 	}
 	if constexpr (std::is_scalar_v<T>)
 		*((T*)result) = std::sqrt(*((T*)result));
@@ -502,44 +566,44 @@ inline int vectorNorm(const void* av, const size_t n, const size_t sa, void* res
 
 #pragma region unary aggregate
 template <typename T>
-inline int getReduceFunction(const ReduceOperation op, T& init, std::function<T(T, T)>& func)
+inline int getReduceFunction(const reduceOp::ReduceOperation op, T& init, FUNC<T(T, T)>& func)
 {
 	init = T{};
 	switch (op)
 	{
-	case ReduceOperation::AbsoluteMaximum:
+	case reduceOp::ReduceOperation::AbsoluteMaximum:
 		func = [=] PREFIX(const T v1, const T v2) { return std::abs(v1) > std::abs(v2) ? (T)std::abs(v1) : (T)std::abs(v2); };
 		init = neginf<T>();
 		break;
-	case ReduceOperation::AbsoluteMininum:
+	case reduceOp::ReduceOperation::AbsoluteMininum:
 		func = [=] PREFIX(const T v1, const T v2) { return std::abs(v1) < std::abs(v2) ? (T)std::abs(v1) : (T)std::abs(v2); };
 		init = inf<T>();
 		break;
-	case ReduceOperation::Add:
+	case reduceOp::ReduceOperation::Add:
 		func = [=] PREFIX(const T v1, const T v2) { return v1 + v2; };
 		break;
-	case ReduceOperation::AddAbsolute:
+	case reduceOp::ReduceOperation::AddAbsolute:
 		func = [=] PREFIX(const T v1, const T v2) { return std::abs(v1) + std::abs(v2); };
 		break;
-	case ReduceOperation::Maximum:
+	case reduceOp::ReduceOperation::Maximum:
 		if constexpr (!std::is_scalar_v<T>)
 			return -1;
 		else
-			func = [=] PREFIX(const T v1, const T v2) { return v1 > v2 ? v1 : v2; };
+			func = largerOne_functor<T>();
 		init = neginf<T>();
 		break;
-	case ReduceOperation::Mininum:
+	case reduceOp::ReduceOperation::Mininum:
 		if constexpr (!std::is_scalar_v<T>)
 			return -1;
 		else
-			func = [=] PREFIX(const T v1, const T v2) { return v1 < v2 ? v1 : v2; };
+			func = smallerOne_functor<T>();
 		init = inf<T>();
 		break;
-	case ReduceOperation::Multiply:
+	case reduceOp::ReduceOperation::Multiply:
 		func = [=] PREFIX(const T v1, const T v2) { return v1 * v2; };
 		init = T{1};
 		break;
-	case ReduceOperation::MultiplyAbsolute:
+	case reduceOp::ReduceOperation::MultiplyAbsolute:
 		func = [=] PREFIX(const T v1, const T v2) { return std::abs(v1) * std::abs(v2); };
 		init = T{1};
 		break;
@@ -549,10 +613,10 @@ inline int getReduceFunction(const ReduceOperation op, T& init, std::function<T(
 }
 
 template <typename T>
-inline int vectorUnaryReduce(const ReduceOperation op, const void* srcv, const size_t n, const size_t strideSrc, void* result)
+inline int vectorUnaryReduce(const reduceOp::ReduceOperation op, const void* srcv, const size_t n, const size_t strideSrc, void* result)
 {
 	T init{};
-	std::function<T(T, T)> func;
+	FUNC<T(T, T)> func;
 	if (getReduceFunction(op, init, func) < 0)
 		return -1;
 	const T* src = (const T*)srcv;
@@ -561,9 +625,9 @@ inline int vectorUnaryReduce(const ReduceOperation op, const void* srcv, const s
 }
 
 DLLEXP
-int vecUnaryReduce(const DataType type, const ReduceOperation op, const size_t n, const void* src, const size_t strideSrc, void* result)
+int vecUnaryReduce(const DataType type, const reduceOp::ReduceOperation op, const size_t n, const void* src, const size_t strideSrc, void* result)
 {
-	if (op == ReduceOperation::Norm)
+	if (op == reduceOp::ReduceOperation::Norm)
 	{
 		AUTO_ALLTYPE_FUNC(vectorNorm, type, int, src, n, strideSrc, result);
 	}
@@ -571,30 +635,30 @@ int vecUnaryReduce(const DataType type, const ReduceOperation op, const size_t n
 }
 #pragma endregion
 
-#pragma region vector arg reduce
+#pragma region arg reduce
 template <typename T>
-inline int vectorArgReduce(const ReduceOperation op, const void* srcv, const size_t n, const size_t strideSrc, size_t& result)
+inline int vectorArgReduce(const reduceOp::ReduceOperation op, const void* srcv, const size_t n, const size_t strideSrc, size_t& result)
 {
-	std::function<bool(T, T)> func;
+	FUNC<bool(T, T)> func;
 	switch (op)
 	{
-	case ReduceOperation::AbsoluteMaximum:
+	case reduceOp::ReduceOperation::AbsoluteMaximum:
 		func = [=] PREFIX(const T v1, const T v2) { return std::abs(v1) > std::abs(v2); };
 		break;
-	case ReduceOperation::AbsoluteMininum:
+	case reduceOp::ReduceOperation::AbsoluteMininum:
 		func = [=] PREFIX(const T v1, const T v2) { return std::abs(v1) < std::abs(v2); };
 		break;
-	case ReduceOperation::Maximum:
+	case reduceOp::ReduceOperation::Maximum:
 		if constexpr (!std::is_scalar_v<T>)
 			return -1;
 		else
-			func = [=] PREFIX(const T v1, const T v2) { return v1 > v2; };
+			func = largerThan_functor<T>();
 		break;
-	case ReduceOperation::Mininum:
+	case reduceOp::ReduceOperation::Mininum:
 		if constexpr (!std::is_scalar_v<T>)
 			return -1;
 		else
-			func = [=] PREFIX(const T v1, const T v2) { return v1 < v2; };
+			func = smallerThan_functor<T>();
 		break;
 	default:
 		return -1;
@@ -613,64 +677,27 @@ inline int vectorArgReduce(const ReduceOperation op, const void* srcv, const siz
 }
 
 DLLEXP
-int vecArgReduce(const DataType type, const ReduceOperation op, const size_t n, const void* src, const size_t strideSrc, size_t& result)
+int vecArgReduce(const DataType type, const reduceOp::ReduceOperation op, const size_t n, const void* src, const size_t strideSrc, size_t& result)
 {
 	AUTO_ALLTYPE_FUNC(vectorArgReduce, type, int, op, src, n, strideSrc, result);
 }
 #pragma endregion
 
-#pragma region vectors equal
+#pragma region scan
 template<typename T>
-inline bool vectorsEqual(const void* av, const void* bv, const size_t n, const size_t sa, const size_t sb)
-{
-	if (av == bv && sa == sb)
-		return true;
-	const T* a = (const T*)av;
-	const T* b = (const T*)bv;
-	auto strideA = make_strided_range(a, n, sa);
-	auto strideB = make_strided_range(b, n, sb);
-	if (sa == 1 && sb == 1)
-	{
-		return thrust::equal(THRUST_PAR, a, a + n, b);
-	}
-	else if (sa == 1 && sb != 1)
-	{
-		return thrust::equal(THRUST_PAR, a, a + n, strideB.begin());
-	}
-	else if (sa != 1 && sb == 1)
-	{
-		return thrust::equal(THRUST_PAR, strideA.begin(), strideA.end(), b);
-	}
-	else
-	{
-		return thrust::equal(THRUST_PAR, strideA.begin(), strideA.end(), strideB.begin());
-	}
-	// fake return for NVCC
-	return false;
-}
-
-DLLEXP
-bool vecsEq(const DataType type, const size_t n, const void* a, const size_t strideA, const void* b, const size_t strideB)
-{
-	AUTO_ALLTYPE_FUNC(vectorsEqual, type, bool, a, b, n, strideA, strideB);
-}
-#pragma endregion
-
-#pragma region vector scan
-template<typename T>
-inline int vectorScan(const ReduceOperation op, const bool inclusive, const void* srcv, void* dstv, const size_t n, const size_t s1, const size_t s2)
+inline int vectorScan(const reduceOp::ReduceOperation op, const bool inclusive, const void* srcv, void* dstv, const size_t n, const size_t s1, const size_t s2)
 {
 	T init{};
-	std::function<T(T, T)> func;
+	FUNC<T(T, T)> func;
 	if (getReduceFunction(op, init, func) < 0)
 		return -1;
 	const T* src = (const T*)srcv;
-	T* dst = (T*)dst;
-	return vectorScan(inclusive, src, dst, n, s1, s2, func);
+	T* dst = (T*)dstv;
+	return vectorScan(inclusive, src, dst, n, s1, s2, init, func);
 }
 
 DLLEXP
-int vecScan(const DataType type, const ReduceOperation op, const bool inclusive, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
+int vecScan(const DataType type, const reduceOp::ReduceOperation op, const bool inclusive, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
 {
 	AUTO_ALLTYPE_FUNC(vectorScan, type, int, op, inclusive, src, dst, n, strideSrc, strideDst);
 }
@@ -867,7 +894,7 @@ inline int vectorFillRange(void* vec, const size_t n, const size_t stride, const
 DLLEXP
 int vecFillRange(const DataType type, const size_t n, void* v, const size_t stride, const void* start, const void* step)
 {
-	AUTO_ALLTYPE_FUNC(vectorFillRange, type, int, v, n, stride, start, step);
+	AUTO_REALTYPE_FUNC(vectorFillRange, type, int, v, n, stride, start, step);
 }
 
 

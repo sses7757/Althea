@@ -2,11 +2,9 @@
 
 #include <cuda_runtime.h>
 
-#include <cstddef>
 #include <cmath>
 #include <type_traits>
 #include <stdint.h>
-#include <math_functions.h>
 
 
 // CUDA has a problem that gives false warnings for CONSTEXPR IF
@@ -106,18 +104,6 @@ namespace extblas
 			return _real * _real + _imag * _imag;
 		}
 	};
-
-	template <typename T>
-	struct late
-	{
-		using type = typename T::value_type;
-	};
-
-	template <typename T>
-	struct real_type
-	{
-		using type = std::conditional_t<std::is_scalar_v<T>, T, late<T>::type>
-	};
 }
 
 
@@ -174,40 +160,40 @@ namespace std
 template <typename T>
 PREFIX inline static extblas::complex<T> operator*(const extblas::complex<T> left, const extblas::complex<T> right)
 {
-	const T real = left.real() * right.real() - left.imag() * right.imag();
-	const T imag = left.real() * right.imag() + left.imag() * right.real();
+	const T real = left._real * right._real - left._imag * right._imag;
+	const T imag = left._real * right._imag + left._imag * right._real;
 	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
 PREFIX inline static extblas::complex<T> operator*(const extblas::complex<T> left, const T right)
 {
-	const T real = left.real() * right;
-	const T imag = left.imag() * right;
+	const T real = left._real * right;
+	const T imag = left._imag * right;
 	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
 PREFIX inline static extblas::complex<T> operator*(const T left, const extblas::complex<T> right)
 {
-	const T real = right.real() * left;
-	const T imag = right.imag() * left;
+	const T real = right._real * left;
+	const T imag = right._imag * left;
 	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
 PREFIX inline static extblas::complex<T> operator/(const extblas::complex<T> left, const T right)
 {
-	const T real = left.real() / right;
-	const T imag = left.imag() / right;
+	const T real = left._real / right;
+	const T imag = left._imag / right;
 	return extblas::complex<T>(real, imag);
 }
 
 template <typename T>
 PREFIX inline static extblas::complex<T> operator/(const T left, const extblas::complex<T> right)
 {
-	const T real = right.real() / left;
-	const T imag = right.imag() / left;
+	const T real = right._real / left;
+	const T imag = right._imag / left;
 	return extblas::complex<T>(real, imag);
 }
 
@@ -216,8 +202,8 @@ template <typename T>
 PREFIX inline static extblas::complex<T> operator/(const extblas::complex<T> x, const extblas::complex<T> y)
 {
 	const T squareAbsY = y.absSquare();
-	const T acbd = x.real() * y.real() + x.imag() * y.imag();
-	const T bcad = x.imag() * y.real() - x.real() * y.imag();
+	const T acbd = x._real * y._real + x._imag * y._imag;
+	const T bcad = x._imag * y._real - x._real * y._imag;
 	return extblas::complex<T>(acbd / squareAbsY, bcad / squareAbsY);
 }
 
@@ -260,18 +246,7 @@ PREFIX inline static bool operator!=(const extblas::complex<T> left, const extbl
 template <typename T>
 PREFIX inline static bool operator==(const extblas::complex<T> left, const T right)
 {
-	return left.imag() == 0 && left.real() == right;
-}
-
-template <typename T, typename U>
-PREFIX inline static bool operator==(const extblas::complex<T> left, const U right)
-{
-	if constexpr (std::is_scalar<U>::value)
-		return left == extblas::complex<T>((T)right);
-	else
-		return false;
-	// false return at end to suppress NVCC problem
-	return true;
+	return left._imag == 0 && left._real == right;
 }
 #pragma endregion
 

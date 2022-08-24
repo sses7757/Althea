@@ -62,14 +62,14 @@ internal static class Conjugater
 
 
 /// <summary>
-/// The CUDA back-end of the <see cref="IBlasAbstractApi"/>, <see cref="IExtendBlasAbstractApi"/>, <see cref="IHalfMatrixBlasAbstractApi"/> and <see cref="ILapackAbstractApi"/> that utilizes cuBLAS and cuSOLVER API with 11.2 ≤ CUDA version (and maybe future versions)
+/// The CUDA back-end of the <see cref="IBlasAbstractApi"/>, <see cref="IExtendBlasAbstractApi"/> and <see cref="ILapackAbstractApi"/> that utilizes cuBLAS and cuSOLVER API with 11.2 ≤ CUDA version (and maybe future versions)
 /// </summary>
 /// <remarks>The legacy cuBLAS APIs are not supported.<br/>
 /// The only supported location is a pure one on GPU memory. But cuFILE cached ones can be supported easily.<br/>
 /// The stream operation is not supported here, but it can be easily added by utilizing "cudaStreamCreate()", "cublasSetStream()", etc.<br/>
 /// The packed matrix, batched matrices and banded matrix BLAS operations are not supported, but it can be easily added as well.<br/>
 /// The cuSOLVER MultiGPU library is not supported, but it can be easily added as well.</remarks>
-public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAbstractApi, IHalfMatrixBlasAbstractApi, ILapackAbstractApi
+public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAbstractApi, ILapackAbstractApi
 {
 	#region basic
 	/// <summary>

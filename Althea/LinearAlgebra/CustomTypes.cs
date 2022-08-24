@@ -348,39 +348,39 @@ public enum BinaryScalarOperation
 	/// <summary>
 	/// Operation that returns the addition of two input parameters
 	/// </summary>
-	Add = -1,
+	Add = BinaryOperation.Add,
 	/// <summary>
 	/// Operation that returns the multiplication of two input parameters
 	/// </summary>
-	Multiply = -2,
+	Multiply = BinaryOperation.Multiply,
 	/// <summary>
 	/// Operation that returns the power of the first input parameter to the second one
 	/// </summary>
-	Power = -3,
-	/// <summary>
-	/// Operation that simply returns the second input parameter
-	/// </summary>
-	Fill = -4,
-	/// <summary>
-	/// Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
-	/// </summary>
-	Truncate = -5,
+	Power = BinaryOperation.Power,
 	/// <summary>
 	/// Operation that returns the maximum of two input parameters
 	/// </summary>
-	Maximum = -6,
+	Maximum = BinaryOperation.Maximum,
 	/// <summary>
 	/// Operation that returns the minimum of two input parameters
 	/// </summary>
-	Mininum = -7,
+	Mininum = BinaryOperation.Mininum,
 	/// <summary>
 	/// Operation that returns the maximum of the absolute values two input parameters
 	/// </summary>
-	AbsoluteMaximum = -8,
+	AbsoluteMaximum = BinaryOperation.AbsoluteMaximum,
 	/// <summary>
 	/// Operation that returns the minimum of the absolute values two input parameters
 	/// </summary>
-	AbsoluteMininum = -9,
+	AbsoluteMininum = BinaryOperation.AbsoluteMininum,
+	/// <summary>
+	/// Operation that simply returns the second input parameter
+	/// </summary>
+	Fill = AbsoluteMininum - 1,
+	/// <summary>
+	/// Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
+	/// </summary>
+	Truncate = Fill - 2,
 }
 
 /// <summary>

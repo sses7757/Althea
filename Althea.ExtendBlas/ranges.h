@@ -66,11 +66,11 @@ namespace extblas
 		struct leadDim_functor : public thrust::unary_function<difference_type, difference_type>
 		{
 			const difference_type m, ld;
-			leadDim_functor(const difference_type m_, const diffrence_type ld_) : m(m_), ld(ld_) {}
+			leadDim_functor(const difference_type m_, const difference_type ld_) : m(m_), ld(ld_) {}
 
 			PREFIX difference_type operator()(const difference_type& i) const
 			{
-				return i % m + i % m * ld;
+				return i % m + i / m * ld;
 			}
 		};
 
@@ -83,7 +83,7 @@ namespace extblas
 
 		// construct strided_range for the range [first,last)
 		LeadDimRange(Iterator first, difference_type m_, difference_type n_, difference_type ld_)
-			: first(first), last(last), m(m_), n(n_), ld(ld_) {}
+			: first(first), m(m_), n(n_), ld(ld_) {}
 
 		iterator begin(void) const
 		{
@@ -103,7 +103,7 @@ namespace extblas
 
 
 template <typename Iterator>
-inline static extblas::StridedRange<Iterator> make_strided_range(Iterator it, size_t N, const typename extblas::StridedRange<Iterator>::difference_type stride)
+inline static extblas::StridedRange<Iterator> make_strided_range(Iterator it, size_t N, size_t stride)
 {
 	return extblas::StridedRange<Iterator>(it, it + N * stride, stride);
 }
