@@ -70,10 +70,10 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 			{
 				if (T.Type.IsInteger())
 					return false;
-				else if (LinearAlgebra.Dense.CustomNativeMethods.vecMulScalar(T.Type, length, &scale, s, 1, s, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+				else if (LinearAlgebra.Dense.CustomNativeMethods.vecBinaryScalar(T.Type, Althea.LinearAlgebra.BinaryScalarOperation.Multiply, &scale, length, s, 1, s, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
 					return false;
 			}
-			if (uniform.LowerBound != T.Zero && LinearAlgebra.Dense.CustomNativeMethods.vecAddScalar(T.Type, length, &offset, s, 1, s, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+			if (uniform.LowerBound != T.Zero && LinearAlgebra.Dense.CustomNativeMethods.vecBinaryScalar(T.Type, Althea.LinearAlgebra.BinaryScalarOperation.Add, &offset, length, s, 1, s, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
 				return false;
 		}
 		else if (dist is NormalDistribution<T> normal)

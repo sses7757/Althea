@@ -342,7 +342,7 @@ namespace extblas
 	}
 
 	// generate a float type of given size
-	inline static constexpr DataType makeFloatType(const int size, const bool complex)
+	inline static constexpr DataType makeFloatType(const int size, bool complex)
 	{
 		if (complex)
 			return (DataType)((int)DataTypeTuple::Complex + ((int)DataTypeClassification::BinaryFloat_IEEE754 << 8) + size << 16);

@@ -94,19 +94,19 @@ inline size_t vectorPruneNonZeros(const void* av, const void* threshold, const s
 	if constexpr (std::is_scalar_v<T>)
 	{
 		const T thre = std::abs(*((const T*)threshold));
-		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, [=] PREFIX(const T a) { return a > thre; });
+		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, truncateGT_functor<T, T>(thre));
 	}
 	else
 	{
-		const typename real_type<T>::type threAbs = std::abs(*((const T*)threshold));
-		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, [=] PREFIX(const T a) { return a > threAbs; });
+		const typename T::value_type threAbs = std::abs(*((const T*)threshold));
+		resultEnd = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, truncateGT_functor<T, typename T::value_type>(threAbs));
 	}
 	return resultEnd - resultBegin;
 }
 
 // dense vector prune to sparse vector -- no buffer
 template <typename T, typename TInd>
-inline ptrdiff_t vectorPruneDirect(const void* av, const void* threshold, const size_t N, TInd* idxOut, void* valOutv, const bool safeOut, const size_t outN)
+inline ptrdiff_t vectorPruneDirect(const void* av, const void* threshold, const size_t N, TInd* idxOut, void* valOutv, bool safeOut, const size_t outN)
 {
 	const T* a = (const T*)av;
 
@@ -122,24 +122,26 @@ inline ptrdiff_t vectorPruneDirect(const void* av, const void* threshold, const 
 	if constexpr (std::is_scalar_v<T>)
 	{
 		const T thre = std::abs(*((const T*)threshold));
+		auto gt = truncateGT_functor<T, T>(thre);
 		if (safeOut)
 		{
-			auto diff = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, tempBegin, [=] PREFIX(const T a) { return a > thre; }) - tempBegin;
+			auto diff = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, tempBegin, gt) - tempBegin;
 			if (diff > outN)
 				return diff - outN;
 		}
-		thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, [=] PREFIX(const T a) { return a > thre; });
+		thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, gt);
 	}
 	else
 	{
-		const typename real_type<T>::type threAbs = std::abs(*((const T*)threshold));
+		const typename T::value_type threAbs = std::abs(*((const T*)threshold));
+		auto gt = truncateGT_functor<T, typename T::value_type>(threAbs);
 		if (safeOut)
 		{
-			auto diff = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, tempBegin, [=] PREFIX(const T a) { return a > threAbs; }) - tempBegin;
+			auto diff = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, tempBegin, gt) - tempBegin;
 			if (diff > outN)
 				return diff - outN;
 		}
-		thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, [=] PREFIX(const T a) { return a > threAbs; });
+		thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, gt);
 	}
 	return 0;
 }
@@ -195,7 +197,7 @@ inline size_t vectorSparseAddGetNonzero(const TInd* indA, const void* valAv, con
 	T* temp_value = (T*)(nnz + (TInd*)buffer);
 
 	// merge A and B by index
-	if (alpha == 1)
+	if (alpha == T{ 1 })
 	{
 		thrust::merge_by_key(THRUST_PAR, indA, indA + nnzA, indB, indB + nnzB, valA, valB, temp_index, temp_value);
 	}
@@ -240,7 +242,7 @@ inline void vectorDenseAddBySparse(void* densev, const void* sparsev, const TInd
 	const T alpha = *((const T*)alphav);
 
 	auto densePerm = thrust::make_permutation_iterator(dense, index);
-	if (alpha == 1)
+	if (alpha == T{ 1 })
 	{
 		thrust::transform(THRUST_PAR, sparse, sparse + nnz, densePerm, densePerm, plus_functor<T>());
 	}
@@ -292,7 +294,7 @@ template <typename T, typename TInd>
 inline int sparseVectorsOuter(
 	const void* valAv, const TInd* indA, const size_t nnzA,
 	const void* valBv, const TInd* indB, const size_t nnzB,
-	void* valCv, TInd* rowC, TInd* colC, const bool conj)
+	void* valCv, TInd* rowC, TInd* colC, bool conj)
 {
 	const T* valA = (const T*)valAv;
 	const T* valB = (const T*)valBv;
@@ -389,7 +391,7 @@ DLLEXP size_t vecPruneNnz(const DataType type, const void* a, const void* thresh
 	AUTO_ALLTYPE_IND_FUNC(vectorPruneNonZeros, type, MKL_INT, size_t, a, threshold, N, buffer);
 }
 
-DLLEXP ptrdiff_t vecPruneDirect(const DataType type, const void* a, const void* threshold, const size_t N, MKL_INT* idxOut, void* valOut, const bool safe, const size_t nnz)
+DLLEXP ptrdiff_t vecPruneDirect(const DataType type, const void* a, const void* threshold, const size_t N, MKL_INT* idxOut, void* valOut, bool safe, const size_t nnz)
 {
 	AUTO_ALLTYPE_IND_FUNC(vectorPruneDirect, type, MKL_INT, ptrdiff_t, a, threshold, N, idxOut, valOut, safe, nnz);
 }
@@ -443,7 +445,7 @@ DLLEXP int spVecOuterCheck(const extblas::DataType type)
 DLLEXP int spVecOuter(const extblas::DataType type,
 	const void* valA, const MKL_INT* indA, const size_t nnzA,
 	const void* valB, const MKL_INT* indB, const size_t nnzB,
-	void* valC, MKL_INT* rowC, MKL_INT* colC, const bool conj)
+	void* valC, MKL_INT* rowC, MKL_INT* colC, bool conj)
 {
 	AUTO_ALLTYPE_IND_FUNC(sparseVectorsOuter, type, MKL_INT, int, valA, indA, nnzA, valB, indB, nnzB, valC, rowC, colC, conj);
 }
@@ -473,7 +475,7 @@ DLLEXP size_t vecPruneNnz_i32(const DataType type, const void* a, const void* th
 	AUTO_ALLTYPE_IND_FUNC(vectorPruneNonZeros, type, int, size_t, a, threshold, N, buffer);
 }
 
-DLLEXP ptrdiff_t vecPruneDirect_i32(const DataType type, const void* a, const void* threshold, const size_t N, int* idxOut, void* valOut, const bool safe, const size_t nnz)
+DLLEXP ptrdiff_t vecPruneDirect_i32(const DataType type, const void* a, const void* threshold, const size_t N, int* idxOut, void* valOut, bool safe, const size_t nnz)
 {
 	AUTO_ALLTYPE_IND_FUNC(vectorPruneDirect, type, int, ptrdiff_t, a, threshold, N, idxOut, valOut, safe, nnz);
 }
@@ -527,7 +529,7 @@ DLLEXP int spVecOuterCheck_i32(const extblas::DataType type)
 DLLEXP int spVecOuter_i32(const extblas::DataType type,
 	const void* valA, const int* indA, const size_t nnzA,
 	const void* valB, const int* indB, const size_t nnzB,
-	void* valC, int* rowC, int* colC, const bool conj)
+	void* valC, int* rowC, int* colC, bool conj)
 {
 	AUTO_ALLTYPE_IND_FUNC(sparseVectorsOuter, type, int, int, valA, indA, nnzA, valB, indB, nnzB, valC, rowC, colC, conj);
 }
@@ -557,7 +559,7 @@ DLLEXP size_t vecPruneNnz_i64(const DataType type, const void* a, const void* th
 	AUTO_ALLTYPE_IND_FUNC(vectorPruneNonZeros, type, long long, size_t, a, threshold, N, buffer);
 }
 
-DLLEXP ptrdiff_t vecPruneDirect_i64(const DataType type, const void* a, const void* threshold, const size_t N, long long* idxOut, void* valOut, const bool safe, const size_t nnz)
+DLLEXP ptrdiff_t vecPruneDirect_i64(const DataType type, const void* a, const void* threshold, const size_t N, long long* idxOut, void* valOut, bool safe, const size_t nnz)
 {
 	AUTO_ALLTYPE_IND_FUNC(vectorPruneDirect, type, long long, ptrdiff_t, a, threshold, N, idxOut, valOut, safe, nnz);
 }
@@ -611,7 +613,7 @@ DLLEXP int spVecOuterCheck_i64(const extblas::DataType type)
 DLLEXP int spVecOuter_i64(const extblas::DataType type,
 	const void* valA, const long long* indA, const size_t nnzA,
 	const void* valB, const long long* indB, const size_t nnzB,
-	void* valC, long long* rowC, long long* colC, const bool conj)
+	void* valC, long long* rowC, long long* colC, bool conj)
 {
 	AUTO_ALLTYPE_IND_FUNC(sparseVectorsOuter, type, long long, int, valA, indA, nnzA, valB, indB, nnzB, valC, rowC, colC, conj);
 }

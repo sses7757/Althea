@@ -72,6 +72,14 @@ struct plus_functor
 		return x + y;
 	}
 };
+template <typename T>
+struct equals_functor
+{
+	PREFIX bool operator()(const T& x, const T& y) const
+	{
+		return x == y;
+	}
+};
 
 template <typename T>
 struct larger_functor
@@ -80,7 +88,7 @@ struct larger_functor
 
 	PREFIX larger_functor(const T& val) : v(val){}
 
-	PREFIX const bool operator()(const T& x) const
+	PREFIX bool operator()(const T& x) const
 	{
 		return x > v;
 	}
@@ -92,7 +100,7 @@ struct smaller_functor
 
 	PREFIX smaller_functor(const T& val) : v(val) {}
 
-	PREFIX const bool operator()(const T& x) const
+	PREFIX bool operator()(const T& x) const
 	{
 		return x < v;
 	}
@@ -135,6 +143,19 @@ struct truncate_functor
 	}
 };
 
+template <typename T, typename U>
+struct truncateGT_functor
+{
+	const U v;
+
+	PREFIX truncateGT_functor(const U& val) : v(val) {}
+
+	PREFIX bool operator()(const T& x) const
+	{
+		return std::abs(x) > v;
+	}
+};
+
 template <typename T>
 struct largerOne_functor
 {
@@ -155,7 +176,7 @@ struct smallerOne_functor
 template <typename T>
 struct largerThan_functor
 {
-	PREFIX const bool operator()(const T& x, const T& y) const
+	PREFIX bool operator()(const T& x, const T& y) const
 	{
 		return x > y;
 	}
@@ -163,7 +184,7 @@ struct largerThan_functor
 template <typename T>
 struct smallerThan_functor
 {
-	PREFIX const bool operator()(const T& x, const T& y) const
+	PREFIX bool operator()(const T& x, const T& y) const
 	{
 		return x < y;
 	}

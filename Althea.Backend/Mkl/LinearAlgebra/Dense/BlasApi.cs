@@ -87,7 +87,7 @@ public unsafe partial class Api
 			index = (long)func(n, px, strideX);
 			return true;
 		}
-		return NMC.vecArgAbsMax(T.Type, n, px, strideX, out index).Check();
+		return NMC.vecArgReduce(T.Type, ReduceOperation.AbsoluteMaximum, n, px, strideX, out index).Check();
 	}
 
 	/// <inheritdoc/>
@@ -107,7 +107,7 @@ public unsafe partial class Api
 			index = (long)func(n, px, strideX);
 			return true;
 		}
-		return NMC.vecArgAbsMin(T.Type, n, px, strideX, out index).Check();
+		return NMC.vecArgReduce(T.Type, ReduceOperation.AbsoluteMininum, n, px, strideX, out index).Check();
 	}
 
 	/// <inheritdoc/>
@@ -124,7 +124,7 @@ public unsafe partial class Api
 		{
 			*(double*)&result = NM.cblas_dasum(n, px, strideX);
 		}
-		else if (NMC.vecAbsSum(T.Type, n, px, strideX, &result) != CustomStatus.Success)
+		else if (NMC.vecUnaryReduce(T.Type, ReduceOperation.AddAbsolute, n, px, strideX, &result) != CustomStatus.Success)
 			return false;
 		sum = result;
 		return true;
@@ -583,7 +583,7 @@ public unsafe partial class Api
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static void TriangularMatrixMultiplyGeneralPostProcess<T, TS1, TS2, TS3, TApi>(TApi api, bool actualSquare, bool leftA, bool fillUpper, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, long minA, long maxA, long colA, long rowA, long colB, long rowB, T α, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TApi : class, Althea.LinearAlgebra.Dense.IBlasAbstractApi, Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi
+	internal static void TriangularMatrixMultiplyGeneralPostProcess<T, TS1, TS2, TS3, TApi>(TApi api, bool actualSquare, bool leftA, bool fillUpper, MatrixOperation opA, MatrixOperation opB, long m, long n, long minA, long maxA, long colA, long rowA, long colB, long rowB, T α, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where TApi : class, Althea.LinearAlgebra.Dense.IBlasAbstractApi, Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi
 	{
 		if (actualSquare)
 		{
@@ -673,7 +673,7 @@ public unsafe partial class Api
 		funcRe?.Invoke(MklMatrixLayout.ColMajor, lr, fu, opA.ToMkl(), ud, mm, nn, α, pA, lda, pC, ldc);
 		funcCm?.Invoke(MklMatrixLayout.ColMajor, lr, fu, opA.ToMkl(), ud, mm, nn, α, pA, lda, pC, ldc);
 		long minA = Math.Min(rowA, colA), maxA = Math.Max(rowA, colA);
-		TriangularMatrixMultiplyGeneralPostProcess(this, actualSquare, leftA, fillUpper, opA, opB, m, n, k, minA, maxA, colA, rowA, colB, rowB, α, A, lda, B, ldb, C, ldc);
+		TriangularMatrixMultiplyGeneralPostProcess(this, actualSquare, leftA, fillUpper, opA, opB, m, n, minA, maxA, colA, rowA, colB, rowB, α, A, lda, B, ldb, C, ldc);
 		if (conjugated)
 			Conjugater.Conjugate(pC, mm, nn, ldc);
 		return true;
@@ -687,6 +687,8 @@ public unsafe partial class Api
 		if (!GetPointer(C, n, n, ldc, out T* pC))
 			return false;
 		op = op.Simplify<T>();
+		if (op == MatrixOperation.Conjugate)
+			return false;
 		var funcRe = default(T) switch
 		{
 			Float32 => new NM.cblas_syrk<Float32>(NM.cblas_ssyrk) as NM.cblas_syrk<T>,
@@ -704,8 +706,8 @@ public unsafe partial class Api
 		var ul = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
 		funcRe?.Invoke(MklMatrixLayout.ColMajor, ul, op.ToMkl(), n, k, α, pA, lda, β, pC, ldc);
 		funcCm?.Invoke(MklMatrixLayout.ColMajor, ul, op.ToMkl(), n, k, α, pA, lda, β, pC, ldc);
-		if (op == MatrixOperation.Conjugate)
-			this.TriangularMatricesAdd(false, fillUpper, op, default, n, n, T.One, C, ldc, default, (TS1?)null, 1, C, ldc);
+		////if (op == MatrixOperation.Conjugate)
+		////	this.TriangularMatricesAdd(false, fillUpper, op, default, n, n, T.One, C, ldc, default, (TS1?)null, 1, C, ldc);
 		return funcRe != null || funcCm != null;
 	}
 
@@ -719,6 +721,8 @@ public unsafe partial class Api
 		if (!GetPointer(C, n, n, ldc, out T* pC))
 			return false;
 		op = op.Simplify<T>();
+		if (op == MatrixOperation.Conjugate)
+			return false;
 		var funcRe = default(T) switch
 		{
 			Float32 => new NM.cblas_syr2k<Float32>(NM.cblas_ssyr2k) as NM.cblas_syr2k<T>,
@@ -736,8 +740,8 @@ public unsafe partial class Api
 		var ul = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
 		funcRe?.Invoke(MklMatrixLayout.ColMajor, ul, op.ToMkl(), n, k, α, pA, lda, pB, ldb, β, pC, ldc);
 		funcCm?.Invoke(MklMatrixLayout.ColMajor, ul, op.ToMkl(), n, k, α, pA, lda, pB, ldb, β, pC, ldc);
-		if (op == MatrixOperation.Conjugate)
-			this.TriangularMatricesAdd(false, fillUpper, op, default, n, n, T.One, C, ldc, default, (TS1?)null, 1, C, ldc);
+		////if (op == MatrixOperation.Conjugate)
+		////	this.TriangularMatricesAdd(false, fillUpper, op, default, n, n, T.One, C, ldc, default, (TS1?)null, 1, C, ldc);
 		return funcRe != null || funcCm != null;
 	}
 	#endregion

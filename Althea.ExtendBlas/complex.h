@@ -126,6 +126,7 @@ namespace std
 	PREFIX static inline constexpr uint32_t abs(const uint32_t a) { return a; }
 	PREFIX static inline constexpr uint64_t abs(const uint64_t a) { return a; }
 
+	PREFIX static inline char hypot(const char a, const char b) { return (char)hypotf(a, b); }
 	PREFIX static inline int8_t hypot(const int8_t a, const int8_t b) { return (int8_t)hypotf(a, b); }
 	PREFIX static inline int16_t hypot(const int16_t a, const int16_t b) { return (int16_t)hypotf(a, b); }
 	PREFIX static inline int32_t hypot(const int32_t a, const int32_t b) { return (int32_t)hypot((double)a, (double)b); }
@@ -268,7 +269,10 @@ namespace std
 	template <typename T>
 	PREFIX static inline T abs(const extblas::complex<T> x)
 	{
-		return hypot(x.real(), x.imag());
+		if constexpr (std::is_same_v<T, float>)
+			return hypotf(x.real(), x.imag());
+		else
+			return hypot(x.real(), x.imag());
 	}
 	
 	#pragma region integer type conversions

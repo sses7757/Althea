@@ -63,7 +63,7 @@ public unsafe partial class Api
 		}
 		else
 		{
-			return NMC.vecArgAbsMax(T.Type, n, px, inc, out index).Check();
+			return NMC.vecArgReduce(T.Type, ReduceOperation.AbsoluteMaximum, n, px, inc, out index).Check();
 		}
 		return true;
 	}
@@ -88,7 +88,7 @@ public unsafe partial class Api
 		}
 		else
 		{
-			return NMC.vecArgAbsMin(T.Type, n, px, inc, out index).Check();
+			return NMC.vecArgReduce(T.Type, ReduceOperation.AbsoluteMininum, n, px, inc, out index).Check();
 		}
 		return true;
 	}
@@ -119,7 +119,7 @@ public unsafe partial class Api
 		if (funcS is null && funcD is null)
 		{
 			T result = default;
-			var hresult = doSum ? NMC.vecAbsSum(T.Type, n, px, inc, &result) : CustomStatus.NotSupported;
+			var hresult = doSum ? NMC.vecUnaryReduce(T.Type, ReduceOperation.AddAbsolute, n, px, inc, &result) : CustomStatus.NotSupported;
 			sum = result;
 			return hresult.Check();
 		}
@@ -208,7 +208,7 @@ public unsafe partial class Api
 		}
 		else
 		{
-			return NMC.vecMulScalar(T.Type, n, &scalar, px, inc, px, inc).Check();
+			return NMC.vecBinaryScalar(T.Type, BinaryScalarOperation.Multiply, &scalar, n, px, inc, px, inc).Check();
 		}
 		return true;
 	}
@@ -632,7 +632,7 @@ public unsafe partial class Api
 		}
 		func(this.cublasHandle, lr, fu, opA.ToCuda(), ud, mm, nn, &α, pA, llda, pB, lldb, pC, lldc).Check();
 		long minA = Math.Min(rowA, colA), maxA = Math.Max(rowA, colA);
-		Mkl.LinearAlgebra.Dense.Api.TriangularMatrixMultiplyGeneralPostProcess(this, actualSquare, leftA, fillUpper, opA, opB, m, n, k, minA, maxA, colA, rowA, colB, rowB, α, A, lda, B, ldb, C, ldc);
+		Mkl.LinearAlgebra.Dense.Api.TriangularMatrixMultiplyGeneralPostProcess(this, actualSquare, leftA, fillUpper, opA, opB, m, n, minA, maxA, colA, rowA, colB, rowB, α, A, lda, B, ldb, C, ldc);
 		if (conjugated)
 			Conjugater.Conjugate(pC, mm, nn, lldc);
 		return true;

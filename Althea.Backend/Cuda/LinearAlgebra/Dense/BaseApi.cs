@@ -19,7 +19,7 @@ internal readonly unsafe ref struct Conjugater1<T> where T : unmanaged, IBaseNum
 		this.ptr = ptr; this.n = n; this.inc = inc;
 		if (op == MatrixOperation.Conjugate)
 		{
-			CustomNativeMethods.vecConj(T.Type, n, ptr, inc, ptr, inc).Check();
+			CustomNativeMethods.vecUnary(T.Type, UnaryOperation.Conjugate, n, ptr, inc, ptr, inc).Check();
 		}
 		else
 		{
@@ -31,7 +31,7 @@ internal readonly unsafe ref struct Conjugater1<T> where T : unmanaged, IBaseNum
 	public void Dispose()
 	{
 		if (this.n != 0)
-			CustomNativeMethods.vecConj(T.Type, n, ptr, inc, ptr, inc).Check();
+			CustomNativeMethods.vecUnary(T.Type, UnaryOperation.Conjugate, n, ptr, inc, ptr, inc).Check();
 	}
 }
 
@@ -43,19 +43,19 @@ internal static class Conjugater
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal unsafe static bool Conjugate<T>(T* ptr, long n, int inc) where T : unmanaged, IBaseNumber<T>
 	{
-		return CustomNativeMethods.vecConj(T.Type, n, ptr, inc, ptr, inc).Check();
+		return CustomNativeMethods.vecUnary(T.Type, UnaryOperation.Conjugate, n, ptr, inc, ptr, inc).Check();
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal unsafe static bool Conjugate<T>(long n, T* ptr1, int inc1, T* ptr2, int inc2) where T : unmanaged, IBaseNumber<T>
 	{
-		return CustomNativeMethods.vecConj(T.Type, n, ptr1, inc1, ptr2, inc2).Check();
+		return CustomNativeMethods.vecUnary(T.Type, UnaryOperation.Conjugate, n, ptr1, inc1, ptr2, inc2).Check();
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal unsafe static bool Conjugate<T>(T* ptr, long m, long n, long ld) where T : unmanaged, IBaseNumber<T>
 	{
-		return CustomNativeMethods.matConj(T.Type, m, n, ptr, ld, ptr, ld).Check();
+		return CustomNativeMethods.matUnary(T.Type, UnaryOperation.Conjugate, m, n, ptr, ld, ptr, ld).Check();
 	}
 }
 #endregion

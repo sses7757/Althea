@@ -230,7 +230,7 @@ public sealed class MklBackend : IBackends
 	public Althea.Storage.IAbstractApi? Storage => ST;
 
 	/// <inheritdoc/>
-	public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => LAD;
+	public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => null;
 
 	/// <inheritdoc/>
 	public LinearAlgebra.Dense.IExtendBlasAbstractApi? LinearAlgebraDenseExtendBlas => LAD;
@@ -294,7 +294,7 @@ public sealed class CudaBackend : IBackends
 	public Althea.Storage.IAbstractApi? Storage => ST;
 
 	/// <inheritdoc/>
-	public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => LAD;
+	public LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi? LinearAlgebraDenseHalfMatrixBlas => null;
 
 	/// <inheritdoc/>
 	public LinearAlgebra.Dense.IExtendBlasAbstractApi? LinearAlgebraDenseExtendBlas => LAD;

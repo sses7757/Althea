@@ -404,8 +404,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 				break;
 			case MemoryCopyKind.DeviceToDevice:
 				var err = LinearAlgebra.Dense.CustomNativeMethods.vecStridedCopy(T.Type, copies, source, incrementSource, destination, incrementDestination);
-				err.Check();
-				if (err == (CudaError)(-1))
+				if (err == LinearAlgebra.Dense.CustomStatus.NotSupported)
 					return false;
 				break;
 			case MemoryCopyKind.HostToHost:

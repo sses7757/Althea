@@ -174,12 +174,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="y">The vector to store the scan result</param>
 		/// <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
 		/// <param name="inclusive">Whether to scan <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) or exclusively (the first element is the identity element of <paramref name="op"/>)</param>
-		/// <param name="op">The <see cref="BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="x"/></param>
+		/// <param name="op">The <see cref="ReduceOperation"/> to apply to the partial scan result and each element of <paramref name="x"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorsScan<T, TS1, TS2>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralVectorsScan<T, TS1, TS2>(ReduceOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="x"/> and <paramref name="y"/> are equal: <c><paramref name="x"/>[i] == <paramref name="y"/>[i]</c> for all <c>i</c>.
@@ -344,12 +344,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">The matrix whose columns will be overwritten by the scan results of <paramref name="A"/>'s column s</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
 		/// <param name="inclusive">Whether to scan <paramref name="A"/> inclusively (the first elements are the first elements of columns <paramref name="A"/>) or exclusively (the first elements are the identity element of <paramref name="op"/>)</param>
-		/// <param name="op">The <see cref="BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
+		/// <param name="op">The <see cref="ReduceOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixColumnScan<T, TS1, TS2>(BinaryOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatrixColumnScan<T, TS1, TS2>(ReduceOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i, j] == <paramref name="B"/>[i, j]</c> for all <c>i, j</c>.

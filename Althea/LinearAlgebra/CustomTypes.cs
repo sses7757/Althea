@@ -392,39 +392,39 @@ public enum ReduceOperation
 	/// <summary>
 	/// Operation that returns the addition of two input parameters
 	/// </summary>
-	Add = -2,
-	/// <summary>
-	/// Operation that returns the addition of the absolute value of the first input parameter and the second parameter
-	/// </summary>
-	AddAbsolute = -3,
+	Add = BinaryOperation.Add,
 	/// <summary>
 	/// Operation that returns the multiplication of two input parameters
 	/// </summary>
-	Multiply = -4,
-	/// <summary>
-	/// Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
-	/// </summary>
-	MultiplyAbsolute = -5,
-	/// <summary>
-	/// Operation that returns the addition of the square of the first input parameter and the second parameter; and sqrt the result before exit
-	/// </summary>
-	Norm = -6,
+	Multiply = BinaryOperation.Multiply,
 	/// <summary>
 	/// Operation that returns the maximum of two input parameters
 	/// </summary>
-	Maximum = -7,
+	Maximum = BinaryOperation.Maximum,
 	/// <summary>
 	/// Operation that returns the minimum of two input parameters
 	/// </summary>
-	Mininum = -8,
+	Mininum = BinaryOperation.Mininum,
 	/// <summary>
 	/// Operation that returns the maximum of the absolute values two input parameters
 	/// </summary>
-	AbsoluteMaximum = -9,
+	AbsoluteMaximum = BinaryOperation.AbsoluteMaximum,
 	/// <summary>
 	/// Operation that returns the minimum of the absolute values two input parameters
 	/// </summary>
-	AbsoluteMininum = -10,
+	AbsoluteMininum = BinaryOperation.AbsoluteMininum,
+	/// <summary>
+	/// Operation that returns the addition of the absolute value of the first input parameter and the second parameter
+	/// </summary>
+	AddAbsolute = AbsoluteMininum - 1,
+	/// <summary>
+	/// Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
+	/// </summary>
+	MultiplyAbsolute = AddAbsolute - 1,
+	/// <summary>
+	/// Operation that returns the addition of the square of the first input parameter and the second parameter; and sqrt the result before exit
+	/// </summary>
+	Norm = MultiplyAbsolute - 1,
 }
 
 /// <summary>

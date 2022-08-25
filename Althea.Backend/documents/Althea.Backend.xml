@@ -278,7 +278,7 @@
         <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsCast``4(``2,System.Int64,``3,System.Int64)">
@@ -557,7 +557,7 @@
         </member>
         <member name="T:Althea.Backend.Cuda.LinearAlgebra.Dense.Api">
             <summary>
-            The CUDA back-end of the <see cref="T:Althea.LinearAlgebra.Dense.IBlasAbstractApi"/>, <see cref="T:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi"/>, <see cref="T:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi"/> and <see cref="T:Althea.LinearAlgebra.Dense.ILapackAbstractApi"/> that utilizes cuBLAS and cuSOLVER API with 11.2 ≤ CUDA version (and maybe future versions)
+            The CUDA back-end of the <see cref="T:Althea.LinearAlgebra.Dense.IBlasAbstractApi"/>, <see cref="T:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi"/> and <see cref="T:Althea.LinearAlgebra.Dense.ILapackAbstractApi"/> that utilizes cuBLAS and cuSOLVER API with 11.2 ≤ CUDA version (and maybe future versions)
             </summary>
             <remarks>The legacy cuBLAS APIs are not supported.<br/>
             The only supported location is a pure one on GPU memory. But cuFILE cached ones can be supported easily.<br/>
@@ -700,7 +700,7 @@
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsCast``4(``2,System.Int64,``3,System.Int64)">
@@ -730,61 +730,13 @@
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatricesEqual``3(System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean@)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixCast``4(System.Int64,System.Int64,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``0@)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatricesEqual``3(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean@)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixCast``4(System.Boolean,System.Boolean,System.Int64,System.Int64,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.TriangularMatricesAdd``4(System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,``1,System.Int64,``0,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.SymmetricMatricesAdd``4(System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,``0,``1,System.Int64,``0,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.TriangularMatricesMultiply``4(System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.SymmetricMatricesMultiply``4(System.Boolean,System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.SymmetricMatrixToNormal``2(System.Boolean,System.Boolean,System.Int64,``1,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixClearPart``2(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HalfMatrixCopy``3(System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.EigenStandardMatrixHermitian``4(System.Int64,System.Boolean,``1,System.Int64,``2,``3,System.Int64,System.Boolean)">
@@ -4465,29 +4417,6 @@
             <param name="devPtrOffset">Offset relative to the <paramref name="devPtr"/> to read into. This parameter should be used only with registered buffers.</param>
             <returns>Size of bytes that were successfully read; or -1 on an error, so error number is set to indicate file system errors. All other errors return a negative integer value of the <see cref="T:Althea.Backend.Cuda.Storage.CudaFileOpError"/> value.</returns>
         </member>
-        <member name="M:Althea.Backend.Cuda.Storage.NativeMethods.vecFillVal(Althea.Numerics.DataType,System.Void*,System.Void*,System.Int64,System.Int32)">
-            <summary>
-            Fill the GPU <paramref name="array"/> with given <paramref name="value"/> of <paramref name="type"/>
-            </summary>
-            <param name="type">The data type of the GPU array and value</param>
-            <param name="array">The GPU array to be filled</param>
-            <param name="value">The pointer to the value of <paramref name="type"/> to be filled</param>
-            <param name="N">The number of elements of <paramref name="array"/>, in <paramref name="type"/></param>
-            <param name="stride">The stride between two consecutive elements to be operated in <paramref name="array"/></param>
-            <remarks>Strided filling reduce the performance greatly.</remarks>
-        </member>
-        <member name="M:Althea.Backend.Cuda.Storage.NativeMethods.vecStridedCopy(Althea.Numerics.DataType,System.Void*,System.Void*,System.Int64,System.Int32,System.Int32)">
-            <summary>
-            Strided copy the <paramref name="src"/> GPU array to the <paramref name="dst"/> GPU array
-            </summary>
-            <param name="type">The data type of the GPU array and value</param>
-            <param name="src">The source GPU array to copy from</param>
-            <param name="dst">The destination GPU array to copy to</param>
-            <param name="N">The number of elements to copy, counted in <paramref name="type"/></param>
-            <param name="strideSrc">The stride between two consecutive elements to be copied in <paramref name="src"/></param>
-            <param name="strideDst">The stride between two consecutive elements to be overwritten in <paramref name="dst"/></param>
-            <remarks>Strided copying reduce the performance greatly.</remarks>
-        </member>
         <member name="T:Althea.Backend.Cuda.TensorAlgebra.Dense.Api">
             <summary>
             The CUDA back-end of the dense tensor algebra <see cref="T:Althea.TensorAlgebra.Dense.IBaseAbstractApi"/> that utilizes cuTENSOR with 1.0 ≤ version
@@ -4967,7 +4896,7 @@
         </member>
         <member name="T:Althea.Backend.Mkl.LinearAlgebra.Dense.Api">
             <summary>
-            The MKL back-end of <see cref="T:Althea.LinearAlgebra.Dense.IBlasAbstractApi"/>, <see cref="T:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi"/>, <see cref="T:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi"/>, <see cref="T:Althea.LinearAlgebra.Dense.ILapackAbstractApi"/> that supports storage locations of CPU memory.
+            The MKL back-end of <see cref="T:Althea.LinearAlgebra.Dense.IBlasAbstractApi"/>, <see cref="T:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi"/> and <see cref="T:Althea.LinearAlgebra.Dense.ILapackAbstractApi"/> that supports storage locations of CPU memory.
             </summary>
             <remarks>The general SVD and general Schur decompositions are not supported, but can be added simply.</remarks>
         </member>
@@ -5100,27 +5029,6 @@
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.DiagonalMatrixMultiplyGeneral``4(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.TriangularMatricesAdd``4(System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``0,``1,System.Int64,``0,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.SymmetricMatricesAdd``4(System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,``0,``1,System.Int64,``0,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.TriangularMatricesMultiply``4(System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.SymmetricMatricesMultiply``4(System.Boolean,System.Boolean,System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.SymmetricMatrixToNormal``2(System.Boolean,System.Boolean,System.Int64,``1,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixClearPart``2(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixCopy``3(System.Boolean,System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorUnary``3(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
@@ -5136,7 +5044,7 @@
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsCast``4(``2,System.Int64,``3,System.Int64)">
@@ -5166,40 +5074,13 @@
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatricesEqual``3(System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean@)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixCast``4(System.Int64,System.Int64,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``0@)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatricesEqual``3(System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean@)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HalfMatrixCast``4(System.Boolean,System.Boolean,System.Int64,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.EigenStandardMatrixHermitian``4(System.Int64,System.Boolean,``1,System.Int64,``2,``3,System.Int64,System.Boolean)">

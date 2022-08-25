@@ -9319,16 +9319,6 @@
             Operation that returns the power of the first input parameter to the second one
             </summary>
         </member>
-        <member name="F:Althea.LinearAlgebra.BinaryScalarOperation.Fill">
-            <summary>
-            Operation that simply returns the second input parameter
-            </summary>
-        </member>
-        <member name="F:Althea.LinearAlgebra.BinaryScalarOperation.Truncate">
-            <summary>
-            Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
-            </summary>
-        </member>
         <member name="F:Althea.LinearAlgebra.BinaryScalarOperation.Maximum">
             <summary>
             Operation that returns the maximum of two input parameters
@@ -9349,6 +9339,16 @@
             Operation that returns the minimum of the absolute values two input parameters
             </summary>
         </member>
+        <member name="F:Althea.LinearAlgebra.BinaryScalarOperation.Fill">
+            <summary>
+            Operation that simply returns the second input parameter
+            </summary>
+        </member>
+        <member name="F:Althea.LinearAlgebra.BinaryScalarOperation.Truncate">
+            <summary>
+            Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
+            </summary>
+        </member>
         <member name="T:Althea.LinearAlgebra.ReduceOperation">
             <summary>
             Binary reduce operations used by array point-wise reduce operations whose first input is the element in array and the second one is the partial reduction result.
@@ -9360,24 +9360,9 @@
             Operation that returns the addition of two input parameters
             </summary>
         </member>
-        <member name="F:Althea.LinearAlgebra.ReduceOperation.AddAbsolute">
-            <summary>
-            Operation that returns the addition of the absolute value of the first input parameter and the second parameter
-            </summary>
-        </member>
         <member name="F:Althea.LinearAlgebra.ReduceOperation.Multiply">
             <summary>
             Operation that returns the multiplication of two input parameters
-            </summary>
-        </member>
-        <member name="F:Althea.LinearAlgebra.ReduceOperation.MultiplyAbsolute">
-            <summary>
-            Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
-            </summary>
-        </member>
-        <member name="F:Althea.LinearAlgebra.ReduceOperation.Norm">
-            <summary>
-            Operation that returns the addition of the square of the first input parameter and the second parameter; and sqrt the result before exit
             </summary>
         </member>
         <member name="F:Althea.LinearAlgebra.ReduceOperation.Maximum">
@@ -9398,6 +9383,21 @@
         <member name="F:Althea.LinearAlgebra.ReduceOperation.AbsoluteMininum">
             <summary>
             Operation that returns the minimum of the absolute values two input parameters
+            </summary>
+        </member>
+        <member name="F:Althea.LinearAlgebra.ReduceOperation.AddAbsolute">
+            <summary>
+            Operation that returns the addition of the absolute value of the first input parameter and the second parameter
+            </summary>
+        </member>
+        <member name="F:Althea.LinearAlgebra.ReduceOperation.MultiplyAbsolute">
+            <summary>
+            Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
+            </summary>
+        </member>
+        <member name="F:Althea.LinearAlgebra.ReduceOperation.Norm">
+            <summary>
+            Operation that returns the addition of the square of the first input parameter and the second parameter; and sqrt the result before exit
             </summary>
         </member>
         <member name="T:Althea.LinearAlgebra.UnaryOperation">
@@ -14220,7 +14220,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/>, <paramref name="y"/> or <paramref name="z"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/>, <paramref name="strideY"/> or <paramref name="strideZ"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsScan``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
             <summary>
             When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
@@ -14232,7 +14232,7 @@
             <param name="y">The vector to store the scan result</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <param name="inclusive">Whether to scan <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) or exclusively (the first element is the identity element of <paramref name="op"/>)</param>
-            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="x"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to the partial scan result and each element of <paramref name="x"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
@@ -14377,7 +14377,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
             </summary>
@@ -14391,7 +14391,7 @@
             <param name="B">The matrix whose columns will be overwritten by the scan results of <paramref name="A"/>'s column s</param>
             <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
             <param name="inclusive">Whether to scan <paramref name="A"/> inclusively (the first elements are the first elements of columns <paramref name="A"/>) or exclusively (the first elements are the identity element of <paramref name="op"/>)</param>
-            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
@@ -15631,7 +15631,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/>, <paramref name="strideY"/> or <paramref name="strideZ"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsScan``3(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
             <summary>
             Perform partial aggregate (scan) <paramref name="op"/> of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
@@ -15643,7 +15643,7 @@
             <param name="y">The vector to store the scan result</param>
             <param name="strideY">The stride between consecutive elements of <paramref name="y"/></param>
             <param name="inclusive">Whether to scan <paramref name="x"/> inclusively (the first element is the first element of <paramref name="x"/>) or exclusively (the first element is the identity element of <paramref name="op"/>)</param>
-            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="x"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to the partial scan result and each element of <paramref name="x"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
@@ -15788,7 +15788,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             Perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
             </summary>
@@ -15802,7 +15802,7 @@
             <param name="B">The matrix whose columns will be overwritten by the scan results of <paramref name="A"/>'s column s</param>
             <param name="ldb">The leading dimension of <paramref name="B"/> in <typeparamref name="T"/></param>
             <param name="inclusive">Whether to scan <paramref name="A"/> inclusively (the first elements are the first elements of columns <paramref name="A"/>) or exclusively (the first elements are the identity element of <paramref name="op"/>)</param>
-            <param name="op">The <see cref="T:Althea.LinearAlgebra.BinaryOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
+            <param name="op">The <see cref="T:Althea.LinearAlgebra.ReduceOperation"/> to apply to the partial scan result and each element of <paramref name="A"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>

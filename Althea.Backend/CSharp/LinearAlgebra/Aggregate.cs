@@ -1344,12 +1344,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			};
 		}
 
-		public virtual partial bool GeneralVectorsScan<T, TS1, TS2>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual partial bool GeneralVectorsScan<T, TS1, TS2>(ReduceOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
 			return (op) switch
 			{
-				BinaryOperation.Add => ParSumProd<T, TS1, TS2, bool>(x, strideX, y, strideY, inclusive),
-				BinaryOperation.Multiply => ParSumProd<T, TS1, TS2, byte>(x, strideX, y, strideY, inclusive),
+				ReduceOperation.Add => ParSumProd<T, TS1, TS2, bool>(x, strideX, y, strideY, inclusive),
+				ReduceOperation.Multiply => ParSumProd<T, TS1, TS2, byte>(x, strideX, y, strideY, inclusive),
 				_ => false
 			};
 		}

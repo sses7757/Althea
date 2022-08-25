@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Althea.Backend.Storage;
 using Althea.LinearAlgebra;
 
 using static Althea.Backend.Mkl.MemoryPointerChecker;
@@ -583,14 +584,7 @@ public unsafe partial class Api
 			return FillWithValue(py, strideY, n, scalar);
 		if (op == BinaryScalarOperation.Power)
 			return PowerScalar(n, scalar, px, strideX, py, strideY);
-		delegate*<DataType, long, T*, T*, long, T*, long, CustomStatus> func = op switch
-		{
-			BinaryScalarOperation.Add => &NMC.vecAddScalar,
-			BinaryScalarOperation.Multiply => &NMC.vecMulScalar,
-			BinaryScalarOperation.Truncate => &NMC.vecClip,
-			_ => null,
-		};
-		return func != null && func(T.Type, n, &scalar, px, strideX, py, strideY).Check();
+		return NMC.vecBinaryScalar(T.Type, op, &scalar, n, px, strideX, py, strideY).Check();
 	}
 
 	/// <inheritdoc/>
@@ -614,36 +608,10 @@ public unsafe partial class Api
 			result = reduce;
 			return true;
 		}
-		delegate*<DataType, long, T*, long, T*, CustomStatus> func = op switch
-		{
-			ReduceOperation.Add => &NMC.vecSum,
-			ReduceOperation.AddAbsolute => &NMC.vecAbsSum,
-			ReduceOperation.Multiply => &NMC.vecProd,
-			ReduceOperation.MultiplyAbsolute => &NMC.vecAbsProd,
-			_ => null,
-		};
-		delegate*<DataType, long, T*, long, out long, CustomStatus> funcInd = op switch
-		{
-			ReduceOperation.Maximum => &NMC.vecArgMax,
-			ReduceOperation.Mininum => &NMC.vecArgMin,
-			ReduceOperation.AbsoluteMaximum => &NMC.vecArgAbsMax,
-			ReduceOperation.AbsoluteMininum => &NMC.vecArgAbsMin,
-			_ => null,
-		};
-		CustomStatus status = CustomStatus.NotSupported;
-		if (func is not null)
-		{
-			status = func(T.Type, n, px, strideX, &reduce);
-			result = reduce;
-		}
-		if (funcInd is not null)
-		{
-			status = funcInd(T.Type, n, px, strideX, out long index);
-			result = px[index];
-			if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
-				result = T.Abs(result);
-		}
-		return status.Check();
+		if (!NMC.vecUnaryReduce(T.Type, op, n, px, strideX, &reduce).Check())
+			return false;
+		result = reduce;
+		return true;
 	}
 
 	/// <inheritdoc/>
@@ -658,15 +626,7 @@ public unsafe partial class Api
 			return false;
 		if (op >= ReduceOperation.Add && op <= ReduceOperation.Norm)
 			throw new ArgumentOutOfRangeException(nameof(op), op, Resources.ParameterError.InvalidValue);
-		delegate*<DataType, long, T*, long, out long, CustomStatus> funcInd = op switch
-		{
-			ReduceOperation.Maximum => &NMC.vecArgMax,
-			ReduceOperation.Mininum => &NMC.vecArgMin,
-			ReduceOperation.AbsoluteMaximum => &NMC.vecArgAbsMax,
-			ReduceOperation.AbsoluteMininum => &NMC.vecArgAbsMin,
-			_ => null,
-		};
-		return funcInd != null && funcInd(T.Type, n, px, strideX, out index).Check();
+		return NMC.vecArgReduce(T.Type, op, n, px, strideX, out index).Check();
 	}
 
 	/// <inheritdoc/>
@@ -809,7 +769,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorsScan<T, TS1, TS2>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralVectorsScan<T, TS1, TS2>(ReduceOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (!GetPointer(x, strideX, out T* px, out long n))
 			return false;
@@ -817,8 +777,7 @@ public unsafe partial class Api
 			return false;
 		if (ny < n)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(y));
-		delegate*<DataType, bool, long, T*, long, T*, long, CustomStatus> func = op == BinaryOperation.Add ? &NMC.vecParSum : op == BinaryOperation.Multiply ? &NMC.vecParProd : null;
-		return func != null && func(T.Type, inclusive, n, px, strideX, py, strideY).Check();
+		return NMC.vecScan(T.Type, op, inclusive, n, px, strideX, py, strideY).Check();
 	}
 
 	/// <inheritdoc/>
@@ -885,7 +844,7 @@ public unsafe partial class Api
 				else
 					return Storage.Api.PointerMemoryCopy2D(pA, lda, pB, ldb, rows, cols, default, -T.One);
 			default:
-				return false;
+				return NMC.matUnary(T.Type, op, rows, cols, pA, lda, pB, ldb).Check();
 		}
 	}
 
@@ -900,14 +859,7 @@ public unsafe partial class Api
 			return false;
 		if (op == BinaryScalarOperation.Fill)
 			return NMC.matFillVal(T.Type, rows, cols, &scalar, pB, ldb).Check();
-		delegate*<DataType, long, long, T*, T*, long, T*, long, CustomStatus> func = op switch
-		{
-			BinaryScalarOperation.Add => &NMC.matAddScalar,
-			BinaryScalarOperation.Multiply => &NMC.matMulScalar,
-			BinaryScalarOperation.Truncate => &NMC.matClip,
-			_ => null,
-		};
-		return func != null && func(T.Type, rows, cols, &scalar, pA, lda, pB, ldb).Check();
+		return NMC.matBinaryScalar(T.Type, op, &scalar, rows, cols, pA, lda, pB, ldb).Check();
 	}
 
 	/// <inheritdoc/>
@@ -928,37 +880,10 @@ public unsafe partial class Api
 		if (!GetPointer(A, rows, cols, lda, out T* pA))
 			return false;
 		T reduce = T.Zero;
-		delegate*<DataType, long, long, T*, long, T*, CustomStatus> func = op switch
-		{
-			ReduceOperation.Add => &NMC.matSum,
-			ReduceOperation.AddAbsolute => &NMC.matAbsSum,
-			ReduceOperation.Multiply => &NMC.matProd,
-			ReduceOperation.MultiplyAbsolute => &NMC.matAbsProd,
-			ReduceOperation.Norm => &NMC.matAsVecNorm,
-			_ => null,
-		};
-		delegate*<DataType, long, long, T*, long, out long, CustomStatus> funcInd = op switch
-		{
-			ReduceOperation.Maximum => &NMC.matArgMax,
-			ReduceOperation.Mininum => &NMC.matArgMin,
-			ReduceOperation.AbsoluteMaximum => &NMC.matArgAbsMax,
-			ReduceOperation.AbsoluteMininum => &NMC.matArgAbsMin,
-			_ => null,
-		};
-		CustomStatus status = CustomStatus.NotSupported;
-		if (func is not null)
-		{
-			status = func(T.Type, rows, cols, pA, lda, &reduce);
-			result = reduce;
-		}
-		if (funcInd is not null)
-		{
-			status = funcInd(T.Type, rows, cols, pA, lda, out long index);
-			result = pA[index];
-			if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
-				result = T.Abs(result);
-		}
-		return status.Check();
+		if (!NMC.matUnaryReduce(T.Type, op, rows, cols, pA, lda, &reduce).Check())
+			return false;
+		result = reduce;
+		return true;
 	}
 
 	/// <inheritdoc/>
@@ -971,52 +896,25 @@ public unsafe partial class Api
 			return false;
 		if (op >= ReduceOperation.Add && op <= ReduceOperation.Norm)
 			throw new ArgumentOutOfRangeException(nameof(op), op, Resources.ParameterError.InvalidValue);
-		delegate*<DataType, long, long, T*, long, out long, CustomStatus> funcInd = op switch
-		{
-			ReduceOperation.Maximum => &NMC.matArgMax,
-			ReduceOperation.Mininum => &NMC.matArgMin,
-			ReduceOperation.AbsoluteMaximum => &NMC.matArgAbsMax,
-			ReduceOperation.AbsoluteMininum => &NMC.matArgAbsMin,
-			_ => null,
-		};
-		return funcInd != null && funcInd(T.Type, rows, cols, pA, lda, out index).Check();
+		return NMC.matArgReduce(T.Type, op, rows, cols, pA, lda, out index).Check();
 	}
 
 	/// <inheritdoc/>
 	public virtual bool GeneralMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
+		if (op != ReduceOperation.Add)
 			return false;
-		if (!GetPointer(x, strideX, out T* px, out long n))
+		using PureStorage<T, CpuMemoryPointer> ps = Backend.Storage.ActualPureStorage<T, CpuMemoryPointer>.Create(rows);
+		T one = T.One;
+		if (!NMC.vecFillVal(T.Type, rows, &one, ps.Pointer.Pointer.Pointer.ToPointer(), 1).Check())
 			return false;
-		if (n < cols)
-			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
-		delegate*<DataType, long, long, T*, long, T*, long, CustomStatus> func = op switch
-		{
-			ReduceOperation.Add => &NMC.matColsSum,
-			ReduceOperation.AddAbsolute => &NMC.matColsAbsSum,
-			ReduceOperation.Multiply => &NMC.matColsProd,
-			ReduceOperation.MultiplyAbsolute => &NMC.matColsAbsProd,
-			ReduceOperation.Norm => &NMC.matColsNorm,
-			_ => null
-		};
-		return func != null && func(T.Type, rows, cols, pA, lda, px, strideX).Check();
+		return this.GeneralMatrixMultiplyVector(MatrixOperation.Transpose, rows, cols, one, A, lda, ps, 1, T.Zero, x, strideX);
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixColumnScan<T, TS1, TS2>(BinaryOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixColumnScan<T, TS1, TS2>(ReduceOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (!GetPointer(B, rows, cols, ldb, out T* pB))
-			return false;
-		delegate*<DataType, bool, long, long, T*, long, T*, long, CustomStatus> func = op switch
-		{
-			BinaryOperation.Add => &NMC.matColsParSum,
-			BinaryOperation.Multiply => &NMC.matColsParProd,
-			_ => null
-		};
-		return func != null && func(T.Type, inclusive, rows, cols, pA, lda, pB, ldb).Check();
+		return false;
 	}
 
 	/// <inheritdoc/>
@@ -1042,241 +940,6 @@ public unsafe partial class Api
 		if (!GetPointer(destination, rows, cols, ldd, out TOut* pB))
 			return false;
 		return NMC.matDataConvert(TIn.Type, TOut.Type, true, rows, cols, pA, lds, pB, ldd).Check();
-	}
-	#endregion
-
-	#region half matrix math
-	/// <inheritdoc/>
-	public virtual bool HalfMatrixUnary<T, TS1, TS2>(UnaryOperation op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
-	{
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (!GetPointer(B, rows, cols, ldb, out T* pB))
-			return false;
-		switch (op)
-		{
-			case UnaryOperation.Identity:
-				return true;
-			case UnaryOperation.Conjugate:
-				T one = T.One;
-				return NMC.triMatMulCopy(T.Type, upper, !unitDiag, MatrixOperation.Conjugate, rows, cols, &one, pA, lda, pB, ldb).Check();
-			case UnaryOperation.Negate:
-				T negOne = -T.One;
-				return NMC.triMatMulCopy(T.Type, upper, !unitDiag, MatrixOperation.None, rows, cols, &negOne, pA, lda, pB, ldb).Check();
-			default:
-				return false;
-		}
-	}
-
-	/// <inheritdoc/>
-	public virtual bool HalfMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, bool upper, bool unitDiag, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
-	{
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (!GetPointer(B, rows, cols, ldb, out T* pB))
-			return false;
-		return op switch
-		{
-			BinaryScalarOperation.Add => NMC.triMatAddCopy(T.Type, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
-			BinaryScalarOperation.Multiply => NMC.triMatMulCopy(T.Type, upper, !unitDiag, MatrixOperation.None, rows, cols, &scalar, pA, lda, pB, ldb).Check(),
-			BinaryScalarOperation.Fill => NMC.triMatFillVal(T.Type, upper, unitDiag, rows, cols, &scalar, pB, ldb).Check(),
-			_ => false,
-		};
-	}
-
-	/// <inheritdoc/>
-	public virtual bool HalfMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
-	{
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (!GetPointer(B, rows, cols, ldb, out T* pB))
-			return false;
-		if (!GetPointer(C, rows, cols, ldc, out T* pC))
-			return false;
-		T one = T.One;
-		if (op == BinaryOperation.Add)
-			return NMC.triMatAdd(T.Type, unitDiag, upper, MatrixOperation.None, MatrixOperation.None, rows, cols, &one, pA, lda, &one, pB, ldb, pC, ldc).Check();
-		else
-			return false;
-	}
-
-	/// <inheritdoc/>
-	public virtual bool HalfMatrixReduce<T, TS>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-	{
-		if (triangular && rows != cols)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(cols));
-		result = default;
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (triangular && (op == ReduceOperation.Multiply || op == ReduceOperation.MultiplyAbsolute || op == ReduceOperation.AbsoluteMininum))
-		{
-			result = T.Zero;
-			return true;
-		}
-		T reduce = T.Zero;
-		delegate*<DataType, bool, bool, long, long, T*, long, T*, CustomStatus> triFunc = op switch
-		{
-			ReduceOperation.Add => &NMC.triMatSum,
-			ReduceOperation.AddAbsolute => &NMC.triMatAbsSum,
-			ReduceOperation.Norm => &NMC.triMatAsVecNorm,
-			_ => null,
-		};
-		delegate*<DataType, bool, bool, long, long, T*, long, out long, CustomStatus> funcInd = op switch
-		{
-			ReduceOperation.Maximum => &NMC.triMatArgMax,
-			ReduceOperation.Mininum => &NMC.triMatArgMin,
-			ReduceOperation.AbsoluteMaximum => &NMC.triMatArgAbsMax,
-			_ => null,
-		};
-		delegate*<DataType, bool, bool, long, T*, long, T*, CustomStatus> symFunc = op switch
-		{
-			ReduceOperation.Add => &NMC.symmMatSum,
-			ReduceOperation.AddAbsolute => &NMC.symmMatAbsSum,
-			ReduceOperation.Multiply => &NMC.symmMatProd,
-			ReduceOperation.MultiplyAbsolute => &NMC.symmMatAbsProd,
-			ReduceOperation.Norm => &NMC.symmMatAsVecNorm,
-			_ => null,
-		};
-		CustomStatus status = CustomStatus.NotSupported;
-		if (triangular)
-		{
-			if (triFunc != null)
-			{
-				status = triFunc(T.Type, upper, unitDiagOrHerm, rows, cols, pA, lda, &reduce);
-				result = reduce;
-			}
-			if (funcInd != null)
-			{
-				status = funcInd(T.Type, upper, unitDiagOrHerm, rows, cols, pA, lda, out long index);
-				result = pA[index];
-				if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
-					result = T.Abs(result);
-			}
-		}
-		else
-		{
-			if (symFunc != null)
-			{
-				status = symFunc(T.Type, upper, false, rows, pA, lda, &reduce);
-				result = reduce;
-			}
-			if (funcInd != null)
-			{
-				status = funcInd(T.Type, upper, false, rows, cols, pA, lda, out long index);
-				result = pA[index];
-				if (op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum)
-					result = T.Abs(result);
-			}
-		}
-		return status.Check();
-	}
-
-	/// <inheritdoc/>
-	public virtual bool HalfMatrixArgReduce<T, TS>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
-	{
-		if (triangular && rows != cols)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(cols));
-		index = -1;
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (op >= ReduceOperation.Add && op <= ReduceOperation.Norm)
-			throw new ArgumentOutOfRangeException(nameof(op), op, Resources.ParameterError.InvalidValue);
-		delegate*<DataType, bool, bool, long, long, T*, long, out long, CustomStatus> funcInd = op switch
-		{
-			ReduceOperation.Maximum => &NMC.triMatArgMax,
-			ReduceOperation.Mininum => &NMC.triMatArgMin,
-			ReduceOperation.AbsoluteMaximum => &NMC.triMatArgAbsMax,
-			ReduceOperation.AbsoluteMininum => &NMC.triMatArgAbsMin,
-			_ => null,
-		};
-		return funcInd != null && funcInd(T.Type, upper, triangular && unitDiagOrHerm, rows, cols, pA, lda, out index).Check();
-	}
-
-	/// <inheritdoc/>
-	public virtual bool HalfMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
-	{
-		if (triangular && rows != cols)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(cols));
-		if (triangular && (op == ReduceOperation.Multiply || op == ReduceOperation.MultiplyAbsolute))
-		{
-			x.MakeReference(0, cols - 1).FillWith(T.Zero);
-			this.GeneralVectorReduce(op, A.MakeReference((cols - 1) * lda, rows), 1, out T res);
-			x.MakeReference(cols - 1, 1).FromManaged(res);
-			return true;
-		}
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (!GetPointer(x, strideX, out T* px, out long n))
-			return false;
-		if (n < cols)
-			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
-		delegate*<DataType, bool, bool, long, long, T*, long, T*, long, CustomStatus> triFunc = op switch
-		{
-			ReduceOperation.Add => &NMC.triMatColsSum,
-			ReduceOperation.AddAbsolute => &NMC.triMatColsAbsSum,
-			ReduceOperation.Norm => &NMC.triMatColsNorm,
-			_ => null
-		};
-		delegate*<DataType, bool, bool, long, T*, long, T*, long, CustomStatus> symFunc = op switch
-		{
-			ReduceOperation.Add => &NMC.symmMatColsSum,
-			ReduceOperation.AddAbsolute => &NMC.symmMatColsAbsSum,
-			ReduceOperation.Multiply => &NMC.symmMatColsProd,
-			ReduceOperation.MultiplyAbsolute => &NMC.symmMatColsAbsProd,
-			ReduceOperation.Norm => &NMC.symmMatColsNorm,
-			_ => null
-		};
-		if (triangular)
-			return triFunc != null && triFunc(T.Type, upper, unitDiagOrHerm, rows, cols, pA, lda, px, strideX).Check();
-		else
-			return symFunc != null && symFunc(T.Type, upper, unitDiagOrHerm, rows, pA, lda, px, strideX).Check();
-	}
-
-	/// <inheritdoc/>
-	public virtual bool HalfMatrixColumnScan<T, TS1, TS2>(BinaryOperation op, bool inclusive, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
-	{
-		if (triangular && rows != cols)
-			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(cols));
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (!GetPointer(B, rows, cols, ldb, out T* pB))
-			return false;
-		delegate*<DataType, bool, bool, bool, long, long, T*, long, T*, long, CustomStatus> triFunc = op switch
-		{
-			BinaryOperation.Add => &NMC.triMatColsParSum,
-			_ => null
-		};
-		delegate*<DataType, bool, bool, bool, long, T*, long, T*, long, CustomStatus> symFunc = op switch
-		{
-			BinaryOperation.Add => &NMC.symmMatColsParSum,
-			BinaryOperation.Multiply => &NMC.symmMatColsParProd,
-			_ => null
-		};
-		if (triangular)
-			return triFunc != null && triFunc(T.Type, inclusive, upper, unitDiagOrHerm, rows, cols, pA, lda, pB, ldb).Check();
-		else
-			return symFunc != null && symFunc(T.Type, inclusive, upper, unitDiagOrHerm, rows, pA, lda, pB, ldb).Check();
-	}
-
-	/// <inheritdoc/>
-	public virtual bool HalfMatricesEqual<T, TS1, TS2>(bool upper, bool ignoreDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, out bool equals) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
-	{
-		equals = false;
-		if (!GetPointer(A, rows, cols, lda, out T* pA))
-			return false;
-		if (!GetPointer(B, rows, cols, ldb, out T* pB))
-			return false;
-		return NMC.triMatsEq(T.Type, upper, ignoreDiag, rows, cols, pA, lda, pB, ldb, out equals).Check();
-	}
-
-	/// <inheritdoc/>
-	public virtual bool HalfMatrixCast<TIn, TOut, TSIn, TSOut>(bool upper, bool ignoreDiag, long rows, long cols, TSIn source, long lds, TSOut destination, long ldd) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>
-	{
-		if (!GetPointer(source, rows, cols, lds, out TIn* pA))
-			return false;
-		if (!GetPointer(destination, rows, cols, ldd, out TOut* pB))
-			return false;
-		return NMC.triMatDataConvert(TIn.Type, TOut.Type, true, upper, ignoreDiag, rows, cols, pA, lds, pB, ldd).Check();
 	}
 	#endregion
 }
