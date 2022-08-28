@@ -39,7 +39,21 @@ public class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
 		result = TP.Default;
 		if (!CheckType<TP>())
 			return false;
-		var ptr = Marshal.AllocHGlobal((IntPtr)length);
+		IntPtr ptr;
+		bool triedGC = false;
+	ALLOC:
+		try
+		{
+			ptr = Marshal.AllocHGlobal((IntPtr)length);
+		}
+		catch (OutOfMemoryException)
+		{
+			if (triedGC)
+				throw;
+			triedGC = true;
+			GC.Collect();
+			goto ALLOC;
+		}
 		result = new CpuMemoryPointer(ptr, length).AsGeneric<TP>();
 		return true;
 	}

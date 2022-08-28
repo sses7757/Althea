@@ -131,9 +131,16 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 		{
 			if (Runtime.CurrentDeviceID != TP.Location.Detail)
 				return false;
+			bool triedGC = false;
+		ALLOC:
 			var err = NativeMethods.cudaMalloc(out var pointer, length);
 			if (err == CudaError.ErrorOutOfMemory)
-				throw new OutOfMemoryException();
+			{
+				if (triedGC)
+					throw new OutOfMemoryException();
+				triedGC = true;
+				goto ALLOC;
+			}
 			err.Check();
 			var ptr = new CudaMemoryPointer((IntPtr)pointer, length);
 			result = Unsafe.As<CudaMemoryPointer, TP>(ref ptr);

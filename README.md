@@ -1,64 +1,135 @@
 # Althea
-A Linear **A**lgebra **L**ibrary for **T**ensors with **H**ighly-**E**xtendable **A**PIs
+**A**lgebra **L**ibrary for **T**ensors with **H**ighly-**E**xtendable **A**PIs
 
-It is written in C# (>= 9.0) and mainly focuses on general purposed scientific computations. It is designed to fulfill the high performance, user-friendliness as well as high extendibility at the same time.
+This project is written in C# (>= 11 and .NET 7.0) and CUDA (>= 10.0 with C++ 17) (and Intel TBB in future). It mainly focuses on general purposed scientific computations. It is designed to fulfill the high performance, user-friendliness as well as high extendibility at the same time.
 
-## Features
+**Currently, this project is not yet tested and the `UnitTest` sub-project is *obsolete*.**
+
+## License
+This library follows the GNU GPL v3 license
+
+## `Althea`
 - Cross Platform and Cross Device
-  - It can be run on Windows, Linux or MacOS with CPU, GPU or even FPGA (if there were proper support)
-- High Flexibility : you can determine which implementation you would like to use
-  -  From the lowest level like BLAS
-  -  To the highest level like general eigen-solver
-- Highly Modularized : composed of several parts
-  - `Althea` -- basic definitions such as the abstract runtime API class to be inherited by all APIs in all modules and the abstract storage structures and classes used across the whole library are defined in the base namespce `Althea`
-  - `Althea.Storage` -- native storage related structures and classes which provide a unified and easy-to-use interface for accessing and manipulating memory blocks and local/remote files on different devices
-  - `Althea.NativeTypes` -- interfaces, implementations and helper methods for native types used to communicate with interfaces of heavy computations which also provides support for possible future real and complex types 
-  - `Althea.Arrays` -- interfaces of vectors, matrices and tensors and their abstracts classes
-    - `Vectors`
-    - `Matrices`
-    - `Tensors`
-  - `Althea.LinearAlgebra` -- interfaces for dense and sparse vectors and matrices operations which actually handles the final computations and unified accessing points of them
-    - `Dense`
-    - `Sparse`
-  - `Althea.TensorAlgebra` -- interfaces for dense and sparse tensors operations which actually handles the final computations and unified accessing points of them
-    - `Dense`
-    - `Sparse`
-  - `Althea.Statistics` -- interfaces for random number generators and random distributions, etc which actually handles the final computations and unified accessing points of them
-    - `RandomNumberGenerators`
-    - `Distributions`
-    - T.B.D.
-  - `Althea.Solves` -- interfaces for general and interface-based equation and eigen solvers and optimizers which also has unified accessing points
-    - `EquationSolvers`
-    - `EigenSolvers`
-    - `Optimizers`
-  - `Althea.Helpers` -- classes and methods to improve the accessibility of other modules, also has interfaces for device information and their unified accessing points
-  - `Althea.Linq` -- `System.Linq` like extend methods for `IReadOnlyList<T>` and `Span<T>` of C#
-  - `Althea.Backend.Arrays` -- default implementations of abstracts classes defined in `Althea.Arrays`
-  - `Althea.Backend.CSharp` -- default implementations of storage, linear algebra operations and random number generators using only C# language to make sure the basic functionalities of this library works in case both CUDA and MKL and other custom backends are not available
-  - `Althea.Backend.Cuda` -- default implementations of storage, linear and tensor algebra operations and random number generators using CUDA, cuTENSOR (or [CUTT](https://github.com/ap-hynninen/cutt) when cuTENSOR is not available) and custom functions written in CUDA
-  - `Althea.Backend.Mkl` -- default implementations of storage, linear and tensor algebra operations and random number generators using MKL, [HPTT](https://github.com/springer13/hptt) and custom functions written in OpenMP
+  - It can be run on Windows, Linux or MacOS with CPU, GPU or even FPGA (if there were proper backend support)
+- Thread and Memory Safety
+- Common Language Specification (CLS) compliant (see [CLSCompliantAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.clscompliantattribute?view=net-6.0))
+
 - Fully Aspect- and Interface- Oriented : from top to bottom
   - Algorithms based on interfaces such as the Lanczos, Krylov-Schur and GMERS algorithms
   - Unified accessing points
   - Interfaces for operations and arrays
   - Implementations on different platforms and devices
   - Native codes
-- High Extendability
-  - **All** modules and aspects are designed to support any possible extensions in the future and all the default implementations are written in the same regulations
-  - **Each** module and aspect can be changed to custom ones **individually** during **runtime**
+  
 - High Performance (with high-performance implementations such as the default ones)
   - The pre-defined unified accessing points are simple so that there will be no substantial overhead. And the dynamic accessing points which may be defined by users afterwards are cached by the dynamic system of DotNet.
-- Thread and Memory Safe
-- Common Language Specification (CLS) compliant (see [CLSCompliantAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.clscompliantattribute?view=net-5.0))
 
-## License
-This library follows the GNU GPL v3 (TBD) license
+- High Extendability
+  - **All** modules and aspects are designed to support any possible extensions in the future and all the default implementations are written in the same regulations
+  - **All** public extendable classes are implementations of interfaces and **All** public operations depend on these interfaces
+  - **Each** module and aspect can be changed to custom ones **individually** during **runtime**
+  - Fully functional source code generators (e.g. [`ApiSelectorGenerator`](Althea.SourceGenerator/ApiSelectorGenerator.cs)) to help users to generate repetitive codes
+  - Level 1: Array classes like [`Althea.Array.DenseVector<T, TS>`](Althea/Arrays/Vectors/DenseVector.cs) can be inherited or fully rewritten with similar interfaces if necessary
+  - Level 2: API selectors that are auto generated by [`ApiSelectorGenerator`](Althea.SourceGenerator/ApiSelectorGenerator.cs)
+  - Level 3: APIs that inherits [`IAbstractRuntimeApi`](Althea/Base/AbstractApi.cs). One can simply add other APIs via inheriting same `IAbstractRuntimeApi`
+  - Level 4: Actual classes that implements APIs (e.g. [`Althea.Backend.Cuda.LinearAlgebra.Dense.Api`](Althea.Backend/Cuda/LinearAlgebra/Dense/BaseApi.cs)). These classes can be inherited to modify the default behaviors or upgrade to a new version of actual backend
+  - Level 5: Native methods like CUDA C ABIs. The [`NativeMethodsGenerator`](Althea.SourceGenerator/NativeMethodsGenerator.cs) provides a easy way to auto generate repetitive P/Invoke codes
+  
+- [`Althea`](Althea/Base/) -- basic definitions and interfaces
+  - The abstract runtime API interfaces to be inherited by all APIs in all modules and the helper interface and class to help code generations
+  - The [settings](Althea/Base/Settings.cs) that provides easy access and modify the usage of all backends
+- [`Althea.Numerics`](Althea/Numerics/) -- interfaces and structures for real and complex number types
+  - Since .NET 7.0 does not provide complex-compatible number interfaces, most structures of this namespace is auto generated ones that implements custom complex-compatible number interfaces
+- [`Althea.Helpers`](Althea/Helpers/) -- helper classes (mostly static ones) and structures that can be used to enhance code simplicity
+  - [`ExtensionHelper.cs`](Althea/Helpers/ExtensionHelper.cs) -- all sorts of utility extension methods
+  - [fixed buffers](Althea/Helpers/FixedBuffers.cs) -- template files that generate fixed-sized buffer structures for unmanaged data types and class types
+  - [`LimitSizedCacher.cs`](Althea/Helpers/LimitSizedCacher.cs) -- thread-safe caching structures of limited size and/or limited candidate size
+  - [`Log.cs`](Althea/Helpers/Log.cs) -- a simple asynchronous log system
+  - [`SpanHelper.cs`](Althea/Helpers/SpanHelper.cs) -- extension methods for `Span<T>` and `ReadOnlySpan<T>` that provide LINQ-like operations for spans to reduce GC pressure
+  - [`SpanVariants.cs`](Althea/Helpers/SpanVariants.cs) -- `SpanList<T>` and `SpanMatrix<T>` that are based on `Span<T>` while behave like `List<T>` and a column-majored matrix. Can be used to reduce GC pressure
+  - [`SwapSort.tt`](Althea/Helpers/SwapSort.tt) -- a template that used to generate one-key-multiple-values sort based on swapping
+- [`Althea.Storage`](Althea/Storage/) -- native storage related structures, interfaces and classes which provide a unified and easy-to-use interface for accessing and manipulating memory blocks and local/remote files on different devices
+  - [`Interface.cs`](Althea/Storage/Interface.cs) -- various interfaces for accessing storages, the interfaces of `Althea.Array` are based on these interfaces rather than abstract classes
+  - [`API.cs`](Althea/Storage/API.cs) -- the storage API that regulates the allocation, free, initialization and copy operations between same and/or different memory positions. Also, IL generator is used to generate complicated operation methods for concrete storage classes if necessary
+  - [`CacheStorage.cs`](Althea/Storage/CacheStorage.cs), [`MixedStorage.cs`](Althea/Storage/MixedStorage.cs) and [`PureStorages.cs`](Althea/Storage/PureStorages.cs) -- simple implementations of storage interfaces
+- [`Althea.Array`](Althea/Arrays/) -- interfaces and implementation of arrays, vectors, matrices and tensors
+  - [`BaseInterfaces.cs`](Althea/Arrays/BaseInterfaces.cs) -- the basic interfaces for arrays, vectors, matrices and tensors
+  - [`ValueArray.cs`](Althea/Arrays/ValueArray.cs) -- the basic interfaces for arrays with at least one value storage and a value array manager class to manage the storage cross references of them
+  - [`Wrapper.cs`](Althea/Arrays/Wrapper.cs) -- the wrappers for dense and sparse arrays and sparse format
+  - [operations](Althea/Arrays/Operations/) -- array operations' interfaces
+  - [vectors](Althea/Arrays/Vectors/) -- vector interface, dense vector, abstract sparse vector and the most common implementation, i.e., coordinated sparse vector
+  - [matrices](Althea/Arrays/Matrices/) -- matrix interface, dense matrix, triangular matrix, symmetric/Hermitian matrix, abstract sparse matrix and the most common implementations, i.e., COO, CSR/CSC and BSR/BSC sparse matrices
+  - [tensors](Althea/Arrays/Tensors/) -- tensor interface, dense tensor, abstract sparse tensor and the most common implementation, i.e., coordinated sparse tensor
+- [`Althea.LinearAlgebra`](Althea/LinearAlgebra/) -- APIs and structures for dense and sparse vector and matrix operations
+  - [`Dense`](Althea/LinearAlgebra/Dense/) -- stride and 2D copy APIs, BLAS- and LAPACK-like APIs, vector and matrix math APIs, symmetric and triangular matrix APIs and extended math APIs
+  - [`Sparse`](Althea/LinearAlgebra/Sparse/) -- conversion and computation APIs for sparse vectors and matrices, as well as extended index-related APIs (e.g. sort with multiple values)
+- [`Althea.TensorAlgebra`](Althea/TensorAlgebra/) -- interfaces for dense and sparse tensors operations
+  - [`TensorOrder.cs`](Althea/TensorAlgebra/TensorOrder.cs) -- the structure used to label the order of tensors indicated by `int`, `char` (the native label type of tensors), `System.Index` and/or `System.Range`
+  - [`Dense`](Althea/TensorAlgebra/Dense/) -- dense tensor transposition, reduction, contraction and element-wise math APIs
+  - [`Sparse`](Althea/TensorAlgebra/Sparse/) -- sparse tensor slicing, transposition, reduction, contraction and element-wise math APIs
+- [`Althea.Random`](Althea/Random/)
+  - `*Distributions.cs` -- interfaces and implementations of random distributions of integral and floating point number types of different ranks
+  - [`API.tt`](Althea/Random/API.tt) -- template file that generates APIs for filling storages according to distribution of different ranks
+- [`Althea.Transformer`](Althea/Transformer/API.cs) -- dense array (of any rank) discrete fast Fourier transformation APIs
+
+
+## [`Althea.Backend`](Althea.Backend/)
+The C#, CUDA and MKL backends that implements the APIs above. Currently, not all of the APIs are implemented: the C# backend only supports operations with complexity not larger than $O(n \log{n})$ (where $n$ being the number of elements to process) and some LAPACK routines. The CUDA backend supports most of the operations except non-symmetric LAPACK routines, sparse tensor algebra and dynamic extended APIs. The MKL backend, however, supports the non-symmetric LAPACK routines while does not support tensor algebra at all.
+
+- [`Althea.Backend.CSharp`](Althea.Backend/CSharp/) -- default implementations of storage, linear algebra operations and random number generators using only C# language to make sure the basic functionalities of this library works in case none of CUDA, MKL or other custom backends is available
+  - The implementations utilizes SIMD if possible
+  - The eigen-problem and Schur-problem of one symmetric/Hermitian or non-symmetric/Hermitian matrix is implemented via SIMD, while the complex types may not be well accelerated
+  - The DFFT for one-dimensional arrays with integral $\log_2(n)$ is supported via SIMD
+  - The above two implementations are publicly available for `Span<T>`
+- [`Althea.Backend.Cuda`](Althea.Backend/Cuda/) -- implementations of storage, linear and tensor algebra operations, random number generators and DFFT using CUDA, cuTENSOR and custom functions written in `thrust::par::cuda`
+- [`Althea.Backend.Mkl`](Althea.Backend/Mkl/) -- implementations of storage, linear algebra operations, random number generators and DFFT using MKL and custom functions written in `thrust::par::tbb`
+
+## [`Althea.GeneralSolvers`](Althea.GeneralSolvers/)
+The general solver extensions.
+- [`Kronecker`](Althea.GeneralSolvers/Kronecker/) -- provides the memory and time efficient way of computing vector multiplying Kronecker product/sum result, i.e. $(A\otimes B)vec(X)$ and $(A\oplus B)vec(X)$. Including interfaces that requires vectors/matrices to implement, API, implementation and zero-overhead extensions to dense vector and matrix in `Althea.Array` that implements the required interfaces
+- [`Krylov`](Althea.GeneralSolvers/Krylov/) -- provides the memory efficient way of computing first (several) eigenvector(s) of large matrices that cannot be stored explicitly via Krylov subspace methods. Including the interface ([`IKrylovVector<T, TVec>`](Althea.GeneralSolvers/Krylov/CustomTypes.cs)) that requires vectors to implement, API, implementation and zero-overhead extensions to `Althea.Array.DenseVector<T, TS>` that implements the required interface
+
+## [`Althea.ExtendBlas`](Althea.ExtendBlas/)
+The custom functions written in C++ to implement extend math operations on both CPU and GPU.
+
+## TODO
+- Directly use Intel TBB rather than `thrust::par::tbb` in `Althea.ExtendBlas` when CPU routines are to be compiled
+- Add partial Schur vector solver for `Althea.GeneralSolvers.Krylov`
+- Add ODE and PDE solvers for `Althea.GeneralSolvers`
+- Add a sub-project for (random) particle simulation extension
+- Add a more user-friendly frontend
+- Finish unit test of the whole project
+
 
 ## How To Use
 ### Introduction
+If you are using Linux and the CUDA or MKL is correctly installed (PATH, etc. are correctly configured), then simply import this project and you are good to go.
 ```C#
-// TODO
+using System;
+using Althea;
+using Althea.Array;
+using Althea.Numerics;
+using Althea.Random;
+
+using MP = Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>;
+// or
+// using MP = Althea.Backend.CpuMemoryPointer;
+// to use CPU instead
+using Storage = Althea.Storage.PureStorage<Float64, MP>;
+
+// top level codes
+Settings.Import(); // import setting JSON
+var s1 = Storage.Create(1024); // create a storage that occupies 1024 * sizeof(Float64) bytes on GPU0
+var vec = new DenseVector<Float64, Storage>(s1, s1.Length);
+s1.FillWith(1.0); // fill vector with ones
+var s2 = Storage.Create(1024 * 1024);
+var mat = new DenseMatrix<Float64, Storage>(s2, 1024, 1024);
+var dist = new NormalDistribution<Float64>(); // a standard normal distribution
+ApiSelector.FillWithRandom<Float64, Storage>(s2, dist); // fill matrix with random values generated from `dist`
+var sumRows = mat * vec; // multiply `mat` and `vec` and create a new storage and vector to store the result
+Console.WriteLine(sumRows.Print()); // print the contents of the resulting vector to console
 ```
+Writing in this way, all managed and unmanaged memories will be collected by GC. This is usually fine if the memory is not at tense, otherwise, the following way is recommended.
 
 ### Select a Different Implementation
 ```C#
@@ -69,28 +140,3 @@ This library follows the GNU GPL v3 (TBD) license
 ```C#
 // TODO
 ```
-
-## Remote Debugging from Visual Studio on Windows (IDE) to Ubuntu (remote host)
-First, make sure `openssh-server`, `unzip` and `curl` are installed on host.
-
-Then, find somewhere to run bash code
-```bash
-mkdir coredemo
-cd coredemo
-dotnet new web
-dotnet restore
-dotnet run
-```
-in order to start a HTTP host for receiving debugger from IDE.
-
-Then, you can open your Visual Studio that compiled the code, click Debug-Attach to Process-select SSH. Adjust configurations and attach to something like
-```bash
-/usr/shared/dotnet/dotnet -XXX
-```
-After successfully connected, stop IDE debugging and the dotnet process on host.
-
-Finally, compile your code and publish them to host before using
-```bash
-dotnet exec Your_Compiled_DLL_Name.dll
-```
-to run your code on host. Make sure that code like `Console.Read()` is used to wait asynchronous connections. Then do the same on Visual Studio as above, you can debug via IDE now.

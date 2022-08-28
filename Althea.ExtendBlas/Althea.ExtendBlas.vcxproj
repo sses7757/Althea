@@ -56,6 +56,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>%CUDA_PATH_V11_7%\include;$(IncludePath)</IncludePath>
+    <LibraryPath>%CUDA_PATH_V11_7%\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>%CUDA_PATH_V11_7%\include;$(IncludePath)</IncludePath>
+    <LibraryPath>%CUDA_PATH_V11_7%\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
