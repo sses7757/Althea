@@ -1,14 +1,14 @@
-# Althea
+# ALTHEA
 **A**lgebra **L**ibrary for **T**ensors with **H**ighly-**E**xtendable **A**PIs
 
-This project is written in C# (>= 11 and .NET 7.0) and CUDA (>= 10.0 with C++ 17) (and Intel TBB in future). It mainly focuses on general purposed scientific computations. It is designed to fulfill the high performance, user-friendliness as well as high extendibility at the same time.
+This project is written in C# (>= 11 and .NET >= 7.0) and CUDA (>= 10.0 with C++ >= 17) (and Intel TBB in future). It mainly focuses on general purposed scientific computations. It is designed to fulfill the high performance, user-friendliness as well as high extendibility at the same time.
 
 **Currently, this project is not yet tested and the `UnitTest` sub-project is *obsolete*.**
 
 ## License
-This library follows the GNU GPL v3 license
+This library follows the GNU GPL v3 license (TBD).
 
-## `Althea`
+## [`Althea`](Althea/)
 - Cross platform and cross device
 	- It can be run on Windows, Linux or MacOS with CPUs and GPUs
 - Thread and memory safe

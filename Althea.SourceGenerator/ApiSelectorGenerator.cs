@@ -320,7 +320,8 @@ namespace {nsName}
 			ApiIntefaceSyntaxReceiver syntaxReceiver = (ApiIntefaceSyntaxReceiver)context.SyntaxReceiver;
 			var apiClasses = syntaxReceiver.ApiInterfaces;
 			this.AddSelectors(context, apiClasses, syntaxReceiver.VoidReturnType);
-			this.AddSettings(context, apiClasses);
+			if (context.Compilation.AssemblyName == nameof(Althea))
+				this.AddSettings(context, apiClasses);
 		}
 	}
 

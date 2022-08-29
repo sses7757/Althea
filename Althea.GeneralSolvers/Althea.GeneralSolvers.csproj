@@ -39,7 +39,11 @@
     <ProjectReference Include="..\Althea.Backend\Althea.Backend.csproj" />
     <ProjectReference Include="..\Althea\Althea.csproj" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Compile Update="Krylov\Resource.Designer.cs">
       <DependentUpon>Resource.resx</DependentUpon>

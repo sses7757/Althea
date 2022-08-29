@@ -73,6 +73,30 @@
             <param name="rows">The number of rows of the target matrix</param>
             <returns>The converted matrix as a <typeparamref name="TMat"/> that shall NOT contain any referenced storage.</returns>
         </member>
+        <member name="T:Althea.GeneralSolvers.Kronecker.ApiSelector">
+            <summary>
+            The selector class for runtime Kronecker multiply related API routines 
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Kronecker.ApiSelector.KroneckerMultiplyVector``3(System.Boolean,``0,``1,``1,``2@,``0)">
+            <summary>
+            Compute the product of the Kronecker Multiply or Sum of <paramref name="leftMatrix"/> and <paramref name="rightMatrix"/> and <paramref name="vector"/>:<br/>
+            <c><paramref name="vector"/> = <paramref name="scalar"/> * (<paramref name="leftMatrix"/> op <paramref name="rightMatrix"/>) * <paramref name="vector"/> + <paramref name="scalarVector"/> * <paramref name="vector"/></c> where '<c>op</c>' is '⨁' if <paramref name="multiply"/> is false or '⨂' otherwise.
+            </summary>
+            <typeparam name="TMat">The concrete matrix type as a <see cref="T:Althea.GeneralSolvers.Kronecker.IConvertibleMatrix`3"/></typeparam>
+            <typeparam name="TVec">The concrete vector type as a <see cref="T:Althea.GeneralSolvers.Kronecker.IConvertibleVector`3"/></typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
+            <param name="multiply">Whether to perform Kronecker multiply or Kronecker sum</param>
+            <param name="scalar">The scalar to multiply to the multiplication result</param>
+            <param name="leftMatrix">The input left matrix to perform the Kronecker multiply/sum</param>
+            <param name="rightMatrix">The input right matrix to perform the Kronecker multiply/sum</param>
+            <param name="vector">The input / output vector</param>
+            <param name="scalarVector">The scalar to multiply to the <paramref name="vector"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="leftMatrix"/> or <paramref name="rightMatrix"/> or <paramref name="vector"/> is null or invalid</exception>
+            <exception cref="T:System.ArgumentException">If the sizes mismatch</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
         <member name="T:Althea.GeneralSolvers.Krylov.IAbstractApi">
             <summary>
             The abstract interface for runtime general Krylov subspace matrix solver API routines 
@@ -620,6 +644,49 @@
             <summary>
               查找类似 The number of smallest eigenvalues required ({0}) is larger than the desired value, maybe the native eigen solver is a better option. 的本地化字符串。
             </summary>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.ApiSelector">
+            <summary>
+            The selector class for runtime general Krylov subspace matrix solver API routines 
+            </summary>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.ApiSelector.NaiveKrylovSubspaceEigenHermitain``2(Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@)">
+            <summary>
+            Perform a naïve Krylov subspace algorithm (typically the naïve Lanczos algorithm) to calculate the lowest eigenvalue and eigenvector of a hermitian matrix.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolvers.Krylov.IKrylovVector`2"/></typeparam>
+            <param name="info">The <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <returns>The output approximate lowest eigenvalue and corresponding eigenvector.</returns>
+            <remarks>Only <paramref name="info"/>'s <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.MatrixFunction"/>, <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.InitialVector"/> and <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.MaxRestarts"/> are used as inputs. Its <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output eigenvector.</remarks>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.ApiSelector.RestartKrylovSubspaceEigen``2(System.Boolean,Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@)">
+            <summary>
+            Perform a restart Krylov subspace algorithm (typically the Lanczos or the Krylov-Schur algorithm) to solve a hermitian (or a non-hermitian) matrix's lowest several eigenvalues and eigenvectors.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolvers.Krylov.IKrylovVector`2"/></typeparam>
+            <param name="hermitian">Whether the given matrix is a hermitian one or a general square matrix</param>
+            <param name="info">The <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <returns>Output the number of converged eigen-pairs.</returns>
+            <remarks><paramref name="info"/>'s <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.WhichEigenvaluesDesired"/>, <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.EigenvaluesImag"/> are not used</remarks>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.ApiSelector.RestartKrylovSubspaceLinearSolve``2(System.Nullable{System.Boolean},Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@)">
+            <summary>
+            Perform a restart Krylov subspace algorithm (typically the GMRES algorithm) to linear solve a hermitian-definite (or a hermitian or non-hermitian) matrix.
+            </summary>
+            <typeparam name="T">Any float-point type unmanaged number as the data type</typeparam>
+            <typeparam name="TVec">The concrete vector class type hat implements <see cref="T:Althea.GeneralSolvers.Krylov.IKrylovVector`2"/></typeparam>
+            <param name="hermitianOrDefinite">Whether the given matrix is hermitian (true) or hermitian-definite (false) or a general square matrix (null)</param>
+            <param name="info">The <see cref="T:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2"/> used as input information and output container</param>
+            <returns>Output the solve vector and the corresponding relative error.</returns>
+            <remarks><paramref name="info"/>'s eigen related fields are all not used and the <see cref="F:Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo`2.OtherVector"/> is used as the output solve.</remarks>
+            <exception cref="T:System.ArgumentException">If <paramref name="info"/> contains invalid value</exception>
+            <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
     </members>
 </doc>
