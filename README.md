@@ -9,20 +9,15 @@ This project is written in C# (>= 11 and .NET 7.0) and CUDA (>= 10.0 with C++ 17
 This library follows the GNU GPL v3 license
 
 ## `Althea`
-- Cross Platform and Cross Device
-	- It can be run on Windows, Linux or MacOS with CPU, GPU or even FPGA (if there were proper backend support)
-- Thread and Memory Safety
+- Cross platform and cross device
+	- It can be run on Windows, Linux or MacOS with CPUs and GPUs
+- Thread and memory safe
 - Common Language Specification (CLS) compliant (see [CLSCompliantAttribute](https://docs.microsoft.com/en-us/dotnet/api/system.clscompliantattribute?view=net-6.0))
+  - Therefore, users of VB.NET and F# can import this project directly
 
-- Fully Aspect- and Interface- Oriented : from top to bottom
-	- Algorithms based on interfaces such as the Lanczos, Krylov-Schur and GMERS algorithms
-	- Unified accessing points
-	- Interfaces for operations and arrays
-	- Implementations on different platforms and devices
-	- Native codes
+- Fully aspect- and interface- oriented
 	
-- High Performance (with high-performance implementations such as the default ones)
-	- The pre-defined unified accessing points are simple so that there will be no substantial overhead. And the dynamic accessing points which may be defined by users afterwards are cached by the dynamic system of DotNet.
+- High Performance (with high-performance implementations such as the default CUDA and MKL ones)
 
 - High Extendability
 	- **All** modules and aspects are designed to support any possible extensions in the future and all the default implementations are written in the same regulations
@@ -88,6 +83,11 @@ The C#, CUDA and MKL backends that implements the APIs above. Currently, not all
 The general solver extensions.
 - [`Kronecker`](Althea.GeneralSolvers/Kronecker/) -- provides the memory and time efficient way of computing vector multiplying Kronecker product/sum result, i.e. $(A\otimes B)vec(X)$ and $(A\oplus B)vec(X)$. Including interfaces that requires vectors/matrices to implement, API, implementation and zero-overhead extensions to dense vector and matrix in `Althea.Array` that implements the required interfaces
 - [`Krylov`](Althea.GeneralSolvers/Krylov/) -- provides the memory efficient way of computing first (several) eigenvector(s) of large matrices that cannot be stored explicitly via Krylov subspace methods. Including the interface ([`IKrylovVector<T, TVec>`](Althea.GeneralSolvers/Krylov/CustomTypes.cs)) that requires vectors to implement, API, implementation and zero-overhead extensions to `Althea.Array.DenseVector<T, TS>` that implements the required interface
+  - Naive Lanczos solver
+  - Restart Lanczos solver
+  - Restart Krylov-Schur solver
+  - Generalized Minimal Residual solver
+  - Conjugate Gradient solver
 
 ## [`Althea.ExtendBlas`](Althea.ExtendBlas/)
 The custom functions written in C++ to implement extend math operations on both CPU and GPU.
@@ -189,7 +189,7 @@ public class ApiUpgrade : Api
 	/// <inheritdoc/>
 	public override bool GeneralMatrixMultiplyVector<T, TSM, TSV1, TSV2>(MatrixOperation op, long m, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>
 	{
-		// your own implementation
+		// your own implementation here. You can simply use cuBLASXt rather than default cuBLAS to utilize multiple GPUs.
 	}
 
 	// other implementations ...
@@ -204,6 +204,7 @@ By referring the sub-project `Althea.GeneralSolvers`, I believe that it is not d
 - Directly use Intel TBB rather than `thrust::par::tbb` in `Althea.ExtendBlas` when CPU routines are to be compiled
 - Add partial Schur vector solver for `Althea.GeneralSolvers.Krylov`
 - Add ODE and PDE solvers for `Althea.GeneralSolvers`
+- Add dynamic extended math supports
 - Add a sub-project for (random) particle simulation extension
 - Add a more user-friendly frontend
 - Finish unit test of the whole project
