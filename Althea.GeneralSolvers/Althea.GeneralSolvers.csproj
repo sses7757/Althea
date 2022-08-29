@@ -1,65 +1,77 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<OutputType>Library</OutputType>
-	<TargetFramework>net7.0</TargetFramework>
-	<LangVersion>preview</LangVersion>
-	<EnablePreviewFeatures>True</EnablePreviewFeatures>
-	<Platforms>x64</Platforms>
-	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	<Nullable>enable</Nullable>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-	<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-	<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-	<RootNamespace>Althea.GeneralSolvers</RootNamespace>
-	<AssemblyName>Althea.GeneralSolvers</AssemblyName>
-	<AnalysisLevel>latest</AnalysisLevel>
-	<RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <EnablePreviewFeatures>True</EnablePreviewFeatures>
+    <Platforms>x64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-	<PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
-  </ItemGroup>
+  <PropertyGroup>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RootNamespace>Althea.GeneralSolvers</RootNamespace>
+    <AssemblyName>Althea.GeneralSolvers</AssemblyName>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Title>Althea</Title>
+    <Authors>https://github.com/sses7757</Authors>
+    <Description>The general solvers based on ALTHEA</Description>
+    <Copyright>https://github.com/sses7757/Althea/blob/master/LICENSE</Copyright>
+    <PackageProjectUrl>https://github.com/sses7757/Althea</PackageProjectUrl>
+    <IncrementVersionOnBuild>1.0.Mdd.Hmm</IncrementVersionOnBuild>
+    <Version>0.1.0.0</Version>
+  </PropertyGroup>
   
   <ItemGroup>
-	<ProjectReference Include="..\Althea.Backend\Althea.Backend.csproj" />
-	<ProjectReference Include="..\Althea\Althea.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
   </ItemGroup>
-  
+
   <ItemGroup>
-	<Compile Update="Krylov\Resource.Designer.cs">
-	  <DependentUpon>Resource.resx</DependentUpon>
-	  <DesignTime>True</DesignTime>
-	  <AutoGen>True</AutoGen>
-	</Compile>
+    <ProjectReference Include="..\Althea.Backend\Althea.Backend.csproj" />
+    <ProjectReference Include="..\Althea\Althea.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
-	<EmbeddedResource Update="Krylov\Resource.resx">
-	  <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-	  <Generator>ResXFileCodeGenerator</Generator>
-	</EmbeddedResource>
+    <Compile Update="Krylov\Resource.Designer.cs">
+      <DependentUpon>Resource.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Krylov\Resource.resx">
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
-	<DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
-	<DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-	<DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
-	<NoWarn>1701;1702</NoWarn>
-	<Optimize>False</Optimize>
+    <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
+    <NoWarn>1701;1702</NoWarn>
+    <Optimize>False</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-	<DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
-	<LangVersion>preview</LangVersion>
+    <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
 </Project>

@@ -92,15 +92,6 @@ The general solver extensions.
 ## [`Althea.ExtendBlas`](Althea.ExtendBlas/)
 The custom functions written in C++ to implement extend math operations on both CPU and GPU.
 
-## TODO
-- Directly use Intel TBB rather than `thrust::par::tbb` in `Althea.ExtendBlas` when CPU routines are to be compiled
-- Add partial Schur vector solver for `Althea.GeneralSolvers.Krylov`
-- Add ODE and PDE solvers for `Althea.GeneralSolvers`
-- Add a sub-project for (random) particle simulation extension
-- Add a more user-friendly frontend
-- Finish unit test of the whole project
-
-
 ## How To Use
 ### Basics
 If you are using Linux and the CUDA or MKL is correctly installed (PATH, etc. are correctly configured), then simply import this project and you are good to go.
@@ -129,6 +120,8 @@ ApiSelector.FillWithRandom<Float64, Storage>(s2, dist); // fill matrix with rand
 var sumRows = mat * vec; // multiply `mat` and `vec` and create a new storage and vector to store the result
 Console.WriteLine(sumRows.Print()); // print the contents of the resulting vector to console
 ```
+Also, operator wrappers are not exclusive for vectors and matrices, even sparse and dense vector, matrix and operations have operator wrappers. There are also series of operations that can in-place operate them, solving some problems of them, etc.
+
 Writing in this way, all unmanaged memories (such as GPU memory allocated at GPU0 in the example) will be collected by GC. This is usually fine if the memory is not at tense, otherwise, the following way is recommended.
 ```C#
 var s1 = Storage.Create(1024);
@@ -163,11 +156,13 @@ Furthermore, if you do not need the wrappers provided by array classes, you can 
 ```
 Although you can eliminate array wrappers' overheads, it is not recommended unless you are pretty sure what you are doing. Since the overheads are quite small relative to the actual computation when the array size is large.
 
+Also, there are so many im
+
 ### Select a Different Implementation
 ```C#
 using Althea;
 
-namespace MyNamespace;
+......
 
 // if the API type of `impl` is known
 LinearAlgebra.Dense.IBlasApi impl = ...;
@@ -181,6 +176,34 @@ Settings.TrySetBackend(backend);
 ```
 
 ### Writing or Upgrading Implementations
+Following the implementation classes in `Althea.Backend`, I believe it is relatively easy to write your own implementation for any API.
 
+As for upgrading existing implementation(s), there are many options, in which the easiest one is to inherit the non-sealed existing implementation class(es). For example,
+```C#
+using Althea.Backend.Cuda.LinearAlgebra.Dense;
+
+namespace MyNamespace;
+
+public class ApiUpgrade : Api
+{
+	/// <inheritdoc/>
+	public override bool GeneralMatrixMultiplyVector<T, TSM, TSV1, TSV2>(MatrixOperation op, long m, long n, T α, TSM A, long lda, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>
+	{
+		// your own implementation
+	}
+
+	// other implementations ...
+}
+```
+And then set implementation(s) to your class instance.
 
 ### Writing Your Own API and Implementation
+By referring the sub-project `Althea.GeneralSolvers`, I believe that it is not difficult to write your own API and implementation at the same time.
+
+## TODO
+- Directly use Intel TBB rather than `thrust::par::tbb` in `Althea.ExtendBlas` when CPU routines are to be compiled
+- Add partial Schur vector solver for `Althea.GeneralSolvers.Krylov`
+- Add ODE and PDE solvers for `Althea.GeneralSolvers`
+- Add a sub-project for (random) particle simulation extension
+- Add a more user-friendly frontend
+- Finish unit test of the whole project

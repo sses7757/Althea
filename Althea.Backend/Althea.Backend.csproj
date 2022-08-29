@@ -1,111 +1,119 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<OutputType>Library</OutputType>
-	<TargetFramework>net7.0</TargetFramework>
-	<LangVersion>preview</LangVersion>
-	<EnablePreviewFeatures>True</EnablePreviewFeatures>
-	<Platforms>x64</Platforms>
-	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-	<Nullable>enable</Nullable>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <EnablePreviewFeatures>True</EnablePreviewFeatures>
+    <Platforms>x64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup>
-	<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-	<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
-	<RootNamespace>Althea.Backend</RootNamespace>
-	<AssemblyName>Althea.Backend</AssemblyName>
-	<AnalysisLevel>latest</AnalysisLevel>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+    <RootNamespace>Althea.Backend</RootNamespace>
+    <AssemblyName>Althea.Backend</AssemblyName>
+    <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>
-	<None Include="Cuda\Runtime\CudaGpuIds.cs">
-	  <DesignTime>True</DesignTime>
-	  <AutoGen>True</AutoGen>
-	  <DependentUpon>CudaGpuIds.tt</DependentUpon>
-	</None>
+    <None Include="Cuda\Runtime\CudaGpuIds.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CudaGpuIds.tt</DependentUpon>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
-	<PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Metrics" Version="3.3.3" />
   </ItemGroup>
 
   <PropertyGroup>
-	<DefineConstants>$(DefineConstants);TRACE</DefineConstants>
-	<RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
+    <RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Title>Althea</Title>
+    <Authors>https://github.com/sses7757</Authors>
+    <Description>The backend implementations of ALTHEA</Description>
+    <Copyright>https://github.com/sses7757/Althea/blob/master/LICENSE</Copyright>
+    <PackageProjectUrl>https://github.com/sses7757/Althea</PackageProjectUrl>
+    <IncrementVersionOnBuild>1.0.Mdd.Hmm</IncrementVersionOnBuild>
+    <Version>0.1.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Platform)' == 'x64' ">
-	<DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug'">
-	<DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-	<DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
-	<NoWarn>1701;1702</NoWarn>
-	<Optimize>False</Optimize>
+    <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
+    <NoWarn>1701;1702</NoWarn>
+    <Optimize>False</Optimize>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-	<DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
-	<LangVersion>preview</LangVersion>
+    <DocumentationFile>$(MSBuildProjectDirectory)\documents\$(MSBuildProjectName).xml</DocumentationFile>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-	<ProjectReference Include="..\Althea\Althea.csproj" />
+    <ProjectReference Include="..\Althea\Althea.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-	<Compile Update="Cuda\Runtime\BrainHalfMethods.cs">
-	  <DesignTime>True</DesignTime>
-	  <AutoGen>True</AutoGen>
-	  <DependentUpon>BrainHalfMethods.tt</DependentUpon>
-	</Compile>
-	<Compile Update="Cuda\Runtime\CudaGpuIds.cs">
-	  <DesignTime>True</DesignTime>
-	  <AutoGen>True</AutoGen>
-	  <DependentUpon>CudaGpuIds.tt</DependentUpon>
-	</Compile>
-	<Compile Update="Resource.Designer.cs">
-	  <DesignTime>True</DesignTime>
-	  <AutoGen>True</AutoGen>
-	  <DependentUpon>Resource.resx</DependentUpon>
-	</Compile>
+    <Compile Update="Cuda\Runtime\BrainHalfMethods.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>BrainHalfMethods.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Cuda\Runtime\CudaGpuIds.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CudaGpuIds.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Resource.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
-	<EmbeddedResource Update="Resource.resx">
-	  <Generator>ResXFileCodeGenerator</Generator>
-	  <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-	</EmbeddedResource>
+    <EmbeddedResource Update="Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-	<ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+    <ProjectReference Include="..\Althea.SourceGenerator\Althea.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
   </ItemGroup>
 
   <ItemGroup>
-	<None Update="Cuda\ExtendBlasCUDA.dll">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</None>
-	<None Update="Cuda\Runtime\BrainHalfMethods.tt">
-	  <LastGenOutput>BrainHalfMethods.cs</LastGenOutput>
-	  <Generator>TextTemplatingFileGenerator</Generator>
-	</None>
-	<None Update="Cuda\Runtime\CudaGpuIds.tt">
-	  <Generator>TextTemplatingFileGenerator</Generator>
-	  <LastGenOutput>CudaGpuIds.cs</LastGenOutput>
-	</None>
-	<None Update="Mkl\ExtendBlasTBB.dll">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</None>
+    <None Update="Cuda\ExtendBlasCUDA.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Cuda\Runtime\BrainHalfMethods.tt">
+      <LastGenOutput>BrainHalfMethods.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Cuda\Runtime\CudaGpuIds.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>CudaGpuIds.cs</LastGenOutput>
+    </None>
+    <None Update="Mkl\ExtendBlasTBB.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
-	<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>

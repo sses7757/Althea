@@ -342,7 +342,7 @@ public static class Settings
 	}
 
 	/// <summary>
-	/// Export current settings to the file "Althea.json"
+	/// Export current settings to the file set by <see cref="SetConfigFile"/>
 	/// </summary>
 	public static void ExportSettings()
 	{

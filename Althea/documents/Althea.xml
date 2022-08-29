@@ -5112,7 +5112,7 @@
         </member>
         <member name="M:Althea.Settings.ExportSettings">
             <summary>
-            Export current settings to the file "Althea.json"
+            Export current settings to the file set by <see cref="M:Althea.Settings.SetConfigFile(System.String)"/>
             </summary>
         </member>
         <member name="T:Althea.Helpers.MethodParametersInfo">

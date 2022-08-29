@@ -1,16 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<TargetFramework>netstandard2.0</TargetFramework>
-	<LangVersion>8.0</LangVersion>
-	<!--It is necessary to use AnyCPU to generate codes (at least for VS 16.10.2 and .NET5)-->
-	<Platforms>x64</Platforms>
-	<RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <Platforms>x64</Platforms>
+    <RepositoryUrl>https://github.com/sses7757/Althea</RepositoryUrl>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <Title>Althea</Title>
+    <Authors>https://github.com/sses7757</Authors>
+    <Description>The general solvers based on ALTHEA</Description>
+    <Copyright>https://github.com/sses7757/Althea/blob/master/LICENSE</Copyright>
+    <PackageProjectUrl>https://github.com/sses7757/Althea</PackageProjectUrl>
+    <IncrementVersionOnBuild>1.0.Mdd.Hmm</IncrementVersionOnBuild>
+    <Version>0.1.0.0</Version>
   </PropertyGroup>
-  
+
   <ItemGroup>
-	<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.10.0" PrivateAssets="all" />
-	<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.10.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
