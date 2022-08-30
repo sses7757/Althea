@@ -109,7 +109,7 @@ using MP = Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>;
 using Storage = Althea.Storage.PureStorage<Float64, MP>;
 
 // top level codes
-Settings.Import(); // import setting JSON
+Settings.Initialize(); // initialize settings
 var s1 = Storage.Create(1024); // create a storage that occupies 1024 * sizeof(Float64) bytes on GPU0, 1024 can be a runtime variable
 var vec = new DenseVector<Float64, Storage>(s1, s1.Length);
 s1.FillWith(1.0); // fill vector with ones, 1.0 can be a runtime variable, and if it is composed of same bytes, fast initialization will be used

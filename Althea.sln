@@ -5,8 +5,6 @@ VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea", "Althea\Althea.csproj", "{09ECD0E5-2229-496D-9558-1E5F617A081D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnitTest", "UnitTest\UnitTest.csproj", "{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.Backend", "Althea.Backend\Althea.Backend.csproj", "{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.SourceGenerator", "Althea.SourceGenerator\Althea.SourceGenerator.csproj", "{A3523AF3-FF3E-4749-A8CC-E962DBD9DCE2}"
@@ -14,6 +12,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.GeneralSolvers", "Althea.GeneralSolvers\Althea.GeneralSolvers.csproj", "{0F08AF51-31F4-4C13-9930-50F166BDF7D5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Althea.ExtendBlas", "Althea.ExtendBlas\Althea.ExtendBlas.vcxproj", "{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.UnitTests", "Althea.UnitTests\Althea.UnitTests.csproj", "{C232E3F7-A408-47AC-8638-A2CA8B9434AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +25,6 @@ Global
 		{09ECD0E5-2229-496D-9558-1E5F617A081D}.Debug|x64.Build.0 = Debug|x64
 		{09ECD0E5-2229-496D-9558-1E5F617A081D}.Release|x64.ActiveCfg = Release|x64
 		{09ECD0E5-2229-496D-9558-1E5F617A081D}.Release|x64.Build.0 = Release|x64
-		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Debug|x64.ActiveCfg = Debug|x64
-		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Debug|x64.Build.0 = Debug|x64
-		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Release|x64.ActiveCfg = Release|x64
-		{9292D8E8-CBC2-46F2-81BC-DE00D2A60A81}.Release|x64.Build.0 = Release|x64
 		{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}.Debug|x64.ActiveCfg = Debug|x64
 		{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}.Debug|x64.Build.0 = Debug|x64
 		{4DA5DA96-88B5-44CB-AFF9-823A7436E0D7}.Release|x64.ActiveCfg = Release|x64
@@ -43,6 +39,10 @@ Global
 		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Debug|x64.Build.0 = Debug|x64
 		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Release|x64.ActiveCfg = Release|x64
 		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Release|x64.Build.0 = Release|x64
+		{C232E3F7-A408-47AC-8638-A2CA8B9434AB}.Debug|x64.ActiveCfg = Debug|x64
+		{C232E3F7-A408-47AC-8638-A2CA8B9434AB}.Debug|x64.Build.0 = Debug|x64
+		{C232E3F7-A408-47AC-8638-A2CA8B9434AB}.Release|x64.ActiveCfg = Release|x64
+		{C232E3F7-A408-47AC-8638-A2CA8B9434AB}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -68,7 +68,7 @@ internal static class ApiManager
 
 	internal static void Dispose<TApi>(int index) where TApi : IAbstractRuntimeApi<TApi>
 	{
-		if (index < 0)
+		if (index < 0 || index >= AbstractApiSelector<TApi>.APIs.Count)
 			return;
 		lock (__locker)
 		{
@@ -123,6 +123,23 @@ public abstract class AbstractApiSelector<TApi> where TApi : IAbstractRuntimeApi
 	private static int CurrentApiIndex = -1;
 
 	private static readonly ReaderWriterLockSlim apiLock = new();
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static void Clear()
+	{
+		try
+		{
+			apiLock.EnterWriteLock();
+			for (int i = APIs.Count - 1; i >= 0; i--)
+			{
+				ApiManager.Dispose<TApi>(i);
+			}
+		}
+		finally
+		{
+			apiLock.ExitWriteLock();
+		}
+	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static void SetImplementation(TApi implementation)

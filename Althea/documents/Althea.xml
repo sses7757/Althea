@@ -5115,6 +5115,12 @@
             Export current settings to the file set by <see cref="M:Althea.Settings.SetConfigFile(System.String)"/>
             </summary>
         </member>
+        <member name="M:Althea.Settings.Initialize">
+            <summary>
+            Initialize all the settings to default state, clear all backends and reload C#, CUDA and MKL backends.
+            </summary>
+            <remarks>This method heavily relies on reflection and shall NOT be invoked frequently.</remarks>
+        </member>
         <member name="T:Althea.Helpers.MethodParametersInfo">
             <summary>
             The read-only struct for storing method parameter types
