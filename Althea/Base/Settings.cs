@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -107,7 +108,7 @@ public static class Settings
 		}
 	}
 
-	internal static JsonSettings settings;
+	internal static JsonSettings settings = new();
 
 	private static readonly object __lockSetting = new();
 	#endregion
@@ -328,9 +329,53 @@ public static class Settings
 		return impls;
 	}
 
-	// Ignore Spelling: Cuda Mkl
-	static Settings()
+	/// <summary>
+	/// Export current settings to the file set by <see cref="SetConfigFile"/>
+	/// </summary>
+	public static void ExportSettings()
 	{
+		string json = JsonSerializer.Serialize(settings, options);
+		File.WriteAllText(fileName, json);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static bool IsApiType(Type t)
+	{
+		try
+		{
+			if (!t.IsInterface)
+				return false;
+			if (!t.GetInterfaces().Any(static i => i.Name == nameof(IAbstractRuntimeApi<Storage.IAbstractApi>)))
+				return false;
+			var _ = typeof(IAbstractRuntimeApi<>).MakeGenericType(new[] { t });
+			return true;
+		}
+		catch (Exception)
+		{
+			return false;
+		}
+	}
+
+	// Ignore Spelling: Cuda Mkl
+	/// <summary>
+	/// Initialize all the settings to default state, clear all backends and reload C#, CUDA and MKL backends.
+	/// </summary>
+	/// <remarks>This method heavily relies on reflection and shall NOT be invoked frequently.</remarks>
+	public static void Initialize()
+	{
+		// get API types
+		List<Type> apis = new();
+		foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+		{
+			apis.AddRange(assembly.ExportedTypes.Where(IsApiType));
+		}
+		// clear APIs
+		foreach (var api in apis)
+		{
+			typeof(AbstractApiSelector<>).MakeGenericType(new[] { api })!
+				.GetMethod(nameof(AbstractApiSelector<Storage.IAbstractApi>.Clear))!
+				.Invoke(null, null);
+		}
 		// set default implementations
 		settings = new();
 		// CUDA implementations
@@ -339,15 +384,6 @@ public static class Settings
 		TrySetBackend(GetInternalBackend(@"Mkl"));
 		// import at last
 		Import(logError: true);
-	}
-
-	/// <summary>
-	/// Export current settings to the file set by <see cref="SetConfigFile"/>
-	/// </summary>
-	public static void ExportSettings()
-	{
-		string json = JsonSerializer.Serialize(settings, options);
-		File.WriteAllText(fileName, json);
 	}
 	#endregion
 }
