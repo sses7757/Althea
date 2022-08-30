@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.GeneralSolvers", "Al
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Althea.ExtendBlas", "Althea.ExtendBlas\Althea.ExtendBlas.vcxproj", "{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Althea.UnitTests", "AltheaTests\Althea.UnitTests.csproj", "{6E047D28-330B-4520-AB91-E66C244804BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Althea.UnitTests", "Althea.UnitTests\Althea.UnitTests.csproj", "{C232E3F7-A408-47AC-8638-A2CA8B9434AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,10 +39,10 @@ Global
 		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Debug|x64.Build.0 = Debug|x64
 		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Release|x64.ActiveCfg = Release|x64
 		{BFA7E66D-8D5D-4537-8B0C-DDF5803A4A2C}.Release|x64.Build.0 = Release|x64
-		{6E047D28-330B-4520-AB91-E66C244804BD}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{6E047D28-330B-4520-AB91-E66C244804BD}.Debug|x64.Build.0 = Debug|Any CPU
-		{6E047D28-330B-4520-AB91-E66C244804BD}.Release|x64.ActiveCfg = Release|Any CPU
-		{6E047D28-330B-4520-AB91-E66C244804BD}.Release|x64.Build.0 = Release|Any CPU
+		{C232E3F7-A408-47AC-8638-A2CA8B9434AB}.Debug|x64.ActiveCfg = Debug|x64
+		{C232E3F7-A408-47AC-8638-A2CA8B9434AB}.Debug|x64.Build.0 = Debug|x64
+		{C232E3F7-A408-47AC-8638-A2CA8B9434AB}.Release|x64.ActiveCfg = Release|x64
+		{C232E3F7-A408-47AC-8638-A2CA8B9434AB}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
