@@ -1,7 +1,0 @@
-{
-  "profiles": {
-    "UnitTestCudaCSharp": {
-      "commandName": "Project"
-    }
-  }
-}
