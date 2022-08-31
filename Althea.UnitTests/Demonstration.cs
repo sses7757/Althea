@@ -1,6 +1,9 @@
 ﻿using System;
 
 using Althea.Array;
+using Althea.Backend.Cuda;
+using Althea.Backend.Cuda.Storage;
+using Althea.Backend.Storage;
 using Althea.Helpers;
 using Althea.Numerics;
 using Althea.Random;
@@ -174,5 +177,57 @@ internal static class BasicDemonstration
 
 internal static class AdvancedDemonstration
 {
+	public static void RefWithDifferentType()
+	{
+		// the original memory is of Float64 type
+		using var original = GpuMem.Create(1024);
+		original.FillWith((Float64)5.0);
 
+		// referenced one is of uint64 type with offset 512 * sizeof(Float64)
+		var intRef = (original + 512).As<UnsignedInt64>();
+		Console.WriteLine(string.Join(Environment.NewLine, intRef));
+	}
+
+	public static void MixedExample()
+	{
+		// create a storage representing two memory blocks on CPU and GPU, presenting to be one continuous memory
+		using var mix = MixedStorage<Float64, CpuMemoryPointer, CudaMemoryPointer<GpuId0>>.Create(512, 512);
+
+		// these and other basic storage operations will work
+		mix.FillWith((Float64)5.0);
+		IStorage<Float64, MixedStorage<Float64, CpuMemoryPointer, CudaMemoryPointer<GpuId0>>> accesser = mix;
+		Console.WriteLine(accesser[10]);
+		Console.WriteLine(accesser[1000]);
+
+		// since currently no backend supports operations on such mixed storage, an exception will be thrown
+		LinearAlgebra.Dense.BlasApiSelector.Scale(mix, 1, (Float64)0.2);
+	}
+
+	public static void CuFileExample()
+	{
+		// create a storage representing a temporary file on disk with such size and a piece of caching memory on GPU whose size is determined by `DirectMappingStrategy`
+		// the copy between them is managed by CuFile library
+		using var cache = CachedStorage<Float64, DirectMappingStrategy, CudaMemoryPointer<GpuId0>, CudaFilePointer>.Create(1024 * 1024);
+
+		// this and other basic storage operations will work
+		cache.FillWith((Float64)5.0);
+
+		// since currently no backend supports operations on such cached storage, an exception will be thrown
+		LinearAlgebra.Dense.BlasApiSelector.Scale(cache, 1, (Float64)0.2);
+	}
+
+	// contract triangular shaped tensor network
+	public static TT GenericTensorNetworkContractExample<T, TT, TOp>(TT A, TT B, TT C)
+		where T : unmanaged, IBaseNumber<T>
+		where TT : class, IBaseTensor<T, TT>
+		where TOp : ITensorOperations<T, TT, TT, TT>
+	{
+		using var AA = A.SetLabels(stackalloc[] { 'x', 'a', 'b' });
+		using var BB = B.SetLabels(stackalloc[] { 'a', 'y', 'c' });
+		using var CC = C.SetLabels(stackalloc[] { 'c', 'b', 'z' });
+
+		using var tempAB = TOp.Contract(AA, LinearAlgebra.UnaryOperation.Identity, BB, LinearAlgebra.UnaryOperation.Identity, T.One);
+		var ABC = TOp.Contract(tempAB, LinearAlgebra.UnaryOperation.Identity, CC, LinearAlgebra.UnaryOperation.Identity, T.One);
+		return ABC;
+	}
 }

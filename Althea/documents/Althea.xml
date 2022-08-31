@@ -169,9 +169,8 @@
         </member>
         <member name="P:Althea.Array.ILabeledTensor`1.Labels">
             <summary>
-            When implemented by a derived class, get or set the label array as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/> used to mark each index of this tensor.
+            When implemented by a derived class, get the label array as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Char"/> used to mark each index of this tensor.
             </summary>
-            <exception cref="T:System.ArgumentException">If the setting value's length is not the same as the <see cref="P:Althea.Array.ILabeledTensor`1.Rank"/></exception>
         </member>
         <member name="M:Althea.Array.ILabeledTensor`1.GetLabel(System.Int32)">
             <summary>
@@ -180,22 +179,6 @@
             <param name="index">The index of the rank whose label will be obtained</param>
             <returns>The <see cref="T:System.Char"/> label at <paramref name="index"/></returns>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of <see cref="P:Althea.Array.ILabeledTensor`1.Rank"/></exception>
-        </member>
-        <member name="M:Althea.Array.ILabeledTensor`1.SetLabel(System.Int32,System.Char)">
-            <summary>
-            When implemented by a derived class, set the label at rank <paramref name="index"/> to <paramref name="value"/>
-            </summary>
-            <param name="index">The index of the rank whose label will be set</param>
-            <param name="value">The <see cref="T:System.Char"/> label at <paramref name="index"/> to set</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of <see cref="P:Althea.Array.ILabeledTensor`1.Rank"/></exception>
-        </member>
-        <member name="M:Althea.Array.ILabeledTensor`1.SetLabels(System.Char[])">
-            <summary>
-            When implemented by a derived class, set the label(s) used to mark each index of this tensor
-            </summary>
-            <param name="labels">The label(s) to set as an array of <see cref="T:System.Char"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
-            <exception cref="T:System.ArgumentException">If the length of <paramref name="labels"/> is not the same as the <see cref="P:Althea.Array.ILabeledTensor`1.Rank"/></exception>
         </member>
         <member name="T:Althea.Array.IPrintable`1">
             <summary>
@@ -2914,6 +2897,12 @@
             <exception cref="T:System.ArgumentException">If <paramref name="values"/> is too short</exception>
             <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
         </member>
+        <member name="M:Althea.Array.CoordinateSparseTensor`4.SetLabel(System.Int32,System.Char)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.CoordinateSparseTensor`4.SetLabels(System.ReadOnlySpan{System.Char})">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Array.CoordinateSparseTensor`4.GetOffsets(System.ReadOnlySpan{System.Int64},System.Span{System.Int64})">
             <inheritdoc/>
         </member>
@@ -2970,6 +2959,12 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="size"/> ≤ 0</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="values"/> is too short</exception>
             <remarks>The validness of the detail values (such as sorted or not) in these storages are not checked for performance issues.</remarks>
+        </member>
+        <member name="M:Althea.Array.CoordinateBlockSparseTensor`4.SetLabel(System.Int32,System.Char)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.CoordinateBlockSparseTensor`4.SetLabels(System.ReadOnlySpan{System.Char})">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Array.CoordinateBlockSparseTensor`4.GetOffsets(System.ReadOnlySpan{System.Int64},System.Span{System.Int64})">
             <inheritdoc/>
@@ -3035,6 +3030,9 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseTensor`2.SetLabels(System.Char[])">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseTensor`2.SetLabels(System.ReadOnlySpan{System.Char})">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseTensor`2.#ctor(`1,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Char})">
@@ -3228,6 +3226,9 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SparseTensor`4.SetLabel(System.Int32,System.Char)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.SparseTensor`4.SetLabels(System.ReadOnlySpan{System.Char})">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SparseTensor`4.SetLabels(System.Char[])">
@@ -3458,6 +3459,32 @@
             When implemented by a derived class, get the (both end inclusive) accumulated product of the <see cref="P:Althea.Array.ILabeledTensor`1.Size"/> of this tensor.
             </summary>
             <remarks>The first element is 1, the last element is <see cref="P:Althea.Array.IValueArray`2.Length"/> and its size == <see cref="P:Althea.Array.ILabeledTensor`1.Rank"/> + 1</remarks>
+        </member>
+        <member name="M:Althea.Array.IBaseTensor`2.SetLabel(System.Int32,System.Char)">
+            <summary>
+            When implemented by a derived class, create a new tensor with the label at rank <paramref name="index"/> being <paramref name="value"/>.
+            </summary>
+            <param name="index">The index of the rank whose label will be set</param>
+            <param name="value">The <see cref="T:System.Char"/> label at <paramref name="index"/> to set</param>
+            <returns>The new <typeparamref name="TSelf"/> with new label</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of rank</exception>
+        </member>
+        <member name="M:Althea.Array.IBaseTensor`2.SetLabels(System.Char[])">
+            <summary>
+            When implemented by a derived class, create a new tensor with the <paramref name="labels"/>.
+            </summary>
+            <param name="labels">The label(s) to set as an array of <see cref="T:System.Char"/></param>
+            <returns>The new <typeparamref name="TSelf"/> with new label</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="labels"/> is not the same as the rank</exception>
+        </member>
+        <member name="M:Althea.Array.IBaseTensor`2.SetLabels(System.ReadOnlySpan{System.Char})">
+            <summary>
+            When implemented by a derived class, create a new tensor with the <paramref name="labels"/>.
+            </summary>
+            <param name="labels">The label(s) to set as a <see cref="T:System.Span`1"/> of <see cref="T:System.Char"/></param>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
+            <exception cref="T:System.ArgumentException">If the length of <paramref name="labels"/> is not the same as the rank</exception>
         </member>
         <member name="P:Althea.Array.IBaseTensor`2.Item(System.Index[])">
             <summary>
