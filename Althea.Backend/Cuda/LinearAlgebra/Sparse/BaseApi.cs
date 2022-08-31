@@ -41,9 +41,17 @@ public unsafe partial class Api : IBindedDevice, IConversionAbstractApi, IComput
 	/// <inheritdoc/>
 	public void Dispose()
 	{
-		NativeMethods.cusparseDestroy(this.cusparseHandle);
 		this.Disposed = true;
 		GC.SuppressFinalize(this);
+	}
+
+	/// <summary>
+	/// The actual disposing methods
+	/// </summary>
+	/// <param name="disposing"></param>
+	public virtual void Dispose(bool disposing)
+	{
+		NativeMethods.cusparseDestroy(this.cusparseHandle);
 	}
 
 	/// <inheritdoc/>

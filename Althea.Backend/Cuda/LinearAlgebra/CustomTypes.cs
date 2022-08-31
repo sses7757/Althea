@@ -72,11 +72,26 @@ internal unsafe static class SignalErrorBufferExtension
 #endregion
 
 #region BLAS Op
-internal enum CuBlasOperation
+/// <summary>
+/// The CUDA BLAS operations
+/// </summary>
+public enum CuBlasOperation
 {
+	/// <summary>
+	/// No transpose
+	/// </summary>
 	None = 0,
+	/// <summary>
+	/// Only transpose
+	/// </summary>
 	Transpose = 1,
+	/// <summary>
+	/// Conjugate and transpose
+	/// </summary>
 	ConjugateTranspose = 2,
+	/// <summary>
+	/// Only conjugate, not supported
+	/// </summary>
 	Conjugate = 3,
 }
 

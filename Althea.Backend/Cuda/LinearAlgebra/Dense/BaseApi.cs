@@ -141,10 +141,17 @@ public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAb
 	/// <inheritdoc/>
 	public void Dispose()
 	{
-		NativeMethods.cublasDestroy(this.cublasHandle);
-		NativeMethods.cusolverDnDestroy(this.cusolverHandle);
 		this.Disposed = true;
 		GC.SuppressFinalize(this);
+	}
+
+	/// <summary>
+	/// The actual disposing method
+	/// </summary>
+	public virtual void Dispose(bool disposing)
+	{
+		NativeMethods.cublasDestroy(this.cublasHandle);
+		NativeMethods.cusolverDnDestroy(this.cusolverHandle);
 	}
 
 	/// <inheritdoc/>
