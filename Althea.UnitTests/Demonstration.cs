@@ -8,13 +8,14 @@ using Althea.Storage;
 
 using CpuMem = Althea.Storage.PureStorage<Althea.Numerics.Float64, Althea.Backend.Storage.CpuMemoryPointer>;
 using GpuMem = Althea.Storage.PureStorage<Althea.Numerics.Float64, Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>>;
+using GpuMemInt = Althea.Storage.PureStorage<Althea.Numerics.SignedInt32, Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>>;
 
 
 namespace Althea.UnitTests;
 
-internal static class Demonstration
+internal static class BasicDemonstration
 {
-	static Demonstration()
+	static BasicDemonstration()
 	{
 		// load all default backends
 		Settings.Initialize();
@@ -113,4 +114,65 @@ internal static class Demonstration
 		using var result = sub1 * sub2;
 		Console.WriteLine(result.Print());
 	}
+
+	public static void MultiplySparseMatrixWithVector()
+	{
+		// create a new COO format (column major) sparse matrix
+		var sValues = GpuMem.Create(1024);
+		var sRowIdx = GpuMemInt.Create(1024);
+		var sColIdx = GpuMemInt.Create(1024);
+		using var cooMatrix = new CoordinateSparseMatrix<Float64, SignedInt32, GpuMem, GpuMemInt>(false, 1024, 1024, sValues, sRowIdx, sColIdx, nnz: 0);
+
+		// sparse matrix is MUTABLE, which is convenient for adding values
+		// However, it is relatively slow to add values one by one, and therefore not recommended
+		cooMatrix[10, 20] = 56.0;
+		// add more values or fill storages ...
+
+		var sVector = GpuMem.Create(1024);
+		using var vector = new DenseVector<Float64, GpuMem>(sVector, sVector.Length);
+
+		// automatically invoke cuSPARSE to compute dense vector sparse matrix multiplication
+		using var result = vector * cooMatrix;
+	}
+
+	public static void MultiplySparseMatrices()
+	{
+		// create a new CSR format sparse matrix
+		var sValues = GpuMem.Create(1024);
+		var sRowIdx = GpuMemInt.Create(1024 + 1);
+		var sColIdx = GpuMemInt.Create(1024);
+		using var csrMatrix = new CompressSparseMatrix<Float64, SignedInt32, GpuMem, GpuMemInt>(true, 1024, 1024, sValues, sRowIdx, sColIdx, nnz: 0);
+
+		csrMatrix[10, 20] = 56.0;
+		// add more values or fill storages ...
+
+		// automatically invoke cuSPARSE to compute sparse matrices multiplication with result being a NEW sparse matrix
+		using var result = csrMatrix * csrMatrix;
+	}
+
+	public static void SolveMatrix()
+	{
+		var s1 = CpuMem.Create(1024 * 1024);
+		var s2 = CpuMem.Create(1024 * 1024);
+		var s3 = CpuMem.Create(1024);
+		var dist = new NormalDistribution<Float64>();
+		Random.ApiSelector.FillWithRandom<Float64, CpuMem, NormalDistribution<Float64>>(s1, dist);
+		using var matrix = new DenseMatrix<Float64, CpuMem>(s1, 1024, 1024);
+		using var eigvecs = new DenseMatrix<Float64, CpuMem>(s2, 1024, 1024);
+		using var eigvals = new DenseVector<Float64, CpuMem>(s3, 1024);
+
+		// this operation makes matrix symmetric
+		DenseOperation<Float64, CpuMem>.AddMatrices(matrix, 0.5, matrix, 0.5, matrix, LinearAlgebra.MatrixOperation.Transpose);
+
+		using var symm = new SymmetricMatrix<Float64, CpuMem>(true, matrix.Storage, 1024);
+
+		// automatically invoke MKL symmetric eigen-solver
+		// If not present, the C# implementation will be invoked
+		DenseSolvers<Float64, CpuMem>.StandardEigenSolve(symm, eigvals, null, eigvecs, null);
+	}
+}
+
+internal static class AdvancedDemonstration
+{
+
 }

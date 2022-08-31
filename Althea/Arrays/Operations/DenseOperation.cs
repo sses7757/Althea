@@ -1109,6 +1109,17 @@ public sealed class DenseSolvers<T, TS> :
 		Lapack.EigenStandardMatrixGeneral<T, TS, TS, TS, TS>(matrix.NRows, matrix.Storage, matrix.LeadDim, outValues.Storage, outValuesImag?.Storage, outLeftVectors?.Storage, outLeftVectors?.LeadDim ?? 1, outRightVectors?.Storage, outRightVectors?.LeadDim ?? 1);
 	}
 
+	/// <summary>
+	/// Solve the standard symmetric/Hermitian eigen-equation: <c><paramref name="matrix"/> * x = λ * x</c>. Where <c>x</c>s are eigenvectors and <c>λ</c>s are eigenvalues, respectively.
+	/// </summary>
+	/// <param name="matrix">The input matrix to solve the standard eigen problem</param>
+	/// <param name="outValues">The output vector to store the eigenvalues</param>
+	/// <param name="outValuesImag">Not referenced, only used to match interface</param>
+	/// <param name="outLeftVectors">The output matrix to store the eigenvectors</param>
+	/// <param name="outRightVectors">The output matrix to store the eigenvectors, not referenced if <paramref name="outLeftVectors"/> is not null</param>
+	/// <exception cref="ArgumentException">If the sizes are incompatible</exception>
+	/// <exception cref="ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+	/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 	/// <inheritdoc/>
 	public static void StandardEigenSolve(SymmetricMatrix<T, TS> matrix, DenseVector<T, TS> outValues, DenseVector<T, TS>? outValuesImag, DenseMatrix<T, TS>? outLeftVectors, DenseMatrix<T, TS>? outRightVectors)
 	{
