@@ -20,6 +20,32 @@ public interface IBaseTensor<T, TSelf> : ILabeledTensor<T>, IValueArray<T, TSelf
 	/// </summary>
 	/// <remarks>The first element is 1, the last element is <see cref="IValueArray{T, TSelf}.Length"/> and its size == <see cref="ILabeledTensor{T}.Rank"/> + 1</remarks>
 	protected ReadOnlySpan<long> SizeProd { get; }
+
+	/// <summary>
+	/// When implemented by a derived class, create a new tensor with the label at rank <paramref name="index"/> being <paramref name="value"/>.
+	/// </summary>
+	/// <param name="index">The index of the rank whose label will be set</param>
+	/// <param name="value">The <see cref="char"/> label at <paramref name="index"/> to set</param>
+	/// <returns>The new <typeparamref name="TSelf"/> with new label</returns>
+	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of rank</exception>
+	public abstract TSelf SetLabel(int index, char value);
+
+	/// <summary>
+	/// When implemented by a derived class, create a new tensor with the <paramref name="labels"/>.
+	/// </summary>
+	/// <param name="labels">The label(s) to set as an array of <see cref="char"/></param>
+	/// <returns>The new <typeparamref name="TSelf"/> with new label</returns>
+	/// <exception cref="ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
+	/// <exception cref="ArgumentException">If the length of <paramref name="labels"/> is not the same as the rank</exception>
+	public abstract TSelf SetLabels(params char[] labels);
+
+	/// <summary>
+	/// When implemented by a derived class, create a new tensor with the <paramref name="labels"/>.
+	/// </summary>
+	/// <param name="labels">The label(s) to set as a <see cref="Span{T}"/> of <see cref="char"/></param>
+	/// <exception cref="ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
+	/// <exception cref="ArgumentException">If the length of <paramref name="labels"/> is not the same as the rank</exception>
+	public abstract TSelf SetLabels(ReadOnlySpan<char> labels);
 	#endregion
 
 	#region element indexing

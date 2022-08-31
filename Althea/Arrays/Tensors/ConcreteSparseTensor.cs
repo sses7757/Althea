@@ -51,6 +51,25 @@ public class CoordinateSparseTensor<T, TInd, TS, TSInd> : SparseTensor<T, TInd, 
 	}
 
 	internal CoordinateSparseTensor() : base() { }
+
+	/// <inheritdoc/>
+	public override CoordinateSparseTensor<T, TInd, TS, TSInd> SetLabel(int index, char label)
+	{
+		if (index < 0 || index >= this.Rank)
+			throw new ArgumentOutOfRangeException(nameof(index));
+		Span<char> labels = stackalloc char[this.Rank];
+		this.Labels.CopyTo(labels);
+		labels[index] = label;
+		return new(this.Size, this.Storage, this.IndexStorage, this.DefaultValue, this.NStored, labels);
+	}
+
+	/// <inheritdoc/>
+	public override CoordinateSparseTensor<T, TInd, TS, TSInd> SetLabels(ReadOnlySpan<char> labels)
+	{
+		if (labels.Length != this.Rank)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
+		return new(this.Size, this.Storage, this.IndexStorage, this.DefaultValue, this.NStored, labels);
+	}
 	#endregion
 
 	#region implementation
@@ -280,6 +299,25 @@ public class CoordinateBlockSparseTensor<T, TInd, TS, TSInd> : SparseTensor<T, T
 	}
 
 	internal CoordinateBlockSparseTensor() : base() { }
+
+	/// <inheritdoc/>
+	public override CoordinateBlockSparseTensor<T, TInd, TS, TSInd> SetLabel(int index, char label)
+	{
+		if (index < 0 || index >= this.Rank)
+			throw new ArgumentOutOfRangeException(nameof(index));
+		Span<char> labels = stackalloc char[this.Rank];
+		this.Labels.CopyTo(labels);
+		labels[index] = label;
+		return new(this.Size, this.BlockSize, this.Storage, this.IndexStorage, this.DefaultValue, this.NStored, labels);
+	}
+
+	/// <inheritdoc/>
+	public override CoordinateBlockSparseTensor<T, TInd, TS, TSInd> SetLabels(ReadOnlySpan<char> labels)
+	{
+		if (labels.Length != this.Rank)
+			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
+		return new(this.Size, this.BlockSize, this.Storage, this.IndexStorage, this.DefaultValue, this.NStored, labels);
+	}
 	#endregion
 
 	#region implementation

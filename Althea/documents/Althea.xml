@@ -1760,6 +1760,17 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseSolvers`2.StandardEigenSolve(Althea.Array.SymmetricMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">
+            <summary>
+            Solve the standard symmetric/Hermitian eigen-equation: <c><paramref name="matrix"/> * x = λ * x</c>. Where <c>x</c>s are eigenvectors and <c>λ</c>s are eigenvalues, respectively.
+            </summary>
+            <param name="matrix">The input matrix to solve the standard eigen problem</param>
+            <param name="outValues">The output vector to store the eigenvalues</param>
+            <param name="outValuesImag">Not referenced, only used to match interface</param>
+            <param name="outLeftVectors">The output matrix to store the eigenvectors</param>
+            <param name="outRightVectors">The output matrix to store the eigenvectors, not referenced if <paramref name="outLeftVectors"/> is not null</param>
+            <exception cref="T:System.ArgumentException">If the sizes are incompatible</exception>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="outValuesImag"/> is null when <typeparamref name="T"/> is a real type</exception>
+            <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseSolvers`2.SchurSolve(Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseVector{`0,`1},Althea.Array.DenseMatrix{`0,`1},Althea.Array.DenseMatrix{`0,`1})">

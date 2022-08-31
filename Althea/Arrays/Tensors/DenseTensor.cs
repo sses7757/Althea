@@ -44,7 +44,7 @@ public class DenseTensor<T, TS> : IDenseArray<T, TS>,
 	[FieldOffset(128 * 4 - sizeof(long))]
 	private readonly long outerLength;
 	[FieldOffset(128 * 4)]
-	private FixedBuffer_32<char> labels;
+	private readonly FixedBuffer_32<char> labels;
 	[FieldOffset(128 * 4 + 32)]
 	private readonly TS values;
 
@@ -81,16 +81,7 @@ public class DenseTensor<T, TS> : IDenseArray<T, TS>,
 
 	/// <inheritdoc/>
 	[JsonIgnore]
-	public ReadOnlySpan<char> Labels
-	{
-		get => this.labels.AsSpan(this.rank);
-		set
-		{
-			if (value.Length != this.rank)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(value));
-			this.labels.CopyFromSpan(value);
-		}
-	}
+	public ReadOnlySpan<char> Labels => this.labels.AsSpan(this.rank);
 
 	[JsonInclude]
 	private long[] SizeArray => this.Size.ToArray();
@@ -110,19 +101,25 @@ public class DenseTensor<T, TS> : IDenseArray<T, TS>,
 	}
 
 	/// <inheritdoc/>
-	public void SetLabel(int index, char label)
+	public DenseTensor<T, TS> SetLabel(int index, char label)
 	{
 		if (index < 0 || index >= this.rank)
 			throw new ArgumentOutOfRangeException(nameof(index));
-		this.labels[index] = label;
+		Span<char> labels = stackalloc char[this.rank];
+		this.labels.CopyToSpan(labels);
+		labels[index] = label;
+		return new(this.Storage, this.Size, this.OuterSize, labels);
 	}
 
 	/// <inheritdoc/>
-	public void SetLabels(params char[] labels)
+	public DenseTensor<T, TS> SetLabels(params char[] labels) => this.SetLabels((ReadOnlySpan<char>)labels);
+
+	/// <inheritdoc/>
+	public DenseTensor<T, TS> SetLabels(ReadOnlySpan<char> labels)
 	{
 		if (labels.Length != this.rank)
 			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
-		this.labels.CopyFromSpan(labels);
+		return new(this.Storage, this.Size, this.OuterSize, labels);
 	}
 
 	private DenseTensor() => this.values = TS.Empty;

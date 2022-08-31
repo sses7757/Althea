@@ -285,10 +285,9 @@ public interface ILabeledTensor<T> where T : unmanaged, IBaseNumber<T>
 	long Length { get; }
 
 	/// <summary>
-	/// When implemented by a derived class, get or set the label array as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> used to mark each index of this tensor.
+	/// When implemented by a derived class, get the label array as a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/> used to mark each index of this tensor.
 	/// </summary>
-	/// <exception cref="ArgumentException">If the setting value's length is not the same as the <see cref="Rank"/></exception>
-	ReadOnlySpan<char> Labels { get; set; }
+	ReadOnlySpan<char> Labels { get; }
 	#endregion
 
 	#region method
@@ -299,22 +298,6 @@ public interface ILabeledTensor<T> where T : unmanaged, IBaseNumber<T>
 	/// <returns>The <see cref="char"/> label at <paramref name="index"/></returns>
 	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of <see cref="Rank"/></exception>
 	char GetLabel(int index);
-
-	/// <summary>
-	/// When implemented by a derived class, set the label at rank <paramref name="index"/> to <paramref name="value"/>
-	/// </summary>
-	/// <param name="index">The index of the rank whose label will be set</param>
-	/// <param name="value">The <see cref="char"/> label at <paramref name="index"/> to set</param>
-	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="index"/> is out of range of <see cref="Rank"/></exception>
-	void SetLabel(int index, char value);
-
-	/// <summary>
-	/// When implemented by a derived class, set the label(s) used to mark each index of this tensor
-	/// </summary>
-	/// <param name="labels">The label(s) to set as an array of <see cref="char"/></param>
-	/// <exception cref="ArgumentNullException">If <paramref name="labels"/> is null or empty</exception>
-	/// <exception cref="ArgumentException">If the length of <paramref name="labels"/> is not the same as the <see cref="Rank"/></exception>
-	void SetLabels(params char[] labels);
 	#endregion
 }
 

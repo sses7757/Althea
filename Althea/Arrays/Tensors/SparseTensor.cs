@@ -115,16 +115,7 @@ public abstract partial class SparseTensor<T, TInd, TS, TSInd> : ISparseArray<T,
 
 	/// <inheritdoc/>
 	[JsonIgnore]
-	public ReadOnlySpan<char> Labels
-	{
-		get => this.labels.AsSpan(this.rank);
-		set
-		{
-			if (value.Length != this.rank)
-				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(value));
-			this.labels.CopyFromSpan(value);
-		}
-	}
+	public ReadOnlySpan<char> Labels => this.labels.AsSpan(this.rank);
 
 	[JsonInclude]
 	private long[] SizeArray => this.Size.ToArray();
@@ -141,20 +132,13 @@ public abstract partial class SparseTensor<T, TInd, TS, TSInd> : ISparseArray<T,
 	}
 
 	/// <inheritdoc/>
-	public void SetLabel(int index, char label)
-	{
-		if (index < 0 || index >= this.rank)
-			throw new ArgumentOutOfRangeException(nameof(index));
-		this.labels[index] = label;
-	}
+	public abstract SparseTensor<T, TInd, TS, TSInd> SetLabel(int index, char label);
 
 	/// <inheritdoc/>
-	public void SetLabels(params char[] labels)
-	{
-		if (labels.Length != this.rank)
-			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(labels));
-		this.labels.CopyFromSpan(labels);
-	}
+	public abstract SparseTensor<T, TInd, TS, TSInd> SetLabels(ReadOnlySpan<char> labels);
+
+	/// <inheritdoc/>
+	public SparseTensor<T, TInd, TS, TSInd> SetLabels(params char[] labels) => this.SetLabels((ReadOnlySpan<char>)labels);
 
 	/// <summary>
 	/// Create a new <see cref="SparseTensor{T, TInd, TS, TSInd}"/> with given parameters.
