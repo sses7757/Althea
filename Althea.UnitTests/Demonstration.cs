@@ -3,7 +3,9 @@ using System.Runtime.InteropServices;
 
 using Althea.Array;
 using Althea.Backend.Cuda;
+using Althea.Backend.Cuda.LinearAlgebra;
 using Althea.Backend.Cuda.LinearAlgebra.Dense;
+using Althea.Backend.Cuda.LinearAlgebra.Sparse;
 using Althea.Backend.Cuda.Storage;
 using Althea.Backend.Storage;
 using Althea.Helpers;
@@ -248,14 +250,37 @@ namespace Althea.UnitTests.BlockEllDemo
 	{
 		private const SparseFormat.Type EllType = (SparseFormat.Type)(1 << 2);
 
-		public override SparseFormat Format => new(EllType, SparseFormat.Blocking.Simple, SparseFormat.Major.Row);
+		internal static readonly SparseFormat BlockEllFormat = new(EllType, SparseFormat.Blocking.Simple, SparseFormat.Major.Row);
+
+		public override SparseFormat Format => BlockEllFormat;
 
 		// implement other methods
 	}
 
 	public class BlockEllSparseApi : Althea.Backend.Cuda.LinearAlgebra.Sparse.Api
 	{
+		public unsafe override bool MatrixSparseMultiplyDense<T, TInd, TS1, TS2, TS3, TSInd>(MatrixOperation opA, MatrixOperation opB, long n, T α, ISparseArray<T, TInd, TS1, TSInd> A, TS2 B, long ldb, T β, TS3 C, long ldc)
+		{
+			if (A.Format != BlockEllSparseMatrix<T, TInd, TS1, TSInd>.BlockEllFormat)
+				return base.MatrixSparseMultiplyDense(opA, opB, n, α, A, B, ldb, β, C, ldc);
+			if (T.Type.IsInteger() && (T.Size != 1 || opA != MatrixOperation.None || opB != MatrixOperation.None))
+				return false; // not supported by CUDA
+			if (opA.HasConjugate() || opB.HasConjugate())
+				return false; // not supported by CUDA
+			if (!MemoryPointerChecker.GetPointer(this, A, out var pvalA, out var pindA, out _, out var nnzA))
+				return false;
+			// other checks ...
 
+			// create sparse matrix description using `cusparseCreateBlockedEll`
+			// invoke `cusparseSpMM`
+			return true;
+		}
+	}
+
+	public static unsafe class NativeMethods
+	{
+		[DllImport(@"cusparse")]
+		internal static extern CudaSparseStatus cusparseCreateBlockedEll(out IntPtr spMatDescr, long rows, long cols, long ellBlockSize, long ellCols, void* ellColInd, void* ellValue, IndexType ellIdxType, IndexBase idxBase, CudaDataType valueType);
 	}
 }
 #endregion
@@ -273,10 +298,10 @@ namespace Althea.UnitTests.MultiGpuDemo
 			NativeMethods.cublasXtCreate(out this.xtHandle);
 		}
 
-		public override void Dispose()
+		public override void Dispose(bool disposing)
 		{
+			base.Dispose(disposing);
 			NativeMethods.cublasXtDestroy(this.xtHandle);
-			base.Dispose();
 		}
 
 		public override bool GeneralMatricesMultiply<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc)

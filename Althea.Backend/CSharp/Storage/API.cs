@@ -27,6 +27,7 @@ public class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
 	internal protected static readonly Api Default = new();
 	#endregion
 
+
 	#region operations
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static bool CheckType<TP>() where TP : IPointer<TP> => typeof(TP) == typeof(CpuMemoryPointer);

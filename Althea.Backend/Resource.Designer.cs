@@ -97,6 +97,15 @@ namespace Althea.Backend {
         }
         
         /// <summary>
+        ///   查找类似 The CuFile system is not supported by CUDA. 的本地化字符串。
+        /// </summary>
+        internal static string CuFileNotSupport {
+            get {
+                return ResourceManager.GetString("CuFileNotSupport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The CUDA compute capability {0} of current CUDA device is less than required {1}. 的本地化字符串。
         /// </summary>
         internal static string InsufficientCudaCapability {

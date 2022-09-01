@@ -4901,6 +4901,49 @@
             When implemented by a derived class, get a <see cref="T:System.Boolean"/> indicating whether this instance is disposed or not
             </summary>
         </member>
+        <member name="P:Althea.IAbstractRuntimeApi`1.Properties">
+            <summary>
+            When implemented by the derided class, get the singleton <see cref="T:Althea.IAbstractRuntimeApi`1.DynamicProperties"/> used to dynamically get or set underlying instance's properties.
+            </summary>
+            <remarks>The default implementation simply returns a singleton of <see cref="T:Althea.IAbstractRuntimeApi`1.NoDynamicProperties"/>.</remarks>
+        </member>
+        <member name="T:Althea.IAbstractRuntimeApi`1.DynamicProperties">
+            <summary>
+            The dynamic abstract class for getting and setting API instance's properties, only <see cref="M:Althea.IAbstractRuntimeApi`1.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)"/> and <see cref="M:Althea.IAbstractRuntimeApi`1.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)"/> are required to implement.
+            </summary>
+        </member>
+        <member name="F:Althea.IAbstractRuntimeApi`1.DynamicProperties.api">
+            <summary>
+            The API instance of the properties to be set
+            </summary>
+        </member>
+        <member name="M:Althea.IAbstractRuntimeApi`1.DynamicProperties.#ctor(`0)">
+            <summary>
+            The constructor that sets the <see cref="F:Althea.IAbstractRuntimeApi`1.DynamicProperties.api"/>
+            </summary>
+        </member>
+        <member name="M:Althea.IAbstractRuntimeApi`1.DynamicProperties.#ctor">
+            <summary>
+            The constructor that sets the <see cref="F:Althea.IAbstractRuntimeApi`1.DynamicProperties.api"/> to null
+            </summary>
+        </member>
+        <member name="M:Althea.IAbstractRuntimeApi`1.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.IAbstractRuntimeApi`1.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.IAbstractRuntimeApi`1.NoDynamicProperties">
+            <summary>
+            The dynamic class for API instances with no public properties to be get or set
+            </summary>
+        </member>
+        <member name="M:Althea.IAbstractRuntimeApi`1.NoDynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.IAbstractRuntimeApi`1.NoDynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+            <inheritdoc/>
+        </member>
         <member name="T:Althea.AbstractApiSelector`1">
             <summary>
             The base abstract class for all API selector classes defined in and out of this assembly.

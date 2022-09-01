@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Dynamic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -14,9 +15,25 @@ namespace Althea.Backend.Cuda.Storage;
 public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
 {
 	#region basic
+	private static readonly bool HasCuFile;
+
+	static Api()
+	{
+		try
+		{
+			var err = NativeMethods.cuFileDriverOpen();
+			err.Check();
+			HasCuFile = true;
+		}
+		catch (Exception)
+		{
+			HasCuFile = false;
+		}
+	}
+
 	internal static readonly Api Default = new(false);
 
-	private readonly ConcurrentDictionary<IntPtr, IntPtr>? fileBuffers;
+	private ConcurrentDictionary<IntPtr, IntPtr>? fileBuffers;
 
 	/// <summary>
 	/// The default constructor of <see cref="Api"/> that does not support CUDA File
@@ -30,19 +47,14 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 	/// <remarks>If the invocation of <see cref="NativeMethods.cuFileDriverOpen"/> failed, the caller must invoke that method when available later</remarks>
 	public Api(bool supportCuFile)
 	{
-		if (!supportCuFile)
-			return;
-		try
-		{
-			this.CudaFileSupported = NativeMethods.cuFileDriverOpen().IsSuccess;
-			if (this.CudaFileSupported)
-				this.fileBuffers = new();
-		}
-		catch (Exception e)
-		{
-			this.CudaFileSupported = false;
-			Helpers.Log.Write($"Error occurred when opening CUDA file driver: {e}", level: Helpers.LogLevel.Error);
-		}
+		if (supportCuFile)
+			this.EnableCuFile();
+		this.Properties = new DynamicProperties(this);
+	}
+
+	private void EnableCuFile()
+	{
+		this.fileBuffers ??= new();
 	}
 
 	/// <inheritdoc/>
@@ -51,18 +63,15 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 	/// <inheritdoc/>
 	public void Dispose()
 	{
-		if (this.CudaFileSupported)
+		if (this.CudaFileEnable)
 		{
-			var err = NativeMethods.cuFileDriverClose();
-			if (!err.IsSuccess)
-				Helpers.Log.Write($"Error occurred when closing CUDA file driver: {err.FileOpResult} ({err.DriverResult})", level: Helpers.LogLevel.Error);
 			if (this.fileBuffers is not null)
 			{
 				foreach (var kv in this.fileBuffers)
 				{
 					var error = NativeMethods.cuFileBufDeregister(kv.Value.ToPointer());
 					if (!error.IsSuccess)
-						Helpers.Log.Write($"Error occurred when deregistering CUDA file buffer: {err.FileOpResult} ({err.DriverResult})", level: Helpers.LogLevel.Error);
+						Helpers.Log.Write($"Error occurred when deregistering CUDA file buffer: {error.FileOpResult} ({error.DriverResult})", level: Helpers.LogLevel.Error);
 				}
 			}
 		}
@@ -70,18 +79,25 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 		GC.SuppressFinalize(this);
 	}
 
-	/// <summary>
-	/// Get a <see cref="bool"/> indicating whether the GPUDirect® Storage is supported by this instance when initializing it.
-	/// </summary>
-	public bool CudaFileSupported { get; } = false;
+	private bool cuFileEnabled = false;
 
 	/// <summary>
-	/// Get or set a <see cref="bool"/> indicating whether the GPU file's corresponding memory buffer shall be cached or not.
+	/// Get or set a <see cref="bool"/> indicating whether the GPUDirect® Storage shall be enabled by this instance when initializing it.
 	/// </summary>
-	public bool CudaFileCacheBuffer { get; set; } = false;
+	/// <exception cref="NotSupportedException">If CUDA GPUDirect® Storage is not supported</exception>
+	public bool CudaFileEnable
+	{
+		get => this.cuFileEnabled;
+		set
+		{
+			if (value && !HasCuFile)
+				throw new NotSupportedException();
+			this.cuFileEnabled = value;
+		}
+	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private bool Supported(StorageLocation location) => location.Type == LocationType.GpuRam || (this.CudaFileSupported && location == CudaFilePointer.Location);
+	private bool Supported(StorageLocation location) => location.Type == LocationType.GpuRam || (this.CudaFileEnable && location == CudaFilePointer.Location);
 
 	private string _fileFolder = Path.GetTempPath();
 
@@ -120,6 +136,51 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 	}
 	#endregion
 
+	#region dynamic
+	/// <inheritdoc/>
+	public dynamic Properties { get; }
+
+	/// <inheritdoc/>
+	protected sealed class DynamicProperties : IAbstractApi.DynamicProperties
+	{
+		internal DynamicProperties(Api @this) : base(@this) { }
+
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			if (binder.Name == nameof(CudaFileEnable) && binder.ReturnType == typeof(bool))
+			{
+				result = (this.api as Api)!.CudaFileEnable;
+				return true;
+			}
+			if (binder.Name == nameof(TempFileFolder) && binder.ReturnType == typeof(string))
+			{
+				result = (this.api as Api)!.TempFileFolder;
+				return true;
+			}
+			result = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
+		{
+			if (binder.Name == nameof(CudaFileEnable) && value is bool b)
+			{
+				(this.api as Api)!.CudaFileEnable = b;
+				return true;
+			}
+			if (binder.Name == nameof(TempFileFolder) && value is string s)
+			{
+				(this.api as Api)!.TempFileFolder = s;
+				return true;
+			}
+			return false;
+		}
+	}
+	#endregion
+
+
 	#region allocate and free
 	/// <inheritdoc/>
 	public virtual bool Allocate<TP>(long length, out TP result) where TP : notnull, IPointer<TP>
@@ -147,7 +208,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 		}
 		else if (result is CudaFilePointer)
 		{
-			if (!this.CudaFileSupported)
+			if (!this.CudaFileEnable)
 				return false;
 			var ptr = new CudaFilePointer(this.TempFile);
 			result = Unsafe.As<CudaFilePointer, TP>(ref ptr);
@@ -168,7 +229,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 		}
 		else if (file.IsValid())
 		{
-			if (!this.CudaFileSupported)
+			if (!this.CudaFileEnable)
 				return false;
 			file.Dispose();
 			if (this.fileBuffers!.TryGetValue(file.Handle, out var ptr))
@@ -267,7 +328,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 		actualCopied = Math.Min(source.LengthInBytes / sizeof(T), destination.LengthInBytes / sizeof(T)) * sizeof(T);
 		var (gpuSrc, fileSrc) = source.Pointer.FromGeneric();
 		var (gpuDst, fileDst) = destination.Pointer.FromGeneric();
-		if (!this.CudaFileSupported && (fileSrc.IsValid() || fileDst.IsValid()))
+		if (!this.CudaFileEnable && (fileSrc.IsValid() || fileDst.IsValid()))
 			return false;
 		CpuMemoryPointer cpuSrc = default, cpuDst = default;
 		if (gpuSrc == default && fileSrc == default)
@@ -332,7 +393,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 
 		var (gpuSrc, fileSrc) = source.Pointer.FromGeneric();
 		var (gpuDst, fileDst) = destination.Pointer.FromGeneric();
-		if (!this.CudaFileSupported && (fileSrc.IsValid() || fileDst.IsValid()))
+		if (!this.CudaFileEnable && (fileSrc.IsValid() || fileDst.IsValid()))
 			return false;
 		CpuMemoryPointer cpuSrc = default, cpuDst = default;
 		if (gpuSrc == default && fileSrc == default)

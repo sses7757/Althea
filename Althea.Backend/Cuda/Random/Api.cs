@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Althea.Random;
 
@@ -14,8 +15,35 @@ namespace Althea.Backend.Cuda.Random;
 public class Api : IBindedDevice, Althea.Random.IAbstractApi
 {
 	#region basic
-	private readonly IntPtr generator;
-	private readonly bool canHaveSeed;
+	private GeneratorType type;
+	private Ordering order;
+	private IntPtr generator;
+	private bool canSeed;
+
+	/// <summary>
+	/// Get whether the current generator can set seed or not
+	/// </summary>
+	public bool CanHaveSeed => this.canSeed;
+
+	/// <summary>
+	/// Get or set the generator used by this instance API
+	/// </summary>
+	public (GeneratorType type, Ordering order) Generator
+	{
+		get => (this.type, this.order);
+		set
+		{
+			lock (this)
+			{
+				NativeMethods.curandCreateGenerator(out var generator, type).Check();
+				NativeMethods.curandSetGeneratorOrdering(generator, order).Check();
+				NativeMethods.curandDestroyGenerator(this.generator);
+				this.generator = generator;
+				this.canSeed = type is >= GeneratorType.PseudoDefault and <= GeneratorType.QuasiDefault && order == Ordering.Pseudoeseded;
+				this.type = value.type; this.order = value.order;
+			}
+		}
+	}
 
 	/// <summary>
 	/// The default constructor of <see cref="Api"/>
@@ -27,10 +55,9 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 	/// </summary>
 	public Api(GeneratorType type = GeneratorType.PseudoDefault, Ordering order = Ordering.Pseudoeseded)
 	{
-		NativeMethods.curandCreateGenerator(out this.generator, type).Check();
-		NativeMethods.curandSetGeneratorOrdering(generator, order).Check();
-		this.canHaveSeed = type is >= GeneratorType.PseudoDefault and <= GeneratorType.QuasiDefault && order == Ordering.Pseudoeseded;
+		this.Generator = (type, order);
 		this.BindedDeviceID = Runtime.CurrentDeviceID;
+		this.Properties = new DynamicProperties(this);
 	}
 
 	/// <inheritdoc/>
@@ -46,6 +73,45 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 
 	/// <inheritdoc/>
 	public int BindedDeviceID { get; }
+	#endregion
+
+	#region dynamic
+	/// <inheritdoc/>
+	public dynamic Properties { get; }
+
+	/// <inheritdoc/>
+	protected sealed class DynamicProperties : Althea.Random.IAbstractApi.DynamicProperties
+	{
+		internal DynamicProperties(Api @this) : base(@this) { }
+
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			if (binder.Name == nameof(BindedDeviceID) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.BindedDeviceID;
+				return true;
+			}
+			if (binder.Name == nameof(Generator) && binder.ReturnType == typeof((GeneratorType, Ordering)))
+			{
+				result = (this.api as Api)!.Generator;
+				return true;
+			}
+			result = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
+		{
+			if (binder.Name == nameof(Generator) && value is ValueTuple<GeneratorType, Ordering> g)
+			{
+				(this.api as Api)!.Generator = g;
+				return true;
+			}
+			return false;
+		}
+	}
 	#endregion
 
 	#region methods

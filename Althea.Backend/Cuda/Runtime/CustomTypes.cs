@@ -8,7 +8,10 @@ using Althea.Helpers;
 namespace Althea.Backend.Cuda;
 
 #region CDUA device property
-internal interface IBindedDevice
+/// <summary>
+/// Indicates that the inherited class instances are binded to certain CUDA devices
+/// </summary>
+public interface IBindedDevice
 {
 	/// <summary>
 	/// Get the device ID that binds to this instance when initializing it.

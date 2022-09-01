@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
 using Althea.LinearAlgebra;
@@ -136,6 +137,7 @@ public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAb
 		NativeMethods.cublasSetPointerMode(this.cublasHandle, CuBlasPointerMode.Host);
 		this.UseAtomicsMode = true;
 		NativeMethods.cusolverDnCreate(out this.cusolverHandle).Check();
+		this.Properties = new DynamicProperties(this);
 	}
 
 	/// <inheritdoc/>
@@ -170,6 +172,45 @@ public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAb
 			_ => null,
 		};
 		func(this.cublasHandle, n, from, incx, to, incy).Check();
+	}
+	#endregion
+
+	#region dynamic
+	/// <inheritdoc/>
+	public dynamic Properties { get; }
+
+	/// <inheritdoc/>
+	protected sealed class DynamicProperties : IBlasAbstractApi.DynamicProperties
+	{
+		internal DynamicProperties(Api @this) : base(@this) { } 
+
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			if (binder.Name == nameof(BindedDeviceID) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.BindedDeviceID;
+				return true;
+			}
+			if (binder.Name == nameof(UseAtomicsMode) && binder.ReturnType == typeof(bool))
+			{
+				result = (this.api as Api)!.UseAtomicsMode;
+				return true;
+			}
+			result = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
+		{
+			if (binder.Name == nameof(UseAtomicsMode) && value is bool b)
+			{
+				(this.api as Api)!.UseAtomicsMode = b;
+				return true;
+			}
+			return false;
+		}
 	}
 	#endregion
 }

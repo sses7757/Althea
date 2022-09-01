@@ -17,7 +17,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra;
 
 /// <summary>
 /// The C# back-end of <see cref="IBlasAbstractApi"/> that utilizes <see cref="System.Runtime.Intrinsics"/> and <see cref="Vector{T}"/>.<br/>
-/// Only supports storages on CPU memory of primitive and pre-defined types and single-threaded vector operations.
+/// Only supports storages on CPU memory of primitive and predefined types and single-threaded vector operations.
 /// </summary>
 public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, IConversionAbstractApi, ILapackAbstractApi, IIndexOperationAbstractApi
 {

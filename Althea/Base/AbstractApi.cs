@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Dynamic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
@@ -41,6 +42,62 @@ public interface IAbstractRuntimeApi<TApi> : IDisposable where TApi : IAbstractR
 		catch (Exception e)
 		{
 			throw new InvalidOperationException(Resources.BackendError.CannotInitialize, e);
+		}
+	}
+	#endregion
+
+	#region dynamic set properties
+	/// <summary>
+	/// When implemented by the derided class, get the singleton <see cref="DynamicProperties"/> used to dynamically get or set underlying instance's properties.
+	/// </summary>
+	/// <remarks>The default implementation simply returns a singleton of <see cref="NoDynamicProperties"/>.</remarks>
+	virtual dynamic Properties => noDynamic;
+
+	private static readonly NoDynamicProperties noDynamic = new();
+
+	/// <summary>
+	/// The dynamic abstract class for getting and setting API instance's properties, only <see cref="TryGetMember(GetMemberBinder, out object?)"/> and <see cref="TrySetMember(SetMemberBinder, object?)"/> are required to implement.
+	/// </summary>
+	protected abstract class DynamicProperties : DynamicObject
+	{
+		/// <summary>
+		/// The API instance of the properties to be set
+		/// </summary>
+		protected readonly TApi? api;
+
+		/// <summary>
+		/// The constructor that sets the <see cref="api"/>
+		/// </summary>
+		protected DynamicProperties(TApi api) => this.api = api;
+
+		/// <summary>
+		/// The constructor that sets the <see cref="api"/> to null
+		/// </summary>
+		protected DynamicProperties() => this.api = default;
+
+		/// <inheritdoc/>
+		public abstract override bool TryGetMember(GetMemberBinder binder, out object? result);
+
+		/// <inheritdoc/>
+		public abstract override bool TrySetMember(SetMemberBinder binder, object? value);
+	}
+
+	/// <summary>
+	/// The dynamic class for API instances with no public properties to be get or set
+	/// </summary>
+	protected sealed class NoDynamicProperties : DynamicProperties
+	{
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			result = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
+		{
+			return false;
 		}
 	}
 	#endregion

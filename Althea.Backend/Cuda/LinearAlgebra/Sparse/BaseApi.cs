@@ -23,12 +23,6 @@ public unsafe partial class Api : IBindedDevice, IConversionAbstractApi, IComput
 	public int BindedDeviceID { get; }
 
 	/// <summary>
-	/// Get or set a <see cref="bool"/> to indicate whether this implementation shall use the polar decomposition to perform the singular value decomposition or the legacy QR decomposition to do so.
-	/// </summary>
-	/// <remarks>The polar decomposition approach is much faster but may leads to larger error(s) when the matrix to be decomposed is (near) singularity.</remarks>
-	public bool SvdViaPolarDecomposition { get; set; }
-
-	/// <summary>
 	/// The default constructor of <see cref="Api"/>
 	/// </summary>
 	public Api()

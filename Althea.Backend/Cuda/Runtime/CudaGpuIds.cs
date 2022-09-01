@@ -342,7 +342,8 @@ internal static class CudaMemoryPointerExtension
 }
 #endregion
 
-internal static unsafe partial class MemoryPointerChecker
+#pragma warning disable CS1591
+public static unsafe partial class MemoryPointerChecker
 {
 	#region CUDA back-end
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

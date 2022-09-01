@@ -129,6 +129,9 @@
   <data name="CuFileFS" xml:space="preserve">
     <value>File system error occurred during CuFile read/write.</value>
   </data>
+  <data name="CuFileNotSupport" xml:space="preserve">
+    <value>The CuFile system is not supported by CUDA.</value>
+  </data>
   <data name="InsufficientCudaCapability" xml:space="preserve">
     <value>The CUDA compute capability {0} of current CUDA device is less than required {1}.</value>
   </data>

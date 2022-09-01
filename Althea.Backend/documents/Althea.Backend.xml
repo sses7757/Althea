@@ -228,7 +228,7 @@
         <member name="T:Althea.Backend.CSharp.LinearAlgebra.Api">
             <summary>
             The C# back-end of <see cref="T:Althea.LinearAlgebra.Dense.IBlasAbstractApi"/> that utilizes <see cref="N:System.Runtime.Intrinsics"/> and <see cref="T:System.Numerics.Vector`1"/>.<br/>
-            Only supports storages on CPU memory of primitive and pre-defined types and single-threaded vector operations.
+            Only supports storages on CPU memory of primitive and predefined types and single-threaded vector operations.
             </summary>
         </member>
         <member name="P:Althea.Backend.CSharp.LinearAlgebra.Api.Disposed">
@@ -443,7 +443,7 @@
             <summary>
             The C# back-end of <see cref="T:Althea.Random.IAbstractApi"/> that utilizes <see cref="T:System.Random"/>.
             </summary>
-            <remarks>Only supports storages on CPU memory of primitive and pre-defined real types.<br/>
+            <remarks>Only supports storages on CPU memory of primitive and predefined real types.<br/>
             Only supports the <see cref="T:Althea.Random.UniformDistribution`1"/> and <see cref="T:Althea.Random.RandomBitsDistribution`1"/>.</remarks>
         </member>
         <member name="P:Althea.Backend.CSharp.Random.Api.Disposed">
@@ -555,6 +555,31 @@
             <exception cref="T:System.NotSupportedException">If <paramref name="array"/>'s length is not a power of 2</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="output"/>'s length != <paramref name="array"/>'s length</exception>
         </member>
+        <member name="T:Althea.Backend.Cuda.LinearAlgebra.CuBlasOperation">
+            <summary>
+            The CUDA BLAS operations
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.LinearAlgebra.CuBlasOperation.None">
+            <summary>
+            No transpose
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.LinearAlgebra.CuBlasOperation.Transpose">
+            <summary>
+            Only transpose
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.LinearAlgebra.CuBlasOperation.ConjugateTranspose">
+            <summary>
+            Conjugate and transpose
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.LinearAlgebra.CuBlasOperation.Conjugate">
+            <summary>
+            Only conjugate, not supported
+            </summary>
+        </member>
         <member name="T:Althea.Backend.Cuda.LinearAlgebra.Dense.Api">
             <summary>
             The CUDA back-end of the <see cref="T:Althea.LinearAlgebra.Dense.IBlasAbstractApi"/>, <see cref="T:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi"/> and <see cref="T:Althea.LinearAlgebra.Dense.ILapackAbstractApi"/> that utilizes cuBLAS and cuSOLVER API with 11.2 ≤ CUDA version (and maybe future versions)
@@ -602,7 +627,24 @@
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.Dispose">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.Dispose(System.Boolean)">
+            <summary>
+            The actual disposing method
+            </summary>
+        </member>
         <member name="P:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.Disposed">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.Properties">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.DynamicProperties">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.HorizontalAbsoluteValueArgMinMax``2(System.Boolean,``1,System.Int64,System.Int64@)">
@@ -1183,12 +1225,6 @@
         <member name="P:Althea.Backend.Cuda.LinearAlgebra.Sparse.Api.BindedDeviceID">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Backend.Cuda.LinearAlgebra.Sparse.Api.SvdViaPolarDecomposition">
-            <summary>
-            Get or set a <see cref="T:System.Boolean"/> to indicate whether this implementation shall use the polar decomposition to perform the singular value decomposition or the legacy QR decomposition to do so.
-            </summary>
-            <remarks>The polar decomposition approach is much faster but may leads to larger error(s) when the matrix to be decomposed is (near) singularity.</remarks>
-        </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Sparse.Api.#ctor">
             <summary>
             The default constructor of <see cref="T:Althea.Backend.Cuda.LinearAlgebra.Sparse.Api"/>
@@ -1196,6 +1232,12 @@
         </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Sparse.Api.Dispose">
             <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Sparse.Api.Dispose(System.Boolean)">
+            <summary>
+            The actual disposing methods
+            </summary>
+            <param name="disposing"></param>
         </member>
         <member name="P:Althea.Backend.Cuda.LinearAlgebra.Sparse.Api.Disposed">
             <inheritdoc/>
@@ -1424,6 +1466,16 @@
             </summary>
             <remarks>Other distributions can be easily supported by utilizing the result of uniform distributions.</remarks>
         </member>
+        <member name="P:Althea.Backend.Cuda.Random.Api.CanHaveSeed">
+            <summary>
+            Get whether the current generator can set seed or not
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Cuda.Random.Api.Generator">
+            <summary>
+            Get or set the generator used by this instance API
+            </summary>
+        </member>
         <member name="M:Althea.Backend.Cuda.Random.Api.#ctor">
             <summary>
             The default constructor of <see cref="T:Althea.Backend.Cuda.Random.Api"/>
@@ -1441,6 +1493,18 @@
             <inheritdoc/>
         </member>
         <member name="P:Althea.Backend.Cuda.Random.Api.BindedDeviceID">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.Cuda.Random.Api.Properties">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Backend.Cuda.Random.Api.DynamicProperties">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.Random.Api.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.Random.Api.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.Random.Api.FillWithRandom``3(``1,``2@)">
@@ -2149,6 +2213,11 @@
         <member name="M:Althea.Backend.Cuda.BrainHalf.op_Division(Althea.Backend.Cuda.BrainHalf,Althea.Backend.Cuda.BrainHalf)">
             <inheritdoc/>
         </member>
+        <member name="T:Althea.Backend.Cuda.MemoryPointerChecker">
+            <summary>
+            The pointer checker functions for <see cref="T:Althea.Backend.Cuda.CudaMemoryPointer`1"/>s
+            </summary>
+        </member>
         <member name="T:Althea.Backend.Cuda.GpuId0">
             <summary>
             The struct with nothing for GPU 0.
@@ -2269,6 +2338,11 @@
             <typeparam name="T">Any unmanaged type as the data type</typeparam>
             <param name="pointer">The allocated pointer on managed memory</param>
             <param name="length">The length in <typeparamref name="T"/></param>
+        </member>
+        <member name="T:Althea.Backend.Cuda.IBindedDevice">
+            <summary>
+            Indicates that the inherited class instances are binded to certain CUDA devices
+            </summary>
         </member>
         <member name="P:Althea.Backend.Cuda.IBindedDevice.BindedDeviceID">
             <summary>
@@ -3728,15 +3802,11 @@
         <member name="M:Althea.Backend.Cuda.Storage.Api.Dispose">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Backend.Cuda.Storage.Api.CudaFileSupported">
+        <member name="P:Althea.Backend.Cuda.Storage.Api.CudaFileEnable">
             <summary>
-            Get a <see cref="T:System.Boolean"/> indicating whether the GPUDirect® Storage is supported by this instance when initializing it.
+            Get or set a <see cref="T:System.Boolean"/> indicating whether the GPUDirect® Storage shall be enabled by this instance when initializing it.
             </summary>
-        </member>
-        <member name="P:Althea.Backend.Cuda.Storage.Api.CudaFileCacheBuffer">
-            <summary>
-            Get or set a <see cref="T:System.Boolean"/> indicating whether the GPU file's corresponding memory buffer shall be cached or not.
-            </summary>
+            <exception cref="T:System.NotSupportedException">If CUDA GPUDirect® Storage is not supported</exception>
         </member>
         <member name="P:Althea.Backend.Cuda.Storage.Api.TempFileFolder">
             <summary>
@@ -3745,6 +3815,18 @@
             <exception cref="T:System.ArgumentException">If the folder to set is not an existing folder</exception>
             <exception cref="T:System.UnauthorizedAccessException">If the program does not have permission to write to the folder</exception>
             <exception cref="T:System.IO.IOException">Other I/O exceptions</exception>
+        </member>
+        <member name="P:Althea.Backend.Cuda.Storage.Api.Properties">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Backend.Cuda.Storage.Api.DynamicProperties">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.Storage.Api.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.Storage.Api.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.Storage.Api.Allocate``1(System.Int64,``0@)">
             <inheritdoc/>
@@ -4446,6 +4528,18 @@
             Get or set the algorithm used in the contractions
             </summary>
         </member>
+        <member name="P:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.Properties">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.DynamicProperties">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.Permute``3(Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``2},System.ReadOnlySpan{System.Int32})">
             <inheritdoc/>
         </member>
@@ -4788,6 +4882,28 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.Transformer.Api.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="P:Althea.Backend.Cuda.Transformer.Api.CachePlans">
+            <summary>
+            Get or set a <see cref="T:System.Boolean"/> indicating whether this <see cref="T:Althea.Backend.Cuda.Transformer.Api"/> instance shall cache invoked FFT plans for future use or not. This only works for 1D FFT.
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Cuda.Transformer.Api.CachingCapacity">
+            <summary>
+            Get or set the number of cached FFT plans
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Cuda.Transformer.Api.Properties">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Backend.Cuda.Transformer.Api.DynamicProperties">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.Transformer.Api.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Cuda.Transformer.Api.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.Transformer.Api.FourierTransform``3(System.Boolean,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``2})">
@@ -6397,16 +6513,38 @@
             The MKL back-end of <see cref="T:Althea.Transformer.IAbstractApi"/> that supports storage locations of CPU memory.
             </summary>
         </member>
+        <member name="M:Althea.Backend.Mkl.Transformer.Api.#ctor">
+            <summary>
+            The default constructor
+            </summary>
+        </member>
         <member name="P:Althea.Backend.Mkl.Transformer.Api.Disposed">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Mkl.Transformer.Api.Dispose">
             <inheritdoc/>
         </member>
-        <member name="P:Althea.Backend.Mkl.Transformer.Api.CacheFftPlan">
+        <member name="P:Althea.Backend.Mkl.Transformer.Api.CachePlans">
             <summary>
             Get or set a <see cref="T:System.Boolean"/> indicating whether this <see cref="T:Althea.Backend.Mkl.Transformer.Api"/> instance shall cache invoked FFT plans for future use or not. This only works for 1D FFT.
             </summary>
+        </member>
+        <member name="P:Althea.Backend.Mkl.Transformer.Api.CachingCapacity">
+            <summary>
+            Get or set the number of cached FFT plans
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Mkl.Transformer.Api.Properties">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Backend.Mkl.Transformer.Api.DynamicProperties">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Mkl.Transformer.Api.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Mkl.Transformer.Api.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Mkl.Transformer.Api.FourierTransform``3(System.Boolean,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``2})">
             <inheritdoc/>
@@ -6586,6 +6724,11 @@
         <member name="P:Althea.Backend.Resource.CuFileFS">
             <summary>
               查找类似 File system error occurred during CuFile read/write. 的本地化字符串。
+            </summary>
+        </member>
+        <member name="P:Althea.Backend.Resource.CuFileNotSupport">
+            <summary>
+              查找类似 The CuFile system is not supported by CUDA. 的本地化字符串。
             </summary>
         </member>
         <member name="P:Althea.Backend.Resource.InsufficientCudaCapability">

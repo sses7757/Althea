@@ -195,8 +195,6 @@ internal record struct DftiDescriptor : IDisposable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void Dispose()
 	{
-		var err = NativeMethods.DftiFreeDescriptor(ref this.handle);
-		if (err != MklDftError.Success)
-			Log.Write($"Error in MKL DFT descriptor disposition: {err}", level: LogLevel.Error);
+		NativeMethods.DftiFreeDescriptor(ref this.handle);
 	}
 }

@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Althea.Array;
 using Althea.Backend.Cuda.Storage;
@@ -31,6 +32,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		NM.cutensorInit(out this.handle).Check();
 		this.ContractAlgorithm = ContractionAlgorithm.Default;
 		this.BindedDeviceID = Runtime.CurrentDeviceID;
+		this.Properties = new DynamicProperties(this);
 	}
 
 	/// <inheritdoc/>
@@ -78,6 +80,56 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 
 	private ContractFind _algorithmFind = default;
 	#endregion
+
+	#region dynamic
+	/// <inheritdoc/>
+	public dynamic Properties { get; }
+
+	/// <inheritdoc/>
+	protected sealed class DynamicProperties : IBaseAbstractApi.DynamicProperties
+	{
+		internal DynamicProperties(Api @this) : base(@this) { }
+
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			if (binder.Name == nameof(BindedDeviceID) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.BindedDeviceID;
+				return true;
+			}
+			if (binder.Name == nameof(ContractPlanCacheSize) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.ContractPlanCacheSize;
+				return true;
+			}
+			if (binder.Name == nameof(ContractAlgorithm) && binder.ReturnType == typeof(ContractionAlgorithm))
+			{
+				result = (this.api as Api)!.ContractAlgorithm;
+				return true;
+			}
+			result = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
+		{
+			if (binder.Name == nameof(ContractPlanCacheSize) && value is int i)
+			{
+				(this.api as Api)!.ContractPlanCacheSize = i;
+				return true;
+			}
+			if (binder.Name == nameof(ContractAlgorithm) && value is ContractionAlgorithm c)
+			{
+				(this.api as Api)!.ContractAlgorithm = c;
+				return true;
+			}
+			return false;
+		}
+	}
+	#endregion
+
 
 	#region contract cache
 	internal readonly struct DenseTensorDescription : IEquatable<DenseTensorDescription>

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Dynamic;
 using System.Runtime.CompilerServices;
 
 using Althea.Array;
@@ -24,6 +25,7 @@ public unsafe class Api : Althea.Transformer.IAbstractApi
 	public Api()
 	{
 		this.cacher = new(16);
+		this.Properties = new DynamicProperties(this);
 	}
 
 	/// <inheritdoc/>
@@ -47,6 +49,66 @@ public unsafe class Api : Althea.Transformer.IAbstractApi
 
 	private LimitSizedCacher<FftInfo, FftPlan> cacher;
 
+	/// <summary>
+	/// Get or set a <see cref="bool"/> indicating whether this <see cref="Api"/> instance shall cache invoked FFT plans for future use or not. This only works for 1D FFT.
+	/// </summary>
+	public bool CachePlans { get; set; } = true;
+
+	/// <summary>
+	/// Get or set the number of cached FFT plans
+	/// </summary>
+	public int CachingCapacity
+	{
+		get => this.cacher.Capacity;
+		set => this.cacher.Capacity = value;
+	}
+	#endregion
+
+	#region dynamic
+	/// <inheritdoc/>
+	public dynamic Properties { get; }
+
+	/// <inheritdoc/>
+	protected sealed class DynamicProperties : Althea.Transformer.IAbstractApi.DynamicProperties
+	{
+		internal DynamicProperties(Api @this) : base(@this) { }
+
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			if (binder.Name == nameof(CachePlans) && binder.ReturnType == typeof(bool))
+			{
+				result = (this.api as Api)!.CachePlans;
+				return true;
+			}
+			if (binder.Name == nameof(CachingCapacity) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.CachingCapacity;
+				return true;
+			}
+			result = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
+		{
+			if (binder.Name == nameof(CachePlans) && value is bool b)
+			{
+				(this.api as Api)!.CachePlans = b;
+				return true;
+			}
+			if (binder.Name == nameof(CachingCapacity) && value is int i)
+			{
+				(this.api as Api)!.CachingCapacity = i;
+				return true;
+			}
+			return false;
+		}
+	}
+	#endregion
+
+	#region cache
 	private readonly struct FftInfo : IEquatable<FftInfo>
 	{
 		private readonly FixedBuffer_60<int> size;
@@ -183,7 +245,7 @@ public unsafe class Api : Althea.Transformer.IAbstractApi
 		plan = default;
 		if (!FftInfo.TryCreate(input, output, out var info))
 			return false;
-		if (this.cacher.TryGetValue(info, out plan))
+		if (this.CachePlans && this.cacher.TryGetValue(info, out plan))
 			return true;
 		if (!NM.cufftCreate(out var planId).Check())
 			return false;

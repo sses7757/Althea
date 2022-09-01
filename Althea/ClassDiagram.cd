@@ -73,14 +73,14 @@
   <Class Name="Althea.Array.CoordinateSparseTensor&lt;T, TInd, TS, TSInd&gt;" Collapsed="true">
     <Position X="42.25" Y="17.75" Width="3.5" />
     <TypeIdentifier>
-      <HashCode>AkAAAAAAAAAAAAAAAAAAHgAAAAgAAQAAAAAAAAAUIAA=</HashCode>
+      <HashCode>AkAAAAAAAAAAAAAAAAAAHgAAAAgBAQAAAAAAAAAUIAA=</HashCode>
       <FileName>Arrays\Tensors\ConcreteSparseTensor.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="Althea.Array.CoordinateBlockSparseTensor&lt;T, TInd, TS, TSInd&gt;" Collapsed="true">
     <Position X="46.25" Y="17.75" Width="3.75" />
     <TypeIdentifier>
-      <HashCode>AkAAIAAAAAAAABAAAAAAHAAAAAgAAQAAIAAAACAUoAA=</HashCode>
+      <HashCode>AkAAIAAAAAAAABAAAAAAHAAAAAgBAQAAIAAAACAUoAA=</HashCode>
       <FileName>Arrays\Tensors\ConcreteSparseTensor.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
@@ -225,15 +225,15 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" Collapsed="true" />
   </Class>
-  <Class Name="Althea.ApiManager">
-    <Position X="2.5" Y="19" Width="2.75" />
+  <Class Name="Althea.ApiManager" Collapsed="true">
+    <Position X="16.25" Y="19.5" Width="2.75" />
     <TypeIdentifier>
       <HashCode>AAIAAgAAACAAAAAAAAAAAACAAAAAAAAAAACAAAAAAAA=</HashCode>
       <FileName>Base\AbstractApi.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="Althea.AbstractApiSelector&lt;TApi&gt;">
-    <Position X="8.25" Y="19" Width="3" />
+  <Class Name="Althea.AbstractApiSelector&lt;TApi&gt;" Collapsed="true">
+    <Position X="22" Y="19.5" Width="3" />
     <Compartments>
       <Compartment Name="Properties" Collapsed="true" />
       <Compartment Name="Methods" Collapsed="true" />
@@ -251,7 +251,7 @@
       </Struct>
     </NestedTypes>
     <TypeIdentifier>
-      <HashCode>AAAAABAAEAAAAAAIAACACAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <HashCode>AAAAABAAEAAAAAAIAACACAAAAAAAAAAAAQAAAABAAAA=</HashCode>
       <FileName>Base\AbstractApi.cs</FileName>
     </TypeIdentifier>
   </Class>
@@ -265,7 +265,7 @@
   <Interface Name="Althea.Array.IBaseTensor&lt;T, TSelf&gt;" Collapsed="true">
     <Position X="14.25" Y="12.5" Width="2" />
     <TypeIdentifier>
-      <HashCode>CEAAAAAAABACIAAQCAAABAAAAAAAAAAAABiAAAAAAAA=</HashCode>
+      <HashCode>CEAAAAAAABACIAAQCAAABAAAAAABAAAAABiAAAAAAAA=</HashCode>
       <FileName>Arrays\Tensors\Tensor.cs</FileName>
     </TypeIdentifier>
   </Interface>
@@ -314,7 +314,7 @@
   <Interface Name="Althea.Array.ILabeledTensor&lt;T&gt;" Collapsed="true">
     <Position X="14.25" Y="14" Width="2" />
     <TypeIdentifier>
-      <HashCode>AAABAAAAEAAAgAAAAAAAAABQAAABAAAAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAABAAAAEAAAgAAAAAAAAABQAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Arrays\BaseInterfaces.cs</FileName>
     </TypeIdentifier>
   </Interface>
@@ -493,8 +493,8 @@
       <FileName>Storage\Interface.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="Althea.IAbstractRuntimeApi&lt;TApi&gt;">
-    <Position X="5.5" Y="19" Width="2.5" />
+  <Interface Name="Althea.IAbstractRuntimeApi&lt;TApi&gt;" Collapsed="true">
+    <Position X="19.25" Y="19.5" Width="2.5" />
     <Compartments>
       <Compartment Name="Fields" Collapsed="true" />
     </Compartments>
@@ -504,6 +504,11 @@
           <NewMemberFileName>Base\AbstractApi.cs</NewMemberFileName>
         </TypeIdentifier>
       </Delegate>
+      <Class Name="Althea.IAbstractRuntimeApi&lt;TApi&gt;.DynamicProperties" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Base\AbstractApi.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
     </NestedTypes>
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAABAAAAAAAAEAAAAAAAAACAAA=</HashCode>

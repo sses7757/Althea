@@ -58,6 +58,8 @@ public struct LimitSizedCacher<TKey, TValue> : ICacher<TKey, TValue>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		set
 		{
+			if (value < this.capacity)
+				throw new ArgumentOutOfRangeException(nameof(value), value, Resources.ParameterError.UnexpectedValue);
 			this.cached.EnsureCapacity(value);
 			this.capacity = value;
 		}
@@ -192,6 +194,8 @@ public struct CandidateCacher<TKey, TValue> : ICacher<TKey, TValue>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		set
 		{
+			if (value < this.capacity)
+				throw new ArgumentOutOfRangeException(nameof(value), value, Resources.ParameterError.UnexpectedValue);
 			this.candidates.EnsureCapacity(value);
 			this.capacity = value;
 		}

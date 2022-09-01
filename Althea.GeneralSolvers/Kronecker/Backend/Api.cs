@@ -25,6 +25,8 @@ public class Api : IAbstractApi
 	/// </summary>
 	internal protected static readonly Api Default = new();
 
+	/// <inheritdoc/>
+	public dynamic Properties { get; } = new IAbstractApi.NoDynamicProperties();
 
 	/// <inheritdoc/>
 	public virtual bool KroneckerMultiplyVector<T, TMat, TVec>(bool multiply, T scalar, TMat leftMatrix, TMat rightMatrix, ref TVec vector, T scalarVector = default) where T : unmanaged, IBaseNumber<T> where TMat : class, IConvertibleMatrix<T, TMat, TVec> where TVec : class, IConvertibleVector<T, TVec, TMat>

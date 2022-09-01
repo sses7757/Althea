@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
 using Althea.Random;
@@ -11,7 +12,7 @@ namespace Althea.Backend.CSharp.Random;
 /// <summary>
 /// The C# back-end of <see cref="Althea.Random.IAbstractApi"/> that utilizes <see cref="System.Random"/>.
 /// </summary>
-/// <remarks>Only supports storages on CPU memory of primitive and pre-defined real types.<br/>
+/// <remarks>Only supports storages on CPU memory of primitive and predefined real types.<br/>
 /// Only supports the <see cref="UniformDistribution{T}"/> and <see cref="RandomBitsDistribution{T}"/>.</remarks>
 public class Api : Althea.Random.IAbstractApi
 {

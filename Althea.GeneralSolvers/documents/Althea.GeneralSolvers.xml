@@ -41,6 +41,9 @@
             Get the default <see cref="T:Althea.GeneralSolvers.Kronecker.Backend.Api"/>.
             </summary>
         </member>
+        <member name="P:Althea.GeneralSolvers.Kronecker.Backend.Api.Properties">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.GeneralSolvers.Kronecker.Backend.Api.KroneckerMultiplyVector``3(System.Boolean,``0,``1,``1,``2@,``0)">
             <inheritdoc/>
         </member>
@@ -145,6 +148,11 @@
             The C# back-end of <see cref="T:Althea.GeneralSolvers.Krylov.IAbstractApi"/> that utilizes other APIs and thus has no specific supporting storage locations
             </summary>
         </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.Backend.Api.#ctor">
+            <summary>
+            The default constructor
+            </summary>
+        </member>
         <member name="P:Althea.GeneralSolvers.Krylov.Backend.Api.Disposed">
             <inheritdoc/>
         </member>
@@ -162,6 +170,18 @@
             <summary>
             Get or set the maximum number of stagnation steps allowed for Krylov subspace linear system solvers.
             </summary>
+        </member>
+        <member name="P:Althea.GeneralSolvers.Krylov.Backend.Api.Properties">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.GeneralSolvers.Krylov.Backend.Api.DynamicProperties">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.Backend.Api.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.GeneralSolvers.Krylov.Backend.Api.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+            <inheritdoc/>
         </member>
         <member name="M:Althea.GeneralSolvers.Krylov.Backend.Api.NaiveKrylovSubspaceEigenHermitain``2(Althea.GeneralSolvers.Krylov.KrylovSubspaceSolveInfo{``0,``1}@,System.ValueTuple{``0,``1}@)">
             <inheritdoc/>

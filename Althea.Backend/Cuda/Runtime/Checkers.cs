@@ -9,7 +9,12 @@ using static Althea.Backend.Cuda.LinearAlgebra.Sparse.NativeMethods;
 
 namespace Althea.Backend.Cuda;
 
-internal static unsafe partial class MemoryPointerChecker
+#pragma warning disable CS1591
+#pragma warning disable CS3001, CS3002
+/// <summary>
+/// The pointer checker functions for <see cref="CudaMemoryPointer{TD}"/>s
+/// </summary>
+public static unsafe partial class MemoryPointerChecker
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static T* GetPointerDirect<T, TS>(this TS s, [CallerArgumentExpression("s")] string? sName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>

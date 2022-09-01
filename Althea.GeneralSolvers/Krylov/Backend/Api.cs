@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Runtime.CompilerServices;
 
 using Althea.Helpers;
@@ -13,6 +14,14 @@ namespace Althea.GeneralSolvers.Krylov.Backend;
 public class Api : IAbstractApi
 {
 	#region basic
+	/// <summary>
+	/// The default constructor
+	/// </summary>
+	public Api()
+	{
+		this.Properties = new DynamicProperties(this);
+	}
+
 	void IDisposable.Dispose()
 	{
 		this.Disposed = true;
@@ -36,6 +45,50 @@ public class Api : IAbstractApi
 	/// Get or set the maximum number of stagnation steps allowed for Krylov subspace linear system solvers.
 	/// </summary>
 	public int MaxStagnationSteps { get; set; } = 3;
+	#endregion
+
+	#region dynamic
+	/// <inheritdoc/>
+	public dynamic Properties { get; }
+
+	/// <inheritdoc/>
+	protected sealed class DynamicProperties : IAbstractApi.DynamicProperties
+	{
+		internal DynamicProperties(Api @this) : base(@this) { }
+
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			if (binder.Name == nameof(InfoLogInterval) && binder.ReturnType == typeof(TimeSpan))
+			{
+				result = (this.api as Api)!.InfoLogInterval;
+				return true;
+			}
+			if (binder.Name == nameof(MaxStagnationSteps) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.MaxStagnationSteps;
+				return true;
+			}
+			result = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
+		{
+			if (binder.Name == nameof(InfoLogInterval) && value is TimeSpan t)
+			{
+				(this.api as Api)!.InfoLogInterval = t;
+				return true;
+			}
+			if (binder.Name == nameof(MaxStagnationSteps) && value is int i)
+			{
+				(this.api as Api)!.MaxStagnationSteps = i;
+				return true;
+			}
+			return false;
+		}
+	}
 	#endregion
 
 	#region eigen
@@ -195,6 +248,7 @@ internal static class Common
 	#endregion
 
 	#region gap
+	// Ignore Spelling: \right \vec
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static T GetGap<T>(T beta, T tol, ReadOnlySpan<T> vals, ReadOnlySpan<T> vecsLastRow, int target = 0, T normA = default) where T : unmanaged, IBinaryFloat<T>
 	{

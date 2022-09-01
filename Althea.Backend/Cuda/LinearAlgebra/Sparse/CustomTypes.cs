@@ -129,22 +129,26 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		InsufficientResource = 11,
 	}
 
-	internal enum PointerMode
+
+#pragma warning disable CS1591
+#pragma warning disable CS3001, CS3002
+
+	public enum PointerMode
 	{
 		Host = 0,
 		Device = 1
 	}
 
-	internal enum SparseToDenseAlgorithm
+	public enum SparseToDenseAlgorithm
 	{
 		Default = 0,
 	}
-	internal enum DenseToSparseAlgorithm
+	public enum DenseToSparseAlgorithm
 	{
 		Default = 0,
 	}
 
-	internal enum SparseMVAlgorithm
+	public enum SparseMVAlgorithm
 	{
 		Default = 0,
 		CsrAlgorithm1 = 2,
@@ -153,7 +157,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		CooAlgorithm2 = 4
 	}
 
-	internal enum SparseMMAlgorithm
+	public enum SparseMMAlgorithm
 	{
 		Default = 0,
 		CooAlgorithm1 = 1,
@@ -166,19 +170,19 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		BlockEllAlgorithm1 = 13
 	}
 
-	internal enum SparseGemmAlgorithm {
+	public enum SparseGemmAlgorithm {
 		Default = 0,
 		CsrDeterministic = 1,
 		CsrNonDeterministic = 2
 	}
 
-	internal enum Csr2CscAlgorithm
+	public enum Csr2CscAlgorithm
 	{
 		Algorithm1 = 1, // faster than V2 (in general), deterministic
 		Algorithm2 = 2  // low memory requirement, non-deterministic
 	}
 
-	internal enum MatrixType
+	public enum MatrixType
 	{
 		General = 0,
 		Symmetric = 1,
@@ -186,26 +190,26 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		Triangular = 3
 	}
 
-	internal enum SparseAction
+	public enum SparseAction
 	{
 		OnlyIndices = 0,
 		ValuesAndIndices = 1,
 	}
 
-	internal enum IndexBase
+	public enum IndexBase
 	{
 		Zero = 0,
 		One = 1
 	}
 
-	internal enum IndexType
+	public enum IndexType
 	{
 		UnsignedInt16 = 1,
 		Integer32 = 2,
 		Integer64 = 3
 	}
 
-	internal enum MatrixFormat
+	public enum MatrixFormat
 	{
 		CSR = 1,
 		CSC = 2,
@@ -214,19 +218,19 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		BlockedEll = 5
 	}
 
-	internal enum DenseMatrixOrder
+	public enum DenseMatrixOrder
 	{
 		Column = 1,
 		Row = 2
 	}
 
-	internal enum SparseMatrixOrder
+	public enum SparseMatrixOrder
 	{
 		Row = 0,
 		Column = 1
 	}
 
-	internal readonly unsafe ref struct DenseVectorWrapper
+	public readonly unsafe ref struct DenseVectorWrapper
 	{
 		private readonly IntPtr handle;
 
@@ -258,7 +262,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		}
 	}
 
-	internal readonly unsafe ref struct DenseMatrixWrapper
+	public readonly unsafe ref struct DenseMatrixWrapper
 	{
 		private readonly IntPtr handle;
 
@@ -287,7 +291,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		}
 	}
 
-	internal readonly unsafe ref struct SparseVectorWrapper
+	public readonly unsafe ref struct SparseVectorWrapper
 	{
 		private readonly IntPtr handle;
 
@@ -322,7 +326,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		}
 	}
 
-	internal readonly unsafe ref struct BaseMatrixWrapper
+	public readonly unsafe ref struct BaseMatrixWrapper
 	{
 		private readonly IntPtr handle;
 
@@ -341,7 +345,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		}
 	}
 
-	internal readonly unsafe ref struct SparseMatrixWrapper
+	public readonly unsafe ref struct SparseMatrixWrapper
 	{
 		private readonly IntPtr handle;
 
@@ -407,7 +411,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Sparse
 		}
 	}
 
-	internal readonly unsafe ref struct SparseGemmDescriptor
+	public readonly unsafe ref struct SparseGemmDescriptor
 	{
 		private readonly IntPtr handle;
 
