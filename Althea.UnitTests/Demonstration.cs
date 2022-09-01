@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 
 using Althea.Array;
 using Althea.Backend.Cuda;
-using Althea.Backend.Cuda.LinearAlgebra;
 using Althea.Backend.Cuda.LinearAlgebra.Dense;
 using Althea.Backend.Cuda.Storage;
 using Althea.Backend.Storage;
@@ -19,16 +18,17 @@ using GpuMem = Althea.Storage.PureStorage<Althea.Numerics.Float64, Althea.Backen
 using GpuMemInt = Althea.Storage.PureStorage<Althea.Numerics.SignedInt32, Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>>;
 
 
-namespace Althea.UnitTests
+namespace Althea.UnitTests.Demo
 {
-	internal static class BasicDemonstration
+	internal static class Demonstration
 	{
-		static BasicDemonstration()
+		static Demonstration()
 		{
 			// load all default backends
 			Settings.Initialize();
 		}
 
+		#region basic
 		public static void SumMatrixRowsGpuSimple()
 		{
 			// create a storage that occupies 1024 * Float64.Size bytes on GPU0, 1024 can be a runtime variable
@@ -178,10 +178,9 @@ namespace Althea.UnitTests
 			// If not present, the C# implementation will be invoked
 			DenseSolvers<Float64, CpuMem>.StandardEigenSolve(symm, eigvals, null, eigvecs, null);
 		}
-	}
+		#endregion
 
-	internal static class AdvancedDemonstration
-	{
+		#region advanced
 		public static void RefWithDifferentType()
 		{
 			// the original memory is of Float64 type
@@ -235,26 +234,35 @@ namespace Althea.UnitTests
 			var ABC = TOp.Contract(tempAB, LinearAlgebra.UnaryOperation.Identity, CC, LinearAlgebra.UnaryOperation.Identity, T.One);
 			return ABC;
 		}
+		#endregion
 	}
 }
 
 
 #region extend existing sparse matrix
-public class BlockEllSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
-	where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
-	where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+namespace Althea.UnitTests.BlockEllDemo
 {
-	private const SparseFormat.Type EllType = (SparseFormat.Type)(1 << 2);
+	public class BlockEllSparseMatrix<T, TInd, TS, TSInd> : SparseMatrix<T, TInd, TS, TSInd>
+		where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
+		where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
+	{
+		private const SparseFormat.Type EllType = (SparseFormat.Type)(1 << 2);
 
-	public override SparseFormat Format => new(EllType, SparseFormat.Blocking.Simple, SparseFormat.Major.Row);
+		public override SparseFormat Format => new(EllType, SparseFormat.Blocking.Simple, SparseFormat.Major.Row);
 
-	// implement other function alike
+		// implement other methods
+	}
+
+	public class BlockEllSparseApi : Althea.Backend.Cuda.LinearAlgebra.Sparse.Api
+	{
+
+	}
 }
 #endregion
 
 
 #region extend existing API implementation
-namespace Althea.UnitTests.Demo
+namespace Althea.UnitTests.MultiGpuDemo
 {
 	public class MultiGpuBlasApi : Backend.Cuda.LinearAlgebra.Dense.Api
 	{
