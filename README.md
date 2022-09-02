@@ -1,5 +1,5 @@
 # ALTHEA
-**A**lgebra **L**ibrary for **T**ensors with **H**ighly-**E**xtendable **A**PIs
+**A**lgebra **L**ibrary for **T**ensors with **H**ighly-**E**xtensible **A**PIs
 
 This project is written in C# (>= 11 and .NET >= 7.0) and CUDA (>= 10.0 with C++ >= 17) (and Intel TBB in future). It mainly focuses on general purposed scientific computations. It is designed to fulfill the high performance, user-friendliness as well as high extendibility at the same time.
 
@@ -19,7 +19,7 @@ This library follows the GNU GPL v3 license (TBD).
 	
 - High Performance (with high-performance implementations such as the default CUDA and MKL ones)
 
-- High Extendability
+- High Extensibility
 	- **All** modules and aspects are designed to support any possible extensions in the future and all the default implementations are written in the same regulations
 	- **All** public extendable classes are implementations of interfaces and **All** public operations depend on these interfaces
 	- **Each** module and aspect can be changed to custom ones **individually** during **runtime**
@@ -56,7 +56,12 @@ This library follows the GNU GPL v3 license (TBD).
 	- [matrices](Althea/Arrays/Matrices/) -- matrix interface, dense matrix, triangular matrix, symmetric/Hermitian matrix, abstract sparse matrix and the most common implementations, i.e., COO, CSR/CSC and BSR/BSC sparse matrices
 	- [tensors](Althea/Arrays/Tensors/) -- tensor interface, dense tensor, abstract sparse tensor and the most common implementation, i.e., coordinated sparse tensor
 - [`Althea.LinearAlgebra`](Althea/LinearAlgebra/) -- APIs and structures for dense and sparse vector and matrix operations
-	- [`Dense`](Althea/LinearAlgebra/Dense/) -- stride and 2D copy APIs, BLAS- and LAPACK-like APIs, vector and matrix math APIs, symmetric and triangular matrix APIs and extended math APIs
+	- [`Dense`](Althea/LinearAlgebra/Dense/) -- stride and 2D copy APIs, BLAS- and LAPACK-like APIs, vector and matrix math APIs, symmetric and triangular matrix APIs and 
+	
+	
+	
+	
+	ded math APIs
 	- [`Sparse`](Althea/LinearAlgebra/Sparse/) -- conversion and computation APIs for sparse vectors and matrices, as well as extended index-related APIs (e.g. sort with multiple values)
 - [`Althea.TensorAlgebra`](Althea/TensorAlgebra/) -- interfaces for dense and sparse tensors operations
 	- [`TensorOrder.cs`](Althea/TensorAlgebra/TensorOrder.cs) -- the structure used to label the order of tensors indicated by `int`, `char` (the native label type of tensors), `System.Index` and/or `System.Range`
