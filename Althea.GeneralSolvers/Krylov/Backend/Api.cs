@@ -2,6 +2,7 @@
 using System.Dynamic;
 using System.Runtime.CompilerServices;
 
+using Althea.Array;
 using Althea.Helpers;
 using Althea.Numerics;
 
@@ -93,7 +94,7 @@ public class Api : IAbstractApi
 
 	#region eigen
 	/// <inheritdoc/>
-	public virtual bool NaiveKrylovSubspaceEigenHermitain<T, TVec>(ref KrylovSubspaceSolveInfo<T, TVec> info, out (T Value, TVec Vector) eigen) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	public virtual bool NaiveKrylovSubspaceEigenHermitain<T, TVec>(ref KrylovSubspaceSolveInfo<T, TVec> info, out (T Value, TVec Vector) eigen) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		eigen = (default, TVec.Empty);
 		eigen = LanczosBased.NaiveLanczos<T, TVec>(info.MatrixFunction, info.InitialVector, info.MaxRestarts, info.CheckMatrixFunction, this.InfoLogInterval);
@@ -101,7 +102,7 @@ public class Api : IAbstractApi
 	}
 
 	/// <inheritdoc/>
-	public virtual bool RestartKrylovSubspaceEigen<T, TVec>(bool hermitian, ref KrylovSubspaceSolveInfo<T, TVec> info, out int converged) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	public virtual bool RestartKrylovSubspaceEigen<T, TVec>(bool hermitian, ref KrylovSubspaceSolveInfo<T, TVec> info, out int converged) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		converged = 0;
 		int iter = info.IterationsPerRestart == 0 ? Common.HERM_MAX_ITER : info.IterationsPerRestart;
@@ -127,7 +128,7 @@ public class Api : IAbstractApi
 
 	#region linear solve
 	/// <inheritdoc/>
-	public virtual bool RestartKrylovSubspaceLinearSolve<T, TVec>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<T, TVec> info, out (TVec Vector, double RelativeError) solve) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	public virtual bool RestartKrylovSubspaceLinearSolve<T, TVec>(bool? hermitianOrDefinite, ref KrylovSubspaceSolveInfo<T, TVec> info, out (TVec Vector, double RelativeError) solve) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		if (info.OtherVector is null)
 			throw new ArgumentNullException(nameof(info), nameof(info.OtherVector));
@@ -153,6 +154,78 @@ public class Api : IAbstractApi
 
 internal static class Common
 {
+	#region vector extend
+	/// <summary>
+	/// See <see cref="OperateOn{T, TVec}(ReadOnlySpan{TVec}, ReadOnlySpan{T})"/>
+	/// </summary>
+	public static TVec OperateOn<T, TVec>(this Span<TVec> unjoinedVectors, ReadOnlySpan<T> input) where T : unmanaged, IBaseNumber<T> where TVec : class, IBaseVector<T, TVec> => ((ReadOnlySpan<TVec>)unjoinedVectors).OperateOn(input);
+
+	/// <summary>
+	/// Statically multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <typeparamref name="TVec"/>.
+	/// </summary>
+	/// <typeparam name="T">The data type</typeparam>
+	/// <typeparam name="TVec">The vector type that implements <see cref="IBaseVector{T, TSelf}"/></typeparam>
+	/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
+	/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
+	/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <typeparamref name="TVec"/></returns>
+	/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
+	/// <exception cref="ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
+	/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
+	public static TVec OperateOn<T, TVec>(this ReadOnlySpan<TVec> unjoinedVectors, ReadOnlySpan<T> input) where T : unmanaged, IBaseNumber<T> where TVec : class, IBaseVector<T, TVec>
+	{
+		if (unjoinedVectors.IsEmpty)
+			throw new ArgumentNullException(nameof(unjoinedVectors));
+		if (input.IsEmpty)
+			throw new ArgumentNullException(nameof(input));
+		if (unjoinedVectors.Length < input.Length)
+			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(unjoinedVectors));
+
+		// sort first to reduce errors
+		int cols = input.Length;
+		using var tempArray = cols.CheckStackLimit<(T, IntPtr)>();
+		Span<(T, IntPtr)> temp = tempArray.IsEmpty ? stackalloc (T, IntPtr)[cols] : tempArray.Data;
+		using var tempKeys = cols.CheckStackLimit<T>();
+		Span<T> keys = tempKeys.IsEmpty ? stackalloc T[cols] : tempKeys.Data;
+		Span<(T val, TVec vec)> values = SpanHelper.CreateSpan(ref Unsafe.As<(T, IntPtr), (T, TVec)>(ref temp[0]), cols);
+		for (int i = 0; i < cols; i++)
+		{
+			values[i] = (input[i], unjoinedVectors[i]);
+			keys[i] = input[i] * T.Conjugate(input[i]);
+		}
+		keys.Sort(values);
+
+		long vecLen = unjoinedVectors[0].Length;
+		var vec = unjoinedVectors[0].CreateAlike();
+		try
+		{
+			vec.FillWith(T.Zero);
+			for (int i = 0; i < cols; i++)
+			{
+				var dnvec = values[i].vec;
+				var val = values[i].val;
+				if (dnvec is null)
+					throw new ArgumentNullException(nameof(unjoinedVectors));
+				if (dnvec.Length != vecLen)
+					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(unjoinedVectors));
+				if (val != T.Zero)
+				{
+					var newVec = vec.AddBy(dnvec, val);
+					if (ReferenceEquals(newVec, vec))
+						continue;
+					vec.Dispose();
+					vec = newVec;
+				}
+			}
+			return vec;
+		}
+		catch (Exception)
+		{
+			vec.Dispose();
+			throw;
+		}
+	}
+	#endregion
+
 	#region from T to real
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static bool ToRealCheck<T>(this T value, out T real) where T : unmanaged, IBinaryFloat<T>
@@ -208,7 +281,7 @@ internal static class Common
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static void CheckParas<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int smallestK, ref int maxIter, bool herm) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	internal static void CheckParas<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int smallestK, ref int maxIter, bool herm) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		try
 		{
@@ -282,7 +355,7 @@ internal static class Common
 
 	#region orthogonalization
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static void RobustOrthogonalize<T, TVec>(TVec r, ReadOnlySpan<TVec> qs, Span<T> weights, bool robust = true) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	internal static void RobustOrthogonalize<T, TVec>(TVec r, ReadOnlySpan<TVec> qs, Span<T> weights, bool robust = true) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		if (qs.IsEmpty)
 			return;
@@ -313,7 +386,7 @@ internal static class Common
 	#region linear solve helper
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static TVec RSetToBSubAx<T, TVec>(Func<TVec, TVec> A, TVec x, TVec b)
-		where TVec : class, IKrylovVector<T, TVec>
+		where TVec : class, IBaseVector<T, TVec>
 		where T : unmanaged, IBinaryFloat<T>
 	{
 		TVec r = A.Invoke(x);
@@ -332,7 +405,7 @@ internal static class Common
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal static void RSetToBSubAx<T, TVec>(Func<TVec, TVec> A, ref TVec r, TVec x, TVec b)
-		where TVec : class, IKrylovVector<T, TVec>
+		where TVec : class, IBaseVector<T, TVec>
 		where T : unmanaged, IBinaryFloat<T>
 	{
 		r?.Dispose();

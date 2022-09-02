@@ -273,6 +273,9 @@ public abstract partial class SparseVector<T, TInd, TS, TSInd> : ISparseArray<T,
 			this.defaultValue = T.Conjugate(this.defaultValue);
 		}
 	}
+
+	/// <inheritdoc/>
+	public SparseVector<T, TInd, TS, TSInd> AddBy(SparseVector<T, TInd, TS, TSInd> other, T scalar) => SparseOperation<T, TInd, TS, TSInd>.VectorsAdd(scalar, other, this);
 	#endregion
 
 	#region simple aggregation operations
@@ -321,6 +324,9 @@ public abstract partial class SparseVector<T, TInd, TS, TSInd> : ISparseArray<T,
 		else
 			return min;
 	}
+
+	/// <inheritdoc/>
+	public T Dot(SparseVector<T, TInd, TS, TSInd> other) => SparseOperation<T, TInd, TS, TSInd>.Dot(this, other);
 	#endregion
 
 	#region operators

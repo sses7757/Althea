@@ -125,4 +125,23 @@ public interface IBaseVector<T, TSelf> : IVectorMetric, IValueArray<T, TSelf>, I
 
 	IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 	#endregion
+
+	#region vector algebra
+	/// <summary>
+	/// When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
+	/// </summary>
+	/// <param name="other">The other <typeparamref name="TSelf"/> to perform the dot product</param>
+	/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
+	/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+	T Dot(TSelf other);
+
+	/// <summary>
+	/// When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector.
+	/// </summary>
+	/// <param name="other">The other <typeparamref name="TSelf"/> to add</param>
+	/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
+	/// <returns>The resulting vector, shall be this one if possible.</returns>
+	/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+	TSelf AddBy(TSelf other, T scalar);
+	#endregion
 }

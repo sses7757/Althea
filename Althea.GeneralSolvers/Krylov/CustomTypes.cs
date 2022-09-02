@@ -1,139 +1,11 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 
+using Althea.Array;
 using Althea.Helpers;
 using Althea.Numerics;
 
 
 namespace Althea.GeneralSolvers.Krylov;
-
-#region interface
-/// <summary>
-/// The interface of vector that contains the operation needed for Krylov-subspace methods such as Lanczos and Krylov-Schur solver.
-/// </summary>
-/// <typeparam name="TVec">The concrete vector type</typeparam>
-/// <typeparam name="T">Any unmanaged number as the data type</typeparam>
-public interface IKrylovVector<T, TVec> : ICreateAlike<TVec>, IDisposable
-	where TVec : class, IKrylovVector<T, TVec>
-	where T : unmanaged, IBaseNumber<T>
-{
-	/// <summary>
-	/// When implemented by a derived class, get the total presenting length of this vector
-	/// </summary>
-	long Length { get; }
-
-	/// <summary>
-	/// When implemented by a derived class, fill this vector with the given <paramref name="value"/>
-	/// </summary>
-	/// <param name="value">The value to fill</param>
-	void FillWith(T value);
-
-	/// <summary>
-	/// When implemented by a derived class, point-wisely in-place multiply this vector with given <paramref name="value"/>.
-	/// </summary>
-	/// <param name="value">The scalar as <typeparamref name="T"/> to multiply</param>
-	void Scale(T value);
-
-	/// <summary>
-	/// When implemented by a derived class, compute the 2-norm (Euclidean norm) of elements in this vector.
-	/// </summary>
-	/// <returns>The 2-norm of this vector</returns>
-	T Norm();
-
-	/// <summary>
-	/// When implemented by a derived class, in-place scale this vector such that its 2-norm (Euclidean norm) is one.
-	/// </summary>
-	/// <exception cref="DivideByZeroException">If the 2-norm of this array is 0</exception>
-	void Normalize();
-
-	/// <summary>
-	/// When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
-	/// </summary>
-	/// <param name="other">The other <typeparamref name="TVec"/> to perform the dot product</param>
-	/// <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
-	/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-	T Dot(TVec other);
-
-	/// <summary>
-	/// When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector in-place.
-	/// </summary>
-	/// <param name="other">The other <typeparamref name="TVec"/> to add</param>
-	/// <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
-	/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-	void AddBy(TVec other, T scalar);
-
-	/// <summary>
-	/// When implemented by a derived class, replace this vector's content with the <paramref name="other"/> vector in-place.
-	/// </summary>
-	/// <param name="other">The other <typeparamref name="TVec"/> to replace from</param>
-	/// <exception cref="ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
-	/// <exception cref="InvalidOperationException">If the replacement cannot be done in-place due to reason(s) such as different sparsities between this and <paramref name="other"/></exception>
-	void ReplaceBy(TVec other);
-
-	/// <summary>
-	/// When implemented by a derived class, statically get an empty <typeparamref name="TVec"/>.
-	/// </summary>
-	abstract static TVec Empty { get; }
-
-	/// <summary>
-	/// Statically multiply the matrix whose columns are indicated by <paramref name="unjoinedVectors"/> to a dense vector indicated by a <see cref="ReadOnlySpan{T}"/> and obtain the result vector as a <typeparamref name="TVec"/>.
-	/// </summary>
-	/// <param name="unjoinedVectors">The columns of the matrix to be multiplied</param>
-	/// <param name="input">The input dense vector to be multiplied as a <see cref="ReadOnlySpan{T}"/></param>
-	/// <returns>The product of <paramref name="unjoinedVectors"/> and <paramref name="input"/> as a <typeparamref name="TVec"/></returns>
-	/// <remarks>The method shall be basically static, the information of this vector shall only be used to verify the consistency of <paramref name="unjoinedVectors"/></remarks>
-	/// <exception cref="ArgumentNullException">If any of <paramref name="unjoinedVectors"/> is null or invalid</exception>
-	/// <exception cref="ArgumentException">If <paramref name="input"/> and <paramref name="unjoinedVectors"/> have different size, or any element of <paramref name="unjoinedVectors"/> has different size than this vector</exception>
-	static TVec OperateOn(ReadOnlySpan<TVec> unjoinedVectors, ReadOnlySpan<T> input)
-	{
-		if (unjoinedVectors.IsEmpty)
-			throw new ArgumentNullException(nameof(unjoinedVectors));
-		if (input.IsEmpty)
-			throw new ArgumentNullException(nameof(input));
-		if (unjoinedVectors.Length != input.Length)
-			throw new ArgumentException(Resources.ParameterError.NotSameSize);
-
-		// sort first to reduce errors
-		int cols = input.Length;
-		using var tempArray = cols.CheckStackLimit<(T, IntPtr)>();
-		Span<(T, IntPtr)> temp = tempArray.IsEmpty ? stackalloc (T, IntPtr)[cols] : tempArray.Data;
-		using var tempKeys = cols.CheckStackLimit<T>();
-		Span<T> keys = tempKeys.IsEmpty ? stackalloc T[cols] : tempKeys.Data;
-		Span<(T val, TVec vec)> values = SpanHelper.CreateSpan(ref Unsafe.As<(T, IntPtr), (T, TVec)>(ref temp[0]), cols);
-		for (int i = 0; i < cols; i++)
-		{
-			values[i] = (input[i], unjoinedVectors[i]);
-			keys[i] = input[i] * T.Conjugate(input[i]);
-		}
-		keys.Sort(values);
-
-		long vecLen = unjoinedVectors[0].Length;
-		var vec = unjoinedVectors[0].CreateAlike();
-		try
-		{
-			vec.FillWith(T.Zero);
-			for (int i = 0; i < cols; i++)
-			{
-				var dnvec = values[i].vec;
-				var val = values[i].val;
-				if (dnvec is null)
-					throw new ArgumentNullException(nameof(unjoinedVectors));
-				if (dnvec.Length != vecLen)
-					throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(unjoinedVectors));
-				if (val != T.Zero)
-					vec.AddBy(dnvec, val);
-			}
-			return vec;
-		}
-		catch (Exception)
-		{
-			vec.Dispose();
-			throw;
-		}
-	}
-}
-#endregion
-
 
 #region enum
 /// <summary>
@@ -178,7 +50,7 @@ public enum RestartStrategy : byte
 }
 
 /// <summary>
-/// The <see cref="ReorthogonalizeMethod"/> indicates which method shall be used to re-orthogonalize with the previous basis in Krylov subspace algorithms.
+/// The <see cref="ReorthogonalizeMethod"/> indicates which method shall be used to reorthogonalize with the previous basis in Krylov subspace algorithms.
 /// </summary>
 /// <remarks>Other non built-in methods are possible and they work as long as there exists implementation supporting them.</remarks>
 public enum ReorthogonalizeMethod : byte
@@ -188,7 +60,7 @@ public enum ReorthogonalizeMethod : byte
 	/// </summary>
 	None,
 	/// <summary>
-	/// Selective re-orthogonalize, let the internal heuristic to determine when and which basis to re-orthogonalize
+	/// Selective reorthogonalize, let the internal heuristic to determine when and which basis to reorthogonalize
 	/// </summary>
 	Selective,
 	/// <summary>
@@ -380,8 +252,8 @@ internal sealed class BuiltInPreserveSelector : IPreserveSelector
 /// The information ref struct used as input and output of Krylov subspace methods.
 /// </summary>
 /// <typeparam name="T">Any floating point number as the data type</typeparam>
-/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IKrylovVector{TVec, T}"/></typeparam>
-public readonly ref struct KrylovSubspaceSolveInfo<T, TVec> where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+/// <typeparam name="TVec">The concrete vector class type hat implements <see cref="IBaseVector{TVec, T}"/></typeparam>
+public readonly ref struct KrylovSubspaceSolveInfo<T, TVec> where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 {
 	#region fields
 	/// <summary>

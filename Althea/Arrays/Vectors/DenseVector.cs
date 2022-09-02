@@ -205,6 +205,13 @@ public class DenseVector<T, TS> : IDenseArray<T, TS>,
 
 	/// <inheritdoc/>
 	public void Conjugate() => ExtBlas.GeneralVectorUnary<T, TS, TS>(LinearAlgebra.UnaryOperation.Conjugate, this.values, this.stride, this.values, this.stride);
+
+	/// <inheritdoc/>
+	public DenseVector<T, TS> AddBy(DenseVector<T, TS> other, T scalar)
+	{
+		DenseOperation<T, TS>.AddBy(this, other, scalar);
+		return this;
+	}
 	#endregion
 
 	#region simple aggregation operations
@@ -222,6 +229,9 @@ public class DenseVector<T, TS> : IDenseArray<T, TS>,
 
 	/// <inheritdoc/>
 	public T ValueWithMinAbs() => (this.values + Blas.AbsoluteValueArgMin<T, TS>(this.values, this.stride)).ToManaged<T, TS>();
+
+	/// <inheritdoc/>
+	public T Dot(DenseVector<T, TS> other) => DenseOperation<T, TS>.Dot(this, other);
 	#endregion
 
 	#region operators

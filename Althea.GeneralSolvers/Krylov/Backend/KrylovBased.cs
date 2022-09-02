@@ -3,12 +3,13 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using Althea.Array;
 using Althea.Backend.CSharp.LinearAlgebra;
 using Althea.Helpers;
 using Althea.Numerics;
 
 
-// Ignore Spelling: \mathbf \overset \longrightarrow \mathrm \cdot \left \right \varepsilon \mathbb \begin \times \le
+// Ignore Spelling: \vec \frac \mathbf \overset \longrightarrow \mathrm \cdot \left \right \varepsilon \mathbb \begin \times \le diag
 namespace Althea.GeneralSolvers.Krylov.Backend;
 
 internal static class KrylovBased
@@ -16,7 +17,7 @@ internal static class KrylovBased
 	#region common
 
 	#region inner
-	private static void KrylovSchurInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, ReadOnlySpan<T> a, ref T β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static void KrylovSchurInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, ReadOnlySpan<T> a, ref T β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		Span<T> w = stackalloc T[iters];
 		int nPreserve = qs.Count;
@@ -56,13 +57,13 @@ internal static class KrylovBased
 
 	#region final calculation
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static Span<TVec> FinalCalc<T, TVec>(SpanMatrix<T> vecs, ReadOnlySpan<TVec> Q, Span<TVec> vector) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static Span<TVec> FinalCalc<T, TVec>(SpanMatrix<T> vecs, ReadOnlySpan<TVec> Q, Span<TVec> vector) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		try
 		{
 			for (int i = 0; i < vecs.Cols; i++)
 			{
-				vector[i] = IKrylovVector<T, TVec>.OperateOn(Q, vecs[i]);
+				vector[i] = Q.OperateOn<T, TVec>(vecs[i]);
 				vector[i].Normalize();
 			}
 			return vector;
@@ -144,7 +145,7 @@ internal static class KrylovBased
 		return count;
 	}
 
-	private static unsafe void ReorderSchur<T, TVec>(Span<int> select, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, Span<T> eigenvalues, Span<T> eigenvaluesImag, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static unsafe void ReorderSchur<T, TVec>(Span<int> select, int preserveCount, SpanMatrix<T> schurT, SpanMatrix<T> schurU, Span<T> eigenvalues, Span<T> eigenvaluesImag, TVec r, ref SpanList<TVec> qs, Span<T> a, T beta) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		int rows = select.Length, n = preserveCount;
 		//tex:$\mathbf H \overset{\text{Schur (order}=\vec v_\text{preserve}\text{)}}{\longrightarrow} \mathbf H \cdot \mathbf X$
@@ -167,7 +168,7 @@ internal static class KrylovBased
 		{
 			for (int i = 0; i < n; i++)
 			{
-				var newq = IKrylovVector<T, TVec>.OperateOn(qs, X1[i]);
+				var newq = qs.UnderlyingSpan.OperateOn<T, TVec>(X1[i]);
 				newq.Normalize();
 				newQ.Add(newq);
 			}
@@ -183,7 +184,7 @@ internal static class KrylovBased
 	#endregion
 
 	// null return for not support
-	internal static int? KrylovSchur<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, WhichEigenvalues which, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<T> outEigvalsImag, Span<TVec> outEigvecs) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	internal static int? KrylovSchur<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, WhichEigenvalues which, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<T> outEigvalsImag, Span<TVec> outEigvecs) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		#region basic
 		if (tolerance <= 0)
@@ -392,13 +393,13 @@ internal static class KrylovBased
 
 	#region GMRES inner
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static T GetNewInitial<T, TVec>(Func<TVec, TVec> A, TVec b, TVec guess, ref TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<T> vec) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static T GetNewInitial<T, TVec>(Func<TVec, TVec> A, TVec b, TVec guess, ref TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<T> vec) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		TVec? temp = null;
 		try
 		{
 			//tex:$\vec x_\text{new} = \vec x_\text{old} + \mathbf Q \vec y$
-			temp = IKrylovVector<T, TVec>.OperateOn(qs, vec);
+			temp = qs.OperateOn(vec);
 			guess.AddBy(temp, T.One);
 			temp.Dispose();
 			//tex:$\vec r_\text{new} = \vec b - \mathbf A \vec x_\text{new}$
@@ -411,7 +412,7 @@ internal static class KrylovBased
 		}
 	}
 
-	private static bool GMResInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, T tol, ref T β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs, Span<T> convergedVec) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static bool GMResInner<T, TVec>(Func<TVec, TVec> matrixFunction, int iters, bool robustOrth, T tol, ref T β, SpanMatrix<T> H, ref TVec r, ref SpanList<TVec> qs, Span<T> convergedVec) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		T orgBeta = β;
 		Span<T> w = stackalloc T[iters];
@@ -453,7 +454,7 @@ internal static class KrylovBased
 	#endregion
 
 	internal static bool GeneralMinimalResidual<T, TVec>(Func<TVec, TVec> matrixFunction, TVec b, TVec initGuess, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool checkFirst, TimeSpan interval, int maxStagnations, out TVec solution, out double relativeError)
-		where TVec : class, IKrylovVector<T, TVec>
+		where TVec : class, IBaseVector<T, TVec>
 		where T : unmanaged, IBinaryFloat<T>
 	{
 		#region basic
@@ -563,7 +564,7 @@ internal static class KrylovBased
 			{
 				LinearSolveConvergenceCheck(qs.Count, H, oldResidual, residual, realTolerance, convergedVec, forceCalc: true);
 			}
-			solution = IKrylovVector<T, TVec>.OperateOn(qs, convergedVec[..qs.Count]);
+			solution = qs.UnderlyingSpan.OperateOn<T, TVec>(convergedVec[..qs.Count]);
 			solution.AddBy(guess, T.One);
 			relativeError = (residual / normB).AsDouble();
 			return true;

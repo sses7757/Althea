@@ -4,19 +4,20 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Althea.Array;
 using Althea.Backend.CSharp.LinearAlgebra;
 using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.Numerics;
 
 
-// Ignore Spelling: \dfrac \cdot \alpha \mathbf \varepsilon \begin \ddots \cdots
+// Ignore Spelling: \vec \frac \dfrac \cdot \alpha \mathbf \varepsilon \begin \ddots \cdots \left \right
 namespace Althea.GeneralSolvers.Krylov.Backend;
 
 internal static class LanczosBased
 {
 	#region restart info
-	private ref struct RestartBasicInfo<T, TVec> where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private ref struct RestartBasicInfo<T, TVec> where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		internal TVec ResidualVec;
 
@@ -51,7 +52,7 @@ internal static class LanczosBased
 
 	#region initialize Lanczos
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, ref TVec q0, out TVec r, out T α0, out T β0) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, ref TVec q0, out TVec r, out T α0, out T β0) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		q0.Normalize();
 		//tex: $\vec r = A \vec q$
@@ -66,7 +67,7 @@ internal static class LanczosBased
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, T ψ, out TVec r, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, ref RestartBasicInfo<T, TVec> info) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static void LanczosInit<T, TVec>(Func<TVec, TVec> matrixFunction, T ψ, out TVec r, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, ref RestartBasicInfo<T, TVec> info) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		T oneFourth = T.One / ((T.One + T.One) + (T.One + T.One));
 
@@ -113,7 +114,7 @@ internal static class LanczosBased
 
 	#region main loop of Lanczos
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> matrixFunction, TVec q, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs, ref TVec newq, bool dispose = true) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> matrixFunction, TVec q, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs, ref TVec newq, bool dispose = true) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		//tex: $\vec v=\vec q$
 		/*var v = q;*/
@@ -136,7 +137,7 @@ internal static class LanczosBased
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> MatMulVecFunc, SpanList<TVec> qs, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static void LanczosMainCalc<T, TVec>(Func<TVec, TVec> MatMulVecFunc, SpanList<TVec> qs, ref TVec r, ref SpanList<T> αs, ref SpanList<T> βs) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		TVec newq = TVec.Empty;
 		LanczosMainCalc(MatMulVecFunc, qs[^1], ref r, ref αs, ref βs, ref newq, dispose: false);
@@ -226,10 +227,10 @@ internal static class LanczosBased
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal string Reorthonalize<TVec>(TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<TVec> converged, T thre1, T thre2) where TVec : class, IKrylovVector<T, TVec>
+		internal string Reorthonalize<TVec>(TVec r, ReadOnlySpan<TVec> qs, ReadOnlySpan<TVec> converged, T thre1, T thre2) where TVec : class, IBaseVector<T, TVec>
 		{
 #if DEBUG
-			var stringBuilder = new StringBuilder("\tre-orthogonalize the new basis vector to the ");
+			var stringBuilder = new StringBuilder("\treorthogonalize the new basis vector to the ");
 			bool hasContent = false;
 #endif
 			if (this.now[..^1].Any(w => w >= thre1))
@@ -374,7 +375,7 @@ internal static class LanczosBased
 	#endregion
 
 	#region add unconverged vectors
-	private static void AddUnconvergedVectors<T, TVec>(ref RestartBasicInfo<T, TVec> info, ReadOnlySpan<TVec> Q, ReadOnlySpan<int> preserve, Span<T> eigvals, SpanMatrix<T> eigvecs, TVec r, T rNorm) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static void AddUnconvergedVectors<T, TVec>(ref RestartBasicInfo<T, TVec> info, ReadOnlySpan<TVec> Q, ReadOnlySpan<int> preserve, Span<T> eigvals, SpanMatrix<T> eigvecs, TVec r, T rNorm) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		Span<T> lastRow = stackalloc T[eigvecs.Cols];
 		//tex:$\vec{r}$ so that $A\vec{y}_i - \vartheta_i\vec{y}_i = \sigma_i\vec{r}$
@@ -386,7 +387,7 @@ internal static class LanczosBased
 			info.ResidualScalars.Add(lastRow[i] * rNorm);
 			//tex:$\vartheta_i$ and $\vec{y}_i = Q \vec{s}_i$
 			info.UnconvergedEigenvalues.Add(eigvals[i]);
-			var unconverged = IKrylovVector<T, TVec>.OperateOn(Q, eigvecs[i]);
+			var unconverged = Q.OperateOn<T, TVec>(eigvecs[i]);
 			unconverged.Normalize();
 			info.UnconvergedEigenvectors.Add(unconverged);
 		}
@@ -395,7 +396,7 @@ internal static class LanczosBased
 
 
 	#region naive Lanczos
-	internal static (T val, TVec vec) NaiveLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool checkFirst, TimeSpan interval) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	internal static (T val, TVec vec) NaiveLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int maxIter, bool checkFirst, TimeSpan interval) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 
 		#region basic check
@@ -462,7 +463,7 @@ internal static class LanczosBased
 			#endregion
 
 			#region output
-			var vecOut = IKrylovVector<T, TVec>.OperateOn(qs.UnderlyingSpan, eigenvectors[0]);
+			var vecOut = qs.UnderlyingSpan.OperateOn<T, TVec>(eigenvectors[0]);
 			return (eigenvalues[0], vecOut);
 			#endregion
 		}
@@ -478,7 +479,7 @@ internal static class LanczosBased
 
 
 	#region restart lanczos
-	internal static int? RestartLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<TVec> outEigvecs) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	internal static int? RestartLanczos<T, TVec>(Func<TVec, TVec> matrixFunction, TVec initial, int maxRestarts, int iterPerRestart, double tolerance, ReorthogonalizeMethod reorthogonalize, bool useGap, IPreserveSelector selector, bool checkFirst, TimeSpan interval, Span<T> outEigvals, Span<TVec> outEigvecs) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 
 		#region basic
@@ -538,7 +539,7 @@ internal static class LanczosBased
 					Log.Write($"The newest unconverged eigenvalue is {eigvals[0]}", level: LogLevel.Trace);
 					// calculate last eigenvector
 					eigenvalues.Add(eigvals[0]);
-					var newConverged = IKrylovVector<T, TVec>.OperateOn(qs, eigvecs[0]);
+					var newConverged = qs.UnderlyingSpan.OperateOn<T, TVec>(eigvecs[0]);
 					newConverged.Normalize();
 					restartInfo.ConvergedEigenvectors.Add(newConverged);
 					// remove the newly converged one from eigen pairs
@@ -612,7 +613,7 @@ internal static class LanczosBased
 	}
 
 
-	private static bool RestartLanczosInner<T, TVec>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, bool? robustOrth, bool useGap, ref RestartBasicInfo<T, TVec> restartInfo, Span<T> eigvals, SpanMatrix<T> eigvecs, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, out TVec r) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static bool RestartLanczosInner<T, TVec>(Func<TVec, TVec> matrixFunction, int nIter, double tolerance, bool? robustOrth, bool useGap, ref RestartBasicInfo<T, TVec> restartInfo, Span<T> eigvals, SpanMatrix<T> eigvecs, ref SpanList<TVec> qs, ref SpanList<T> αs, ref SpanList<T> βs, out TVec r) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		#region constants
 		double _machinePrecision = T.MachinePrecision.AsDouble(),
@@ -734,7 +735,7 @@ internal static class LanczosBased
 
 	#region linear solve helpers
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static TVec? CheckLinearSolve<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out T normB, out T realTolerance) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static TVec? CheckLinearSolve<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, ref int maxIter, double tolerance, bool checkFirst, out T normB, out T realTolerance) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		#region basic
 		if (tolerance <= 0)
@@ -768,7 +769,7 @@ internal static class LanczosBased
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static (double relativeError, TVec? solve) CheckLinearSolveInitial<T, TVec>(Func<TVec, TVec> matrix, TVec initial, TVec b, T normB, T realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out T minResidual) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	private static (double relativeError, TVec? solve) CheckLinearSolveInitial<T, TVec>(Func<TVec, TVec> matrix, TVec initial, TVec b, T normB, T realTolerance, out TVec r, out TVec x, out TVec minResidualVec, out T minResidual) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		#region initial vector check
 		x = initial;
@@ -802,7 +803,7 @@ internal static class LanczosBased
 
 
 	#region preconditioned conjugate gradient
-	internal static (TVec Solve, double RelativeError) ConjugateGradient<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	internal static (TVec Solve, double RelativeError) ConjugateGradient<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		#region basic
 		var simpleSolution = CheckLinearSolve<T, TVec>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out T normB, out T realTolerance);
@@ -915,7 +916,7 @@ internal static class LanczosBased
 				if (normR < minResidual)
 				{
 					minResidual = normR;
-					if (x != solution)
+					if (!ReferenceEquals(x, solution))
 						solution.Dispose();
 					solution = x.Clone();
 				}
@@ -954,11 +955,11 @@ internal static class LanczosBased
 		}
 		finally
 		{
-			if (r != solution)
+			if (!ReferenceEquals(r, solution))
 				r?.Dispose();
-			if (x != solution)
+			if (!ReferenceEquals(x, solution))
 				x?.Dispose();
-			if (p != solution)
+			if (!ReferenceEquals(p, solution))
 				p?.Dispose();
 		}
 		#endregion
@@ -968,7 +969,7 @@ internal static class LanczosBased
 
 
 	#region preconditioned minimal residual
-	internal static (TVec Solve, double RelativeError) MinimalResidual<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IBinaryFloat<T> where TVec : class, IKrylovVector<T, TVec>
+	internal static (TVec Solve, double RelativeError) MinimalResidual<T, TVec>(Func<TVec, TVec> matrix, Func<TVec, TVec>? preconditioner, TVec initial, TVec rightSide, int maxIter, double tolerance, bool checkFirst, TimeSpan interval, int maxStagnation) where T : unmanaged, IBinaryFloat<T> where TVec : class, IBaseVector<T, TVec>
 	{
 		#region basic
 		var simpleSolution = CheckLinearSolve<T, TVec>(matrix, preconditioner, initial, rightSide, ref maxIter, tolerance, checkFirst, out T normB, out T realTolerance);
@@ -1004,7 +1005,7 @@ internal static class LanczosBased
 			//tex: $\vec v' = \vec v / \beta_1$
 			vv = v.Clone(); vv.Scale(T.One / oldβ);
 			//tex: $\vec v = \mathbf A \vec v'$
-			if (v != r)
+			if (!ReferenceEquals(v, r))
 				v.Dispose();
 			v = matrix.Invoke(vv);
 			Am = v.Clone();
@@ -1166,7 +1167,7 @@ internal static class LanczosBased
 				if (normR < minResidual)
 				{
 					minResidual = normR;
-					if (solution != x)
+					if (!ReferenceEquals(solution, x))
 						solution?.Dispose();
 					solution = x;
 				}
@@ -1206,29 +1207,29 @@ internal static class LanczosBased
 		}
 		finally
 		{
-			if (r != solution)
+			if (!ReferenceEquals(r, solution))
 				r?.Dispose();
-			if (x != solution)
+			if (!ReferenceEquals(x, solution))
 				x?.Dispose();
-			if (v != solution)
+			if (!ReferenceEquals(v, solution))
 				v?.Dispose();
-			if (vv != solution)
+			if (!ReferenceEquals(vv, solution))
 				vv?.Dispose();
-			if (oldV != solution)
+			if (!ReferenceEquals(oldV, solution))
 				oldV?.Dispose();
-			if (olderV != solution)
+			if (!ReferenceEquals(olderV, solution))
 				olderV?.Dispose();
-			if (Am != solution)
+			if (!ReferenceEquals(Am, solution))
 				Am?.Dispose();
-			if (oldAm != solution)
+			if (!ReferenceEquals(oldAm, solution))
 				oldAm?.Dispose();
-			if (olderAm != solution)
+			if (!ReferenceEquals(olderAm, solution))
 				olderAm?.Dispose();
-			if (m != solution)
+			if (!ReferenceEquals(m, solution))
 				m?.Dispose();
-			if (oldM != solution)
+			if (!ReferenceEquals(oldM, solution))
 				oldM?.Dispose();
-			if (olderM != solution)
+			if (!ReferenceEquals(olderM, solution))
 				olderM?.Dispose();
 		}
 		#endregion

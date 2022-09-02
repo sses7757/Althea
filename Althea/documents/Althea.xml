@@ -3991,6 +3991,9 @@
         <member name="M:Althea.Array.DenseVector`2.Conjugate">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Array.DenseVector`2.AddBy(Althea.Array.DenseVector{`0,`1},`0)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Array.DenseVector`2.Sum">
             <inheritdoc/>
         </member>
@@ -4004,6 +4007,9 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseVector`2.ValueWithMinAbs">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.DenseVector`2.Dot(Althea.Array.DenseVector{`0,`1})">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.DenseVector`2.op_Multiply(Althea.Array.DenseVector{`0,`1},`0)">
@@ -4177,6 +4183,9 @@
         <member name="M:Althea.Array.SparseVector`4.Conjugate">
             <inheritdoc/>
         </member>
+        <member name="M:Althea.Array.SparseVector`4.AddBy(Althea.Array.SparseVector{`0,`1,`2,`3},`0)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Array.SparseVector`4.Sum">
             <inheritdoc/>
         </member>
@@ -4190,6 +4199,9 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SparseVector`4.ValueWithMinAbs">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Array.SparseVector`4.Dot(Althea.Array.SparseVector{`0,`1,`2,`3})">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Array.SparseVector`4.op_Multiply(Althea.Array.SparseVector{`0,`1,`2,`3},`0)">
@@ -4351,6 +4363,23 @@
             <summary>
             Provide legacy support of C# duck type for <c>this[<see cref="T:System.Range"/>]</c>
             </summary>
+        </member>
+        <member name="M:Althea.Array.IBaseVector`2.Dot(`1)">
+            <summary>
+            When implemented by a derived class, compute dot (inner) product of this vector and <paramref name="other"/> vector. The conjugate of this vector shall be actually used.
+            </summary>
+            <param name="other">The other <typeparamref name="TSelf"/> to perform the dot product</param>
+            <returns>The dot (inner) product result as a <typeparamref name="T"/></returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
+        </member>
+        <member name="M:Althea.Array.IBaseVector`2.AddBy(`1,`0)">
+            <summary>
+            When implemented by a derived class, add the <paramref name="other"/> (scaling by <paramref name="scalar"/>) to this vector.
+            </summary>
+            <param name="other">The other <typeparamref name="TSelf"/> to add</param>
+            <param name="scalar">The scalar to be multiplied to <paramref name="other"/> of type <typeparamref name="T"/></param>
+            <returns>The resulting vector, shall be this one if possible.</returns>
+            <exception cref="T:System.ArgumentNullException">If <paramref name="other"/> is null or invalid</exception>
         </member>
         <member name="T:Althea.Array.DenseArrayWrapper`2">
             <summary>
