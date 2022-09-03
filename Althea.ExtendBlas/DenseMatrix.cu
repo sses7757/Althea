@@ -302,7 +302,7 @@ int matDataConvert(const DataType srcType, const DataType dstType, bool toRealBy
 #undef CONVERT_OUTER_SWITCH
 #undef CONVERT_INNER_SWITCH
 	// calculate
-	convertFunc(src, dst, m, n, ldSrc, ldDst, toRealByAbs);
+	return convertFunc(src, dst, m, n, ldSrc, ldDst, toRealByAbs);
 }
 #pragma endregion
 
@@ -389,11 +389,23 @@ inline int matrixUnary(const unaryOp::UnaryOperation op, const void* srcv, void*
 	{ \
 		if constexpr (std::is_scalar_v<T>) \
 			return -1; \
+		else \
+		{ \
+			if constexpr (std::is_unsigned_v<typename T::value_type>) \
+				return -1; \
+		} \
 		auto func = [] PREFIX(const T v) { return std::conj(v); }; \
 		return invoke(__VA_ARGS__, func); \
 	} \
 	case unaryOp::UnaryOperation::Negate: \
 	{ \
+		if constexpr (std::is_unsigned_v<T>) \
+			return -1; \
+		if constexpr (!std::is_scalar_v<T>) \
+		{ \
+			if constexpr (std::is_unsigned_v<typename T::value_type>) \
+				return -1; \
+		} \
 		auto func = [] PREFIX(const T v) { return -v; }; \
 		return invoke(__VA_ARGS__, func); \
 	} \
@@ -610,9 +622,9 @@ inline int matrixNorm(const void* srcv, const size_t m, const size_t n, const si
 			*((typename T::value_type*)result) = thrust::inner_product(THRUST_PAR, ssrc.begin(), ssrc.end(), ssrc.begin(), typename T::value_type{}, plus_functor<typename T::value_type>(), norm_functor<T>());
 	}
 	if constexpr (std::is_scalar_v<T>)
-		*((T*)result) = std::sqrt(*((T*)result));
+		*((T*)result) = (T)std::sqrt(*((T*)result));
 	else
-		*((typename T::value_type*)result) = std::sqrt(*((typename T::value_type*)result));
+		*((typename T::value_type*)result) = (typename T::value_type)std::sqrt(*((typename T::value_type*)result));
 	return 0;
 }
 #pragma endregion
@@ -852,10 +864,10 @@ inline void matricesKronecker(
 	const T alpha = *((const T*)alphav);
 	const T beta = *((const T*)betav);
 
-	const unsigned int rowsD = rowsA * rowsB;
-	const unsigned int colsD = colsA * colsB;
+	const size_t rowsD = rowsA * rowsB;
+	const size_t colsD = colsA * colsB;
 
-#define KRON_CODE(bool1, bool2, bool3) thrust::for_each_n(THRUST_PAR, thurst::make_counting_iterator((size_t)0), rowsD * colsD, kronecker_functor<T, bool1, bool2, bool3>(alpha, beta, ldA, ldB, colsB, ldD, rowsD, A, B, D))
+#define KRON_CODE(bool1, bool2, bool3) thrust::for_each_n(THRUST_PAR, thrust::make_counting_iterator((size_t)0), rowsD * colsD, kronecker_functor<T, bool1, bool2, bool3>(alpha, beta, ldA, ldB, colsB, ldD, rowsD, A, B, D))
 
 	if (rowsD == ldD)
 	{

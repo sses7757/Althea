@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 
+using Althea.Helpers;
 using Althea.SourceGenerator;
 using Althea.Storage;
 
@@ -93,7 +94,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralVectorUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		
 		/// <summary>
 		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="x"/>[i], result)</c> for all <c>i</c>.
@@ -108,7 +109,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorReduce<T, TS>(ReduceOperation op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralVectorReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="x"/>[i], result)</c> for all <c>i</c>.
@@ -123,7 +124,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorArgReduce<T, TS>(ReduceOperation op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralVectorArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
@@ -141,7 +142,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralVectorBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="z"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
@@ -161,7 +162,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/>, <paramref name="y"/> or <paramref name="z"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/>, <paramref name="strideY"/> or <paramref name="strideZ"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool GeneralVectorsBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
@@ -179,7 +180,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="x"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralVectorsScan<T, TS1, TS2>(ReduceOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralVectorsScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="x"/> and <paramref name="y"/> are equal: <c><paramref name="x"/>[i] == <paramref name="y"/>[i]</c> for all <c>i</c>.
@@ -234,7 +235,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixUnary<T, TS1, TS2>(UnaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatrixUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
@@ -251,7 +252,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralMatrixReduce<T, TS>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
@@ -268,7 +269,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixArgReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool GeneralMatrixArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute reduction <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
@@ -287,7 +288,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatrixColumnReduce<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
@@ -307,7 +308,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatrixBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
@@ -329,7 +330,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool GeneralMatricesBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
@@ -349,7 +350,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool GeneralMatrixColumnScan<T, TS1, TS2>(ReduceOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool GeneralMatrixColumnScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i, j] == <paramref name="B"/>[i, j]</c> for all <c>i, j</c>.
@@ -408,7 +409,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="B">dense matrix with size <c><paramref name="ldb"/>×<paramref name="nb"/></c></param>
 		/// <param name="ldb">leading dimension of <paramref name="B"/>, must be at least <paramref name="mb"/></param>
 		/// <param name="β">The scalar to be multiplied to <paramref name="C"/></param>
-		/// <param name="C">The pre-allocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
+		/// <param name="C">The preallocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
 		/// <param name="ldc">The leading dimension of <paramref name="C"/>, must be at least <paramref name="na"/>*<paramref name="nb"/></param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>

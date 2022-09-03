@@ -1,5 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
+using Althea.Helpers;
+
 
 namespace Althea.LinearAlgebra;
 
@@ -63,8 +65,6 @@ public class MatrixSolveAlgorithmException : Exception
 			SolveMethodKind.GeneralEigen => Resources.OtherError.MatrixSolveGeneralEigen,
 			SolveMethodKind.NonSymmetricEigenvalue => Resources.OtherError.MatrixSolveNonSymmEigen,
 			SolveMethodKind.NonSymmetricGeneralEigenvalue => Resources.OtherError.MatrixSolveNonSymmGeneralEigen,
-			////SolveMethodKind.GeneralSchur => throw new NotImplementedException(),
-			////SolveMethodKind.GeneralSVD => throw new NotImplementedException(),
 			_ => string.Format(Resources.OtherError.MatrixSolveOther, info),
 		};
 	}
@@ -302,47 +302,47 @@ public static class MatrixOperationExtension
 /// <summary>
 /// Binary operations used by array point-wise binary operations.
 /// </summary>
-/// <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+/// <remarks>To extend more operations, use <see cref="ManagedEnum{T}"/></remarks>
 public enum BinaryOperation
 {
 	/// <summary>
 	/// Operation that returns the addition of two input parameters
 	/// </summary>
-	Add = -1,
+	Add = 0,
 	/// <summary>
 	/// Operation that returns the multiplication of two input parameters
 	/// </summary>
-	Multiply = -2,
+	Multiply = -1,
 	/// <summary>
 	/// Operation that returns the division of two input parameters
 	/// </summary>
-	Divide = -3,
+	Divide = -2,
 	/// <summary>
 	/// Operation that returns the power of the first input parameter to the second one
 	/// </summary>
-	Power = -4,
+	Power = -3,
 	/// <summary>
 	/// Operation that returns the maximum of two input parameters
 	/// </summary>
-	Maximum = -5,
+	Maximum = -4,
 	/// <summary>
 	/// Operation that returns the minimum of two input parameters
 	/// </summary>
-	Mininum = -6,
+	Mininum = -5,
 	/// <summary>
 	/// Operation that returns the maximum of the absolute values two input parameters
 	/// </summary>
-	AbsoluteMaximum = -7,
+	AbsoluteMaximum = -6,
 	/// <summary>
 	/// Operation that returns the minimum of the absolute values two input parameters
 	/// </summary>
-	AbsoluteMininum = -8,
+	AbsoluteMininum = -7,
 }
 
 /// <summary>
 /// Binary operations used by array point-wise binary operations with a scalar.
 /// </summary>
-/// <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+/// <remarks>To extend more operations, use <see cref="ManagedEnum{T}"/></remarks>
 public enum BinaryScalarOperation
 {
 	/// <summary>
@@ -386,7 +386,7 @@ public enum BinaryScalarOperation
 /// <summary>
 /// Binary reduce operations used by array point-wise reduce operations whose first input is the element in array and the second one is the partial reduction result.
 /// </summary>
-/// <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+/// <remarks>To extend more operations, use <see cref="ManagedEnum{T}"/></remarks>
 public enum ReduceOperation
 {
 	/// <summary>
@@ -430,7 +430,7 @@ public enum ReduceOperation
 /// <summary>
 /// Unitary operations of array point-wise unary operations.
 /// </summary>
-/// <remarks>All implementations shall support these pre-defined unary operations, but a implementation can add support for more unary operations.</remarks>
+/// <remarks>To extend more operations, use <see cref="ManagedEnum{T}"/></remarks>
 public enum UnaryOperation
 {
 	/// <summary>

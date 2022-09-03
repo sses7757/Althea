@@ -9460,7 +9460,7 @@
 			          <Metric Name="ExecutableLines" Value="8" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void DenseOperation&lt;T, TS&gt;.Reduce(DenseTensor&lt;T, TS&gt; A, TensorOrder order, T α, DenseTensor&lt;T, TS&gt; B, T β = default(T), UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="793">
+			      <Method Name="void DenseOperation&lt;T, TS&gt;.Reduce(DenseTensor&lt;T, TS&gt; A, TensorOrder order, T α, DenseTensor&lt;T, TS&gt; B, T β = default(T), ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity, ManagedEnum<UnaryOperation> opB = UnaryOperation.Identity, ManagedEnum<ReduceOperation> reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="793">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="65" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -9469,7 +9469,7 @@
 			          <Metric Name="ExecutableLines" Value="7" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void DenseOperation&lt;T, TS&gt;.Permute(DenseTensor&lt;T, TS&gt; A, TensorOrder order, T scalar, DenseTensor&lt;T, TS&gt; B, UnaryOperation op = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="801">
+			      <Method Name="void DenseOperation&lt;T, TS&gt;.Permute(DenseTensor&lt;T, TS&gt; A, TensorOrder order, T scalar, DenseTensor&lt;T, TS&gt; B, ManagedEnum<UnaryOperation> op = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="801">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="74" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -9478,7 +9478,7 @@
 			          <Metric Name="ExecutableLines" Value="4" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; DenseOperation&lt;T, TS&gt;.Reduce(DenseTensor&lt;T, TS&gt; A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="809">
+			      <Method Name="DenseTensor&lt;T, TS&gt; DenseOperation&lt;T, TS&gt;.Reduce(DenseTensor&lt;T, TS&gt; A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity, ManagedEnum<ReduceOperation> reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="809">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="62" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -9487,7 +9487,7 @@
 			          <Metric Name="ExecutableLines" Value="10" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; DenseOperation&lt;T, TS&gt;.Permute(DenseTensor&lt;T, TS&gt; A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="828">
+			      <Method Name="DenseTensor&lt;T, TS&gt; DenseOperation&lt;T, TS&gt;.Permute(DenseTensor&lt;T, TS&gt; A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="828">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="64" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -9496,7 +9496,7 @@
 			          <Metric Name="ExecutableLines" Value="9" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void DenseOperation&lt;T, TS&gt;.Contract(DenseTensor&lt;T, TS&gt; A, UnaryOperation opA, DenseTensor&lt;T, TS&gt; B, UnaryOperation opB, T α, DenseTensor&lt;T, TS&gt; C, UnaryOperation opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="847">
+			      <Method Name="void DenseOperation&lt;T, TS&gt;.Contract(DenseTensor&lt;T, TS&gt; A, ManagedEnum<UnaryOperation> opA, DenseTensor&lt;T, TS&gt; B, ManagedEnum<UnaryOperation> opB, T α, DenseTensor&lt;T, TS&gt; C, ManagedEnum<UnaryOperation> opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="847">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="64" />
 			          <Metric Name="CyclomaticComplexity" Value="2" />
@@ -9505,7 +9505,7 @@
 			          <Metric Name="ExecutableLines" Value="8" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void DenseOperation&lt;T, TS&gt;.TensorsBinaryOperation(DenseTensor&lt;T, TS&gt;? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor&lt;T, TS&gt;? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor&lt;T, TS&gt; C, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="861">
+			      <Method Name="void DenseOperation&lt;T, TS&gt;.TensorsBinaryOperation(DenseTensor&lt;T, TS&gt;? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, DenseTensor&lt;T, TS&gt;? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, DenseTensor&lt;T, TS&gt; C, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="861">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="74" />
 			          <Metric Name="CyclomaticComplexity" Value="7" />
@@ -9514,7 +9514,7 @@
 			          <Metric Name="ExecutableLines" Value="3" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; DenseOperation&lt;T, TS&gt;.Contract(DenseTensor&lt;T, TS&gt; A, UnaryOperation opA, DenseTensor&lt;T, TS&gt; B, UnaryOperation opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="869">
+			      <Method Name="DenseTensor&lt;T, TS&gt; DenseOperation&lt;T, TS&gt;.Contract(DenseTensor&lt;T, TS&gt; A, ManagedEnum<UnaryOperation> opA, DenseTensor&lt;T, TS&gt; B, ManagedEnum<UnaryOperation> opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="869">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="57" />
 			          <Metric Name="CyclomaticComplexity" Value="2" />
@@ -9523,7 +9523,7 @@
 			          <Metric Name="ExecutableLines" Value="15" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; DenseOperation&lt;T, TS&gt;.TensorsBinaryOperation(DenseTensor&lt;T, TS&gt;? A, TensorOrder orderA, UnaryOperation opA, T scalarA, DenseTensor&lt;T, TS&gt;? B, TensorOrder orderB, UnaryOperation opB, T scalarB, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="895">
+			      <Method Name="DenseTensor&lt;T, TS&gt; DenseOperation&lt;T, TS&gt;.TensorsBinaryOperation(DenseTensor&lt;T, TS&gt;? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T scalarA, DenseTensor&lt;T, TS&gt;? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T scalarB, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\DenseOperation.cs" Line="895">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="63" />
 			          <Metric Name="CyclomaticComplexity" Value="14" />
@@ -13916,7 +13916,7 @@
 			          <Metric Name="ExecutableLines" Value="9" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void ITensorOperations&lt;T, TTen1, TTen2, TTen3&gt;.Contract(TTen1 A, UnaryOperation opA, TTen2 B, UnaryOperation opB, T α, TTen3 C, UnaryOperation opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1118">
+			      <Method Name="void ITensorOperations&lt;T, TTen1, TTen2, TTen3&gt;.Contract(TTen1 A, ManagedEnum<UnaryOperation> opA, TTen2 B, ManagedEnum<UnaryOperation> opB, T α, TTen3 C, ManagedEnum<UnaryOperation> opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1118">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -13934,7 +13934,7 @@
 			          <Metric Name="ExecutableLines" Value="14" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void ITensorOperations&lt;T, TTen1, TTen2, TTen3&gt;.TensorsBinaryOperation(TTen1? A, TensorOrder orderA, UnaryOperation opA, T scalarA, TTen2? B, TensorOrder orderB, UnaryOperation opB, T scalarB, TTen3 C, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1165">
+			      <Method Name="void ITensorOperations&lt;T, TTen1, TTen2, TTen3&gt;.TensorsBinaryOperation(TTen1? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T scalarA, TTen2? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T scalarB, TTen3 C, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1165">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -13952,7 +13952,7 @@
 			          <Metric Name="ExecutableLines" Value="12" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="TTen3 ITensorOperations&lt;T, TTen1, TTen2, TTen3&gt;.Contract(TTen1 A, UnaryOperation opA, TTen2 B, UnaryOperation opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1200">
+			      <Method Name="TTen3 ITensorOperations&lt;T, TTen1, TTen2, TTen3&gt;.Contract(TTen1 A, ManagedEnum<UnaryOperation> opA, TTen2 B, ManagedEnum<UnaryOperation> opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1200">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -13970,7 +13970,7 @@
 			          <Metric Name="ExecutableLines" Value="13" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="TTen3 ITensorOperations&lt;T, TTen1, TTen2, TTen3&gt;.TensorsBinaryOperation(TTen1? A, TensorOrder orderA, UnaryOperation opA, T scalarA, TTen2? B, TensorOrder orderB, UnaryOperation opB, T scalarB, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1245">
+			      <Method Name="TTen3 ITensorOperations&lt;T, TTen1, TTen2, TTen3&gt;.TensorsBinaryOperation(TTen1? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T scalarA, TTen2? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T scalarB, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1245">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -14000,7 +14000,7 @@
 			          <Metric Name="ExecutableLines" Value="14" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void ITensorOperations&lt;T, TTen1, TTen2&gt;.Reduce(TTen1 A, TensorOrder order, T α, TTen2 B, T β = default(T), UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="976">
+			      <Method Name="void ITensorOperations&lt;T, TTen1, TTen2&gt;.Reduce(TTen1 A, TensorOrder order, T α, TTen2 B, T β = default(T), ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity, ManagedEnum<UnaryOperation> opB = UnaryOperation.Identity, ManagedEnum<ReduceOperation> reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="976">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="74" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -14018,7 +14018,7 @@
 			          <Metric Name="ExecutableLines" Value="7" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void ITensorOperations&lt;T, TTen1, TTen2&gt;.Permute(TTen1 A, TensorOrder order, T scalar, TTen2 B, UnaryOperation opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1005">
+			      <Method Name="void ITensorOperations&lt;T, TTen1, TTen2&gt;.Permute(TTen1 A, TensorOrder order, T scalar, TTen2 B, ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1005">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="87" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -14036,7 +14036,7 @@
 			          <Metric Name="ExecutableLines" Value="11" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="TTen2 ITensorOperations&lt;T, TTen1, TTen2&gt;.Reduce(TTen1 A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1046">
+			      <Method Name="TTen2 ITensorOperations&lt;T, TTen1, TTen2&gt;.Reduce(TTen1 A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity, ManagedEnum<ReduceOperation> reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1046">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="80" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -14054,7 +14054,7 @@
 			          <Metric Name="ExecutableLines" Value="4" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="TTen2 ITensorOperations&lt;T, TTen1, TTen2&gt;.Permute(TTen1 A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1070">
+			      <Method Name="TTen2 ITensorOperations&lt;T, TTen1, TTen2&gt;.Permute(TTen1 A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\MultiTypeOperations.cs" Line="1070">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="87" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16628,7 +16628,7 @@
 			          <Metric Name="ExecutableLines" Value="5" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Reduce(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, UnaryOperation opA, ReduceOperation reduce)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="335">
+			      <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Reduce(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA, ManagedEnum<ReduceOperation> reduce)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="335">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="66" />
 			          <Metric Name="CyclomaticComplexity" Value="2" />
@@ -16637,7 +16637,7 @@
 			          <Metric Name="ExecutableLines" Value="7" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Permute(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="348">
+			      <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Permute(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="348">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="66" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16646,7 +16646,7 @@
 			          <Metric Name="ExecutableLines" Value="7" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Reduce(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T α, UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="359">
+			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Reduce(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T α, ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity, ManagedEnum<ReduceOperation> reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="359">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="62" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16655,7 +16655,7 @@
 			          <Metric Name="ExecutableLines" Value="10" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Permute(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, UnaryOperation op)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="378">
+			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Permute(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> op)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="378">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="66" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16664,7 +16664,7 @@
 			          <Metric Name="ExecutableLines" Value="8" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, UnaryOperation opA, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, UnaryOperation opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="398">
+			      <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, ManagedEnum<UnaryOperation> opA, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, ManagedEnum<UnaryOperation> opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="398">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="63" />
 			          <Metric Name="CyclomaticComplexity" Value="3" />
@@ -16673,7 +16673,7 @@
 			          <Metric Name="ExecutableLines" Value="8" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(SparseTensor&lt;T, TInd, TS, TSInd&gt;? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt;? B, TensorOrder orderB, UnaryOperation opB, T β, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="413">
+			      <Method Name="SparseTensor&lt;T, TInd, TS, TSInd&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(SparseTensor&lt;T, TInd, TS, TSInd&gt;? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt;? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="413">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="65" />
 			          <Metric Name="CyclomaticComplexity" Value="9" />
@@ -16682,7 +16682,7 @@
 			          <Metric Name="ExecutableLines" Value="6" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, UnaryOperation opA, DenseTensor&lt;T, TS&gt; B, UnaryOperation opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="424">
+			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, ManagedEnum<UnaryOperation> opA, DenseTensor&lt;T, TS&gt; B, ManagedEnum<UnaryOperation> opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="424">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="56" />
 			          <Metric Name="CyclomaticComplexity" Value="2" />
@@ -16691,7 +16691,7 @@
 			          <Metric Name="ExecutableLines" Value="15" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(SparseTensor&lt;T, TInd, TS, TSInd&gt;? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor&lt;T, TS&gt;? B, TensorOrder orderB, UnaryOperation opB, T β, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="450">
+			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(SparseTensor&lt;T, TInd, TS, TSInd&gt;? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, DenseTensor&lt;T, TS&gt;? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="450">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="63" />
 			          <Metric Name="CyclomaticComplexity" Value="13" />
@@ -16700,7 +16700,7 @@
 			          <Metric Name="ExecutableLines" Value="7" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(DenseTensor&lt;T, TS&gt; A, UnaryOperation opA, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, UnaryOperation opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="468">
+			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(DenseTensor&lt;T, TS&gt; A, ManagedEnum<UnaryOperation> opA, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, ManagedEnum<UnaryOperation> opB, T α)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="468">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="91" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16709,7 +16709,7 @@
 			          <Metric Name="ExecutableLines" Value="1" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(DenseTensor&lt;T, TS&gt;? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt;? B, TensorOrder orderB, UnaryOperation opB, T β, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="471">
+			      <Method Name="DenseTensor&lt;T, TS&gt; SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(DenseTensor&lt;T, TS&gt;? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt;? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="471">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="89" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16718,7 +16718,7 @@
 			          <Metric Name="ExecutableLines" Value="1" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Reduce(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, T β = default(T), UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="476">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Reduce(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, T β = default(T), ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity, ManagedEnum<UnaryOperation> opB = UnaryOperation.Identity, ManagedEnum<ReduceOperation> reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="476">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="63" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16727,7 +16727,7 @@
 			          <Metric Name="ExecutableLines" Value="8" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Permute(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, UnaryOperation opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="485">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Permute(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="485">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="70" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16736,7 +16736,7 @@
 			          <Metric Name="ExecutableLines" Value="5" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Reduce(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T α, DenseTensor&lt;T, TS&gt; B, T β = default(T), UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="494">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Reduce(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T α, DenseTensor&lt;T, TS&gt; B, T β = default(T), ManagedEnum<UnaryOperation> opA = UnaryOperation.Identity, ManagedEnum<UnaryOperation> opB = UnaryOperation.Identity, ManagedEnum<ReduceOperation> reduce = ReduceOperation.Add)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="494">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="63" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16745,7 +16745,7 @@
 			          <Metric Name="ExecutableLines" Value="7" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Permute(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, DenseTensor&lt;T, TS&gt; B, UnaryOperation op = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="502">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Permute(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, TensorOrder order, T scalar, DenseTensor&lt;T, TS&gt; B, ManagedEnum<UnaryOperation> op = UnaryOperation.Identity)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="502">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="72" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16754,7 +16754,7 @@
 			          <Metric Name="ExecutableLines" Value="4" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, UnaryOperation opA, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, UnaryOperation opB, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt; C, UnaryOperation opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="510">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, ManagedEnum<UnaryOperation> opA, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, ManagedEnum<UnaryOperation> opB, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt; C, ManagedEnum<UnaryOperation> opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="510">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="77" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16763,7 +16763,7 @@
 			          <Metric Name="ExecutableLines" Value="3" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(SparseTensor&lt;T, TInd, TS, TSInd&gt;? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt;? B, TensorOrder orderB, UnaryOperation opB, T β, SparseTensor&lt;T, TInd, TS, TSInd&gt; C, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="518">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(SparseTensor&lt;T, TInd, TS, TSInd&gt;? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt;? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, SparseTensor&lt;T, TInd, TS, TSInd&gt; C, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="518">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="71" />
 			          <Metric Name="CyclomaticComplexity" Value="5" />
@@ -16772,7 +16772,7 @@
 			          <Metric Name="ExecutableLines" Value="4" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, UnaryOperation opA, DenseTensor&lt;T, TS&gt; B, UnaryOperation opB, T α, DenseTensor&lt;T, TS&gt; C, UnaryOperation opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="527">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(SparseTensor&lt;T, TInd, TS, TSInd&gt; A, ManagedEnum<UnaryOperation> opA, DenseTensor&lt;T, TS&gt; B, ManagedEnum<UnaryOperation> opB, T α, DenseTensor&lt;T, TS&gt; C, ManagedEnum<UnaryOperation> opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="527">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="63" />
 			          <Metric Name="CyclomaticComplexity" Value="2" />
@@ -16781,7 +16781,7 @@
 			          <Metric Name="ExecutableLines" Value="8" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(SparseTensor&lt;T, TInd, TS, TSInd&gt;? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor&lt;T, TS&gt;? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor&lt;T, TS&gt; C, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="541">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(SparseTensor&lt;T, TInd, TS, TSInd&gt;? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, DenseTensor&lt;T, TS&gt;? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, DenseTensor&lt;T, TS&gt; C, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="541">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="73" />
 			          <Metric Name="CyclomaticComplexity" Value="6" />
@@ -16790,7 +16790,7 @@
 			          <Metric Name="ExecutableLines" Value="3" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(DenseTensor&lt;T, TS&gt; A, UnaryOperation opA, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, UnaryOperation opB, T α, DenseTensor&lt;T, TS&gt; C, UnaryOperation opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="549">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.Contract(DenseTensor&lt;T, TS&gt; A, ManagedEnum<UnaryOperation> opA, SparseTensor&lt;T, TInd, TS, TSInd&gt; B, ManagedEnum<UnaryOperation> opB, T α, DenseTensor&lt;T, TS&gt; C, ManagedEnum<UnaryOperation> opC, T β)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="549">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="90" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -16799,7 +16799,7 @@
 			          <Metric Name="ExecutableLines" Value="1" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(DenseTensor&lt;T, TS&gt;? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt;? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor&lt;T, TS&gt; C, BinaryOperation binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="552">
+			      <Method Name="void SparseOperation&lt;T, TInd, TS, TSInd&gt;.TensorsBinaryOperation(DenseTensor&lt;T, TS&gt;? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, SparseTensor&lt;T, TInd, TS, TSInd&gt;? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, DenseTensor&lt;T, TS&gt; C, ManagedEnum<BinaryOperation> binary)" File="D:\Works\git\ALTHEA\Althea\Arrays\Operations\SparseOperations.cs" Line="552">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="89" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30109,7 +30109,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorUnary&lt;T, TS1, TS2&gt;(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="96">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorUnary&lt;T, TS1, TS2&gt;(ManagedEnum<UnaryOperation> op, TS1 x, long strideX, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="96">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30118,7 +30118,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorReduce&lt;T, TS&gt;(ReduceOperation op, TS x, long strideX, out T result)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="111">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, TS x, long strideX, out T result)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="111">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30127,7 +30127,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorArgReduce&lt;T, TS&gt;(ReduceOperation op, TS x, long strideX, out long index)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="126">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorArgReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, TS x, long strideX, out long index)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="126">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30136,7 +30136,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorBinaryScalar&lt;T, TS1, TS2&gt;(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="144">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorBinaryScalar&lt;T, TS1, TS2&gt;(ManagedEnum<BinaryScalarOperation> op, T scalar, TS1 x, long strideX, TS2 y, long strideY)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="144">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30145,7 +30145,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorsBinary&lt;T, TS1, TS2, TS3&gt;(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="164">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorsBinary&lt;T, TS1, TS2, TS3&gt;(ManagedEnum<BinaryOperation> op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="164">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30154,7 +30154,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorsScan&lt;T, TS1, TS2&gt;(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="182">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralVectorsScan&lt;T, TS1, TS2&gt;(ManagedEnum<BinaryOperation> op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="182">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30181,7 +30181,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixUnary&lt;T, TS1, TS2&gt;(UnaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="237">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixUnary&lt;T, TS1, TS2&gt;(ManagedEnum<UnaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="237">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30190,7 +30190,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixReduce&lt;T, TS&gt;(ReduceOperation op, long rows, long cols, TS A, long lda, out T result)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="254">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out T result)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="254">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30199,7 +30199,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixArgReduce&lt;T, TS&gt;(ReduceOperation op, long rows, long cols, TS A, long lda, out long index)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="271">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixArgReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out long index)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="271">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30208,7 +30208,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixColumnReduce&lt;T, TS1, TS2&gt;(ReduceOperation op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="290">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixColumnReduce&lt;T, TS1, TS2&gt;(ManagedEnum<ReduceOperation> op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="290">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30217,7 +30217,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixBinaryScalar&lt;T, TS1, TS2&gt;(BinaryScalarOperation op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="310">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixBinaryScalar&lt;T, TS1, TS2&gt;(ManagedEnum<BinaryScalarOperation> op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="310">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30226,7 +30226,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatricesBinary&lt;T, TS1, TS2, TS3&gt;(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="332">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatricesBinary&lt;T, TS1, TS2, TS3&gt;(ManagedEnum<BinaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="332">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30235,7 +30235,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixColumnScan&lt;T, TS1, TS2&gt;(BinaryOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="352">
+			      <Method Name="bool IExtendBlasAbstractApi.GeneralMatrixColumnScan&lt;T, TS1, TS2&gt;(ManagedEnum<BinaryOperation> op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\ExtendBlasAPI.cs" Line="352">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30346,7 +30346,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixUnary&lt;T, TS1, TS2&gt;(UnaryOperation op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="204">
+			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixUnary&lt;T, TS1, TS2&gt;(ManagedEnum<UnaryOperation> op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="204">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30355,7 +30355,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixReduce&lt;T, TS&gt;(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out T result)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="224">
+			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out T result)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="224">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30364,7 +30364,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixArgReduce&lt;T, TS&gt;(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out long index)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="244">
+			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixArgReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out long index)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="244">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30373,7 +30373,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixColumnReduce&lt;T, TS1, TS2&gt;(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 x, long strideX)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="266">
+			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixColumnReduce&lt;T, TS1, TS2&gt;(ManagedEnum<ReduceOperation> op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 x, long strideX)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="266">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30382,7 +30382,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixBinaryScalar&lt;T, TS1, TS2&gt;(BinaryScalarOperation op, bool upper, bool unitDiag, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="288">
+			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixBinaryScalar&lt;T, TS1, TS2&gt;(ManagedEnum<BinaryScalarOperation> op, bool upper, bool unitDiag, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="288">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30391,7 +30391,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatricesBinary&lt;T, TS1, TS2, TS3&gt;(BinaryOperation op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="312">
+			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatricesBinary&lt;T, TS1, TS2, TS3&gt;(ManagedEnum<BinaryOperation> op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="312">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -30400,7 +30400,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixColumnScan&lt;T, TS1, TS2&gt;(BinaryOperation op, bool inclusive, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="335">
+			      <Method Name="bool IHalfMatrixBlasAbstractApi.HalfMatrixColumnScan&lt;T, TS1, TS2&gt;(ManagedEnum<BinaryOperation> op, bool inclusive, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)" File="D:\Works\git\ALTHEA\Althea\LinearAlgebra\Dense\HalfMatrixBlasAPI.cs" Line="335">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53434,7 +53434,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Field>
-			      <Field Name="UnaryOperation DenseTensorWrapper&lt;T, TS&gt;.m_op" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="24">
+			      <Field Name="ManagedEnum<UnaryOperation> DenseTensorWrapper&lt;T, TS&gt;.m_op" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="24">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="0" />
@@ -53552,7 +53552,7 @@
 			          </Method>
 			        </Accessors>
 			      </Property>
-			      <Property Name="UnaryOperation DenseTensorWrapper&lt;T, TS&gt;.Operation" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="73">
+			      <Property Name="ManagedEnum<UnaryOperation> DenseTensorWrapper&lt;T, TS&gt;.Operation" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="73">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="90" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53561,7 +53561,7 @@
 			          <Metric Name="ExecutableLines" Value="2" />
 			        </Metrics>
 			        <Accessors>
-			          <Method Name="UnaryOperation DenseTensorWrapper&lt;T, TS&gt;.Operation.get" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="75">
+			          <Method Name="ManagedEnum<UnaryOperation> DenseTensorWrapper&lt;T, TS&gt;.Operation.get" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="75">
 			            <Metrics>
 			              <Metric Name="MaintainabilityIndex" Value="90" />
 			              <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53682,7 +53682,7 @@
 			          <Metric Name="ExecutableLines" Value="1" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensorWrapper&lt;T, TS&gt;.DenseTensorWrapper(TS value, ReadOnlySpan&lt;long&gt; size, UnaryOperation operation, T scalar)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="179">
+			      <Method Name="DenseTensorWrapper&lt;T, TS&gt;.DenseTensorWrapper(TS value, ReadOnlySpan&lt;long&gt; size, ManagedEnum<UnaryOperation> operation, T scalar)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="179">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="91" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53700,7 +53700,7 @@
 			          <Metric Name="ExecutableLines" Value="1" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensorWrapper&lt;T, TS&gt;.DenseTensorWrapper(TS value, ReadOnlySpan&lt;long&gt; size, ReadOnlySpan&lt;long&gt; outerSize, ReadOnlySpan&lt;long&gt; strides, UnaryOperation operation, T scalar)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="201">
+			      <Method Name="DenseTensorWrapper&lt;T, TS&gt;.DenseTensorWrapper(TS value, ReadOnlySpan&lt;long&gt; size, ReadOnlySpan&lt;long&gt; outerSize, ReadOnlySpan&lt;long&gt; strides, ManagedEnum<UnaryOperation> operation, T scalar)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="201">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="63" />
 			          <Metric Name="CyclomaticComplexity" Value="2" />
@@ -53709,7 +53709,7 @@
 			          <Metric Name="ExecutableLines" Value="10" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensorWrapper&lt;T, TS&gt;.DenseTensorWrapper(ILabeledTensor&lt;T&gt;? tensor, UnaryOperation operation = UnaryOperation.Identity, T? scalar = null)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="224">
+			      <Method Name="DenseTensorWrapper&lt;T, TS&gt;.DenseTensorWrapper(ILabeledTensor&lt;T&gt;? tensor, ManagedEnum<UnaryOperation> operation = UnaryOperation.Identity, T? scalar = null)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="224">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="57" />
 			          <Metric Name="CyclomaticComplexity" Value="6" />
@@ -53718,7 +53718,7 @@
 			          <Metric Name="ExecutableLines" Value="16" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="DenseTensorWrapper&lt;T, TS&gt;.DenseTensorWrapper(DenseTensorWrapper&lt;T, TS&gt; tensor, UnaryOperation operation, T scalar)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="255">
+			      <Method Name="DenseTensorWrapper&lt;T, TS&gt;.DenseTensorWrapper(DenseTensorWrapper&lt;T, TS&gt; tensor, ManagedEnum<UnaryOperation> operation, T scalar)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\CustomTypes.cs" Line="255">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="67" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53757,7 +53757,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IBaseAbstractApi.OperationBinary&lt;T, TS1, TS2, TS3&gt;(BinaryOperation binary, DenseTensorWrapper&lt;T, TS1&gt; left, ReadOnlySpan&lt;int&gt; leftPerm, DenseTensorWrapper&lt;T, TS2&gt; right, ReadOnlySpan&lt;int&gt; rightPerm, DenseArrayWrapper&lt;T, TS3&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\BaseAPI.cs" Line="48">
+			      <Method Name="bool IBaseAbstractApi.OperationBinary&lt;T, TS1, TS2, TS3&gt;(ManagedEnum<BinaryOperation> binary, DenseTensorWrapper&lt;T, TS1&gt; left, ReadOnlySpan&lt;int&gt; leftPerm, DenseTensorWrapper&lt;T, TS2&gt; right, ReadOnlySpan&lt;int&gt; rightPerm, DenseArrayWrapper&lt;T, TS3&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\BaseAPI.cs" Line="48">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53766,7 +53766,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IBaseAbstractApi.Reduce&lt;T, TS1, TS2&gt;(ReduceOperation reduce, DenseTensorWrapper&lt;T, TS1&gt; source, DenseTensorWrapper&lt;T, TS2&gt; destination, ReadOnlySpan&lt;int&gt; reduceDimensions)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\BaseAPI.cs" Line="65">
+			      <Method Name="bool IBaseAbstractApi.Reduce&lt;T, TS1, TS2&gt;(ManagedEnum<ReduceOperation> reduce, DenseTensorWrapper&lt;T, TS1&gt; source, DenseTensorWrapper&lt;T, TS2&gt; destination, ReadOnlySpan&lt;int&gt; reduceDimensions)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\BaseAPI.cs" Line="65">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53826,7 +53826,7 @@
 			      <Metric Name="ExecutableLines" Value="0" />
 			    </Metrics>
 			    <Members>
-			      <Method Name="bool IExtendAbstractApi.PointwiseBinaryScalar&lt;T, TS&gt;(BinaryScalarOperation op, DenseArrayWrapper&lt;T, TS&gt; tensor, T value)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="28">
+			      <Method Name="bool IExtendAbstractApi.PointwiseBinaryScalar&lt;T, TS&gt;(ManagedEnum<BinaryScalarOperation> op, DenseArrayWrapper&lt;T, TS&gt; tensor, T value)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="28">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53835,7 +53835,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendAbstractApi.FullReduce&lt;T, TS&gt;(ReduceOperation op, DenseArrayWrapper&lt;T, TS&gt; tensor, out T result)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="41">
+			      <Method Name="bool IExtendAbstractApi.FullReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, DenseArrayWrapper&lt;T, TS&gt; tensor, out T result)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="41">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53844,7 +53844,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendAbstractApi.AxisReduce&lt;T, TS&gt;(ReduceOperation op, int axis, DenseArrayWrapper&lt;T, TS&gt; tensor, DenseArrayWrapper&lt;T, TS&gt; result)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="56">
+			      <Method Name="bool IExtendAbstractApi.AxisReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, int axis, DenseArrayWrapper&lt;T, TS&gt; tensor, DenseArrayWrapper&lt;T, TS&gt; result)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="56">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53853,7 +53853,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendAbstractApi.AxisScan&lt;T, TS&gt;(ReduceOperation op, bool inclusive, int axis, DenseArrayWrapper&lt;T, TS&gt; tensor, DenseArrayWrapper&lt;T, TS&gt; result)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="72">
+			      <Method Name="bool IExtendAbstractApi.AxisScan&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, bool inclusive, int axis, DenseArrayWrapper&lt;T, TS&gt; tensor, DenseArrayWrapper&lt;T, TS&gt; result)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="72">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53862,7 +53862,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IExtendAbstractApi.ArgFullReduce&lt;T, TS&gt;(ReduceOperation op, DenseArrayWrapper&lt;T, TS&gt; tensor, out long index)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="86">
+			      <Method Name="bool IExtendAbstractApi.ArgFullReduce&lt;T, TS&gt;(ManagedEnum<ReduceOperation> op, DenseArrayWrapper&lt;T, TS&gt; tensor, out long index)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Dense\ExtendAPI.cs" Line="86">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53949,7 +53949,7 @@
 			          <Metric Name="ExecutableLines" Value="2" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IAbstractApi.Permute&lt;T, TInd, TS1, TS2, TSInd&gt;(ISparseArray&lt;T, TInd, TS1, TSInd&gt; source, T scalar, UnaryOperation op, ReadOnlySpan&lt;int&gt; permutationOrder, DenseArrayWrapper&lt;T, TS2&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="99">
+			      <Method Name="bool IAbstractApi.Permute&lt;T, TInd, TS1, TS2, TSInd&gt;(ISparseArray&lt;T, TInd, TS1, TSInd&gt; source, T scalar, ManagedEnum<UnaryOperation> op, ReadOnlySpan&lt;int&gt; permutationOrder, DenseArrayWrapper&lt;T, TS2&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="99">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53958,7 +53958,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IAbstractApi.Permute&lt;T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2&gt;(ISparseArray&lt;T, TInd1, TS1, TSInd1&gt; source, T scalar, UnaryOperation op, ReadOnlySpan&lt;int&gt; permutationOrder, ref SparseArrayWrapper&lt;T, TInd2, TS2, TSInd2&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="121">
+			      <Method Name="bool IAbstractApi.Permute&lt;T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2&gt;(ISparseArray&lt;T, TInd1, TS1, TSInd1&gt; source, T scalar, ManagedEnum<UnaryOperation> op, ReadOnlySpan&lt;int&gt; permutationOrder, ref SparseArrayWrapper&lt;T, TInd2, TS2, TSInd2&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="121">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53967,7 +53967,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IAbstractApi.OperationBinary&lt;T, TInd, TS1, TS2, TS3, TSInd&gt;(BinaryOperation binary, ISparseArray&lt;T, TInd, TS1, TSInd&gt;? left, ReadOnlySpan&lt;int&gt; leftPerm, T scalarLeft, UnaryOperation opLeft, DenseTensorWrapper&lt;T, TS2&gt; right, ReadOnlySpan&lt;int&gt; rightPerm, DenseArrayWrapper&lt;T, TS3&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="143">
+			      <Method Name="bool IAbstractApi.OperationBinary&lt;T, TInd, TS1, TS2, TS3, TSInd&gt;(ManagedEnum<BinaryOperation> binary, ISparseArray&lt;T, TInd, TS1, TSInd&gt;? left, ReadOnlySpan&lt;int&gt; leftPerm, T scalarLeft, ManagedEnum<UnaryOperation> opLeft, DenseTensorWrapper&lt;T, TS2&gt; right, ReadOnlySpan&lt;int&gt; rightPerm, DenseArrayWrapper&lt;T, TS3&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="143">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53976,7 +53976,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IAbstractApi.OperationBinary&lt;T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3&gt;(BinaryOperation binary, ISparseArray&lt;T, TInd1, TS1, TSInd1&gt;? left, ReadOnlySpan&lt;int&gt; leftPerm, T scalarLeft, UnaryOperation opLeft, ISparseArray&lt;T, TInd2, TS2, TSInd2&gt;? right, ReadOnlySpan&lt;int&gt; rightPerm, T scalarRight, UnaryOperation opRight, ref SparseArrayWrapper&lt;T, TInd3, TS3, TSInd3&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="171">
+			      <Method Name="bool IAbstractApi.OperationBinary&lt;T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3&gt;(ManagedEnum<BinaryOperation> binary, ISparseArray&lt;T, TInd1, TS1, TSInd1&gt;? left, ReadOnlySpan&lt;int&gt; leftPerm, T scalarLeft, ManagedEnum<UnaryOperation> opLeft, ISparseArray&lt;T, TInd2, TS2, TSInd2&gt;? right, ReadOnlySpan&lt;int&gt; rightPerm, T scalarRight, ManagedEnum<UnaryOperation> opRight, ref SparseArrayWrapper&lt;T, TInd3, TS3, TSInd3&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="171">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53985,7 +53985,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IAbstractApi.Reduce&lt;T, TInd, TS1, TS2, TSInd&gt;(ReduceOperation reduce, ISparseArray&lt;T, TInd, TS1, TSInd&gt; source, T α, UnaryOperation op, ReadOnlySpan&lt;int&gt; reduceDimensions, DenseTensorWrapper&lt;T, TS2&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="192">
+			      <Method Name="bool IAbstractApi.Reduce&lt;T, TInd, TS1, TS2, TSInd&gt;(ManagedEnum<ReduceOperation> reduce, ISparseArray&lt;T, TInd, TS1, TSInd&gt; source, T α, ManagedEnum<UnaryOperation> op, ReadOnlySpan&lt;int&gt; reduceDimensions, DenseTensorWrapper&lt;T, TS2&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="192">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -53994,7 +53994,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IAbstractApi.Reduce&lt;T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2&gt;(ReduceOperation reduce, ISparseArray&lt;T, TInd1, TS1, TSInd1&gt; source, T scalar, UnaryOperation op, ReadOnlySpan&lt;int&gt; reduceDimensions, ref SparseArrayWrapper&lt;T, TInd2, TS2, TSInd2&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="215">
+			      <Method Name="bool IAbstractApi.Reduce&lt;T, TInd1, TInd2, TS1, TS2, TSInd1, TSInd2&gt;(ManagedEnum<ReduceOperation> reduce, ISparseArray&lt;T, TInd1, TS1, TSInd1&gt; source, T scalar, ManagedEnum<UnaryOperation> op, ReadOnlySpan&lt;int&gt; reduceDimensions, ref SparseArrayWrapper&lt;T, TInd2, TS2, TSInd2&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="215">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -54003,7 +54003,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IAbstractApi.Contract&lt;T, TInd, TS1, TS2, TS3, TSInd&gt;(ISparseArray&lt;T, TInd, TS1, TSInd&gt; left, UnaryOperation opLeft, DenseTensorWrapper&lt;T, TS2&gt; right, TensorContractInfo info, DenseTensorWrapper&lt;T, TS3&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="236">
+			      <Method Name="bool IAbstractApi.Contract&lt;T, TInd, TS1, TS2, TS3, TSInd&gt;(ISparseArray&lt;T, TInd, TS1, TSInd&gt; left, ManagedEnum<UnaryOperation> opLeft, DenseTensorWrapper&lt;T, TS2&gt; right, TensorContractInfo info, DenseTensorWrapper&lt;T, TS3&gt; destination)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="236">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />
@@ -54012,7 +54012,7 @@
 			          <Metric Name="ExecutableLines" Value="0" />
 			        </Metrics>
 			      </Method>
-			      <Method Name="bool IAbstractApi.Contract&lt;T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3&gt;(T α, ISparseArray&lt;T, TInd1, TS1, TSInd1&gt; left, UnaryOperation opLeft, ISparseArray&lt;T, TInd2, TS2, TSInd2&gt; right, UnaryOperation opRight, in StorableContractInfo info, T β, ref SparseArrayWrapper&lt;T, TInd3, TS3, TSInd3&gt; destination, UnaryOperation opDst)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="265">
+			      <Method Name="bool IAbstractApi.Contract&lt;T, TInd1, TInd2, TInd3, TS1, TS2, TS3, TSInd1, TSInd2, TSInd3&gt;(T α, ISparseArray&lt;T, TInd1, TS1, TSInd1&gt; left, ManagedEnum<UnaryOperation> opLeft, ISparseArray&lt;T, TInd2, TS2, TSInd2&gt; right, ManagedEnum<UnaryOperation> opRight, in StorableContractInfo info, T β, ref SparseArrayWrapper&lt;T, TInd3, TS3, TSInd3&gt; destination, ManagedEnum<UnaryOperation> opDst)" File="D:\Works\git\ALTHEA\Althea\TensorAlgebra\Sparse\API.cs" Line="265">
 			        <Metrics>
 			          <Metric Name="MaintainabilityIndex" Value="100" />
 			          <Metric Name="CyclomaticComplexity" Value="1" />

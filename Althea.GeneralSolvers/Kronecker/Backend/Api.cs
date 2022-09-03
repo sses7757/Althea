@@ -37,7 +37,7 @@ public class Api : IAbstractApi
 						rightMatrix.NRows != rightMatrix.NCols ||
 						vector.Length != leftMatrix.NRows * rightMatrix.NRows))
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
-		if (multiply && vector.Length != leftMatrix.NCols * rightMatrix.NCols)
+		if (!multiply && (vector.Length != leftMatrix.NCols * rightMatrix.NCols))
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
 		if (scalarVector != T.Zero && vector.Length != leftMatrix.NRows * rightMatrix.NRows)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(scalarVector));

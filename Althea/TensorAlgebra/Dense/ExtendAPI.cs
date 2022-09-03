@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using Althea.Array;
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 using Althea.SourceGenerator;
 using Althea.Storage;
@@ -25,7 +26,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool PointwiseBinaryScalar<T, TS>(BinaryScalarOperation op, DenseArrayWrapper<T, TS> tensor, T value) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool PointwiseBinaryScalar<T, TS>(ManagedEnum<BinaryScalarOperation> op, DenseArrayWrapper<T, TS> tensor, T value) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, fully reduce <paramref name="tensor"/> according to <paramref name="op"/>.
@@ -38,7 +39,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		[AbstractApiMethod]
-		public abstract bool FullReduce<T, TS>(ReduceOperation op, DenseArrayWrapper<T, TS> tensor, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool FullReduce<T, TS>(ManagedEnum<ReduceOperation> op, DenseArrayWrapper<T, TS> tensor, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, reduce <paramref name="tensor"/>'s <paramref name="axis"/> dimension according to <paramref name="op"/> and overwrite <paramref name="result"/>.
@@ -53,7 +54,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="result"/>'s size is not <paramref name="tensor"/>'s without <paramref name="axis"/></exception>
 		[AbstractApiMethod]
-		public abstract bool AxisReduce<T, TS>(ReduceOperation op, int axis, DenseArrayWrapper<T, TS> tensor, DenseArrayWrapper<T, TS> result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool AxisReduce<T, TS>(ManagedEnum<ReduceOperation> op, int axis, DenseArrayWrapper<T, TS> tensor, DenseArrayWrapper<T, TS> result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, partial scan <paramref name="tensor"/>'s <paramref name="axis"/> dimension according to <paramref name="op"/> and overwrite <paramref name="result"/>.
@@ -69,7 +70,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="result"/>'s size is not <paramref name="tensor"/>'s without <paramref name="axis"/></exception>
 		[AbstractApiMethod]
-		public abstract bool AxisScan<T, TS>(ReduceOperation op, bool inclusive, int axis, DenseArrayWrapper<T, TS> tensor, DenseArrayWrapper<T, TS> result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool AxisScan<T, TS>(ManagedEnum<ReduceOperation> op, bool inclusive, int axis, DenseArrayWrapper<T, TS> tensor, DenseArrayWrapper<T, TS> result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, fully reduce <paramref name="tensor"/> according to <paramref name="op"/> and return the index of reduction result.
@@ -83,7 +84,7 @@ namespace Althea.TensorAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
 		/// <exception cref="ArgumentException">If <paramref name="op"/> is not aggregation operation like <see cref="ReduceOperation.Maximum"/></exception>
 		[AbstractApiMethod]
-		public abstract bool ArgFullReduce<T, TS>(ReduceOperation op, DenseArrayWrapper<T, TS> tensor, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool ArgFullReduce<T, TS>(ManagedEnum<ReduceOperation> op, DenseArrayWrapper<T, TS> tensor, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i] == <paramref name="B"/>[i]</c> for all <c>i</c>.

@@ -126,7 +126,7 @@ inline ptrdiff_t vectorPruneDirect(const void* av, const void* threshold, const 
 		if (safeOut)
 		{
 			auto diff = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, tempBegin, gt) - tempBegin;
-			if (diff > outN)
+			if (diff > (ptrdiff_t)outN)
 				return diff - outN;
 		}
 		thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, gt);
@@ -138,7 +138,7 @@ inline ptrdiff_t vectorPruneDirect(const void* av, const void* threshold, const 
 		if (safeOut)
 		{
 			auto diff = thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, tempBegin, gt) - tempBegin;
-			if (diff > outN)
+			if (diff > (ptrdiff_t)outN)
 				return diff - outN;
 		}
 		thrust::copy_if(THRUST_PAR, zipBegin, zipBegin + N, a, resultBegin, gt);
@@ -342,10 +342,10 @@ struct cooMatrixSortByColumn_functor
 {
 	PREFIX bool operator()(const thrust::tuple<TInd, TInd> lhs, const thrust::tuple<TInd, TInd> rhs) const
 	{
-		if (lhs.get<1>() < rhs.get<1>())
+		if (thrust::get<1>(lhs) < thrust::get<1>(rhs))
 			return true;
-		else if (lhs.get<1>() == rhs.get<1>())
-			return lhs.get<0>() < rhs.get<0>();
+		else if (thrust::get<1>(lhs) == thrust::get<1>(rhs))
+			return thrust::get<0>(lhs) < thrust::get<0>(rhs);
 		else
 			return false;
 	}
@@ -374,7 +374,7 @@ inline int cooMatricesKronecker(
 #pragma endregion
 
 
-#ifdef TInd
+#ifdef MKL_INT
 #pragma region export int 32 functions
 DLLEXP int vecSetValAt(const DataType type, void* a, const void* value, const MKL_INT* pos, const size_t posN)
 {

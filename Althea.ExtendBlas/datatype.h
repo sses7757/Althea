@@ -17,92 +17,90 @@ namespace extblas
 			/// <summary>
 			/// Operation that returns the addition of two input parameters
 			/// </summary>
-			Add = -1,
+			Add = 0,
 			/// <summary>
 			/// Operation that returns the multiplication of two input parameters
 			/// </summary>
-			Multiply = -2,
+			Multiply = -1,
 			/// <summary>
 			/// Operation that returns the division of two input parameters
 			/// </summary>
-			Divide = -3,
+			Divide = -2,
 			/// <summary>
 			/// Operation that returns the power of the first input parameter to the second one
 			/// </summary>
-			Power = -4,
+			Power = -3,
 			/// <summary>
 			/// Operation that returns the maximum of two input parameters
 			/// </summary>
-			Maximum = -5,
+			Maximum = -4,
 			/// <summary>
 			/// Operation that returns the minimum of two input parameters
 			/// </summary>
-			Mininum = -6,
+			Mininum = -5,
 			/// <summary>
 			/// Operation that returns the maximum of the absolute values two input parameters
 			/// </summary>
-			AbsoluteMaximum = -7,
+			AbsoluteMaximum = -6,
 			/// <summary>
 			/// Operation that returns the minimum of the absolute values two input parameters
 			/// </summary>
-			AbsoluteMininum = -8,
+			AbsoluteMininum = -7,
 			/// <summary>
 			/// Operation that simply returns the second input parameter
 			/// </summary>
-			Fill = -9,
+			Fill = -8,
 			/// <summary>
 			/// Operation that returns 0 if the first input parameter's absolute value is smaller than the second one; otherwise, returns the first input parameter itself 
 			/// </summary>
-			Truncate = -10,
+			Truncate = -9,
 		};
 
 	}
 
 	namespace reduceOp
 	{
-
 		/// <summary>
 		/// Binary reduce operations used by array point-wise reduce operations whose first input is the element in array and the second one is the partial reduction result.
 		/// </summary>
-		/// <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
 		enum ReduceOperation
 		{
 			/// <summary>
 			/// Operation that returns the addition of two input parameters
 			/// </summary>
-			Add = -2,
-			/// <summary>
-			/// Operation that returns the addition of the absolute value of the first input parameter and the second parameter
-			/// </summary>
-			AddAbsolute = -3,
+			Add = binaryOp::BinaryOperation::Add,
 			/// <summary>
 			/// Operation that returns the multiplication of two input parameters
 			/// </summary>
-			Multiply = -4,
-			/// <summary>
-			/// Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
-			/// </summary>
-			MultiplyAbsolute = -5,
-			/// <summary>
-			/// Operation that returns the addition of the square of the first input parameter and the second parameter; and sqrt the result before exit
-			/// </summary>
-			Norm = -6,
+			Multiply = binaryOp::BinaryOperation::Multiply,
 			/// <summary>
 			/// Operation that returns the maximum of two input parameters
 			/// </summary>
-			Maximum = -7,
+			Maximum = binaryOp::BinaryOperation::Maximum,
 			/// <summary>
 			/// Operation that returns the minimum of two input parameters
 			/// </summary>
-			Mininum = -8,
+			Mininum = binaryOp::BinaryOperation::Mininum,
 			/// <summary>
 			/// Operation that returns the maximum of the absolute values two input parameters
 			/// </summary>
-			AbsoluteMaximum = -9,
+			AbsoluteMaximum = binaryOp::BinaryOperation::AbsoluteMaximum,
 			/// <summary>
 			/// Operation that returns the minimum of the absolute values two input parameters
 			/// </summary>
-			AbsoluteMininum = -10,
+			AbsoluteMininum = binaryOp::BinaryOperation::AbsoluteMininum,
+			/// <summary>
+			/// Operation that returns the addition of the absolute value of the first input parameter and the second parameter
+			/// </summary>
+			AddAbsolute = AbsoluteMininum - 1,
+			/// <summary>
+			/// Operation that returns the multiplication of the absolute value of the first input parameter and the second parameter
+			/// </summary>
+			MultiplyAbsolute = AddAbsolute - 1,
+			/// <summary>
+			/// Operation that returns the addition of the square of the first input parameter and the second parameter; and sqrt the result before exit
+			/// </summary>
+			Norm = MultiplyAbsolute - 1,
 		};
 	}
 
@@ -111,7 +109,6 @@ namespace extblas
 		/// <summary>
 		/// Unitary operations of array point-wise unary operations.
 		/// </summary>
-		/// <remarks>All implementations shall support these pre-defined unary operations, but a implementation can add support for more unary operations.</remarks>
 		enum UnaryOperation
 		{
 			/// <summary>

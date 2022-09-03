@@ -20,7 +20,7 @@ public readonly ref struct DenseTensorWrapper<T, TS> where T : unmanaged, IBaseN
 	private readonly TS m_values;
 	private readonly ref long m_size, m_outerSize, m_strides;
 	private readonly int m_rank;
-	private readonly UnaryOperation m_op;
+	private readonly ManagedEnum<UnaryOperation> m_op;
 	private readonly T m_scalar;
 
 	/// <summary>
@@ -70,7 +70,7 @@ public readonly ref struct DenseTensorWrapper<T, TS> where T : unmanaged, IBaseN
 	/// <summary>
 	/// Get the <see cref="UnaryOperation"/> which is about to be applied to this tensor if this wrapper is used as an input
 	/// </summary>
-	public readonly UnaryOperation Operation {
+	public readonly ManagedEnum<UnaryOperation> Operation {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get => this.m_op;
 	}
@@ -170,7 +170,7 @@ public readonly ref struct DenseTensorWrapper<T, TS> where T : unmanaged, IBaseN
 	/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 	/// <param name="scalar">The scalar which is about to be applied to this wrapper</param>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, UnaryOperation operation, T scalar) : this(value, size, size, default, operation, scalar) { }
+	public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, ManagedEnum<UnaryOperation> operation, T scalar) : this(value, size, size, default, operation, scalar) { }
 
 	/// <summary>
 	/// Create a new <see cref="DenseTensorWrapper{T, TS}"/> with all given parameters and scalar set to 1.
@@ -192,7 +192,7 @@ public readonly ref struct DenseTensorWrapper<T, TS> where T : unmanaged, IBaseN
 	/// <param name="operation">The <see cref="UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
 	/// <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, UnaryOperation operation, T scalar)
+	public DenseTensorWrapper(TS value, ReadOnlySpan<long> size, ReadOnlySpan<long> outerSize, ReadOnlySpan<long> strides, ManagedEnum<UnaryOperation> operation, T scalar)
 	{
 		if (size.Length != outerSize.Length || (!strides.IsEmpty && size.Length + 1 != strides.Length))
 			throw new ArgumentException(Resources.ParameterError.NotSameSize);
@@ -219,7 +219,7 @@ public readonly ref struct DenseTensorWrapper<T, TS> where T : unmanaged, IBaseN
 	/// <exception cref="ArgumentException">If <paramref name="tensor"/> is a <see cref="ISparseArray{T}"/></exception>
 	/// <exception cref="ArgumentNullException">If <paramref name="tensor"/> is not a <see cref="IDenseArray{T, TS}"/></exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public DenseTensorWrapper(ILabeledTensor<T>? tensor, UnaryOperation operation = UnaryOperation.Identity, T? scalar = null)
+	public DenseTensorWrapper(ILabeledTensor<T>? tensor, ManagedEnum<UnaryOperation> operation = default, T? scalar = null)
 	{
 		if (tensor is null)
 		{
@@ -250,7 +250,7 @@ public readonly ref struct DenseTensorWrapper<T, TS> where T : unmanaged, IBaseN
 	/// <param name="operation">The new <see cref="UnaryOperation"/></param>
 	/// <param name="scalar">The new scalar</param>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public DenseTensorWrapper(in DenseTensorWrapper<T, TS> tensor, UnaryOperation operation, T scalar)
+	public DenseTensorWrapper(in DenseTensorWrapper<T, TS> tensor, ManagedEnum<UnaryOperation> operation, T scalar)
 	{
 		this.m_values = tensor.m_values;
 		this.m_size = ref tensor.m_size;

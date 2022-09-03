@@ -1,198 +1,275 @@
-﻿using System.Numerics;
-
-using Althea.Helpers;
-
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Althea.Helpers;
 
-/// <summary>
-/// The read-only struct for storing method parameter types
-/// </summary>
-public readonly struct MethodParametersInfo : IEqualityOperators<MethodParametersInfo, MethodParametersInfo, bool>
+#region debug
+internal readonly struct DebugManagedEnum<T> where T : unmanaged, Enum
 {
-	private readonly FixedClassBuffer_8<Type> parameterTypes;
+	public readonly T Value { get; }
 
-	/// <summary>
-	/// Create an <see cref="MethodParametersInfo"/> from <paramref name="parameterInfos"/>
-	/// </summary>
-	/// <param name="parameterInfos">The input parameters types as a <see cref="ReadOnlySpan{T}"/> of <see cref="System.Reflection.ParameterInfo"/></param>
-	/// <exception cref="ArgumentNullException">If <paramref name="parameterInfos"/> is empty</exception>
-	/// <exception cref="ArgumentException">If <paramref name="parameterInfos"/> is too long</exception>
-	public MethodParametersInfo(ReadOnlySpan<System.Reflection.ParameterInfo> parameterInfos)
+	public readonly string Name { get; }
+
+	internal DebugManagedEnum(ManagedEnum<T> value)
 	{
-		if (parameterInfos.IsEmpty)
-			throw new ArgumentNullException(nameof(parameterInfos));
-		if (parameterInfos.Length > 8)
-			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(parameterInfos));
-		Span<Type> types = (stackalloc IntPtr[parameterInfos.Length]).AsClassType<Type>();
-		for (int i = 0; i < parameterInfos.Length; i++)
-			types[i] = parameterInfos[i].ParameterType;
-		this.parameterTypes = new(types);
+		this.Value = value.Value;
+		this.Name = value.ToString();
 	}
-
-	/// <summary>
-	/// Create an <see cref="MethodParametersInfo"/> from <paramref name="parameterTypes"/>
-	/// </summary>
-	/// <param name="parameterTypes">The input parameters types as a <see cref="ReadOnlySpan{T}"/> of <see cref="Type"/></param>
-	/// <exception cref="ArgumentNullException">If <paramref name="parameterTypes"/> is empty</exception>
-	/// <exception cref="ArgumentException">If <paramref name="parameterTypes"/> is too long</exception>
-	public MethodParametersInfo(ReadOnlySpan<Type> parameterTypes)
-	{
-		if (parameterTypes.IsEmpty)
-			throw new ArgumentNullException(nameof(parameterTypes));
-		if (parameterTypes.Length > 8)
-			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(parameterTypes));
-		this.parameterTypes = new(parameterTypes);
-	}
-
-	/// <summary>
-	/// Indicates whether the current object is equal to another object of the same type.
-	/// </summary>
-	/// <param name="other">The other <see cref="MethodParametersInfo"/> to compare with this one.</param>
-	/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
-	public bool Equals(MethodParametersInfo other) => this.parameterTypes == other.parameterTypes;
-
-	/// <summary>
-	/// Indicates whether the current object is equal to another object of the same type.
-	/// </summary>
-	/// <param name="obj">The other object to compare with this one.</param>
-	/// <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
-	public override bool Equals(object? obj) => obj is MethodParametersInfo info && this.Equals(info);
-
-	/// <summary>
-	/// Get the hash code of this <see cref="MethodParametersInfo"/>
-	/// </summary>
-	/// <returns>The hash code of this <see cref="MethodParametersInfo"/></returns>
-	public override int GetHashCode() => this.parameterTypes.GetHashCode();
-
-	/// <summary>
-	/// Equality operator
-	/// </summary>
-	public static bool operator ==(MethodParametersInfo left, MethodParametersInfo right) => left.Equals(right);
-
-	/// <summary>
-	/// Inequality operator
-	/// </summary>
-	public static bool operator !=(MethodParametersInfo left, MethodParametersInfo right) => !left.Equals(right);
 }
+#endregion
 
 /// <summary>
-/// The static class for generic enum helper methods
+/// The managed enum struct that provide safe extend definitions for existing enum type <typeparamref name="T"/>.
 /// </summary>
-public static class EnumHelper
+/// <typeparam name="T">The enum type</typeparam>
+public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
 {
-	private static class NameCacher<T> where T : struct, Enum
-	{
-		internal static Dictionary<T, string> names = new();
+	#region instance
+	/// <summary>
+	/// The underlying enum value of type <typeparamref name="T"/>
+	/// </summary>
+	public readonly T Value { get; }
 
-		internal static Dictionary<MethodParametersInfo, Type> methodParas = new();
+	/// <summary>
+	/// The default constructor
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public ManagedEnum(T value) => this.Value = value;
+
+	/// <summary>
+	/// Implicitly convert a <see cref="ManagedEnum{T}"/> to its enum <see cref="Value"/>.
+	/// </summary>
+	public static implicit operator T(ManagedEnum<T> value) => value.Value;
+
+	/// <summary>
+	/// Implicitly convert a enum <paramref name="value"/> to a <see cref="ManagedEnum{T}"/>.
+	/// </summary>
+	public static implicit operator ManagedEnum<T>(T value) => new(value);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static unsafe bool ValueEquals(T a, T b)
+	{
+		var spanA = SpanHelper.CreateSpan(ref Unsafe.As<T, byte>(ref a), sizeof(T));
+		var spanB = SpanHelper.CreateSpan(ref Unsafe.As<T, byte>(ref b), sizeof(T));
+		return spanA.SequenceEqual(spanB);
 	}
 
-	private static class MethodCacher<TEnum, TDelegate> where TEnum : struct, Enum where TDelegate : Delegate
+	/// <inheritdoc/>
+	public static bool operator ==(ManagedEnum<T> left, ManagedEnum<T> right) => ValueEquals(left.Value, right.Value);
+
+	/// <inheritdoc/>
+	public static bool operator !=(ManagedEnum<T> left, ManagedEnum<T> right) => !ValueEquals(left.Value, right.Value);
+
+	/// <summary>
+	/// Always throw <see cref="InvalidOperationException"/> since ref struct cannot be boxed.
+	/// </summary>
+	public override bool Equals(object? obj)
 	{
-		internal static Dictionary<TEnum, TDelegate> methods = new();
+		throw new InvalidOperationException();
 	}
 
 	/// <summary>
-	/// Get the name / string representation of the given enum value
+	/// Always throw <see cref="InvalidOperationException"/> since ref struct cannot be boxed.
 	/// </summary>
-	/// <typeparam name="T">The type of the enum</typeparam>
-	/// <param name="e">The value of the enum</param>
-	/// <returns><paramref name="e"/>'s name / string representation</returns>
-	public static string GetName<T>(this T e) where T : struct, Enum
+	public override int GetHashCode()
 	{
-		if (NameCacher<T>.names.TryGetValue(e, out string? name))
-			return name;
-		else
-			return e.ToString();
+		throw new InvalidOperationException();
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private readonly string ToStringInternal(out bool success)
+	{
+		success = true;
+		if (Enum.GetName(this.Value) is { } str)
+			return str;
+		if (names.TryGetValue(this.Value, out str))
+			return str;
+		success = false;
+		return $"Undefined Value {this.Value}";
+	}
+
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public override readonly string ToString()
+	{
+		lock (names)
+		{
+			string name = this.ToStringInternal(out bool success);
+			if (success)
+				return name;
+			if (!IS_FLAG)
+				return $"Undefined Value {this.Value}";
+			StringBuilder sb = new("[");
+			long value = GetIntValue(this.Value);
+			for (byte i = 0; i < MAX_VALUE; i++)
+			{
+				if (!value.IsBitSet(i))
+					continue;
+				long v = 1L << i;
+				ManagedEnum<T> flag = Unsafe.As<long, T>(ref v);
+				string sub = flag.ToStringInternal(out success);
+				if (!success)
+					return $"Undefined Value {this.Value}";
+				sb.Append(sub).Append(" + ");
+			}
+			sb.Remove(sb.Length - 3, 3).Append(']');
+			return sb.ToString();
+		}
+	}
+	#endregion
+
+	#region static
+	private static readonly Dictionary<T, string> names = new();
+	private static readonly Dictionary<string, T> namesInv = new();
+	private static readonly long MAX_VALUE;
+	private static long current;
+	private static readonly bool IS_FLAG;
+
+	static ManagedEnum()
+	{
+		IS_FLAG = typeof(T).CustomAttributes.Any(static attr => attr.AttributeType == typeof(FlagsAttribute));
+		MAX_VALUE = IS_FLAG ? GetMaxValue() : (long)GetMaxValueFlag();
+		current = Enum.GetValues<T>().Select(static v => GetIntValue(v)).Max();
+		if (IS_FLAG)
+			current = long.Log2(current);
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static long GetIntValue(T value)
+	{
+		return Type.GetTypeCode(typeof(T)) switch
+		{
+			TypeCode.SByte => Unsafe.As<T, sbyte>(ref value),
+			TypeCode.Byte => Unsafe.As<T, byte>(ref value),
+			TypeCode.Int16 => Unsafe.As<T, short>(ref value),
+			TypeCode.UInt16 => Unsafe.As<T, ushort>(ref value),
+			TypeCode.Char => Unsafe.As<T, char>(ref value),
+			TypeCode.UInt32 => Unsafe.As<T, uint>(ref value),
+			TypeCode.Int32 => Unsafe.As<T, int>(ref value),
+			TypeCode.UInt64 => (long)Unsafe.As<T, ulong>(ref value),
+			TypeCode.Int64 => Unsafe.As<T, long>(ref value),
+			_ => throw new InvalidOperationException(Resources.ParameterError.UnexpectedType),
+		};
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static long GetMaxValue()
+	{
+		return Type.GetTypeCode(typeof(T)) switch
+		{
+			TypeCode.SByte => sbyte.MaxValue,
+			TypeCode.Byte => byte.MaxValue,
+			TypeCode.Int16 => short.MaxValue,
+			TypeCode.UInt16 => ushort.MaxValue,
+			TypeCode.Char => char.MaxValue,
+			TypeCode.UInt32 => uint.MaxValue,
+			TypeCode.Int32 => int.MaxValue,
+			TypeCode.UInt64 => long.MaxValue,
+			TypeCode.Int64 => long.MaxValue,
+			_ => throw new InvalidOperationException(Resources.ParameterError.UnexpectedType),
+		};
+	}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static ulong GetMaxValueFlag()
+	{
+		return Type.GetTypeCode(typeof(T)) switch
+		{
+			TypeCode.SByte => ulong.Log2(byte.MaxValue),
+			TypeCode.Byte => ulong.Log2(byte.MaxValue),
+			TypeCode.Int16 => ulong.Log2(ushort.MaxValue),
+			TypeCode.UInt16 => ulong.Log2(ushort.MaxValue),
+			TypeCode.Char => ulong.Log2(char.MaxValue),
+			TypeCode.UInt32 => ulong.Log2(uint.MaxValue),
+			TypeCode.Int32 => ulong.Log2(uint.MaxValue),
+			TypeCode.UInt64 => ulong.Log2(ulong.MaxValue),
+			TypeCode.Int64 => ulong.Log2(ulong.MaxValue),
+			_ => throw new InvalidOperationException(Resources.ParameterError.UnexpectedType),
+		};
 	}
 
 	/// <summary>
-	/// Set the name / string representation of the given enum value
+	/// Declare a new enum of type <typeparamref name="T"/> with given <paramref name="name"/>/string representation.
 	/// </summary>
-	/// <typeparam name="T">The type of the enum</typeparam>
-	/// <param name="e">The value of the enum</param>
-	/// <param name="name">The name / string representation of the given enum value <paramref name="e"/></param>
-	/// <exception cref="InvalidOperationException">If <paramref name="e"/> is already defined</exception>
+	/// <param name="name">The name / string representation of the newly declared enum</param>
+	/// <exception cref="InvalidOperationException">If the enum is fully declared thus has no room for new ones</exception>
 	/// <exception cref="ArgumentException">If <paramref name="name"/> is null or empty or it contains space</exception>
-	public static void SetName<T>(this T e, string name) where T : struct, Enum
+	public static ManagedEnum<T> DeclareNewEnum(string name)
 	{
-		if (Enum.IsDefined(e))
-			throw new InvalidOperationException(Resources.ParameterError.InvalidValue);
 		if (string.IsNullOrEmpty(name) || name.Contains(' '))
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(name));
-		NameCacher<T>.names[e] = name;
+		lock (names)
+		{
+			if (current == MAX_VALUE)
+				throw new InvalidOperationException(Resources.ParameterError.DuplicateValue);
+			current++;
+			T newValue;
+			if (IS_FLAG)
+			{
+				long val = 1L << (int)current;
+				newValue = Unsafe.As<long, T>(ref val);
+			}
+			else
+			{
+				newValue = Unsafe.As<long, T>(ref current);
+			}
+			names.Add(newValue, name);
+			namesInv.Add(name, newValue);
+			return newValue;
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static bool TryParseInternal(string name, out ManagedEnum<T> e)
+	{
+		e = default;
+		if (Enum.TryParse(name, out T value))
+		{
+			e = value; return true;
+		}
+		if (namesInv.TryGetValue(name, out value))
+		{
+			e = value; return true;
+		}
+		return false;
 	}
 
 	/// <summary>
-	/// Tries to parse the given enum <paramref name="name"/> to a enum value
+	/// Tries to parse the given enum <paramref name="name"/> to a enum value.
 	/// </summary>
-	/// <typeparam name="T">The type of the enum</typeparam>
-	/// <param name="e">The output value of the enum</param>
+	/// <param name="e">The output value of the <see cref="ManagedEnum{T}"/></param>
 	/// <param name="name">The name / string representation of the enum to parse</param>
 	/// <returns>Success or not</returns>
-	public static bool TryParse<T>(string name, out T e) where T : struct, Enum
+	public static bool TryParse(string name, out ManagedEnum<T> e)
 	{
-		if (Enum.TryParse(name, out e))
+		lock (names)
+		{
+			if (TryParseInternal(name, out e))
+				return true;
+			if (!IS_FLAG)
+				return false;
+			string[] flags = name[1..^1].Split(" + ");
+			long value = 0;
+			for (int i = 0; i < flags.Length; i++)
+			{
+				if (!TryParseInternal(flags[i], out var sub))
+					return false;
+				value += GetIntValue(sub.Value);
+			}
+			e = Unsafe.As<long, T>(ref value);
 			return true;
-		if (!NameCacher<T>.names.ContainsValue(name))
-			return false;
-		e = NameCacher<T>.names.FirstOrDefault(kv => kv.Value == name).Key;
-		return true;
+		}
 	}
 
 	/// <summary>
 	/// Parse the given enum <paramref name="name"/> to a enum value
 	/// </summary>
-	/// <typeparam name="T">The type of the enum</typeparam>
 	/// <param name="name">The name / string representation of the enum to parse</param>
-	/// <returns>The enum of type <typeparamref name="T"/> given by <paramref name="name"/></returns>
+	/// <returns>The <see cref="ManagedEnum{T}"/> given by <paramref name="name"/></returns>
 	/// <exception cref="ArgumentException">If <paramref name="name"/> cannot be converted to a enum of type <typeparamref name="T"/></exception>
-	public static T Parse<T>(string name) where T : struct, Enum
+	public static ManagedEnum<T> Parse(string name)
 	{
-		if (Enum.TryParse(name, out T e))
-			return e;
-		if (!NameCacher<T>.names.ContainsValue(name))
+		if (!TryParse(name, out var e))
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(name));
-		e = NameCacher<T>.names.FirstOrDefault(kv => kv.Value == name).Key;
 		return e;
 	}
-
-	/// <summary>
-	/// Get the method delegate of type <typeparamref name="TDelegate"/> associated to the given enum value
-	/// </summary>
-	/// <typeparam name="TEnum">The type of the enum</typeparam>
-	/// <typeparam name="TDelegate">The type of the delegate of the method</typeparam>
-	/// <param name="e">The value of the enum</param>
-	/// <returns><paramref name="e"/>'s associated method delegate, null for not existing</returns>
-	public static TDelegate? GetMethod<TEnum, TDelegate>(this TEnum e) where TEnum : struct, Enum where TDelegate : Delegate
-	{
-		if (!MethodCacher<TEnum, TDelegate>.methods.TryGetValue(e, out TDelegate? method))
-			method = null;
-		return method;
-	}
-
-	/// <summary>
-	/// Set the method delegate of type <typeparamref name="TDelegate"/> associated to the given enum value
-	/// </summary>
-	/// <typeparam name="TEnum">The type of the enum</typeparam>
-	/// <typeparam name="TDelegate">The type of the delegate of the method</typeparam>
-	/// <param name="e">The value of the enum</param>
-	/// <param name="method">The delegate of the method to set</param>
-	/// <exception cref="ArgumentException">If there are exited delegates whose parameters are the same as <typeparamref name="TDelegate"/>'s while <typeparamref name="TDelegate"/> != that delegate</exception>
-	public static void SetMethod<TEnum, TDelegate>(this TEnum e, TDelegate method) where TEnum : struct, Enum where TDelegate : Delegate
-	{
-		if (MethodCacher<TEnum, TDelegate>.methods.Count != 0)
-		{
-			MethodCacher<TEnum, TDelegate>.methods[e] = method;
-			return;
-		}
-		if (!NameCacher<TEnum>.methodParas.TryGetValue(new(method.Method.GetParameters()), out Type? oldType))
-			oldType = null;
-		if (oldType is null || oldType == typeof(TDelegate))
-		{
-			MethodCacher<TEnum, TDelegate>.methods[e] = method;
-			return;
-		}
-	}
+	#endregion
 }

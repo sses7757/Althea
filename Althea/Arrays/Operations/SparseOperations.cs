@@ -144,17 +144,17 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 
 	#region matrix vector multiply
 	/// <inheritdoc/>
-	public static void MatrixMultiplyVector(DenseMatrix<T, TS> matrix, SparseVector<T, TInd, TS, TSInd> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
+	public static void MatrixMultiplyVector(DenseMatrix<T, TS> matrix, SparseVector<T, TInd, TS, TSInd> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = default)
 	{
 		IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>.CheckMatMulVec(matrix, vector, vectorOut, α, operation);
 		SpComp.MatrixDenseMultiplyVectorSparse(operation, α, operation.CanInPlace() ? matrix.NRows : matrix.NCols, matrix.Storage, matrix.LeadDim, vector, β, vectorOut.Storage, vectorOut.Stride);
 	}
 
 	/// <inheritdoc/>
-	public static void VectorMultiplyMatrix(SparseVector<T, TInd, TS, TSInd> vector, DenseMatrix<T, TS> matrix, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None) => MatrixMultiplyVector(matrix, vector, vectorOut, α, β, operation.Transpose());
+	public static void VectorMultiplyMatrix(SparseVector<T, TInd, TS, TSInd> vector, DenseMatrix<T, TS> matrix, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = default) => MatrixMultiplyVector(matrix, vector, vectorOut, α, β, operation.Transpose());
 
 	/// <inheritdoc/>
-	public static DenseVector<T, TS> MatrixMultiplyVector(DenseMatrix<T, TS> matrix, SparseVector<T, TInd, TS, TSInd> vector, T α, MatrixOperation operation = MatrixOperation.None)
+	public static DenseVector<T, TS> MatrixMultiplyVector(DenseMatrix<T, TS> matrix, SparseVector<T, TInd, TS, TSInd> vector, T α, MatrixOperation operation = default)
 	{
 		var output = IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>.CheckMatMulVec(matrix, vector, vector.Storage, α, operation);
 		try
@@ -170,20 +170,20 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseVector<T, TS> VectorMultiplyMatrix(SparseVector<T, TInd, TS, TSInd> vector, DenseMatrix<T, TS> matrix, T α, MatrixOperation operation = MatrixOperation.None) => MatrixMultiplyVector(matrix, vector, α, operation.Transpose());
+	public static DenseVector<T, TS> VectorMultiplyMatrix(SparseVector<T, TInd, TS, TSInd> vector, DenseMatrix<T, TS> matrix, T α, MatrixOperation operation = default) => MatrixMultiplyVector(matrix, vector, α, operation.Transpose());
 
 	/// <inheritdoc/>
-	public static void MatrixMultiplyVector(SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None)
+	public static void MatrixMultiplyVector(SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = default)
 	{
 		IMatrixVectorMultiplyOperations<T, DenseVector<T, TS>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>.CheckMatMulVec(matrix, vector, vectorOut, α, operation);
 		SpComp.MatrixSparseMultiplyVectorDense(operation, α, matrix, vector.Storage, vector.Stride, β, vectorOut.Storage, vectorOut.Stride);
 	}
 
 	/// <inheritdoc/>
-	public static void VectorMultiplyMatrix(DenseVector<T, TS> vector, SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vectorOut, T α, T β, MatrixOperation operation = MatrixOperation.None) => MatrixMultiplyVector(matrix, vector, vectorOut, α, β, operation.Transpose());
+	public static void VectorMultiplyMatrix(DenseVector<T, TS> vector, SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vectorOut, T α, T β, MatrixOperation operation = default) => MatrixMultiplyVector(matrix, vector, vectorOut, α, β, operation.Transpose());
 
 	/// <inheritdoc/>
-	public static DenseVector<T, TS> MatrixMultiplyVector(SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vector, T α, MatrixOperation operation = MatrixOperation.None)
+	public static DenseVector<T, TS> MatrixMultiplyVector(SparseMatrix<T, TInd, TS, TSInd> matrix, DenseVector<T, TS> vector, T α, MatrixOperation operation = default)
 	{
 		var output = IMatrixVectorMultiplyOperations<T, DenseVector<T, TS>, DenseVector<T, TS>, SparseMatrix<T, TInd, TS, TSInd>>.CheckMatMulVec(matrix, vector, vector.Storage, α, operation);
 		try
@@ -199,12 +199,12 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseVector<T, TS> VectorMultiplyMatrix(DenseVector<T, TS> vector, SparseMatrix<T, TInd, TS, TSInd> matrix, T α, MatrixOperation operation = MatrixOperation.None) => MatrixMultiplyVector(matrix, vector, α, operation.Transpose());
+	public static DenseVector<T, TS> VectorMultiplyMatrix(DenseVector<T, TS> vector, SparseMatrix<T, TInd, TS, TSInd> matrix, T α, MatrixOperation operation = default) => MatrixMultiplyVector(matrix, vector, α, operation.Transpose());
 	#endregion
 
 	#region matrix out-of-place add multiply
 	/// <inheritdoc/>
-	public static DenseMatrix<T, TS> AddMatrices(DenseMatrix<T, TS>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static DenseMatrix<T, TS> AddMatrices(DenseMatrix<T, TS>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		if (B is null || scalarB == T.Zero)
 		{
@@ -224,7 +224,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseMatrix<T, TS> MultiplyMatries(DenseMatrix<T, TS> A, SparseMatrix<T, TInd, TS, TSInd> B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static DenseMatrix<T, TS> MultiplyMatries(DenseMatrix<T, TS> A, SparseMatrix<T, TInd, TS, TSInd> B, T α, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		var output = IMatrixOperations<T, DenseMatrix<T, TS>, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>>.CheckMul(α, A, B, opA, opB, A.Storage, out long m, out long n, out _);
 		try
@@ -240,10 +240,10 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseMatrix<T, TS> AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None) => AddMatrices(B, scalarB, A, scalarA, opB, opA);
+	public static DenseMatrix<T, TS> AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, MatrixOperation opA = default, MatrixOperation opB = default) => AddMatrices(B, scalarB, A, scalarA, opB, opA);
 
 	/// <inheritdoc/>
-	public static DenseMatrix<T, TS> MultiplyMatries(SparseMatrix<T, TInd, TS, TSInd> A, DenseMatrix<T, TS> B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static DenseMatrix<T, TS> MultiplyMatries(SparseMatrix<T, TInd, TS, TSInd> A, DenseMatrix<T, TS> B, T α, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		var output = IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd >, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, opA, opB, A.Storage, out long m, out long n, out _);
 		try
@@ -259,7 +259,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static SparseMatrix<T, TInd, TS, TSInd> AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static SparseMatrix<T, TInd, TS, TSInd> AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>.CheckAdd(A, scalarA, B, scalarB, opA, opB, (TS?)null, out _, out _);
 		var target = new SparseArrayWrapper<T, TInd, TS, TSInd>(A?.DefaultValue ?? T.Zero + B?.DefaultValue ?? T.Zero, SparseFormat.Any);
@@ -269,7 +269,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 
 	/// <inheritdoc/>
 	/// <exception cref="ArgumentException">If <paramref name="A"/> or <paramref name="B"/>'s default is not zero</exception>
-	public static SparseMatrix<T, TInd, TS, TSInd> MultiplyMatries(SparseMatrix<T, TInd, TS, TSInd> A, SparseMatrix<T, TInd, TS, TSInd> B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static SparseMatrix<T, TInd, TS, TSInd> MultiplyMatries(SparseMatrix<T, TInd, TS, TSInd> A, SparseMatrix<T, TInd, TS, TSInd> B, T α, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>.CheckMul(α, A, B, opA, opB, (TS?)null, out _, out _, out _);
 		if (A.DefaultValue != T.Zero)
@@ -284,7 +284,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 
 	#region matrix in-place add multiply
 	/// <inheritdoc/>
-	public static void AddMatrices(DenseMatrix<T, TS>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static void AddMatrices(DenseMatrix<T, TS>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		if (B is null || scalarB == T.Zero)
 		{
@@ -296,24 +296,24 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void MultiplyMatries(DenseMatrix<T, TS> A, SparseMatrix<T, TInd, TS, TSInd> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static void MultiplyMatries(DenseMatrix<T, TS> A, SparseMatrix<T, TInd, TS, TSInd> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		var (m, _, _) = IMatrixOperations<T, DenseMatrix<T, TS>, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 		SpComp.MatrixDenseMultiplySparse(opA, opB, m, α, A.Storage, A.LeadDim, B, β, C.Storage, C.LeadDim);
 	}
 
 	/// <inheritdoc/>
-	public static void AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None) => AddMatrices(B, scalarB, A, scalarA, C, opB, opA);
+	public static void AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, DenseMatrix<T, TS>? B, T scalarB, DenseMatrix<T, TS> C, MatrixOperation opA = default, MatrixOperation opB = default) => AddMatrices(B, scalarB, A, scalarA, C, opB, opA);
 
 	/// <inheritdoc/>
-	public static void MultiplyMatries(SparseMatrix<T, TInd, TS, TSInd> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static void MultiplyMatries(SparseMatrix<T, TInd, TS, TSInd> A, DenseMatrix<T, TS> B, T α, T β, DenseMatrix<T, TS> C, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		var (_, n, _) = IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
 		SpComp.MatrixSparseMultiplyDense(opA, opB, n, α, A, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
 	}
 
 	/// <inheritdoc/>
-	public static void AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, SparseMatrix<T, TInd, TS, TSInd> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static void AddMatrices(SparseMatrix<T, TInd, TS, TSInd>? A, T scalarA, SparseMatrix<T, TInd, TS, TSInd>? B, T scalarB, SparseMatrix<T, TInd, TS, TSInd> C, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>.CheckAdd(A, scalarA, B, scalarB, C, opA, opB);
 		var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(C);
@@ -321,7 +321,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void MultiplyMatries(SparseMatrix<T, TInd, TS, TSInd> A, SparseMatrix<T, TInd, TS, TSInd> B, T α, T β, SparseMatrix<T, TInd, TS, TSInd> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
+	public static void MultiplyMatries(SparseMatrix<T, TInd, TS, TSInd> A, SparseMatrix<T, TInd, TS, TSInd> B, T α, T β, SparseMatrix<T, TInd, TS, TSInd> C, MatrixOperation opA = default, MatrixOperation opB = default)
 	{
 		IMatrixOperations<T, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>, SparseMatrix<T, TInd, TS, TSInd>>.CheckMul(α, A, B, C, opA, opB);
 		var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(C);
@@ -332,7 +332,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	#region tensor out-of-place operations
 	/// <inheritdoc/>
 	/// <exception cref="ArgumentException">If <paramref name="A"/>'s default value is not zero</exception>
-	static SparseTensor<T, TInd, TS, TSInd> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, UnaryOperation opA, ReduceOperation reduce)
+	static SparseTensor<T, TInd, TS, TSInd> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA, ManagedEnum<ReduceOperation> reduce)
 	{
 		if (A.DefaultValue != T.Zero)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(A));
@@ -345,7 +345,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static SparseTensor<T, TInd, TS, TSInd> Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity)
+	public static SparseTensor<T, TInd, TS, TSInd> Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = default)
 	{
 		Span<int> perm = stackalloc int[A.Rank];
 		Span<long> sizeB = stackalloc long[A.Rank];
@@ -356,7 +356,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α,  UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
+	public static DenseTensor<T, TS> Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α,  ManagedEnum<UnaryOperation> opA = default, ManagedEnum<ReduceOperation> reduce = default)
 	{
 		Span<int> reduceInds = stackalloc int[A.Rank];
 		Span<long> sizeB = stackalloc long[A.Rank];
@@ -375,7 +375,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	static DenseTensor<T, TS> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, UnaryOperation op)
+	static DenseTensor<T, TS> ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> op)
 	{
 		Span<int> perm = stackalloc int[A.Rank];
 		Span<long> sizeB = stackalloc long[A.Rank];
@@ -395,7 +395,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 
 	/// <inheritdoc/>
 	/// <exception cref="ArgumentException">If <paramref name="A"/> or <paramref name="B"/>'s default value is not zero</exception>
-	public static SparseTensor<T, TInd, TS, TSInd> Contract(SparseTensor<T, TInd, TS, TSInd> A, UnaryOperation opA, SparseTensor<T, TInd, TS, TSInd> B, UnaryOperation opB, T α)
+	public static SparseTensor<T, TInd, TS, TSInd> Contract(SparseTensor<T, TInd, TS, TSInd> A, ManagedEnum<UnaryOperation> opA, SparseTensor<T, TInd, TS, TSInd> B, ManagedEnum<UnaryOperation> opB, T α)
 	{
 		if (A.DefaultValue != T.Zero)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(A));
@@ -410,7 +410,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static SparseTensor<T, TInd, TS, TSInd> TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, UnaryOperation opB, T β, BinaryOperation binary)
+	public static SparseTensor<T, TInd, TS, TSInd> TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, ManagedEnum<BinaryOperation> binary)
 	{
 		Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 		Span<long> sizeC = stackalloc long[A?.Rank ?? B?.Rank ?? 0];
@@ -421,7 +421,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> Contract(SparseTensor<T, TInd, TS, TSInd> A, UnaryOperation opA, DenseTensor<T, TS> B, UnaryOperation opB, T α)
+	public static DenseTensor<T, TS> Contract(SparseTensor<T, TInd, TS, TSInd> A, ManagedEnum<UnaryOperation> opA, DenseTensor<T, TS> B, ManagedEnum<UnaryOperation> opB, T α)
 	{
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -447,7 +447,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, BinaryOperation binary)
+	public static DenseTensor<T, TS> TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, ManagedEnum<BinaryOperation> binary)
 	{
 		Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 		Span<long> sizeC = stackalloc long[A?.Rank ?? B?.Rank ?? 0];
@@ -465,15 +465,15 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> Contract(DenseTensor<T, TS> A, UnaryOperation opA, SparseTensor<T, TInd, TS, TSInd> B, UnaryOperation opB, T α) => Contract(B, opB, A, opA, α);
+	public static DenseTensor<T, TS> Contract(DenseTensor<T, TS> A, ManagedEnum<UnaryOperation> opA, SparseTensor<T, TInd, TS, TSInd> B, ManagedEnum<UnaryOperation> opB, T α) => Contract(B, opB, A, opA, α);
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, UnaryOperation opB, T β, BinaryOperation binary) => TensorsBinaryOperation(B, orderB, opB, β, A, orderA, opA, α, binary);
+	public static DenseTensor<T, TS> TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, ManagedEnum<BinaryOperation> binary) => TensorsBinaryOperation(B, orderB, opB, β, A, orderA, opA, α, binary);
 	#endregion
 
 	#region tensor out-of-place operations
 	/// <inheritdoc/>
-	public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, SparseTensor<T, TInd, TS, TSInd> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
+	public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, SparseTensor<T, TInd, TS, TSInd> B, T β = default, ManagedEnum<UnaryOperation> opA = default, ManagedEnum<UnaryOperation> opB = default, ManagedEnum<ReduceOperation> reduce = default)
 	{
 		Span<int> reduceInds = stackalloc int[A.Rank];
 		reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckReduce(A, order, α, B, reduceInds);
@@ -482,7 +482,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, SparseTensor<T, TInd, TS, TSInd> B, UnaryOperation opA = UnaryOperation.Identity)
+	public static void Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, SparseTensor<T, TInd, TS, TSInd> B, ManagedEnum<UnaryOperation> opA = default)
 	{
 		Span<int> perm = stackalloc int[A.Rank];
 		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckPermute(A, order, scalar, B, perm);
@@ -491,7 +491,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, DenseTensor<T, TS> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
+	public static void Reduce(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T α, DenseTensor<T, TS> B, T β = default, ManagedEnum<UnaryOperation> opA = default, ManagedEnum<UnaryOperation> opB = default, ManagedEnum<ReduceOperation> reduce = default)
 	{
 		Span<int> reduceInds = stackalloc int[A.Rank];
 		reduceInds = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckReduce(A, order, α, B, reduceInds);
@@ -499,7 +499,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, DenseTensor<T, TS> B, UnaryOperation op = UnaryOperation.Identity)
+	public static void Permute(SparseTensor<T, TInd, TS, TSInd> A, TensorOrder order, T scalar, DenseTensor<T, TS> B, ManagedEnum<UnaryOperation> op = default)
 	{
 		Span<int> perm = stackalloc int[A.Rank];
 		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
@@ -507,7 +507,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void Contract(SparseTensor<T, TInd, TS, TSInd> A, UnaryOperation opA, SparseTensor<T, TInd, TS, TSInd> B, UnaryOperation opB, T α, SparseTensor<T, TInd, TS, TSInd> C, UnaryOperation opC, T β)
+	public static void Contract(SparseTensor<T, TInd, TS, TSInd> A, ManagedEnum<UnaryOperation> opA, SparseTensor<T, TInd, TS, TSInd> B, ManagedEnum<UnaryOperation> opB, T α, SparseTensor<T, TInd, TS, TSInd> C, ManagedEnum<UnaryOperation> opC, T β)
 	{
 		var info = ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckContract(A, B, α, C);
 		var target = SparseArrayWrapper<T, TInd, TS, TSInd>.Create(C);
@@ -515,7 +515,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, UnaryOperation opB, T β, SparseTensor<T, TInd, TS, TSInd> C, BinaryOperation binary)
+	public static void TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, SparseTensor<T, TInd, TS, TSInd> C, ManagedEnum<BinaryOperation> binary)
 	{
 		Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>, SparseTensor<T, TInd, TS, TSInd>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
@@ -524,7 +524,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void Contract(SparseTensor<T, TInd, TS, TSInd> A, UnaryOperation opA, DenseTensor<T, TS> B, UnaryOperation opB, T α, DenseTensor<T, TS> C, UnaryOperation opC, T β)
+	public static void Contract(SparseTensor<T, TInd, TS, TSInd> A, ManagedEnum<UnaryOperation> opA, DenseTensor<T, TS> B, ManagedEnum<UnaryOperation> opB, T α, DenseTensor<T, TS> C, ManagedEnum<UnaryOperation> opC, T β)
 	{
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -538,7 +538,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C, BinaryOperation binary)
+	public static void TensorsBinaryOperation(SparseTensor<T, TInd, TS, TSInd>? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, DenseTensor<T, TS> C, ManagedEnum<BinaryOperation> binary)
 	{
 		Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 		ITensorOperations<T, SparseTensor<T, TInd, TS, TSInd>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
@@ -546,9 +546,9 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	}
 
 	/// <inheritdoc/>
-	public static void Contract(DenseTensor<T, TS> A, UnaryOperation opA, SparseTensor<T, TInd, TS, TSInd> B, UnaryOperation opB, T α, DenseTensor<T, TS> C, UnaryOperation opC, T β) => Contract(B, opB, A, opA, α, C, opC, β);
+	public static void Contract(DenseTensor<T, TS> A, ManagedEnum<UnaryOperation> opA, SparseTensor<T, TInd, TS, TSInd> B, ManagedEnum<UnaryOperation> opB, T α, DenseTensor<T, TS> C, ManagedEnum<UnaryOperation> opC, T β) => Contract(B, opB, A, opA, α, C, opC, β);
 
 	/// <inheritdoc/>
-	public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C, BinaryOperation binary) => TensorsBinaryOperation(B, orderB, opB, β, A, orderA, opA, α, C, binary);
+	public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, SparseTensor<T, TInd, TS, TSInd>? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, DenseTensor<T, TS> C, ManagedEnum<BinaryOperation> binary) => TensorsBinaryOperation(B, orderB, opB, β, A, orderA, opA, α, C, binary);
 	#endregion
 }

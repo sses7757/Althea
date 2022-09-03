@@ -1,9 +1,9 @@
 ﻿global using System;
-global using System.Linq;
 global using System.Collections.Generic;
+global using System.Linq;
 
-global using Althea.Storage;
 global using Althea.Numerics;
+global using Althea.Storage;
 
 using System.Diagnostics;
 
@@ -56,7 +56,7 @@ public abstract class AbstractStatusException : Exception
 		}
 		this.stackTrace = trace ?? new(1);
 		string? type = error.GetType().FullName;
-		string? descr = typeof(EnumHelper).GetMethod(nameof(EnumHelper.GetName))?.MakeGenericMethod(error.GetType())?.Invoke(null, new object[] { error }) as string;
+		string? descr = GetName(error);
 		this.error = (type, code, descr ?? error.ToString());
 	}
 
@@ -82,12 +82,17 @@ public abstract class AbstractStatusException : Exception
 		}
 		this.stackTrace = trace ?? new(1);
 		string? type1 = error1.GetType().FullName;
-		string? descr1 = typeof(EnumHelper).GetMethod(nameof(EnumHelper.GetName))?.MakeGenericMethod(error1.GetType())?.Invoke(null, new object[] { error1 }) as string;
+		string? descr1 = GetName(error1);
 		this.error = (type1, code1, descr1 ?? error1.ToString());
 		string? type2 = error2.GetType().FullName;
-		string? descr2 = typeof(EnumHelper).GetMethod(nameof(EnumHelper.GetName))?.MakeGenericMethod(error2.GetType())?.Invoke(null, new object[] { error2 }) as string;
+		string? descr2 = GetName(error2);
 		this.error2 = (type2, code2, descr2 ?? error2.ToString());
 	}
+	private static string? GetName(Enum value)
+	{
+		return typeof(AbstractStatusException).GetMethod(nameof(AbstractStatusException.GetName))?.MakeGenericMethod(value.GetType())?.Invoke(null, new object[] { value }) as string;
+	}
+	private static string GetName<T>(T value) where T : struct, Enum => ((ManagedEnum<T>)value).ToString();
 
 	private readonly bool overwriteMessage = true;
 

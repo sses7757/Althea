@@ -1,4 +1,5 @@
-﻿using Althea.SourceGenerator;
+﻿using Althea.Helpers;
+using Althea.SourceGenerator;
 using Althea.Storage;
 
 
@@ -201,7 +202,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixUnary<T, TS1, TS2>(UnaryOperation op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool HalfMatrixUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
@@ -221,7 +222,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixReduce<T, TS>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool HalfMatrixReduce<T, TS>(ManagedEnum<ReduceOperation> op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
@@ -241,7 +242,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixArgReduce<T, TS>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+		public abstract bool HalfMatrixArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
@@ -263,7 +264,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool HalfMatrixColumnReduce<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
@@ -285,7 +286,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, bool upper, bool unitDiag, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool HalfMatrixBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, bool upper, bool unitDiag, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
@@ -309,7 +310,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+		public abstract bool HalfMatricesBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, bool upper, bool unitDiag, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 		/// <summary>
 		/// When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
@@ -332,7 +333,7 @@ namespace Althea.LinearAlgebra.Dense
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="lda"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
 		[AbstractApiMethod]
-		public abstract bool HalfMatrixColumnScan<T, TS1, TS2>(BinaryOperation op, bool inclusive, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool HalfMatrixColumnScan<T, TS1, TS2>(ManagedEnum<BinaryOperation> op, bool inclusive, bool upper, bool triangular, bool unitDiagOrHerm, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 		/// <summary>
 		/// When implemented by a derived class, check if all elements in <paramref name="A"/> and <paramref name="B"/> are equal: <c><paramref name="A"/>[i, j] == <paramref name="B"/>[i, j]</c> for all <c>i, j</c>.

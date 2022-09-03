@@ -1693,28 +1693,28 @@
             <param name="β">The scalar to multiply to <paramref name="A"/></param>
             <param name="op">The operation to be applied to both <paramref name="B"/> and <paramref name="C"/></param>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.Reduce(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.DenseTensor{`0,`1},`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)">
+        <member name="M:Althea.Array.DenseOperation`2.Reduce(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.DenseTensor{`0,`1},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.Permute(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.DenseTensor{`0,`1},Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.Array.DenseOperation`2.Permute(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.DenseTensor{`0,`1},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.Reduce(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)">
+        <member name="M:Althea.Array.DenseOperation`2.Reduce(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.Permute(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.Array.DenseOperation`2.Permute(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.Contract(Althea.Array.DenseTensor{`0,`1},Althea.LinearAlgebra.UnaryOperation,Althea.Array.DenseTensor{`0,`1},Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`1},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.DenseOperation`2.Contract(Althea.Array.DenseTensor{`0,`1},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.DenseTensor{`0,`1},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`1},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`1},Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.DenseOperation`2.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`1},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.Contract(Althea.Array.DenseTensor{`0,`1},Althea.LinearAlgebra.UnaryOperation,Althea.Array.DenseTensor{`0,`1},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.DenseOperation`2.Contract(Althea.Array.DenseTensor{`0,`1},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.DenseTensor{`0,`1},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.DenseOperation`2.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.DenseOperation`2.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`1},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.DenseSolvers`2">
@@ -2427,10 +2427,10 @@
         </member>
         <member name="M:Althea.Array.ITensorOperations`3.CheckReduce(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,System.Span{System.Int32})">
             <summary>
-            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`3.Reduce(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)"/>.
+            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`3.Reduce(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.ITensorOperations`3.Reduce(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)">
+        <member name="M:Althea.Array.ITensorOperations`3.Reduce(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})">
             <summary>
             When implemented by a derived class, compute the tensor reduction (self partial summation): <c><paramref name="B"/> = <paramref name="α"/> * <paramref name="reduce"/>(<paramref name="opA"/>(<paramref name="A"/>[<paramref name="order"/>])) + <paramref name="β"/> * <paramref name="opB"/>(<paramref name="B"/>)</c>.
             </summary>
@@ -2447,10 +2447,10 @@
         </member>
         <member name="M:Althea.Array.ITensorOperations`3.CheckPermute(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,System.Span{System.Int32})">
             <summary>
-            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`3.Permute(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,Althea.LinearAlgebra.UnaryOperation)"/>.
+            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`3.Permute(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.ITensorOperations`3.Permute(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.Array.ITensorOperations`3.Permute(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <summary>
             When implemented by a derived class, compute the tensor permutation of tensor <paramref name="A"/> under the given <paramref name="order"/> to tensor <paramref name="B"/>.
             </summary>
@@ -2464,10 +2464,10 @@
         </member>
         <member name="M:Althea.Array.ITensorOperations`3.CheckReduce(`1,Althea.TensorAlgebra.TensorOrder,`0,System.Span{System.Int32}@,System.Span{System.Int64}@)">
             <summary>
-            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`3.Reduce(`1,Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)"/>.
+            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`3.Reduce(`1,Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.ITensorOperations`3.Reduce(`1,Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)">
+        <member name="M:Althea.Array.ITensorOperations`3.Reduce(`1,Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})">
             <summary>
             When implemented by a derived class, create a new tensor as the reduction (self partial summation) of tensor <paramref name="A"/> under the given <paramref name="order"/>.
             </summary>
@@ -2482,10 +2482,10 @@
         </member>
         <member name="M:Althea.Array.ITensorOperations`3.CheckPermute(`1,Althea.TensorAlgebra.TensorOrder,`0,System.Span{System.Int32},System.Span{System.Int64})">
             <summary>
-            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`3.Permute(`1,Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation)"/>.
+            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`3.Permute(`1,Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.ITensorOperations`3.Permute(`1,Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.Array.ITensorOperations`3.Permute(`1,Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <summary>
             When implemented by a derived class, create a new tensor as the permutation of tensor <paramref name="A"/> under the given <paramref name="order"/>.
             </summary>
@@ -2508,10 +2508,10 @@
         </member>
         <member name="M:Althea.Array.ITensorOperations`4.CheckContract(`1,`2,`0,`3)">
             <summary>
-            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`4.Contract(`1,Althea.LinearAlgebra.UnaryOperation,`2,Althea.LinearAlgebra.UnaryOperation,`0,`3,Althea.LinearAlgebra.UnaryOperation,`0)"/>.
+            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`4.Contract(`1,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`2,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,`3,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.ITensorOperations`4.Contract(`1,Althea.LinearAlgebra.UnaryOperation,`2,Althea.LinearAlgebra.UnaryOperation,`0,`3,Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.ITensorOperations`4.Contract(`1,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`2,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,`3,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <summary>
             When implemented by a derived class, compute the tensor contraction-addition: <c><paramref name="C"/> = <paramref name="α"/> .* <paramref name="opA"/>(<paramref name="A"/>) * <paramref name="opB"/>(<paramref name="B"/>) + <paramref name="β"/> .* <paramref name="opC"/>(<paramref name="C"/>)</c>.
             </summary>
@@ -2530,10 +2530,10 @@
         </member>
         <member name="M:Althea.Array.ITensorOperations`4.CheckBinary(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,Althea.TensorAlgebra.TensorOrder,`0,`3,System.Span{System.Int32},System.Span{System.Int32})">
             <summary>
-            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`4.TensorsBinaryOperation(`1,Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,`2,Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,`3,Althea.LinearAlgebra.BinaryOperation)"/>.
+            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`4.TensorsBinaryOperation(`1,Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,`2,Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,`3,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.ITensorOperations`4.TensorsBinaryOperation(`1,Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,`2,Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,`3,Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.ITensorOperations`4.TensorsBinaryOperation(`1,Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,`2,Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,`3,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <summary>
             When implemented by a derived class, compute the tensor point-wise binary operation: <c><paramref name="C"/> = <paramref name="binary"/>(<paramref name="scalarA"/> .* <paramref name="opA"/>(<paramref name="A"/>[<paramref name="orderA"/>]), <paramref name="scalarB"/> .* <paramref name="opB"/>(<paramref name="B"/>[<paramref name="orderB"/>]))</c>.
             </summary>
@@ -2552,10 +2552,10 @@
         </member>
         <member name="M:Althea.Array.ITensorOperations`4.CheckContract(`1,`2,`0,System.Span{System.Int64}@,System.Span{System.Char}@)">
             <summary>
-            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`4.Contract(`1,Althea.LinearAlgebra.UnaryOperation,`2,Althea.LinearAlgebra.UnaryOperation,`0)"/>.
+            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`4.Contract(`1,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`2,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.ITensorOperations`4.Contract(`1,Althea.LinearAlgebra.UnaryOperation,`2,Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.ITensorOperations`4.Contract(`1,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`2,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <summary>
             When implemented by a derived class, create a new tensor as the contraction result of <paramref name="opA"/>(<paramref name="A"/>) and <paramref name="opB"/>(<paramref name="B"/>).
             </summary>
@@ -2572,10 +2572,10 @@
         </member>
         <member name="M:Althea.Array.ITensorOperations`4.CheckBinary``1(`1,Althea.TensorAlgebra.TensorOrder,`0,`2,Althea.TensorAlgebra.TensorOrder,`0,System.Span{System.Int32},System.Span{System.Int32},System.Span{System.Int64},``0)">
             <summary>
-            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`4.TensorsBinaryOperation(`1,Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,`2,Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.LinearAlgebra.BinaryOperation)"/>.
+            Check the input parameters of <see cref="M:Althea.Array.ITensorOperations`4.TensorsBinaryOperation(`1,Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,`2,Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.ITensorOperations`4.TensorsBinaryOperation(`1,Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,`2,Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.ITensorOperations`4.TensorsBinaryOperation(`1,Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,`2,Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <summary>
             When implemented by a derived class, create a new tensor as the point-wise binary operation result: <c><paramref name="binary"/>(<paramref name="scalarA"/> .* <paramref name="opA"/>(<paramref name="A"/>[<paramref name="orderA"/>]), <paramref name="scalarB"/> .* <paramref name="opB"/>(<paramref name="B"/>[<paramref name="orderB"/>]))</c>.
             </summary>
@@ -2809,66 +2809,66 @@
         <member name="M:Althea.Array.SparseOperation`4.MultiplyMatries(Althea.Array.SparseMatrix{`0,`1,`2,`3},Althea.Array.SparseMatrix{`0,`1,`2,`3},`0,`0,Althea.Array.SparseMatrix{`0,`1,`2,`3},Althea.LinearAlgebra.MatrixOperation,Althea.LinearAlgebra.MatrixOperation)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Althea#Array#ITensorOperations{T,Althea#Array#SparseTensor{T,TInd,TS,TSInd},Althea#Array#SparseTensor{T,TInd,TS,TSInd}}#Reduce(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.Althea#Array#ITensorOperations{T,Althea#Array#SparseTensor{T,TInd,TS,TSInd},Althea#Array#SparseTensor{T,TInd,TS,TSInd}}#Reduce(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})">
             <inheritdoc/>
             <exception cref="T:System.ArgumentException">If <paramref name="A"/>'s default value is not zero</exception>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Permute(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.Permute(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Reduce(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.Reduce(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Althea#Array#ITensorOperations{T,Althea#Array#SparseTensor{T,TInd,TS,TSInd},Althea#Array#DenseTensor{T,TS}}#Permute(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.Althea#Array#ITensorOperations{T,Althea#Array#SparseTensor{T,TInd,TS,TSInd},Althea#Array#DenseTensor{T,TS}}#Permute(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <inheritdoc/>
             <exception cref="T:System.ArgumentException">If <paramref name="A"/> or <paramref name="B"/>'s default value is not zero</exception>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`2},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`2},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.UnaryOperation,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`2},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`2},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Reduce(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.Reduce(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Permute(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.Permute(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Reduce(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.DenseTensor{`0,`2},`0,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.UnaryOperation,Althea.LinearAlgebra.ReduceOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.Reduce(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.DenseTensor{`0,`2},`0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Permute(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.Permute(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,`0,Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`2},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`2},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.UnaryOperation,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.Array.SparseOperation`4.Contract(Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`2},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.LinearAlgebra.UnaryOperation,`0,Althea.Array.DenseTensor{`0,`2},Althea.LinearAlgebra.BinaryOperation)">
+        <member name="M:Althea.Array.SparseOperation`4.TensorsBinaryOperation(Althea.Array.DenseTensor{`0,`2},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.SparseTensor{`0,`1,`2,`3},Althea.TensorAlgebra.TensorOrder,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0,Althea.Array.DenseTensor{`0,`2},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation})">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Array.CoordinateSparseTensor`4">
@@ -4574,7 +4574,7 @@
             Get the <see cref="T:Althea.Array.SparseFormat.Major"/> of this <see cref="T:Althea.Array.SparseFormat"/>.
             </summary>
         </member>
-        <member name="M:Althea.Array.SparseFormat.#ctor(Althea.Array.SparseFormat.Type,Althea.Array.SparseFormat.Blocking,Althea.Array.SparseFormat.Major)">
+        <member name="M:Althea.Array.SparseFormat.#ctor(Althea.Helpers.ManagedEnum{Althea.Array.SparseFormat.Type},Althea.Helpers.ManagedEnum{Althea.Array.SparseFormat.Blocking},Althea.Helpers.ManagedEnum{Althea.Array.SparseFormat.Major})">
             <summary>
             The full constructor of a <see cref="T:Althea.Array.SparseFormat"/>.
             </summary>
@@ -5231,116 +5231,74 @@
             </summary>
             <remarks>This method heavily relies on reflection and shall NOT be invoked frequently.</remarks>
         </member>
-        <member name="T:Althea.Helpers.MethodParametersInfo">
+        <member name="T:Althea.Helpers.ManagedEnum`1">
             <summary>
-            The read-only struct for storing method parameter types
+            The managed enum struct that provide safe extend definitions for existing enum type <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The enum type</typeparam>
+        </member>
+        <member name="P:Althea.Helpers.ManagedEnum`1.Value">
+            <summary>
+            The underlying enum value of type <typeparamref name="T"/>
             </summary>
         </member>
-        <member name="M:Althea.Helpers.MethodParametersInfo.#ctor(System.ReadOnlySpan{System.Reflection.ParameterInfo})">
+        <member name="M:Althea.Helpers.ManagedEnum`1.#ctor(`0)">
             <summary>
-            Create an <see cref="T:Althea.Helpers.MethodParametersInfo"/> from <paramref name="parameterInfos"/>
-            </summary>
-            <param name="parameterInfos">The input parameters types as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Reflection.ParameterInfo"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="parameterInfos"/> is empty</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="parameterInfos"/> is too long</exception>
-        </member>
-        <member name="M:Althea.Helpers.MethodParametersInfo.#ctor(System.ReadOnlySpan{System.Type})">
-            <summary>
-            Create an <see cref="T:Althea.Helpers.MethodParametersInfo"/> from <paramref name="parameterTypes"/>
-            </summary>
-            <param name="parameterTypes">The input parameters types as a <see cref="T:System.ReadOnlySpan`1"/> of <see cref="T:System.Type"/></param>
-            <exception cref="T:System.ArgumentNullException">If <paramref name="parameterTypes"/> is empty</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="parameterTypes"/> is too long</exception>
-        </member>
-        <member name="M:Althea.Helpers.MethodParametersInfo.Equals(Althea.Helpers.MethodParametersInfo)">
-            <summary>
-            Indicates whether the current object is equal to another object of the same type.
-            </summary>
-            <param name="other">The other <see cref="T:Althea.Helpers.MethodParametersInfo"/> to compare with this one.</param>
-            <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
-        </member>
-        <member name="M:Althea.Helpers.MethodParametersInfo.Equals(System.Object)">
-            <summary>
-            Indicates whether the current object is equal to another object of the same type.
-            </summary>
-            <param name="obj">The other object to compare with this one.</param>
-            <returns>True if the current object is equal to the other parameter; otherwise, false.</returns>
-        </member>
-        <member name="M:Althea.Helpers.MethodParametersInfo.GetHashCode">
-            <summary>
-            Get the hash code of this <see cref="T:Althea.Helpers.MethodParametersInfo"/>
-            </summary>
-            <returns>The hash code of this <see cref="T:Althea.Helpers.MethodParametersInfo"/></returns>
-        </member>
-        <member name="M:Althea.Helpers.MethodParametersInfo.op_Equality(Althea.Helpers.MethodParametersInfo,Althea.Helpers.MethodParametersInfo)">
-            <summary>
-            Equality operator
+            The default constructor
             </summary>
         </member>
-        <member name="M:Althea.Helpers.MethodParametersInfo.op_Inequality(Althea.Helpers.MethodParametersInfo,Althea.Helpers.MethodParametersInfo)">
+        <member name="M:Althea.Helpers.ManagedEnum`1.op_Implicit(Althea.Helpers.ManagedEnum{`0})~`0">
             <summary>
-            Inequality operator
+            Implicitly convert a <see cref="T:Althea.Helpers.ManagedEnum`1"/> to its enum <see cref="P:Althea.Helpers.ManagedEnum`1.Value"/>.
             </summary>
         </member>
-        <member name="T:Althea.Helpers.EnumHelper">
+        <member name="M:Althea.Helpers.ManagedEnum`1.op_Implicit(`0)~Althea.Helpers.ManagedEnum{`0}">
             <summary>
-            The static class for generic enum helper methods
+            Implicitly convert a enum <paramref name="value"/> to a <see cref="T:Althea.Helpers.ManagedEnum`1"/>.
             </summary>
         </member>
-        <member name="M:Althea.Helpers.EnumHelper.GetName``1(``0)">
-            <summary>
-            Get the name / string representation of the given enum value
-            </summary>
-            <typeparam name="T">The type of the enum</typeparam>
-            <param name="e">The value of the enum</param>
-            <returns><paramref name="e"/>'s name / string representation</returns>
+        <member name="M:Althea.Helpers.ManagedEnum`1.op_Equality(Althea.Helpers.ManagedEnum{`0},Althea.Helpers.ManagedEnum{`0})">
+            <inheritdoc/>
         </member>
-        <member name="M:Althea.Helpers.EnumHelper.SetName``1(``0,System.String)">
+        <member name="M:Althea.Helpers.ManagedEnum`1.op_Inequality(Althea.Helpers.ManagedEnum{`0},Althea.Helpers.ManagedEnum{`0})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.Equals(System.Object)">
             <summary>
-            Set the name / string representation of the given enum value
+            Always throw <see cref="T:System.InvalidOperationException"/> since ref struct cannot be boxed.
             </summary>
-            <typeparam name="T">The type of the enum</typeparam>
-            <param name="e">The value of the enum</param>
-            <param name="name">The name / string representation of the given enum value <paramref name="e"/></param>
-            <exception cref="T:System.InvalidOperationException">If <paramref name="e"/> is already defined</exception>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.GetHashCode">
+            <summary>
+            Always throw <see cref="T:System.InvalidOperationException"/> since ref struct cannot be boxed.
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.DeclareNewEnum(System.String)">
+            <summary>
+            Declare a new enum of type <typeparamref name="T"/> with given <paramref name="name"/>/string representation.
+            </summary>
+            <param name="name">The name / string representation of the newly declared enum</param>
+            <exception cref="T:System.InvalidOperationException">If the enum is fully declared thus has no room for new ones</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="name"/> is null or empty or it contains space</exception>
         </member>
-        <member name="M:Althea.Helpers.EnumHelper.TryParse``1(System.String,``0@)">
+        <member name="M:Althea.Helpers.ManagedEnum`1.TryParse(System.String,Althea.Helpers.ManagedEnum{`0}@)">
             <summary>
-            Tries to parse the given enum <paramref name="name"/> to a enum value
+            Tries to parse the given enum <paramref name="name"/> to a enum value.
             </summary>
-            <typeparam name="T">The type of the enum</typeparam>
-            <param name="e">The output value of the enum</param>
+            <param name="e">The output value of the <see cref="T:Althea.Helpers.ManagedEnum`1"/></param>
             <param name="name">The name / string representation of the enum to parse</param>
             <returns>Success or not</returns>
         </member>
-        <member name="M:Althea.Helpers.EnumHelper.Parse``1(System.String)">
+        <member name="M:Althea.Helpers.ManagedEnum`1.Parse(System.String)">
             <summary>
             Parse the given enum <paramref name="name"/> to a enum value
             </summary>
-            <typeparam name="T">The type of the enum</typeparam>
             <param name="name">The name / string representation of the enum to parse</param>
-            <returns>The enum of type <typeparamref name="T"/> given by <paramref name="name"/></returns>
+            <returns>The <see cref="T:Althea.Helpers.ManagedEnum`1"/> given by <paramref name="name"/></returns>
             <exception cref="T:System.ArgumentException">If <paramref name="name"/> cannot be converted to a enum of type <typeparamref name="T"/></exception>
-        </member>
-        <member name="M:Althea.Helpers.EnumHelper.GetMethod``2(``0)">
-            <summary>
-            Get the method delegate of type <typeparamref name="TDelegate"/> associated to the given enum value
-            </summary>
-            <typeparam name="TEnum">The type of the enum</typeparam>
-            <typeparam name="TDelegate">The type of the delegate of the method</typeparam>
-            <param name="e">The value of the enum</param>
-            <returns><paramref name="e"/>'s associated method delegate, null for not existing</returns>
-        </member>
-        <member name="M:Althea.Helpers.EnumHelper.SetMethod``2(``0,``1)">
-            <summary>
-            Set the method delegate of type <typeparamref name="TDelegate"/> associated to the given enum value
-            </summary>
-            <typeparam name="TEnum">The type of the enum</typeparam>
-            <typeparam name="TDelegate">The type of the delegate of the method</typeparam>
-            <param name="e">The value of the enum</param>
-            <param name="method">The delegate of the method to set</param>
-            <exception cref="T:System.ArgumentException">If there are exited delegates whose parameters are the same as <typeparamref name="TDelegate"/>'s while <typeparamref name="TDelegate"/> != that delegate</exception>
         </member>
         <member name="T:Althea.Helpers.TypeMismatchException">
             <summary>
@@ -5474,13 +5432,13 @@
             <param name="bit">bit position</param>
             <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
-        <member name="M:Althea.Helpers.ExtensionHelper.IsBitNotSet(System.Int32,System.Byte)">
+        <member name="M:Althea.Helpers.ExtensionHelper.IsBitSet(System.Int64,System.Byte)">
             <summary>
-            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0
+            Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
             </summary>
             <param name="input">input number</param>
             <param name="bit">bit position</param>
-            <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0</returns>
+            <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
         </member>
         <member name="M:Althea.Helpers.ExtensionHelper.SetBit(System.Int32,System.Byte)">
             <summary>
@@ -9372,7 +9330,7 @@
             <summary>
             Binary operations used by array point-wise binary operations.
             </summary>
-            <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+            <remarks>To extend more operations, use <see cref="T:Althea.Helpers.ManagedEnum`1"/></remarks>
         </member>
         <member name="F:Althea.LinearAlgebra.BinaryOperation.Add">
             <summary>
@@ -9418,7 +9376,7 @@
             <summary>
             Binary operations used by array point-wise binary operations with a scalar.
             </summary>
-            <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+            <remarks>To extend more operations, use <see cref="T:Althea.Helpers.ManagedEnum`1"/></remarks>
         </member>
         <member name="F:Althea.LinearAlgebra.BinaryScalarOperation.Add">
             <summary>
@@ -9469,7 +9427,7 @@
             <summary>
             Binary reduce operations used by array point-wise reduce operations whose first input is the element in array and the second one is the partial reduction result.
             </summary>
-            <remarks>All implementations shall support these pre-defined binary operations, but a implementation can add support for more binary operations.</remarks>
+            <remarks>To extend more operations, use <see cref="T:Althea.Helpers.ManagedEnum`1"/></remarks>
         </member>
         <member name="F:Althea.LinearAlgebra.ReduceOperation.Add">
             <summary>
@@ -9520,7 +9478,7 @@
             <summary>
             Unitary operations of array point-wise unary operations.
             </summary>
-            <remarks>All implementations shall support these pre-defined unary operations, but a implementation can add support for more unary operations.</remarks>
+            <remarks>To extend more operations, use <see cref="T:Althea.Helpers.ManagedEnum`1"/></remarks>
         </member>
         <member name="F:Althea.LinearAlgebra.UnaryOperation.Identity">
             <summary>
@@ -14256,7 +14214,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorUnary``3(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i])</c>.
             </summary>
@@ -14272,7 +14230,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``0@)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``0@)">
             <summary>
             When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="x"/>[i], result)</c> for all <c>i</c>.
             </summary>
@@ -14286,7 +14244,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorArgReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,System.Int64@)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,System.Int64@)">
             <summary>
             When implemented by a derived class, compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="x"/>[i], result)</c> for all <c>i</c>.
             </summary>
@@ -14300,7 +14258,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},``0,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
             </summary>
@@ -14317,7 +14275,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/> or <paramref name="y"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="z"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
             </summary>
@@ -14336,7 +14294,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="x"/>, <paramref name="y"/> or <paramref name="z"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/>, <paramref name="strideY"/> or <paramref name="strideZ"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralVectorsScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``2,System.Int64,System.Boolean)">
             <summary>
             When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
@@ -14385,7 +14343,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
             </summary>
@@ -14403,7 +14361,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``0@)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,``0@)">
             <summary>
             When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
@@ -14419,7 +14377,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
             <summary>
             When implemented by a derived class, compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
@@ -14435,7 +14393,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixColumnReduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute reduction <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
             </summary>
@@ -14453,7 +14411,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
             </summary>
@@ -14472,7 +14430,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatricesBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
             </summary>
@@ -14493,7 +14451,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IExtendBlasAbstractApi.GeneralMatrixColumnScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
             </summary>
@@ -14566,7 +14524,7 @@
             <param name="B">dense matrix with size <c><paramref name="ldb"/>×<paramref name="nb"/></c></param>
             <param name="ldb">leading dimension of <paramref name="B"/>, must be at least <paramref name="mb"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="C"/></param>
-            <param name="C">The pre-allocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
+            <param name="C">The preallocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
             <param name="ldc">The leading dimension of <paramref name="C"/>, must be at least <paramref name="na"/>*<paramref name="nb"/></param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
@@ -14738,7 +14696,7 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
             </summary>
@@ -14758,7 +14716,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``0@)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``0@)">
             <summary>
             When implemented by a derived class, compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
@@ -14777,7 +14735,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
             <summary>
             When implemented by a derived class, compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
@@ -14796,7 +14754,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixColumnReduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
             </summary>
@@ -14817,7 +14775,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="x"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},System.Boolean,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
             </summary>
@@ -14838,7 +14796,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatricesBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             When implemented by a derived class, compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
             </summary>
@@ -14861,7 +14819,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.IHalfMatrixBlasAbstractApi.HalfMatrixColumnScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
             </summary>
@@ -15667,7 +15625,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorUnary``3(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i])</c>.
             </summary>
@@ -15683,7 +15641,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64)">
             <summary>
             Compute <c>result = <paramref name="op"/>(<paramref name="x"/>[i], result)</c> for all <c>i</c>.
             </summary>
@@ -15697,7 +15655,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorArgReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64)">
             <summary>
             Compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="x"/>[i], result)</c> for all <c>i</c>.
             </summary>
@@ -15711,7 +15669,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},``0,``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute <c><paramref name="y"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="scalar"/>)</c>.
             </summary>
@@ -15728,7 +15686,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/> or <paramref name="strideY"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             Compute <c><paramref name="z"/>[i] = <paramref name="op"/>(<paramref name="x"/>[i], <paramref name="y"/>[i])</c>.
             </summary>
@@ -15747,7 +15705,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideX"/>, <paramref name="strideY"/> or <paramref name="strideZ"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralVectorsScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``2,System.Int64,System.Boolean)">
             <summary>
             Perform partial aggregate (scan) <paramref name="op"/> of the elements in vector <paramref name="x"/> and write the result to <paramref name="y"/>.
             </summary>
@@ -15796,7 +15754,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="strideSource"/> or <paramref name="strideDestination"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
             </summary>
@@ -15814,7 +15772,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64)">
             <summary>
             Compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
@@ -15830,7 +15788,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64)">
             <summary>
             Compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
@@ -15846,7 +15804,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixColumnReduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute reduction <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
             </summary>
@@ -15864,7 +15822,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
             </summary>
@@ -15883,7 +15841,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatricesBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             Compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
             </summary>
@@ -15904,7 +15862,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.ExtendBlasApiSelector.GeneralMatrixColumnScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             Perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
             </summary>
@@ -15977,7 +15935,7 @@
             <param name="B">dense matrix with size <c><paramref name="ldb"/>×<paramref name="nb"/></c></param>
             <param name="ldb">leading dimension of <paramref name="B"/>, must be at least <paramref name="mb"/></param>
             <param name="β">The scalar to be multiplied to <paramref name="C"/></param>
-            <param name="C">The pre-allocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
+            <param name="C">The preallocated destination matrix with size <c><paramref name="ldc"/> × <paramref name="na"/>*<paramref name="nb"/></c></param>
             <param name="ldc">The leading dimension of <paramref name="C"/>, must be at least <paramref name="na"/>*<paramref name="nb"/></param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
@@ -16149,7 +16107,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> is null or invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute <c><paramref name="B"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j])</c>.
             </summary>
@@ -16169,7 +16127,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
             <summary>
             Compute <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
@@ -16188,7 +16146,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64)">
             <summary>
             Compute the index of the reduction result: <c>result = <paramref name="op"/>(<paramref name="A"/>[i, j], result)</c> for all <c>i, j</c>.
             </summary>
@@ -16207,7 +16165,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixColumnReduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute <c><paramref name="x"/>[i] = <paramref name="op"/>(<paramref name="A"/>[j, i], <paramref name="x"/>[i])</c> for all <c>i, j</c>.
             </summary>
@@ -16228,7 +16186,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="strideX"/> ≤ 0</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},System.Boolean,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
             <summary>
             Compute <c><paramref name="A"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="scalar"/>)</c>.
             </summary>
@@ -16249,7 +16207,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatricesBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <summary>
             Compute <c><paramref name="C"/>[i, j] = <paramref name="op"/>(<paramref name="A"/>[i, j], <paramref name="B"/>[i, j])</c>.
             </summary>
@@ -16272,7 +16230,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="lda"/> &lt; <paramref name="rows"/> or <paramref name="ldb"/> &lt; <paramref name="rows"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixColumnScan``3(Althea.LinearAlgebra.BinaryOperation,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.LinearAlgebra.Dense.HalfMatrixBlasApiSelector.HalfMatrixColumnScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             Perform partial aggregate (scan) <paramref name="op"/> of the elements in columns of <paramref name="A"/> and write the result to columns <paramref name="B"/>.
             </summary>
@@ -25145,13 +25103,6 @@
             <param name="locationType">The given <see cref="T:Althea.Storage.LocationType"/></param>
             <returns>The classification as a <see cref="T:System.Byte"/></returns>
         </member>
-        <member name="T:Althea.Storage.LocationTypeExtension.GetDetailDescription">
-            <summary>
-            The delegate for obtaining the description of the given <paramref name="detail"/> which is associated with different values of <see cref="T:Althea.Storage.LocationType"/>
-            </summary>
-            <param name="detail">The input detail as a <see cref="T:System.Int16"/></param>
-            <returns>The description of the given <paramref name="detail"/> associated with current value of <see cref="T:Althea.Storage.LocationType"/></returns>
-        </member>
         <member name="T:Althea.Storage.CombinationType">
             <summary>
             The enum for the type of the description the combination of storage locations, each bit represents the type of its corresponding location in <see cref="T:Althea.Storage.CombinationOfLocations"/>
@@ -25265,6 +25216,9 @@
         </member>
         <member name="P:Althea.Storage.StorageLocation.Detail">
             <summary>The location detail of the <see cref="P:Althea.Storage.StorageLocation.Type"/>.</summary>
+        </member>
+        <member name="M:Althea.Storage.StorageLocation.ToString">
+            <inheritdoc/>
         </member>
         <member name="T:Althea.Storage.CombinationOfLocations">
             <summary>
@@ -27986,7 +27940,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="destination"/> or <paramref name="permutationOrder"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order or the sizes mismatches</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.IBaseAbstractApi.OperationBinary``4(Althea.LinearAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
+        <member name="M:Althea.TensorAlgebra.Dense.IBaseAbstractApi.OperationBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
             <summary>
             When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
             </summary>
@@ -28004,7 +27958,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="destination"/> is invalid or both <paramref name="left"/> and <paramref name="right"/> are invalid</exception>
             <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.IBaseAbstractApi.Reduce``3(Althea.LinearAlgebra.ReduceOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32})">
+        <member name="M:Althea.TensorAlgebra.Dense.IBaseAbstractApi.Reduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32})">
             <summary>
             When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="reduceDimensions"/>:<br/>
             <c><paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.ValueStorage">Storage</see> = <paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">Scalar</see> * <paramref name="reduce"/>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">Op</see>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.ValueStorage">Storage</see>[<paramref name="reduceDimensions"/>])) + <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">Scalar</see> * <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">Op</see>(<paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.ValueStorage">Storage</see>)</c>.
@@ -28140,7 +28094,7 @@
             <param name="value">The given dense storage</param>
             <param name="size">The presenting size / extent of all dimensions</param>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.#ctor(`1,System.ReadOnlySpan{System.Int64},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.#ctor(`1,System.ReadOnlySpan{System.Int64},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2"/> with all given parameters.
             </summary>
@@ -28158,7 +28112,7 @@
             <param name="outerSize">The actual outer size, will be replaced by <paramref name="size"/> if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
             <param name="strides">The strides between consecutive elements in each dimension, will be replaced by empty if <paramref name="size"/> sequence equals <paramref name="outerSize"/></param>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.#ctor(`1,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.#ctor(`1,System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},System.ReadOnlySpan{System.Int64},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2"/> with all parameters.
             </summary>
@@ -28169,7 +28123,7 @@
             <param name="operation">The <see cref="T:Althea.LinearAlgebra.UnaryOperation"/> which is about to be applied to this wrapper if it is used as an input</param>
             <param name="scalar">The scalar which is about to be applied to this wrapper if it is used as an input. 0 will <b>not</b> be replaced by 1.</param>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.#ctor(Althea.Array.ILabeledTensor{`0},Althea.LinearAlgebra.UnaryOperation,System.Nullable{`0})">
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.#ctor(Althea.Array.ILabeledTensor{`0},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.Nullable{`0})">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2"/> with a given dense <paramref name="tensor"/>.
             </summary>
@@ -28179,7 +28133,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="tensor"/> is a <see cref="T:Althea.Array.ISparseArray`1"/></exception>
             <exception cref="T:System.ArgumentNullException">If <paramref name="tensor"/> is not a <see cref="T:Althea.Array.IDenseArray`2"/></exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.#ctor(Althea.TensorAlgebra.Dense.DenseTensorWrapper{`0,`1}@,Althea.LinearAlgebra.UnaryOperation,`0)">
+        <member name="M:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.#ctor(Althea.TensorAlgebra.Dense.DenseTensorWrapper{`0,`1}@,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},`0)">
             <summary>
             Create a new <see cref="T:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2"/> with the given original <paramref name="tensor"/> and new <paramref name="operation"/> and <paramref name="scalar"/>.
             </summary>
@@ -28202,7 +28156,7 @@
             The abstract interface for extended runtime dense tensor algebra API routines 
             </summary>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.PointwiseBinaryScalar``2(Althea.LinearAlgebra.BinaryScalarOperation,Althea.Array.DenseArrayWrapper{``0,``1},``0)">
+        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.PointwiseBinaryScalar``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},Althea.Array.DenseArrayWrapper{``0,``1},``0)">
             <summary>
             When implemented by a derived class, perform binary operation <paramref name="op"/> to each element in <paramref name="tensor"/> with <paramref name="value"/> and write the result in-place.
             </summary>
@@ -28214,7 +28168,7 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.FullReduce``2(Althea.LinearAlgebra.ReduceOperation,Althea.Array.DenseArrayWrapper{``0,``1},``0@)">
+        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.FullReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.Array.DenseArrayWrapper{``0,``1},``0@)">
             <summary>
             When implemented by a derived class, fully reduce <paramref name="tensor"/> according to <paramref name="op"/>.
             </summary>
@@ -28226,7 +28180,7 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.AxisReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int32,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``1})">
+        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.AxisReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int32,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``1})">
             <summary>
             When implemented by a derived class, reduce <paramref name="tensor"/>'s <paramref name="axis"/> dimension according to <paramref name="op"/> and overwrite <paramref name="result"/>.
             </summary>
@@ -28240,7 +28194,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="result"/>'s size is not <paramref name="tensor"/>'s without <paramref name="axis"/></exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.AxisScan``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int32,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``1})">
+        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.AxisScan``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Int32,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``1})">
             <summary>
             When implemented by a derived class, partial scan <paramref name="tensor"/>'s <paramref name="axis"/> dimension according to <paramref name="op"/> and overwrite <paramref name="result"/>.
             </summary>
@@ -28255,7 +28209,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="result"/>'s size is not <paramref name="tensor"/>'s without <paramref name="axis"/></exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.ArgFullReduce``2(Althea.LinearAlgebra.ReduceOperation,Althea.Array.DenseArrayWrapper{``0,``1},System.Int64@)">
+        <member name="M:Althea.TensorAlgebra.Dense.IExtendAbstractApi.ArgFullReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.Array.DenseArrayWrapper{``0,``1},System.Int64@)">
             <summary>
             When implemented by a derived class, fully reduce <paramref name="tensor"/> according to <paramref name="op"/> and return the index of reduction result.
             </summary>
@@ -28353,7 +28307,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order or the sizes mismatches</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.BaseApiSelector.OperationBinary``4(Althea.LinearAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
+        <member name="M:Althea.TensorAlgebra.Dense.BaseApiSelector.OperationBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
             <summary>
             Compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and stored the result to the <paramref name="destination"/> tensor
             </summary>
@@ -28371,7 +28325,7 @@
             <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.BaseApiSelector.Reduce``3(Althea.LinearAlgebra.ReduceOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32})">
+        <member name="M:Althea.TensorAlgebra.Dense.BaseApiSelector.Reduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32})">
             <summary>
             Compute the tensor reduction from the <paramref name="source"/> tensor to the <paramref name="destination"/> tensor with the given <paramref name="reduceDimensions"/>:<br/>
             <c><paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.ValueStorage">Storage</see> = <paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">Scalar</see> * <paramref name="reduce"/>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">Op</see>(<paramref name="source"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.ValueStorage">Storage</see>[<paramref name="reduceDimensions"/>])) + <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">Scalar</see> * <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">Op</see>(<paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.ValueStorage">Storage</see>)</c>.
@@ -28409,7 +28363,7 @@
             The selector class for extended runtime dense tensor algebra API routines 
             </summary>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.PointwiseBinaryScalar``2(Althea.LinearAlgebra.BinaryScalarOperation,Althea.Array.DenseArrayWrapper{``0,``1},``0)">
+        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.PointwiseBinaryScalar``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},Althea.Array.DenseArrayWrapper{``0,``1},``0)">
             <summary>
             Perform binary operation <paramref name="op"/> to each element in <paramref name="tensor"/> with <paramref name="value"/> and write the result in-place.
             </summary>
@@ -28421,7 +28375,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.FullReduce``2(Althea.LinearAlgebra.ReduceOperation,Althea.Array.DenseArrayWrapper{``0,``1})">
+        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.FullReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.Array.DenseArrayWrapper{``0,``1})">
             <summary>
             Fully reduce <paramref name="tensor"/> according to <paramref name="op"/>.
             </summary>
@@ -28433,7 +28387,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="tensor"/> is invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.AxisReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int32,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``1})">
+        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.AxisReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int32,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``1})">
             <summary>
             Reduce <paramref name="tensor"/>'s <paramref name="axis"/> dimension according to <paramref name="op"/> and overwrite <paramref name="result"/>.
             </summary>
@@ -28447,7 +28401,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="result"/>'s size is not <paramref name="tensor"/>'s without <paramref name="axis"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.AxisScan``2(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int32,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``1})">
+        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.AxisScan``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Int32,Althea.Array.DenseArrayWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``1})">
             <summary>
             Partial scan <paramref name="tensor"/>'s <paramref name="axis"/> dimension according to <paramref name="op"/> and overwrite <paramref name="result"/>.
             </summary>
@@ -28462,7 +28416,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="result"/>'s size is not <paramref name="tensor"/>'s without <paramref name="axis"/></exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.ArgFullReduce``2(Althea.LinearAlgebra.ReduceOperation,Althea.Array.DenseArrayWrapper{``0,``1})">
+        <member name="M:Althea.TensorAlgebra.Dense.ExtendApiSelector.ArgFullReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.Array.DenseArrayWrapper{``0,``1})">
             <summary>
             Fully reduce <paramref name="tensor"/> according to <paramref name="op"/> and return the index of reduction result.
             </summary>
@@ -28607,7 +28561,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or format of <paramref name="destination"/> is not atomic</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Permute``5(Althea.Array.ISparseArray{``0,``1,``2,``4},``0,Althea.LinearAlgebra.UnaryOperation,System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
+        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Permute``5(Althea.Array.ISparseArray{``0,``1,``2,``4},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
             <summary>
             When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and overwrite the result multiplied by <paramref name="scalar"/> to <paramref name="destination"/>.
             </summary>
@@ -28625,7 +28579,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="permutationOrder"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Permute``7(Althea.Array.ISparseArray{``0,``1,``3,``5},``0,Althea.LinearAlgebra.UnaryOperation,System.ReadOnlySpan{System.Int32},Althea.Array.SparseArrayWrapper{``0,``2,``4,``6}@)">
+        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Permute``7(Althea.Array.ISparseArray{``0,``1,``3,``5},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.ReadOnlySpan{System.Int32},Althea.Array.SparseArrayWrapper{``0,``2,``4,``6}@)">
             <summary>
             When implemented by a derived class, compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and output the result multiplied by <paramref name="scalar"/> to <paramref name="destination"/>.
             </summary>
@@ -28646,7 +28600,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="permutationOrder"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.OperationBinary``6(Althea.LinearAlgebra.BinaryOperation,Althea.Array.ISparseArray{``0,``1,``2,``5},System.ReadOnlySpan{System.Int32},``0,Althea.LinearAlgebra.UnaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``4})">
+        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.OperationBinary``6(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},Althea.Array.ISparseArray{``0,``1,``2,``5},System.ReadOnlySpan{System.Int32},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``4})">
             <summary>
             When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
             </summary>
@@ -28667,7 +28621,7 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.OperationBinary``10(Althea.LinearAlgebra.BinaryOperation,Althea.Array.ISparseArray{``0,``1,``4,``7},System.ReadOnlySpan{System.Int32},``0,Althea.LinearAlgebra.UnaryOperation,Althea.Array.ISparseArray{``0,``2,``5,``8},System.ReadOnlySpan{System.Int32},``0,Althea.LinearAlgebra.UnaryOperation,Althea.Array.SparseArrayWrapper{``0,``3,``6,``9}@)">
+        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.OperationBinary``10(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},Althea.Array.ISparseArray{``0,``1,``4,``7},System.ReadOnlySpan{System.Int32},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.ISparseArray{``0,``2,``5,``8},System.ReadOnlySpan{System.Int32},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.SparseArrayWrapper{``0,``3,``6,``9}@)">
             <summary>
             When implemented by a derived class, compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
             </summary>
@@ -28694,7 +28648,7 @@
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Reduce``5(Althea.LinearAlgebra.ReduceOperation,Althea.Array.ISparseArray{``0,``1,``2,``4},``0,Althea.LinearAlgebra.UnaryOperation,System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3})">
+        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Reduce``5(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.Array.ISparseArray{``0,``1,``2,``4},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3})">
             <summary>
             When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and overwrite the result to <paramref name="destination"/>:<br/>
             <c><paramref name="destination"/> = <paramref name="α"/> * <paramref name="reduce"/>(<paramref name="op"/>(<paramref name="source"/>)[<paramref name="reduceDimensions"/>]) + <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">β</see> * <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">op</see>(<paramref name="destination"/>)</c>.
@@ -28714,7 +28668,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Reduce``7(Althea.LinearAlgebra.ReduceOperation,Althea.Array.ISparseArray{``0,``1,``3,``5},``0,Althea.LinearAlgebra.UnaryOperation,System.ReadOnlySpan{System.Int32},Althea.Array.SparseArrayWrapper{``0,``2,``4,``6}@)">
+        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Reduce``7(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.Array.ISparseArray{``0,``1,``3,``5},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.ReadOnlySpan{System.Int32},Althea.Array.SparseArrayWrapper{``0,``2,``4,``6}@)">
             <summary>
             When implemented by a derived class, compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>:<br/>
             <c><paramref name="destination"/> = <paramref name="scalar"/> * <paramref name="reduce"/>(<paramref name="op"/>(<paramref name="source"/>)[<paramref name="reduceDimensions"/>])</c>.
@@ -28736,7 +28690,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="source"/> or <paramref name="reduceDimensions"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Contract``6(Althea.Array.ISparseArray{``0,``1,``2,``5},Althea.LinearAlgebra.UnaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},Althea.TensorAlgebra.TensorContractInfo,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``4})">
+        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Contract``6(Althea.Array.ISparseArray{``0,``1,``2,``5},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},Althea.TensorAlgebra.TensorContractInfo,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``4})">
             <summary>
             When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
             <c><paramref name="destination"/> = <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">α</see> * contract(<paramref name="opLeft"/>(<paramref name="left"/>), <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">op</see>(<paramref name="right"/>) + <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">β</see> * <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">op</see>(<paramref name="destination"/>)</c>.
@@ -28756,7 +28710,7 @@
             <exception cref="T:System.ArgumentNullException">If <paramref name="left"/> or <paramref name="right"/> or <paramref name="info"/> is invalid</exception>
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Contract``10(``0,Althea.Array.ISparseArray{``0,``1,``4,``7},Althea.LinearAlgebra.UnaryOperation,Althea.Array.ISparseArray{``0,``2,``5,``8},Althea.LinearAlgebra.UnaryOperation,Althea.TensorAlgebra.StorableContractInfo@,``0,Althea.Array.SparseArrayWrapper{``0,``3,``6,``9}@,Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.TensorAlgebra.Sparse.IAbstractApi.Contract``10(``0,Althea.Array.ISparseArray{``0,``1,``4,``7},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.ISparseArray{``0,``2,``5,``8},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.TensorAlgebra.StorableContractInfo@,``0,Althea.Array.SparseArrayWrapper{``0,``3,``6,``9}@,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <summary>
             When implemented by a derived class, compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
             <c><paramref name="destination"/> = <paramref name="α"/> * contract(<paramref name="opLeft"/>(<paramref name="left"/>), <paramref name="opRight"/>(<paramref name="right"/>) + <paramref name="β"/> * <paramref name="opDst"/>(<paramref name="destination"/>)</c>.
@@ -28852,7 +28806,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="threshold"/> is less than 0 or format of <paramref name="destination"/> is not atomic</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Permute``5(Althea.Array.ISparseArray{``0,``1,``2,``4},``0,Althea.LinearAlgebra.UnaryOperation,System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
+        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Permute``5(Althea.Array.ISparseArray{``0,``1,``2,``4},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
             <summary>
             Compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and overwrite the result multiplied by <paramref name="scalar"/> to <paramref name="destination"/>.
             </summary>
@@ -28870,7 +28824,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Permute``7(Althea.Array.ISparseArray{``0,``1,``3,``5},``0,Althea.LinearAlgebra.UnaryOperation,System.ReadOnlySpan{System.Int32},Althea.Array.SparseArrayWrapper{``0,``2,``4,``6}@)">
+        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Permute``7(Althea.Array.ISparseArray{``0,``1,``3,``5},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.ReadOnlySpan{System.Int32},Althea.Array.SparseArrayWrapper{``0,``2,``4,``6}@)">
             <summary>
             Compute the tensor permutation from the <paramref name="source"/> tensor with the given <paramref name="permutationOrder"/> and output the result multiplied by <paramref name="scalar"/> to <paramref name="destination"/>.
             </summary>
@@ -28891,7 +28845,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="permutationOrder"/> is not a full permutation order</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.OperationBinary``6(Althea.LinearAlgebra.BinaryOperation,Althea.Array.ISparseArray{``0,``1,``2,``5},System.ReadOnlySpan{System.Int32},``0,Althea.LinearAlgebra.UnaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``4})">
+        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.OperationBinary``6(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},Althea.Array.ISparseArray{``0,``1,``2,``5},System.ReadOnlySpan{System.Int32},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``4})">
             <summary>
             Compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
             </summary>
@@ -28912,7 +28866,7 @@
             <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.OperationBinary``10(Althea.LinearAlgebra.BinaryOperation,Althea.Array.ISparseArray{``0,``1,``4,``7},System.ReadOnlySpan{System.Int32},``0,Althea.LinearAlgebra.UnaryOperation,Althea.Array.ISparseArray{``0,``2,``5,``8},System.ReadOnlySpan{System.Int32},``0,Althea.LinearAlgebra.UnaryOperation,Althea.Array.SparseArrayWrapper{``0,``3,``6,``9}@)">
+        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.OperationBinary``10(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},Althea.Array.ISparseArray{``0,``1,``4,``7},System.ReadOnlySpan{System.Int32},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.ISparseArray{``0,``2,``5,``8},System.ReadOnlySpan{System.Int32},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.SparseArrayWrapper{``0,``3,``6,``9}@)">
             <summary>
             Compute the point-wise binary operation for input <paramref name="leftPerm"/>(<paramref name="left"/>) and <paramref name="rightPerm"/>(<paramref name="right"/>) tensors and output the result as a <paramref name="destination"/>.
             </summary>
@@ -28939,7 +28893,7 @@
             <exception cref="T:System.ArgumentException">If the given tensors have different sizes under their permutations; or <paramref name="left"/> and <paramref name="right"/> are both invalid</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Reduce``5(Althea.LinearAlgebra.ReduceOperation,Althea.Array.ISparseArray{``0,``1,``2,``4},``0,Althea.LinearAlgebra.UnaryOperation,System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3})">
+        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Reduce``5(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.Array.ISparseArray{``0,``1,``2,``4},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3})">
             <summary>
             Compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and overwrite the result to <paramref name="destination"/>:<br/>
             <c><paramref name="destination"/> = <paramref name="α"/> * <paramref name="reduce"/>(<paramref name="op"/>(<paramref name="source"/>)[<paramref name="reduceDimensions"/>]) + <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">β</see> * <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">op</see>(<paramref name="destination"/>)</c>.
@@ -28959,7 +28913,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Reduce``7(Althea.LinearAlgebra.ReduceOperation,Althea.Array.ISparseArray{``0,``1,``3,``5},``0,Althea.LinearAlgebra.UnaryOperation,System.ReadOnlySpan{System.Int32},Althea.Array.SparseArrayWrapper{``0,``2,``4,``6}@)">
+        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Reduce``7(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.Array.ISparseArray{``0,``1,``3,``5},``0,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.ReadOnlySpan{System.Int32},Althea.Array.SparseArrayWrapper{``0,``2,``4,``6}@)">
             <summary>
             Compute the tensor reduction from the <paramref name="source"/> tensor with the given <paramref name="reduceDimensions"/> and output the result as a <paramref name="destination"/>:<br/>
             <c><paramref name="destination"/> = <paramref name="scalar"/> * <paramref name="reduce"/>(<paramref name="op"/>(<paramref name="source"/>)[<paramref name="reduceDimensions"/>])</c>.
@@ -28981,7 +28935,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="reduceDimensions"/> is not a partial permutation order or the sizes mismatches</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Contract``6(Althea.Array.ISparseArray{``0,``1,``2,``5},Althea.LinearAlgebra.UnaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},Althea.TensorAlgebra.TensorContractInfo,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``4})">
+        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Contract``6(Althea.Array.ISparseArray{``0,``1,``2,``5},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},Althea.TensorAlgebra.TensorContractInfo,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``4})">
             <summary>
             Compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
             <c><paramref name="destination"/> = <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">α</see> * contract(<paramref name="opLeft"/>(<paramref name="left"/>), <paramref name="right"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">op</see>(<paramref name="right"/>) + <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Scalar">β</see> * <paramref name="destination"/>.<see cref="P:Althea.TensorAlgebra.Dense.DenseTensorWrapper`2.Operation">op</see>(<paramref name="destination"/>)</c>.
@@ -29001,7 +28955,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="info"/> mismatches the given tensors</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Contract``10(``0,Althea.Array.ISparseArray{``0,``1,``4,``7},Althea.LinearAlgebra.UnaryOperation,Althea.Array.ISparseArray{``0,``2,``5,``8},Althea.LinearAlgebra.UnaryOperation,Althea.TensorAlgebra.StorableContractInfo@,``0,Althea.Array.SparseArrayWrapper{``0,``3,``6,``9}@,Althea.LinearAlgebra.UnaryOperation)">
+        <member name="M:Althea.TensorAlgebra.Sparse.ApiSelector.Contract``10(``0,Althea.Array.ISparseArray{``0,``1,``4,``7},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.Array.ISparseArray{``0,``2,``5,``8},Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},Althea.TensorAlgebra.StorableContractInfo@,``0,Althea.Array.SparseArrayWrapper{``0,``3,``6,``9}@,Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation})">
             <summary>
             Compute the tensor contraction of the <paramref name="left"/> and <paramref name="right"/> tensors and output the result as <paramref name="destination"/>:<br/>
             <c><paramref name="destination"/> = <paramref name="α"/> * contract(<paramref name="opLeft"/>(<paramref name="left"/>), <paramref name="opRight"/>(<paramref name="right"/>) + <paramref name="β"/> * <paramref name="opDst"/>(<paramref name="destination"/>)</c>.

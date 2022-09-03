@@ -277,22 +277,21 @@ public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseF
 	#endregion
 
 	#region JSON
+	private readonly record struct SparseFormatJson(string Class, string BlockType, string MajorType);
+
 	private sealed class JsonConverter : JsonConverter<SparseFormat>
 	{
 		public override SparseFormat Read(ref Utf8JsonReader reader, System.Type typeToConvert, JsonSerializerOptions options)
 		{
 			if (typeToConvert != typeof(SparseFormat))
 				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(typeToConvert));
-			if (!reader.Read())
-				throw new JsonException();
-			if (!reader.TryGetInt32(out int data))
-				throw new JsonException(Resources.ParameterError.UnexpectedType);
-			return new(data);
+			var json = JsonSerializer.Deserialize<SparseFormatJson>(ref reader, options);
+			return new(ManagedEnum<Type>.Parse(json.Class), ManagedEnum<Blocking>.Parse(json.BlockType), ManagedEnum<Major>.Parse(json.MajorType));
 		}
 
 		public override void Write(Utf8JsonWriter writer, SparseFormat value, JsonSerializerOptions options)
 		{
-			writer.WriteNumberValue(value.data);
+			JsonSerializer.Serialize(new SparseFormatJson(value.Class.ToString(), value.BlockType.ToString(), value.MajorType.ToString()));
 		}
 	}
 	#endregion
@@ -311,17 +310,17 @@ public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseF
 	/// <summary>
 	/// Get the <see cref="Type"/> of this <see cref="SparseFormat"/>.
 	/// </summary>
-	public Type Class => this.type;
+	public ManagedEnum<Type> Class => this.type;
 
 	/// <summary>
 	/// Get the <see cref="Blocking"/> of this <see cref="SparseFormat"/>.
 	/// </summary>
-	public Blocking BlockType => this.blocking;
+	public ManagedEnum<Blocking> BlockType => this.blocking;
 
 	/// <summary>
 	/// Get the <see cref="Major"/> of this <see cref="SparseFormat"/>.
 	/// </summary>
-	public Major MajorType => this.major;
+	public ManagedEnum<Major> MajorType => this.major;
 
 	private SparseFormat(int data)
 	{
@@ -334,7 +333,7 @@ public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseF
 	/// <summary>
 	/// The full constructor of a <see cref="SparseFormat"/>.
 	/// </summary>
-	public SparseFormat(Type type, Blocking blocking = Blocking.None, Major major = Major.None)
+	public SparseFormat(ManagedEnum<Type> type, ManagedEnum<Blocking> blocking = default, ManagedEnum<Major> major = default)
 	{
 		this.type = type;
 		this.blocking = blocking;
@@ -596,13 +595,13 @@ public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseF
 		if (this == None)
 			return nameof(None);
 		if (this.IsAtomic)
-			return $"{this.type.GetName()}_{this.blocking.GetName()}{nameof(Blocking)}_{this.major.GetName()}{nameof(Major)}";
+			return $"{this.Class}_{this.BlockType}{nameof(Blocking)}_{this.MajorType}{nameof(Major)}";
 		byte t = (byte)this.type, b = (byte)this.blocking, m = (byte)this.major;
 		string st, sb, sm;
-		st = t == 255 ? "Any" : $"{{{this.type.GetName()}}}";
-		sb = b == 255 ? "Any" : $"{{{this.blocking.GetName()}}}";
-		sm = m == 255 ? "Any" : $"{{{this.major.GetName()}}}";
-		return $"[{nameof(Type)}={st}; {nameof(Blocking)}={sb}; {nameof(Major)}={sm}]";
+		st = t == 255 ? "Any" : $"{this.Class}";
+		sb = b == 255 ? "Any" : $"{this.BlockType}";
+		sm = m == 255 ? "Any" : $"{this.MajorType}";
+		return $"{{ {nameof(Type)} = {st}; {nameof(Blocking)} = {sb}; {nameof(Major)} = {sm} }}";
 	}
 	#endregion
 }

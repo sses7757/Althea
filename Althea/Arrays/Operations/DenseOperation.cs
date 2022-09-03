@@ -788,7 +788,7 @@ public sealed class DenseOperation<T, TS> :
 
 	#region tensor
 	/// <inheritdoc/>
-	public static void Reduce(DenseTensor<T, TS> A, TensorOrder order, T α, DenseTensor<T, TS> B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
+	public static void Reduce(DenseTensor<T, TS> A, TensorOrder order, T α, DenseTensor<T, TS> B, T β = default, ManagedEnum<UnaryOperation> opA = default, ManagedEnum<UnaryOperation> opB = default, ManagedEnum<ReduceOperation> reduce = default)
 	{
 		Span<int> reduceInd = stackalloc int[A.Rank];
 		reduceInd = ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckReduce(A, order, α, B, reduceInd);
@@ -796,7 +796,7 @@ public sealed class DenseOperation<T, TS> :
 	}
 
 	/// <inheritdoc/>
-	public static void Permute(DenseTensor<T, TS> A, TensorOrder order, T scalar, DenseTensor<T, TS> B, UnaryOperation op = UnaryOperation.Identity)
+	public static void Permute(DenseTensor<T, TS> A, TensorOrder order, T scalar, DenseTensor<T, TS> B, ManagedEnum<UnaryOperation> op = default)
 	{
 		Span<int> perm = stackalloc int[A.Rank];
 		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckPermute(A, order, scalar, B, perm);
@@ -804,7 +804,7 @@ public sealed class DenseOperation<T, TS> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> Reduce(DenseTensor<T, TS> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add)
+	public static DenseTensor<T, TS> Reduce(DenseTensor<T, TS> A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = default, ManagedEnum<ReduceOperation> reduce = default)
 	{
 		Span<int> reduceInd = stackalloc int[A.Rank];
 		Span<long> sizeB = stackalloc long[A.Rank];
@@ -823,7 +823,7 @@ public sealed class DenseOperation<T, TS> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> Permute(DenseTensor<T, TS> A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity)
+	public static DenseTensor<T, TS> Permute(DenseTensor<T, TS> A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = default)
 	{
 		Span<int> perm = stackalloc int[A.Rank];
 		Span<long> sizeB = stackalloc long[A.Rank];
@@ -842,7 +842,7 @@ public sealed class DenseOperation<T, TS> :
 	}
 
 	/// <inheritdoc/>
-	public static void Contract(DenseTensor<T, TS> A, UnaryOperation opA, DenseTensor<T, TS> B, UnaryOperation opB, T α, DenseTensor<T, TS> C, UnaryOperation opC, T β)
+	public static void Contract(DenseTensor<T, TS> A, ManagedEnum<UnaryOperation> opA, DenseTensor<T, TS> B, ManagedEnum<UnaryOperation> opB, T α, DenseTensor<T, TS> C, ManagedEnum<UnaryOperation> opC, T β)
 	{
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -856,7 +856,7 @@ public sealed class DenseOperation<T, TS> :
 	}
 
 	/// <inheritdoc/>
-	public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T β, DenseTensor<T, TS> C, BinaryOperation binary)
+	public static void TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T α, DenseTensor<T, TS>? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T β, DenseTensor<T, TS> C, ManagedEnum<BinaryOperation> binary)
 	{
 		Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 		ITensorOperations<T, DenseTensor<T, TS>, DenseTensor<T, TS>, DenseTensor<T, TS>>.CheckBinary(A, orderA, α, B, orderB, β, C, permA, permB);
@@ -864,7 +864,7 @@ public sealed class DenseOperation<T, TS> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> Contract(DenseTensor<T, TS> A, UnaryOperation opA, DenseTensor<T, TS> B, UnaryOperation opB, T α)
+	public static DenseTensor<T, TS> Contract(DenseTensor<T, TS> A, ManagedEnum<UnaryOperation> opA, DenseTensor<T, TS> B, ManagedEnum<UnaryOperation> opB, T α)
 	{
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
@@ -890,7 +890,7 @@ public sealed class DenseOperation<T, TS> :
 	}
 
 	/// <inheritdoc/>
-	public static DenseTensor<T, TS> TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, UnaryOperation opA, T scalarA, DenseTensor<T, TS>? B, TensorOrder orderB, UnaryOperation opB, T scalarB, BinaryOperation binary)
+	public static DenseTensor<T, TS> TensorsBinaryOperation(DenseTensor<T, TS>? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T scalarA, DenseTensor<T, TS>? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T scalarB, ManagedEnum<BinaryOperation> binary)
 	{
 		Span<int> permA = stackalloc int[A?.Rank ?? 0], permB = stackalloc int[B?.Rank ?? 0];
 		Span<long> sizeC = stackalloc long[A?.Rank ?? B?.Rank ?? 0];

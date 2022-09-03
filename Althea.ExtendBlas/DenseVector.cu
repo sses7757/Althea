@@ -309,7 +309,7 @@ int vecDataConvert(const DataType srcType, const DataType dstType, bool toRealBy
 #undef CONVERT_OUTER_SWITCH
 #undef CONVERT_INNER_SWITCH
 	// calculate
-	convertFunc(src, dst, n, strideSrc, strideDst, toRealByAbs);
+	return convertFunc(src, dst, n, strideSrc, strideDst, toRealByAbs);
 }
 #pragma endregion
 
@@ -401,6 +401,13 @@ inline int vectorUnary(const unaryOp::UnaryOperation op, const void* srcv, void*
 	} \
 	case unaryOp::UnaryOperation::Negate: \
 	{ \
+		if constexpr (std::is_unsigned_v<T>) \
+			return -1; \
+		if constexpr (!std::is_scalar_v<T>) \
+		{ \
+			if constexpr (std::is_unsigned_v<typename T::value_type>) \
+				return -1; \
+		} \
 		auto func = [] PREFIX(const T v) { return -v; }; \
 		return invoke(__VA_ARGS__, func); \
 	} \
@@ -617,9 +624,9 @@ inline int vectorNorm(const void* srcv, const size_t n, const size_t stride, voi
 			*((typename T::value_type*)result) = thrust::inner_product(THRUST_PAR, ssrc.begin(), ssrc.end(), ssrc.begin(), typename T::value_type{}, plus_functor<typename T::value_type>(), norm_functor<T>());
 	}
 	if constexpr (std::is_scalar_v<T>)
-		*((T*)result) = std::sqrt(*((T*)result));
+		*((T*)result) = (T)std::sqrt(*((T*)result));
 	else
-		*((typename T::value_type*)result) = std::sqrt(*((typename T::value_type*)result));
+		*((typename T::value_type*)result) = (typename T::value_type)std::sqrt(*((typename T::value_type*)result));
 	return 0;
 }
 #pragma endregion

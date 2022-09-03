@@ -148,7 +148,7 @@ public interface IMatrixVectorMultiplyOperations<T, TVec1, TVec2, TMat>
 	/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
 	/// <param name="β">The scalar to be multiplied to <paramref name="vectorOut"/> of type <typeparamref name="T"/></param>
 	/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
-	public abstract static void MatrixMultiplyVector(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, T β = default, MatrixOperation operation = MatrixOperation.None);
+	public abstract static void MatrixMultiplyVector(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, T β = default, MatrixOperation operation = default);
 
 	/// <summary>
 	/// Check the input parameters of <see cref="MatrixMultiplyVector(TMat, TVec1, T, MatrixOperation)"/>.
@@ -174,7 +174,7 @@ public interface IMatrixVectorMultiplyOperations<T, TVec1, TVec2, TMat>
 	/// <param name="α">The scalar to be multiplied to the <paramref name="matrix"/> of type <typeparamref name="T"/></param>
 	/// <param name="operation">The simple operation to be applied to <paramref name="matrix"/> before computation as a <see cref="MatrixOperation"/></param>
 	/// <returns>The created new <typeparamref name="TVec2"/> as the result.</returns>
-	public abstract static TVec2 MatrixMultiplyVector(TMat matrix, TVec1 vector, T α, MatrixOperation operation = MatrixOperation.None);
+	public abstract static TVec2 MatrixMultiplyVector(TMat matrix, TVec1 vector, T α, MatrixOperation operation = default);
 }
 
 /// <summary>
@@ -374,7 +374,7 @@ public interface IMatrixAddOperations<T, TMat1, TMat2, TMat3>
 	/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before addition</param>
 	/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before addition</param>
 	/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or empty; or both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the addition cannot be performed due to incompatible sizes</exception>
-	public abstract static void AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+	public abstract static void AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, TMat3 C, MatrixOperation opA = default, MatrixOperation opB = default);
 
 	/// <summary>
 	/// Check the input parameters of <see cref="AddMatrices(TMat1?, T, TMat2?, T, MatrixOperation, MatrixOperation)"/>.
@@ -419,7 +419,7 @@ public interface IMatrixAddOperations<T, TMat1, TMat2, TMat3>
 	/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before addition</param>
 	/// <returns>The created new <typeparamref name="TMat3"/> as the result.</returns>
 	/// <exception cref="ArgumentException">If both <paramref name="A"/> and <paramref name="B"/> are null or empty; or both <paramref name="scalarA"/> and <paramref name="scalarB"/> are 0; or the addition cannot be performed due to incompatible sizes</exception>
-	public abstract static TMat3 AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+	public abstract static TMat3 AddMatrices(TMat1? A, T scalarA, TMat2? B, T scalarB, MatrixOperation opA = default, MatrixOperation opB = default);
 }
 
 /// <summary>
@@ -468,7 +468,7 @@ public interface IMatrixMultiplyOperations<T, TMat1, TMat2, TMat3>
 	/// <param name="opA">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="A"/> before multiplication</param>
 	/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before multiplication</param>
 	/// <exception cref="ArgumentException">If any of the matrices is null or empty; or the multiplication cannot be performed due to incompatible sizes</exception>
-	public abstract static void MultiplyMatries(TMat1 A, TMat2 B, T α, T β, TMat3 C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+	public abstract static void MultiplyMatries(TMat1 A, TMat2 B, T α, T β, TMat3 C, MatrixOperation opA = default, MatrixOperation opB = default);
 
 	/// <summary>
 	/// Check the input parameters of <see cref="MultiplyMatries(TMat1, TMat2, T, MatrixOperation, MatrixOperation)"/>.
@@ -499,7 +499,7 @@ public interface IMatrixMultiplyOperations<T, TMat1, TMat2, TMat3>
 	/// <param name="opB">The <see cref="MatrixOperation"/> to apply to matrix <paramref name="B"/> before multiplication</param>
 	/// <returns>The created new <typeparamref name="TMat3"/> as the result.</returns>
 	/// <exception cref="ArgumentException">If any of the matrices is null or empty; or the multiplication cannot be performed due to incompatible sizes</exception>
-	public abstract static TMat3 MultiplyMatries(TMat1 A, TMat2 B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None);
+	public abstract static TMat3 MultiplyMatries(TMat1 A, TMat2 B, T α, MatrixOperation opA = default, MatrixOperation opB = default);
 }
 
 /// <summary>
@@ -927,7 +927,7 @@ public interface ITensorOperations<T, TTen1, TTen2>
 	where TTen2 : class, IBaseTensor<T, TTen2>
 {
 	/// <summary>
-	/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, TTen2, T, UnaryOperation, UnaryOperation, ReduceOperation)"/>.
+	/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, TTen2, T, ManagedEnum{UnaryOperation}, ManagedEnum{UnaryOperation}, ManagedEnum{ReduceOperation})"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static Span<int> CheckReduce(TTen1 A, TensorOrder order, T scalar, TTen2 B, Span<int> reduceInds)
@@ -972,10 +972,10 @@ public interface ITensorOperations<T, TTen1, TTen2>
 	/// <param name="reduce">The <see cref="ReduceOperation"/> used to reduce elements</param>
 	/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
 	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
-	public abstract static void Reduce(TTen1 A, TensorOrder order, T α, TTen2 B, T β = default, UnaryOperation opA = UnaryOperation.Identity, UnaryOperation opB = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add);
+	public abstract static void Reduce(TTen1 A, TensorOrder order, T α, TTen2 B, T β = default, ManagedEnum<UnaryOperation> opA = default, ManagedEnum<UnaryOperation> opB = default, ManagedEnum<ReduceOperation> reduce = default);
 
 	/// <summary>
-	/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, TTen2, UnaryOperation)"/>.
+	/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, TTen2, ManagedEnum{UnaryOperation})"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static void CheckPermute(TTen1 A, TensorOrder order, T scalar, TTen2 B, Span<int> perm)
@@ -1001,11 +1001,11 @@ public interface ITensorOperations<T, TTen1, TTen2>
 	/// <param name="opA">The <see cref="UnaryOperation"/> to apply to each element during the operation</param>
 	/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
 	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-	public abstract static void Permute(TTen1 A, TensorOrder order, T scalar, TTen2 B, UnaryOperation opA = UnaryOperation.Identity);
+	public abstract static void Permute(TTen1 A, TensorOrder order, T scalar, TTen2 B, ManagedEnum<UnaryOperation> opA = default);
 
 
 	/// <summary>
-	/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, UnaryOperation, ReduceOperation)"/>.
+	/// Check the input parameters of <see cref="Reduce(TTen1, TensorOrder, T, ManagedEnum{UnaryOperation}, ManagedEnum{ReduceOperation})"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static void CheckReduce(TTen1 A, TensorOrder order, T scalar, ref Span<int> reduceInds, ref Span<long> outputSize)
@@ -1042,10 +1042,10 @@ public interface ITensorOperations<T, TTen1, TTen2>
 	/// <returns>The created new <typeparamref name="TTen2"/> as the result.</returns>
 	/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a partial permutation order</exception>
 	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-	public abstract static TTen2 Reduce(TTen1 A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity, ReduceOperation reduce = ReduceOperation.Add);
+	public abstract static TTen2 Reduce(TTen1 A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = default, ManagedEnum<ReduceOperation> reduce = default);
 
 	/// <summary>
-	/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, UnaryOperation)"/>.
+	/// Check the input parameters of <see cref="Permute(TTen1, TensorOrder, T, ManagedEnum{UnaryOperation})"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static void CheckPermute(TTen1 A, TensorOrder order, T scalar, Span<int> perm, Span<long> outputSize)
@@ -1066,7 +1066,7 @@ public interface ITensorOperations<T, TTen1, TTen2>
 	/// <returns>The created new <typeparamref name="TTen2"/> as the result.</returns>
 	/// <exception cref="ArgumentException">If <paramref name="order"/> does not indicate a full permutation order</exception>
 	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="scalar"/> is 0</exception>
-	public abstract static TTen2 Permute(TTen1 A, TensorOrder order, T scalar, UnaryOperation opA = UnaryOperation.Identity);
+	public abstract static TTen2 Permute(TTen1 A, TensorOrder order, T scalar, ManagedEnum<UnaryOperation> opA = default);
 }
 
 /// <summary>
@@ -1083,7 +1083,7 @@ public interface ITensorOperations<T, TTen1, TTen2, TTen3>
 	where TTen3 : class, IBaseTensor<T, TTen3>
 {
 	/// <summary>
-	/// Check the input parameters of <see cref="Contract(TTen1, UnaryOperation, TTen2, UnaryOperation, T, TTen3, UnaryOperation, T)"/>.
+	/// Check the input parameters of <see cref="Contract(TTen1, ManagedEnum{UnaryOperation}, TTen2, ManagedEnum{UnaryOperation}, T, TTen3, ManagedEnum{UnaryOperation}, T)"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static StorableContractInfo CheckContract(TTen1 A, TTen2 B, T α, TTen3 C)
@@ -1114,10 +1114,10 @@ public interface ITensorOperations<T, TTen1, TTen2, TTen3>
 	/// <exception cref="ArgumentNullException">If <paramref name="A"/>, <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 	/// <exception cref="ArgumentException">If <paramref name="A"/>, <paramref name="B"/> or <paramref name="C"/>'s labels indicate that they cannot contract or add</exception>
 	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
-	public abstract static void Contract(TTen1 A, UnaryOperation opA, TTen2 B, UnaryOperation opB, T α, TTen3 C, UnaryOperation opC, T β);
+	public abstract static void Contract(TTen1 A, ManagedEnum<UnaryOperation> opA, TTen2 B, ManagedEnum<UnaryOperation> opB, T α, TTen3 C, ManagedEnum<UnaryOperation> opC, T β);
 
 	/// <summary>
-	/// Check the input parameters of <see cref="TensorsBinaryOperation(TTen1?, TensorOrder, UnaryOperation, T, TTen2?, TensorOrder, UnaryOperation, T, TTen3, BinaryOperation)"/>.
+	/// Check the input parameters of <see cref="TensorsBinaryOperation(TTen1?, TensorOrder, ManagedEnum{UnaryOperation}, T, TTen2?, TensorOrder, ManagedEnum{UnaryOperation}, T, TTen3, ManagedEnum{BinaryOperation})"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static void CheckBinary(TTen1? A, TensorOrder orderA, T α, TTen2? B, TensorOrder orderB, T β, TTen3 C, Span<int> permA, Span<int> permB)
@@ -1161,10 +1161,10 @@ public interface ITensorOperations<T, TTen1, TTen2, TTen3>
 	/// <param name="binary">The <see cref="BinaryOperation"/> to apply simultaneously to both elements of <paramref name="A"/> and <paramref name="B"/></param>
 	/// <exception cref="ArgumentNullException">If both <paramref name="A"/> and <paramref name="B"/> or <paramref name="C"/> is null or invalid</exception>
 	/// <exception cref="ArgumentException">If the operation cannot be performed due to incompatible size(s)</exception>
-	public abstract static void TensorsBinaryOperation(TTen1? A, TensorOrder orderA, UnaryOperation opA, T scalarA, TTen2? B, TensorOrder orderB, UnaryOperation opB, T scalarB, TTen3 C, BinaryOperation binary);
+	public abstract static void TensorsBinaryOperation(TTen1? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T scalarA, TTen2? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T scalarB, TTen3 C, ManagedEnum<BinaryOperation> binary);
 
 	/// <summary>
-	/// Check the input parameters of <see cref="Contract(TTen1, UnaryOperation, TTen2, UnaryOperation, T)"/>.
+	/// Check the input parameters of <see cref="Contract(TTen1, ManagedEnum{UnaryOperation}, TTen2, ManagedEnum{UnaryOperation}, T)"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static StorableContractInfo CheckContract(TTen1 A, TTen2 B, T α, ref Span<long> outputSize, ref Span<char> outputLabel)
@@ -1196,10 +1196,10 @@ public interface ITensorOperations<T, TTen1, TTen2, TTen3>
 	/// <exception cref="ArgumentNullException">If <paramref name="A"/>, <paramref name="B"/> is null or invalid</exception>
 	/// <exception cref="ArgumentException">If <paramref name="A"/> or <paramref name="B"/>'s labels indicate that they cannot contract or add</exception>
 	/// <exception cref="ArgumentOutOfRangeException">If <paramref name="α"/> is 0</exception>
-	public abstract static TTen3 Contract(TTen1 A, UnaryOperation opA, TTen2 B, UnaryOperation opB, T α);
+	public abstract static TTen3 Contract(TTen1 A, ManagedEnum<UnaryOperation> opA, TTen2 B, ManagedEnum<UnaryOperation> opB, T α);
 
 	/// <summary>
-	/// Check the input parameters of <see cref="TensorsBinaryOperation(TTen1?, TensorOrder, UnaryOperation, T, TTen2?, TensorOrder, UnaryOperation, T, BinaryOperation)"/>.
+	/// Check the input parameters of <see cref="TensorsBinaryOperation(TTen1?, TensorOrder, ManagedEnum{UnaryOperation}, T, TTen2?, TensorOrder, ManagedEnum{UnaryOperation}, T, ManagedEnum{BinaryOperation})"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static TS CheckBinary<TS>(TTen1? A, TensorOrder orderA, T α, TTen2? B, TensorOrder orderB, T β, Span<int> permA, Span<int> permB, Span<long> outputSize, TS? storage) where TS : class, IStorage<T, TS>
@@ -1241,7 +1241,7 @@ public interface ITensorOperations<T, TTen1, TTen2, TTen3>
 	/// <returns>The created new <typeparamref name="TTen3"/> as the result.</returns>
 	/// <exception cref="ArgumentNullException">If both <paramref name="A"/> and <paramref name="B"/> are null or invalid</exception>
 	/// <exception cref="ArgumentException">If the operation cannot be performed due to incompatible size(s)</exception>
-	public abstract static TTen3 TensorsBinaryOperation(TTen1? A, TensorOrder orderA, UnaryOperation opA, T scalarA, TTen2? B, TensorOrder orderB, UnaryOperation opB, T scalarB, BinaryOperation binary);
+	public abstract static TTen3 TensorsBinaryOperation(TTen1? A, TensorOrder orderA, ManagedEnum<UnaryOperation> opA, T scalarA, TTen2? B, TensorOrder orderB, ManagedEnum<UnaryOperation> opB, T scalarB, ManagedEnum<BinaryOperation> binary);
 }
 
 /// <summary>

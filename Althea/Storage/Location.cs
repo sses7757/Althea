@@ -39,24 +39,24 @@ public static class LocationTypeExtension
 	/// <summary>
 	/// The classification mask end bit of <see cref="LocationType"/>
 	/// </summary>
-	public const int ClassMaskEnd = 3;
+	internal const int ClassMaskEnd = 3;
 
 	/// <summary>
 	/// The classification mask of <see cref="LocationType"/>
 	/// </summary>
-	public const int ClassMask = 0b111;
+	internal const int ClassMask = 0b111;
 
 	/// <summary>
 	/// The classification of stream typed <see cref="LocationType"/>
 	/// </summary>
 	/// <remarks>Other classifications are not presented here but they are also supported.</remarks>
-	public const int ClassStream = 0b001;
+	internal const int ClassStream = 0b001;
 
 	/// <summary>
 	/// The classification of memory typed <see cref="LocationType"/>
 	/// </summary>
 	/// <remarks>Other classifications are not presented here but they are also supported.</remarks>
-	public const int ClassMemory = 0b000;
+	internal const int ClassMemory = 0b000;
 
 	/// <summary>
 	/// Get the classification of given <see cref="LocationType"/>
@@ -64,20 +64,6 @@ public static class LocationTypeExtension
 	/// <param name="locationType">The given <see cref="LocationType"/></param>
 	/// <returns>The classification as a <see cref="byte"/></returns>
 	public static byte GetClassification(this LocationType locationType) => (byte)(((byte)locationType) & ClassMask);
-
-	/// <summary>
-	/// The delegate for obtaining the description of the given <paramref name="detail"/> which is associated with different values of <see cref="LocationType"/>
-	/// </summary>
-	/// <param name="detail">The input detail as a <see cref="short"/></param>
-	/// <returns>The description of the given <paramref name="detail"/> associated with current value of <see cref="LocationType"/></returns>
-	public delegate string GetDetailDescription(short detail);
-
-	static LocationTypeExtension()
-	{
-		EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.Uri, static d => $"(scheme={((UriScheme)d).GetName()})");
-		EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.CpuRam, static d => $"(device_ID={d})");
-		EnumHelper.SetMethod<LocationType, GetDetailDescription>(LocationType.GpuRam, static d => $"(device_ID={d})");
-	}
 }
 
 /// <summary>
@@ -196,7 +182,7 @@ public static class UriSchemeExtension
 	/// <returns>the <see cref="UriScheme"/> of <paramref name="uri"/>, or <see cref="UriScheme.Unknown"/> if <paramref name="uri"/>'s scheme is not in <see cref="UriScheme"/></returns>
 	/// <exception cref="ArgumentOutOfRangeException">if <paramref name="uri"/> is not an absolute URI</exception>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static UriScheme GetScheme(this Uri uri)
+	public static ManagedEnum<UriScheme> GetScheme(this Uri uri)
 	{
 		if (!uri.IsAbsoluteUri)
 			throw new ArgumentOutOfRangeException(nameof(uri), uri, ParameterError.InvalidValue);
@@ -210,7 +196,7 @@ public static class UriSchemeExtension
 			return UriScheme.HTTP;
 		if (uri.Scheme == Uri.UriSchemeHttps)
 			return UriScheme.HTTPS;
-		if (EnumHelper.TryParse(uri.Scheme, out UriScheme s))
+		if (ManagedEnum<UriScheme>.TryParse(uri.Scheme, out var s))
 			return s;
 		return UriScheme.Unknown;
 	}
@@ -227,7 +213,14 @@ public static class UriSchemeExtension
 /// </remarks>
 /// <param name="Type">The location type of this <see cref="StorageLocation"/> as a <see cref="LocationType"/></param>
 /// <param name="Detail">The location detail of the <see cref="Type"/>.</param>
-public readonly record struct StorageLocation(LocationType Type, short Detail);
+public readonly record struct StorageLocation(LocationType Type, short Detail)
+{
+	/// <inheritdoc/>
+	public override string ToString()
+	{
+		return $"{nameof(StorageLocation)} {{ {nameof(Type)} = {new ManagedEnum<LocationType>(this.Type).ToString()}, {nameof(Detail)} = {this.Detail} }}";
+	}
+}
 
 /// <summary>
 /// The struct of a combination of storage location(s)

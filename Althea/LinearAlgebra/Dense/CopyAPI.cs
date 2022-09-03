@@ -263,7 +263,7 @@ namespace Althea.LinearAlgebra.Dense
 					int type = (pointerGetters1[i].GetParameters().Length != 0 ? 0.SetBit(0) : 0) + (pointerGetters2[j].GetParameters().Length != 0 ? 0.SetBit(1) : 0);
 					IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
 					IL.Emit(OpCodes.Brfalse_S, branches[i + 1, j]); // if (sizeSrcPointerI == 0) goto P[I+1, J];
-					if (type.IsBitNotSet(0))
+					if (!type.IsBitSet(0))
 					{   // if (sizeSrcPointerI != 1) throw;
 						IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
 						IL.Emit(OpCodes.Ldc_I8, 1L);
@@ -271,7 +271,7 @@ namespace Althea.LinearAlgebra.Dense
 					}
 					IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
 					IL.Emit(OpCodes.Brfalse_S, branches[i, j + 1]); // if (sizeSrcPointerJ == 0) goto P[I, J+1];
-					if (type.IsBitNotSet(1))
+					if (!type.IsBitSet(1))
 					{   // if (sizeSrcPointerJ != 1) throw;
 						IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
 						IL.Emit(OpCodes.Ldc_I8, 1L);
@@ -279,7 +279,7 @@ namespace Althea.LinearAlgebra.Dense
 					}
 
 					IL.Emit(OpCodes.Ldarg_0);
-					if (type.IsBitNotSet(0))
+					if (!type.IsBitSet(0))
 					{
 						IL.Emit(OpCodes.Callvirt, pointerGetters1[i]);
 					}
@@ -294,7 +294,7 @@ namespace Althea.LinearAlgebra.Dense
 					IL.Emit(OpCodes.Calli, pointerMove1[i]);
 					IL.Emit(OpCodes.Stloc_S, srcPointer(i)); // srcPtrI = src.PointerI(i, false).Move(offsetSrc);
 					IL.Emit(OpCodes.Ldarg_1);
-					if (type.IsBitNotSet(1))
+					if (!type.IsBitSet(1))
 					{
 						IL.Emit(OpCodes.Callvirt, pointerGetters2[j]);
 					}
@@ -455,7 +455,7 @@ namespace Althea.LinearAlgebra.Dense
 					IL.Emit(OpCodes.Calli, pointerLen2[j]);
 					IL.Emit(OpCodes.Sub);
 					IL.Emit(OpCodes.Stloc_S, offsetDst()); // offsetDst = copiedDst - dstPtrJ.LengthInBytes;
-					if (type.IsBitNotSet(1))
+					if (!type.IsBitSet(1))
 					{
 						IL.Emit(OpCodes.Br_S, branches[i, j + 1]); // goto P[I, J+1];
 					}
@@ -484,7 +484,7 @@ namespace Althea.LinearAlgebra.Dense
 					IL.Emit(OpCodes.Calli, pointerLen1[j]);
 					IL.Emit(OpCodes.Sub);
 					IL.Emit(OpCodes.Stloc_S, offsetSrc()); // offsetSrc = copiedSrc - srcPtrI.LengthInBytes;
-					if (type.IsBitNotSet(0))
+					if (!type.IsBitSet(0))
 					{
 						IL.Emit(OpCodes.Br_S, branches[i + 1, j]); // goto P[I+1, J];
 					}
@@ -714,7 +714,7 @@ namespace Althea.LinearAlgebra.Dense
 					int type = (pointerGetters1[i].GetParameters().Length != 0 ? 0.SetBit(0) : 0) + (pointerGetters2[j].GetParameters().Length != 0 ? 0.SetBit(1) : 0);
 					IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
 					IL.Emit(OpCodes.Brfalse_S, branches[i + 1, j]); // if (sizeSrcPointerI == 0) goto P[I+1, J];
-					if (type.IsBitNotSet(0))
+					if (!type.IsBitSet(0))
 					{   // if (sizeSrcPointerI != 1) throw;
 						IL.Emit(OpCodes.Ldloc_S, sizeSrcPointer(i));
 						IL.Emit(OpCodes.Ldc_I8, 1L);
@@ -722,7 +722,7 @@ namespace Althea.LinearAlgebra.Dense
 					}
 					IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
 					IL.Emit(OpCodes.Brfalse_S, branches[i, j + 1]); // if (sizeSrcPointerJ == 0) goto P[I, J+1];
-					if (type.IsBitNotSet(1))
+					if (!type.IsBitSet(1))
 					{   // if (sizeSrcPointerJ != 1) throw;
 						IL.Emit(OpCodes.Ldloc_S, sizeDstPointer(j));
 						IL.Emit(OpCodes.Ldc_I8, 1L);
@@ -730,7 +730,7 @@ namespace Althea.LinearAlgebra.Dense
 					}
 
 					IL.Emit(OpCodes.Ldarg_0);
-					if (type.IsBitNotSet(0))
+					if (!type.IsBitSet(0))
 					{
 						IL.Emit(OpCodes.Callvirt, pointerGetters1[i]);
 					}
@@ -745,7 +745,7 @@ namespace Althea.LinearAlgebra.Dense
 					IL.Emit(OpCodes.Calli, pointerMove1[i]);
 					IL.Emit(OpCodes.Stloc_S, srcPointer(i)); // srcPtrI = src.PointerI(i, false).Move(offsetSrc);
 					IL.Emit(OpCodes.Ldarg_1);
-					if (type.IsBitNotSet(1))
+					if (!type.IsBitSet(1))
 					{
 						IL.Emit(OpCodes.Callvirt, pointerGetters2[j]);
 					}
@@ -888,7 +888,7 @@ namespace Althea.LinearAlgebra.Dense
 					IL.Emit(OpCodes.Calli, pointerLen2[j]);
 					IL.Emit(OpCodes.Sub);
 					IL.Emit(OpCodes.Stloc_S, offsetDst()); // offsetDst = copiedDst - dstPtrJ.LengthInBytes;
-					if (type.IsBitNotSet(1))
+					if (!type.IsBitSet(1))
 					{
 						IL.Emit(OpCodes.Br_S, branches[i, j + 1]); // goto P[I, J+1];
 					}
@@ -917,7 +917,7 @@ namespace Althea.LinearAlgebra.Dense
 					IL.Emit(OpCodes.Calli, pointerLen1[j]);
 					IL.Emit(OpCodes.Sub);
 					IL.Emit(OpCodes.Stloc_S, offsetSrc()); // offsetSrc = copiedSrc - srcPtrI.LengthInBytes;
-					if (type.IsBitNotSet(0))
+					if (!type.IsBitSet(0))
 					{
 						IL.Emit(OpCodes.Br_S, branches[i + 1, j]); // goto P[I+1, J];
 					}

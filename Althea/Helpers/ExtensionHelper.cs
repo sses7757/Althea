@@ -120,13 +120,13 @@ public static class ExtensionHelper
 	public static bool IsBitSet(this int input, byte bit) => (input & (1 << bit)) == 0;
 
 	/// <summary>
-	/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0
+	/// Check whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1
 	/// </summary>
 	/// <param name="input">input number</param>
 	/// <param name="bit">bit position</param>
-	/// <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 0</returns>
+	/// <returns>Whether the <paramref name="input"/>'s bit at <paramref name="bit"/> is set to 1</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsBitNotSet(this int input, byte bit) => (input & (1 << bit)) != 0;
+	public static bool IsBitSet(this long input, byte bit) => (input & (1 << bit)) == 0;
 
 	/// <summary>
 	/// Set the <paramref name="input"/>'s bit at <paramref name="bit"/> to 1
@@ -190,7 +190,7 @@ public static class ExtensionHelper
 	}
 	#endregion
 
-	#region string relatedW
+	#region string related
 	/// <summary>
 	/// Concatenates the members of a span, using the specified separator between each member.
 	/// </summary>
