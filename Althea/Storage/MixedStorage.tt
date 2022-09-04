@@ -14,7 +14,6 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Althea.Helpers;
-using Althea.Helpers;
 using Althea.Resources;
 
 using Mem = Althea.Storage.ApiSelector;
@@ -133,7 +132,7 @@ public abstract class MixedStorage<T, <#=pointerTypes#>> : MixedStorageBase<<#=p
 	public long LengthInBytes => <# for (int j = 1; j < i; j++) { #>this.Pointer<#=j#>.LengthInBytes + <# } #>this.Pointer<#=i#>.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, <#=pointerTypes#>>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -286,11 +285,11 @@ public abstract class MixedStorage<T, <#=pointerTypes#>> : MixedStorageBase<<#=p
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, <#=pointerTypes#>>>.StringMain => nameof(MixedStorage<T, <#=pointerTypes#>>);
+	static string IMainPropertyFormattable<MixedStorage<T, <#=pointerTypes#>>>.StringMain => typeof(MixedStorage<T, <#=pointerTypes#>>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, <#=pointerTypes#>>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, <#=pointerTypes#>>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, <#=pointerTypes#>>>.PropertyNames => new[] { nameof(Length)<# for (int j = 1; j <= i; j++) { #>, nameof(Pointer<#=j#>)<# } #> };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, <#=pointerTypes#>>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, <#=pointerTypes#>>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, <#=pointerTypes#>>>.PropertyValues => new object?[] { this.Length<# for (int j = 1; j <= i; j++) { #>, this.Pointer<#=j#>.ToString()<# } #> };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, <#=pointerTypes#>>>.ToString(this);

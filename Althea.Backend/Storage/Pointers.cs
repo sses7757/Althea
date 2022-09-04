@@ -45,6 +45,9 @@ public readonly record struct CpuMemoryPointer(IntPtr Pointer, long LengthInByte
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public readonly bool IsValid() => this.Pointer != default;
+
+	/// <inheritdoc/>
+	public override readonly string ToString() => $"{nameof(CpuMemoryPointer)} {{ {nameof(Pointer)} = {this.Pointer:X}, {nameof(LengthInBytes)} = {this.LengthInBytes} }}";
 	#endregion
 
 	#region extension

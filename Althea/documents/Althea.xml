@@ -24966,7 +24966,7 @@
         </member>
         <member name="P:Althea.Storage.IStorage`2.Length">
             <summary>
-            Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="P:Althea.Numerics.IBaseNumber`1.Size"/>.
+            When implemented by a derived class, get the total length of the presenting array in type <typeparamref name="T"/>.
             </summary>
         </member>
         <member name="M:Althea.Storage.IStorage`2.MakeReference(System.Int64,System.Int64)">

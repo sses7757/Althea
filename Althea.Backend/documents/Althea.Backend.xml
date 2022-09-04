@@ -2339,6 +2339,9 @@
             <param name="pointer">The allocated pointer on managed memory</param>
             <param name="length">The length in <typeparamref name="T"/></param>
         </member>
+        <member name="M:Althea.Backend.Cuda.CudaMemoryPointer`1.ToString">
+            <inheritdoc/>
+        </member>
         <member name="T:Althea.Backend.Cuda.IBindedDevice">
             <summary>
             Indicates that the inherited class instances are binded to certain CUDA devices
@@ -6766,6 +6769,9 @@
             <param name="length">The length in <typeparamref name="T"/></param>
         </member>
         <member name="M:Althea.Backend.Storage.CpuMemoryPointer.IsValid">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Storage.CpuMemoryPointer.ToString">
             <inheritdoc/>
         </member>
     </members>

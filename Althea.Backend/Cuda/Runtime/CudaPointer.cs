@@ -64,5 +64,8 @@ public readonly record struct CudaMemoryPointer<TD>(IntPtr Pointer, long LengthI
 	/// <param name="length">The length in <typeparamref name="T"/></param>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static CudaMemoryPointer<TD> Create<T>(IntPtr pointer, long length) where T : unmanaged, IBaseNumber<T> => new(pointer, length * T.Size);
+
+	/// <inheritdoc/>
+	public override readonly string ToString() => $"{nameof(CudaMemoryPointer)} {{ {nameof(Pointer)} = {this.Pointer:X}, {nameof(LengthInBytes)} = {this.LengthInBytes} }}";
 	#endregion
 }

@@ -382,7 +382,7 @@ public abstract class CachedStorage<T, TS, TPh, TPl> : CachedStorageBase<TS, TPh
 	public long LengthInBytes => this.Memory.LengthInBytes;
 
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, CachedStorage<T, TS, TPh, TPl>>)this).Length;
+	public long Length => this.Memory.LengthInBytes / T.Size;
 
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -527,11 +527,11 @@ public abstract class CachedStorage<T, TS, TPh, TPl> : CachedStorageBase<TS, TPh
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.StringMain => nameof(CachedStorage<T, TS, TPh, TPl>);
+	static string IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.StringMain => typeof(CachedStorage<T, TS, TPh, TPl>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, CachedStorage<T, TS, TPh, TPl>>.Length), nameof(Cache), nameof(Memory) };
+	static IEnumerable<string> IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.PropertyNames => new[] { nameof(IStorage<T, CachedStorage<T, TS, TPh, TPl>>.Length), nameof(Cache), nameof(Memory) };
 
-	IEnumerable<object?> IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.PropertyValues => new object?[] { DataType, this.Length, this.Cache.ToString(), this.Memory.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.PropertyValues => new object?[] { this.Length, this.Cache.ToString(), this.Memory.ToString() };
 
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<CachedStorage<T, TS, TPh, TPl>>.ToString(this);

@@ -120,7 +120,7 @@ public class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
 	}
 
 	/// <inheritdoc/>
-	public virtual bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth)
+	public virtual unsafe bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth)
 		where T : unmanaged, IBaseNumber<T>
 		where TP1 : IPointer<TP1>
 		where TP2 : IPointer<TP2>
@@ -128,14 +128,11 @@ public class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstractApi
 		copyWidth = 0;
 		if (!CheckType<TP1>() || !CheckType<TP2>())
 			return false;
-		copyWidth = Math.Min((source.LengthInBytes + (sourceLD - height)) / sourceLD, (destination.LengthInBytes + (destinationLD - height)) / destinationLD);
+		copyWidth = Math.Min((source.LengthInBytes + (sourceLD - height) * sizeof(T)) / sourceLD, (destination.LengthInBytes + (destinationLD - height) * sizeof(T)) / destinationLD) / sizeof(T);
 		copyWidth = Math.Min(copyWidth, width);
 		long srcOff = source.OffsetInBytes, dstOff = destination.OffsetInBytes;
 		CpuMemoryPointer src = source.Pointer.FromGenericCpu(), dst = destination.Pointer.FromGenericCpu();
-		unsafe
-		{
-			MemoryCopy2D(src.NativePointer(srcOff), dst.NativePointer(dstOff), sourceLD, destinationLD, width, height);
-		}
+		MemoryCopy2D(src.NativePointer(srcOff), dst.NativePointer(dstOff), sourceLD * sizeof(T), destinationLD * sizeof(T), width, height * sizeof(T));
 		return true;
 	}
 

@@ -101,7 +101,7 @@ public abstract class MixedStorage<T, TP1, TP2> : MixedStorageBase<TP1, TP2>, IS
 	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -251,11 +251,11 @@ public abstract class MixedStorage<T, TP1, TP2> : MixedStorageBase<TP1, TP2>, IS
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.StringMain => nameof(MixedStorage<T, TP1, TP2>);
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.StringMain => typeof(MixedStorage<T, TP1, TP2>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyNames => new[] { nameof(Length), nameof(Pointer1), nameof(Pointer2) };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.PropertyValues => new object?[] { this.Length, this.Pointer1.ToString(), this.Pointer2.ToString() };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2>>.ToString(this);
@@ -517,7 +517,7 @@ public abstract class MixedStorage<T, TP1, TP2, TP3> : MixedStorageBase<TP1, TP2
 	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -672,11 +672,11 @@ public abstract class MixedStorage<T, TP1, TP2, TP3> : MixedStorageBase<TP1, TP2
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3>);
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.StringMain => typeof(MixedStorage<T, TP1, TP2, TP3>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyNames => new[] { nameof(Length), nameof(Pointer1), nameof(Pointer2), nameof(Pointer3) };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.PropertyValues => new object?[] { this.Length, this.Pointer1.ToString(), this.Pointer2.ToString(), this.Pointer3.ToString() };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3>>.ToString(this);
@@ -977,7 +977,7 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4> : MixedStorageBase<TP1
 	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -1137,11 +1137,11 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4> : MixedStorageBase<TP1
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4>);
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.StringMain => typeof(MixedStorage<T, TP1, TP2, TP3, TP4>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyNames => new[] { nameof(Length), nameof(Pointer1), nameof(Pointer2), nameof(Pointer3), nameof(Pointer4) };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.PropertyValues => new object?[] { this.Length, this.Pointer1.ToString(), this.Pointer2.ToString(), this.Pointer3.ToString(), this.Pointer4.ToString() };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4>>.ToString(this);
@@ -1481,7 +1481,7 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5> : MixedStorageBas
 	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -1646,11 +1646,11 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5> : MixedStorageBas
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5>);
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.StringMain => typeof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyNames => new[] { nameof(Length), nameof(Pointer1), nameof(Pointer2), nameof(Pointer3), nameof(Pointer4), nameof(Pointer5) };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.PropertyValues => new object?[] { this.Length, this.Pointer1.ToString(), this.Pointer2.ToString(), this.Pointer3.ToString(), this.Pointer4.ToString(), this.Pointer5.ToString() };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5>>.ToString(this);
@@ -2029,7 +2029,7 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> : MixedStora
 	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -2199,11 +2199,11 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6> : MixedStora
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>);
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.StringMain => typeof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyNames => new[] { nameof(Length), nameof(Pointer1), nameof(Pointer2), nameof(Pointer3), nameof(Pointer4), nameof(Pointer5), nameof(Pointer6) };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.PropertyValues => new object?[] { this.Length, this.Pointer1.ToString(), this.Pointer2.ToString(), this.Pointer3.ToString(), this.Pointer4.ToString(), this.Pointer5.ToString(), this.Pointer6.ToString() };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6>>.ToString(this);
@@ -2621,7 +2621,7 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> : Mixed
 	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -2796,11 +2796,11 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7> : Mixed
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>);
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.StringMain => typeof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyNames => new[] { nameof(Length), nameof(Pointer1), nameof(Pointer2), nameof(Pointer3), nameof(Pointer4), nameof(Pointer5), nameof(Pointer6), nameof(Pointer7) };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.PropertyValues => new object?[] { this.Length, this.Pointer1.ToString(), this.Pointer2.ToString(), this.Pointer3.ToString(), this.Pointer4.ToString(), this.Pointer5.ToString(), this.Pointer6.ToString(), this.Pointer7.ToString() };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7>>.ToString(this);
@@ -3257,7 +3257,7 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> : 
 	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes + this.Pointer8.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -3437,11 +3437,11 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8> : 
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>);
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.StringMain => typeof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyNames => new[] { nameof(Length), nameof(Pointer1), nameof(Pointer2), nameof(Pointer3), nameof(Pointer4), nameof(Pointer5), nameof(Pointer6), nameof(Pointer7), nameof(Pointer8) };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.PropertyValues => new object?[] { this.Length, this.Pointer1.ToString(), this.Pointer2.ToString(), this.Pointer3.ToString(), this.Pointer4.ToString(), this.Pointer5.ToString(), this.Pointer6.ToString(), this.Pointer7.ToString(), this.Pointer8.ToString() };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8>>.ToString(this);
@@ -3937,7 +3937,7 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP
 	public long LengthInBytes => this.Pointer1.LengthInBytes + this.Pointer2.LengthInBytes + this.Pointer3.LengthInBytes + this.Pointer4.LengthInBytes + this.Pointer5.LengthInBytes + this.Pointer6.LengthInBytes + this.Pointer7.LengthInBytes + this.Pointer8.LengthInBytes + this.Pointer9.LengthInBytes;
 		
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).Length;
+	public long Length => this.LengthInBytes / T.Size;
 		
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -4122,11 +4122,11 @@ public abstract class MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.StringMain => nameof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>);
+	static string IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.StringMain => typeof(MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyNames => new[] { nameof(DataType), nameof(IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.Length), nameof(Pointer1), nameof(Pointer2) };
+	static IEnumerable<string> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyNames => new[] { nameof(Length), nameof(Pointer1), nameof(Pointer2), nameof(Pointer3), nameof(Pointer4), nameof(Pointer5), nameof(Pointer6), nameof(Pointer7), nameof(Pointer8), nameof(Pointer9) };
 
-	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyValues => new object?[] { DataType, ((IStorage<T, MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>)this).Length, this.Pointer1.Pointer.ToString(), this.Pointer2.Pointer.ToString() };
+	IEnumerable<object?> IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.PropertyValues => new object?[] { this.Length, this.Pointer1.ToString(), this.Pointer2.ToString(), this.Pointer3.ToString(), this.Pointer4.ToString(), this.Pointer5.ToString(), this.Pointer6.ToString(), this.Pointer7.ToString(), this.Pointer8.ToString(), this.Pointer9.ToString() };
 		
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<MixedStorage<T, TP1, TP2, TP3, TP4, TP5, TP6, TP7, TP8, TP9>>.ToString(this);

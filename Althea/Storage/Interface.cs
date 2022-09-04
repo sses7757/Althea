@@ -320,9 +320,9 @@ public interface IStorage<T, TSelf> : IStorage<TSelf>, IReadOnlyList<T>,
 	}
 
 	/// <summary>
-	/// Get the total length of the presenting array in type <typeparamref name="T"/>. The default implementation uses <see cref="IBaseNumber{TSelf}.Size"/>.
+	/// When implemented by a derived class, get the total length of the presenting array in type <typeparamref name="T"/>.
 	/// </summary>
-	public long Length => this.LengthInBytes / T.Size;
+	long Length { get; }
 
 	/// <summary>
 	/// When implemented by a derived class, make a referenced <typeparamref name="TSelf"/> with the starting pointer moving <paramref name="offset"/> and <see cref="Length"/> changing to <paramref name="newLength"/>.

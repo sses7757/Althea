@@ -70,7 +70,7 @@ public abstract class PureStorage<T, TP> : PureStorageBase<TP>, IStorage<T, Pure
 	public long LengthInBytes => this.Pointer.LengthInBytes;
 
 	/// <inheritdoc/>
-	public long Length => ((IStorage<T, PureStorage<T, TP>>)this).Length;
+	public long Length => this.Pointer.LengthInBytes / T.Size;
 
 	/// <inheritdoc/>
 	public bool Disposed { get; private set; } = false;
@@ -206,11 +206,11 @@ public abstract class PureStorage<T, TP> : PureStorageBase<TP>, IStorage<T, Pure
 	#endregion
 
 	#region string
-	static string IMainPropertyFormattable<PureStorage<T, TP>>.StringMain => nameof(PureStorage<T, TP>);
+	static string IMainPropertyFormattable<PureStorage<T, TP>>.StringMain => typeof(PureStorage<T, TP>).GetGenericString();
 
-	static IEnumerable<string> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyNames => new[] { nameof(DataType), nameof(Length), nameof(Pointer) };
+	static IEnumerable<string> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyNames => new[] { nameof(Length), nameof(Pointer) };
 
-	IEnumerable<object?> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyValues => new object[] { DataType, this.Length, this.Pointer };
+	IEnumerable<object?> IMainPropertyFormattable<PureStorage<T, TP>>.PropertyValues => new object[] { this.Length, this.Pointer };
 
 	/// <inheritdoc/>
 	public override string ToString() => IMainPropertyFormattable<PureStorage<T, TP>>.ToString(this);
