@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 using Althea.LinearAlgebra;
 
+
 namespace Althea.Backend.Cuda.LinearAlgebra.Dense;
 
 internal enum CustomStatus : int

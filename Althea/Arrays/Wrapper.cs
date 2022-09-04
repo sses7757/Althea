@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using Althea.Helpers;
@@ -200,7 +199,6 @@ public readonly ref struct DenseArrayWrapper<T, TS> where T : unmanaged, IBaseNu
 /// The structure for the format of any sparse array with size the same as an <see cref="int"/>.
 /// </summary>
 [StructLayout(LayoutKind.Explicit)]
-[JsonConverter(typeof(SparseFormat.JsonConverter))]
 public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseFormat, SparseFormat, bool>, IEquatable<SparseFormat>, System.Numerics.IBitwiseOperators<SparseFormat, SparseFormat, SparseFormat>
 {
 	#region enumerates
@@ -276,26 +274,6 @@ public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseF
 	}
 	#endregion
 
-	#region JSON
-	private readonly record struct SparseFormatJson(string Class, string BlockType, string MajorType);
-
-	private sealed class JsonConverter : JsonConverter<SparseFormat>
-	{
-		public override SparseFormat Read(ref Utf8JsonReader reader, System.Type typeToConvert, JsonSerializerOptions options)
-		{
-			if (typeToConvert != typeof(SparseFormat))
-				throw new ArgumentException(Resources.ParameterError.UnexpectedType, nameof(typeToConvert));
-			var json = JsonSerializer.Deserialize<SparseFormatJson>(ref reader, options);
-			return new(ManagedEnum<Type>.Parse(json.Class), ManagedEnum<Blocking>.Parse(json.BlockType), ManagedEnum<Major>.Parse(json.MajorType));
-		}
-
-		public override void Write(Utf8JsonWriter writer, SparseFormat value, JsonSerializerOptions options)
-		{
-			JsonSerializer.Serialize(new SparseFormatJson(value.Class.ToString(), value.BlockType.ToString(), value.MajorType.ToString()));
-		}
-	}
-	#endregion
-
 	#region basic
 	[FieldOffset(0)]
 	private readonly int data = 0;
@@ -310,16 +288,19 @@ public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseF
 	/// <summary>
 	/// Get the <see cref="Type"/> of this <see cref="SparseFormat"/>.
 	/// </summary>
+	[JsonInclude]
 	public ManagedEnum<Type> Class => this.type;
 
 	/// <summary>
 	/// Get the <see cref="Blocking"/> of this <see cref="SparseFormat"/>.
 	/// </summary>
+	[JsonInclude]
 	public ManagedEnum<Blocking> BlockType => this.blocking;
 
 	/// <summary>
 	/// Get the <see cref="Major"/> of this <see cref="SparseFormat"/>.
 	/// </summary>
+	[JsonInclude]
 	public ManagedEnum<Major> MajorType => this.major;
 
 	private SparseFormat(int data)
@@ -328,7 +309,10 @@ public readonly struct SparseFormat : System.Numerics.IEqualityOperators<SparseF
 		this.data = data;
 	}
 
-	internal int Data => this.data;
+	[JsonConstructor]
+	private SparseFormat(string @class, string blockType, string majorType) :
+		this(ManagedEnum<Type>.Parse(@class), ManagedEnum<Blocking>.Parse(blockType), ManagedEnum<Major>.Parse(majorType))
+	{ }
 
 	/// <summary>
 	/// The full constructor of a <see cref="SparseFormat"/>.

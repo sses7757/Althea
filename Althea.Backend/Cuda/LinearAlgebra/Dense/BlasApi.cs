@@ -537,7 +537,7 @@ public unsafe partial class Api
 		{
 			if (m != ldc)
 				return false;
-			// pre
+			// previous
 			if (opA != MatrixOperation.None)
 				return false;
 			// multiply
@@ -546,7 +546,7 @@ public unsafe partial class Api
 		}
 		else if (opA == MatrixOperation.Conjugate)
 		{   // T is complex
-			// pre
+			// previous
 			if (opB == MatrixOperation.None)
 				return false;
 			// multiply

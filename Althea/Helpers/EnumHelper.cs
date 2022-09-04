@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading;
 
 namespace Althea.Helpers;
 
@@ -22,12 +23,13 @@ internal readonly struct DebugManagedEnum<T> where T : unmanaged, Enum
 /// The managed enum struct that provide safe extend definitions for existing enum type <typeparamref name="T"/>.
 /// </summary>
 /// <typeparam name="T">The enum type</typeparam>
-public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
+public readonly record struct ManagedEnum<T> where T : unmanaged, Enum
 {
 	#region instance
 	/// <summary>
 	/// The underlying enum value of type <typeparamref name="T"/>
 	/// </summary>
+	[JsonIgnore]
 	public readonly T Value { get; }
 
 	/// <summary>
@@ -35,6 +37,51 @@ public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public ManagedEnum(T value) => this.Value = value;
+
+	[JsonInclude]
+	private readonly string[] Flags
+	{
+		get
+		{
+			if (!IS_FLAG)
+				return new[] { this.ToStringInternal(out _) };
+			List<string> names = new((int)MAX_VALUE);
+			long value = GetIntValue(this.Value);
+			for (byte i = 0; i < MAX_VALUE; i++)
+			{
+				if (!value.IsBitSet(i))
+					continue;
+				long v = 1L << i;
+				ManagedEnum<T> flag = Unsafe.As<long, T>(ref v);
+				string sub = flag.ToStringInternal(out bool success);
+				if (!success)
+					return new[] { this.ToStringInternal(out _) };
+				names.Add(sub);
+			}
+			return names.ToArray();
+		}
+	}
+
+	[JsonConstructor]
+	internal ManagedEnum(string[] flags)
+	{
+		locker.EnterReadLock();
+		try
+		{
+			long value = 0;
+			for (int i = 0; i < flags.Length; i++)
+			{
+				if (!TryParseInternal(flags[i], out var sub))
+					return;
+				value += GetIntValue(sub.Value);
+			}
+			this.Value = Unsafe.As<long, T>(ref value);
+		}
+		finally
+		{
+			locker.ExitReadLock();
+		}
+	}
 
 	/// <summary>
 	/// Implicitly convert a <see cref="ManagedEnum{T}"/> to its enum <see cref="Value"/>.
@@ -45,36 +92,6 @@ public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
 	/// Implicitly convert a enum <paramref name="value"/> to a <see cref="ManagedEnum{T}"/>.
 	/// </summary>
 	public static implicit operator ManagedEnum<T>(T value) => new(value);
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static unsafe bool ValueEquals(T a, T b)
-	{
-		var spanA = SpanHelper.CreateSpan(ref Unsafe.As<T, byte>(ref a), sizeof(T));
-		var spanB = SpanHelper.CreateSpan(ref Unsafe.As<T, byte>(ref b), sizeof(T));
-		return spanA.SequenceEqual(spanB);
-	}
-
-	/// <inheritdoc/>
-	public static bool operator ==(ManagedEnum<T> left, ManagedEnum<T> right) => ValueEquals(left.Value, right.Value);
-
-	/// <inheritdoc/>
-	public static bool operator !=(ManagedEnum<T> left, ManagedEnum<T> right) => !ValueEquals(left.Value, right.Value);
-
-	/// <summary>
-	/// Always throw <see cref="InvalidOperationException"/> since ref struct cannot be boxed.
-	/// </summary>
-	public override bool Equals(object? obj)
-	{
-		throw new InvalidOperationException();
-	}
-
-	/// <summary>
-	/// Always throw <see cref="InvalidOperationException"/> since ref struct cannot be boxed.
-	/// </summary>
-	public override int GetHashCode()
-	{
-		throw new InvalidOperationException();
-	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private readonly string ToStringInternal(out bool success)
@@ -90,35 +107,11 @@ public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
 
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public override readonly string ToString()
-	{
-		lock (names)
-		{
-			string name = this.ToStringInternal(out bool success);
-			if (success)
-				return name;
-			if (!IS_FLAG)
-				return $"Undefined Value {this.Value}";
-			StringBuilder sb = new("[");
-			long value = GetIntValue(this.Value);
-			for (byte i = 0; i < MAX_VALUE; i++)
-			{
-				if (!value.IsBitSet(i))
-					continue;
-				long v = 1L << i;
-				ManagedEnum<T> flag = Unsafe.As<long, T>(ref v);
-				string sub = flag.ToStringInternal(out success);
-				if (!success)
-					return $"Undefined Value {this.Value}";
-				sb.Append(sub).Append(" + ");
-			}
-			sb.Remove(sb.Length - 3, 3).Append(']');
-			return sb.ToString();
-		}
-	}
+	public override readonly string ToString() => string.Join(" + ", this.Flags);
 	#endregion
 
 	#region static
+	private static readonly ReaderWriterLockSlim locker = new();
 	private static readonly Dictionary<T, string> names = new();
 	private static readonly Dictionary<string, T> namesInv = new();
 	private static readonly long MAX_VALUE;
@@ -196,7 +189,8 @@ public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
 	{
 		if (string.IsNullOrEmpty(name) || name.Contains(' '))
 			throw new ArgumentException(Resources.ParameterError.InvalidValue, nameof(name));
-		lock (names)
+		locker.EnterWriteLock();
+		try
 		{
 			if (current == MAX_VALUE)
 				throw new InvalidOperationException(Resources.ParameterError.DuplicateValue);
@@ -214,6 +208,10 @@ public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
 			names.Add(newValue, name);
 			namesInv.Add(name, newValue);
 			return newValue;
+		}
+		finally
+		{
+			locker.ExitWriteLock();
 		}
 	}
 
@@ -240,7 +238,8 @@ public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
 	/// <returns>Success or not</returns>
 	public static bool TryParse(string name, out ManagedEnum<T> e)
 	{
-		lock (names)
+		locker.EnterReadLock();
+		try
 		{
 			if (TryParseInternal(name, out e))
 				return true;
@@ -256,6 +255,10 @@ public readonly ref struct ManagedEnum<T> where T : unmanaged, Enum
 			}
 			e = Unsafe.As<long, T>(ref value);
 			return true;
+		}
+		finally
+		{
+			locker.ExitReadLock();
 		}
 	}
 

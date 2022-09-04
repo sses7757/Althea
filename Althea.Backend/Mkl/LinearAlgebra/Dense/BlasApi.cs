@@ -520,7 +520,7 @@ public unsafe partial class Api
 		{
 			if (m != ldc)
 				return false;
-			// pre
+			// previous
 			opA = (opB == MatrixOperation.Transpose ? opA.Transpose() : opA.Conjugate().Transpose()).Simplify<T>(hermA);
 			using var conjA = Conjugater.Create(pA, leftA ? m : n, leftA ? m : n, lda, ref opA);
 			// multiply
@@ -531,7 +531,7 @@ public unsafe partial class Api
 		}
 		else if (opA == MatrixOperation.Conjugate)
 		{   // T is complex
-			// pre
+			// previous
 			if (opB == MatrixOperation.None)
 				Conjugater.Conjugate(pA, leftA ? m : n, leftA ? m : n, lda);
 			// multiply

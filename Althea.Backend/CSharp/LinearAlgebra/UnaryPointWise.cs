@@ -5,6 +5,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 using Althea.Backend.Storage;
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 
 using static Althea.Backend.CSharp.MemoryPointerChecker;
@@ -526,9 +527,9 @@ public unsafe partial class Api
 	
 	public virtual partial bool Scale<T, TS>(TS x, long strideX, T scalar) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS> => VectorModify<T, TS, TS, U_MultiplyScalar>(x, strideX, x, strideX, scalar);
 
-	public virtual partial bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual partial bool GeneralVectorUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
-		return op switch
+		return op.Value switch
 		{
 			UnaryOperation.Identity => true,
 			UnaryOperation.Conjugate => !T.IsComplexType || VectorModify<T, TS1, TS2, U_Conjugate>(x, strideX, y, strideY, default),
@@ -538,9 +539,9 @@ public unsafe partial class Api
 		};
 	}
 
-	public virtual partial bool GeneralVectorBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual partial bool GeneralVectorBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
-		return op switch
+		return op.Value switch
 		{
 			BinaryScalarOperation.Add => VectorModify<T, TS1, TS2, U_AddScalar>(x, strideX, y, strideY, scalar),
 			BinaryScalarOperation.Multiply => VectorModify<T, TS1, TS2, U_MultiplyScalar>(x, strideX, y, strideY, scalar),

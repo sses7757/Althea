@@ -43,7 +43,7 @@ public static class NativeMethods
 	/// <summary>
 	/// The custom CUDA library name
 	/// </summary>
-	public const string CUSTOM_DLL_NAME = @"SupplementCUDA";
+	public const string CUSTOM_DLL_NAME = @"Cuda/Althea.ExtendBlas";
 
 	#region device utilities
 	/// <summary>

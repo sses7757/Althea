@@ -96,6 +96,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Cuda\Althea.ExtendBlas.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Cuda\Althea.ExtendBlas.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Cuda\ExtendBlasCUDA.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -107,8 +113,11 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>CudaGpuIds.cs</LastGenOutput>
     </None>
-    <None Update="Mkl\ExtendBlasTBB.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="Mkl\Althea.ExtendBlas.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Mkl\Althea.ExtendBlas.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

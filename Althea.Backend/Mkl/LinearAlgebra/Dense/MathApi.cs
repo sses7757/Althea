@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
 using Althea.Backend.Storage;
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 
 using static Althea.Backend.Mkl.MemoryPointerChecker;
@@ -14,13 +15,13 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense;
 public unsafe partial class Api
 {
 	#region vector math
-	private static bool AdditionalUnary<T>(UnaryOperationSupplement op, long n, T* px, long strideX, T* py, long strideY) where T : unmanaged, IBaseNumber<T>
+	private static bool AdditionalUnary<T>(ManagedEnum<UnaryOperation> op, long n, T* px, long strideX, T* py, long strideY) where T : unmanaged, IBaseNumber<T>
 	{
 		delegate*<MklInt, T*, T*, void> func;
 		delegate*<MklInt, T*, MklInt, T*, MklInt, void> funcI;
 		func = op switch
 		{
-			UnaryOperationSupplement.Exp => default(T) switch
+			_ when op == UnaryOperationSupplement.Exp => default(T) switch
 			{
 				Float32 => &NM.vsExp,
 				Float64 => &NM.vdExp,
@@ -28,25 +29,25 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzExp,
 				_ => null,
 			},
-			UnaryOperationSupplement.Exp2 => default(T) switch
+			_ when op == UnaryOperationSupplement.Exp2 => default(T) switch
 			{
 				Float32 => &NM.vsExp2,
 				Float64 => &NM.vdExp2,
 				_ => null,
 			},
-			UnaryOperationSupplement.Exp10 => default(T) switch
+			_ when op == UnaryOperationSupplement.Exp10 => default(T) switch
 			{
 				Float32 => &NM.vsExp10,
 				Float64 => &NM.vdExp10,
 				_ => null,
 			},
-			UnaryOperationSupplement.ExpM1 => default(T) switch
+			_ when op == UnaryOperationSupplement.ExpM1 => default(T) switch
 			{
 				Float32 => &NM.vsExpm1,
 				Float64 => &NM.vdExpm1,
 				_ => null,
 			},
-			UnaryOperationSupplement.Ln => default(T) switch
+			_ when op == UnaryOperationSupplement.Ln => default(T) switch
 			{
 				Float32 => &NM.vsLn,
 				Float64 => &NM.vdLn,
@@ -54,13 +55,13 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzLn,
 				_ => null,
 			},
-			UnaryOperationSupplement.Log2 => default(T) switch
+			_ when op == UnaryOperationSupplement.Log2 => default(T) switch
 			{
 				Float32 => &NM.vsLog2,
 				Float64 => &NM.vdLog2,
 				_ => null,
 			},
-			UnaryOperationSupplement.Log10 => default(T) switch
+			_ when op == UnaryOperationSupplement.Log10 => default(T) switch
 			{
 				Float32 => &NM.vsLog10,
 				Float64 => &NM.vdLog10,
@@ -68,19 +69,19 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzLog10,
 				_ => null,
 			},
-			UnaryOperationSupplement.Log1p => default(T) switch
+			_ when op == UnaryOperationSupplement.Log1p => default(T) switch
 			{
 				Float32 => &NM.vsLog1p,
 				Float64 => &NM.vdLog1p,
 				_ => null,
 			},
-			UnaryOperationSupplement.LogBinary => default(T) switch
+			_ when op == UnaryOperationSupplement.LogBinary => default(T) switch
 			{
 				Float32 => &NM.vsLogb,
 				Float64 => &NM.vdLogb,
 				_ => null,
 			},
-			UnaryOperationSupplement.Cos => default(T) switch
+			_ when op == UnaryOperationSupplement.Cos => default(T) switch
 			{
 				Float32 => &NM.vsCos,
 				Float64 => &NM.vdCos,
@@ -88,7 +89,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzCos,
 				_ => null,
 			},
-			UnaryOperationSupplement.Sin => default(T) switch
+			_ when op == UnaryOperationSupplement.Sin => default(T) switch
 			{
 				Float32 => &NM.vsSin,
 				Float64 => &NM.vdSin,
@@ -96,7 +97,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzSin,
 				_ => null,
 			},
-			UnaryOperationSupplement.Tan => default(T) switch
+			_ when op == UnaryOperationSupplement.Tan => default(T) switch
 			{
 				Float32 => &NM.vsTan,
 				Float64 => &NM.vdTan,
@@ -104,7 +105,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzTan,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcCos => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcCos => default(T) switch
 			{
 				Float32 => &NM.vsAcos,
 				Float64 => &NM.vdAcos,
@@ -112,7 +113,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAcos,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcSin => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcSin => default(T) switch
 			{
 				Float32 => &NM.vsAsin,
 				Float64 => &NM.vdAsin,
@@ -120,7 +121,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAsin,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcTan => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcTan => default(T) switch
 			{
 				Float32 => &NM.vsAtan,
 				Float64 => &NM.vdAtan,
@@ -128,7 +129,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAtan,
 				_ => null,
 			},
-			UnaryOperationSupplement.Cosh => default(T) switch
+			_ when op == UnaryOperationSupplement.Cosh => default(T) switch
 			{
 				Float32 => &NM.vsCosh,
 				Float64 => &NM.vdCosh,
@@ -136,7 +137,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzCosh,
 				_ => null,
 			},
-			UnaryOperationSupplement.Sinh => default(T) switch
+			_ when op == UnaryOperationSupplement.Sinh => default(T) switch
 			{
 				Float32 => &NM.vsSinh,
 				Float64 => &NM.vdSinh,
@@ -144,7 +145,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzSinh,
 				_ => null,
 			},
-			UnaryOperationSupplement.Tanh => default(T) switch
+			_ when op == UnaryOperationSupplement.Tanh => default(T) switch
 			{
 				Float32 => &NM.vsTanh,
 				Float64 => &NM.vdTanh,
@@ -152,7 +153,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzTanh,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcCosh => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcCosh => default(T) switch
 			{
 				Float32 => &NM.vsAcosh,
 				Float64 => &NM.vdAcosh,
@@ -160,7 +161,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAcosh,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcSinh => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcSinh => default(T) switch
 			{
 				Float32 => &NM.vsAsinh,
 				Float64 => &NM.vdAsinh,
@@ -168,7 +169,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAsinh,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcTanh => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcTanh => default(T) switch
 			{
 				Float32 => &NM.vsAtanh,
 				Float64 => &NM.vdAtanh,
@@ -180,7 +181,7 @@ public unsafe partial class Api
 		};
 		funcI = op switch
 		{
-			UnaryOperationSupplement.Exp => default(T) switch
+			_ when op == UnaryOperationSupplement.Exp => default(T) switch
 			{
 				Float32 => &NM.vsExpI,
 				Float64 => &NM.vdExpI,
@@ -188,25 +189,25 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzExpI,
 				_ => null,
 			},
-			UnaryOperationSupplement.Exp2 => default(T) switch
+			_ when op == UnaryOperationSupplement.Exp2 => default(T) switch
 			{
 				Float32 => &NM.vsExp2I,
 				Float64 => &NM.vdExp2I,
 				_ => null,
 			},
-			UnaryOperationSupplement.Exp10 => default(T) switch
+			_ when op == UnaryOperationSupplement.Exp10 => default(T) switch
 			{
 				Float32 => &NM.vsExp10I,
 				Float64 => &NM.vdExp10I,
 				_ => null,
 			},
-			UnaryOperationSupplement.ExpM1 => default(T) switch
+			_ when op == UnaryOperationSupplement.ExpM1 => default(T) switch
 			{
 				Float32 => &NM.vsExpm1I,
 				Float64 => &NM.vdExpm1I,
 				_ => null,
 			},
-			UnaryOperationSupplement.Ln => default(T) switch
+			_ when op == UnaryOperationSupplement.Ln => default(T) switch
 			{
 				Float32 => &NM.vsLnI,
 				Float64 => &NM.vdLnI,
@@ -214,13 +215,13 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzLnI,
 				_ => null,
 			},
-			UnaryOperationSupplement.Log2 => default(T) switch
+			_ when op == UnaryOperationSupplement.Log2 => default(T) switch
 			{
 				Float32 => &NM.vsLog2I,
 				Float64 => &NM.vdLog2I,
 				_ => null,
 			},
-			UnaryOperationSupplement.Log10 => default(T) switch
+			_ when op == UnaryOperationSupplement.Log10 => default(T) switch
 			{
 				Float32 => &NM.vsLog10I,
 				Float64 => &NM.vdLog10I,
@@ -228,19 +229,19 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzLog10I,
 				_ => null,
 			},
-			UnaryOperationSupplement.Log1p => default(T) switch
+			_ when op == UnaryOperationSupplement.Log1p => default(T) switch
 			{
 				Float32 => &NM.vsLog1pI,
 				Float64 => &NM.vdLog1pI,
 				_ => null,
 			},
-			UnaryOperationSupplement.LogBinary => default(T) switch
+			_ when op == UnaryOperationSupplement.LogBinary => default(T) switch
 			{
 				Float32 => &NM.vsLogbI,
 				Float64 => &NM.vdLogbI,
 				_ => null,
 			},
-			UnaryOperationSupplement.Cos => default(T) switch
+			_ when op == UnaryOperationSupplement.Cos => default(T) switch
 			{
 				Float32 => &NM.vsCosI,
 				Float64 => &NM.vdCosI,
@@ -248,7 +249,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzCosI,
 				_ => null,
 			},
-			UnaryOperationSupplement.Sin => default(T) switch
+			_ when op == UnaryOperationSupplement.Sin => default(T) switch
 			{
 				Float32 => &NM.vsSinI,
 				Float64 => &NM.vdSinI,
@@ -256,7 +257,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzSinI,
 				_ => null,
 			},
-			UnaryOperationSupplement.Tan => default(T) switch
+			_ when op == UnaryOperationSupplement.Tan => default(T) switch
 			{
 				Float32 => &NM.vsTanI,
 				Float64 => &NM.vdTanI,
@@ -264,7 +265,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzTanI,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcCos => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcCos => default(T) switch
 			{
 				Float32 => &NM.vsAcosI,
 				Float64 => &NM.vdAcosI,
@@ -272,7 +273,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAcosI,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcSin => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcSin => default(T) switch
 			{
 				Float32 => &NM.vsAsinI,
 				Float64 => &NM.vdAsinI,
@@ -280,7 +281,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAsinI,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcTan => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcTan => default(T) switch
 			{
 				Float32 => &NM.vsAtanI,
 				Float64 => &NM.vdAtanI,
@@ -288,7 +289,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAtanI,
 				_ => null,
 			},
-			UnaryOperationSupplement.Cosh => default(T) switch
+			_ when op == UnaryOperationSupplement.Cosh => default(T) switch
 			{
 				Float32 => &NM.vsCoshI,
 				Float64 => &NM.vdCoshI,
@@ -296,7 +297,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzCoshI,
 				_ => null,
 			},
-			UnaryOperationSupplement.Sinh => default(T) switch
+			_ when op == UnaryOperationSupplement.Sinh => default(T) switch
 			{
 				Float32 => &NM.vsSinhI,
 				Float64 => &NM.vdSinhI,
@@ -304,7 +305,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzSinhI,
 				_ => null,
 			},
-			UnaryOperationSupplement.Tanh => default(T) switch
+			_ when op == UnaryOperationSupplement.Tanh => default(T) switch
 			{
 				Float32 => &NM.vsTanhI,
 				Float64 => &NM.vdTanhI,
@@ -312,7 +313,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzTanhI,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcCosh => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcCosh => default(T) switch
 			{
 				Float32 => &NM.vsAcoshI,
 				Float64 => &NM.vdAcoshI,
@@ -320,7 +321,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAcoshI,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcSinh => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcSinh => default(T) switch
 			{
 				Float32 => &NM.vsAsinhI,
 				Float64 => &NM.vdAsinhI,
@@ -328,7 +329,7 @@ public unsafe partial class Api
 				Complex<Float64> => &NM.vzAsinhI,
 				_ => null,
 			},
-			UnaryOperationSupplement.ArcTanh => default(T) switch
+			_ when op == UnaryOperationSupplement.ArcTanh => default(T) switch
 			{
 				Float32 => &NM.vsAtanhI,
 				Float64 => &NM.vdAtanhI,
@@ -509,7 +510,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralVectorUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (op == UnaryOperation.Identity || (op == UnaryOperation.Conjugate && !T.IsComplexType))
 			return true;
@@ -525,7 +526,7 @@ public unsafe partial class Api
 		n = Math.Min(n, ny);
 		delegate*<MklInt, T*, T*, void> func;
 		delegate*<MklInt, T*, MklInt, T*, MklInt, void> funcI;
-		func = op switch
+		func = op.Value switch
 		{
 			UnaryOperation.Conjugate => default(T) switch
 			{
@@ -543,7 +544,7 @@ public unsafe partial class Api
 			},
 			_ => null,
 		};
-		funcI = op switch
+		funcI = op.Value switch
 		{
 			UnaryOperation.Conjugate => default(T) switch
 			{
@@ -562,7 +563,7 @@ public unsafe partial class Api
 			_ => null,
 		};
 		if (func == null)
-			return AdditionalUnary((UnaryOperationSupplement)op, n, px, strideX, py, strideY);
+			return AdditionalUnary(op, n, px, strideX, py, strideY);
 		if (op == UnaryOperation.AbsoluteValue && T.IsComplexType)
 			strideY *= 2;
 		if (strideX == 1 && strideY == 1)
@@ -573,7 +574,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralVectorBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (!GetPointer(x, strideX, out T* px, out long n))
 			return false;
@@ -588,7 +589,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorReduce<T, TS>(ReduceOperation op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool GeneralVectorReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (op == ReduceOperation.Norm)
 			return this.Norm(x, strideX, out result);
@@ -615,7 +616,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorArgReduce<T, TS>(ReduceOperation op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool GeneralVectorArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if ((op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum) && (typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64)))
 		{
@@ -630,7 +631,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	public virtual bool GeneralVectorsBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
 		if (!GetPointer(x, strideX, out T* px, out long n))
 			return false;
@@ -639,7 +640,7 @@ public unsafe partial class Api
 		if (!GetPointer(z, strideZ, out T* pz, out long nz))
 			return false;
 		n = Math.Min(n, Math.Min(ny, nz));
-		delegate*<MklInt, T*, T*, T*, void> func = op switch
+		delegate*<MklInt, T*, T*, T*, void> func = op.Value switch
 		{
 			BinaryOperation.Add => default(T) switch
 			{
@@ -699,7 +700,7 @@ public unsafe partial class Api
 			},
 			_ => null
 		};
-		delegate*<MklInt, T*, MklInt, T*, MklInt, T*, MklInt, void> funcI = op switch
+		delegate*<MklInt, T*, MklInt, T*, MklInt, T*, MklInt, void> funcI = op.Value switch
 		{
 			BinaryOperation.Add => default(T) switch
 			{
@@ -769,7 +770,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorsScan<T, TS1, TS2>(ReduceOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralVectorsScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (!GetPointer(x, strideX, out T* px, out long n))
 			return false;
@@ -821,7 +822,7 @@ public unsafe partial class Api
 
 	#region matrix math
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixUnary<T, TS1, TS2>(UnaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (rows == lda && rows == ldb)
 			return GeneralVectorUnary<T, TS1, TS2>(op, A.MakeReference(0, rows * cols), 1, B, 1);
@@ -829,7 +830,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(B, rows, cols, ldb, out T* pB))
 			return false;
-		switch (op)
+		switch (op.Value)
 		{
 			case UnaryOperation.Identity:
 				return true;
@@ -849,7 +850,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (rows == lda && rows == ldb)
 			return GeneralVectorBinaryScalar(op, scalar, A.MakeReference(0, rows * cols), 1, B, 1);
@@ -863,7 +864,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	public virtual bool GeneralMatricesBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
 		if (rows == lda && rows == ldb && rows == ldc)
 			return GeneralVectorsBinary<T, TS1, TS2, TS3>(op, A.MakeReference(0, rows * cols), 1, B, 1, C, 1);
@@ -872,7 +873,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool GeneralMatrixReduce<T, TS>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (rows == lda)
 			return GeneralVectorReduce<T, TS>(op, A.MakeReference(0, rows * cols), 1, out result);
@@ -887,7 +888,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixArgReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool GeneralMatrixArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (rows == lda)
 			return GeneralVectorArgReduce<T, TS>(op, A.MakeReference(0, rows * cols), 1, out index);
@@ -900,7 +901,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixColumnReduce<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (op != ReduceOperation.Add)
 			return false;
@@ -912,7 +913,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixColumnScan<T, TS1, TS2>(ReduceOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixColumnScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		return false;
 	}

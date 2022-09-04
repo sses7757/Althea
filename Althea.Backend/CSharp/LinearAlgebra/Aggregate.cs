@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -1312,10 +1311,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		#endregion
 
 
-		public virtual partial bool GeneralVectorReduce<T, TS>(ReduceOperation op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		public virtual partial bool GeneralVectorReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			result = default;
-			return (op) switch
+			return op.Value switch
 			{
 				ReduceOperation.Add => AbsSumProd<T, TS, long>(x, strideX, out result),
 				ReduceOperation.AddAbsolute => AbsSumProd<T, TS, int>(x, strideX, out result),
@@ -1330,10 +1329,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			};
 		}
 
-		public virtual partial bool GeneralVectorArgReduce<T, TS>(ReduceOperation op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+		public virtual partial bool GeneralVectorArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
 			index = default;
-			return (op) switch
+			return op.Value switch
 			{
 				ReduceOperation.Add or ReduceOperation.AddAbsolute or ReduceOperation.Multiply or ReduceOperation.MultiplyAbsolute or ReduceOperation.Norm => throw new ArgumentOutOfRangeException(nameof(op), op, Resources.ParameterError.InvalidValue),
 				ReduceOperation.Maximum => ArgMinMax<T, TS, long>(x, strideX, out index),
@@ -1344,9 +1343,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			};
 		}
 
-		public virtual partial bool GeneralVectorsScan<T, TS1, TS2>(ReduceOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+		public virtual partial bool GeneralVectorsScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 		{
-			return (op) switch
+			return op.Value switch
 			{
 				ReduceOperation.Add => ParSumProd<T, TS1, TS2, bool>(x, strideX, y, strideY, inclusive),
 				ReduceOperation.Multiply => ParSumProd<T, TS1, TS2, byte>(x, strideX, y, strideY, inclusive),

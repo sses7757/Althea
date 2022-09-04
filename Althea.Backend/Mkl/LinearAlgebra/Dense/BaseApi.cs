@@ -178,6 +178,12 @@ internal static class Conjugater
 public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ILapackAbstractApi
 {
 	#region basic
+	static Api()
+	{
+		// initialize UnaryOperationSupplement
+		UnaryOperationSupplement.Exp.ToString();
+	}
+
 	/// <summary>
 	/// The default constructor of <see cref="Api"/> that sets the <see cref="GemmJitThreshold"/> to 100
 	/// </summary>

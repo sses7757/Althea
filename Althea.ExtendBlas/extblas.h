@@ -41,15 +41,15 @@
 
 
 // compile options
-// ignore spelling: nvcc Xcompiler bigobj openmp
-// nvcc -o extblasCUDA.dll --shared DenseVector.cu --shared DenseMatrix.cu --shared Sparse.cu -std=c++17 -Xcompiler "-bigobj" -extended-lambda
-// nvcc -o extblasOMP.dll -DCPU --shared DenseVector.cu --shared SparseVector.cu --shared Matrix.cu -std=c++17 -Xcompiler "-bigobj -openmp"
+// Ignore Spelling: nvcc Xcompiler bigobj openmp \tbb nologo
+// nvcc -o Althea.ExtendBlas.dll --shared DenseVector.cu --shared DenseMatrix.cu --shared Sparse.cu -std=c++17 -Xcompiler "-bigobj" -extended-lambda
+// nvcc -o Althea.ExtendBlas.dll --shared DenseVector.cu --shared DenseMatrix.cu --shared Sparse.cu -std=c++17 -Xcompiler "-bigobj" -extended-lambda -DCPU -I"C:\Program Files (x86)\Intel\oneAPI\tbb\latest\include"
 #undef THRUST_DEVICE_SYSTEM
 #ifdef CPU
 #include <thrust/system/tbb/execution_policy.h>
 #define THRUST_PAR thrust::tbb::par
 #define ERROR_RETURN int
-#define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_OMP
+#define THRUST_DEVICE_SYSTEM THRUST_DEVICE_SYSTEM_TBB
 #ifdef MKL_ILP64
 #define MKL_INT long long
 #else

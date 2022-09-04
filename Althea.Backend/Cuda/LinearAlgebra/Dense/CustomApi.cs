@@ -1,5 +1,5 @@
 ﻿using Althea.Backend.Cuda.Storage;
-using Althea.Backend.Cuda.TensorAlgebra.Dense;
+using Althea.Helpers;
 using Althea.LinearAlgebra;
 
 using static Althea.Backend.Cuda.MemoryPointerChecker;
@@ -13,7 +13,7 @@ public unsafe partial class Api
 {
 	#region vector
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralVectorUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (op == UnaryOperation.Identity || (op == UnaryOperation.Conjugate && !T.IsComplexType))
 			return true;
@@ -31,7 +31,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralVectorBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (!GetPointer(this, x, strideX, out T* px, out long n))
 			return false;
@@ -44,7 +44,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorReduce<T, TS>(ReduceOperation op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool GeneralVectorReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (op == ReduceOperation.Norm)
 			return this.Norm(x, strideX, out result);
@@ -59,7 +59,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorArgReduce<T, TS>(ReduceOperation op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool GeneralVectorArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if ((op == ReduceOperation.AbsoluteMaximum || op == ReduceOperation.AbsoluteMininum) && (typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64)))
 		{
@@ -72,13 +72,13 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	public virtual bool GeneralVectorsBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
 		return false;
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralVectorsScan<T, TS1, TS2>(ReduceOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralVectorsScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (!GetPointer(this, x, strideX, out T* px, out long n))
 			return false;
@@ -128,7 +128,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixUnary<T, TS1, TS2>(UnaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (rows == lda && rows == ldb)
 			return GeneralVectorUnary<T, TS1, TS2>(op, A.MakeReference(0, rows * cols), 1, B, 1);
@@ -140,7 +140,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (rows == lda && rows == ldb)
 			return GeneralVectorBinaryScalar(op, scalar, A.MakeReference(0, rows * cols), 1, B, 1);
@@ -154,7 +154,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	public virtual bool GeneralMatricesBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
 		if (rows == lda && rows == ldb && rows == ldc)
 			return GeneralVectorsBinary<T, TS1, TS2, TS3>(op, A.MakeReference(0, rows * cols), 1, B, 1, C, 1);
@@ -163,7 +163,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool GeneralMatrixReduce<T, TS>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (rows == lda)
 			return GeneralVectorReduce<T, TS>(op, A.MakeReference(0, rows * cols), 1, out result);
@@ -178,7 +178,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixArgReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool GeneralMatrixArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		if (rows == lda)
 			return GeneralVectorArgReduce<T, TS>(op, A.MakeReference(0, rows * cols), 1, out index);
@@ -189,7 +189,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixColumnReduce<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (op != ReduceOperation.Add)
 			return false;
@@ -218,7 +218,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool GeneralMatrixColumnScan<T, TS1, TS2>(ReduceOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool GeneralMatrixColumnScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		return false;
 	}

@@ -18,15 +18,15 @@ namespace Althea.Storage;
 public enum LocationType : short
 {
 	/// <summary>
-	/// Represents a storage location represented by Universal Resource Identifier.
+	/// Represents a storage location represented by Universal Resource Identifier. The <see cref="StorageLocation.Detail"/> is a <see cref="UriScheme"/>.
 	/// </summary>
 	Uri = LocationTypeExtension.ClassStream + 0,
 	/// <summary>
-	/// Storage at local CPU RAM
+	/// Storage at local CPU RAM. The <see cref="StorageLocation.Detail"/> is not used currently.
 	/// </summary>
 	CpuRam = LocationTypeExtension.ClassMemory + 0,
 	/// <summary>
-	/// Storage at local GPU RAM
+	/// Storage at local GPU RAM. The <see cref="StorageLocation.Detail"/> is the GPU device ID.
 	/// </summary>
 	GpuRam = LocationTypeExtension.ClassMemory + 1 << LocationTypeExtension.ClassMaskEnd,
 }
@@ -213,14 +213,7 @@ public static class UriSchemeExtension
 /// </remarks>
 /// <param name="Type">The location type of this <see cref="StorageLocation"/> as a <see cref="LocationType"/></param>
 /// <param name="Detail">The location detail of the <see cref="Type"/>.</param>
-public readonly record struct StorageLocation(LocationType Type, short Detail)
-{
-	/// <inheritdoc/>
-	public override string ToString()
-	{
-		return $"{nameof(StorageLocation)} {{ {nameof(Type)} = {new ManagedEnum<LocationType>(this.Type).ToString()}, {nameof(Detail)} = {this.Detail} }}";
-	}
-}
+public readonly record struct StorageLocation(ManagedEnum<LocationType> Type, short Detail);
 
 /// <summary>
 /// The struct of a combination of storage location(s)

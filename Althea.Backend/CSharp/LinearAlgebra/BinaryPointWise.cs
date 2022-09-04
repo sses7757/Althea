@@ -383,9 +383,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			return VectorsBinary<T, Op>(px, incx, py, incy, pz, incz, scalar, length);
 		}
 
-		public virtual partial bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		public virtual partial bool GeneralVectorsBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{
-			return op switch
+			return op.Value switch
 			{
 				BinaryOperation.Add => VectorsBinary<T, TS1, TS2, TS3, B_Add>(x, strideX, y, strideY, z, strideZ, default),
 				BinaryOperation.Multiply => VectorsBinary<T, TS1, TS2, TS3, B_Multiply>(x, strideX, y, strideY, z, strideZ, default),

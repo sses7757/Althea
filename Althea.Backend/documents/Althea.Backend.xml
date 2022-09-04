@@ -263,22 +263,22 @@
         <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsEqual``3(``1,System.Int64,``2,System.Int64,System.Boolean@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorUnary``3(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},``0,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``0@)">
+        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``0@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorArgReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,System.Int64@)">
+        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,System.Int64@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``2,System.Int64,System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.GeneralVectorsCast``4(``2,System.Int64,``3,System.Int64)">
@@ -727,22 +727,22 @@
             See <see cref="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.SymmetricRankKUpdate``3(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``0,``2,System.Int64)"/> except we are computing <c><paramref name="C"/> = <paramref name="α"/> * <paramref name="op"/>(<paramref name="A"/>) * <paramref name="op"/>(<paramref name="B"/>)^pow + <paramref name="β"/> * <paramref name="C"/></c> can be used when <paramref name="B"/> is in such way that the result <paramref name="C"/> is guaranteed to be symmetric/hermitian.
             </summary>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorUnary``3(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},``0,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``0@)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``0@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorArgReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,System.Int64@)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,System.Int64@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``2,System.Int64,System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralVectorsCast``4(``2,System.Int64,``3,System.Int64)">
@@ -754,25 +754,25 @@
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.MatrixKronecker``4(System.Int64,System.Int64,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatricesBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``0@)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,``0@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixColumnReduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatrixColumnScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.GeneralMatricesEqual``3(System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean@)">
@@ -4543,14 +4543,119 @@
         <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.Permute``3(Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.Array.DenseArrayWrapper{``0,``2},System.ReadOnlySpan{System.Int32})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.OperationBinary``4(Althea.LinearAlgebra.BinaryOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
+        <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.OperationBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},System.ReadOnlySpan{System.Int32},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32},Althea.Array.DenseArrayWrapper{``0,``3})">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.Reduce``3(Althea.LinearAlgebra.ReduceOperation,Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32})">
+        <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.Reduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},System.ReadOnlySpan{System.Int32})">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Cuda.TensorAlgebra.Dense.Api.Contract``4(Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``1},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``2},Althea.TensorAlgebra.Dense.DenseTensorWrapper{``0,``3},Althea.TensorAlgebra.TensorContractInfo)">
             <inheritdoc/>
+        </member>
+        <member name="T:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement">
+            <summary>
+            The supplement <see cref="T:Althea.LinearAlgebra.UnaryOperation"/>s.
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Sqrt">
+            <summary>
+            Square root
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.ReLU">
+            <summary>
+            Rectified linear unit (x if x > 0, otherwise 0)
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Reciprocate">
+            <summary>
+            Reciprocal
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Sigmoid">
+            <summary>
+            Logistic sigmoid function: <c>y = 1 / (1 + exp(-x))</c>
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Tanh">
+            <summary>
+            <c>y = tanh(x)</c>
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Exp">
+            <summary>
+            <c>y = exp(x)</c>
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Log">
+            <summary>
+            Base <c>e</c> logarithm
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Sin">
+            <summary>
+            Sine function
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Cos">
+            <summary>
+            Cosine function
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Tan">
+            <summary>
+            Tangent function
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Sinh">
+            <summary>
+            Hyperbolic sine
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Cosh">
+            <summary>
+            Hyperbolic cosine
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.ArcSin">
+            <summary>
+            Inverse sine
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.ArcCos">
+            <summary>
+            Inverse cosine
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.ArcTan">
+            <summary>
+            Inverse tangent
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.ArcSinh">
+            <summary>
+            Inverse hyperbolic sine
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.ArcCosh">
+            <summary>
+            Inverse hyperbolic cosine
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.ArcTanh">
+            <summary>
+            Inverse hyperbolic tangent
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Ceil">
+            <summary>
+            Ceiling function
+            </summary>
+        </member>
+        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.UnaryOperationSupplement.Floor">
+            <summary>
+            Floor function
+            </summary>
         </member>
         <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorBinary.Add">
             <summary>
@@ -4570,126 +4675,6 @@
         <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorBinary.Min">
             <summary>
             Minimum of two elements
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Identity">
-            <summary>
-            Identity operator (i.e., elements are not changed)
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Sqrt">
-            <summary>
-            Square root
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.ReLU">
-            <summary>
-            Rectified linear unit (x if x > 0, otherwise 0)
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Conjugate">
-            <summary>
-            Complex conjugate
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Reciprocate">
-            <summary>
-            Reciprocal
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Sigmoid">
-            <summary>
-            Logistic sigmoid function: <c>y = 1 / (1 + exp(-x))</c>
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Tanh">
-            <summary>
-            <c>y = tanh(x)</c>
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Exp">
-            <summary>
-            <c>y = exp(x)</c>
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Log">
-            <summary>
-            Base <c>e</c> logarithm
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Abs">
-            <summary>
-            Absolute value
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Negate">
-            <summary>
-            Negation
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Sin">
-            <summary>
-            Sine function
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Cos">
-            <summary>
-            Cosine function
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Tan">
-            <summary>
-            Tangent function
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Sinh">
-            <summary>
-            Hyperbolic sine
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Cosh">
-            <summary>
-            Hyperbolic cosine
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.ArcSin">
-            <summary>
-            Inverse sine
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.ArcCos">
-            <summary>
-            Inverse cosine
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.ArcTan">
-            <summary>
-            Inverse tangent
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.ArcSinh">
-            <summary>
-            Inverse hyperbolic sine
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.ArcCosh">
-            <summary>
-            Inverse hyperbolic cosine
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.ArcTanh">
-            <summary>
-            Inverse hyperbolic tangent
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Ceil">
-            <summary>
-            Ceiling function
-            </summary>
-        </member>
-        <member name="F:Althea.Backend.Cuda.TensorAlgebra.Dense.CuTensorUnary.Floor">
-            <summary>
-            Floor function
             </summary>
         </member>
         <member name="T:Althea.Backend.Cuda.TensorAlgebra.Dense.CudaTensorStatus">
@@ -5145,22 +5130,22 @@
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.DiagonalMatrixMultiplyGeneral``4(System.Boolean,Althea.LinearAlgebra.MatrixOperation,System.Boolean,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorUnary``3(Althea.LinearAlgebra.UnaryOperation,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},``0,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``0@)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``0@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorArgReduce``2(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,System.Int64@)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,System.Int64@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsBinary``4(Althea.LinearAlgebra.BinaryOperation,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsScan``3(Althea.LinearAlgebra.ReduceOperation,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},``1,System.Int64,``2,System.Int64,System.Boolean)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralVectorsCast``4(``2,System.Int64,``3,System.Int64)">
@@ -5172,25 +5157,25 @@
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.MatrixKronecker``4(System.Int64,System.Int64,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64,``0,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixUnary``3(Althea.LinearAlgebra.UnaryOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixUnary``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.UnaryOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixBinaryScalar``3(Althea.LinearAlgebra.BinaryScalarOperation,System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixBinaryScalar``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryScalarOperation},System.Int64,System.Int64,``0,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatricesBinary``4(Althea.LinearAlgebra.BinaryOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatricesBinary``4(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.BinaryOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,``3,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``0@)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,``0@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixArgReduce``2(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixArgReduce``2(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,System.Int64@)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixColumnReduce``3(Althea.LinearAlgebra.ReduceOperation,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixColumnReduce``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixColumnScan``3(Althea.LinearAlgebra.ReduceOperation,System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatrixColumnScan``3(Althea.Helpers.ManagedEnum{Althea.LinearAlgebra.ReduceOperation},System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.GeneralMatricesEqual``3(System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean@)">

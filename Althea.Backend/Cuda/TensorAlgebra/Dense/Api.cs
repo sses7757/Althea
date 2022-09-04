@@ -21,6 +21,12 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense;
 public unsafe class Api : IBindedDevice, IBaseAbstractApi
 {
 	#region basic
+	static Api()
+	{
+		// initialize UnaryOperationSupplement
+		UnaryOperationSupplement.Exp.ToString();
+	}
+
 	internal readonly CudaTensorHandle handle;
 
 	/// <summary>
@@ -249,7 +255,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 	}
 
 	/// <inheritdoc/>
-	public virtual bool OperationBinary<T, TS1, TS2, TS3>(BinaryOperation binary, DenseTensorWrapper<T, TS1> left, ReadOnlySpan<int> leftPerm, DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	public virtual bool OperationBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> binary, DenseTensorWrapper<T, TS1> left, ReadOnlySpan<int> leftPerm, DenseTensorWrapper<T, TS2> right, ReadOnlySpan<int> rightPerm, DenseArrayWrapper<T, TS3> destination) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
 		CuTensorBinary opAB = binary.ToCudaOp();
 		if (opAB == 0)
@@ -278,7 +284,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 	}
 
 	/// <inheritdoc/>
-	public virtual bool Reduce<T, TS1, TS2>(ReduceOperation reduce, DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool Reduce<T, TS1, TS2>(ManagedEnum<ReduceOperation> reduce, DenseTensorWrapper<T, TS1> source, DenseTensorWrapper<T, TS2> destination, ReadOnlySpan<int> reduceDimensions) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		CuTensorBinary opRed = reduce.ToCudaOp();
 		if (opRed == 0)
@@ -333,6 +339,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		return NM.cutensorContraction(this.handle, in plan, &alpha, pA, pB, &beta, pC, pC, buffer, workspace, null).Check();
 	}
 
+	// Ignore Spelling: bool stackalloc
 	/*
 	protected internal unsafe bool OperationTrinary<T>(CuTensorBinary binaryAB, CuTensorBinary binaryABC, DenseTensorWrapper<T> A, Span<int> permA, DenseTensorWrapper<T> B, Span<int> permB, DenseTensorWrapper<T> C, Span<int> permC, DenseTensorWrapper<T> destination, Span<int> permD) where T : unmanaged, IBaseNumber<T>
 	{

@@ -12,12 +12,12 @@ public static class NativeMethods
 	/// <summary>
 	/// The MKL Runtime library name
 	/// </summary>
-	public const string MKL_DLL_NAME = "mkl_rt";
+	public const string MKL_DLL_NAME = @"mkl_rt";
 
 	/// <summary>
 	/// The custom BLAS library name
 	/// </summary>
-	public const string CUSTOM_DLL_NAME = "ExtendBlasTBB";
+	public const string CUSTOM_DLL_NAME = @"Mkl/Althea.ExtendBlas";
 
 	/// <summary>
 	/// Set number of threads used by MKL library

@@ -34,6 +34,93 @@ namespace Althea.Backend.Cuda
 namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 {
 	#region operations
+	/// <summary>
+	/// The supplement <see cref="UnaryOperation"/>s.
+	/// </summary>
+	public static class UnaryOperationSupplement
+	{
+		/// <summary>
+		/// Square root
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Sqrt = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Sqrt");
+		/// <summary>
+		/// Rectified linear unit (x if x > 0, otherwise 0)
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> ReLU = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"ReLU");
+		/// <summary>
+		/// Reciprocal
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Reciprocate = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Reciprocate");
+		/// <summary>
+		/// Logistic sigmoid function: <c>y = 1 / (1 + exp(-x))</c>
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Sigmoid = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Sigmoid");
+		/// <summary>
+		/// <c>y = tanh(x)</c>
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Tanh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Tanh");
+		/// <summary>
+		/// <c>y = exp(x)</c>
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Exp = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Exp");
+		/// <summary>
+		/// Base <c>e</c> logarithm
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Log = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Log");
+		/// <summary>
+		/// Sine function
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Sin = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Sin");
+		/// <summary>
+		/// Cosine function
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Cos = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Cos");
+		/// <summary>
+		/// Tangent function
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Tan = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Tan");
+		/// <summary>
+		/// Hyperbolic sine
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Sinh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Sinh");
+		/// <summary>
+		/// Hyperbolic cosine
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Cosh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Cosh");
+		/// <summary>
+		/// Inverse sine
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> ArcSin = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"ArcSin");
+		/// <summary>
+		/// Inverse cosine
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> ArcCos = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"ArcCos");
+		/// <summary>
+		/// Inverse tangent
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> ArcTan = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"ArcTan");
+		/// <summary>
+		/// Inverse hyperbolic sine
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> ArcSinh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"ArcSinh");
+		/// <summary>
+		/// Inverse hyperbolic cosine
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> ArcCosh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"ArcCosh");
+		/// <summary>
+		/// Inverse hyperbolic tangent
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> ArcTanh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"ArcTanh");
+		/// <summary>
+		/// Ceiling function
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Ceil = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Ceil");
+		/// <summary>
+		/// Floor function
+		/// </summary>
+		public static readonly ManagedEnum<UnaryOperation> Floor = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Floor");
+	}
+
 	internal enum CuTensorBinary
 	{
 		/// <summary>
@@ -56,109 +143,37 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 
 	internal enum CuTensorUnary
 	{
-		/// <summary>
-		/// Identity operator (i.e., elements are not changed)
-		/// </summary>
 		Identity = 1,
-		/// <summary>
-		/// Square root
-		/// </summary>
 		Sqrt = 2,
-		/// <summary>
-		/// Rectified linear unit (x if x > 0, otherwise 0)
-		/// </summary>
 		ReLU = 8,
-		/// <summary>
-		/// Complex conjugate
-		/// </summary>
 		Conjugate = 9,
-		/// <summary>
-		/// Reciprocal
-		/// </summary>
 		Reciprocate = 10,
-		/// <summary>
-		/// Logistic sigmoid function: <c>y = 1 / (1 + exp(-x))</c>
-		/// </summary>
 		Sigmoid = 11,
-		/// <summary>
-		/// <c>y = tanh(x)</c>
-		/// </summary>
 		Tanh = 12,
-		/// <summary>
-		/// <c>y = exp(x)</c>
-		/// </summary>
 		Exp = 22,
-		/// <summary>
-		/// Base <c>e</c> logarithm
-		/// </summary>
 		Log = 23,
-		/// <summary>
-		/// Absolute value
-		/// </summary>
 		Abs = 24,
-		/// <summary>
-		/// Negation
-		/// </summary>
 		Negate = 25,
-		/// <summary>
-		/// Sine function
-		/// </summary>
 		Sin = 26,
-		/// <summary>
-		/// Cosine function
-		/// </summary>
 		Cos = 27,
-		/// <summary>
-		/// Tangent function
-		/// </summary>
 		Tan = 28,
-		/// <summary>
-		/// Hyperbolic sine
-		/// </summary>
 		Sinh = 29,
-		/// <summary>
-		/// Hyperbolic cosine
-		/// </summary>
 		Cosh = 30,
-		/// <summary>
-		/// Inverse sine
-		/// </summary>
 		ArcSin = 31,
-		/// <summary>
-		/// Inverse cosine
-		/// </summary>
 		ArcCos = 32,
-		/// <summary>
-		/// Inverse tangent
-		/// </summary>
 		ArcTan = 33,
-		/// <summary>
-		/// Inverse hyperbolic sine
-		/// </summary>
 		ArcSinh = 34,
-		/// <summary>
-		/// Inverse hyperbolic cosine
-		/// </summary>
 		ArcCosh = 35,
-		/// <summary>
-		/// Inverse hyperbolic tangent
-		/// </summary>
 		ArcTanh = 36,
-		/// <summary>
-		/// Ceiling function
-		/// </summary>
 		Ceil = 37,
-		/// <summary>
-		/// Floor function
-		/// </summary>
 		Floor = 38,
 	}
 
 	internal static partial class Converter
 	{
-		internal static CuTensorBinary ToCudaOp(this BinaryOperation op)
+		internal static CuTensorBinary ToCudaOp(this ManagedEnum<BinaryOperation> op)
 		{
-			return op switch
+			return op.Value switch
 			{
 				BinaryOperation.Add => CuTensorBinary.Add,
 				BinaryOperation.Multiply => CuTensorBinary.Mul,
@@ -168,9 +183,9 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 			};
 		}
 
-		internal static CuTensorBinary ToCudaOp(this ReduceOperation op)
+		internal static CuTensorBinary ToCudaOp(this ManagedEnum<ReduceOperation> op)
 		{
-			return op switch
+			return op.Value switch
 			{
 				ReduceOperation.Add => CuTensorBinary.Add,
 				ReduceOperation.Multiply => CuTensorBinary.Mul,
@@ -179,15 +194,35 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 				_ => 0,
 			};
 		}
-		internal static CuTensorUnary ToCudaOp(this Althea.LinearAlgebra.UnaryOperation op)
+		internal static CuTensorUnary ToCudaOp(this ManagedEnum<UnaryOperation> op)
 		{
-			return op switch
+			return op.Value switch
 			{
 				UnaryOperation.Identity => CuTensorUnary.Identity,
 				UnaryOperation.Conjugate => CuTensorUnary.Conjugate,
 				UnaryOperation.Negate => CuTensorUnary.Negate,
 				UnaryOperation.AbsoluteValue => CuTensorUnary.Abs,
-				> 0 => (CuTensorUnary)op,
+				_ when op == UnaryOperationSupplement.Sqrt => CuTensorUnary.Sqrt,
+				_ when op == UnaryOperationSupplement.Sqrt => CuTensorUnary.Sqrt,
+				_ when op == UnaryOperationSupplement.ReLU => CuTensorUnary.ReLU,
+				_ when op == UnaryOperationSupplement.Reciprocate => CuTensorUnary.Reciprocate,
+				_ when op == UnaryOperationSupplement.Sigmoid => CuTensorUnary.Sigmoid,
+				_ when op == UnaryOperationSupplement.Tanh => CuTensorUnary.Tanh,
+				_ when op == UnaryOperationSupplement.Exp => CuTensorUnary.Exp,
+				_ when op == UnaryOperationSupplement.Log => CuTensorUnary.Log,
+				_ when op == UnaryOperationSupplement.Sin => CuTensorUnary.Sin,
+				_ when op == UnaryOperationSupplement.Cos => CuTensorUnary.Cos,
+				_ when op == UnaryOperationSupplement.Tan => CuTensorUnary.Tan,
+				_ when op == UnaryOperationSupplement.Sinh => CuTensorUnary.Sinh,
+				_ when op == UnaryOperationSupplement.Cosh => CuTensorUnary.Cosh,
+				_ when op == UnaryOperationSupplement.ArcSin => CuTensorUnary.ArcSin,
+				_ when op == UnaryOperationSupplement.ArcCos => CuTensorUnary.ArcCos,
+				_ when op == UnaryOperationSupplement.ArcTan => CuTensorUnary.ArcTan,
+				_ when op == UnaryOperationSupplement.ArcSinh => CuTensorUnary.ArcSinh,
+				_ when op == UnaryOperationSupplement.ArcCosh => CuTensorUnary.ArcCosh,
+				_ when op == UnaryOperationSupplement.ArcTanh => CuTensorUnary.ArcTanh,
+				_ when op == UnaryOperationSupplement.Ceil => CuTensorUnary.Ceil,
+				_ when op == UnaryOperationSupplement.Floor => CuTensorUnary.Floor,
 				_ => 0
 			};
 		}

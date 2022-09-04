@@ -12,92 +12,92 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Dense
 	/// <summary>
 	/// The supplement <see cref="UnaryOperation"/>s.
 	/// </summary>
-	public enum UnaryOperationSupplement
+	public static class UnaryOperationSupplement
 	{
 		/// <summary>
 		/// Operation that returns the base <c>e</c> exponential of the input parameter
 		/// </summary>
-		Exp = UnaryOperation.AbsoluteValue + 1,
+		public static readonly ManagedEnum<UnaryOperation> Exp = ManagedEnum<UnaryOperation>.DeclareNewEnum("Exp");
 		/// <summary>
 		/// Operation that returns the base 2 exponential of the input parameter
 		/// </summary>
-		Exp2,
+		public static readonly ManagedEnum<UnaryOperation> Exp2 = ManagedEnum<UnaryOperation>.DeclareNewEnum("Exp2");
 		/// <summary>
 		/// Operation that returns the base 10 exponential of the input parameter
 		/// </summary>
-		Exp10,
+		public static readonly ManagedEnum<UnaryOperation> Exp10 = ManagedEnum<UnaryOperation>.DeclareNewEnum("Exp10");
 		/// <summary>
 		/// Operation that returns the base <c>e</c> exponential of the input parameter minus 1
 		/// </summary>
-		ExpM1,
+		public static readonly ManagedEnum<UnaryOperation> ExpM1 = ManagedEnum<UnaryOperation>.DeclareNewEnum("ExpM1");
 		/// <summary>
 		/// Operation that returns the base <c>e</c> logarithm of the input parameter
 		/// </summary>
-		Ln,
+		public static readonly ManagedEnum<UnaryOperation> Ln = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Ln");
 		/// <summary>
 		/// Operation that returns the base 2 logarithm of the input parameter
 		/// </summary>
-		Log2,
+		public static readonly ManagedEnum<UnaryOperation> Log2 = ManagedEnum<UnaryOperation>.DeclareNewEnum("Log2");
 		/// <summary>
 		/// Operation that returns the base 10 logarithm of the input parameter
 		/// </summary>
-		Log10,
+		public static readonly ManagedEnum<UnaryOperation> Log10 = ManagedEnum<UnaryOperation>.DeclareNewEnum("Log10");
 		/// <summary>
 		/// Operation that returns the base <c>e</c> logarithm of the input parameter plus 1
 		/// </summary>
-		Log1p,
+		public static readonly ManagedEnum<UnaryOperation> Log1p = ManagedEnum<UnaryOperation>.DeclareNewEnum("Log1p");
 		/// <summary>
 		/// Operation that returns the exponent part of the input parameter
 		/// </summary>
-		LogBinary,
+		public static readonly ManagedEnum<UnaryOperation> LogBinary = ManagedEnum<UnaryOperation>.DeclareNewEnum("LogBinary");
 		/// <summary>
 		/// Operation that returns the cosine of the input parameter
 		/// </summary>
-		Cos,
+		public static readonly ManagedEnum<UnaryOperation> Cos = ManagedEnum<UnaryOperation>.DeclareNewEnum("Cos");
 		/// <summary>
 		/// Operation that returns the sine of the input parameter
 		/// </summary>
-		Sin,
+		public static readonly ManagedEnum<UnaryOperation> Sin = ManagedEnum<UnaryOperation>.DeclareNewEnum("Sin");
 		/// <summary>
 		/// Operation that returns the tangent of the input parameter
 		/// </summary>
-		Tan,
+		public static readonly ManagedEnum<UnaryOperation> Tan = ManagedEnum<UnaryOperation>.DeclareNewEnum("Tan");
 		/// <summary>
 		/// Operation that returns the inverse cosine of the input parameter
 		/// </summary>
-		ArcCos,
+		public static readonly ManagedEnum<UnaryOperation> ArcCos = ManagedEnum<UnaryOperation>.DeclareNewEnum("ArcCos");
 		/// <summary>
 		/// Operation that returns the inverse sine of the input parameter
 		/// </summary>
-		ArcSin,
+		public static readonly ManagedEnum<UnaryOperation> ArcSin = ManagedEnum<UnaryOperation>.DeclareNewEnum("ArcSin");
 		/// <summary>
 		/// Operation that returns the inverse tangent of the input parameter
 		/// </summary>
-		ArcTan,
+		public static readonly ManagedEnum<UnaryOperation> ArcTan = ManagedEnum<UnaryOperation>.DeclareNewEnum("ArcTan");
 		/// <summary>
 		/// Operation that returns the hyperbolic cosine of the input parameter
 		/// </summary>
-		Cosh,
+		public static readonly ManagedEnum<UnaryOperation> Cosh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Cosh");
 		/// <summary>
 		/// Operation that returns the hyperbolic sine of the input parameter
 		/// </summary>
-		Sinh,
+		public static readonly ManagedEnum<UnaryOperation> Sinh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Sinh");
 		/// <summary>
 		/// Operation that returns the hyperbolic tangent of the input parameter
 		/// </summary>
-		Tanh,
+		public static readonly ManagedEnum<UnaryOperation> Tanh = ManagedEnum<UnaryOperation>.DeclareNewEnum(@"Tanh");
 		/// <summary>
 		/// Operation that returns the inverse hyperbolic cosine of the input parameter
 		/// </summary>
-		ArcCosh,
+		public static readonly ManagedEnum<UnaryOperation> ArcCosh = ManagedEnum<UnaryOperation>.DeclareNewEnum("ArcCosh");
 		/// <summary>
 		/// Operation that returns the inverse hyperbolic sine of the input parameter
 		/// </summary>
-		ArcSinh,
+		public static readonly ManagedEnum<UnaryOperation> ArcSinh = ManagedEnum<UnaryOperation>.DeclareNewEnum("ArcSinh");
 		/// <summary>
 		/// Operation that returns the inverse hyperbolic tangent of the input parameter
 		/// </summary>
-		ArcTanh,
+		public static readonly ManagedEnum<UnaryOperation> ArcTanh = ManagedEnum<UnaryOperation>.DeclareNewEnum("ArcTanh");
 	}
 
 	/// <summary>

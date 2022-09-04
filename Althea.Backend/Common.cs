@@ -92,7 +92,7 @@ public abstract class AbstractStatusException : Exception
 	{
 		return typeof(AbstractStatusException).GetMethod(nameof(AbstractStatusException.GetName))?.MakeGenericMethod(value.GetType())?.Invoke(null, new object[] { value }) as string;
 	}
-	private static string GetName<T>(T value) where T : struct, Enum => ((ManagedEnum<T>)value).ToString();
+	private static string GetName<T>(T value) where T : unmanaged, Enum => ((ManagedEnum<T>)value).ToString();
 
 	private readonly bool overwriteMessage = true;
 

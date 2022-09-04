@@ -633,22 +633,22 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	public virtual partial bool GeneralVectorsEqual<T, TS1, TS2>(TS1 x, long strideX, TS2 y, long strideY, out bool equals) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorUnary<T, TS1, TS2>(UnaryOperation op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool GeneralVectorUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool GeneralVectorBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, T scalar, TS1 x, long strideX, TS2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorReduce<T, TS>(ReduceOperation op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool GeneralVectorReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out T result) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorArgReduce<T, TS>(ReduceOperation op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
+	public virtual partial bool GeneralVectorArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorsBinary<T, TS1, TS2, TS3>(BinaryOperation op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
+	public virtual partial bool GeneralVectorsBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>;
 
 	/// <inheritdoc/>
-	public virtual partial bool GeneralVectorsScan<T, TS1, TS2>(ReduceOperation op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+	public virtual partial bool GeneralVectorsScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, TS1 x, long strideX, TS2 y, long strideY, bool inclusive) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 
 	/// <inheritdoc/>
 	public virtual partial bool GeneralVectorsCast<TIn, TOut, TSIn, TSOut>(TSIn source, long strideSource, TSOut destination, long strideDestination) where TIn : unmanaged, IBaseNumber<TIn> where TOut : unmanaged, IBaseNumber<TOut> where TSIn : class, IStorage<TIn, TSIn> where TSOut : class, IStorage<TOut, TSOut>;
@@ -686,14 +686,14 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 
 
 	#region matrix compact operations
-	bool IExtendBlasAbstractApi.GeneralMatrixUnary<T, TS1, TS2>(UnaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)
+	bool IExtendBlasAbstractApi.GeneralMatrixUnary<T, TS1, TS2>(ManagedEnum<UnaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb)
 	{
 		if (rows == lda && rows == ldb)
 			return this.GeneralVectorUnary<T, TS1, TS2>(op, A.MakeReference(0, rows * cols), 1, B, 1);
 		return false;
 	}
 
-	bool IExtendBlasAbstractApi.GeneralMatrixReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out T result)
+	bool IExtendBlasAbstractApi.GeneralMatrixReduce<T, TS>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out T result)
 	{
 		result = default;
 		if (rows == lda)
@@ -701,7 +701,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		return false;
 	}
 
-	bool IExtendBlasAbstractApi.GeneralMatrixArgReduce<T, TS>(ReduceOperation op, long rows, long cols, TS A, long lda, out long index)
+	bool IExtendBlasAbstractApi.GeneralMatrixArgReduce<T, TS>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS A, long lda, out long index)
 	{
 		index = -1;
 		if (rows == lda)
@@ -709,23 +709,23 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		return false;
 	}
 
-	bool IExtendBlasAbstractApi.GeneralMatrixColumnReduce<T, TS1, TS2>(ReduceOperation op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) => false;
+	bool IExtendBlasAbstractApi.GeneralMatrixColumnReduce<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, long rows, long cols, TS1 A, long lda, TS2 x, long strideX) => false;
 
-	bool IExtendBlasAbstractApi.GeneralMatrixBinaryScalar<T, TS1, TS2>(BinaryScalarOperation op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb)
+	bool IExtendBlasAbstractApi.GeneralMatrixBinaryScalar<T, TS1, TS2>(ManagedEnum<BinaryScalarOperation> op, long rows, long cols, T scalar, TS1 A, long lda, TS2 B, long ldb)
 	{
 		if (rows == lda && rows == ldb)
 			return this.GeneralVectorBinaryScalar(op, scalar, A.MakeReference(0, rows * cols), 1, B, 1);
 		return false;
 	}
 
-	bool IExtendBlasAbstractApi.GeneralMatricesBinary<T, TS1, TS2, TS3>(BinaryOperation op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc)
+	bool IExtendBlasAbstractApi.GeneralMatricesBinary<T, TS1, TS2, TS3>(ManagedEnum<BinaryOperation> op, long rows, long cols, TS1 A, long lda, TS2 B, long ldb, TS3 C, long ldc)
 	{
 		if (rows == lda && rows == ldb && rows == ldc)
 			return this.GeneralVectorsBinary<T, TS1, TS2, TS3>(op, A.MakeReference(0, rows * cols), 1, B, 1, C, 1);
 		return false;
 	}
 
-	bool IExtendBlasAbstractApi.GeneralMatrixColumnScan<T, TS1, TS2>(ReduceOperation op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) => false;
+	bool IExtendBlasAbstractApi.GeneralMatrixColumnScan<T, TS1, TS2>(ManagedEnum<ReduceOperation> op, bool inclusive, long rows, long cols, TS1 A, long lda, TS2 B, long ldb) => false;
 
 	bool IExtendBlasAbstractApi.GeneralMatricesEqual<T, TS1, TS2>(long rows, long cols, TS1 A, long lda, TS2 B, long ldb, out bool equals)
 	{

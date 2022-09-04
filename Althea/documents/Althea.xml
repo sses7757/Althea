@@ -5257,22 +5257,6 @@
             Implicitly convert a enum <paramref name="value"/> to a <see cref="T:Althea.Helpers.ManagedEnum`1"/>.
             </summary>
         </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.op_Equality(Althea.Helpers.ManagedEnum{`0},Althea.Helpers.ManagedEnum{`0})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.op_Inequality(Althea.Helpers.ManagedEnum{`0},Althea.Helpers.ManagedEnum{`0})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.Equals(System.Object)">
-            <summary>
-            Always throw <see cref="T:System.InvalidOperationException"/> since ref struct cannot be boxed.
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.GetHashCode">
-            <summary>
-            Always throw <see cref="T:System.InvalidOperationException"/> since ref struct cannot be boxed.
-            </summary>
-        </member>
         <member name="M:Althea.Helpers.ManagedEnum`1.ToString">
             <inheritdoc/>
         </member>
@@ -25056,17 +25040,17 @@
         </member>
         <member name="F:Althea.Storage.LocationType.Uri">
             <summary>
-            Represents a storage location represented by Universal Resource Identifier.
+            Represents a storage location represented by Universal Resource Identifier. The <see cref="P:Althea.Storage.StorageLocation.Detail"/> is a <see cref="T:Althea.Storage.UriScheme"/>.
             </summary>
         </member>
         <member name="F:Althea.Storage.LocationType.CpuRam">
             <summary>
-            Storage at local CPU RAM
+            Storage at local CPU RAM. The <see cref="P:Althea.Storage.StorageLocation.Detail"/> is not used currently.
             </summary>
         </member>
         <member name="F:Althea.Storage.LocationType.GpuRam">
             <summary>
-            Storage at local GPU RAM
+            Storage at local GPU RAM. The <see cref="P:Althea.Storage.StorageLocation.Detail"/> is the GPU device ID.
             </summary>
         </member>
         <member name="T:Althea.Storage.LocationTypeExtension">
@@ -25201,7 +25185,7 @@
             <param name="Type">The location type of this <see cref="T:Althea.Storage.StorageLocation"/> as a <see cref="T:Althea.Storage.LocationType"/></param>
             <param name="Detail">The location detail of the <see cref="P:Althea.Storage.StorageLocation.Type"/>.</param>
         </member>
-        <member name="M:Althea.Storage.StorageLocation.#ctor(Althea.Storage.LocationType,System.Int16)">
+        <member name="M:Althea.Storage.StorageLocation.#ctor(Althea.Helpers.ManagedEnum{Althea.Storage.LocationType},System.Int16)">
             <summary>
             The struct of a storage location
             </summary>
@@ -25216,9 +25200,6 @@
         </member>
         <member name="P:Althea.Storage.StorageLocation.Detail">
             <summary>The location detail of the <see cref="P:Althea.Storage.StorageLocation.Type"/>.</summary>
-        </member>
-        <member name="M:Althea.Storage.StorageLocation.ToString">
-            <inheritdoc/>
         </member>
         <member name="T:Althea.Storage.CombinationOfLocations">
             <summary>
