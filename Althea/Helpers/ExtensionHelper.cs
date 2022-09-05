@@ -963,10 +963,11 @@ public static class ExtensionHelper
 	/// <returns>The name string representation of given <paramref name="type"/> or null if the given <paramref name="type"/>'s name cannot be obtained.</returns>
 	public static string GetGenericString(this Type type)
 	{
-		string name = type.Name;
+		string name = type.Name[..^(1 + type.GenericTypeArguments.Length.ToString().Length)];
 		if (type.IsGenericType)
 		{
 			var args = type.GenericTypeArguments;
+			name = name[..^(1 + args.Length.ToString().Length)];
 			name += $"<{string.Join(", ", args.Select(a => a.GetGenericString()).ToArray())}>";
 		}
 		return name;

@@ -21,13 +21,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				return true;
 			if (!GetPointer(x, strideX, out T* px, out int length, out int incx))
 				return false;
-			if (!GetPointer(y, strideY, out T* py, out int length2, out int incy))
+			if (!GetPointer(y, strideY, out T* py, out _, out int incy))
 				return false;
 			if (px == py)
 			{
 				equals = true; return true;
 			}
-			length = Math.Min(length, length2);
 
 			if (incx == 1 && incy == 1)
 			{
@@ -100,51 +99,15 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			for (int i = 0, ix = 0, iy = 0, iz = 0; i < length; i++, ix += incx, iy += incy, iz += incz)
 			{
 				T a = x[ix], b = y[iy];
-				T v;
-				// floating point FMA accelerate
-				if (typeof(T) == typeof(Float32) && op == BinaryModify.AddScaled)
+				T v = op switch
 				{
-					float temp = MathF.FusedMultiplyAdd(*(Float32*)&scalar, *(Float32*)&b, *(Float32*)&a);
-					v = *(T*)&temp;
-				}
-				else if (typeof(T) == typeof(double) && op == BinaryModify.AddScaled)
-				{
-					double temp = Math.FusedMultiplyAdd(*(double*)&scalar, *(double*)&b, *(double*)&a);
-					v = *(T*)&temp;
-				}
-				else if ((typeof(T) == typeof(Complex<Float32>) || typeof(T) == typeof(Complex<Float32>)) && op == BinaryModify.AddScaled)
-				{
-					Complex<Float32> temp = Complex<Float32>.FusedMultiplyAdd(*(Complex<Float32>*)&scalar, *(Complex<Float32>*)&b, *(Complex<Float32>*)&a);
-					v = *(T*)&temp;
-				}
-				else if ((typeof(T) == typeof(Complex<Float64>) || typeof(T) == typeof(Complex<Float64>)) && op == BinaryModify.AddScaled)
-				{
-					Complex<Float64> temp = Complex<Float64>.FusedMultiplyAdd(*(Complex<Float64>*)&scalar, *(Complex<Float64>*)&b, *(Complex<Float64>*)&a);
-					v = *(T*)&temp;
-				}
-				else if ((typeof(T) == typeof(Complex<Float32>) || typeof(T) == typeof(Complex<Float32>)) && op == BinaryModify.AddConjScaled)
-				{
-					Complex<Float32> temp = Complex<Float32>.FusedMultiplyAdd(*(Complex<Float32>*)&scalar, (*(Complex<Float32>*)&b).Conjugate, *(Complex<Float32>*)&a);
-					v = *(T*)&temp;
-				}
-				else if ((typeof(T) == typeof(Complex<Float64>) || typeof(T) == typeof(Complex<Float64>)) && op == BinaryModify.AddConjScaled)
-				{
-					Complex<Float64> temp = Complex<Float64>.FusedMultiplyAdd(*(Complex<Float64>*)&scalar, (*(Complex<Float64>*)&b).Conjugate, *(Complex<Float64>*)&a);
-					v = *(T*)&temp;
-				}
-				// otherwise
-				else
-				{
-					v = op switch
-					{
-						BinaryModify.Multiply => a * b,
-						BinaryModify.Divide => a / b,
-						BinaryModify.Add => a + b,
-						BinaryModify.AddScaled => a + b * scalar,
-						BinaryModify.AddConjScaled => a + T.Conjugate(b) * scalar,
-						_ => default,
-					};
-				}
+					BinaryModify.Multiply => a * b,
+					BinaryModify.Divide => a / b,
+					BinaryModify.Add => a + b,
+					BinaryModify.AddScaled => a + b * scalar,
+					BinaryModify.AddConjScaled => a + T.Conjugate(b) * scalar,
+					_ => default,
+				};
 				z[iz] = v;
 			}
 		}
@@ -399,9 +362,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			if (α == T.Zero)
 				return true;
 			if (α == T.One)
-				return VectorsBinary<T, TS1, TS2, TS2, B_Add>(x, strideX, y, strideY, y, strideY, default);
+				return VectorsBinary<T, TS2, TS1, TS2, B_Add>(y, strideY, x, strideX, y, strideY, default);
 			else
-				return VectorsBinary<T, TS1, TS2, TS2, B_AddScaled>(x, strideX, y, strideY, y, strideY, α);
+				return VectorsBinary<T, TS2, TS1, TS2, B_AddScaled>(y, strideY, x, strideX, y, strideY, α);
 		}
 		#endregion
 

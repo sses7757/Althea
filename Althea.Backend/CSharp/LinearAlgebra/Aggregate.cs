@@ -32,7 +32,6 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			U* end = x + length;
 			while (x + Vector<U>.Count <= end)
 			{
-				indices += increment;
 				Vector<UInd> compare;
 				// JIT shall optimize the branches and type converts to some code as if they do not exist
 				Vector<U> current = doAbs ? Vector.Abs(LoadVector(x)) : LoadVector(x);
@@ -76,21 +75,30 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				}
 				extremeIndices = Vector.ConditionalSelect(compare, indices, extremeIndices);
 				x += Vector<U>.Count;
+				indices += increment;
 			}
 			// reduce main
 			VectorArgMinMaxManaged<T, Test>((T*)&extremes, 1, Vector<U>.Count, out long extremeIndex);
-			int index = (int)extremeIndex;
+			int tempIndex = (int)extremeIndex;
+			var _mainIndex = extremeIndices[tempIndex];
+			int mainIndex = *(int*)&_mainIndex;
 			// reduce left
 			if (x < end)
 			{
 				VectorArgMinMaxManaged<T, Test>((T*)x, 1, (int)(end - x), out long restExtreme);
 				int newIndex = (int)((T*)x - (T*)xx + restExtreme);
-				if (doMax && x[newIndex] > extremes[index])
-					index = newIndex;
-				if (!doMax && x[newIndex] < extremes[index])
-					index = newIndex;
+				if (doMax)
+				{
+					if ((doAbs ? U.Abs(x[restExtreme]) : x[restExtreme]) > extremes[tempIndex])
+						mainIndex = newIndex;
+				}
+				else
+				{
+					if ((doAbs ? U.Abs(x[restExtreme]) : x[restExtreme]) < extremes[tempIndex])
+						mainIndex = newIndex;
+				}
 			}
-			return index;
+			return mainIndex;
 		}
 
 		//// Test == int, uint   for   AbsMax, AbsMin
@@ -118,7 +126,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				else
 				{   // abs min
 					compare = Avx.CompareNotLessThan(squares, extremes); // not since Avx2.BlendVariable is reversed
-					extremes = Avx.Max(squares, extremes);
+					extremes = Avx.Min(squares, extremes);
 				}
 				extremeIndices = Avx2.BlendVariable(indices, extremeIndices, compare.AsInt32());
 				lengthLeft -= Vector256<float>.Count;
@@ -182,7 +190,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				else
 				{   // abs min
 					compare = Avx.CompareNotLessThan(squares, extremes); // not since Avx2.BlendVariable is reversed
-					extremes = Avx.Max(squares, extremes);
+					extremes = Avx.Min(squares, extremes);
 				}
 				extremeIndices = Avx2.BlendVariable(indices, extremeIndices, compare.AsInt64());
 				lengthLeft -= Vector256<double>.Count;
@@ -693,6 +701,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else
 			{
+				bool conj = typeof(Conj) == typeof(bool);
 				// initialize
 				Vector256<float> aggregateReal = Vector<float>.Zero.AsVector256(), aggregateImag = Vector<float>.Zero.AsVector256();
 				ComplexMultiplyAddSingle<Conj>(x, y, ref aggregateReal, ref aggregateImag);
@@ -718,7 +727,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					for (; offset < length; offset++)
 					{
 						Complex<Float32> v1 = x[offset], v2 = y[offset];
-						result += v1 * v2;
+						result += conj ? v1.Conjugate * v2 : v1 * v2;
 					}
 				}
 				innerResult = result;
@@ -764,12 +773,12 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else
 			{
+				bool conj = typeof(Conj) == typeof(bool);
 				// initialize
 				Vector256<double> aggregateReal = Vector<double>.Zero.AsVector256(), aggregateImag = Vector<double>.Zero.AsVector256();
-				ComplexMultiplyAddDouble<Conj>(x, y, ref aggregateReal, ref aggregateImag);
 				// loop
-				int lengthLeft = length - Vector256<double>.Count, offset = Vector256<double>.Count;
-				while (lengthLeft >= Vector256<double>.Count) // Vector256<Complex<Float32>>.Count * 2
+				int lengthLeft = length, offset = 0;
+				while (lengthLeft >= Vector256<double>.Count) // Vector256<Complex<Float64>>.Count * 2
 				{
 					ComplexMultiplyAddDouble<Conj>(x + offset, y + offset, ref aggregateReal, ref aggregateImag);
 					lengthLeft -= Vector256<double>.Count;
@@ -789,7 +798,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					for (; offset < length; offset++)
 					{
 						Complex<Float64> v1 = x[offset], v2 = y[offset];
-						result += v1 * v2;
+						result += conj ? v1.Conjugate * v2 : v1 * v2;
 					}
 				}
 				innerResult = result;
@@ -815,9 +824,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					var xx = (Complex<Float32>*)px; var yy = (Complex<Float32>*)py;
 					Complex<Float32> temp;
 					if (conjX)
-						VectorInnerCompex<Dot, bool>(xx, yy, length);
+						temp = VectorInnerCompex<Dot, bool>(xx, yy, length);
 					else
-						VectorInnerCompex<Dot, byte>(xx, yy, length);
+						temp = VectorInnerCompex<Dot, byte>(xx, yy, length);
 					dot = *(T*)&temp;
 				}
 				else if (typeof(T) == typeof(Complex<Float64>))
@@ -825,9 +834,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 					var xx = (Complex<Float64>*)px; var yy = (Complex<Float64>*)py;
 					Complex<Float64> temp;
 					if (conjX)
-						VectorInnerComplex<Dot, bool>(xx, yy, length);
+						temp = VectorInnerComplex<Dot, bool>(xx, yy, length);
 					else
-						VectorInnerComplex<Dot, byte>(xx, yy, length);
+						temp = VectorInnerComplex<Dot, byte>(xx, yy, length);
 					dot = *(T*)&temp;
 				}
 				else
@@ -917,51 +926,54 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void VectorAbsSumProdReal<T, Test>(T* x, int length, out T aggregation) where T : unmanaged, IBaseNumber<T>
+		private static void VectorAbsSumProdReal<T, U, Test>(void* xx, int length, void* aggregation) where T : unmanaged, IBaseNumber<T> where U : unmanaged, INumberBase<U>
 		{
-			aggregation = T.Zero;
+			*(T*)aggregation = T.Zero;
 			bool doSum = typeof(Test) == typeof(int) || typeof(Test) == typeof(long);
 			bool doAbs = typeof(Test) == typeof(int) || typeof(Test) == typeof(uint);
 			// initial
-			Vector<T> aggregate = LoadVector(x);
+			U* x = (U*)xx;
+			Vector<U> aggregate = LoadVector(x);
 			if (doAbs)
 				aggregate = Vector.Abs(aggregate);
 			// loop
-			int lengthLeft = length - Vector<T>.Count, offset = Vector<T>.Count;
-			while (lengthLeft >= Vector<T>.Count)
+			int lengthLeft = length - Vector<U>.Count, offset = Vector<U>.Count;
+			while (lengthLeft >= Vector<U>.Count)
 			{
-				Vector<T> current = LoadVector(x + offset);
+				Vector<U> current = LoadVector(x + offset);
 				if (doAbs)
 					current = Vector.Abs(current);
 				if (doSum)
 					aggregate += current;
 				else
 					aggregate *= current;
-				lengthLeft -= Vector<T>.Count;
-				offset += Vector<T>.Count;
+				lengthLeft -= Vector<U>.Count;
+				offset += Vector<U>.Count;
 			}
 			// reduce left
 			if (lengthLeft > 0)
 			{
-				VectorAbsSumProdManaged<T, Test>(x + offset, 1, lengthLeft, out aggregation);
+				VectorAbsSumProdManaged<T, Test>((T*)xx + offset, 1, lengthLeft, out var result);
+				*(T*)aggregation = result;
 			}
 			else if (!doSum)
 			{
-				aggregation = T.One;
+				*(T*)aggregation = T.One;
 			}
 			// return
 			if (doSum)
 			{
-				aggregation += Vector.Dot(aggregate, Vector<T>.One);
+				var temp = Vector.Dot(aggregate, Vector<U>.One);
+				*(T*)aggregation += *(T*)&temp;
 			}
 			else
 			{
-				T result = aggregate[0];
-				for (int i = 1; i < Vector<T>.Count; i++)
+				U result = aggregate[0];
+				for (int i = 1; i < Vector<U>.Count; i++)
 				{
 					result *= aggregate[i];
 				}
-				aggregation *= result;
+				*(T*)aggregation *= *(T*)&result;
 			}
 		}
 
@@ -1262,7 +1274,23 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			}
 			else
 			{
-				VectorAbsSumProdReal<T, Test>(px, length, out aggregate);
+				delegate*<void*, int, void*, void> func = default(T) switch
+				{
+					Float64 => &VectorAbsSumProdReal<Float64, double, Test>,
+					Float32 => &VectorAbsSumProdReal<Float32, float, Test>,
+					SignedInt8 => &VectorAbsSumProdReal<SignedInt8, sbyte, Test>,
+					SignedInt16 => &VectorAbsSumProdReal<SignedInt16, short, Test>,
+					SignedInt32 => &VectorAbsSumProdReal<SignedInt32,  int, Test>,
+					SignedInt64 => &VectorAbsSumProdReal<SignedInt64, long, Test>,
+					UnsignedInt8 => &VectorAbsSumProdReal<UnsignedInt8, byte, Test>,
+					UnsignedInt16 => &VectorAbsSumProdReal<UnsignedInt16, ushort, Test>,
+					UnsignedInt32 => &VectorAbsSumProdReal<UnsignedInt32, uint, Test>,
+					UnsignedInt64 => &VectorAbsSumProdReal<UnsignedInt64, ulong, Test>,
+					_ => null,
+				};
+				T result = default;
+				func(px, length, &result);
+				aggregate = result;
 			}
 			return true;
 		}

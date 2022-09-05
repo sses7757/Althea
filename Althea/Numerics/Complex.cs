@@ -1061,7 +1061,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 		if (charsWritten + 1 >= destination.Length)
 			return false;
 		destination[charsWritten] = ','; charsWritten++;
-		if (!this.real.TryFormat(destination[charsWritten..], out int cw2, format, provider))
+		if (!this.imag.TryFormat(destination[charsWritten..], out int cw2, format, provider))
 			return false;
 		charsWritten += cw2;
 		if (charsWritten + 1 >= destination.Length)
@@ -1570,7 +1570,7 @@ public readonly partial struct ComplexInteger<T> : IComplexIntegerNumber<Complex
 		if (charsWritten + 1 >= destination.Length)
 			return false;
 		destination[charsWritten] = ','; charsWritten++;
-		if (!this.real.TryFormat(destination[charsWritten..], out int cw2, format, provider))
+		if (!this.imag.TryFormat(destination[charsWritten..], out int cw2, format, provider))
 			return false;
 		charsWritten += cw2;
 		if (charsWritten + 1 >= destination.Length)

@@ -46,24 +46,26 @@ public unsafe partial class Api
 
 		static OtherOp()
 		{
+			// TODO: type issues
 			DynamicMethod methodMod = new("Modulo", typeof(T), new[] { typeof(T), typeof(T) });
 			ILGenerator IL = methodMod.GetILGenerator();
 			IL.Emit(OpCodes.Ldarg_0);
 			IL.Emit(OpCodes.Ldarg_1);
-			switch (Type.GetTypeCode(typeof(T)))
+			switch (T.Type)
 			{
-				case TypeCode.Byte:
-				case TypeCode.UInt16:
-				case TypeCode.Char:
-				case TypeCode.UInt32:
-				case TypeCode.UInt64:
-					IL.Emit(OpCodes.Rem_Un);
-					break;
-				case TypeCode.SByte:
-				case TypeCode.Int16:
-				case TypeCode.Int32:
-				case TypeCode.Int64:
+				case DataType.RealInt8:
+				case DataType.RealInt16:
+				case DataType.RealInt32:
+				case DataType.RealInt64:
+				case DataType.RealInt128:
 					IL.Emit(OpCodes.Rem);
+					break;
+				case DataType.RealUInt8:
+				case DataType.RealUInt16:
+				case DataType.RealUInt32:
+				case DataType.RealUInt64:
+				case DataType.RealUInt128:
+					IL.Emit(OpCodes.Rem_Un);
 					break;
 				default:
 					break;
@@ -71,14 +73,14 @@ public unsafe partial class Api
 			IL.Emit(OpCodes.Ret);
 			ModuloDelegate = methodMod.CreateDelegate<Func<T, T, T>>();
 
-			DynamicMethod methodTruncate = new("Truncate", typeof(T), new[] { typeof(T), typeof(T) });
-			IL = methodMod.GetILGenerator();
+			DynamicMethod methodTruncate = new("Truncate", typeof(T), new[] { typeof(T), typeof(double) });
+			IL = methodTruncate.GetILGenerator();
 			Label l = IL.DefineLabel();
 			IL.DeclareLocal(typeof(T));
 			IL.Emit(OpCodes.Ldarg_0);
 			if (T.IsComplexType)
 			{
-				var method = typeof(T).GetProperty(nameof(Complex<Float32>.Magnitude), System.Reflection.BindingFlags.Public)?.GetGetMethod();
+				var method = typeof(T).GetProperty(nameof(Complex<Float32>.Magnitude))?.GetGetMethod();
 				if (method is null)
 					throw new MethodAccessException();
 				IL.Emit(OpCodes.Call, method);
@@ -113,7 +115,7 @@ public unsafe partial class Api
 		}
 	}
 
-	private delegate void VectorModifyFloatDelegate<T>(T* x, int length, T scalar) where T : unmanaged, IBaseNumber<T>;
+	private delegate void VectorModifyFloatDelegate<T>(T* x, int incx, T* y, int incy, int length, T scalar) where T : unmanaged, IBaseNumber<T>;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void VectorModifyManaged<T, Op>(T* x, int incx, T* y, int incy, int length, T scalar) where T : unmanaged, IBaseNumber<T>
@@ -144,17 +146,16 @@ public unsafe partial class Api
 			var func = typeof(Api).GetMethod(nameof(VectorModifyFloatManaged), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)?.MakeGenericMethod(new[] { typeof(T), typeof(Op) })?.CreateDelegate<VectorModifyFloatDelegate<T>>();
 			if (func is null)
 				throw new MethodAccessException();
-			func(x, length, scalar);
+			func(x, incx, y, incy, length, scalar);
 			return;
 		}
-		Func<T, T, T> mod = OtherOp<T>.ModuloDelegate;
-		Func<T, double, T> trunc = OtherOp<T>.TruncateDelegate;
 
 		// JIT shall in-line / eliminate all switches and type conditions as if they do not exist
 		for (int i = 0, ix = 0, iy = 0; i < length; i++, ix += incx, iy += incy)
 		{
 			if (op == Modify.Modulo)
 			{
+				Func<T, T, T> mod = OtherOp<T>.ModuloDelegate;
 				T a = x[ix];
 				if (typeof(T) == typeof(UnsignedInt32))
 				{ UnsignedInt32 v = (*(UnsignedInt32*)&a) % (*(UnsignedInt32*)&scalar); y[iy] = *(T*)&v; }
@@ -169,6 +170,7 @@ public unsafe partial class Api
 			}
 			else if (op == Modify.Truncate)
 			{
+				Func<T, double, T> trunc = OtherOp<T>.TruncateDelegate;
 				T a = x[ix];
 				Float64 scalarD = scalar.AsDouble(), scalarDS = scalarD * scalarD;
 				if (typeof(T) == typeof(UnsignedInt32))
@@ -271,7 +273,7 @@ public unsafe partial class Api
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void VectorModifyCompex<U, Op>(Complex<Float32>* x, Complex<Float32>* y, int length, U scalar) where U : unmanaged, IBaseNumber<U>
+	private static bool VectorModifyComplex<U, Op>(Complex<Float32>* x, Complex<Float32>* y, int length, U scalar) where U : unmanaged, IBaseNumber<U>
 	{
 		Complex<Float32> scalarT = scalar.As<U, Complex<Float32>>();
 		Modify op;
@@ -279,58 +281,95 @@ public unsafe partial class Api
 			op = Modify.AddScalar;
 		else if (typeof(Op) == typeof(U_MultiplyScalar))
 			op = Modify.MultiplyScalar;
-		else if (typeof(Op) == typeof(U_Modulo))
-			op = Modify.Modulo; // not possible here
-		else if (typeof(Op) == typeof(U_Sqrt))
-			op = Modify.Sqrt;
-		else if (typeof(Op) == typeof(U_Square))
-			op = Modify.Square;
 		else if (typeof(Op) == typeof(U_Truncate))
 			op = Modify.Truncate;
 		else if (typeof(Op) == typeof(U_Reciprocal))
 			op = Modify.Reciprocal;
-		else
+		else if (typeof(Op) == typeof(U_Conjugate))
 			op = Modify.Conjugate;
+		else
+			return false;
 
 		// shortcut
-		if (op == Modify.AddScalar && scalarT.Imaginary == 0)
+		if (op == Modify.AddScalar && scalarT.Imaginary == scalarT.Real)
 		{
 			VectorModifyReal<Float32, float, Op>(x, y, length * 2, &scalarT);
-			return;
+			return true;
+		}
+		if (op == Modify.MultiplyScalar && scalarT.Imaginary == 0)
+		{
+			VectorModifyReal<Float32, float, Op>(x, y, length * 2, &scalarT);
+			return true;
 		}
 		// normal
 		int lengthLeft = length, offset = 0;
-		if (op != Modify.Truncate)
+		if (op == Modify.Conjugate)
 		{
-			Vector256<float> scalars = default;
-			Span<Complex<Float32>> _temp = new(&scalars, Vector256<float>.Count / 2);
 			Vector256<float> oneMinusOnes = default;
-			Span<float> _temp2 = new(&oneMinusOnes, Vector256<float>.Count);
-			for (int i = 0; i < Vector256<float>.Count; i += 2)
-			{
-				_temp2[i] = 1; _temp2[i + 1] = -1;
-			}
-			_temp.Fill(scalarT);
+			Span<float> _temp = new(&oneMinusOnes, Vector256<float>.Count);
+			_temp[1] = _temp[3] = -1;
 			// loop
 			while (lengthLeft >= Vector256<float>.Count / 2) // Vector256<Complex<float>>.Count
 			{
 				Vector256<float> current = LoadVector256<float>(x + offset);
-				current = op switch
-				{
-					Modify.AddScalar => Avx.Add(current, scalars),
-					Modify.MultiplyScalar => Avx.Multiply(current, scalars),
-					Modify.Sqrt => Avx.Sqrt(current),
-					Modify.Square => Avx.Multiply(current, current),
-					Modify.Conjugate => Avx.Multiply(current, oneMinusOnes),
-					Modify.Reciprocal => Avx.Reciprocal(current),
-					_ => current,
-				};
+				current = Avx.Multiply(current, oneMinusOnes);
 				StoreVector256(current, y + offset);
+				lengthLeft -= Vector256<float>.Count / 2;
+				offset += Vector256<float>.Count / 2;
+			}
+		}
+		else if (op == Modify.AddScalar)
+		{
+			Vector256<float> scalars = new Vector<float>(*(float*)&scalarT).AsVector256();
+			Span<float> _temp = new(&scalars, Vector256<float>.Count);
+			_temp[1] = _temp[3] = ((float*)&scalarT)[1];
+			// loop
+			while (lengthLeft >= Vector256<float>.Count / 2) // Vector256<Complex<float>>.Count
+			{
+				Vector256<float> current = LoadVector256<float>(x + offset);
+				current = Avx.Add(current, scalars);
+				StoreVector256(current, y + offset);
+				lengthLeft -= Vector256<float>.Count / 2;
+				offset += Vector256<float>.Count / 2;
+			}
+		}
+		else if (op == Modify.MultiplyScalar)
+		{
+			float sRe = *(float*)&scalarT, sIm = ((float*)&scalarT)[1];
+			// loop
+			while (lengthLeft >= Vector256<float>.Count) // Vector256<Complex<float>>.Count * 2
+			{
+				var x0 = LoadVector256<float>(x + offset);
+				var x1 = LoadVector256<float>(x + offset + Vector256<float>.Count / 2);
+				ComplexUnpack(x0, x1, out var realX, out var imagX);
+				UnpackComplexMultiply(realX, imagX, sRe, sIm, ref x0, ref x1);
+				ComplexPack(x0, x1, out var y0, out var y1);
+				StoreVector256(y0, y + offset);
+				StoreVector256(y1, y + offset + Vector256<float>.Count / 2);
 				lengthLeft -= Vector256<float>.Count;
 				offset += Vector256<float>.Count;
 			}
 		}
-		else
+		else if (op == Modify.Reciprocal)
+		{
+			Vector256<float> oneMinusOnes = default;
+			Span<float> _temp = new(&oneMinusOnes, Vector256<float>.Count);
+			_temp[1] = _temp[3] = -1;
+			// loop
+			while (lengthLeft >= Vector256<float>.Count) // Vector256<Complex<float>>.Count * 2
+			{
+				var abs = ComplexSquareAbsNoOrderSingle(x + offset);
+				var left = LoadVector256<float>(x + offset);
+				var right = LoadVector256<float>(x + offset + Vector256<float>.Count / 2);
+				left *= oneMinusOnes; right *= oneMinusOnes;
+				left /= abs; right /= abs;
+				StoreVector256(left, y + offset);
+				StoreVector256(right, y + offset + Vector256<float>.Count / 2);
+				lengthLeft -= Vector256<float>.Count;
+				offset += Vector256<float>.Count;
+			}
+		}
+		else if (op == Modify.Truncate)
 		{
 			Vector256<float> zeros = Vector<float>.Zero.AsVector256();
 			Vector256<float> scalarSquares = default;
@@ -339,23 +378,21 @@ public unsafe partial class Api
 			// loop
 			while (lengthLeft >= Vector256<float>.Count) // Vector256<Complex<float>>.Count * 2
 			{
-				// {a[0].r, a[0].i, ..., a[3].i}
+				// {a[0].r, a[0].i, ..., a[1].i}
 				Vector256<float> current1 = LoadVector256<float>(x + offset);
-				// {a[4].r, a[4].i, ..., a[7].i}
+				// {a[2].r, a[2].i, ..., a[3].i}
 				Vector256<float> current2 = LoadVector256<float>(x + offset + Vector256<float>.Count / 2);
-				// abs(a[{0, 1, 4, 5, 2, 3, 6, 7}])
+				// abs(a[{0, 2, 1, 3}])
 				Vector256<float> currentAbs = ComplexSquareAbsNoOrder(current1, current2);
-				// abs(a[{0, 1, 4, 5, 2, 3, 6, 7}]) > threshold
+				// abs(a[{0, 2, 1, 3}]) > threshold
 				Vector256<float> compare = Avx.CompareNotGreaterThan(currentAbs, scalarSquares);
 				// has "Not" since AVX compare is reversed
-
-				// abs(a[{0, 0, 1, 1, 2, 2, 3, 3}]) > threshold
+				// {0, 0, 1, 1}
 				Vector256<float> compare1 = Avx.UnpackLow(compare, compare);
-				// abs(a[{4, 4, 5, 5, 6, 6, 7, 7}]) > threshold
+				// {2, 2, 3, 3}
 				Vector256<float> compare2 = Avx.UnpackHigh(compare, compare);
 				current1 = Avx.BlendVariable(current1, zeros, compare1);
-				current2 = Avx.BlendVariable(current2, zeros, compare2);
-
+				current2 = Avx.BlendVariable(current1, zeros, compare2);
 				StoreVector256(current1, y + offset);
 				StoreVector256(current1, y + offset + Vector256<float>.Count / 2);
 				lengthLeft -= Vector256<float>.Count;
@@ -367,10 +404,11 @@ public unsafe partial class Api
 		{
 			VectorModifyManaged<Complex<Float32>, Op>(x + offset, 1, y + offset, 1, lengthLeft, *(Complex<Float32>*)&scalar);
 		}
+		return true;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void VectorModifyCompex<U, Op>(Complex<Float64>* x, Complex<Float64>* y, int length, U scalar) where U : unmanaged, IBaseNumber<U>
+	private static bool VectorModifyComplex<U, Op>(Complex<Float64>* x, Complex<Float64>* y, int length, U scalar) where U : unmanaged, IBaseNumber<U>
 	{
 		Complex<Float64> scalarT = scalar.As<U, Complex<Float64>>();
 		Modify op;
@@ -378,64 +416,100 @@ public unsafe partial class Api
 			op = Modify.AddScalar;
 		else if (typeof(Op) == typeof(U_MultiplyScalar))
 			op = Modify.MultiplyScalar;
-		else if (typeof(Op) == typeof(U_Modulo))
-			op = Modify.Modulo; // not possible here
-		else if (typeof(Op) == typeof(U_Sqrt))
-			op = Modify.Sqrt;
-		else if (typeof(Op) == typeof(U_Square))
-			op = Modify.Square;
 		else if (typeof(Op) == typeof(U_Truncate))
 			op = Modify.Truncate;
 		else if (typeof(Op) == typeof(U_Reciprocal))
 			op = Modify.Reciprocal;
-		else
+		else if (typeof(Op) == typeof(U_Conjugate))
 			op = Modify.Conjugate;
+		else
+			return false;
 
 		// shortcut
-		if (op == Modify.AddScalar && scalarT.Imaginary == 0)
+		if (op == Modify.AddScalar && scalarT.Imaginary == scalarT.Real)
 		{
 			VectorModifyReal<Float64, double, Op>(x, y, length * 2, &scalarT);
-			return;
+			return true;
+		}
+		if (op == Modify.MultiplyScalar && scalarT.Imaginary == 0)
+		{
+			VectorModifyReal<Float64, double, Op>(x, y, length * 2, &scalarT);
+			return true;
 		}
 		// normal
 		int lengthLeft = length, offset = 0;
-		if (op != Modify.Truncate)
+		if (op == Modify.Conjugate)
 		{
-			Vector256<double> scalars = default;
-			Span<Complex<Float64>> _temp = new(&scalars, Vector256<double>.Count / 2);
 			Vector256<double> oneMinusOnes = default;
-			Span<double> _temp2 = new(&oneMinusOnes, Vector256<double>.Count);
-			for (int i = 0; i < Vector256<double>.Count; i += 2)
-			{
-				_temp2[i] = 1; _temp2[i + 1] = -1;
-			}
-			_temp.Fill(scalarT);
-			Vector256<double> ones = Vector<double>.One.AsVector256();
+			Span<double> _temp = new(&oneMinusOnes, Vector256<double>.Count);
+			_temp[0] = _temp[2] = 1;
+			_temp[1] = _temp[3] = -1;
 			// loop
 			while (lengthLeft >= Vector256<double>.Count / 2) // Vector256<Complex<double>>.Count
 			{
 				Vector256<double> current = LoadVector256<double>(x + offset);
-				current = op switch
-				{
-					Modify.AddScalar => Avx.Add(current, scalars),
-					Modify.MultiplyScalar => Avx.Multiply(current, scalars),
-					Modify.Sqrt => Avx.Sqrt(current),
-					Modify.Square => Avx.Multiply(current, current),
-					Modify.Conjugate => Avx.Multiply(current, oneMinusOnes),
-					Modify.Reciprocal => Avx.Divide(ones, current),
-					_ => current,
-				};
+				current = Avx.Multiply(current, oneMinusOnes);
 				StoreVector256(current, y + offset);
+				lengthLeft -= Vector256<double>.Count / 2;
+				offset += Vector256<double>.Count / 2;
+			}
+		}
+		else if (op == Modify.AddScalar)
+		{
+			Vector256<double> scalars = new Vector<double>(*(double*)&scalarT).AsVector256();
+			Span<double> _temp = new(&scalars, Vector256<double>.Count);
+			_temp[1] = _temp[3] = ((double*)&scalarT)[1];
+			// loop
+			while (lengthLeft >= Vector256<double>.Count / 2) // Vector256<Complex<double>>.Count
+			{
+				Vector256<double> current = LoadVector256<double>(x + offset);
+				current = Avx.Add(current, scalars);
+				StoreVector256(current, y + offset);
+				lengthLeft -= Vector256<double>.Count / 2;
+				offset += Vector256<double>.Count / 2;
+			}
+		}
+		else if (op == Modify.MultiplyScalar)
+		{
+			double sRe = *(double*)&scalarT, sIm = ((double*)&scalarT)[1];
+			// loop
+			while (lengthLeft >= Vector256<double>.Count) // Vector256<Complex<double>>.Count * 2
+			{
+				var x0 = LoadVector256<double>(x + offset);
+				var x1 = LoadVector256<double>(x + offset + Vector256<double>.Count / 2);
+				ComplexUnpack(x0, x1, out var realX, out var imagX);
+				UnpackComplexMultiply(realX, imagX, sRe, sIm, ref x0, ref x1);
+				ComplexPack(x0, x1, out var y0, out var y1);
+				StoreVector256(y0, y + offset);
+				StoreVector256(y1, y + offset + Vector256<double>.Count / 2);
 				lengthLeft -= Vector256<double>.Count;
 				offset += Vector256<double>.Count;
 			}
 		}
-		else
+		else if (op == Modify.Reciprocal)
 		{
+			Vector256<double> oneMinusOnes = default;
+			Span<double> _temp = new(&oneMinusOnes, Vector256<double>.Count);
+			_temp[1] = _temp[3] = -1;
+			// loop
+			while (lengthLeft >= Vector256<double>.Count) // Vector256<Complex<double>>.Count * 2
+			{
+				var abs = ComplexSquareAbsNoOrderDouble(x + offset);
+				var left = LoadVector256<double>(x + offset);
+				var right = LoadVector256<double>(x + offset + Vector256<double>.Count / 2);
+				left *= oneMinusOnes; right *= oneMinusOnes;
+				left /= abs; right /= abs;
+				StoreVector256(left, y + offset);
+				StoreVector256(right, y + offset + Vector256<double>.Count / 2);
+				lengthLeft -= Vector256<double>.Count;
+				offset += Vector256<double>.Count;
+			}
+		}
+		else if (op == Modify.Truncate)
+		{
+			double scalarSquare = scalarT.MagnitudeSquared;
 			Vector256<double> zeros = Vector<double>.Zero.AsVector256();
-			Vector256<double> scalarSquares = default;
-			Span<double> _temp = new(&scalarSquares, Vector256<double>.Count / 2);
-			_temp.Fill((*(double*)&scalar) * (*(double*)&scalar));
+			Vector256<double> scalarSquares = new Vector<double>(scalarSquare).AsVector256();
 			// loop
 			while (lengthLeft >= Vector256<double>.Count) // Vector256<Complex<double>>.Count * 2
 			{
@@ -453,9 +527,9 @@ public unsafe partial class Api
 				// {2, 2, 3, 3}
 				Vector256<double> compare2 = Avx.UnpackHigh(compare, compare);
 				current1 = Avx.BlendVariable(current1, zeros, compare1);
-				current2 = Avx.BlendVariable(current1, zeros, compare2);
+				current2 = Avx.BlendVariable(current2, zeros, compare2);
 				StoreVector256(current1, y + offset);
-				StoreVector256(current1, y + offset + Vector256<double>.Count / 2);
+				StoreVector256(current2, y + offset + Vector256<double>.Count / 2);
 				lengthLeft -= Vector256<double>.Count;
 				offset += Vector256<double>.Count;
 			}
@@ -465,6 +539,7 @@ public unsafe partial class Api
 		{
 			VectorModifyManaged<Complex<Float64>, Op>(x + offset, 1, y + offset, 1, lengthLeft, *(Complex<Float64>*)&scalar);
 		}
+		return true;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -484,11 +559,11 @@ public unsafe partial class Api
 			}
 			else if (typeof(T) == typeof(Complex<Float32>))
 			{
-				VectorModifyCompex<T, Op>((Complex<Float32>*)px, (Complex<Float32>*)py, length, scalar);
+				return VectorModifyComplex<T, Op>((Complex<Float32>*)px, (Complex<Float32>*)py, length, scalar);
 			}
 			else // double
 			{
-				VectorModifyCompex<T, Op>((Complex<Float64>*)px, (Complex<Float64>*)py, length, scalar);
+				return VectorModifyComplex<T, Op>((Complex<Float64>*)px, (Complex<Float64>*)py, length, scalar);
 			}
 		}
 		else
