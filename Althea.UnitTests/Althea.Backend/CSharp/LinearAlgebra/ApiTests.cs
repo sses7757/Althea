@@ -1,8 +1,12 @@
-﻿using Althea.LinearAlgebra;
+﻿using System;
+
+using Althea.LinearAlgebra;
 using Althea.UnitTests;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
+using Newtonsoft.Json.Linq;
 
 namespace Althea.Backend.CSharp.LinearAlgebra.Tests;
 
@@ -15,7 +19,7 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void AbsoluteValueArgMaxTest()
 	{
-		var array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		bool success = api.AbsoluteValueArgMax<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1, out long index);
 		Assert.IsTrue(success);
 
@@ -34,7 +38,7 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void AbsoluteValueArgMinTest()
 	{
-		var array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		bool success = api.AbsoluteValueArgMin<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1, out long index);
 		Assert.IsTrue(success);
 
@@ -53,7 +57,7 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void AbsoluteValueArgMaxComplexTest()
 	{
-		var _array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array = _array.As<Complex<Float64>>();
 		bool success = api.AbsoluteValueArgMax<Complex<Float64>, PureStorage<Complex<Float64>, CpuMemoryPointer>>(array, 1, out long index);
 		Assert.IsTrue(success);
@@ -73,7 +77,7 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void AbsoluteValueArgMinComplexTest()
 	{
-		var _array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array = _array.As<Complex<Float64>>();
 		bool success = api.AbsoluteValueArgMin<Complex<Float64>, PureStorage<Complex<Float64>, CpuMemoryPointer>>(array, 1, out long index);
 		Assert.IsTrue(success);
@@ -93,7 +97,7 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void AbsoluteValueSumTest()
 	{
-		var array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		bool success = api.AbsoluteValueSum(array, 1, out Float64 sum);
 		Assert.IsTrue(success);
 
@@ -109,7 +113,7 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void AbsoluteValueSumComplexTest()
 	{
-		var _array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array = _array.As<Complex<Float64>>();
 		bool success = api.AbsoluteValueSum(array, 1, out Complex<Float64> sum);
 		Assert.IsTrue(success);
@@ -126,7 +130,7 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void NormTest()
 	{
-		var array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		bool success = api.Norm(array, 1, out Float64 sum);
 		Assert.IsTrue(success);
 
@@ -143,7 +147,7 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void NormComplexTest()
 	{
-		var _array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array = _array.As<Complex<Float64>>();
 		bool success = api.Norm(array, 1, out Complex<Float64> sum);
 		Assert.IsTrue(success);
@@ -163,7 +167,7 @@ public unsafe class ApiTests
 	{
 		Float64 SCALAR = 5.0;
 
-		var array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		Float64* values = stackalloc Float64[(int)array.Length];
 		array.CopyToManaged(values);
 
@@ -183,10 +187,10 @@ public unsafe class ApiTests
 	{
 		Float64 SCALAR = 5.0;
 
-		var array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		Float64* values1 = stackalloc Float64[(int)array1.Length];
 		array1.CopyToManaged(values1);
-		var array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		Float64* values2 = stackalloc Float64[(int)array2.Length];
 		array2.CopyToManaged(values2);
 
@@ -206,11 +210,11 @@ public unsafe class ApiTests
 	{
 		Complex<Float64> SCALAR = new(5.0, 4.0);
 
-		var _array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array1 = _array1.As<Complex<Float64>>();
 		Complex<Float64>* values1 = stackalloc Complex<Float64>[(int)array1.Length];
 		array1.CopyToManaged(values1);
-		var _array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array2 = _array2.As<Complex<Float64>>();
 		Complex<Float64>* values2 = stackalloc Complex<Float64>[(int)array2.Length];
 		array2.CopyToManaged(values2);
@@ -229,8 +233,8 @@ public unsafe class ApiTests
 	[TestMethod()]
 	public void DotTest()
 	{
-		var array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
-		var array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 
 		bool success = api.Dot(true, array1, 1, array2, 1, out Float64 dot);
 		Assert.IsTrue(success);
@@ -250,9 +254,9 @@ public unsafe class ApiTests
 	[DataRow(false)]
 	public void DotComplexTest(bool conj)
 	{
-		var _array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array1 = _array1.As<Complex<Float64>>();
-		var _array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array2 = _array2.As<Complex<Float64>>();
 
 		bool success = api.Dot(conj, array1, 1, array2, 1, out Complex<Float64> dot);
@@ -273,8 +277,8 @@ public unsafe class ApiTests
 	[DataRow(false)]
 	public void GeneralVectorsEqualTest(bool copy)
 	{
-		var array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
-		var array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		if (copy)
 			array1.NoApiCopy(array2);
 		array1 = array1.MakeReference(0, Math.Min(array1.Length, array2.Length));
@@ -289,8 +293,8 @@ public unsafe class ApiTests
 	[DataRow(UnaryOperation.Negate)]
 	public void GeneralVectorUnaryTest(UnaryOperation op)
 	{
-		var array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
-		var array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 
 		bool success = api.GeneralVectorUnary<Float64, PureStorage<Float64, CpuMemoryPointer>, PureStorage<Float64, CpuMemoryPointer>>(op, array1, 1, array2, 1);
 		Assert.IsTrue(success);
@@ -314,9 +318,9 @@ public unsafe class ApiTests
 	[DataRow(UnaryOperation.Conjugate)]
 	public void GeneralVectorUnaryComplexTest(UnaryOperation op)
 	{
-		var _array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array1 = _array1.As<Complex<Float64>>();
-		var _array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array2 = _array2.As<Complex<Float64>>();
 
 		bool success = api.GeneralVectorUnary<Complex<Float64>, PureStorage<Complex<Float64>, CpuMemoryPointer>, PureStorage<Complex<Float64>, CpuMemoryPointer>>(op, array1, 1, array2, 1);
@@ -347,8 +351,8 @@ public unsafe class ApiTests
 		const double SCALAR = 0.5;
 		Float64 scalar = SCALAR;
 
-		var array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
-		var array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 
 		bool success = api.GeneralVectorBinaryScalar(op, scalar, array1, 1, array2, 1);
 		Assert.IsTrue(success);
@@ -380,9 +384,9 @@ public unsafe class ApiTests
 	{
 		Complex<Float64> SCALAR = new(0.5, 0.5);
 
-		var _array1 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array1 = _array1.As<Complex<Float64>>();
-		var _array2 = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var _array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
 		var array2 = _array2.As<Complex<Float64>>();
 
 		bool success = api.GeneralVectorBinaryScalar(op, SCALAR, array1, 1, array2, 1);
@@ -417,7 +421,7 @@ public unsafe class ApiTests
 	[DataRow(ReduceOperation.AbsoluteMininum)]
 	public void GeneralVectorReduceTest(ReduceOperation op)
 	{
-		var array = UnitTests.Helpers.GenerateFloatData(1, -1);
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
 
 		bool success = api.GeneralVectorReduce(op, array, 1, out Float64 result);
 		Assert.IsTrue(success);
@@ -473,75 +477,440 @@ public unsafe class ApiTests
 	}
 
 	[TestMethod()]
-	public void GeneralVectorArgReduceTest()
+	[DataRow(ReduceOperation.Add)]
+	[DataRow(ReduceOperation.Multiply)]
+	[DataRow(ReduceOperation.AddAbsolute)]
+	[DataRow(ReduceOperation.MultiplyAbsolute)]
+	[DataRow(ReduceOperation.Norm)]
+	[DataRow(ReduceOperation.AbsoluteMaximum)]
+	[DataRow(ReduceOperation.AbsoluteMininum)]
+	public void GeneralVectorReduceComplexTest(ReduceOperation op)
 	{
-		Assert.Fail();
+		var _array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array = _array.As<Complex<Float64>>();
+
+		bool success = api.GeneralVectorReduce(op, array, 1, out Complex<Float64> result);
+		Assert.IsTrue(success);
+
+		Complex<Float64> real = op switch
+		{
+			ReduceOperation.Multiply => Complex<Float64>.One,
+			ReduceOperation.AbsoluteMininum => (Float64)double.MaxValue,
+			ReduceOperation.MultiplyAbsolute => Complex<Float64>.One,
+			_ => default
+		};
+		Complex<Float64>* test = (Complex<Float64>*)array.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < array.Length; i++)
+		{
+			switch (op)
+			{
+				case ReduceOperation.Add:
+					real += test[i];
+					break;
+				case ReduceOperation.Multiply:
+					real *= test[i];
+					break;
+				case ReduceOperation.AddAbsolute:
+					real += Complex<Float64>.Abs(test[i]);
+					break;
+				case ReduceOperation.MultiplyAbsolute:
+					real *= Complex<Float64>.Abs(test[i]);
+					break;
+				case ReduceOperation.Norm:
+					real += test[i].Conjugate * test[i];
+					break;
+				case ReduceOperation.AbsoluteMaximum:
+					real = Complex<Float64>.Max(real, Complex<Float64>.Abs(test[i]));
+					break;
+				case ReduceOperation.AbsoluteMininum:
+					real = Complex<Float64>.Min(real, Complex<Float64>.Abs(test[i]));
+					break;
+				default:
+					break;
+			}
+		}
+		if (op == ReduceOperation.Norm)
+			real = Complex<Float64>.Sqrt(real);
+		ValueAssert.AreApproxEqual(real, result);
 	}
 
 	[TestMethod()]
-	public void GeneralVectorsBinaryTest()
+	[DataRow(ReduceOperation.Maximum)]
+	[DataRow(ReduceOperation.Mininum)]
+	[DataRow(ReduceOperation.AbsoluteMaximum)]
+	[DataRow(ReduceOperation.AbsoluteMininum)]
+	public void GeneralVectorArgReduceTest(ReduceOperation op)
 	{
-		Assert.Fail();
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+
+		bool success = api.GeneralVectorArgReduce<Float64, PureStorage<Float64, CpuMemoryPointer>>(op, array, 1, out long result);
+		Assert.IsTrue(success);
+
+		double real = op switch
+		{
+			ReduceOperation.Maximum => double.MinValue,
+			ReduceOperation.Mininum => double.MaxValue,
+			ReduceOperation.AbsoluteMininum => double.MaxValue,
+			_ => 0
+		};
+		long realIdx = -1;
+		double* test = (double*)array.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < array.Length; i++)
+		{
+			switch (op)
+			{
+				case ReduceOperation.Maximum:
+					if (test[i] > real)
+					{
+						real = test[i]; realIdx = i;
+					}
+					break;
+				case ReduceOperation.Mininum:
+					if (test[i] < real)
+					{
+						real = test[i]; realIdx = i;
+					}
+					break;
+				case ReduceOperation.AbsoluteMaximum:
+					if (Math.Abs(test[i]) > real)
+					{
+						real = Math.Abs(test[i]); realIdx = i;
+					}
+					break;
+				case ReduceOperation.AbsoluteMininum:
+					if (Math.Abs(Math.Abs(test[i])) < real)
+					{
+						real = Math.Abs(test[i]); realIdx = i;
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		Assert.AreEqual(realIdx, result);
 	}
 
 	[TestMethod()]
-	public void GeneralVectorsScanTest()
+	[DataRow(ReduceOperation.AbsoluteMaximum)]
+	[DataRow(ReduceOperation.AbsoluteMininum)]
+	public void GeneralVectorArgReduceComplexTest(ReduceOperation op)
 	{
-		Assert.Fail();
+		var _array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array = _array.As<Complex<Float64>>();
+
+		bool success = api.GeneralVectorArgReduce<Complex<Float64>, PureStorage<Complex<Float64>, CpuMemoryPointer>>(op, array, 1, out long result);
+		Assert.IsTrue(success);
+
+		double real = op switch
+		{
+			ReduceOperation.AbsoluteMininum => double.MaxValue,
+			_ => 0
+		};
+		long realIdx = -1;
+		Complex<Float64>* test = (Complex<Float64>*)array.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < array.Length; i++)
+		{
+			switch (op)
+			{
+				case ReduceOperation.AbsoluteMaximum:
+					if (test[i].MagnitudeSquared > real)
+					{
+						real = test[i].MagnitudeSquared; realIdx = i;
+					}
+					break;
+				case ReduceOperation.AbsoluteMininum:
+					if (test[i].MagnitudeSquared < real)
+					{
+						real = test[i].MagnitudeSquared; realIdx = i;
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		Assert.AreEqual(realIdx, result);
+	}
+
+	[TestMethod()]
+	[DataRow(BinaryOperation.Add)]
+	[DataRow(BinaryOperation.Multiply)]
+	[DataRow(BinaryOperation.Divide)]
+	public void GeneralVectorsBinaryTest(BinaryOperation op)
+	{
+		var array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array3 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+
+		bool success = api.GeneralVectorsBinary<Float64, PureStorage<Float64, CpuMemoryPointer>, PureStorage<Float64, CpuMemoryPointer>, PureStorage<Float64, CpuMemoryPointer>>(op, array1, 1, array2, 1, array3, 1);
+		Assert.IsTrue(success);
+
+		double* test1 = (double*)array1.Pointer.Pointer.Pointer.ToPointer();
+		double* test2 = (double*)array2.Pointer.Pointer.Pointer.ToPointer();
+		double* test3 = (double*)array3.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < Math.Min(array1.Length, array2.Length); i++)
+		{
+			double real = op switch
+			{
+				BinaryOperation.Add => test1[i] + test2[i],
+				BinaryOperation.Multiply => test1[i] * test2[i],
+				BinaryOperation.Divide => test1[i] / test2[i],
+				_ => test1[i],
+			};
+			ValueAssert.AreApproxEqual(real, test3[i]);
+		}
+	}
+
+	[TestMethod()]
+	[DataRow(BinaryOperation.Add)]
+	[DataRow(BinaryOperation.Multiply)]
+	[DataRow(BinaryOperation.Divide)]
+	public void GeneralVectorsBinaryComplexTest(BinaryOperation op)
+	{
+		var _array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array1 = _array1.As<Complex<Float64>>();
+		var _array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array2 = _array2.As<Complex<Float64>>();
+		var _array3 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array3 = _array3.As<Complex<Float64>>();
+
+		bool success = api.GeneralVectorsBinary<Complex<Float64>, PureStorage<Complex<Float64>, CpuMemoryPointer>, PureStorage<Complex<Float64>, CpuMemoryPointer>, PureStorage<Complex<Float64>, CpuMemoryPointer>>(op, array1, 1, array2, 1, array3, 1);
+		Assert.IsTrue(success);
+
+		Complex<Float64>* test1 = (Complex<Float64>*)array1.Pointer.Pointer.Pointer.ToPointer();
+		Complex<Float64>* test2 = (Complex<Float64>*)array2.Pointer.Pointer.Pointer.ToPointer();
+		Complex<Float64>* test3 = (Complex<Float64>*)array3.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < Math.Min(array1.Length, array2.Length); i++)
+		{
+			Complex<Float64> real = op switch
+			{
+				BinaryOperation.Add => test1[i] + test2[i],
+				BinaryOperation.Multiply => test1[i] * test2[i],
+				BinaryOperation.Divide => test1[i] / test2[i],
+				_ => test1[i],
+			};
+			ValueAssert.AreApproxEqual(real, test3[i]);
+		}
+	}
+
+	[TestMethod()]
+	[DataRow(ReduceOperation.Add, true)]
+	[DataRow(ReduceOperation.Multiply, true)]
+	[DataRow(ReduceOperation.Add, false)]
+	[DataRow(ReduceOperation.Multiply, false)]
+	public void GeneralVectorsScanTest(ReduceOperation op, bool inclusive)
+	{
+		var array1 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array2 = UnitTests.Helpers.GenerateFloatData(-1, 1);
+
+		bool success = api.GeneralVectorsScan<Float64, PureStorage<Float64, CpuMemoryPointer>, PureStorage<Float64, CpuMemoryPointer>>(op, array1, 1, array2, 1, inclusive);
+		Assert.IsTrue(success);
+
+		double* test1 = (double*)array1.Pointer.Pointer.Pointer.ToPointer();
+		double* test2 = (double*)array2.Pointer.Pointer.Pointer.ToPointer();
+		double real = op == ReduceOperation.Add ? 0 : 1;
+		if (inclusive)
+		{
+			real = test1[0];
+		}
+		ValueAssert.AreApproxEqual(real, test2[0]);
+		for (int i = 1; i < Math.Min(array1.Length, array2.Length); i++)
+		{
+			real = op switch
+			{
+				ReduceOperation.Add => real + test1[inclusive ? i : i - 1],
+				ReduceOperation.Multiply => real * test1[inclusive ? i : i - 1],
+				_ => test1[i],
+			};
+			ValueAssert.AreApproxEqual(real, test2[i]);
+		}
 	}
 
 	[TestMethod()]
 	public void GeneralVectorsCastTest()
 	{
-		Assert.Fail();
+		var array1 = UnitTests.Helpers.GenerateFloatData(-10, 10);
+		var array2 = UnitTests.Helpers.GenerateIntData(-1, 1);
+
+		bool success = api.GeneralVectorsCast<Float64, SignedInt32, PureStorage<Float64, CpuMemoryPointer>, PureStorage<SignedInt32, CpuMemoryPointer>>(array1, 1, array2, 1);
+		Assert.IsTrue(success);
+
+		double* test1 = (double*)array1.Pointer.Pointer.Pointer.ToPointer();
+		int* test2 = (int*)array2.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < Math.Min(array1.Length, array2.Length); i++)
+		{
+			int real = (int)test1[i];
+			Assert.AreEqual(real, test2[i]);
+		}
 	}
 
 	[TestMethod()]
 	public void SortTest()
 	{
-		Assert.Fail();
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		Float64* values = stackalloc Float64[(int)array.Length];
+		array.CopyToManaged(values);
+
+		bool success = api.Sort<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1);
+		Assert.IsTrue(success);
+
+		Span<double> span = new(values, (int)array.Length);
+		span.Sort();
+		double* test = (double*)array.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < array.Length; i++)
+		{
+			Assert.AreEqual(span[i], test[i]);
+		}
 	}
 
 	[TestMethod()]
-	public void SortTest1()
+	public void SortByKeyTest()
 	{
-		Assert.Fail();
+		var arrayVal = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		Float64* values = stackalloc Float64[(int)arrayVal.Length];
+		arrayVal.CopyToManaged(values);
+		var arrayKey = UnitTests.Helpers.GenerateIntData(-100, 100);
+		SignedInt32* keys = stackalloc SignedInt32[(int)arrayKey.Length];
+		arrayKey.CopyToManaged(keys);
+		int len = (int)Math.Min(arrayKey.Length, arrayVal.Length);
+		arrayVal = arrayVal.MakeReference(0, len);
+		arrayKey = arrayKey.MakeReference(0, len);
+
+		bool success = api.Sort<SignedInt32, Float64, PureStorage<SignedInt32, CpuMemoryPointer>, PureStorage<Float64, CpuMemoryPointer>>(arrayKey, 1, arrayVal, 1);
+		Assert.IsTrue(success);
+
+		Span<int> keySpan = new(keys, len);
+		Span<double> valSpan = new(values, len);
+		keySpan.Sort(valSpan);
+		double* testVal = (double*)arrayVal.Pointer.Pointer.Pointer.ToPointer();
+		int* testKey = (int*)arrayKey.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < len; i++)
+		{
+			Assert.AreEqual(keySpan[i], testKey[i]);
+			Assert.AreEqual(valSpan[i], testVal[i]);
+		}
 	}
 
 	[TestMethod()]
 	public void IndexOfTest()
 	{
-		Assert.Fail();
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		long real = System.Random.Shared.Next((int)array.Length);
+		double* test = (double*)array.Pointer.Pointer.Pointer.ToPointer();
+
+		bool success = api.IndexOf<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1, false, test[real], out long find);
+		Assert.IsTrue(success);
+		Assert.AreEqual(real, find);
+
+		api.Sort<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1);
+
+		success = api.IndexOf<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1, false, test[real], out find);
+		Assert.IsTrue(success);
+		Assert.AreEqual(real, find);
 	}
 
 	[TestMethod()]
-	public void BoundOfTest()
+	[DataRow(true)]
+	[DataRow(false)]
+	public void BoundOfTest(bool lower)
 	{
-		Assert.Fail();
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		double* test = (double*)array.Pointer.Pointer.Pointer.ToPointer();
+		long real = System.Random.Shared.Next((int)array.Length);
+		api.Sort<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1);
+
+		bool success = api.BoundOf<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1, test[real], lower, out long find);
+		Assert.IsTrue(success);
+		Assert.AreEqual(lower ? real : real + 1, find);
 	}
 
 	[TestMethod()]
-	public void FillWithRangeTest()
+	[DataRow(15.0, 0.5)]
+	public void FillWithRangeTest(double start, double step)
 	{
-		Assert.Fail();
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+
+		bool success = api.FillWithRange<Float64, PureStorage<Float64, CpuMemoryPointer>>(array, 1, start, step);
+		Assert.IsTrue(success);
+
+		double* test = (double*)array.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < array.Length; i++)
+		{
+			ValueAssert.AreApproxEqual(start + i * step, test[i]);
+		}
+	}
+
+	[TestMethod()]
+	public void FillWithRangeComplexTest()
+	{
+		Complex<Float64> start = new(15.0, 5.0), step = new(0.5, 0.25);
+
+		var _array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var array = _array.As<Complex<Float64>>();
+
+		bool success = api.FillWithRange(array, 1, start, step);
+		Assert.IsTrue(success);
+
+		Complex<Float64>* test = (Complex<Float64>*)array.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < array.Length; i++)
+		{
+			ValueAssert.AreApproxEqual(start + i * step, test[i]);
+		}
+	}
+
+	[TestMethod()]
+	[DataRow(5.0)]
+	public void VectorSetAllValuesAtTest(double value)
+	{
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var indexArray = UnitTests.Helpers.GenerateIntData(0, (int)array.Length).MakeReference(0, array.Length / 2);
+
+		bool success = api.VectorSetValuesAt<Float64, SignedInt32, PureStorage<Float64, CpuMemoryPointer>, PureStorage<SignedInt32, CpuMemoryPointer>>(array, value, indexArray);
+		Assert.IsTrue(success);
+
+		double* test = (double*)array.Pointer.Pointer.Pointer.ToPointer();
+		int* testInd = (int*)indexArray.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < indexArray.Length; i++)
+		{
+			Assert.AreEqual(value, test[testInd[i]]);
+		}
 	}
 
 	[TestMethod()]
 	public void VectorSetValuesAtTest()
 	{
-		Assert.Fail();
-	}
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var indexArray = UnitTests.Helpers.GenerateIntData(0, (int)array.Length).MakeReference(0, 10);
+		var valueArray = UnitTests.Helpers.GenerateFloatData(-5, 5).MakeReference(0, 10);
 
-	[TestMethod()]
-	public void VectorSetValuesAtTest1()
-	{
-		Assert.Fail();
+		bool success = api.VectorSetValuesAt<Float64, SignedInt32, PureStorage<Float64, CpuMemoryPointer>, PureStorage<Float64, CpuMemoryPointer>, PureStorage<SignedInt32, CpuMemoryPointer>>(array, valueArray, indexArray);
+		Assert.IsTrue(success);
+
+		double* test = (double*)array.Pointer.Pointer.Pointer.ToPointer();
+		double* testVal = (double*)valueArray.Pointer.Pointer.Pointer.ToPointer();
+		int* testInd = (int*)indexArray.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < indexArray.Length; i++)
+		{
+			Assert.AreEqual(testVal[i], test[testInd[i]]);
+		}
 	}
 
 	[TestMethod()]
 	public void VectorGatherValuesAtTest()
 	{
-		Assert.Fail();
+		var array = UnitTests.Helpers.GenerateFloatData(-1, 1);
+		var indexArray = UnitTests.Helpers.GenerateIntData(0, (int)array.Length).MakeReference(0, 10);
+		var valueArray = UnitTests.Helpers.GenerateFloatData(-5, 5).MakeReference(0, 10);
+
+		bool success = api.VectorGatherValuesAt<Float64, SignedInt32, PureStorage<Float64, CpuMemoryPointer>, PureStorage<Float64, CpuMemoryPointer>, PureStorage<SignedInt32, CpuMemoryPointer>>(array, valueArray, indexArray);
+		Assert.IsTrue(success);
+
+		double* test = (double*)array.Pointer.Pointer.Pointer.ToPointer();
+		double* testVal = (double*)valueArray.Pointer.Pointer.Pointer.ToPointer();
+		int* testInd = (int*)indexArray.Pointer.Pointer.Pointer.ToPointer();
+		for (int i = 0; i < indexArray.Length; i++)
+		{
+			Assert.AreEqual(test[testInd[i]], testVal[i]);
+		}
 	}
 
 	[TestMethod()]
@@ -556,45 +925,47 @@ public unsafe class ApiTests
 		Assert.Fail();
 	}
 
+	#region already tested
 	[TestMethod()]
 	public void EigenStandardMatrixHermitianTest()
 	{
-		Assert.Fail();
+		return;
 	}
 
 	[TestMethod()]
 	public void SchurDecompositionTest()
 	{
-		Assert.Fail();
+		return;
 	}
 
 	[TestMethod()]
 	public void SchurReorderTest()
 	{
-		Assert.Fail();
+		return;
 	}
 
 	[TestMethod()]
 	public void EigenStandardMatrixGeneralTest()
 	{
-		Assert.Fail();
+		return;
 	}
 
 	[TestMethod()]
 	public void LinearSolveGeneralTest()
 	{
-		Assert.Fail();
+		return;
 	}
 
 	[TestMethod()]
 	public void QRDecompositionTest()
 	{
-		Assert.Fail();
+		return;
 	}
 
 	[TestMethod()]
 	public void LeastSquareSolveTest()
 	{
-		Assert.Fail();
+		return;
 	}
+	#endregion
 }

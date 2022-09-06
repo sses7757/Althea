@@ -342,7 +342,7 @@ public unsafe partial class Api
 				var x0 = LoadVector256<float>(x + offset);
 				var x1 = LoadVector256<float>(x + offset + Vector256<float>.Count / 2);
 				ComplexUnpack(x0, x1, out var realX, out var imagX);
-				UnpackComplexMultiply(realX, imagX, sRe, sIm, ref x0, ref x1);
+				ComplexMultiplyUnpacked(realX, imagX, sRe, sIm, ref x0, ref x1);
 				ComplexPack(x0, x1, out var y0, out var y1);
 				StoreVector256(y0, y + offset);
 				StoreVector256(y1, y + offset + Vector256<float>.Count / 2);
@@ -478,7 +478,7 @@ public unsafe partial class Api
 				var x0 = LoadVector256<double>(x + offset);
 				var x1 = LoadVector256<double>(x + offset + Vector256<double>.Count / 2);
 				ComplexUnpack(x0, x1, out var realX, out var imagX);
-				UnpackComplexMultiply(realX, imagX, sRe, sIm, ref x0, ref x1);
+				ComplexMultiplyUnpacked(realX, imagX, sRe, sIm, ref x0, ref x1);
 				ComplexPack(x0, x1, out var y0, out var y1);
 				StoreVector256(y0, y + offset);
 				StoreVector256(y1, y + offset + Vector256<double>.Count / 2);

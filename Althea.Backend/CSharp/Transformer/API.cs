@@ -300,7 +300,7 @@ public class Api : Althea.Transformer.IAbstractApi
 								var ys1 = LA.LoadVector256(aij);
 								var ys2 = LA.LoadVector256(aij + Vector256<U>.Count);
 								LA.ComplexUnpack(ys1, ys2, out var yre, out var yim);
-								LA.UnpackComplexMultiply(wre, wim, yre, yim, ref yre, ref yim);
+								LA.ComplexMultiplyUnpacked(wre, wim, yre, yim, ref yre, ref yim);
 								// a[j + k] = x + y;
 								Vector256<U> xyRe = xre + yre, xyIm = xim + yim;
 								LA.ComplexPack(xyRe, xyIm, out var xy1, out var xy2);
@@ -312,7 +312,7 @@ public class Api : Althea.Transformer.IAbstractApi
 								LA.StoreVector256(xy1, aij);
 								LA.StoreVector256(xy2, aij + Vector256<U>.Count);
 								// increment
-								LA.UnpackComplexMultiply(wre, wim, cos, sin, ref wre, ref wim);
+								LA.ComplexMultiplyUnpacked(wre, wim, cos, sin, ref wre, ref wim);
 								aj += Vector256<U>.Count * 2; aij += Vector256<U>.Count * 2;
 							}
 						}

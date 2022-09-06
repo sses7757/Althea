@@ -46,7 +46,7 @@ public record struct PrintSettings
 #endregion
 
 #region implementation settings
-internal record struct ImplementationSettings(bool DisposeNotCurrentImplementation, Dictionary<string, object> Implementations)
+internal record struct ImplementationSettings(Dictionary<string, object> Implementations)
 {
 	private static Dictionary<string, object> GetImplementations(IBackends backend)
 	{
@@ -63,7 +63,7 @@ internal record struct ImplementationSettings(bool DisposeNotCurrentImplementati
 		return impls;
 	}
 
-	public ImplementationSettings(IBackends backend) : this(false, GetImplementations(backend))
+	public ImplementationSettings(IBackends backend) : this(GetImplementations(backend))
 	{ }
 
 	public readonly void SetBackends()
@@ -171,14 +171,41 @@ public static class Settings
 
 	#region implementation settings
 	/// <summary>
-	/// When a new implementation is indicated, whether elder ones will be disposed or not.
+	/// Remove the <paramref name="implementation"/> from <typeparamref name="TApi"/>'s API list.
 	/// </summary>
-	/// <remarks>If the value is true, there may be creations and dispositions of implementation classes that may introduce more time loss.<br/>
-	/// Otherwise, there may be maintained storages of implementation classes that may introduce some memory loss.</remarks>
-	public static bool DisposeNotCurrentImplementation
+	/// <typeparam name="TApi">The runtime API interface type</typeparam>
+	/// <param name="implementation">The implementation which implements <typeparamref name="TApi"/> to be disabled</param>
+	/// <remarks><paramref name="implementation"/> will be disposed if and only if its other implementations are all removed (if existed).</remarks>
+	public static void DisableImplementation<TApi>(TApi implementation) where TApi : IAbstractRuntimeApi<TApi>
 	{
-		get => settings.ImplementationSettings.DisposeNotCurrentImplementation;
-		set => settings.ImplementationSettings = settings.ImplementationSettings with { DisposeNotCurrentImplementation = value };
+		lock (__lockSetting)
+		{
+			AbstractApiSelector<TApi>.RemoveImplementation(implementation);
+			settings.ImplementationSettings.Implementations[typeof(TApi).AssemblyQualifiedName ?? string.Empty] = implementation;
+		}
+	}
+
+	/// <summary>
+	/// Remove the <paramref name="implementation"/> from all API's lists that it implements and dispose it.
+	/// </summary>
+	/// <param name="implementation">The implementation which implements API(s) to be disabled</param>
+	public static void DisableAllImplementations(object implementation)
+	{
+		foreach (var t in implementation.GetType().GetInterfaces())
+		{
+			try
+			{
+				if (!t.IsRuntimeApiInterface())
+					continue;
+				typeof(Settings).GetMethod(nameof(Settings.SetImplementation))?
+								.MakeGenericMethod(t)?
+								.Invoke(null, new[] { implementation });
+			}
+			catch (Exception e)
+			{
+				Log.Write($"Error occurred during disabling implementation of {t}: {e}", level: LogLevel.Error);
+			}
+		}
 	}
 
 	/// <summary>
@@ -221,22 +248,19 @@ public static class Settings
 	/// <remarks>This method is based on reflection, thus it shall NOT be invoked repeatedly to prevent performance issues.</remarks>
 	public static void SetAllImplementations(object implementation)
 	{
-		lock (__lockSetting)
+		foreach (var t in implementation.GetType().GetInterfaces())
 		{
-			foreach (var t in implementation.GetType().GetInterfaces())
+			try
 			{
-				try
-				{
-					if (!t.IsRuntimeApiInterface())
-						continue;
-					typeof(Settings).GetMethod(nameof(Settings.SetImplementation))?
-									.MakeGenericMethod(t)?
-									.Invoke(null, new[] { implementation });
-				}
-				catch (Exception e)
-				{
-					Log.Write($"Error occurred during setting implementation of {t}: {e}", level: LogLevel.Error);
-				}
+				if (!t.IsRuntimeApiInterface())
+					continue;
+				typeof(Settings).GetMethod(nameof(Settings.SetImplementation))?
+								.MakeGenericMethod(t)?
+								.Invoke(null, new[] { implementation });
+			}
+			catch (Exception e)
+			{
+				Log.Write($"Error occurred during setting implementation of {t}: {e}", level: LogLevel.Error);
 			}
 		}
 	}

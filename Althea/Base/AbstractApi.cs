@@ -108,12 +108,12 @@ internal static class ApiManager
 {
 	private static readonly Dictionary<object, List<RuntimeTypeHandle>> InstanceApis = new();
 
-	private static readonly object __locker = new();
+	private static readonly object globalLocker = new();
 
 	internal static void Add<TApi>(TApi instance) where TApi : IAbstractRuntimeApi<TApi>
 	{
 		var handle = typeof(TApi).TypeHandle;
-		lock (__locker)
+		lock (globalLocker)
 		{
 			AbstractApiSelector<TApi>.APIs.Add(instance);
 			if (InstanceApis.TryGetValue(instance, out var list))
@@ -127,7 +127,7 @@ internal static class ApiManager
 	{
 		if (index < 0 || index >= AbstractApiSelector<TApi>.APIs.Count)
 			return;
-		lock (__locker)
+		lock (globalLocker)
 		{
 			var instance = AbstractApiSelector<TApi>.APIs[index];
 			var apis = InstanceApis[instance];
@@ -148,7 +148,7 @@ internal static class ApiManager
 
 	internal static void Initiate<TApi>(int index, Type actualType) where TApi : IAbstractRuntimeApi<TApi>
 	{
-		lock (__locker)
+		lock (globalLocker)
 		{
 			var instance = IAbstractRuntimeApi<TApi>.Create(actualType);
 			var old = AbstractApiSelector<TApi>.APIs[index];
@@ -191,6 +191,34 @@ public abstract class AbstractApiSelector<TApi> where TApi : IAbstractRuntimeApi
 			{
 				ApiManager.Dispose<TApi>(i);
 			}
+			APIs.Clear();
+		}
+		finally
+		{
+			apiLock.ExitWriteLock();
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static void RemoveImplementation(TApi implementation)
+	{
+		if (implementation.Disposed)
+			return;
+		try
+		{
+			apiLock.EnterWriteLock();
+			int orgIndex = APIs.IndexOf(implementation);
+			if (orgIndex < 0 || APIs[orgIndex].Disposed)
+			{
+				return;
+			}
+			else
+			{
+				ApiManager.Dispose<TApi>(orgIndex);
+				APIs.RemoveAt(orgIndex);
+				if (CurrentApiIndex == APIs.Count)
+					CurrentApiIndex = (CurrentApiIndex + 1) % APIs.Count;
+			}
 		}
 		finally
 		{
@@ -211,10 +239,6 @@ public abstract class AbstractApiSelector<TApi> where TApi : IAbstractRuntimeApi
 			{
 				ApiManager.Add(implementation);
 				newIndex = APIs.Count - 1;
-			}
-			if (Settings.DisposeNotCurrentImplementation)
-			{
-				ApiManager.Dispose<TApi>(CurrentApiIndex);
 			}
 			CurrentApiIndex = newIndex;
 			if (APIs[CurrentApiIndex].Disposed)

@@ -5176,12 +5176,19 @@
             Get and set the maximum size in bytes when using C# keyword "stackalloc" to reduce GC pressure. The default stack size of x64 C# program is 4MB, set a value larger than this may cause unexpected error(s).
             </summary>
         </member>
-        <member name="P:Althea.Settings.DisposeNotCurrentImplementation">
+        <member name="M:Althea.Settings.DisableImplementation``1(``0)">
             <summary>
-            When a new implementation is indicated, whether elder ones will be disposed or not.
+            Remove the <paramref name="implementation"/> from <typeparamref name="TApi"/>'s API list.
             </summary>
-            <remarks>If the value is true, there may be creations and dispositions of implementation classes that may introduce more time loss.<br/>
-            Otherwise, there may be maintained storages of implementation classes that may introduce some memory loss.</remarks>
+            <typeparam name="TApi">The runtime API interface type</typeparam>
+            <param name="implementation">The implementation which implements <typeparamref name="TApi"/> to be disabled</param>
+            <remarks><paramref name="implementation"/> will be disposed if and only if its other implementations are all removed (if existed).</remarks>
+        </member>
+        <member name="M:Althea.Settings.DisableAllImplementations(System.Object)">
+            <summary>
+            Remove the <paramref name="implementation"/> from all API's lists that it implements and dispose it.
+            </summary>
+            <param name="implementation">The implementation which implements API(s) to be disabled</param>
         </member>
         <member name="M:Althea.Settings.SetImplementation``1(``0)">
             <summary>

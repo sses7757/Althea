@@ -121,7 +121,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	{
 		current1 *= current1;
 		current2 *= current2;
-		Vector256<float> squares = Avx.HorizontalAdd(current1, current2);
+		var squares = Avx.HorizontalAdd(current1, current2);
 		return squares;
 		// abs of {0, 1, 4, 5, 2, 3, 6, 7}-th complex
 	}
@@ -130,51 +130,51 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	{
 		current1 *= current1;
 		current2 *= current2;
-		Vector256<double> squares = Avx.HorizontalAdd(current1, current2);
+		var squares = Avx.HorizontalAdd(current1, current2);
 		return squares;
 		// abs of {0, 2, 1, 3}-th complex
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<float> ComplexSquareAbsNoOrderSingle(void* p)
 	{
-		Vector256<float> current1 = LoadVector256<float>(p);
-		Vector256<float> current2 = LoadVector256((float*)p + Vector256<float>.Count);
+		var current1 = LoadVector256<float>(p);
+		var current2 = LoadVector256((float*)p + Vector256<float>.Count);
 		return ComplexSquareAbsNoOrder(current1, current2);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<double> ComplexSquareAbsNoOrderDouble(void* p)
 	{
-		Vector256<double> current1 = LoadVector256<double>(p);
-		Vector256<double> current2 = LoadVector256((double*)p + Vector256<double>.Count);
+		var current1 = LoadVector256<double>(p);
+		var current2 = LoadVector256((double*)p + Vector256<double>.Count);
 		return ComplexSquareAbsNoOrder(current1, current2);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<float> ComplexSquareAbsOrder(Vector256<float> current1, Vector256<float> current2)
 	{
-		Vector256<float> squares = ComplexSquareAbsNoOrder(current1, current2);
+		var squares = ComplexSquareAbsNoOrder(current1, current2);
 		squares = Avx2.Permute4x64(squares.AsDouble(), 0b11_01_10_00).AsSingle();
 		return squares;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<double> ComplexSquareAbsOrder(Vector256<double> current1, Vector256<double> current2)
 	{
-		Vector256<double> squares = ComplexSquareAbsNoOrder(current1, current2);
+		var squares = ComplexSquareAbsNoOrder(current1, current2);
 		squares = Avx2.Permute4x64(squares, 0b11_01_10_00);
 		return squares;
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<float> ComplexSquareAbsOrder(float* p)
 	{
-		Vector256<float> current1 = LoadVector256(p);
-		Vector256<float> current2 = LoadVector256(p + Vector256<float>.Count);
+		var current1 = LoadVector256(p);
+		var current2 = LoadVector256(p + Vector256<float>.Count);
 		return ComplexSquareAbsOrder(current1, current2);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static Vector256<double> ComplexSquareAbsOrder(double* p)
 	{
-		Vector256<double> current1 = LoadVector256(p);
-		Vector256<double> current2 = LoadVector256(p + Vector256<double>.Count);
+		var current1 = LoadVector256(p);
+		var current2 = LoadVector256(p + Vector256<double>.Count);
 		return ComplexSquareAbsOrder(current1, current2);
 	}
 
@@ -196,9 +196,9 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	private static void ComplexUnpack(Vector256<float> a0, Vector256<float> a1, out Vector256<float> realA, out Vector256<float> imagA)
 	{
 		// {a[0].r, a[4].r, a[0].i, a[4].i, a[2].r, a[6].r, a[2].i, a[6].i}
-		Vector256<float> tempA0 = Avx.UnpackLow(a0, a1);
+		var tempA0 = Avx.UnpackLow(a0, a1);
 		// {a[1].r, a[5].r, a[1].i, a[5].i, a[3].r, a[7].r, a[3].i, a[7].i}
-		Vector256<float> tempA1 = Avx.UnpackHigh(a0, a1);
+		var tempA1 = Avx.UnpackHigh(a0, a1);
 		// {a[0].r, a[1].r, a[4].r, a[5].r, a[2].r, a[3].r, a[6].r, a[7].r}
 		realA = Avx.UnpackLow(tempA0, tempA1);
 		// {a[0].i, a[1].i, a[4].i, a[5].i, a[2].i, a[3].i, a[6].i, a[7].i}
@@ -307,19 +307,19 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static void UnpackComplexMultiply<T>(Vector256<T> realA, Vector256<T> imagA, Vector256<T> realB, Vector256<T> imagB, ref Vector256<T> realC, ref Vector256<T> imagC) where T : unmanaged
+	internal static void ComplexMultiplyUnpacked<T>(Vector256<T> realA, Vector256<T> imagA, Vector256<T> realB, Vector256<T> imagB, ref Vector256<T> realC, ref Vector256<T> imagC) where T : unmanaged
 	{
 		if (typeof(T) == typeof(float))
 		{
-			UnpackComplexMultiply<byte>(*(Vector256<float>*)&realA, *(Vector256<float>*)&imagA, *(Vector256<float>*)&realB, *(Vector256<float>*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<float>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<float>>(ref imagC));
+			ComplexMultiplyUnpacked<byte>(*(Vector256<float>*)&realA, *(Vector256<float>*)&imagA, *(Vector256<float>*)&realB, *(Vector256<float>*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<float>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<float>>(ref imagC));
 		}
 		else
 		{
-			UnpackComplexMultiply<byte>(*(Vector256<double>*)&realA, *(Vector256<double>*)&imagA, *(Vector256<double>*)&realB, *(Vector256<double>*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<double>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<double>>(ref imagC));
+			ComplexMultiplyUnpacked<byte>(*(Vector256<double>*)&realA, *(Vector256<double>*)&imagA, *(Vector256<double>*)&realB, *(Vector256<double>*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<double>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<double>>(ref imagC));
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void UnpackComplexMultiply<Conj>(Vector256<float> realA, Vector256<float> imagA, Vector256<float> realB, Vector256<float> imagB, ref Vector256<float> realC, ref Vector256<float> imagC)
+	private static void ComplexMultiplyUnpacked<Conj>(Vector256<float> realA, Vector256<float> imagA, Vector256<float> realB, Vector256<float> imagB, ref Vector256<float> realC, ref Vector256<float> imagC)
 	{
 		bool conj = typeof(Conj) == typeof(bool);
 		// multiply
@@ -340,11 +340,9 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void UnpackComplexMultiply<Conj>(Vector256<double> realA, Vector256<double> imagA, Vector256<double> realB, Vector256<double> imagB, ref Vector256<double> realC, ref Vector256<double> imagC)
+	private static void ComplexMultiplyUnpacked<Conj>(Vector256<double> realA, Vector256<double> imagA, Vector256<double> realB, Vector256<double> imagB, ref Vector256<double> realC, ref Vector256<double> imagC)
 	{
 		bool conj = typeof(Conj) == typeof(bool);
-		// multiply
-		// the branch shall be eliminated by JIT
 		var ArBr = realA * realB;
 		var AiBi = imagA * imagB;
 		var ArBi = realA * imagB;
@@ -362,23 +360,21 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal static void UnpackComplexMultiply<T>(Vector256<T> realA, Vector256<T> imagA, T realB, T imagB, ref Vector256<T> realC, ref Vector256<T> imagC) where T : unmanaged
+	internal static void ComplexMultiplyUnpacked<T>(Vector256<T> realA, Vector256<T> imagA, T realB, T imagB, ref Vector256<T> realC, ref Vector256<T> imagC) where T : unmanaged
 	{
 		if (typeof(T) == typeof(float))
 		{
-			UnpackComplexMultiply<byte>(*(Vector256<float>*)&realA, *(Vector256<float>*)&imagA, *(float*)&realB, *(float*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<float>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<float>>(ref imagC));
+			ComplexMultiplyUnpacked<byte>(*(Vector256<float>*)&realA, *(Vector256<float>*)&imagA, *(float*)&realB, *(float*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<float>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<float>>(ref imagC));
 		}
 		else
 		{
-			UnpackComplexMultiply<byte>(*(Vector256<double>*)&realA, *(Vector256<double>*)&imagA, *(double*)&realB, *(double*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<double>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<double>>(ref imagC));
+			ComplexMultiplyUnpacked<byte>(*(Vector256<double>*)&realA, *(Vector256<double>*)&imagA, *(double*)&realB, *(double*)&imagB, ref Unsafe.As<Vector256<T>, Vector256<double>>(ref realC), ref Unsafe.As<Vector256<T>, Vector256<double>>(ref imagC));
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void UnpackComplexMultiply<Conj>(Vector256<float> realA, Vector256<float> imagA, float realB, float imagB, ref Vector256<float> realC, ref Vector256<float> imagC)
+	private static void ComplexMultiplyUnpacked<Conj>(Vector256<float> realA, Vector256<float> imagA, float realB, float imagB, ref Vector256<float> realC, ref Vector256<float> imagC)
 	{
 		bool conj = typeof(Conj) == typeof(bool);
-		// multiply
-		// the branch shall be eliminated by JIT
 		var ArBr = realA * realB;
 		var AiBi = imagA * imagB;
 		var ArBi = realA * imagB;
@@ -395,11 +391,10 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	private static void UnpackComplexMultiply<Conj>(Vector256<double> realA, Vector256<double> imagA, double realB, double imagB, ref Vector256<double> realC, ref Vector256<double> imagC)
+	private static void ComplexMultiplyUnpacked<Conj>(Vector256<double> realA, Vector256<double> imagA, double realB, double imagB, ref Vector256<double> realC, ref Vector256<double> imagC)
 	{
 		bool conj = typeof(Conj) == typeof(bool);
 		// multiply
-		// the branch shall be eliminated by JIT
 		var ArBr = realA * realB;
 		var AiBi = imagA * imagB;
 		var ArBi = realA * imagB;
@@ -432,83 +427,51 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexMultiply<Conj, PackOut>(Vector256<float> a0, Vector256<float> a1, Vector256<float> b0, Vector256<float> b1, out Vector256<float> c0, out Vector256<float> c1)
 	{
-		bool conj = typeof(Conj) == typeof(bool);
-		bool packOutput = typeof(PackOut) == typeof(bool);
 		ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
-
-		Vector256<float> AiBi = imagA * imagB;
-		Vector256<float> AiBr = imagA * realB;
-		Vector256<float> real, imag;
-		var ArBr = realA * realB;
-		var ArBi = realA * imagB;
-		if (!conj)
+		Vector256<float> realC = default, imagC = default;
+		ComplexMultiplyUnpacked<Conj>(realA, imagA, realB, imagB, ref realC, ref imagC);
+		if (typeof(PackOut) == typeof(bool))
 		{
-			real = ArBr - AiBi;
-			imag = ArBi + AiBr;
+			ComplexPack(realC, imagC, out c0, out c1);
 		}
 		else
 		{
-			real = ArBr + AiBi;
-			imag = ArBi - AiBr;
-		}
-		if (packOutput)
-		{
-			ComplexPack(real, imag, out c0, out c1);
-		}
-		else
-		{
-			c0 = real; c1 = imag;
+			c0 = realC; c1 = imagC;
 		}
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexMultiply<Conj, PackOut>(Vector256<double> a0, Vector256<double> a1, Vector256<double> b0, Vector256<double> b1, out Vector256<double> c0, out Vector256<double> c1)
 	{
-		bool conj = typeof(Conj) == typeof(bool);
-		bool packOutput = typeof(PackOut) == typeof(bool);
 		ComplexUnpack(a0, a1, b0, b1, out var realA, out var imagA, out var realB, out var imagB);
-
-		Vector256<double> AiBi = imagA * imagB;
-		Vector256<double> AiBr = imagA * realB;
-		Vector256<double> real, imag;
-		var ArBr = realA * realB;
-		var ArBi = realA * imagB;
-		if (!conj)
+		Vector256<double> realC = default, imagC = default;
+		ComplexMultiplyUnpacked<Conj>(realA, imagA, realB, imagB, ref realC, ref imagC);
+		if (typeof(PackOut) == typeof(bool))
 		{
-			real = ArBr - AiBi;
-			imag = ArBi + AiBr;
+			ComplexPack(realC, imagC, out c0, out c1);
 		}
 		else
 		{
-			real = ArBr + AiBi;
-			imag = ArBi - AiBr;
-		}
-		if (packOutput)
-		{
-			ComplexPack(real, imag, out c0, out c1);
-		}
-		else
-		{
-			c0 = real; c1 = imag;
+			c0 = realC; c1 = imagC;
 		}
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexMultiplyAddSingle<Conj>(void* a, void* b, ref Vector256<float> realC, ref Vector256<float> imagC)
 	{
-		Vector256<float> a0 = LoadVector256((float*)a);
-		Vector256<float> a1 = LoadVector256((float*)a + Vector256<float>.Count);
-		Vector256<float> b0 = LoadVector256((float*)b);
-		Vector256<float> b1 = LoadVector256((float*)b + Vector256<float>.Count);
+		var a0 = LoadVector256((float*)a);
+		var a1 = LoadVector256((float*)a + Vector256<float>.Count);
+		var b0 = LoadVector256((float*)b);
+		var b1 = LoadVector256((float*)b + Vector256<float>.Count);
 
 		ComplexMultiplyAdd<Conj>(a0, a1, b0, b1, ref realC, ref imagC);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexMultiplyAddDouble<Conj>(void* a, void* b, ref Vector256<double> realC, ref Vector256<double> imagC)
 	{
-		Vector256<double> a0 = LoadVector256((double*)a);
-		Vector256<double> a1 = LoadVector256((double*)a + Vector256<double>.Count);
-		Vector256<double> b0 = LoadVector256((double*)b);
-		Vector256<double> b1 = LoadVector256((double*)b + Vector256<double>.Count);
+		var a0 = LoadVector256((double*)a);
+		var a1 = LoadVector256((double*)a + Vector256<double>.Count);
+		var b0 = LoadVector256((double*)b);
+		var b1 = LoadVector256((double*)b + Vector256<double>.Count);
 
 		ComplexMultiplyAdd<Conj>(a0, a1, b0, b1, ref realC, ref imagC);
 	}
@@ -516,20 +479,20 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexMultiply<Conj>(float* a, float* b, out Vector256<float> left, out Vector256<float> right)
 	{
-		Vector256<float> a0 = LoadVector256(a);
-		Vector256<float> a1 = LoadVector256(a + Vector256<float>.Count);
-		Vector256<float> b0 = LoadVector256(b);
-		Vector256<float> b1 = LoadVector256(b + Vector256<float>.Count);
+		var a0 = LoadVector256(a);
+		var a1 = LoadVector256(a + Vector256<float>.Count);
+		var b0 = LoadVector256(b);
+		var b1 = LoadVector256(b + Vector256<float>.Count);
 
 		ComplexMultiply<Conj, bool>(a0, a1, b0, b1, out left, out right);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexMultiply<Conj>(double* a, double* b, out Vector256<double> left, out Vector256<double> right)
 	{
-		Vector256<double> a0 = LoadVector256(a);
-		Vector256<double> a1 = LoadVector256(a + Vector256<double>.Count / 2);
-		Vector256<double> b0 = LoadVector256(b);
-		Vector256<double> b1 = LoadVector256(b + Vector256<double>.Count / 2);
+		var a0 = LoadVector256(a);
+		var a1 = LoadVector256(a + Vector256<double>.Count / 2);
+		var b0 = LoadVector256(b);
+		var b1 = LoadVector256(b + Vector256<double>.Count / 2);
 
 		ComplexMultiply<Conj, bool>(a0, a1, b0, b1, out left, out right);
 	}
@@ -544,15 +507,13 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		// get the squares of the absolute values of b
 		b0 *= b0;
 		b1 *= b1;
-		Vector256<float> squareAbsB = Avx.HorizontalAdd(b0, b1);
+		var squareAbsB = Avx.HorizontalAdd(b0, b1);
 
-		Vector256<float> AiBi = imagA * imagB;
-		Vector256<float> ArBi = realA * imagB;
 		Vector256<float> real, imag;
 		real = realA * realB;
-		real -= AiBi;
-		imag = realA * imagB;
-		imag += ArBi;
+		real += imagA * imagB;
+		imag = imagA * realB;
+		imag -= realA * imagB;
 		// divide by the squares of the absolute values of b
 		real /= squareAbsB;
 		imag /= squareAbsB;
@@ -567,15 +528,13 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 		// get the squares of the absolute values of b
 		b0 *= b0;
 		b1 *= b1;
-		Vector256<double> squareAbsB = Avx.HorizontalAdd(b0, b1);
+		var squareAbsB = Avx.HorizontalAdd(b0, b1);
 
-		Vector256<double> imagProd = imagA * imagB;
-		Vector256<double> ArBi = realA * imagB;
 		Vector256<double> real, imag;
 		real = realA * realB;
-		real -= imagProd;
-		imag = realA * imagB;
-		imag += ArBi;
+		real += imagA * imagB;
+		imag = imagA * realB;
+		imag -= realA * imagB;
 		// divide by the squares of the absolute values of b
 		real /= squareAbsB;
 		imag /= squareAbsB;
@@ -586,20 +545,20 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexDivide(float* a, float* b, out Vector256<float> left, out Vector256<float> right)
 	{
-		Vector256<float> a0 = LoadVector256(a);
-		Vector256<float> a1 = LoadVector256(a + Vector256<float>.Count);
-		Vector256<float> b0 = LoadVector256(b);
-		Vector256<float> b1 = LoadVector256(b + Vector256<float>.Count);
+		var a0 = LoadVector256(a);
+		var a1 = LoadVector256(a + Vector256<float>.Count);
+		var b0 = LoadVector256(b);
+		var b1 = LoadVector256(b + Vector256<float>.Count);
 
 		ComplexDivide(a0, a1, b0, b1, out left, out right);
 	}
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static void ComplexDivide(double* a, double* b, out Vector256<double> left, out Vector256<double> right)
 	{
-		Vector256<double> a0 = LoadVector256(a);
-		Vector256<double> a1 = LoadVector256(a + Vector256<double>.Count);
-		Vector256<double> b0 = LoadVector256(b);
-		Vector256<double> b1 = LoadVector256(b + Vector256<double>.Count);
+		var a0 = LoadVector256(a);
+		var a1 = LoadVector256(a + Vector256<double>.Count);
+		var b0 = LoadVector256(b);
+		var b1 = LoadVector256(b + Vector256<double>.Count);
 
 		ComplexDivide(a0, a1, b0, b1, out left, out right);
 	}

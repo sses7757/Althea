@@ -179,28 +179,22 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				Vector256<float> currentX1 = LoadVector256<float>(x + offset), currentX2 = LoadVector256<float>(x + offset + Vector<float>.Count / 2);
 				Vector256<float> currentY1 = LoadVector256<float>(y + offset), currentY2 = LoadVector256<float>(y + offset + Vector<float>.Count / 2);
+				var a0 = currentX1; var a1 = currentX2; var b0 = currentY1; var b1 = currentY2;
 				switch (op)
 				{
 					case BinaryModify.Multiply:
-						ComplexMultiply<byte, bool>(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
+						ComplexMultiply<byte, bool>(a0, a1, b0, b1, out currentX1, out currentX2);
 						break;
 					case BinaryModify.Divide:
-						ComplexDivide(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
+						ComplexDivide(a0, a1, b0, b1, out currentX1, out currentX2);
 						break;
 					case BinaryModify.Add:
 						currentX1 = Avx.Add(currentX1, currentY1);
 						currentX2 = Avx.Add(currentX2, currentY2);
 						break;
 					case BinaryModify.AddScaled:
-						ComplexUnpack(currentX1, currentX2, out currentX1, out currentX2);
-						ComplexUnpack(currentY1, currentY2, out currentY1, out currentY2);
-						UnpackComplexMultiplyAdd<byte>(scalarReals, scalarImags, currentY1, currentY2, ref currentX1, ref currentX2);
-						ComplexPack(currentX1, currentX2, out currentX1, out currentX2);
-						break;
-					case BinaryModify.AddConjScaled:
-						ComplexUnpack(currentX1, currentX2, out currentX1, out currentX2);
-						ComplexUnpack(currentY1, currentY2, out currentY1, out currentY2);
-						currentY2 = -currentY2;
+						ComplexUnpack(a0, a1, out currentX1, out currentX2);
+						ComplexUnpack(b0, b1, out currentY1, out currentY2);
 						UnpackComplexMultiplyAdd<byte>(scalarReals, scalarImags, currentY1, currentY2, ref currentX1, ref currentX2);
 						ComplexPack(currentX1, currentX2, out currentX1, out currentX2);
 						break;
@@ -240,21 +234,22 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				Vector256<double> currentX1 = LoadVector256<double>(x + offset), currentX2 = LoadVector256<double>(x + offset + Vector<double>.Count / 2);
 				Vector256<double> currentY1 = LoadVector256<double>(y + offset), currentY2 = LoadVector256<double>(y + offset + Vector<double>.Count / 2);
+				var a0 = currentX1; var a1 = currentX2; var b0 = currentY1; var b1 = currentY2;
 				switch (op)
 				{
 					case BinaryModify.Multiply:
-						ComplexMultiply<byte, bool>(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
+						ComplexMultiply<byte, bool>(a0, a1, b0, b1, out currentX1, out currentX2);
 						break;
 					case BinaryModify.Divide:
-						ComplexDivide(currentX1, currentX2, currentY1, currentY2, out currentX1, out currentX2);
+						ComplexDivide(a0, a1, b0, b1, out currentX1, out currentX2);
 						break;
 					case BinaryModify.Add:
 						currentX1 = Avx.Add(currentX1, currentY1);
 						currentX2 = Avx.Add(currentX2, currentY2);
 						break;
 					case BinaryModify.AddScaled:
-						ComplexUnpack(currentX1, currentX2, out currentX1, out currentX2);
-						ComplexUnpack(currentY1, currentY2, out currentY1, out currentY2);
+						ComplexUnpack(a0, a1, out currentX1, out currentX2);
+						ComplexUnpack(b0, b1, out currentY1, out currentY2);
 						UnpackComplexMultiplyAdd<byte>(scalarReals, scalarImags, currentY1, currentY2, ref currentX1, ref currentX2);
 						ComplexPack(currentX1, currentX2, out currentX1, out currentX2);
 						break;
