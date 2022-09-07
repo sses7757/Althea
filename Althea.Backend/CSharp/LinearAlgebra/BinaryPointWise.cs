@@ -67,11 +67,13 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 
 		#region add multiply divide
-		internal struct B_Multiply { }
-		internal struct B_Divide { }
-		internal struct B_Add { }
-		internal struct B_AddScaled { }
-		internal struct B_AddConjugateScaled { }
+		internal interface IBinaryOp { }
+
+		internal struct B_Multiply : IBinaryOp { }
+		internal struct B_Divide : IBinaryOp { }
+		internal struct B_Add : IBinaryOp { }
+		internal struct B_AddScaled : IBinaryOp { }
+		internal struct B_AddConjugateScaled : IBinaryOp { }
 		private enum BinaryModify
 		{
 			Multiply,
@@ -269,7 +271,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool VectorsBinary<T, Op>(T* px, int incx, T* py, int incy, T* pz, int incz, T scalar, int length) where T : unmanaged, IBaseNumber<T>
+		internal static bool VectorsBinary<T, Op>(T* px, int incx, T* py, int incy, T* pz, int incz, T scalar, int length) where T : unmanaged, IBaseNumber<T> where Op : IBinaryOp
 		{
 			if (incx != 1 || incy != 1 || incz != 1 || !Vector.IsHardwareAccelerated || length <= (Vector<byte>.Count / sizeof(T) * 4))
 			{   // no SIMD or too short
@@ -312,7 +314,7 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static bool VectorsBinary<T, TS1, TS2, TS3, Op>(TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ, T scalar) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+		internal static bool VectorsBinary<T, TS1, TS2, TS3, Op>(TS1 x, long strideX, TS2 y, long strideY, TS3 z, long strideZ, T scalar) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3> where Op : IBinaryOp
 		{
 			if (!GetPointer(x, strideX, out T* px, out int lenx, out int incx))
 				return false;

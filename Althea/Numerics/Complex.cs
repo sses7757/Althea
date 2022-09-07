@@ -611,7 +611,7 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	public T Magnitude
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => T.Sqrt(this.MagnitudeSquared);
+		get => T.Hypot(this.real, this.imag);
 	}
 	/// <inheritdoc/>
 	public T MagnitudeSquared

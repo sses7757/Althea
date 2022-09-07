@@ -59,13 +59,16 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			{
 				int mid = (int)((uint)(right + left) >> 1);
 				if (value == x[mid])
-					return mid;
+					return incx == 1 ? mid : mid / incx;
 				else if (value > x[mid])
 					left = mid + incx;
 				else
 					right = mid - incx;
 			}
-			return ~left;
+			if (incx == 1)
+				return ~left;
+			else
+				return ~(left / incx);
 		}
 
 		public virtual partial bool IndexOf<T, TS>(TS array, long stride, bool sorted, T value, out long find) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
@@ -83,7 +86,9 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 			else
 			{
 				if (sorted)
+				{
 					find = BinarySearch(ptr, inc, length, value);
+				}
 				else
 				{
 					find = -1;
@@ -103,60 +108,35 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 
 		#region bound
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static int VectorBound<T, U, Lower>(void* xx, int length, void* value) where T : unmanaged, IBaseNumber<T> where U : unmanaged, INumberBase<U>
-		{
-			bool lower = typeof(Lower) == typeof(bool);
-
-			U* x = (U*)xx;
-			Vector<U> values = new(*(U*)value);
-			Vector<U> current;
-			int lengthLeft = length, offset = 0;
-			bool found = false;
-			while (lengthLeft >= Vector<U>.Count)
-			{
-				current = LoadVector(x + offset);
-				if ((lower && Vector.GreaterThanOrEqualAny(current, values)) || (!lower && Vector.GreaterThanAny(current, values)))
-				{
-					found = true;
-					break;
-				}
-				lengthLeft -= Vector<U>.Count;
-				offset += Vector<U>.Count;
-			}
-			if (found || lengthLeft > 0)
-			{
-				int len = found ? Vector<U>.Count : lengthLeft;
-				int find = VectorBoundManaged<T, Lower>((T*)xx + offset, 1, len, *(T*)value);
-				if (found)
-				{
-					return find + offset;
-				}
-				if (find < 0)
-					return -1;
-				if (find >= len)
-					return length;
-				return find + offset;
-			}
-			else
-			{
-				return lower ? -1 : length;
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static int VectorBoundManaged<T, Lower>(T* x, int incx, int length, T value) where T : unmanaged, IBaseNumber<T>
 		{
 			bool lower = typeof(Lower) == typeof(bool);
-			for (int i = 0, ix = 0; i < length; i++, ix += incx)
+
+			int find = BinarySearch(x, incx, length, value);
+			if (find < 0)
+				return ~find;
+			if (lower)
 			{
-				T current = x[ix];
-				if ((lower && current >= value) || (!lower && current > value))
+				for (int i = find - 1; i >= 0; i--)
 				{
-					return i;
+					if (x[i * incx] != value)
+					{
+						return i + 1;
+					}
 				}
+				return 0;
 			}
-			// not found
-			return lower ? -1 : length;
+			else
+			{
+				for (int i = find + 1; i < length; i++)
+				{
+					if (x[i * incx] != value)
+					{
+						return i;
+					}
+				}
+				return length;
+			}
 		}
 
 		public virtual partial bool BoundOf<T, TS>(TS array, long stride, T value, bool lowerBound, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
@@ -166,54 +146,10 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 				return false;
 			if (length == 0)
 				return true;
-
-			if (inc == 1 && Vector.IsHardwareAccelerated && length > 128 / sizeof(T)) // Vector<T>.Count * 4
-			{
-				delegate*<void*, int, void*, int> func;
-
-				if (lowerBound)
-				{
-					func = default(T) switch
-					{
-						Float64 => &VectorBound<Float64, double, bool>,
-						Float32 => &VectorBound<Float32, float, bool>,
-						SignedInt8 => &VectorBound<SignedInt8, sbyte, bool>,
-						SignedInt16 => &VectorBound<SignedInt16, short, bool>,
-						SignedInt32 => &VectorBound<SignedInt32, int, bool>,
-						SignedInt64 => &VectorBound<SignedInt64, long, bool>,
-						UnsignedInt8 => &VectorBound<UnsignedInt8, byte, bool>,
-						UnsignedInt16 => &VectorBound<UnsignedInt16, ushort, bool>,
-						UnsignedInt32 => &VectorBound<UnsignedInt32, uint, bool>,
-						UnsignedInt64 => &VectorBound<UnsignedInt64, ulong, bool>,
-						_ => null,
-					};
-				}
-				else
-				{
-					func = default(T) switch
-					{
-						Float64 => &VectorBound<Float64, double, byte>,
-						Float32 => &VectorBound<Float32, float, byte>,
-						SignedInt8 => &VectorBound<SignedInt8, sbyte, byte>,
-						SignedInt16 => &VectorBound<SignedInt16, short, byte>,
-						SignedInt32 => &VectorBound<SignedInt32, int, byte>,
-						SignedInt64 => &VectorBound<SignedInt64, long, byte>,
-						UnsignedInt8 => &VectorBound<UnsignedInt8, byte, byte>,
-						UnsignedInt16 => &VectorBound<UnsignedInt16, ushort, byte>,
-						UnsignedInt32 => &VectorBound<UnsignedInt32, uint, byte>,
-						UnsignedInt64 => &VectorBound<UnsignedInt64, ulong, byte>,
-						_ => null,
-					};
-				}
-				index = func(x, length, &value);
-			}
+			if (lowerBound)
+				index = VectorBoundManaged<T, bool>(x, inc, length, value);
 			else
-			{
-				if (lowerBound)
-					index = VectorBoundManaged<T, bool>(x, inc, length, value);
-				else
-					index = VectorBoundManaged<T, byte>(x, inc, length, value);
-			}
+				index = VectorBoundManaged<T, byte>(x, inc, length, value);
 			return true;
 		}
 		#endregion
@@ -246,27 +182,26 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		{
 			U* x = (U*)xx;
 			U start = *(U*)&startT, step = *(U*)&stepT;
-			U* starts = stackalloc U[Vector<U>.Count];
-			starts[0] = start;
+			x[0] = start;
 			for (int i = 1; i < Vector<U>.Count; i++)
 			{
-				starts[i] += starts[i - 1] + step;
+				x[i] = x[i - 1] + step;
 			}
-			Buffer.MemoryCopy(starts, x, Vector<U>.Count * sizeof(U), Vector<U>.Count * sizeof(U));
 
 			step *= U.CreateChecked(Vector<U>.Count);
 			Vector<U> steps = new(step);
 			U* end = x + length;
-			for (x += Vector<U>.Count; x < end; x += Vector<U>.Count)
+			var prev = LoadVector(x);
+			for (x += Vector<U>.Count; x + Vector<U>.Count <= end; x += Vector<U>.Count)
 			{
-				var prev = LoadVector(x - Vector<U>.Count);
 				var now = LoadVector(x);
 				now = prev + steps;
 				StoreVector(now, x);
+				prev = now;
 			}
 			if (x < end)
 			{
-				FillWithRangeManaged((T*)x, (int)(end - x), 1, stepT);
+				FillWithRangeManaged((T*)x - 1, (int)(end - x) + 1, 1, stepT);
 			}
 			return true;
 		}
@@ -275,30 +210,30 @@ namespace Althea.Backend.CSharp.LinearAlgebra
 		private static bool FillWithRangeComp<T, U>(void* xx, int length, T startT, T stepT) where T : unmanaged, IBaseNumber<T> where U : unmanaged, INumberBase<U>
 		{
 			U* x = (U*)xx;
-			U* starts = stackalloc U[Vector<U>.Count], steps = stackalloc U[Vector<U>.Count];
-			starts[0] = *(U*)&startT; starts[1] = *((U*)&startT + 1);
+			U* steps = stackalloc U[Vector<U>.Count];
+			x[0] = *(U*)&startT; x[1] = *((U*)&startT + 1);
 			steps[0] = *(U*)&stepT; steps[1] = *((U*)&stepT + 1);
 			for (int i = 2; i < Vector<U>.Count; i += 2)
 			{
-				starts[i] = starts[i - 2] + steps[0];
-				starts[i + 1] = starts[i - 1] + steps[1];
+				x[i] = x[i - 2] + steps[0];
+				x[i + 1] = x[i - 1] + steps[1];
 				steps[i] = steps[0]; steps[i + 1] = steps[1];
 			}
-			Buffer.MemoryCopy(starts, x, Vector<U>.Count * sizeof(U), Vector<U>.Count * sizeof(U));
 
 			Vector<U> incs = LoadVector(steps);
 			incs *= U.CreateChecked(Vector<U>.Count / 2);
 			U* end = x + length;
-			for (x += Vector<U>.Count; x < end; x += Vector<U>.Count)
+			var prev = LoadVector(x);
+			for (x += Vector<U>.Count; x + Vector<U>.Count <= end; x += Vector<U>.Count)
 			{
-				var prev = LoadVector(x - Vector<U>.Count);
 				var now = LoadVector(x);
 				now = prev + incs;
 				StoreVector(now, x);
+				prev = now;
 			}
 			if (x < end)
 			{
-				FillWithRangeManaged((T*)x, (int)(end - x) / 2, 1, stepT);
+				FillWithRangeManaged((T*)x - 1, (int)(end - x) / 2 + 1, 1, stepT);
 			}
 			return true;
 		}

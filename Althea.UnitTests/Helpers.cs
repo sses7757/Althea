@@ -53,6 +53,14 @@ internal static unsafe class Helpers
 {
 	private static readonly Backend.CSharp.Storage.Api api = new();
 
+	private static readonly System.Random rand;
+
+	static Helpers()
+	{
+		Settings.SetImplementation<IAbstractApi>(api);
+		rand = new System.Random(0);
+	}
+
 	public static void CopyToManaged<T>(this PureStorage<T, CpuMemoryPointer> array, T* values) where T : unmanaged, IBaseNumber<T>
 	{
 		api.MemoryCopy<T, CpuMemoryPointer, CpuMemoryPointer>(array.Pointer, new(new((IntPtr)values, array.Length * sizeof(T))), out _);
@@ -66,11 +74,11 @@ internal static unsafe class Helpers
 	public static PureStorage<Float64, CpuMemoryPointer> GenerateFloatData(double lower, double upper)
 	{
 		upper -= lower;
-		int length = System.Random.Shared.Next(1024) + 1024;
+		int length = rand.Next(1024) + 1024;
 		Float64* array = (Float64*)Marshal.AllocHGlobal(length * sizeof(Float64));
 		for (int i = 0; i < length; i++)
 		{
-			array[i] = System.Random.Shared.NextDouble() * upper + lower;
+			array[i] = rand.NextDouble() * upper + lower;
 		}
 		return new ActualPureStorage<Float64, CpuMemoryPointer>(new((IntPtr)array, length * sizeof(Float64)));
 	}
@@ -78,11 +86,11 @@ internal static unsafe class Helpers
 	public static PureStorage<SignedInt32, CpuMemoryPointer> GenerateIntData(int lower, int upper)
 	{
 		upper -= lower;
-		int length = System.Random.Shared.Next(1024) + 1024;
+		int length = rand.Next(1024) + 1024;
 		SignedInt32* array = (SignedInt32*)Marshal.AllocHGlobal(length * sizeof(SignedInt32));
 		for (int i = 0; i < length; i++)
 		{
-			array[i] = System.Random.Shared.Next(upper) + lower;
+			array[i] = rand.Next(upper) + lower;
 		}
 		return new ActualPureStorage<SignedInt32, CpuMemoryPointer>(new((IntPtr)array, length * sizeof(SignedInt32)));
 	}

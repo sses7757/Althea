@@ -17180,9 +17180,9 @@
             <summary>
             When implemented by a derived class, find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
+            <param name="array">The storage of the <b>sorted</b> array</param>
             <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <param name="value">The target value to find</param>
             <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>
@@ -17953,9 +17953,9 @@
             <summary>
             Find the zero-based index of the target <paramref name="value"/> as a (inclusive) lower / (exclusive) upper bound in the given <b>sorted</b> <paramref name="array"/>.
             </summary>
-            <typeparam name="T">Any unmanaged number as the index type</typeparam>
+            <typeparam name="T">Any unmanaged number as the data type</typeparam>
             <typeparam name="TS">The concrete storage type that implements <see cref="T:Althea.Storage.IStorage`2"/></typeparam>
-            <param name="array">The storage of the <b>sorted</b> integer-typed array</param>
+            <param name="array">The storage of the <b>sorted</b> array</param>
             <param name="stride">The stride between consecutive elements in <paramref name="array"/></param>
             <param name="value">The target value to find</param>
             <param name="lowerBound">Whether to find the first element in <paramref name="array"/> whose value is not less than <paramref name="value"/> or the first element in <paramref name="array"/> whose value is larger than <paramref name="value"/></param>

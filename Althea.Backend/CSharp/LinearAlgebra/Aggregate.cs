@@ -470,7 +470,7 @@ public unsafe partial class Api
 		bool doAbs = typeof(Test) == typeof(int) || typeof(Test) == typeof(uint);
 		if (doAbs)
 		{
-			extreme = x[0];
+			extreme = T.Abs(x[0]);
 			for (int i = 0, ix = 0; i < length; i++, ix += inc)
 			{
 				T v = T.Abs(x[ix]);
@@ -486,20 +486,9 @@ public unsafe partial class Api
 			for (int i = 0, ix = 0; i < length; i++, ix += inc)
 			{
 				T v = x[ix];
-				// some frequent type speedups, complex is not possible here
-				if (doMax)
+				if ((doMax && v > extreme) || (!doMax && v < extreme))
 				{
-					if (v > extreme)
-					{
-						extreme = v;
-					}
-				}
-				else
-				{
-					if (v < extreme)
-					{
-						extreme = v;
-					}
+					extreme = v;
 				}
 			}
 		}

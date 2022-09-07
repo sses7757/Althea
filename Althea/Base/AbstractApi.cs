@@ -275,20 +275,11 @@ public abstract class AbstractApiSelector<TApi> where TApi : IAbstractRuntimeApi
 			get
 			{
 				List<TApi> apis = new(APIs.Count);
-				apiLock.EnterReadLock();
-				try
+				foreach (var item in this)
 				{
-					var enumerator = GetEnumerator();
-					do
-					{
-						apis.Add(enumerator.Current);
-					} while (enumerator.MoveNext());
-					return apis;
+					apis.Add(item);
 				}
-				finally
-				{
-					apiLock.ExitReadLock();
-				}
+				return apis;
 			}
 		}
 	}
@@ -352,6 +343,11 @@ public abstract class AbstractApiSelector<TApi> where TApi : IAbstractRuntimeApi
 		{
 			if (this.disposed)
 				throw new ObjectDisposedException(nameof(ApiEnumerator));
+			if (APIs.Count == 0)
+			{
+				this.current = int.MaxValue;
+				return;
+			}
 			this.current = CurrentApiIndex - 1;
 			if (this.current < 0)
 				this.current = APIs.Count - 1;
@@ -366,12 +362,14 @@ public abstract class AbstractApiSelector<TApi> where TApi : IAbstractRuntimeApi
 		{
 			if (this.disposed)
 				throw new ObjectDisposedException(nameof(ApiEnumerator));
+			if (this.current == int.MaxValue)
+				return false;
 			do
 			{
 				this.current++;
 				if (this.current == APIs.Count)
 					current = 0;
-				if (this.current == EndIndex)
+				else if (this.current == EndIndex)
 					return false;
 			} while (this.Current.Disposed);
 			return true;

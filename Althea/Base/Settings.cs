@@ -48,6 +48,8 @@ public record struct PrintSettings
 #region implementation settings
 internal record struct ImplementationSettings(Dictionary<string, object> Implementations)
 {
+	public ImplementationSettings() : this(new Dictionary<string, object>()) { }
+
 	private static Dictionary<string, object> GetImplementations(IBackends backend)
 	{
 		Dictionary<string, object> impls = new();
@@ -181,6 +183,7 @@ public static class Settings
 		lock (__lockSetting)
 		{
 			AbstractApiSelector<TApi>.RemoveImplementation(implementation);
+			settings ??= new();
 			settings.ImplementationSettings.Implementations[typeof(TApi).AssemblyQualifiedName ?? string.Empty] = implementation;
 		}
 	}
@@ -220,7 +223,8 @@ public static class Settings
 		lock (__lockSetting)
 		{
 			AbstractApiSelector<TApi>.SetImplementation(implementation);
-			settings.ImplementationSettings.Implementations[typeof(TApi).AssemblyQualifiedName ?? string.Empty] = implementation;
+			settings ??= new();
+			settings.ImplementationSettings.Implementations[typeof(TApi).AssemblyQualifiedName!] = implementation;
 		}
 	}
 
@@ -279,6 +283,7 @@ public static class Settings
 		{
 			lock (__lockSetting)
 			{
+				settings ??= new();
 				settings.ImplementationSettings = new(backend);
 				settings.ImplementationSettings.SetBackends();
 			}
@@ -358,6 +363,7 @@ public static class Settings
 	/// </summary>
 	public static void ExportSettings()
 	{
+		settings ??= new();
 		string json = JsonSerializer.Serialize(settings, options);
 		File.WriteAllText(fileName, json);
 	}

@@ -78,9 +78,10 @@ public abstract class PureStorage<T, TP> : PureStorageBase<TP>, IStorage<T, Pure
 	/// <inheritdoc/>
 	public virtual void Dispose(bool invokedByUser)
 	{
-		if (this is not ReferencePureStorage<T, TP>)
+		if (this is not ReferencePureStorage<T, TP> && this.Pointer.OffsetInBytes == 0)
 		{
 			Mem.Free(this.Pointer.Pointer);
+			////System.Diagnostics.Debug.WriteLine($"{new System.Diagnostics.StackFrame(2).GetMethod()} disposed {this.Pointer.Pointer}, user invoke = {invokedByUser}");
 		}
 		this.Disposed = true;
 	}
