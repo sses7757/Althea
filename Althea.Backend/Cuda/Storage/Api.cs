@@ -3,6 +3,7 @@ using System.Dynamic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
+using Althea.Backend.Cuda.LinearAlgebra.Dense;
 using Althea.Backend.Storage;
 using Althea.Helpers;
 
@@ -279,7 +280,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 		var (gpu, file) = pointer.Pointer.FromGeneric();
 		if (gpu.IsValid())
 		{
-			if (LinearAlgebra.Dense.CustomNativeMethods.vecFillVal(T.Type, pointer.LengthInBytes / sizeof(T), &value, gpu.NativePointer(pointer),  1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+			if (!CustomNativeMethods.vecFillVal(T.Type, pointer.LengthInBytes / sizeof(T), &value, gpu.NativePointer(pointer),  1).Check())
 				return false;
 		}
 		else if (file.IsValid())
@@ -287,7 +288,7 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 			if (!file.CanWrite)
 				throw new InvalidOperationException();
 			using var buffer = CudaBuffer.Create(4096 + sizeof(T), 0, false);
-			if (LinearAlgebra.Dense.CustomNativeMethods.vecFillVal(T.Type, 4096 / sizeof(T) + 1, &value, buffer.DeviceBuffer, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+			if (!CustomNativeMethods.vecFillVal(T.Type, 4096 / sizeof(T), &value, buffer.DeviceBuffer, 1).Check())
 				return false;
 			using CudaFileBuffer buf = buffer;
 			long end = pointer.LengthInBytes + pointer.OffsetInBytes, start = (pointer.OffsetInBytes + 4095) >> 12 << 12;
@@ -345,7 +346,9 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 		}
 		if (fileSrc == default && fileDst == default)
 		{
-			NativeMethods.cudaMemcpy(gpuDst.NativePointer(destination), gpuSrc.NativePointer(source), actualCopied, GetCopyKind(cpuSrc, cpuDst)).Check();
+			void* pd = gpuDst.NativePointer(destination) is null ? cpuDst.NativePointer(destination) : gpuDst.NativePointer(destination);
+			void* ps = gpuSrc.NativePointer(source) is null ? cpuSrc.NativePointer(source) : gpuSrc.NativePointer(source);
+			NativeMethods.cudaMemcpy(pd, ps, actualCopied, GetCopyKind(cpuSrc, cpuDst)).Check();
 		}
 		else if (gpuSrc.IsValid() && fileDst.IsValid())
 		{
@@ -471,15 +474,9 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 				LinearAlgebra.Dense.NativeMethods.cublasGetVector((int)copies, sizeof(T), source, incrementSource, destination, incrementDestination).Check();
 				break;
 			case MemoryCopyKind.DeviceToDevice:
-				var err = LinearAlgebra.Dense.CustomNativeMethods.vecStridedCopy(T.Type, copies, source, incrementSource, destination, incrementDestination);
-				if (err == LinearAlgebra.Dense.CustomStatus.NotSupported)
+				if (!CustomNativeMethods.vecStridedCopy(T.Type, copies, source, incrementSource, destination, incrementDestination).Check())
 					return false;
 				break;
-			case MemoryCopyKind.HostToHost:
-				if (copies > int.MaxValue)
-					return false;
-				CSharp.Storage.Api.StridedCopy(source, destination, incrementSource, incrementDestination, (int)copies);
-				return true;
 			default:
 				return false;
 		}

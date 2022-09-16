@@ -30,10 +30,10 @@ public unsafe partial class Api
 			return false;
 		delegate*<IntPtr, int, T*, int, out int, CudaBlasStatus> func = default(T) switch
 		{
-			Complex<Float32> when min => &NM.cublasIcamin,
-			Complex<Float64> when min => &NM.cublasIzamin,
-			Complex<Float32> when !min => &NM.cublasIcamin,
-			Complex<Float64> when !min => &NM.cublasIzamax,
+			Complex<Float32> when min => &NM.cublasIcamin_v2,
+			Complex<Float64> when min => &NM.cublasIzamin_v2,
+			Complex<Float32> when !min => &NM.cublasIcamin_v2,
+			Complex<Float64> when !min => &NM.cublasIzamax_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -52,8 +52,8 @@ public unsafe partial class Api
 		delegate*<IntPtr, int, T*, int, out int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasIsamax,
-			Float64 => &NM.cublasIdamax,
+			Float32 => &NM.cublasIsamax_v2,
+			Float64 => &NM.cublasIdamax_v2,
 			_ => null,
 		};
 		if (func is not null)
@@ -77,8 +77,8 @@ public unsafe partial class Api
 		delegate*<IntPtr, int, T*, int, out int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasIsamin,
-			Float64 => &NM.cublasIdamin,
+			Float32 => &NM.cublasIsamin_v2,
+			Float64 => &NM.cublasIdamin_v2,
 			_ => null,
 		};
 		if (func is not null)
@@ -104,16 +104,16 @@ public unsafe partial class Api
 		delegate*<IntPtr, int, T*, int, double*, CudaBlasStatus> funcD;
 		funcS = default(T) switch
 		{
-			Float32 when doSum => &NM.cublasSasum,
-			Float32 when !doSum => &NM.cublasSnrm2,
-			Complex<Float32> when !doSum => &NM.cublasScnrm2,
+			Float32 when doSum => &NM.cublasSasum_v2,
+			Float32 when !doSum => &NM.cublasSnrm2_v2,
+			Complex<Float32> when !doSum => &NM.cublasScnrm2_v2,
 			_ => null,
 		};
 		funcD = default(T) switch
 		{
-			Float64 when doSum => &NM.cublasDasum,
-			Float64 when !doSum => &NM.cublasDnrm2,
-			Complex<Float64> when !doSum => &NM.cublasDznrm2,
+			Float64 when doSum => &NM.cublasDasum_v2,
+			Float64 when !doSum => &NM.cublasDnrm2_v2,
+			Complex<Float64> when !doSum => &NM.cublasDznrm2_v2,
 			_ => null,
 		};
 		if (funcS is null && funcD is null)
@@ -158,10 +158,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, int, T*, int, T*, int, T*, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSdot,
-			Float64 => &NM.cublasDdot,
-			Complex<Float32> => conjX ? &NM.cublasCdotc : &NM.cublasCdotu,
-			Complex<Float64> => conjX ? &NM.cublasZdotc : &NM.cublasZdotu,
+			Float32 => &NM.cublasSdot_v2,
+			Float64 => &NM.cublasDdot_v2,
+			Complex<Float32> => conjX ? &NM.cublasCdotc_v2 : &NM.cublasCdotu_v2,
+			Complex<Float64> => conjX ? &NM.cublasZdotc_v2 : &NM.cublasZdotu_v2,
 			_ => null,
 		};
 		T result;
@@ -191,10 +191,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSscal,
-			Float64 => &NM.cublasDscal,
-			Complex<Float32> => &NM.cublasCscal,
-			Complex<Float64> => &NM.cublasZscal,
+			Float32 => &NM.cublasSscal_v2,
+			Float64 => &NM.cublasDscal_v2,
+			Complex<Float32> => &NM.cublasCscal_v2,
+			Complex<Float64> => &NM.cublasZscal_v2,
 			_ => null,
 		};
 		if (func is not null)
@@ -224,10 +224,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, int, T*, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSaxpy,
-			Float64 => &NM.cublasDaxpy,
-			Complex<Float32> => &NM.cublasCaxpy,
-			Complex<Float64> => &NM.cublasZaxpy,
+			Float32 => &NM.cublasSaxpy_v2,
+			Float64 => &NM.cublasDaxpy_v2,
+			Complex<Float32> => &NM.cublasCaxpy_v2,
+			Complex<Float64> => &NM.cublasZaxpy_v2,
 			_ => null,
 		};
 		if (func is not null)
@@ -261,10 +261,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasOperation, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSgemv,
-			Float64 => &NM.cublasDgemv,
-			Complex<Float32> => &NM.cublasCgemv,
-			Complex<Float64> => &NM.cublasZgemv,
+			Float32 => &NM.cublasSgemv_v2,
+			Float64 => &NM.cublasDgemv_v2,
+			Complex<Float32> => &NM.cublasCgemv_v2,
+			Complex<Float64> => &NM.cublasZgemv_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -291,10 +291,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasFillMode, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSsymv,
-			Float64 => &NM.cublasDsymv,
-			Complex<Float32> => hermA ? &NM.cublasChemv : &NM.cublasCsymv,
-			Complex<Float64> => hermA ? &NM.cublasZhemv : &NM.cublasZsymv,
+			Float32 => &NM.cublasSsymv_v2,
+			Float64 => &NM.cublasDsymv_v2,
+			Complex<Float32> => hermA ? &NM.cublasChemv_v2 : &NM.cublasCsymv_v2,
+			Complex<Float64> => hermA ? &NM.cublasZhemv_v2 : &NM.cublasZsymv_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -318,10 +318,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasFillMode, CuBlasOperation, CuBlasDiagType, int, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasStrmv,
-			Float64 => &NM.cublasDtrmv,
-			Complex<Float32> => &NM.cublasCtrmv,
-			Complex<Float64> => &NM.cublasZtrmv,
+			Float32 => &NM.cublasStrmv_v2,
+			Float64 => &NM.cublasDtrmv_v2,
+			Complex<Float32> => &NM.cublasCtrmv_v2,
+			Complex<Float64> => &NM.cublasZtrmv_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -384,10 +384,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, int, int, T*, T*, int, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSger,
-			Float64 => &NM.cublasDger,
-			Complex<Float32> => conjY ? &NM.cublasCgerc : &NM.cublasCgerc,
-			Complex<Float64> => conjY ? &NM.cublasZgerc : &NM.cublasZgerc,
+			Float32 => &NM.cublasSger_v2,
+			Float64 => &NM.cublasDger_v2,
+			Complex<Float32> => conjY ? &NM.cublasCgerc_v2 : &NM.cublasCgerc_v2,
+			Complex<Float64> => conjY ? &NM.cublasZgerc_v2 : &NM.cublasZgerc_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -411,10 +411,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasFillMode, int, T*, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSsyr,
-			Float64 => &NM.cublasDsyr,
-			Complex<Float32> => conjX ? &NM.cublasCher : &NM.cublasCsyr,
-			Complex<Float64> => conjX ? &NM.cublasZher : &NM.cublasZsyr,
+			Float32 => &NM.cublasSsyr_v2,
+			Float64 => &NM.cublasDsyr_v2,
+			Complex<Float32> => conjX ? &NM.cublasCher_v2 : &NM.cublasCsyr_v2,
+			Complex<Float64> => conjX ? &NM.cublasZher_v2 : &NM.cublasZsyr_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -442,10 +442,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasFillMode, int, T*, T*, int, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSsyr2,
-			Float64 => &NM.cublasSsyr2,
-			Complex<Float32> => conjugate ? &NM.cublasCher2 : &NM.cublasCsyr2,
-			Complex<Float64> => conjugate ? &NM.cublasZher2 : &NM.cublasZsyr2,
+			Float32 => &NM.cublasSsyr2_v2,
+			Float64 => &NM.cublasSsyr2_v2,
+			Complex<Float32> => conjugate ? &NM.cublasCher2_v2 : &NM.cublasCsyr2_v2,
+			Complex<Float64> => conjugate ? &NM.cublasZher2_v2 : &NM.cublasZsyr2_v2,
 			_ => null,
 		};
 		if (β != T.One) // scale A
@@ -469,10 +469,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasOperation, CuBlasOperation, int, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSgemm,
-			Float64 => &NM.cublasDgemm,
-			Complex<Float32> => this.ComplexGemmUseGemm3m ? &NM.cublasCgemm3m : &NM.cublasCgemm,
-			Complex<Float64> => this.ComplexGemmUseGemm3m ? &NM.cublasZgemm3m : &NM.cublasZgemm,
+			Float32 => &NM.cublasSgemm_v2,
+			Float64 => &NM.cublasDgemm_v2,
+			Complex<Float32> => this.ComplexGemmUseGemm3m ? &NM.cublasCgemm3m : &NM.cublasCgemm_v2,
+			Complex<Float64> => this.ComplexGemmUseGemm3m ? &NM.cublasZgemm3m : &NM.cublasZgemm_v2,
 			_ => null,
 		};
 		if (func is not null || T.Type == DataType.RealFloat16 || T.Type == BrainHalf.RealBrainHalfType)
@@ -525,10 +525,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasSideMode, CuBlasFillMode, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSsymm,
-			Float64 => &NM.cublasDsymm,
-			Complex<Float32> => hermA ? &NM.cublasChemm : &NM.cublasCsymm,
-			Complex<Float64> => hermA ? &NM.cublasZhemm : &NM.cublasZsymm,
+			Float32 => &NM.cublasSsymm_v2,
+			Float64 => &NM.cublasDsymm_v2,
+			Complex<Float32> => hermA ? &NM.cublasChemm_v2 : &NM.cublasCsymm_v2,
+			Complex<Float64> => hermA ? &NM.cublasZhemm_v2 : &NM.cublasZsymm_v2,
 			_ => null,
 		};
 		var side = leftA ? CuBlasSideMode.Left : CuBlasSideMode.Right;
@@ -578,10 +578,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasSideMode, CuBlasFillMode, CuBlasOperation, CuBlasDiagType, int, int, T*, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NativeMethods.cublasStrsm,
-			Float64 => &NativeMethods.cublasDtrsm,
-			Complex<Float32> => &NativeMethods.cublasCtrsm,
-			Complex<Float64> => &NativeMethods.cublasZtrsm,
+			Float32 => &NM.cublasStrsm_v2,
+			Float64 => &NM.cublasDtrsm_v2,
+			Complex<Float32> => &NM.cublasCtrsm_v2,
+			Complex<Float64> => &NM.cublasZtrsm_v2,
 			_ => null,
 		};
 		func(this.cublasHandle, leftA ? CuBlasSideMode.Right : CuBlasSideMode.Left, fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower, op.ToCuda(), unitDiag ? CuBlasDiagType.Unit : CuBlasDiagType.NonUnit, mm, nn, &α, pA, llda, pB, lldb).Check();
@@ -610,10 +610,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasSideMode, CuBlasFillMode, CuBlasOperation, CuBlasDiagType, int, int, T*, T*, int, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasStrmm,
-			Float64 => &NM.cublasDtrmm,
-			Complex<Float32> => &NM.cublasCtrmm,
-			Complex<Float64> => &NM.cublasZtrmm,
+			Float32 => &NM.cublasStrmm_v2,
+			Float64 => &NM.cublasDtrmm_v2,
+			Complex<Float32> => &NM.cublasCtrmm_v2,
+			Complex<Float64> => &NM.cublasZtrmm_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -652,10 +652,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasFillMode, CuBlasOperation, int, int, T*, T*, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NativeMethods.cublasSsyrk,
-			Float64 => &NativeMethods.cublasDsyrk,
-			Complex<Float32> => conjA ? &NativeMethods.cublasCherk : &NativeMethods.cublasCsyrk,
-			Complex<Float64> => conjA ? &NativeMethods.cublasZherk : &NativeMethods.cublasZsyrk,
+			Float32 => &NM.cublasSsyrk_v2,
+			Float64 => &NM.cublasDsyrk_v2,
+			Complex<Float32> => conjA ? &NM.cublasCherk_v2 : &NM.cublasCsyrk_v2,
+			Complex<Float64> => conjA ? &NM.cublasZherk_v2 : &NM.cublasZsyrk_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -682,10 +682,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasFillMode, CuBlasOperation, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NativeMethods.cublasSsyr2k,
-			Float64 => &NativeMethods.cublasDsyr2k,
-			Complex<Float32> => conjugate ? &NativeMethods.cublasCher2k : &NativeMethods.cublasCsyr2k,
-			Complex<Float64> => conjugate ? &NativeMethods.cublasZher2k : &NativeMethods.cublasZsyr2k,
+			Float32 => &NM.cublasSsyr2k_v2,
+			Float64 => &NM.cublasDsyr2k_v2,
+			Complex<Float32> => conjugate ? &NM.cublasCher2k_v2 : &NM.cublasCsyr2k_v2,
+			Complex<Float64> => conjugate ? &NM.cublasZher2k_v2 : &NM.cublasZsyr2k_v2,
 			_ => null,
 		};
 		if (func is null)
@@ -725,15 +725,15 @@ public unsafe partial class Api
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
 		if ((opA == MatrixOperation.Conjugate) != (opB == MatrixOperation.Conjugate))
 			return false;
-		if (llda <= 0) llda = 1;
-		if (lldb <= 0) lldb = 1;
+		if (llda <= 0) { llda = mm; opA = default; }
+		if (lldb <= 0) { lldb = mm; opB = default; }
 		delegate*<IntPtr, CuBlasOperation, CuBlasOperation, int, int, T*, T*, int, T*, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NativeMethods.cublasSgeam,
-			Float64 => &NativeMethods.cublasDgeam,
-			Complex<Float32> => &NativeMethods.cublasCgeam,
-			Complex<Float64> => &NativeMethods.cublasZgeam,
+			Float32 => &NM.cublasSgeam,
+			Float64 => &NM.cublasDgeam,
+			Complex<Float32> => &NM.cublasCgeam,
+			Complex<Float64> => &NM.cublasZgeam,
 			_ => null,
 		};
 		func(this.cublasHandle, opA.ToCuda(), opB.ToCuda(), mm, nn, &α, pA, llda, &β, pB, lldb, pC, lldc).Check();
@@ -759,10 +759,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasSideMode, int, int, T*, int, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NativeMethods.cublasSdgmm,
-			Float64 => &NativeMethods.cublasDdgmm,
-			Complex<Float32> => &NativeMethods.cublasCdgmm,
-			Complex<Float64> => &NativeMethods.cublasZdgmm,
+			Float32 => &NM.cublasSdgmm_v2,
+			Float64 => &NM.cublasDdgmm_v2,
+			Complex<Float32> => &NM.cublasCdgmm_v2,
+			Complex<Float64> => &NM.cublasZdgmm_v2,
 			_ => null,
 		};
 		// overwrite C by diagonal multiply result
@@ -791,10 +791,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasFillMode, CuBlasOperation, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NativeMethods.cublasSsyrkx,
-			Float64 => &NativeMethods.cublasDsyrkx,
-			Complex<Float32> => conjB ? &NativeMethods.cublasCherkx : &NativeMethods.cublasCsyrkx,
-			Complex<Float64> => conjB ? &NativeMethods.cublasZherkx : &NativeMethods.cublasZsyrkx,
+			Float32 => &NM.cublasSsyrkx,
+			Float64 => &NM.cublasDsyrkx,
+			Complex<Float32> => conjB ? &NM.cublasCherkx : &NM.cublasCsyrkx,
+			Complex<Float64> => conjB ? &NM.cublasZherkx : &NM.cublasZsyrkx,
 			_ => null,
 		};
 		func(this.cublasHandle, fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower, op.ToCuda(), nn, kk, &α, pA, llda, pB, lldb, &β, pC, lldc).Check();

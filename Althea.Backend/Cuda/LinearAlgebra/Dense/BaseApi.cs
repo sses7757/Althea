@@ -133,8 +133,8 @@ public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAb
 	public Api()
 	{
 		this.BindedDeviceID = Runtime.CurrentDeviceID;
-		NativeMethods.cublasCreate(out this.cublasHandle).Check();
-		NativeMethods.cublasSetPointerMode(this.cublasHandle, CuBlasPointerMode.Host);
+		NativeMethods.cublasCreate_v2(out this.cublasHandle).Check();
+		NativeMethods.cublasSetPointerMode_v2(this.cublasHandle, CuBlasPointerMode.Host);
 		this.UseAtomicsMode = true;
 		NativeMethods.cusolverDnCreate(out this.cusolverHandle).Check();
 		this.Properties = new DynamicProperties(this);
@@ -152,7 +152,7 @@ public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAb
 	/// </summary>
 	public virtual void Dispose(bool disposing)
 	{
-		NativeMethods.cublasDestroy(this.cublasHandle);
+		NativeMethods.cublasDestroy_v2(this.cublasHandle);
 		NativeMethods.cusolverDnDestroy(this.cusolverHandle);
 	}
 
@@ -165,10 +165,10 @@ public unsafe partial class Api : IBindedDevice, IBlasAbstractApi, IExtendBlasAb
 	{
 		delegate*<IntPtr, int, T*, int, T*, int, CudaBlasStatus> func = default(T) switch
 		{
-			Float32 => &NativeMethods.cublasScopy,
-			Float64 => &NativeMethods.cublasDcopy,
-			Complex<Float32> => &NativeMethods.cublasCcopy,
-			Complex<Float64> => &NativeMethods.cublasZcopy,
+			Float32 => &NativeMethods.cublasScopy_v2,
+			Float64 => &NativeMethods.cublasDcopy_v2,
+			Complex<Float32> => &NativeMethods.cublasCcopy_v2,
+			Complex<Float64> => &NativeMethods.cublasZcopy_v2,
 			_ => null,
 		};
 		func(this.cublasHandle, n, from, incx, to, incy).Check();

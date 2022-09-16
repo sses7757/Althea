@@ -981,7 +981,7 @@
             <summary>
             The <see cref="T:Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode"/> enum indicates whether the scalar values are passed by reference on the host or device.<br/>
             It is important to point out that if several scalar values are present in the function call, all of them must conform to the same single pointer mode.<br/>
-            The pointer mode can be set and retrieved using <see cref="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasGetPointerMode(System.IntPtr,Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode@)"/> and <see cref="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasSetPointerMode(System.IntPtr,Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode)"/> routines, respectively.
+            The pointer mode can be set and retrieved using <see cref="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasGetPointerMode_v2(System.IntPtr,Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode@)"/> and <see cref="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasSetPointerMode_v2(System.IntPtr,Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode)"/> routines, respectively.
             </summary>
         </member>
         <member name="F:Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode.Host">
@@ -1123,14 +1123,14 @@
             The actual class for CUDA BLAS and SOLVER library APIs
             </summary>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasCreate(System.IntPtr@)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasCreate_v2(System.IntPtr@)">
             <summary>
             This function initializes the CUDA BLAS library and creates a handle to an opaque structure holding the CUDA BLAS library context.
             </summary>
             <param name="handle">returned CUDA BLAS handle</param>
             <returns>operation status enum <see cref="T:Althea.Backend.Cuda.LinearAlgebra.Dense.CudaBlasStatus"/></returns>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasDestroy(System.IntPtr)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasDestroy_v2(System.IntPtr)">
             <summary>
             This function releases hardware resources used by the CUBLAS library. This function is usually the last call with a particular handle to the CUBLAS library.
             </summary>
@@ -1156,7 +1156,7 @@
             <param name="mode">the <see cref="T:Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasAtomicsMode"/> to set</param>
             <returns>operation status enum <see cref="T:Althea.Backend.Cuda.LinearAlgebra.Dense.CudaBlasStatus"/></returns>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasGetPointerMode(System.IntPtr,Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode@)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasGetPointerMode_v2(System.IntPtr,Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode@)">
             <summary>
             This function obtains the pointer mode used by the cuBLAS library.
             </summary>
@@ -1164,7 +1164,7 @@
             <param name="mode">returned <see cref="T:Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode"/></param>
             <returns>operation status enum <see cref="T:Althea.Backend.Cuda.LinearAlgebra.Dense.CudaBlasStatus"/></returns>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasSetPointerMode(System.IntPtr,Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.NativeMethods.cublasSetPointerMode_v2(System.IntPtr,Althea.Backend.Cuda.LinearAlgebra.Dense.CuBlasPointerMode)">
             <summary>
             This function sets the pointer mode used by the cuBLAS library.
             The default is for the values to be passed by reference on the host.
@@ -2307,6 +2307,9 @@
             <summary>
             When implemented by a derived class, statically get the memory allocation position's GPU ID.
             </summary>
+        </member>
+        <member name="M:Althea.Backend.Cuda.CudaMemoryPointer.ToString">
+            <inheritdoc/>
         </member>
         <member name="T:Althea.Backend.Cuda.CudaMemoryPointer`1">
             <summary>

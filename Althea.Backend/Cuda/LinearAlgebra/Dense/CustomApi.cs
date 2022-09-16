@@ -205,10 +205,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasOperation, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NativeMethods.cublasSgemv,
-			Float64 => &NativeMethods.cublasDgemv,
-			Complex<Float32> => &NativeMethods.cublasCgemv,
-			Complex<Float64> => &NativeMethods.cublasZgemv,
+			Float32 => &NativeMethods.cublasSgemv_v2,
+			Float64 => &NativeMethods.cublasDgemv_v2,
+			Complex<Float32> => &NativeMethods.cublasCgemv_v2,
+			Complex<Float64> => &NativeMethods.cublasZgemv_v2,
 			_ => null,
 		};
 		if (func is null)

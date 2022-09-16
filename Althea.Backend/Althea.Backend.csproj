@@ -96,8 +96,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Cuda\Althea.ExtendBlas.DenseVector.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Cuda\Althea.ExtendBlas.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Cuda\Althea.ExtendBlas.pdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -114,7 +117,7 @@
       <LastGenOutput>CudaGpuIds.cs</LastGenOutput>
     </None>
     <None Update="Mkl\Althea.ExtendBlas.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Mkl\Althea.ExtendBlas.pdb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

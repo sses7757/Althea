@@ -8,24 +8,23 @@ namespace Althea.Backend.Cuda;
 /// </summary>
 public static class Runtime
 {
+	static Runtime()
+	{
+		try
+		{
+			var (major, minor) = GetDeviceComputeCapability(0);
+			Available = major > 0;
+		}
+		catch (Exception)
+		{
+			Available = false;
+		}
+	}
+
 	/// <summary>
 	/// Check whether CUDA is available or not
 	/// </summary>
-	public static bool Available
-	{
-		get
-		{
-			try
-			{
-				var (major, minor) = GetDeviceComputeCapability(0);
-				return major > 0;
-			}
-			catch (Exception)
-			{
-				return false;
-			}
-		}
-	}
+	public static bool Available { get; }
 
 	/// <summary>
 	/// Get the CUDA device's compute capability
@@ -47,7 +46,8 @@ public static class Runtime
 	/// </summary>
 	public static int DeviceCount {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get {
+		get
+		{
 			NativeMethods.cudaGetDeviceCount(out int c).Check();
 			return c;
 		}
@@ -62,7 +62,8 @@ public static class Runtime
 	/// <remarks>Changing the current CDUA device is a global action and shall be very careful when doing so.</remarks>
 	public static int CurrentDeviceID {
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get {
+		get
+		{
 			if (_currentDevice < 0)
 			{
 				var err = NativeMethods.cudaGetDevice(out var d);
@@ -71,7 +72,8 @@ public static class Runtime
 			return _currentDevice;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		set {
+		set
+		{
 			if (_currentDevice == value)
 				return;
 			NativeMethods.cudaSetDevice(value).Check();
@@ -112,5 +114,4 @@ public static class Runtime
 		var err = NativeMethods.cudaRuntimeGetVersion(out var ver);
 		return err == CudaError.Success ? (ver / 1000, (ver % 1000) / 10) : default;
 	}
-
 }

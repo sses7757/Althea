@@ -12,19 +12,19 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		#region level 1 BLAS
 		[NativeMethod(7)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasIsamax(IntPtr handle, int n, void* x, int incx, out int result);
+		internal static extern CudaBlasStatus cublasIsamax_v2(IntPtr handle, int n, void* x, int incx, out int result);
 
 		[NativeMethod(7)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasIsamin(IntPtr handle, int n, void* x, int incx, out int result);
+		internal static extern CudaBlasStatus cublasIsamin_v2(IntPtr handle, int n, void* x, int incx, out int result);
 
 		[NativeMethod(6, true, false, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSasum(IntPtr handle, int n, void* x, int incx, void* result);
+		internal static extern CudaBlasStatus cublasSasum_v2(IntPtr handle, int n, void* x, int incx, void* result);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSaxpy(IntPtr handle, int n, void* α, void* x, int incx, void* y, int incy);
+		internal static extern CudaBlasStatus cublasSaxpy_v2(IntPtr handle, int n, void* α, void* x, int incx, void* y, int incy);
 
 		[CustomNativeMethod(6, "Float32", "Sdot")]
 		[CustomNativeMethod(6, "Float64", "Ddot")]
@@ -33,37 +33,37 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[CustomNativeMethod(6, "Complex<Float64>", "Zdotu")]
 		[CustomNativeMethod(6, "Complex<Float64>", "Zdotc")]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSdot(IntPtr handle, int n, void* x, int incx, void* y, int incy, void* result);
+		internal static extern CudaBlasStatus cublasSdot_v2(IntPtr handle, int n, void* x, int incx, void* y, int incy, void* result);
 
 		[NativeMethod(6, true, false, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSnrm2(IntPtr handle, int n, void* x, int incx, void* result);
+		internal static extern CudaBlasStatus cublasSnrm2_v2(IntPtr handle, int n, void* x, int incx, void* result);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSscal(IntPtr handle, int n, void* α, void* x, int incx);
+		internal static extern CudaBlasStatus cublasSscal_v2(IntPtr handle, int n, void* α, void* x, int incx);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasScopy(IntPtr handle, int n, void* x, int incx, void* y, int incy);
+		internal static extern CudaBlasStatus cublasScopy_v2(IntPtr handle, int n, void* x, int incx, void* y, int incy);
 		#endregion
 
 		#region level 2 BLAS
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSgemv(IntPtr handle, CuBlasOperation op, int m, int n, void* α, void* A, int lda, void* x, int incx, void* β, void* y, int incy);
+		internal static extern CudaBlasStatus cublasSgemv_v2(IntPtr handle, CuBlasOperation op, int m, int n, void* α, void* A, int lda, void* x, int incx, void* β, void* y, int incy);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsymv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, void* A, int lda, void* x, int incx, void* β, void* y, int incy);
+		internal static extern CudaBlasStatus cublasSsymv_v2(IntPtr handle, CuBlasFillMode uplo, int n, void* α, void* A, int lda, void* x, int incx, void* β, void* y, int incy);
 
 		[NativeMethod(6, true, false, false, false)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasChemv(IntPtr handle, CuBlasFillMode uplo, int n, void* α, void* A, int lda, void* x, int incx, void* β, void* y, int incy);
+		internal static extern CudaBlasStatus cublasChemv_v2(IntPtr handle, CuBlasFillMode uplo, int n, void* α, void* A, int lda, void* x, int incx, void* β, void* y, int incy);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmv(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, void* A, int lda, void* x, int incx);
+		internal static extern CudaBlasStatus cublasStrmv_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int n, void* A, int lda, void* x, int incx);
 
 		[CustomNativeMethod(6, "Float32", "Sger")]
 		[CustomNativeMethod(6, "Float64", "Dger")]
@@ -72,29 +72,29 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		[CustomNativeMethod(6, "Complex<Float64>", "Zgeru")]
 		[CustomNativeMethod(6, "Complex<Float64>", "Zgerc")]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSger(IntPtr handle, int m, int n, void* α, void* x, int incx, void* y, int incy, void* A, int lda);
+		internal static extern CudaBlasStatus cublasSger_v2(IntPtr handle, int m, int n, void* α, void* x, int incx, void* y, int incy, void* A, int lda);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, void* x, int incx, void* A, int lda);
+		internal static extern CudaBlasStatus cublasSsyr_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, void* x, int incx, void* A, int lda);
 
 		[NativeMethod(6, true, false, false, false)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, void* x, int incx, void* A, int lda);
+		internal static extern CudaBlasStatus cublasCher_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, void* x, int incx, void* A, int lda);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, void* x, int incx, void* y, int incy, void* A, int lda);
+		internal static extern CudaBlasStatus cublasSsyr2_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, void* x, int incx, void* y, int incy, void* A, int lda);
 
 		[NativeMethod(6, true, false, false, false)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, void* x, int incx, void* y, int incy, void* A, int lda);
+		internal static extern CudaBlasStatus cublasCher2_v2(IntPtr handle, CuBlasFillMode fillMode, int n, void* α, void* x, int incx, void* y, int incy, void* A, int lda);
 		#endregion
 
 		#region level 3 BLAS
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSgemm(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasSgemm_v2(IntPtr handle, CuBlasOperation opA, CuBlasOperation opB, int m, int n, int k, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
 
 		[NativeMethod(6, true, false, false, false)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
@@ -102,27 +102,27 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsymm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasSsymm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
 
 		[NativeMethod(6, true, false, false, false)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasChemm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasChemm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, int m, int n, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyrk(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, void* A, int lda, void* β, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyrk_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, void* A, int lda, void* β, void* C, int ldc);
 
 		[NativeMethod(6, true, false, false, false)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCherk(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, void* A, int lda, void* β, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasCherk_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, void* A, int lda, void* β, void* C, int ldc);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSsyr2k(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasSsyr2k_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
 
 		[NativeMethod(6, true, false, false, false)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCher2k(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasCher2k_v2(IntPtr handle, CuBlasFillMode uplo, CuBlasOperation op, int n, int k, void* α, void* A, int lda, void* B, int ldb, void* β, void* C, int ldc);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
@@ -134,11 +134,11 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrsm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, void* A, int lda, void* B, int ldb);
+		internal static extern CudaBlasStatus cublasStrsm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, void* A, int lda, void* B, int ldb);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasStrmm(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, void* A, int lda, void* B, int ldb, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasStrmm_v2(IntPtr handle, CuBlasSideMode side, CuBlasFillMode uplo, CuBlasOperation op, CuBlasDiagType diag, int m, int n, void* α, void* A, int lda, void* B, int ldb, void* C, int ldc);
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
@@ -146,7 +146,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSdgmm(IntPtr handle, CuBlasSideMode mode, int m, int n, void* A, int lda, void* x, int incx, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasSdgmm_v2(IntPtr handle, CuBlasSideMode mode, int m, int n, void* A, int lda, void* x, int incx, void* C, int ldc);
 		#endregion
 
 		#region solver
@@ -214,7 +214,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="handle">returned CUDA BLAS handle</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasCreate(out IntPtr handle);
+		internal static extern CudaBlasStatus cublasCreate_v2(out IntPtr handle);
 
 		/// <summary>
 		/// This function releases hardware resources used by the CUBLAS library. This function is usually the last call with a particular handle to the CUBLAS library.
@@ -222,7 +222,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="handle">input CUDA BLAS handle</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasDestroy(IntPtr handle);
+		internal static extern CudaBlasStatus cublasDestroy_v2(IntPtr handle);
 
 		/// <summary>
 		/// Some routines like <c>cublas&lt;t&gt;symv</c> and <c>cublas&lt;t&gt;hemv</c> have an alternate implementation that use atomics to cumulate results. This implementation is generally significantly faster but can generate results that are not strictly identical from one run to the others. Mathematically, those different results are not significant but when debugging
@@ -252,7 +252,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="mode">returned <see cref="CuBlasPointerMode"/></param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasGetPointerMode(IntPtr handle, out CuBlasPointerMode mode);
+		internal static extern CudaBlasStatus cublasGetPointerMode_v2(IntPtr handle, out CuBlasPointerMode mode);
 
 		/// <summary>
 		/// This function sets the pointer mode used by the cuBLAS library.
@@ -262,7 +262,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 		/// <param name="mode">the <see cref="CuBlasPointerMode"/> to set</param>
 		/// <returns>operation status enum <see cref="CudaBlasStatus"/></returns>
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSetPointerMode(IntPtr handle, CuBlasPointerMode mode);
+		internal static extern CudaBlasStatus cublasSetPointerMode_v2(IntPtr handle, CuBlasPointerMode mode);
 		#endregion
 
 		#region copy

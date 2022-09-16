@@ -19,9 +19,9 @@ public unsafe partial class Api
 	{
 		Storage.NativeMethods.cudaMemset(comp, 0, 2 * n * sizeof(T));
 		if (typeof(T) == typeof(Float32))
-			NM.cublasScopy(this.cublasHandle, (int)n, real, 1, comp, 2).Check();
+			NM.cublasScopy_v2(this.cublasHandle, (int)n, real, 1, comp, 2).Check();
 		else if (typeof(T) == typeof(Float64))
-			NM.cublasDcopy(this.cublasHandle, (int)n, real, 1, comp, 2).Check();
+			NM.cublasDcopy_v2(this.cublasHandle, (int)n, real, 1, comp, 2).Check();
 		else
 			Storage.Api.PointerStridedCopy(real, 1, comp, 2, MemoryCopyKind.DeviceToDevice, n);
 	}
@@ -239,10 +239,10 @@ public unsafe partial class Api
 		};
 		delegate*<IntPtr, CuBlasSideMode, CuBlasFillMode, CuBlasOperation, CuBlasDiagType, int, int, T*, T*, int, T*, int, CudaBlasStatus> triSolveFunc = default(T) switch
 		{
-			Float32 => &NM.cublasStrsm,
-			Float64 => &NM.cublasDtrsm,
-			Complex<Float32> => &NM.cublasCtrsm,
-			Complex<Float64> => &NM.cublasZtrsm,
+			Float32 => &NM.cublasStrsm_v2,
+			Float64 => &NM.cublasDtrsm_v2,
+			Complex<Float32> => &NM.cublasCtrsm_v2,
+			Complex<Float64> => &NM.cublasZtrsm_v2,
 			_ => null
 		};
 		// get buffer sizes

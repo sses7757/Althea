@@ -215,7 +215,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 	/// <summary>
 	/// The <see cref="CuBlasPointerMode"/> enum indicates whether the scalar values are passed by reference on the host or device.<br/>
 	/// It is important to point out that if several scalar values are present in the function call, all of them must conform to the same single pointer mode.<br/>
-	/// The pointer mode can be set and retrieved using <see cref="NativeMethods.cublasGetPointerMode"/> and <see cref="NativeMethods.cublasSetPointerMode"/> routines, respectively.
+	/// The pointer mode can be set and retrieved using <see cref="NativeMethods.cublasGetPointerMode_v2(nint, out CuBlasPointerMode)"/> and <see cref="NativeMethods.cublasSetPointerMode_v2(nint, CuBlasPointerMode)"/> routines, respectively.
 	/// </summary>
 	internal enum CuBlasPointerMode
 	{
