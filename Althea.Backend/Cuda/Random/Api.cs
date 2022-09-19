@@ -1,6 +1,7 @@
 ﻿using System.Dynamic;
 using System.Runtime.CompilerServices;
 
+using Althea.Backend.Cuda.LinearAlgebra.Dense;
 using Althea.Random;
 
 using static Althea.Backend.Cuda.MemoryPointerChecker;
@@ -33,14 +34,15 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 		get => (this.type, this.order);
 		set
 		{
+			var (type, order) = value;
 			lock (this)
 			{
 				NativeMethods.curandCreateGenerator(out var generator, type).Check();
 				NativeMethods.curandSetGeneratorOrdering(generator, order).Check();
 				NativeMethods.curandDestroyGenerator(this.generator);
 				this.generator = generator;
-				this.canSeed = type is >= GeneratorType.PseudoDefault and <= GeneratorType.QuasiDefault && order == Ordering.Pseudoeseded;
-				this.type = value.type; this.order = value.order;
+				this.canSeed = (type is >= GeneratorType.PseudoDefault and < GeneratorType.QuasiDefault) && order == Ordering.Pseudoeseded;
+				this.type = type; this.order = order;
 			}
 		}
 	}
@@ -48,7 +50,7 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 	/// <summary>
 	/// The default constructor of <see cref="Api"/>
 	/// </summary>
-	public Api() : this(GeneratorType.PseudoDefault) { }
+	public Api() : this(GeneratorType.PseudoDefault, Ordering.Pseudoeseded) { }
 
 	/// <summary>
 	/// The full constructor of <see cref="Api"/>
@@ -118,34 +120,29 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private unsafe bool Generate<T, TDist>(T* s, long length, in TDist dist) where T : unmanaged, IBaseNumber<T> where TDist : struct, IRank1Distribution<T, TDist>
 	{
+		if (dist.RandomSeed.HasValue && !this.CanHaveSeed)
+			return false;
+		if (dist.RandomSeed.HasValue)
+			NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)dist.RandomSeed.Value).Check();
 		if (dist is UniformDistribution<T> uniform)
 		{
-			if (uniform.RandomSeed.HasValue)
-				NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)uniform.RandomSeed.Value).Check();
 			if (typeof(T) == typeof(Float32))
 				NativeMethods.curandGenerateUniform(this.generator, s, length).Check();
 			else if (typeof(T) == typeof(Float64))
 				NativeMethods.curandGenerateUniformDouble(this.generator, s, length).Check();
-			else if (T.Type.IsInteger())
-				NativeMethods.curandGenerate(this.generator, s, length * sizeof(T) / sizeof(int));
+			////else if (typeof(T) == typeof(SignedInt32))
+			////	NativeMethods.curandGenerate(this.generator, s, length * sizeof(T) / sizeof(int));
 			else
 				return false;
 			T scale = uniform.UpperBound - uniform.LowerBound;
 			T offset = uniform.LowerBound;
-			if (scale != T.One)
-			{
-				if (T.Type.IsInteger())
-					return false;
-				else if (LinearAlgebra.Dense.CustomNativeMethods.vecBinaryScalar(T.Type, Althea.LinearAlgebra.BinaryScalarOperation.Multiply, &scale, length, s, 1, s, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
-					return false;
-			}
-			if (uniform.LowerBound != T.Zero && LinearAlgebra.Dense.CustomNativeMethods.vecBinaryScalar(T.Type, Althea.LinearAlgebra.BinaryScalarOperation.Add, &offset, length, s, 1, s, 1) == LinearAlgebra.Dense.CustomStatus.NotSupported)
+			if (scale != T.One && !CustomNativeMethods.vecBinaryScalar(T.Type, Althea.LinearAlgebra.BinaryScalarOperation.Multiply, &scale, length, s, 1, s, 1).Check())
+				return false;
+			if (uniform.LowerBound != T.Zero && !CustomNativeMethods.vecBinaryScalar(T.Type, Althea.LinearAlgebra.BinaryScalarOperation.Add, &offset, length, s, 1, s, 1).Check())
 				return false;
 		}
 		else if (dist is NormalDistribution<T> normal)
 		{
-			if (normal.RandomSeed.HasValue)
-				NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)normal.RandomSeed.Value).Check();
 			T mean = normal.Displacement, stdDev = normal.ScaleFactor;
 			if (typeof(T) == typeof(Float32))
 				NativeMethods.curandGenerateNormal(this.generator, s, length, *(float*)&mean, *(float*)&stdDev).Check();
@@ -156,8 +153,6 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 		}
 		else if (dist is LogNormalDistribution<T> logNormal)
 		{
-			if (logNormal.RandomSeed.HasValue)
-				NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)logNormal.RandomSeed.Value).Check();
 			T mean = logNormal.Displacement, stdDev = logNormal.ScaleFactor;
 			if (typeof(T) == typeof(Float32))
 				NativeMethods.curandGenerateLogNormal(this.generator, s, length, *(float*)&mean, *(float*)&stdDev).Check();
@@ -168,12 +163,12 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 		}
 		else if (dist is RandomBitsDistribution<T> bits)
 		{
-			if (bits.RandomSeed.HasValue)
-				NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)bits.RandomSeed.Value).Check();
 			if (sizeof(T) == sizeof(int))
 				NativeMethods.curandGenerate(this.generator, s, length).Check();
 			else if (sizeof(T) == sizeof(long))
 				NativeMethods.curandGenerateLongLong(this.generator, s, length).Check();
+			else if (sizeof(T) % sizeof(int) == 0)
+				NativeMethods.curandGenerate(this.generator, s, length * sizeof(T) / sizeof(int)).Check();
 			else
 				return false;
 		}
@@ -181,8 +176,6 @@ public class Api : IBindedDevice, Althea.Random.IAbstractApi
 		{
 			if (typeof(T) != typeof(SignedInt32))
 				return false;
-			if (poisson.RandomSeed.HasValue)
-				NativeMethods.curandSetPseudoRandomGeneratorSeed(this.generator, (ulong)poisson.RandomSeed.Value).Check();
 			NativeMethods.curandGeneratePoisson(this.generator, s, length, (double)poisson.Lambda).Check();
 		}
 		else

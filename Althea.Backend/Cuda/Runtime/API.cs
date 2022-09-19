@@ -22,6 +22,12 @@ public static class Runtime
 	}
 
 	/// <summary>
+	/// Wait for compute device to finish and check the error return.
+	/// </summary>
+	/// <exception cref="StatusException">If the returned status is not <see cref="CudaError.Success"/></exception>
+	public static void DeviceSync() => NativeMethods.cudaDeviceSynchronize().Check();
+
+	/// <summary>
 	/// Check whether CUDA is available or not
 	/// </summary>
 	public static bool Available { get; }

@@ -15,8 +15,17 @@ namespace Althea.UnitTests;
 internal sealed class ActualPureStorage<T, TP> : PureStorage<T, TP> where T : unmanaged, IBaseNumber<T> where TP : notnull, IPointer<TP>
 {
 	internal ActualPureStorage(TP pointer) : base(pointer) { }
-
+	
 	~ActualPureStorage() => this.Dispose(false);
+}
+
+internal sealed class NoDisposePureStorage<T, TP> : PureStorage<T, TP> where T : unmanaged, IBaseNumber<T> where TP : notnull, IPointer<TP>
+{
+	internal NoDisposePureStorage(TP pointer) : base(pointer) { }
+
+	public override void Dispose(bool invokedByUser) { }
+
+	////~ActualPureStorage() => this.Dispose(false);
 }
 
 internal static class ValueAssert

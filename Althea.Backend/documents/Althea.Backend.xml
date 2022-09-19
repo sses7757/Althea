@@ -1782,6 +1782,12 @@
             The static class for static global methods and properties of 
             </summary>
         </member>
+        <member name="M:Althea.Backend.Cuda.Runtime.DeviceSync">
+            <summary>
+            Wait for compute device to finish and check the error return.
+            </summary>
+            <exception cref="T:Althea.Backend.Cuda.StatusException">If the returned status is not <see cref="F:Althea.Backend.Cuda.CudaError.Success"/></exception>
+        </member>
         <member name="P:Althea.Backend.Cuda.Runtime.Available">
             <summary>
             Check whether CUDA is available or not

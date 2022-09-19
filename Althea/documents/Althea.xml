@@ -5238,59 +5238,6 @@
             </summary>
             <remarks>This method heavily relies on reflection and shall NOT be invoked frequently.</remarks>
         </member>
-        <member name="T:Althea.Helpers.ManagedEnum`1">
-            <summary>
-            The managed enum struct that provide safe extend definitions for existing enum type <typeparamref name="T"/>.
-            </summary>
-            <typeparam name="T">The enum type</typeparam>
-        </member>
-        <member name="P:Althea.Helpers.ManagedEnum`1.Value">
-            <summary>
-            The underlying enum value of type <typeparamref name="T"/>
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.#ctor(`0)">
-            <summary>
-            The default constructor
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.op_Implicit(Althea.Helpers.ManagedEnum{`0})~`0">
-            <summary>
-            Implicitly convert a <see cref="T:Althea.Helpers.ManagedEnum`1"/> to its enum <see cref="P:Althea.Helpers.ManagedEnum`1.Value"/>.
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.op_Implicit(`0)~Althea.Helpers.ManagedEnum{`0}">
-            <summary>
-            Implicitly convert a enum <paramref name="value"/> to a <see cref="T:Althea.Helpers.ManagedEnum`1"/>.
-            </summary>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.ToString">
-            <inheritdoc/>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.DeclareNewEnum(System.String)">
-            <summary>
-            Declare a new enum of type <typeparamref name="T"/> with given <paramref name="name"/>/string representation.
-            </summary>
-            <param name="name">The name / string representation of the newly declared enum</param>
-            <exception cref="T:System.InvalidOperationException">If the enum is fully declared thus has no room for new ones</exception>
-            <exception cref="T:System.ArgumentException">If <paramref name="name"/> is null or empty or it contains space</exception>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.TryParse(System.String,Althea.Helpers.ManagedEnum{`0}@)">
-            <summary>
-            Tries to parse the given enum <paramref name="name"/> to a enum value.
-            </summary>
-            <param name="e">The output value of the <see cref="T:Althea.Helpers.ManagedEnum`1"/></param>
-            <param name="name">The name / string representation of the enum to parse</param>
-            <returns>Success or not</returns>
-        </member>
-        <member name="M:Althea.Helpers.ManagedEnum`1.Parse(System.String)">
-            <summary>
-            Parse the given enum <paramref name="name"/> to a enum value
-            </summary>
-            <param name="name">The name / string representation of the enum to parse</param>
-            <returns>The <see cref="T:Althea.Helpers.ManagedEnum`1"/> given by <paramref name="name"/></returns>
-            <exception cref="T:System.ArgumentException">If <paramref name="name"/> cannot be converted to a enum of type <typeparamref name="T"/></exception>
-        </member>
         <member name="T:Althea.Helpers.TypeMismatchException">
             <summary>
             The exception to be thrown when one generic type does not fit given regulations or two generic types are mismatched for some reason
@@ -7256,6 +7203,59 @@
             <param name="category">If <paramref name="category"/> is empty or null, the calling method name will be filled; if <paramref name="category"/> is an empty string, the prefix will not be printed to console</param>
             <param name="level">The message <see cref="T:Althea.Helpers.LogLevel"/>, must be atomic</param>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="level"/> is of invalid value</exception>
+        </member>
+        <member name="T:Althea.Helpers.ManagedEnum`1">
+            <summary>
+            The managed enum struct that provide safe extend definitions for existing enum type <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The enum type</typeparam>
+        </member>
+        <member name="P:Althea.Helpers.ManagedEnum`1.Value">
+            <summary>
+            The underlying enum value of type <typeparamref name="T"/>
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.#ctor(`0)">
+            <summary>
+            The default constructor
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.op_Implicit(Althea.Helpers.ManagedEnum{`0})~`0">
+            <summary>
+            Implicitly convert a <see cref="T:Althea.Helpers.ManagedEnum`1"/> to its enum <see cref="P:Althea.Helpers.ManagedEnum`1.Value"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.op_Implicit(`0)~Althea.Helpers.ManagedEnum{`0}">
+            <summary>
+            Implicitly convert a enum <paramref name="value"/> to a <see cref="T:Althea.Helpers.ManagedEnum`1"/>.
+            </summary>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.ToString">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.DeclareNewEnum(System.String)">
+            <summary>
+            Declare a new enum of type <typeparamref name="T"/> with given <paramref name="name"/>/string representation.
+            </summary>
+            <param name="name">The name / string representation of the newly declared enum</param>
+            <exception cref="T:System.InvalidOperationException">If the enum is fully declared thus has no room for new ones</exception>
+            <exception cref="T:System.ArgumentException">If <paramref name="name"/> is null or empty or it contains space</exception>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.TryParse(System.String,Althea.Helpers.ManagedEnum{`0}@)">
+            <summary>
+            Tries to parse the given enum <paramref name="name"/> to a enum value.
+            </summary>
+            <param name="e">The output value of the <see cref="T:Althea.Helpers.ManagedEnum`1"/></param>
+            <param name="name">The name / string representation of the enum to parse</param>
+            <returns>Success or not</returns>
+        </member>
+        <member name="M:Althea.Helpers.ManagedEnum`1.Parse(System.String)">
+            <summary>
+            Parse the given enum <paramref name="name"/> to a enum value
+            </summary>
+            <param name="name">The name / string representation of the enum to parse</param>
+            <returns>The <see cref="T:Althea.Helpers.ManagedEnum`1"/> given by <paramref name="name"/></returns>
+            <exception cref="T:System.ArgumentException">If <paramref name="name"/> cannot be converted to a enum of type <typeparamref name="T"/></exception>
         </member>
         <member name="T:Althea.Helpers.SpanHelper">
             <summary>

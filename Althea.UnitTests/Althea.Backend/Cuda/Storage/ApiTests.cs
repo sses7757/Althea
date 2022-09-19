@@ -1,11 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using Ptr = Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>;
 using HostPtr = Althea.Backend.Storage.CpuMemoryPointer;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Newtonsoft.Json.Linq;
-using Althea.Numerics;
-using Althea.UnitTests;
+using Ptr = Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>;
+
 
 namespace Althea.Backend.Cuda.Storage.Tests;
 
@@ -22,10 +19,12 @@ public unsafe class ApiTests
 		bool success = api.Allocate<Ptr>(length, out var result);
 		Assert.IsTrue(success);
 		Assert.AreEqual(length, result.LengthInBytes);
+		Runtime.DeviceSync();
 
 		success = api.Free(result, out bool valid);
 		Assert.IsTrue(success);
 		Assert.IsTrue(valid);
+		Runtime.DeviceSync();
 	}
 
 	[TestMethod()]
@@ -34,9 +33,11 @@ public unsafe class ApiTests
 	{
 		bool success = api.Allocate<Ptr>(length, out var result);
 		Assert.IsTrue(success);
+		Runtime.DeviceSync();
 
 		success = api.FillWithValue<Ptr>(result, value);
 		Assert.IsTrue(success);
+		Runtime.DeviceSync();
 
 		api.Free(result, out _);
 	}
@@ -53,6 +54,7 @@ public unsafe class ApiTests
 			api.FillWithValue<Ptr>(result, value);
 		else
 			hostApi.FillWithValue<HostPtr>(hostResult, value);
+		Runtime.DeviceSync();
 
 		long copied;
 		if (toHost)
@@ -61,6 +63,7 @@ public unsafe class ApiTests
 			success = api.MemoryCopy<SignedInt8, HostPtr, Ptr>(hostResult, result, out copied);
 		Assert.IsTrue(success);
 		Assert.AreEqual(length, copied);
+		Runtime.DeviceSync();
 		if (toHost)
 		{
 			byte* p = (byte*)hostResult.Pointer.ToPointer();
@@ -81,12 +84,15 @@ public unsafe class ApiTests
 		api.Allocate<Ptr>(length, out var result);
 		api.FillWithValue<Ptr>(result, value);
 		api.Allocate<Ptr>(length, out var target);
+		Runtime.DeviceSync();
 
 		bool success = api.MemoryCopy<SignedInt8, Ptr, Ptr>(result, target, out long copied);
 		Assert.IsTrue(success);
 		Assert.AreEqual(length, copied);
+		Runtime.DeviceSync();
 
 		api.Free(result, out _);
+		api.Free(target, out _);
 	}
 
 	[TestMethod()]
@@ -95,11 +101,14 @@ public unsafe class ApiTests
 	{
 		api.Allocate<Ptr>(length * sizeof(double), out var result);
 		hostApi.Allocate<HostPtr>(length * sizeof(double), out var test);
+		Runtime.DeviceSync();
 
 		bool success = api.FillWithValue<Float64, Ptr>(result, value);
 		Assert.IsTrue(success);
+		Runtime.DeviceSync();
 
 		api.MemoryCopy<Float64, Ptr, HostPtr>(result, test, out _);
+		Runtime.DeviceSync();
 		double* p = (double*)test.Pointer.ToPointer();
 		for (int i = 0; i < length; i++)
 		{
@@ -116,33 +125,65 @@ public unsafe class ApiTests
 	{
 		api.Allocate<Ptr>(rows * cols * sizeof(double), out var src);
 		api.Allocate<Ptr>(rows / 2 * cols / 2 * sizeof(double), out var dst);
+		Runtime.DeviceSync();
 
 		bool success = api.MemoryCopy2D<Float64, Ptr, Ptr>(new PointerSegment<Ptr>(src) + rows * sizeof(double) / 2, rows, dst, rows / 2, rows / 2, 0, out long copyWidth);
 		Assert.IsTrue(success);
 		Assert.AreEqual(cols / 2, copyWidth);
+		Runtime.DeviceSync();
 
 		api.Free(src, out _);
 		api.Free(dst, out _);
 	}
 
 	[TestMethod()]
-	[DataRow(1024L, 2048L)]
-	public void MemoryCopy2DHostTest(long rows, long cols)
+	[DataRow(1024L, 2048L, 10.0)]
+	public void MemoryCopy2DHostTest(long rows, long cols, double value)
 	{
 		api.Allocate<Ptr>(rows * cols * sizeof(double), out var src);
+		api.FillWithValue<Float64, Ptr>(src, value);
 		hostApi.Allocate<HostPtr>(rows / 2 * cols / 2 * sizeof(double), out var dst);
+		Runtime.DeviceSync();
 
 		bool success = api.MemoryCopy2D<Float64, Ptr, HostPtr>(new PointerSegment<Ptr>(src) + rows * sizeof(double) / 2, rows, dst, rows / 2, rows / 2, 0, out long copyWidth);
 		Assert.IsTrue(success);
 		Assert.AreEqual(cols / 2, copyWidth);
+		Runtime.DeviceSync();
+		double* p = (double*)dst.Pointer.ToPointer();
+		for (int i = 0; i < rows / 2 * cols / 2; i++)
+		{
+			Assert.AreEqual(value, p[i]);
+		}
 
 		api.Free(src, out _);
 		api.Free(dst, out _);
 	}
 
 	[TestMethod()]
-	public void StridedCopyTest()
+	[DataRow(1000L, 5L, 10.0)]
+	public void StridedCopyTest(long length, long stride, double value)
 	{
+		api.Allocate<Ptr>(length * sizeof(double), out var result);
+		api.FillWithValue<Float64, Ptr>(result, value);
+		api.Allocate<Ptr>(length / stride * sizeof(double), out var target);
+		hostApi.Allocate<HostPtr>(length / stride * sizeof(double), out var test);
+		Runtime.DeviceSync();
 
+		bool success = api.StridedCopy<Float64, Ptr, Ptr>(result, stride, target, 1, out long copied);
+		Assert.IsTrue(success);
+		Assert.AreEqual(length / stride, copied);
+		Runtime.DeviceSync();
+
+		api.MemoryCopy<Float64, Ptr, HostPtr>(target, test, out _);
+		Runtime.DeviceSync();
+		double* p = (double*)test.Pointer.ToPointer();
+		for (int i = 0; i < length / stride; i++)
+		{
+			Assert.AreEqual(value, p[i]);
+		}
+
+		api.Free(result, out _);
+		api.Free(target, out _);
+		hostApi.Free(test, out _);
 	}
 }

@@ -51,6 +51,17 @@ namespace Althea.Backend.Cuda
 
 namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 {
+	/////// <summary>
+	/////// The extended supported <see cref="BinaryScalarOperation"/>
+	/////// </summary>
+	////public static class BinaryScalarOperationExtension
+	////{
+	////	/// <summary>
+	////	/// The mod operation that operates <c></c>
+	////	/// </summary>
+	////	public static readonly ManagedEnum<BinaryScalarOperation> Modulo = ManagedEnum<BinaryScalarOperation>.DeclareNewEnum(nameof(Modulo));
+	////}
+
 	/// <summary>
 	/// The returned status (errors) of the cuBlas (CUDA BLAS) API calls
 	/// </summary>

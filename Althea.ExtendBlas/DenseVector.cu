@@ -125,7 +125,7 @@ inline int vectorStridedCopy(const void* srcv, void* dstv, const size_t n, const
 	}
 	const T* src = (const T*)srcv;
 	T* dst = (T*)dstv;
-	auto ssrc = make_strided_range(src, n, strideDst);
+	auto ssrc = make_strided_range(src, n, strideSrc);
 	auto sdst = make_strided_range(dst, n, strideDst);
 	if (strideSrc == 1 && strideDst != 1)
 	{
@@ -139,7 +139,7 @@ inline int vectorStridedCopy(const void* srcv, void* dstv, const size_t n, const
 	{
 		thrust::copy_n(THRUST_PAR, ssrc.begin(), n, sdst.begin());
 	}
-	return ERROR_RETURN{};
+	return 0;
 }
 
 DLLEXP

@@ -4,21 +4,6 @@ using System.Threading;
 
 namespace Althea.Helpers;
 
-#region debug
-internal readonly struct DebugManagedEnum<T> where T : unmanaged, Enum
-{
-	public readonly T Value { get; }
-
-	public readonly string Name { get; }
-
-	internal DebugManagedEnum(ManagedEnum<T> value)
-	{
-		this.Value = value.Value;
-		this.Name = value.ToString();
-	}
-}
-#endregion
-
 /// <summary>
 /// The managed enum struct that provide safe extend definitions for existing enum type <typeparamref name="T"/>.
 /// </summary>

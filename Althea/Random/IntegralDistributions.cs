@@ -1,6 +1,6 @@
 ﻿namespace Althea.Random;
 
-// Ignore Spelling: \dfrac \ln \det \lt \alpha \mbox \dbinom \binom
+// Ignore Spelling: \dfrac \ln \det \lt \alpha \mbox \dbinom \binom \frac
 /// <summary>
 /// The struct for a one-dimensional Poisson distribution of type <typeparamref name="T"/>
 /// </summary>

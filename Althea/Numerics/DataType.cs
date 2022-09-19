@@ -249,9 +249,9 @@ public static class DataTypeExtension
 		if (sizeB != size)
 			return default;
 		if (complex)
-			return (DataType)((int)DataTypeTuple.Complex + ((int)type << 8) + sizeB << 16);
+			return (DataType)((int)DataTypeTuple.Complex + ((int)type << 8) + (sizeB << 16));
 		else
-			return (DataType)((int)DataTypeTuple.Real + ((int)type << 8) + sizeB << 16);
+			return (DataType)((int)DataTypeTuple.Real + ((int)type << 8) + (sizeB << 16));
 	}
 
 	/// <summary>

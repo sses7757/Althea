@@ -414,7 +414,9 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 
 		if (fileSrc == default && fileDst == default)
 		{
-			NativeMethods.cudaMemcpy2D(gpuDst.NativePointer(destination), destinationLD, gpuSrc.NativePointer(source), sourceLD, height, width, GetCopyKind(cpuSrc, cpuDst)).Check();
+			void* pd = gpuDst.NativePointer(destination) is null ? cpuDst.NativePointer(destination) : gpuDst.NativePointer(destination);
+			void* ps = gpuSrc.NativePointer(source) is null ? cpuSrc.NativePointer(source) : gpuSrc.NativePointer(source);
+			NativeMethods.cudaMemcpy2D(pd, destinationLD, ps, sourceLD, height, width, GetCopyKind(cpuSrc, cpuDst)).Check();
 		}
 		else if (gpuSrc.IsValid() && fileDst.IsValid())
 		{

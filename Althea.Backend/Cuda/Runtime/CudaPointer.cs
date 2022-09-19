@@ -23,7 +23,7 @@ internal readonly record struct CudaMemoryPointer(IntPtr Pointer, long LengthInB
 	static CudaMemoryPointer IPointer<CudaMemoryPointer>.Default => default;
 
 	/// <inheritdoc/>
-	public override readonly string ToString() => $"{nameof(CudaMemoryPointer)} {{ {nameof(Pointer)} = {this.Pointer:X}, {nameof(LengthInBytes)} = {this.LengthInBytes} }}";
+	public override readonly string ToString() => $"{nameof(CudaMemoryPointer)} {{ {nameof(Pointer)} = 0x{this.Pointer:X}, {nameof(LengthInBytes)} = {this.LengthInBytes} }}";
 
 	#region extension
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -69,6 +69,6 @@ public readonly record struct CudaMemoryPointer<TD>(IntPtr Pointer, long LengthI
 	public static CudaMemoryPointer<TD> Create<T>(IntPtr pointer, long length) where T : unmanaged, IBaseNumber<T> => new(pointer, length * T.Size);
 
 	/// <inheritdoc/>
-	public override readonly string ToString() => $"{nameof(CudaMemoryPointer)}<{typeof(TD).Name}> {{ {nameof(Pointer)} = {this.Pointer:X}, {nameof(LengthInBytes)} = {this.LengthInBytes} }}";
+	public override readonly string ToString() => $"{nameof(CudaMemoryPointer)}<{typeof(TD).Name}> {{ {nameof(Pointer)} = 0x{this.Pointer:X}, {nameof(LengthInBytes)} = {this.LengthInBytes} }}";
 	#endregion
 }

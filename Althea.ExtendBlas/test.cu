@@ -125,7 +125,7 @@ inline int vectorStridedCopy(const void* srcv, void* dstv, const size_t n, const
 	}
 	const T* src = (const T*)srcv;
 	T* dst = (T*)dstv;
-	auto ssrc = make_strided_range(src, n, strideDst);
+	auto ssrc = make_strided_range(src, n, strideSrc);
 	auto sdst = make_strided_range(dst, n, strideDst);
 	if (strideSrc == 1 && strideDst != 1)
 	{
@@ -139,13 +139,140 @@ inline int vectorStridedCopy(const void* srcv, void* dstv, const size_t n, const
 	{
 		thrust::copy_n(THRUST_PAR, ssrc.begin(), n, sdst.begin());
 	}
-	return ERROR_RETURN{};
+	return 0;
 }
 
 DLLEXP
 int vecStridedCopy(const DataType type, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
 {
 	AUTO_ALLTYPE_FUNC(vectorStridedCopy, type, int, src, dst, n, strideSrc, strideDst);
+}
+#pragma endregion
+
+#pragma region fill with value
+template<typename T>
+inline int vectorFillWith(void* av, const void* valv, const size_t n, const size_t stride)
+{
+	const T val = *(const T*)valv;
+	T* a = (T*)av;
+	if (stride == 1)
+	{
+		thrust::fill_n(THRUST_PAR, a, n, val);
+	}
+	else
+	{
+		auto sa = make_strided_range(a, n, stride);
+		thrust::fill_n(THRUST_PAR, sa.begin(), n, val);
+	}
+	return 0;
+}
+
+DLLEXP
+int vecFillVal(const DataType type, const size_t n, const void* val, void* a, const size_t stride)
+{
+	AUTO_ALLTYPE_FUNC(vectorFillWith, type, int, a, val, n, stride);
+}
+#pragma endregion
+
+#pragma region binary scalar
+template <typename T>
+inline int vectorBinaryScalar(const binaryOp::BinaryOperation op, const void* scalarv, const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst)
+{
+	const T scalar = *(const T*)scalarv;
+	const T* src = (const T*)srcv;
+	T* dst = (T*)dstv;
+#define __SWITCH(invoke, ...) do { \
+	switch (op) \
+	{ \
+	case binaryOp::BinaryOperation::Add: \
+	{ \
+		auto func = [=] PREFIX(const T v) { return v + scalar; }; \
+		return invoke(__VA_ARGS__, func); \
+	} \
+	case binaryOp::BinaryOperation::Multiply: \
+	{ \
+		auto func = [=] PREFIX(const T v) { return v * scalar; }; \
+		return invoke(__VA_ARGS__, func); \
+	} \
+	case binaryOp::BinaryOperation::Divide: \
+	{ \
+		auto func = [=] PREFIX(const T v) { return v / scalar; }; \
+		return invoke(__VA_ARGS__, func); \
+	} \
+	case binaryOp::BinaryOperation::Power: \
+	{ \
+		auto func = [=] PREFIX(const T v) { return std::pow(v, scalar); }; \
+		return invoke(__VA_ARGS__, func); \
+	} \
+	} \
+	if constexpr (std::is_scalar_v<T>) \
+	{ \
+		const T scalarAbs = std::abs(scalar); \
+		switch (op) \
+		{ \
+		case binaryOp::BinaryOperation::AbsoluteMaximum: \
+		{ \
+			auto func = abslarger_functor<T, T>(scalarAbs); \
+			return invoke(__VA_ARGS__, func); \
+		} \
+		case binaryOp::BinaryOperation::AbsoluteMininum: \
+		{ \
+			auto func = abssmaller_functor<T, T>(scalarAbs); \
+			return invoke(__VA_ARGS__, func); \
+		} \
+		case binaryOp::BinaryOperation::Maximum: \
+		{ \
+			auto func = larger_functor<T>(scalar); \
+			return invoke(__VA_ARGS__, func); \
+		} \
+		case binaryOp::BinaryOperation::Mininum: \
+		{ \
+			auto func = smaller_functor<T>(scalar); \
+			return invoke(__VA_ARGS__, func); \
+		} \
+		case binaryOp::BinaryOperation::Truncate: \
+		{ \
+			auto func = truncate_functor<T, T>(scalarAbs); \
+			return invoke(__VA_ARGS__, func); \
+		} \
+		default: \
+			return -1; \
+		} \
+	} \
+	else \
+	{ \
+		const typename T::value_type scalarAbs = std::abs(scalar); \
+		switch (op) \
+		{ \
+		case binaryOp::BinaryOperation::AbsoluteMaximum: \
+		{ \
+			auto func = abslarger_functor<T, typename T::value_type>(scalarAbs); \
+			return invoke(__VA_ARGS__, func); \
+		} \
+		case binaryOp::BinaryOperation::AbsoluteMininum: \
+		{ \
+			auto func = abssmaller_functor<T, typename T::value_type>(scalarAbs); \
+			return invoke(__VA_ARGS__, func); \
+		} \
+		case binaryOp::BinaryOperation::Truncate: \
+		{ \
+			auto func = truncate_functor<T, typename T::value_type>(scalarAbs); \
+			return invoke(__VA_ARGS__, func); \
+		} \
+		default: \
+			return -1; \
+		} \
+	} \
+} while (0)
+
+	__SWITCH(vectorConvertInner, src, dst, n, strideSrc, strideDst);
+#undef __SWITCH
+}
+
+DLLEXP
+int vecBinaryScalar(const DataType type, const binaryOp::BinaryOperation op, const void* scalar, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
+{
+	AUTO_ALLTYPE_FUNC(vectorBinaryScalar, type, int, op, scalar, src, dst, n, strideSrc, strideDst);
 }
 #pragma endregion
 
@@ -314,31 +441,6 @@ int vecDataConvert(const DataType srcType, const DataType dstType, bool toRealBy
 }
 #pragma endregion
 
-#pragma region fill with value
-template<typename T>
-inline int vectorFillWith(void* av, const void* valv, const size_t n, const size_t stride)
-{
-	const T val = *(const T*)valv;
-	T* a = (T*)av;
-	if (stride == 1)
-	{
-		thrust::fill_n(THRUST_PAR, a, n, val);
-	}
-	else
-	{
-		auto sa = make_strided_range(a, n, stride);
-		thrust::fill_n(THRUST_PAR, sa.begin(), n, val);
-	}
-	return 0;
-}
-
-DLLEXP
-int vecFillVal(const DataType type, const size_t n, const void* val, void* a, const size_t stride)
-{
-	AUTO_ALLTYPE_FUNC(vectorFillWith, type, int, a, val, n, stride);
-}
-#pragma endregion
-
 #pragma region equal
 template<typename T>
 inline int vectorsEqual(const void* av, const void* bv, const size_t n, const size_t strideA, const size_t strideB, bool& eqs)
@@ -425,108 +527,6 @@ DLLEXP
 int vecUnary(const DataType type, const unaryOp::UnaryOperation op, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
 {
 	AUTO_ALLTYPE_FUNC(vectorUnary, type, int, op, src, dst, n, strideSrc, strideDst);
-}
-#pragma endregion
-
-#pragma region binary scalar
-template <typename T>
-inline int vectorBinaryScalar(const binaryOp::BinaryOperation op, const void* scalarv, const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst)
-{
-	const T scalar = *(const T*)scalarv;
-	const T* src = (const T*)srcv;
-	T* dst = (T*)dstv;
-#define __SWITCH(invoke, ...) do { \
-	switch (op) \
-	{ \
-	case binaryOp::BinaryOperation::Add: \
-	{ \
-		auto func = [=] PREFIX(const T v) { return v + scalar; }; \
-		return invoke(__VA_ARGS__, func); \
-	} \
-	case binaryOp::BinaryOperation::Multiply: \
-	{ \
-		auto func = [=] PREFIX(const T v) { return v * scalar; }; \
-		return invoke(__VA_ARGS__, func); \
-	} \
-	case binaryOp::BinaryOperation::Divide: \
-	{ \
-		auto func = [=] PREFIX(const T v) { return v / scalar; }; \
-		return invoke(__VA_ARGS__, func); \
-	} \
-	case binaryOp::BinaryOperation::Power: \
-	{ \
-		auto func = [=] PREFIX(const T v) { return std::pow(v, scalar); }; \
-		return invoke(__VA_ARGS__, func); \
-	} \
-	} \
-	if constexpr (std::is_scalar_v<T>) \
-	{ \
-		const T scalarAbs = std::abs(scalar); \
-		switch (op) \
-		{ \
-		case binaryOp::BinaryOperation::AbsoluteMaximum: \
-		{ \
-			auto func = abslarger_functor<T, T>(scalarAbs); \
-			return invoke(__VA_ARGS__, func); \
-		} \
-		case binaryOp::BinaryOperation::AbsoluteMininum: \
-		{ \
-			auto func = abssmaller_functor<T, T>(scalarAbs); \
-			return invoke(__VA_ARGS__, func); \
-		} \
-		case binaryOp::BinaryOperation::Maximum: \
-		{ \
-			auto func = larger_functor<T>(scalar); \
-			return invoke(__VA_ARGS__, func); \
-		} \
-		case binaryOp::BinaryOperation::Mininum: \
-		{ \
-			auto func = smaller_functor<T>(scalar); \
-			return invoke(__VA_ARGS__, func); \
-		} \
-		case binaryOp::BinaryOperation::Truncate: \
-		{ \
-			auto func = truncate_functor<T, T>(scalarAbs); \
-			return invoke(__VA_ARGS__, func); \
-		} \
-		default: \
-			return -1; \
-		} \
-	} \
-	else \
-	{ \
-		const typename T::value_type scalarAbs = std::abs(scalar); \
-		switch (op) \
-		{ \
-		case binaryOp::BinaryOperation::AbsoluteMaximum: \
-		{ \
-			auto func = abslarger_functor<T, typename T::value_type>(scalarAbs); \
-			return invoke(__VA_ARGS__, func); \
-		} \
-		case binaryOp::BinaryOperation::AbsoluteMininum: \
-		{ \
-			auto func = abssmaller_functor<T, typename T::value_type>(scalarAbs); \
-			return invoke(__VA_ARGS__, func); \
-		} \
-		case binaryOp::BinaryOperation::Truncate: \
-		{ \
-			auto func = truncate_functor<T, typename T::value_type>(scalarAbs); \
-			return invoke(__VA_ARGS__, func); \
-		} \
-		default: \
-			return -1; \
-		} \
-	} \
-} while (0)
-
-	__SWITCH(vectorConvertInner, src, dst, n, strideSrc, strideDst);
-#undef __SWITCH
-}
-
-DLLEXP
-int vecBinaryScalar(const DataType type, const binaryOp::BinaryOperation op, const void* scalar, const size_t n, const void* src, const size_t strideSrc, void* dst, const size_t strideDst)
-{
-	AUTO_ALLTYPE_FUNC(vectorBinaryScalar, type, int, op, scalar, src, dst, n, strideSrc, strideDst);
 }
 #pragma endregion
 
