@@ -233,7 +233,7 @@ public unsafe class Api : Althea.Transformer.IAbstractApi
 				return false; // not support
 			if (!input.Size.SequenceEqual(output.Size))
 				throw new ArgumentException(Resources.ParameterError.NotSameSize);
-			return TryCreate(input.Size, input.OuterSize, output.OuterSize, type, true, out info);
+			return TryCreate(input.Size, input.OuterSize, output.OuterSize, type, typeof(T) == typeof(U), out info);
 		}
 	}
 	#endregion
