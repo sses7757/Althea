@@ -392,6 +392,9 @@ public readonly partial struct Complex<T> : IComplexFloatNumber<Complex<T>, T> w
 	#region converter
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static implicit operator Complex<T>(int real) => new(real.As<T>());
+	/// <inheritdoc/>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static implicit operator Complex<T>(T real) => new(real);
 	/// <inheritdoc/>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

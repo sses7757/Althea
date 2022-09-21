@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Althea.Backend": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

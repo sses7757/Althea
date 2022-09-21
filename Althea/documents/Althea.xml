@@ -9280,7 +9280,7 @@
             Static class of extension methods of <see cref="T:Althea.LinearAlgebra.MatrixOperation"/>
             </summary>
         </member>
-        <member name="M:Althea.LinearAlgebra.MatrixOperationExtension.CanInPlace(Althea.LinearAlgebra.MatrixOperation)">
+        <member name="M:Althea.LinearAlgebra.MatrixOperationExtension.IsInPlace(Althea.LinearAlgebra.MatrixOperation)">
             <summary>
             Check whether the given <paramref name="operation"/> can be performed in-place, i.e., no transposition involved.
             </summary>
@@ -18289,6 +18289,9 @@
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Complex`1.TryParse(System.ReadOnlySpan{System.Char},System.IFormatProvider,Althea.Numerics.Complex{`0}@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Numerics.Complex`1.op_Implicit(System.Int32)~Althea.Numerics.Complex{`0}">
             <inheritdoc/>
         </member>
         <member name="M:Althea.Numerics.Complex`1.op_Implicit(`0)~Althea.Numerics.Complex{`0}">

@@ -7,6 +7,8 @@ global using Althea.Storage;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+using Althea.Backend.Cuda;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 
@@ -80,6 +82,18 @@ internal static unsafe class Helpers
 		api.MemoryCopy<T, CpuMemoryPointer, CpuMemoryPointer>(source.Pointer, dest.Pointer, out _);
 	}
 
+	public static PureStorage<Float64, CudaMemoryPointer<GpuId0>> GenerateGpuFloatData(double lower, double upper)
+	{
+		upper -= lower;
+		int length = rand.Next(1024) + 1024;
+		Float64* array = (Float64*)Marshal.AllocHGlobal(length * sizeof(Float64));
+		for (int i = 0; i < length; i++)
+		{
+			array[i] = rand.NextDouble() * upper + lower;
+		}
+		return new ActualPureStorage<Float64, CudaMemoryPointer<GpuId0>>(new((IntPtr)array, length * sizeof(Float64)));
+	}
+
 	public static PureStorage<Float64, CpuMemoryPointer> GenerateFloatData(double lower, double upper)
 	{
 		upper -= lower;
@@ -102,5 +116,65 @@ internal static unsafe class Helpers
 			array[i] = rand.Next(upper) + lower;
 		}
 		return new ActualPureStorage<SignedInt32, CpuMemoryPointer>(new((IntPtr)array, length * sizeof(SignedInt32)));
+	}
+}
+
+internal static unsafe class GpuHelpers
+{
+	private static readonly Backend.Cuda.Storage.Api api = new(false);
+
+	private static readonly System.Random rand;
+
+	static GpuHelpers()
+	{
+		Settings.SetImplementation<IAbstractApi>(api);
+		rand = new System.Random(0);
+	}
+
+	public static void CopyFromManaged<T>(this PureStorage<T, CudaMemoryPointer<GpuId0>> array, T* values) where T : unmanaged, IBaseNumber<T>
+	{
+		api.MemoryCopy<T, CpuMemoryPointer, CudaMemoryPointer<GpuId0>>(new(new((IntPtr)values, array.Length * sizeof(T))), array.Pointer, out _);
+	}
+
+	public static void CopyToManaged<T>(this PureStorage<T, CudaMemoryPointer<GpuId0>> array, T* values) where T : unmanaged, IBaseNumber<T>
+	{
+		api.MemoryCopy<T, CudaMemoryPointer<GpuId0>, CpuMemoryPointer>(array.Pointer, new(new((IntPtr)values, array.Length * sizeof(T))), out _);
+	}
+
+	public static void NoApiCopy<T>(this PureStorage<T, CudaMemoryPointer<GpuId0>> source, PureStorage<T, CudaMemoryPointer<GpuId0>> dest) where T : unmanaged, IBaseNumber<T>
+	{
+		api.MemoryCopy<T, CudaMemoryPointer<GpuId0>, CudaMemoryPointer<GpuId0>>(source.Pointer, dest.Pointer, out _);
+	}
+
+	public static PureStorage<Float64, CudaMemoryPointer<GpuId0>> GenerateFloatData(double lower, double upper, out double* host)
+	{
+		upper -= lower;
+		int length = rand.Next(1024) + 1024;
+		Float64* array = (Float64*)Marshal.AllocHGlobal(length * sizeof(Float64));
+		for (int i = 0; i < length; i++)
+		{
+			array[i] = rand.NextDouble() * upper + lower;
+		}
+		api.Allocate<CudaMemoryPointer<GpuId0>>(length * sizeof(double), out var gpu);
+		var s = new ActualPureStorage<Float64, CudaMemoryPointer<GpuId0>>(gpu);
+		s.CopyFromManaged(array);
+		host = (double*)array;
+		return s;
+	}
+
+	public static PureStorage<SignedInt32, CudaMemoryPointer<GpuId0>> GenerateIntData(int lower, int upper, out int* host)
+	{
+		upper -= lower;
+		int length = rand.Next(1024) + 1024;
+		SignedInt32* array = (SignedInt32*)Marshal.AllocHGlobal(length * sizeof(SignedInt32));
+		for (int i = 0; i < length; i++)
+		{
+			array[i] = rand.Next(upper) + lower;
+		}
+		api.Allocate<CudaMemoryPointer<GpuId0>>(length * sizeof(int), out var gpu);
+		var s = new ActualPureStorage<SignedInt32, CudaMemoryPointer<GpuId0>>(gpu);
+		s.CopyFromManaged(array);
+		host = (int*)array;
+		return s;
 	}
 }

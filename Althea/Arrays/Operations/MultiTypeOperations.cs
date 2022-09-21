@@ -132,7 +132,7 @@ public interface IMatrixVectorMultiplyOperations<T, TVec1, TVec2, TMat>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected static void CheckMatMulVec(TMat matrix, TVec1 vector, TVec2 vectorOut, T α, MatrixOperation operation)
 	{
-		long n = operation.CanInPlace() ? matrix.NCols : matrix.NRows;
+		long n = operation.IsInPlace() ? matrix.NCols : matrix.NRows;
 		if (n != vector.Length || vector.Length != vectorOut.Length)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vector));
 		if (α == T.Zero)
@@ -157,7 +157,7 @@ public interface IMatrixVectorMultiplyOperations<T, TVec1, TVec2, TMat>
 	protected static TS CheckMatMulVec<TS>(TMat matrix, TVec1 vector, TS storage, T α, MatrixOperation operation) where TS : class, IStorage<T, TS>
 	{
 		var (m, n) = (matrix.NRows, matrix.NCols);
-		if (!operation.CanInPlace())
+		if (!operation.IsInPlace())
 			(m, n) = (n, m);
 		if (n != vector.Length)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(vector));
@@ -345,7 +345,7 @@ public interface IMatrixAddOperations<T, TMat1, TMat2, TMat3>
 #pragma warning disable CS8602
 			var (m1, n1) = (A.NRows, A.NCols);
 #pragma warning restore CS8602
-			if (!opA.CanInPlace())
+			if (!opA.IsInPlace())
 				(m1, n1) = (n1, m1);
 			if (m1 != m || n1 != n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
@@ -355,7 +355,7 @@ public interface IMatrixAddOperations<T, TMat1, TMat2, TMat3>
 #pragma warning disable CS8602
 			var (m1, n1) = (B.NRows, B.NCols);
 #pragma warning restore CS8602
-			if (!opB.CanInPlace())
+			if (!opB.IsInPlace())
 				(m1, n1) = (n1, m1);
 			if (m1 != m || n1 != n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(B));
@@ -392,7 +392,7 @@ public interface IMatrixAddOperations<T, TMat1, TMat2, TMat3>
 #pragma warning disable CS8602
 			(m, n) = (A.NRows, A.NCols);
 #pragma warning restore CS8602
-			if (!opA.CanInPlace())
+			if (!opA.IsInPlace())
 				(m, n) = (n, m);
 		}
 		if (!nullB)
@@ -400,7 +400,7 @@ public interface IMatrixAddOperations<T, TMat1, TMat2, TMat3>
 #pragma warning disable CS8602
 			var (m1, n1) = (B.NRows, B.NCols);
 #pragma warning restore CS8602
-			if (!opB.CanInPlace())
+			if (!opB.IsInPlace())
 				(m1, n1) = (n1, m1);
 			if (m1 != m || n1 != n)
 				throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(B));
@@ -445,10 +445,10 @@ public interface IMatrixMultiplyOperations<T, TMat1, TMat2, TMat3>
 			throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
 		var (m, n) = (C.NRows, C.NCols);
 		var (r, k) = (A.NRows, A.NCols);
-		if (!opA.CanInPlace())
+		if (!opA.IsInPlace())
 			(r, k) = (k, r);
 		var (s, t) = (B.NRows, B.NCols);
-		if (!opB.CanInPlace())
+		if (!opB.IsInPlace())
 			(s, t) = (t, s);
 		if (r != m || k != s)
 			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
@@ -479,10 +479,10 @@ public interface IMatrixMultiplyOperations<T, TMat1, TMat2, TMat3>
 		if (α == T.Zero)
 			throw new ArgumentException(Resources.ParameterError.CannotZero, nameof(α));
 		(m, k) = (A.NRows, A.NCols);
-		if (!opA.CanInPlace())
+		if (!opA.IsInPlace())
 			(m, k) = (k, m);
 		(long s, n) = (B.NRows, B.NCols);
-		if (!opB.CanInPlace())
+		if (!opB.IsInPlace())
 			(s, n) = (n, s);
 		if (k != s)
 			throw new ArgumentException(Resources.ParameterError.NotSameSize);

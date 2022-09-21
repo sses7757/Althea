@@ -336,12 +336,12 @@ public sealed class DenseOperation<T, TS> :
 		bool upperA = false, unitA = false;
 		if (A is not null)
 		{
-			upperA = A.Upper == opA.CanInPlace(); unitA = A.UnitDiagonal;
+			upperA = A.Upper == opA.IsInPlace(); unitA = A.UnitDiagonal;
 		}
 		bool upperB = upperA, unitB = false;
 		if (B is not null)
 		{
-			upperB = B.Upper == opB.CanInPlace(); unitB = B.UnitDiagonal;
+			upperB = B.Upper == opB.IsInPlace(); unitB = B.UnitDiagonal;
 		}
 		if (upperA != upperB || (unitA && unitB))
 			throw new ArgumentException(Resources.ParameterError.InvalidValue);
@@ -400,8 +400,8 @@ public sealed class DenseOperation<T, TS> :
 	/// <inheritdoc/>
 	public static TriangularMatrix<T, TS> MultiplyMatries(TriangularMatrix<T, TS> A, TriangularMatrix<T, TS> B, T α, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 	{
-		bool upperA = A.Upper == opA.CanInPlace();
-		bool upperB = B.Upper == opB.CanInPlace();
+		bool upperA = A.Upper == opA.IsInPlace();
+		bool upperB = B.Upper == opB.IsInPlace();
 		if (upperA != upperB || A.UnitDiagonal != B.UnitDiagonal)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue);
 		var output = IMatrixOperations<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>.CheckMul(α, A, B, opA, opB, A.Storage, out long m, out long n, out long k);
@@ -564,7 +564,7 @@ public sealed class DenseOperation<T, TS> :
 			return;
 		}
 		var (m, n) = IMatrixOperations<T, TriangularMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckAdd(A, scalarA, B, scalarB, C, opA, opB);
-		if (opA.CanInPlace())
+		if (opA.IsInPlace())
 		{
 			A.Storage.Copy2DTo<T, TS, TS>(A.LeadDim, C.Storage, C.LeadDim, m, n);
 		}
@@ -612,8 +612,8 @@ public sealed class DenseOperation<T, TS> :
 	public static void MultiplyMatries(TriangularMatrix<T, TS> A, TriangularMatrix<T, TS> B, T α, T β, TriangularMatrix<T, TS> C, MatrixOperation opA = MatrixOperation.None, MatrixOperation opB = MatrixOperation.None)
 	{
 		var (m, n, k) = IMatrixOperations<T, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>, TriangularMatrix<T, TS>>.CheckMul(α, A, B, C, opA, opB);
-		bool upperA = A.Upper == opA.CanInPlace();
-		bool upperB = B.Upper == opB.CanInPlace();
+		bool upperA = A.Upper == opA.IsInPlace();
+		bool upperB = B.Upper == opB.IsInPlace();
 		if (upperA != upperB || upperA != C.Upper || A.UnitDiagonal != B.UnitDiagonal || A.UnitDiagonal != C.UnitDiagonal)
 			throw new ArgumentException(Resources.ParameterError.InvalidValue);
 		HalfBlas.TriangularMatricesMultiply(A.UnitDiagonal, upperA, opA, opB, m, n, k, α, A.Storage, A.LeadDim, B.Storage, B.LeadDim, β, C.Storage, C.LeadDim);
@@ -629,7 +629,7 @@ public sealed class DenseOperation<T, TS> :
 			return;
 		}
 		var (m, n) = IMatrixOperations<T, SymmetricMatrix<T, TS>, DenseMatrix<T, TS>, DenseMatrix<T, TS>>.CheckAdd(A, scalarA, B, scalarB, C, opA, opB);
-		if (opA.CanInPlace())
+		if (opA.IsInPlace())
 		{
 			A.Storage.Copy2DTo<T, TS, TS>(A.LeadDim, C.Storage, C.LeadDim, m, n);
 		}
@@ -753,7 +753,7 @@ public sealed class DenseOperation<T, TS> :
 	public static void RankKUpdate(SymmetricMatrix<T, TS> A, DenseMatrix<T, TS> B, T α, T β = default, MatrixOperation opB = MatrixOperation.None)
 	{
 		var (n, k) = (B.NRows, B.NCols);
-		if (!opB.CanInPlace())
+		if (!opB.IsInPlace())
 			(n, k) = (k, n);
 		if (A.NRows != n)
 			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));
@@ -774,7 +774,7 @@ public sealed class DenseOperation<T, TS> :
 	public static void RankTwoKUpdate(SymmetricMatrix<T, TS> A, DenseMatrix<T, TS> B, DenseMatrix<T, TS> C, T α, T β = default, MatrixOperation op = MatrixOperation.None)
 	{
 		var (n, k) = (B.NRows, B.NCols);
-		if (!op.CanInPlace())
+		if (!op.IsInPlace())
 			(n, k) = (k, n);
 		if (A.NRows != n)
 			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(A));

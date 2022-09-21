@@ -251,7 +251,7 @@ public unsafe partial class Api
 			Complex<Float64> => new NM.cblas_gemv_comp<Complex<Float64>>(NM.cblas_zgemv) as NM.cblas_gemv_comp<T>,
 			_ => null,
 		};
-		using var conj = Conjugater.Create(px, op.CanInPlace() ? n : m, strideX, py, op.CanInPlace() ? m : n, strideY, ref op);
+		using var conj = Conjugater.Create(px, op.IsInPlace() ? n : m, strideX, py, op.IsInPlace() ? m : n, strideY, ref op);
 		funcRe?.Invoke(MklMatrixLayout.ColMajor, op.ToMkl(), m, n, α, pA, lda, px, strideX, β, py, strideY);
 		funcCm?.Invoke(MklMatrixLayout.ColMajor, op.ToMkl(), m, n, α, pA, lda, px, strideX, β, py, strideY);
 		return funcRe != null || funcCm != null;
@@ -321,20 +321,20 @@ public unsafe partial class Api
 		{
 			long min = Math.Min(m, n), max = Math.Max(m, n);
 			Storage.Api.PointerStridedCopy(px, strideX, py, strideY, Math.Min(m, n));
-			bool actualSquare = op.CanInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
+			bool actualSquare = op.IsInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
 			using var conj = Conjugater.Create(py, actualSquare ? min : m, strideY, ref op);
 			func(MklMatrixLayout.ColMajor, fu, op.ToMkl(), ud, min, pA, lda, py, strideY);
 			if (actualSquare)
 			{
-				if (op.CanInPlace() == fillUpper)
+				if (op.IsInPlace() == fillUpper)
 					FillWithValue(py + min * strideY, strideY, n, T.Zero);
 			}
 			else
 			{
-				if (op.CanInPlace() == fillUpper)
-					this.GeneralMatrixMultiplyVector(op, max - min, min, T.One, A + min * (op.CanInPlace() ? 1 : lda), lda, y + min * strideY, strideY, T.Zero, y + min * strideY, strideY);
+				if (op.IsInPlace() == fillUpper)
+					this.GeneralMatrixMultiplyVector(op, max - min, min, T.One, A + min * (op.IsInPlace() ? 1 : lda), lda, y + min * strideY, strideY, T.Zero, y + min * strideY, strideY);
 				else
-					this.GeneralMatrixMultiplyVector(op, min, max - min, T.One, A + min * (op.CanInPlace() ? lda : 1), lda, x + min * strideX, strideX, T.One, y, strideY);
+					this.GeneralMatrixMultiplyVector(op, min, max - min, T.One, A + min * (op.IsInPlace() ? lda : 1), lda, x + min * strideX, strideX, T.One, y, strideY);
 			}
 			if (α != T.One)
 				this.Scale(y, strideY, α);
@@ -435,9 +435,9 @@ public unsafe partial class Api
 		if (typeof(T) != typeof(Float32) && typeof(T) != typeof(Float64) && typeof(T) != typeof(Complex<Float32>) && typeof(T) != typeof(Complex<Float64>))
 			return false;
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-		if (!GetPointer(A, opA.CanInPlace() ? m : k, opA.CanInPlace() ? k : m, lda, out T* pA))
+		if (!GetPointer(A, opA.IsInPlace() ? m : k, opA.IsInPlace() ? k : m, lda, out T* pA))
 			return false;
-		if (!GetPointer(B, opB.CanInPlace() ? k : n, opB.CanInPlace() ? n : k, ldb, out T* pB))
+		if (!GetPointer(B, opB.IsInPlace() ? k : n, opB.IsInPlace() ? n : k, ldb, out T* pB))
 			return false;
 		if (!GetPointer(C, m, n, ldc, out T* pC))
 			return false;
@@ -478,8 +478,8 @@ public unsafe partial class Api
 		}
 		else
 		{
-			using var conjA = Conjugater.Create(pA, opA.CanInPlace() ? m : k, opA.CanInPlace() ? k : m, lda, ref opA);
-			using var conjB = Conjugater.Create(pB, opB.CanInPlace() ? k : n, opB.CanInPlace() ? n : k, ldb, ref opB);
+			using var conjA = Conjugater.Create(pA, opA.IsInPlace() ? m : k, opA.IsInPlace() ? k : m, lda, ref opA);
+			using var conjB = Conjugater.Create(pB, opB.IsInPlace() ? k : n, opB.IsInPlace() ? n : k, ldb, ref opB);
 			funcRe?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
 			funcCm?.Invoke(MklMatrixLayout.ColMajor, opA.ToMkl(), opB.ToMkl(), m, n, k, α, pA, lda, pB, ldb, β, pC, ldc);
 		}
@@ -494,7 +494,7 @@ public unsafe partial class Api
 		opA = opA.Simplify<T>(hermA); opB = opB.Simplify<T>();
 		if (!GetPointer(A, leftA ? m : n, leftA ? m : n, lda, out T* pA))
 			return false;
-		if (!GetPointer(B, opB.CanInPlace() ? m : n, opB.CanInPlace() ? n : m, ldb, out T* pB))
+		if (!GetPointer(B, opB.IsInPlace() ? m : n, opB.IsInPlace() ? n : m, ldb, out T* pB))
 			return false;
 		if (!GetPointer(C, m, n, ldc, out T* pC))
 			return false;
@@ -516,7 +516,7 @@ public unsafe partial class Api
 			return false;
 		var side = leftA ? MklBlasSideMode.Left : MklBlasSideMode.Right;
 		var uplo = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
-		if (!opB.CanInPlace())
+		if (!opB.IsInPlace())
 		{
 			if (m != ldc)
 				return false;
@@ -544,7 +544,7 @@ public unsafe partial class Api
 		}
 		else
 		{
-			using var conjB = Conjugater.Create(pA, opB.CanInPlace() ? m : n, opB.CanInPlace() ? n : m, ldb, ref opB);
+			using var conjB = Conjugater.Create(pA, opB.IsInPlace() ? m : n, opB.IsInPlace() ? n : m, ldb, ref opB);
 			funcRe?.Invoke(MklMatrixLayout.ColMajor, side, uplo, m, n, α, pA, lda, pB, ldb, β, pC, ldc);
 			funcCm?.Invoke(MklMatrixLayout.ColMajor, side, uplo, m, n, α, pA, lda, pB, ldb, β, pC, ldc);
 		}
@@ -587,7 +587,7 @@ public unsafe partial class Api
 	{
 		if (actualSquare)
 		{
-			if (opA.CanInPlace() == fillUpper)
+			if (opA.IsInPlace() == fillUpper)
 			{
 				if (leftA)
 					api.GeneralMatrixBinaryScalar(BinaryScalarOperation.Fill, m - minA, n, T.Zero, C, ldc, C + minA, ldc);
@@ -597,21 +597,21 @@ public unsafe partial class Api
 		}
 		else
 		{
-			if (opA.CanInPlace() == fillUpper)
+			if (opA.IsInPlace() == fillUpper)
 			{
-				A += minA * (opA.CanInPlace() ? lda : 1);
+				A += minA * (opA.IsInPlace() ? lda : 1);
 				if (leftA)
-					api.GeneralMatricesMultiply(opA, opB, m, n, maxA - minA, α, A, lda, B + minA * (opB.CanInPlace() ? 1 : ldb), ldb, T.One, C, ldc);
+					api.GeneralMatricesMultiply(opA, opB, m, n, maxA - minA, α, A, lda, B + minA * (opB.IsInPlace() ? 1 : ldb), ldb, T.One, C, ldc);
 				else
-					api.GeneralMatricesMultiply(opB, opA, m, n - minA, opB.CanInPlace() ? colB : rowB, α, B, ldb, A, lda, T.Zero, C + minA * ldc, ldc);
+					api.GeneralMatricesMultiply(opB, opA, m, n - minA, opB.IsInPlace() ? colB : rowB, α, B, ldb, A, lda, T.Zero, C + minA * ldc, ldc);
 			}
 			else
 			{
-				A += minA * (opA.CanInPlace() ? 1 : lda);
+				A += minA * (opA.IsInPlace() ? 1 : lda);
 				if (leftA)
-					api.GeneralMatricesMultiply(opA, opB, m - minA, n, opA.CanInPlace() ? colA : rowA, α, A, lda, B, ldb, T.Zero, C + minA * ldc, ldc);
+					api.GeneralMatricesMultiply(opA, opB, m - minA, n, opA.IsInPlace() ? colA : rowA, α, A, lda, B, ldb, T.Zero, C + minA * ldc, ldc);
 				else
-					api.GeneralMatricesMultiply(opB, opA, m, n, opB.CanInPlace() ? colB : rowB, α, B + minA * (opB.CanInPlace() ? ldb : 1), ldb, A, lda, T.One, C, ldc);
+					api.GeneralMatricesMultiply(opB, opA, m, n, opB.IsInPlace() ? colB : rowB, α, B + minA * (opB.IsInPlace() ? ldb : 1), ldb, A, lda, T.One, C, ldc);
 			}
 		}
 	}
@@ -620,8 +620,8 @@ public unsafe partial class Api
 	public virtual bool TriangularMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
 		long rowA, colA, rowB, colB;
-		(rowA, colA) = opA.CanInPlace() ? (m, k) : (k, m);
-		(rowB, colB) = opB.CanInPlace() ? (k, n) : (n, k);
+		(rowA, colA) = opA.IsInPlace() ? (m, k) : (k, m);
+		(rowB, colB) = opB.IsInPlace() ? (k, n) : (n, k);
 		if (!leftA)
 		{
 			((rowA, colA), (rowB, colB)) = ((rowB, colB), (rowA, colA));
@@ -632,7 +632,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(C, m, n, ldc, out T* pC))
 			return false;
-		if (β != T.Zero || (pB == pC && (!opB.CanInPlace() || rowB != m || colB != n || ldb != ldc || rowA != colA)))
+		if (β != T.Zero || (pB == pC && (!opB.IsInPlace() || rowB != m || colB != n || ldb != ldc || rowA != colA)))
 			return false;
 		opA = opA.Simplify<T>();
 		var funcRe = default(T) switch
@@ -652,7 +652,7 @@ public unsafe partial class Api
 		var lr = leftA ? MklBlasSideMode.Left : MklBlasSideMode.Right;
 		var fu = fillUpper ? MklFillMode.Upper : MklFillMode.Lower;
 		var ud = unitDiag ? MklBlasDiagType.Unit : MklBlasDiagType.NonUnit;
-		bool actualSquare = opA.CanInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
+		bool actualSquare = opA.IsInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
 		bool conjugated = false;
 		long mm = Math.Min(rowB, m), nn = Math.Min(colB, n);
 		if (opA == MatrixOperation.Conjugate)
@@ -682,7 +682,7 @@ public unsafe partial class Api
 	/// <inheritdoc/>
 	public virtual bool SymmetricRankKUpdate<T, TS1, TS2>(bool fillUpper, MatrixOperation op, bool conjA, long n, long k, T α, TS1 A, long lda, T β, TS2 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
-		if (!GetPointer(A, op.CanInPlace() ? n : k, op.CanInPlace() ? k : n, lda, out T* pA))
+		if (!GetPointer(A, op.IsInPlace() ? n : k, op.IsInPlace() ? k : n, lda, out T* pA))
 			return false;
 		if (!GetPointer(C, n, n, ldc, out T* pC))
 			return false;
@@ -714,9 +714,9 @@ public unsafe partial class Api
 	/// <inheritdoc/>
 	public virtual bool SymmetricRankTwoKUpdate<T, TS1, TS2, TS3>(bool fillUpper, MatrixOperation op, bool conjugate, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
-		if (!GetPointer(A, op.CanInPlace() ? n : k, op.CanInPlace() ? k : n, lda, out T* pA))
+		if (!GetPointer(A, op.IsInPlace() ? n : k, op.IsInPlace() ? k : n, lda, out T* pA))
 			return false;
-		if (!GetPointer(B, op.CanInPlace() ? k : n, op.CanInPlace() ? n : k, lda, out T* pB))
+		if (!GetPointer(B, op.IsInPlace() ? k : n, op.IsInPlace() ? n : k, lda, out T* pB))
 			return false;
 		if (!GetPointer(C, n, n, ldc, out T* pC))
 			return false;
@@ -750,9 +750,9 @@ public unsafe partial class Api
 	/// <inheritdoc/>
 	public virtual bool GeneralMatricesAdd<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1? A, long lda, T β, TS2? B, long ldb, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
-		if (!GetPointer(A, opA.CanInPlace() ? m : n, opA.CanInPlace() ? n : m, lda, out T* pA))
+		if (!GetPointer(A, opA.IsInPlace() ? m : n, opA.IsInPlace() ? n : m, lda, out T* pA))
 			return false;
-		if (!GetPointer(B, opB.CanInPlace() ? m : n, opB.CanInPlace() ? n : m, ldb, out T* pB))
+		if (!GetPointer(B, opB.IsInPlace() ? m : n, opB.IsInPlace() ? n : m, ldb, out T* pB))
 			return false;
 		if (!GetPointer(C, m, n, ldc, out T* pC))
 			return false;
@@ -770,7 +770,7 @@ public unsafe partial class Api
 			{
 				pA = pB; lda = ldb; opA = opB; α = β;
 			}
-			func?.Invoke(MklMatrixLayoutChar.ColMajor, opA.ToMklChar(), opA.CanInPlace() ? m : n, opA.CanInPlace() ? n : m, α, pA, lda, pC, ldc);
+			func?.Invoke(MklMatrixLayoutChar.ColMajor, opA.ToMklChar(), opA.IsInPlace() ? m : n, opA.IsInPlace() ? n : m, α, pA, lda, pC, ldc);
 			return func != null;
 		}
 		else
@@ -791,13 +791,13 @@ public unsafe partial class Api
 	/// <inheritdoc/>
 	public virtual bool DiagonalMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, MatrixOperation opA, bool conjX, long m, long n, T α, TS1 A, long lda, TS2 x, long strideX, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
-		if (!GetPointer(A, opA.CanInPlace() ? m : n, opA.CanInPlace() ? n : m, lda, out T* pA))
+		if (!GetPointer(A, opA.IsInPlace() ? m : n, opA.IsInPlace() ? n : m, lda, out T* pA))
 			return false;
 		if (!GetPointer(C, m, n, ldc, out T* pC))
 			return false;
 		if (!GetPointer(x, strideX, out T* pX, out long lenx))
 			return false;
-		if (lenx < (leftA == opA.CanInPlace() ? n : m))
+		if (lenx < (leftA == opA.IsInPlace() ? n : m))
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
 		delegate*<MklMatrixLayout, MklBlasSideMode, MklInt, MklInt, T*, MklInt, MklInt, T*, MklInt, MklInt, T*, MklInt, MklInt, MklInt, void> func = default(T) switch
 		{
@@ -812,7 +812,7 @@ public unsafe partial class Api
 		conjX &= T.IsComplexType;
 		opA = opA.Simplify<T>();
 		conjX = opA.HasConjugate() ^ conjX;
-		if (!opA.CanInPlace())
+		if (!opA.IsInPlace())
 		{
 			leftA = !leftA;
 			if (m != n)

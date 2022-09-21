@@ -9,13 +9,9 @@
     <Nullable>enable</Nullable>
 
     <IsPackable>false</IsPackable>
-  </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Cuda\**" />
-    <EmbeddedResource Remove="Cuda\**" />
-    <None Remove="Cuda\**" />
-  </ItemGroup>
+    <StartupObject>Althea.Backend.Cuda.LinearAlgebra.Dense.Tests.BlasApiTests</StartupObject>
+  </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Demonstration.cs" />

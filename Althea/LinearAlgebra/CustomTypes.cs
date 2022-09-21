@@ -164,6 +164,7 @@ public enum GeneralEigenType
 	/// No general eigen
 	/// </summary>
 	None = 0,
+
 	//tex: $A x = \lambda B x$
 
 	/// <summary>
@@ -227,7 +228,7 @@ public static class MatrixOperationExtension
 	/// <param name="operation">The <see cref="MatrixOperation"/> to check</param>
 	/// <returns>Whether <paramref name="operation"/> can be performed in-place.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool CanInPlace(this MatrixOperation operation) => operation == MatrixOperation.None || operation == MatrixOperation.Conjugate;
+	public static bool IsInPlace(this MatrixOperation operation) => operation == MatrixOperation.None || operation == MatrixOperation.Conjugate;
 
 	/// <summary>
 	/// Check whether the given <paramref name="operation"/> has conjugate operation.

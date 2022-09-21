@@ -276,7 +276,6 @@ int vecBinaryScalar(const DataType type, const binaryOp::BinaryOperation op, con
 }
 #pragma endregion
 
-/*
 #pragma region data type cast
 template <typename RealIn, typename RealOut>
 inline int vectorComplexToReal(const void* srcv, void* dstv, const size_t n, const size_t strideSrc, const size_t strideDst, bool toRealByAbs)
@@ -802,7 +801,6 @@ int vecScan(const DataType type, const reduceOp::ReduceOperation op, bool inclus
 }
 #pragma endregion
 
-
 #pragma region int operations
 template<typename T>
 inline int vectorSort(void* vec, const size_t n, const size_t stride)
@@ -1043,4 +1041,3 @@ int vecBound(const DataType type, bool lower, const size_t n, const void* v, con
 	}
 }
 #pragma endregion
-*/

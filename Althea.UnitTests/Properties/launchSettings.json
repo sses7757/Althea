@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Althea.UnitTests": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

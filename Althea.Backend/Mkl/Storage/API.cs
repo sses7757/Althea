@@ -59,7 +59,7 @@ public unsafe class Api : CSharp.Storage.Api
 	{
 		if (scale == default)
 			scale = T.One;
-		if (!Althea.LinearAlgebra.MatrixOperationExtension.CanInPlace(op))
+		if (!Althea.LinearAlgebra.MatrixOperationExtension.IsInPlace(op))
 			(height, width) = (width, height);
 		if (source == destination)
 		{

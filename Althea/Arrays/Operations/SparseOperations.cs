@@ -147,7 +147,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 	public static void MatrixMultiplyVector(DenseMatrix<T, TS> matrix, SparseVector<T, TInd, TS, TSInd> vector, DenseVector<T, TS> vectorOut, T α, T β = default, MatrixOperation operation = default)
 	{
 		IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>.CheckMatMulVec(matrix, vector, vectorOut, α, operation);
-		SpComp.MatrixDenseMultiplyVectorSparse(operation, α, operation.CanInPlace() ? matrix.NRows : matrix.NCols, matrix.Storage, matrix.LeadDim, vector, β, vectorOut.Storage, vectorOut.Stride);
+		SpComp.MatrixDenseMultiplyVectorSparse(operation, α, operation.IsInPlace() ? matrix.NRows : matrix.NCols, matrix.Storage, matrix.LeadDim, vector, β, vectorOut.Storage, vectorOut.Stride);
 	}
 
 	/// <inheritdoc/>
@@ -159,7 +159,7 @@ public sealed class SparseOperation<T, TInd, TS, TSInd> :
 		var output = IMatrixVectorMultiplyOperations<T, SparseVector<T, TInd, TS, TSInd>, DenseVector<T, TS>, DenseMatrix<T, TS>>.CheckMatMulVec(matrix, vector, vector.Storage, α, operation);
 		try
 		{
-			SpComp.MatrixDenseMultiplyVectorSparse(operation, α, operation.CanInPlace() ? matrix.NRows : matrix.NCols, matrix.Storage, matrix.LeadDim, vector, T.Zero, output, 1);
+			SpComp.MatrixDenseMultiplyVectorSparse(operation, α, operation.IsInPlace() ? matrix.NRows : matrix.NCols, matrix.Storage, matrix.LeadDim, vector, T.Zero, output, 1);
 			return new(output, output.Length);
 		}
 		catch (Exception)

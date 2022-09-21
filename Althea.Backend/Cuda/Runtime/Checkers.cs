@@ -136,7 +136,7 @@ public static unsafe partial class MemoryPointerChecker
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool GetPointer<T, TS>(IBindedDevice? api, TS? s, MatrixOperation op, long m, long n, long ld, out T* pointer, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
-		if (!op.CanInPlace())
+		if (!op.IsInPlace())
 		{
 			(m, n) = (n, m);
 		}
@@ -146,7 +146,7 @@ public static unsafe partial class MemoryPointerChecker
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool GetPointer<T, TS>(IBindedDevice? api, TS? s, MatrixOperation op, long m, long n, long ld, out T* pointer, out int mm, out int nn, out int lld, [CallerArgumentExpression("s")] string? sName = null, [CallerArgumentExpression("m")] string? mName = null, [CallerArgumentExpression("n")] string? nName = null, [CallerArgumentExpression(@"ld")] string? ldName = null) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
-		if (!op.CanInPlace())
+		if (!op.IsInPlace())
 		{
 			(m, n) = (n, m);
 		}

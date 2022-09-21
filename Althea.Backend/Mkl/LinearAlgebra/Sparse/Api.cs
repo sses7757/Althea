@@ -417,7 +417,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 		if (!GetPointer(y, strideY, out T* py, out var ny))
 			return false;
 		var (m, n) = (M.Size[0], M.Size[1]);
-		if (!op.CanInPlace())
+		if (!op.IsInPlace())
 			(m, n) = (n, m);
 		if (n != nx || m != ny)
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
@@ -512,7 +512,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 				return false;
 			MatrixOp op; MatrixOperation opC;
 			SparseMatrixHandle hA = descrA, hB = descrB;
-			if (opA.CanInPlace())
+			if (opA.IsInPlace())
 			{
 				if ((opA == MatrixOperation.Conjugate && opB == MatrixOperation.None) || (opA == MatrixOperation.None && opB == MatrixOperation.Conjugate))
 					return false;
@@ -527,7 +527,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 				opC = opB;
 				if (opB.HasConjugate())
 					opA = opA.Conjugate();
-				if (!opB.CanInPlace())
+				if (!opB.IsInPlace())
 					opA = opA.Transpose();
 				op = opA.ToOp();
 			}
@@ -600,7 +600,7 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-		long m = opA.CanInPlace() ? A.Size[0] : A.Size[1], n = opB.CanInPlace() ? B.Size[1] : B.Size[0];
+		long m = opA.IsInPlace() ? A.Size[0] : A.Size[1], n = opB.IsInPlace() ? B.Size[1] : B.Size[0];
 		if (!GetPointer(C, m, n, ldc, out T* pc))
 			return false;
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
@@ -636,9 +636,9 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-		if (!opB.CanInPlace())
+		if (!opB.IsInPlace())
 			return false;
-		var (m, k) = opA.CanInPlace() ? (A.Size[0], A.Size[1]) : (A.Size[1], A.Size[0]);
+		var (m, k) = opA.IsInPlace() ? (A.Size[0], A.Size[1]) : (A.Size[1], A.Size[0]);
 		if (!GetPointer(B, k, n, ldb, out T* pb))
 			return false;
 		if (!GetPointer(C, m, n, ldc, out T* pc))
@@ -672,9 +672,9 @@ public unsafe partial class Api : IConversionAbstractApi, IComputationAbstractAp
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-		if (!opA.CanInPlace())
+		if (!opA.IsInPlace())
 			return false;
-		var (k, n) = opB.CanInPlace() ? (B.Size[0], B.Size[1]) : (B.Size[1], B.Size[0]);
+		var (k, n) = opB.IsInPlace() ? (B.Size[0], B.Size[1]) : (B.Size[1], B.Size[0]);
 		opB = opB.Transpose();
 		if (!GetPointer(A, m, k, lda, out T* pa))
 			return false;

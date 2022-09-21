@@ -223,7 +223,7 @@ namespace Althea.Backend.Mkl.LinearAlgebra.Sparse
 			where T : unmanaged, IBaseNumber<T> where TInd : unmanaged, IBinaryInt<TInd>
 			where TS : class, IStorage<T, TS> where TSInd : class, IStorage<TInd, TSInd>
 		{
-			bool transposed = !this.op.CanInPlace(), conjugate = this.op.HasConjugate();
+			bool transposed = !this.op.IsInPlace(), conjugate = this.op.HasConjugate();
 			T* pVals; long nnz;
 			if ((this.format & (SparseFormat.MatrixCscFormat | SparseFormat.MatrixCsrFormat)) != SparseFormat.None)
 			{

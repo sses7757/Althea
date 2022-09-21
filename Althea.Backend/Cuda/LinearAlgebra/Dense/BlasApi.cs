@@ -23,7 +23,7 @@ public unsafe partial class Api
 	/// <param name="strideX">The spacing between consecutive elements of <paramref name="x"/></param>
 	/// <param name="index">The output real index in <paramref name="x"/></param>
 	/// <returns>Support or not</returns>
-	protected internal bool HorizontalAbsoluteValueArgMinMax<T, TS>(bool min, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
+	public virtual bool HorizontalAbsoluteValueArgMinMax<T, TS>(bool min, TS x, long strideX, out long index) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 	{
 		index = -1;
 		if (!GetPointer(this, x, strideX, out T* px, out int n, out int inc))
@@ -255,7 +255,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(this, A, m, n, lda, out T* pA, out int mm, out int nn, out int llda))
 			return false;
-		if ((op.CanInPlace() ? nn : mm) != nx || (op.CanInPlace() ? mm : nn) != ny)
+		if ((op.IsInPlace() ? nn : mm) > nx || (op.IsInPlace() ? mm : nn) > ny)
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
 
 		delegate*<IntPtr, CuBlasOperation, int, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
@@ -285,7 +285,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(this, A, n, n, lda, out T* pA, out _, out int nn, out int llda))
 			return false;
-		if (nx != nn || ny != nn)
+		if (nx < nn || ny < nn)
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
 
 		delegate*<IntPtr, CuBlasFillMode, int, T*, T*, int, T*, int, T*, T*, int, CudaBlasStatus> func;
@@ -306,13 +306,15 @@ public unsafe partial class Api
 	/// <inheritdoc/>
 	public virtual bool TriangularMatrixMultiplyVector<T, TSM, TSV1, TSV2>(bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, TSM A, long lda, T α, TSV1 x, long strideX, T β, TSV2 y, long strideY) where T : unmanaged, IBaseNumber<T> where TSM : class, IStorage<T, TSM> where TSV1 : class, IStorage<T, TSV1> where TSV2 : class, IStorage<T, TSV2>
 	{
+		if (β != T.Zero)
+			return false;
 		if (!GetPointer(this, x, strideX, out T* px, out int nx, out int incx))
 			return false;
 		if (!GetPointer(this, y, strideY, out T* py, out int ny, out int incy))
 			return false;
 		if (!GetPointer(this, A, m, n, lda, out T* pA, out int mm, out int nn, out int llda))
 			return false;
-		if (nx != nn || ny != nn)
+		if (nx < (op.IsInPlace() ? mm : nn) || ny < (op.IsInPlace() ? nn : mm))
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
 
 		delegate*<IntPtr, CuBlasFillMode, CuBlasOperation, CuBlasDiagType, int, T*, int, T*, int, CudaBlasStatus> func;
@@ -340,12 +342,12 @@ public unsafe partial class Api
 		{
 			int min = Math.Min(mm, nn), max = Math.Max(mm, nn);
 			this.StridedCopy(px, py, min, incx, incy);
-			bool actualSquare = op.CanInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
+			bool actualSquare = op.IsInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
 			using var conj = Conjugater.Create(py, actualSquare ? min : mm, incy, op);
 			func(this.cublasHandle, fu, op.ToCuda(), ud, min, pA, llda, py, incy);
 			if (actualSquare)
 			{
-				if (op.CanInPlace() == fillUpper)
+				if (op.IsInPlace() == fillUpper)
 				{
 					if (incy == 1)
 						Storage.NativeMethods.cudaMemset(py + min * strideY, 0, n * sizeof(T)).Check();
@@ -358,10 +360,7 @@ public unsafe partial class Api
 			}
 			else
 			{
-				if (op.CanInPlace() == fillUpper)
-					this.GeneralMatrixMultiplyVector(op, max - min, min, T.One, A + min * (op.CanInPlace() ? 1 : lda), lda, y + min * strideY, strideY, T.Zero, y + min * strideY, strideY);
-				else
-					this.GeneralMatrixMultiplyVector(op, min, max - min, T.One, A + min * (op.CanInPlace() ? lda : 1), lda, x + min * strideX, strideX, T.One, y, strideY);
+				this.GeneralMatrixMultiplyVector(op, fillUpper ? m : m - n, fillUpper ? n - m : n, T.One, A + (fillUpper ? m * lda : n), lda, x + (fillUpper != op.IsInPlace() ? 0 : min * strideX), strideX, T.Zero, y + (fillUpper == op.IsInPlace() ? 0 : min * strideY), strideY);
 			}
 			if (α != T.One)
 				this.Scale(y, strideY, α);
@@ -378,7 +377,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(this, A, m, n, lda, out T* pA, out int mm, out int nn, out int llda))
 			return false;
-		if (nx != mm || ny != nn)
+		if (nx < mm || ny < nn)
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
 
 		delegate*<IntPtr, int, int, T*, T*, int, T*, int, T*, int, CudaBlasStatus> func;
@@ -405,7 +404,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(this, A, n, n, lda, out T* pA, out _, out int nn, out int llda))
 			return false;
-		if (nx != nn)
+		if (nx < nn)
 			throw new ArgumentException(Resources.ParameterError.WrongSize);
 
 		delegate*<IntPtr, CuBlasFillMode, int, T*, T*, int, T*, int, CudaBlasStatus> func;
@@ -434,10 +433,8 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(this, A, n, n, lda, out T* pA, out _, out int nn, out int llda))
 			return false;
-		if (nx != nn)
-			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
-		if (ny != nn)
-			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(y));
+		if (nx < nn || ny < nn)
+			throw new ArgumentException(Resources.ParameterError.WrongSize);
 
 		delegate*<IntPtr, CuBlasFillMode, int, T*, T*, int, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
@@ -533,7 +530,7 @@ public unsafe partial class Api
 		};
 		var side = leftA ? CuBlasSideMode.Left : CuBlasSideMode.Right;
 		var uplo = fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower;
-		if (!opB.CanInPlace())
+		if (!opB.IsInPlace())
 		{
 			if (m != ldc)
 				return false;
@@ -592,8 +589,8 @@ public unsafe partial class Api
 	public virtual bool TriangularMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
 		int rowA, colA, rowB, colB;
-		(rowA, colA) = opA.CanInPlace() ? ((int)m, (int)k) : ((int)k, (int)m);
-		(rowB, colB) = opB.CanInPlace() ? ((int)k, (int)n) : ((int)n, (int)k);
+		(rowA, colA) = opA.IsInPlace() ? ((int)m, (int)k) : ((int)k, (int)m);
+		(rowB, colB) = opB.IsInPlace() ? ((int)k, (int)n) : ((int)n, (int)k);
 		if (!leftA)
 		{
 			((rowA, colA), (rowB, colB)) = ((rowB, colB), (rowA, colA));
@@ -604,7 +601,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(this, C, m, n, ldc, out T* pC, out _, out _, out int lldc))
 			return false;
-		if (β != T.Zero || (pB == pC && (!opB.CanInPlace() || rowB != m || colB != n || ldb != ldc || rowA != colA)))
+		if (β != T.Zero || (pB == pC && (!opB.IsInPlace() || rowB != m || colB != n || ldb != ldc || rowA != colA)))
 			return false;
 		opA = opA.Simplify<T>();
 		delegate*<IntPtr, CuBlasSideMode, CuBlasFillMode, CuBlasOperation, CuBlasDiagType, int, int, T*, T*, int, T*, int, T*, int, CudaBlasStatus> func;
@@ -621,7 +618,7 @@ public unsafe partial class Api
 		var lr = leftA ? CuBlasSideMode.Left : CuBlasSideMode.Right;
 		var fu = fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower;
 		var ud = unitDiag ? CuBlasDiagType.Unit : CuBlasDiagType.NonUnit;
-		bool actualSquare = opA.CanInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
+		bool actualSquare = opA.IsInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
 		bool conjugated = false;
 		int mm = Math.Min(rowB, (int)m), nn = Math.Min(colB, (int)n);
 		if (opA == MatrixOperation.Conjugate)
@@ -714,12 +711,13 @@ public unsafe partial class Api
 			if ((A is null || α == T.Zero) && opB == MatrixOperation.None && β == T.One)
 			{   // copy B to C
 				Storage.NativeMethods.cudaMemcpy2D(pC, ldc * sizeof(T), pB, ldb * sizeof(T), m * sizeof(T), n, Storage.MemoryCopyKind.DeviceToDevice).Check();
+				return true;
 			}
 			else if ((B is null || β == T.Zero) && opA == MatrixOperation.None && α == T.One)
 			{   // copy A to C
 				Storage.NativeMethods.cudaMemcpy2D(pC, ldc * sizeof(T), pA, lda * sizeof(T), m * sizeof(T), n, Storage.MemoryCopyKind.DeviceToDevice).Check();
+				return true;
 			}
-			return true;
 		}
 		// normal
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
@@ -751,7 +749,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(this, C, m, n, ldc, out T* pC, out _, out _, out int lldc))
 			return false;
-		if (nx < (leftA == opA.CanInPlace() ? n : m))
+		if (nx < (leftA == opA.IsInPlace() ? n : m))
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(x));
 		if (β != T.Zero)
 			return false;

@@ -164,7 +164,7 @@ public unsafe partial class Api
 		if ((A.Format & NM.SupportFormatIncludeBlocked) == SparseFormat.None || (target.Format & NM.SupportFormatIncludeBlocked) == SparseFormat.None)
 			return false;
 		var converter = GetConverter(this, A, target);
-		if (!opA.CanInPlace())
+		if (!opA.IsInPlace())
 		{
 			// shortcut
 			if ((target.Format & A.Format.WithTransposedMajor) != SparseFormat.None)
@@ -208,7 +208,7 @@ public unsafe partial class Api
 			}
 			hasError = false;
 		}
-		if (!opA.CanInPlace())
+		if (!opA.IsInPlace())
 		{
 			target.Format = target.Format.IsRowMajor ? target.Format.WithColumnMajor : target.Format.WithRowMajor;
 			// cannot be blocked sparse matrix
@@ -257,7 +257,7 @@ public unsafe partial class Api
 		if (C is not null && (!C.Size.SequenceEqual(target.Size) || !C.ValueStorages.SequenceEqual(target.ValueStorages) || !C.IndexStorages.SequenceEqual(target.IndexStorages)))
 			return false;
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-		long m = opA.CanInPlace() ? A.Size[0] : A.Size[1], n = opB.CanInPlace() ? B.Size[1] : B.Size[0];
+		long m = opA.IsInPlace() ? A.Size[0] : A.Size[1], n = opB.IsInPlace() ? B.Size[1] : B.Size[0];
 		T* pcVal = null; TInd3* pcRow = null, pcCol = null; long nnzC = 0;
 		if (C is not null && !GetPointer(this, C, out pcVal, out pcRow, out pcCol, out nnzC))
 			return false;
@@ -322,12 +322,12 @@ public unsafe partial class Api
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-		var (m, k) = opA.CanInPlace() ? (A.Size[0], A.Size[1]) : (A.Size[1], A.Size[0]);
+		var (m, k) = opA.IsInPlace() ? (A.Size[0], A.Size[1]) : (A.Size[1], A.Size[0]);
 		if (!GetPointer(this, B, opB, k, n, ldb, out T* pb))
 			return false;
 		if (!GetPointer(this, C, m, n, ldc, out T* pc))
 			return false;
-		if (!opB.CanInPlace())
+		if (!opB.IsInPlace())
 			(k, n) = (n, k);
 		using var matB = DenseMatrixWrapper.Create(pb, k, n, ldb, false, out bool success);
 		if (!success) return false;
@@ -367,12 +367,12 @@ public unsafe partial class Api
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), α, Resources.ParameterError.CannotZero);
 		opA = opA.Simplify<T>(); opB = opB.Simplify<T>();
-		var (k, n) = opB.CanInPlace() ? (B.Size[0], B.Size[1]) : (B.Size[1], B.Size[0]);
+		var (k, n) = opB.IsInPlace() ? (B.Size[0], B.Size[1]) : (B.Size[1], B.Size[0]);
 		if (!GetPointer(this, A, opA, m, k, lda, out T* pa))
 			return false;
 		if (!GetPointer(this, C, m, n, ldc, out T* pc))
 			return false;
-		if (!opA.CanInPlace())
+		if (!opA.IsInPlace())
 			(k, m) = (m, k);
 		opB = opB.Transpose();
 		using var matA = DenseMatrixWrapper.Create(pa, k, m, lda, true, out bool success);
