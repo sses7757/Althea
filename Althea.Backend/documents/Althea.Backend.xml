@@ -332,7 +332,7 @@
         <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.QRDecomposition``3(System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.CSharp.LinearAlgebra.Api.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Backend.CSharp.LinearAlgebra.MatrixSolvers">
@@ -796,7 +796,7 @@
         <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.QRDecomposition``3(System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.Cuda.LinearAlgebra.Dense.Api.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Backend.Cuda.LinearAlgebra.Dense.CustomNativeMethods">
@@ -5223,7 +5223,7 @@
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.QRDecomposition``3(System.Boolean,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
-        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <inheritdoc/>
         </member>
         <member name="T:Althea.Backend.Mkl.LinearAlgebra.Dense.UnaryOperationSupplement">

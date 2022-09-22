@@ -896,20 +896,15 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 	}
 
 	/// <inheritdoc/>
-	public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (!GetPointer(A, m, n, lda, out T* pA, out int mm, out int nn, out int ld))
 			return false;
 		if (!GetPointer(B, n, nrhs, ldb, out T* pB, out _, out int nr, out int ldr))
 			return false;
 
-		using var buffer = ArrayPoolBuffers.Create<T>(((allowDestroy ? 0 : mm * nn) + mm) * sizeof(T));
+		using var buffer = ArrayPoolBuffers.Create<T>((mm * nn + mm) * sizeof(T));
 		T* temp = buffer;
-		if (!allowDestroy)
-		{
-			Copy2D(temp, mm, pA, ld, mm, nn);
-			pA = temp; ld = nn; temp += mm * nn;
-		}
 		SpanMatrix<T> matA = new(new(pA, ld * nn), ld),
 					  matB = new(new(pB, ldr * nr), ldr);
 		MatrixSolvers.QrFactorize(matA, new(temp, nn));
@@ -943,7 +938,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ICon
 
 	bool IBlasAbstractApi.GeneralMatricesMultiply<T, TS1, TS2, TS3>(MatrixOperation opA, MatrixOperation opB, long m, long n, long k, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) => false;
 
-	bool IBlasAbstractApi.SymmetricMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool fillUpper, bool leftA, bool hermA, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) => false;
+	bool IBlasAbstractApi.SymmetricMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool hermA, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) => false;
 
 	bool IBlasAbstractApi.TriangularMatrixSolve<T, TS1, TS2>(bool leftA, bool fillUpper, bool unitDiag, MatrixOperation op, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb) => false;
 

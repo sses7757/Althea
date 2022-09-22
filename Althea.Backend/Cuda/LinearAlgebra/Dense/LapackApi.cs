@@ -37,13 +37,15 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(valOut, out T* px, out long nx))
 			return false;
-		if (nx != n)
+		if (nx < n)
 			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(valOut));
 
 		var type = T.Type.ToCudaDataType();
 		var uplo = upper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower;
 		var mode = pV == null ? CuSolverEigMode.NoVector : CuSolverEigMode.Vector;
 		using var ppV = allowDestroy && pV == null ? CudaBuffer.Create(pA, lda, n) : CudaBuffer.Create(pV, ldvec, n);
+		if (!allowDestroy && pA != pV)
+			Storage.NativeMethods.cudaMemcpy2D(ppV, ppV.LD * sizeof(T), pA, lda * sizeof(T), n * sizeof(T), n, MemoryCopyKind.DeviceToDevice).Check();
 		using var ppx = T.IsComplexType ? CudaBuffer.Create<T>(n * sizeof(T) / 2) : CudaBuffer.Create(px);
 		NM.cusolverDnXsyevd_bufferSize(this.cusolverHandle, null, mode, uplo, n, type, ppV, ppV.LD, type, ppx, type, out var workDevice, out var workHost).Check();
 		using var buffer = CudaBuffer.Create(workDevice, workHost);
@@ -66,25 +68,25 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(this, valOut, 1, out T* px, out int nv, out _))
 			return false;
-		if (nv != nn)
+		if (nv < nn)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(valOut));
 
 		delegate*<IntPtr, GeneralEigenType, CuSolverEigMode, CuBlasFillMode, int, T*, int, T*, int, T*, out int, CudaSolverStatus> bufFunc;
 		delegate*<IntPtr, GeneralEigenType, CuSolverEigMode, CuBlasFillMode, int, T*, int, T*, int, T*, void*, int, void*, CudaSolverStatus> calFunc;
 		bufFunc = default(T) switch
 		{
-			Float32 => &NativeMethods.cusolverDnSsygvd_bufferSize,
-			Float64 => &NativeMethods.cusolverDnDsygvd_bufferSize,
-			Complex<Float32> => &NativeMethods.cusolverDnChegvd_bufferSize,
-			Complex<Float64> => &NativeMethods.cusolverDnZhegvd_bufferSize,
+			Float32 => &NM.cusolverDnSsygvd_bufferSize,
+			Float64 => &NM.cusolverDnDsygvd_bufferSize,
+			Complex<Float32> => &NM.cusolverDnChegvd_bufferSize,
+			Complex<Float64> => &NM.cusolverDnZhegvd_bufferSize,
 			_ => null,
 		};
 		calFunc = default(T) switch
 		{
-			Float32 => &NativeMethods.cusolverDnSsygvd,
-			Float64 => &NativeMethods.cusolverDnDsygvd,
-			Complex<Float32> => &NativeMethods.cusolverDnChegvd,
-			Complex<Float64> => &NativeMethods.cusolverDnZhegvd,
+			Float32 => &NM.cusolverDnSsygvd,
+			Float64 => &NM.cusolverDnDsygvd,
+			Complex<Float32> => &NM.cusolverDnChegvd,
+			Complex<Float64> => &NM.cusolverDnZhegvd,
 			_ => null,
 		};
 		if (bufFunc is null)
@@ -119,7 +121,7 @@ public unsafe partial class Api
 			return false;
 		if (!GetPointer(S, out T* px, out long nx))
 			return false;
-		if (nx != mn)
+		if (nx < mn)
 			throw new ArgumentException(Resources.ParameterError.WrongSize, nameof(S));
 		if (pU == pA && pV == pA)
 			throw new ArgumentException(Resources.ParameterError.DuplicateValue);
@@ -130,7 +132,8 @@ public unsafe partial class Api
 
 		var type = T.Type.ToCudaDataType();
 		using var ppA = allowDestroy ? CudaBuffer.Create(pA, lda, n) : CudaBuffer.Create<T>(null, m, n);
-		Storage.NativeMethods.cudaMemcpy2D(ppA, ppA.LD, pA, lda, m * sizeof(T), n, MemoryCopyKind.DeviceToDevice).Check();
+		if (pA != ppA)
+			Storage.NativeMethods.cudaMemcpy2D(ppA, ppA.LD, pA, lda, m * sizeof(T), n, MemoryCopyKind.DeviceToDevice).Check();
 		using var ppx = T.IsComplexType ? CudaBuffer.Create<T>(n * sizeof(T) / 2) : CudaBuffer.Create(px);
 		NM.cusolverDnXgesvd_bufferSize(this.cusolverHandle, null, Conversions.ToSvdChar(pA, pU, fullU), Conversions.ToSvdChar(pA, pV, fullV), m, n, type, ppA, ppA.LD, type, ppx, type, pU, ldu, type, pV, ldvct, type, out long workDevice, out long workHost).Check();
 		using var buffer = CudaBuffer.Create(workDevice, workHost);
@@ -154,13 +157,13 @@ public unsafe partial class Api
 
 		var type = T.Type.ToCudaDataType();
 		// factorize
-		NativeMethods.cusolverDnXgetrf_bufferSize(this.cusolverHandle, null, n, n, type, pA, lda, type, out var workDevice, out var workHost).Check();
+		NM.cusolverDnXgetrf_bufferSize(this.cusolverHandle, null, n, n, type, pA, lda, type, out var workDevice, out var workHost).Check();
 		using var buffer = CudaBuffer.Create(workDevice + n * sizeof(long), workHost);
 		void* pP = ((byte*)buffer.DeviceBuffer + workDevice);
-		NativeMethods.cusolverDnXgetrf(this.cusolverHandle, null, n, n, type, pA, lda, pP, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
+		NM.cusolverDnXgetrf(this.cusolverHandle, null, n, n, type, pA, lda, pP, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
 		SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 		// solve
-		NativeMethods.cusolverDnXgetrs(this.cusolverHandle, null, CuBlasOperation.None, n, nrhs, type, pA, lda, pP, type, pB, ldb, buffer.ExtraDeviceInfo).Check();
+		NM.cusolverDnXgetrs(this.cusolverHandle, null, CuBlasOperation.None, n, nrhs, type, pA, lda, pP, type, pB, ldb, buffer.ExtraDeviceInfo).Check();
 		SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 		return true;
 	}
@@ -172,7 +175,7 @@ public unsafe partial class Api
 	{
 		if (!default(T).CheckBaseSupport())
 			return false;
-		if (!GetPointer(this, A, m, n, lda, out T* pA, out int mm, out int nn, out int llda))
+		if (!GetPointer(this, A, m, n, lda, out T* pA, out int mm, out int nn, out _))
 			return false;
 		int kk = Math.Min(mm, nn); long colsQ = full ? m : kk;
 		if (!GetPointer(this, Q, m, colsQ, ldq, out T* pQ, out _, out int nnQ, out int lldq))
@@ -212,7 +215,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (!default(T).CheckBaseSupport())
 			return false;

@@ -507,7 +507,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool SymmetricMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool fillUpper, bool leftA, bool hermA, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
+	public virtual bool SymmetricMatrixMultiplyGeneral<T, TS1, TS2, TS3>(bool leftA, bool fillUpper, bool hermA, MatrixOperation opA, MatrixOperation opB, long m, long n, T α, TS1 A, long lda, TS2 B, long ldb, T β, TS3 C, long ldc) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 	{
 		if (α == T.Zero)
 			throw new ArgumentOutOfRangeException(nameof(α), Resources.ParameterError.CannotZero);
@@ -618,7 +618,7 @@ public unsafe partial class Api
 		var lr = leftA ? CuBlasSideMode.Left : CuBlasSideMode.Right;
 		var fu = fillUpper ? CuBlasFillMode.Upper : CuBlasFillMode.Lower;
 		var ud = unitDiag ? CuBlasDiagType.Unit : CuBlasDiagType.NonUnit;
-		bool actualSquare = opA.IsInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper);
+		bool actualSquare = m == n || (opA.IsInPlace() ? ((m > n) == fillUpper) : ((n > m) == !fillUpper));
 		bool conjugated = false;
 		int mm = Math.Min(rowB, (int)m), nn = Math.Min(colB, (int)n);
 		if (opA == MatrixOperation.Conjugate)
@@ -757,10 +757,10 @@ public unsafe partial class Api
 		delegate*<IntPtr, CuBlasSideMode, int, int, T*, int, T*, int, T*, int, CudaBlasStatus> func;
 		func = default(T) switch
 		{
-			Float32 => &NM.cublasSdgmm_v2,
-			Float64 => &NM.cublasDdgmm_v2,
-			Complex<Float32> => &NM.cublasCdgmm_v2,
-			Complex<Float64> => &NM.cublasZdgmm_v2,
+			Float32 => &NM.cublasSdgmm,
+			Float64 => &NM.cublasDdgmm,
+			Complex<Float32> => &NM.cublasCdgmm,
+			Complex<Float64> => &NM.cublasZdgmm,
 			_ => null,
 		};
 		// overwrite C by diagonal multiply result

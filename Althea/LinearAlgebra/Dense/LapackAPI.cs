@@ -242,13 +242,12 @@ namespace Althea.LinearAlgebra.Dense
 		/// <param name="lda">The leading dimension of <paramref name="A"/></param>
 		/// <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
 		/// <param name="ldb">The leading dimension of <paramref name="B"/></param>
-		/// <param name="allowDestroy">Whether the input matrices can be destroyed during calculation or not, default false</param>
 		/// <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
 		/// <exception cref="ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
 		/// <exception cref="MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
 		[AbstractApiMethod]
-		public abstract bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
+		public abstract bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>;
 		#endregion
 	}
 }

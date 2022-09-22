@@ -397,7 +397,7 @@ public unsafe partial class Api
 	}
 
 	/// <inheritdoc/>
-	public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb, bool allowDestroy = false) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
+	public virtual bool LeastSquareSolve<T, TS1, TS2>(long m, long n, long nrhs, TS1 A, long lda, TS2 B, long ldb) where T : unmanaged, IBinaryFloat<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2>
 	{
 		if (!GetPointer(A, m, n, lda, out T* pA))
 			return false;
@@ -413,9 +413,8 @@ public unsafe partial class Api
 		};
 		if (func == null)
 			return false;
-		using var ppA = allowDestroy ? ArrayPoolBuffers.Create(pA, lda, n) : ArrayPoolBuffers.Create<T>(null, m, n);
-		Storage.Api.PointerMemoryCopy2D(pA, lda, ppA, ppA.ld, m, n);
-		func(MklMatrixLayout.ColMajor, MklOperationChar.NoneTranspose, m, n, nrhs, ppA, ppA.ld, pB, ldb).Check(SolveMethodKind.QR);
+		Storage.Api.PointerMemoryCopy2D(pA, lda, pA, lda, m, n);
+		func(MklMatrixLayout.ColMajor, MklOperationChar.NoneTranspose, m, n, nrhs, pA, lda, pB, ldb).Check(SolveMethodKind.QR);
 		return true;
 	}
 	#endregion

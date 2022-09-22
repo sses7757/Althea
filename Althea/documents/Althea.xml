@@ -15079,7 +15079,7 @@
             <exception cref="T:System.ArgumentException">If <paramref name="Q"/> do not contain enough space to be overwritten</exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Dense.ILapackAbstractApi.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             When implemented by a derived class, least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
             Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its implicit QR decomposition, and <paramref name="B"/> shall be replaced by the solution X.
@@ -15094,7 +15094,6 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <param name="allowDestroy">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <returns>Whether this implementation supports the given parameters or not. If false, further internal operation is not allowed.</returns>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
@@ -16490,7 +16489,7 @@
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>
             <exception cref="T:System.InvalidOperationException">If an error occurred during selecting the implementation</exception>
         </member>
-        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64,System.Boolean)">
+        <member name="M:Althea.LinearAlgebra.Dense.LapackApiSelector.LeastSquareSolve``3(System.Int64,System.Int64,System.Int64,``1,System.Int64,``2,System.Int64)">
             <summary>
             Least square solve a series of linear systems: <c><paramref name="A"/> * X == <paramref name="B"/></c>. Where each column pair of X and <paramref name="B"/> together with <paramref name="A"/> is a overdetermined linear system.<br/>
             Both <paramref name="A"/> and <paramref name="B"/> are in-place: <paramref name="A"/> may be replaced by its implicit QR decomposition, and <paramref name="B"/> shall be replaced by the solution X.
@@ -16505,7 +16504,6 @@
             <param name="lda">The leading dimension of <paramref name="A"/></param>
             <param name="B">The input/output matrix whose each column is a vector at right-hand side; will be overwritten by solution X after exit.</param>
             <param name="ldb">The leading dimension of <paramref name="B"/></param>
-            <param name="allowDestroy">Whether the input matrices can be destroyed during calculation or not, default false</param>
             <exception cref="T:System.ArgumentNullException">If <paramref name="A"/> or <paramref name="B"/> is null or invalid</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">If <paramref name="m"/> ≤ <paramref name="n"/></exception>
             <exception cref="T:Althea.LinearAlgebra.MatrixSolveAlgorithmException">If the internal solver failed due to some reason</exception>

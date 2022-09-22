@@ -146,7 +146,7 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense
 
 		[NativeMethod(6, true)]
 		[DllImport(Cuda.NativeMethods.CUBLAS_DLL_NAME)]
-		internal static extern CudaBlasStatus cublasSdgmm_v2(IntPtr handle, CuBlasSideMode mode, int m, int n, void* A, int lda, void* x, int incx, void* C, int ldc);
+		internal static extern CudaBlasStatus cublasSdgmm(IntPtr handle, CuBlasSideMode mode, int m, int n, void* A, int lda, void* x, int incx, void* C, int ldc);
 		#endregion
 
 		#region solver

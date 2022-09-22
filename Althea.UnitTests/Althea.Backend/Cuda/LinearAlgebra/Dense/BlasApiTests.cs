@@ -45,7 +45,7 @@ public unsafe class BlasApiTests
 		Marshal.FreeHGlobal((IntPtr)host);
 	}
 
-	[TestMethod()]
+	////[TestMethod()]
 	[DataRow(1)]
 	[DataRow(5)]
 	public void AbsoluteValueArgMaxComplexTest(long stride)
@@ -225,9 +225,10 @@ public unsafe class BlasApiTests
 		bool success = api.Add((Float64)5.0, s1, stride, s2, stride);
 		Assert.IsTrue(success);
 
-		double* test = stackalloc double[(int)Math.Min(s1.Length, s2.Length)];
-		GpuHelpers.CopyToManaged(s2, (Float64*)test);
-		for (long i = 0; i < Math.Min(s1.Length, s2.Length); i += stride)
+		int len = (int)Math.Min(s1.Length, s2.Length);
+		double* test = stackalloc double[len];
+		GpuHelpers.CopyToManaged(s2.MakeReference(0, len), (Float64*)test);
+		for (long i = 0; i < len; i += stride)
 		{
 			ValueAssert.AreApproxEqual(host1[i] * 5 + host2[i], test[i]);
 		}
@@ -358,56 +359,174 @@ public unsafe class BlasApiTests
 	}
 
 	[TestMethod()]
-	public void GeneralMatricesMultiplyTest()
+	[DataRow(MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(MatrixOperation.None, MatrixOperation.Transpose, 16L)]
+	[DataRow(MatrixOperation.Transpose, MatrixOperation.None, 16L)]
+	[DataRow(MatrixOperation.Transpose, MatrixOperation.Transpose, 16L)]
+	public void GeneralMatricesMultiplyTest(MatrixOperation opA, MatrixOperation opB, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
+		using var s3 = GpuHelpers.GenerateFloatData(-10, 10, out var host3);
 
+		bool success = api.GeneralMatricesMultiply(opA, opB, n, n, n, (Float64)0.5, s1, n, s2, n, (Float64)0.5, s3, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
+		Marshal.FreeHGlobal((IntPtr)host3);
 	}
 
 	[TestMethod()]
-	public void SymmetricMatrixMultiplyGeneralTest()
+	[DataRow(true, true, MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(true, true, MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(true, true, MatrixOperation.Transpose, MatrixOperation.None, 16L)]
+	[DataRow(true, true, MatrixOperation.Transpose, MatrixOperation.Transpose, 16L)]
+	public void SymmetricMatrixMultiplyGeneralTest(bool upper, bool left, MatrixOperation opA, MatrixOperation opB, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
+		using var s3 = GpuHelpers.GenerateFloatData(-10, 10, out var host3);
 
+		bool success = api.SymmetricMatrixMultiplyGeneral(left, upper, false, opA, opB, n, n, (Float64)0.5, s1, n, s2, n, (Float64)0.5, s3, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
+		Marshal.FreeHGlobal((IntPtr)host3);
 	}
 
 	[TestMethod()]
-	public void TriangularMatrixSolveTest()
+	[DataRow(true, true, MatrixOperation.None, 16L)]
+	public void TriangularMatrixSolveTest(bool upper, bool left, MatrixOperation op, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
 
+		bool success = api.TriangularMatrixSolve(upper, left, false, op, n, n, (Float64)0.5, s1, n, s2, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
 	}
 
 	[TestMethod()]
-	public void TriangularMatrixMultiplyGeneralTest()
+	[DataRow(true, true, MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(true, true, MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(true, true, MatrixOperation.Transpose, MatrixOperation.None, 16L)]
+	[DataRow(true, true, MatrixOperation.Transpose, MatrixOperation.Transpose, 16L)]
+	public void TriangularMatrixMultiplyGeneralTest(bool upper, bool left, MatrixOperation opA, MatrixOperation opB, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
+		using var s3 = GpuHelpers.GenerateFloatData(-10, 10, out var host3);
 
+		bool success = api.TriangularMatrixMultiplyGeneral(left, upper, false, opA, opB, n, n, n, (Float64)0.5, s1, n, s2, n, default, s3, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
+		Marshal.FreeHGlobal((IntPtr)host3);
 	}
 
 	[TestMethod()]
-	public void SymmetricRankKUpdateTest()
+	[DataRow(true, MatrixOperation.None, 16L)]
+	[DataRow(true, MatrixOperation.Transpose, 16L)]
+	public void SymmetricRankKUpdateTest(bool upper, MatrixOperation op, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
 
+		bool success = api.SymmetricRankKUpdate(upper, op, false, n, n, (Float64)0.5, s1, n, (Float64)0.5, s2, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
 	}
 
 	[TestMethod()]
-	public void SymmetricRankTwoKUpdateTest()
+	[DataRow(true, MatrixOperation.None, 16L)]
+	[DataRow(true, MatrixOperation.Transpose, 16L)]
+	public void SymmetricRankTwoKUpdateTest(bool upper, MatrixOperation op, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
+		using var s3 = GpuHelpers.GenerateFloatData(-10, 10, out var host3);
 
+		bool success = api.SymmetricRankTwoKUpdate(upper, op, false, n, n, (Float64)0.5, s1, n, s2, n, (Float64)0.5, s3, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
+		Marshal.FreeHGlobal((IntPtr)host3);
 	}
 
 	[TestMethod()]
-	public void GeneralMatricesAddTest()
+	[DataRow(MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(MatrixOperation.Transpose, MatrixOperation.None, 16L)]
+	[DataRow(MatrixOperation.Transpose, MatrixOperation.Transpose, 16L)]
+	public void GeneralMatricesAddTest(MatrixOperation opA, MatrixOperation opB, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
+		using var s3 = GpuHelpers.GenerateFloatData(-10, 10, out var host3);
 
+		bool success = api.GeneralMatricesAdd(opA, opB, n, n, (Float64)0.5, s1, n, (Float64)0.5, s2, n, s3, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
+		Marshal.FreeHGlobal((IntPtr)host3);
 	}
 
 	[TestMethod()]
-	public void DiagonalMatrixMultiplyGeneralTest()
+	[DataRow(MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(MatrixOperation.None, MatrixOperation.None, 16L)]
+	[DataRow(MatrixOperation.Transpose, MatrixOperation.None, 16L)]
+	[DataRow(MatrixOperation.Transpose, MatrixOperation.Transpose, 16L)]
+	public void GeneralMatricesAddTest(MatrixOperation op, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
 
+		bool success = api.GeneralMatricesAdd(op, default, n, n, (Float64)0.5, s1, n, default, (GpuMemF64?)null, 0, s2, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
 	}
 
 	[TestMethod()]
-	public void SymmetricRankKUpdateVariantTest()
+	[DataRow(true, MatrixOperation.None, 16L)]
+	public void DiagonalMatrixMultiplyGeneralTest(bool left, MatrixOperation op, long n)
 	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
+		using var s3 = GpuHelpers.GenerateFloatData(-10, 10, out var host3);
 
+		bool success = api.DiagonalMatrixMultiplyGeneral(left, op, false, n, n, (Float64)0.5, s1, n, s2, n, default, s3, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
+		Marshal.FreeHGlobal((IntPtr)host3);
+	}
+
+	[TestMethod()]
+	[DataRow(true, MatrixOperation.None, 16L)]
+	[DataRow(true, MatrixOperation.Transpose, 16L)]
+	public void SymmetricRankKUpdateVariantTest(bool upper, MatrixOperation op, long n)
+	{
+		using var s1 = GpuHelpers.GenerateFloatData(-10, 10, out var host1);
+		using var s2 = GpuHelpers.GenerateFloatData(-10, 10, out var host2);
+		using var s3 = GpuHelpers.GenerateFloatData(-10, 10, out var host3);
+
+		bool success = api.SymmetricRankKUpdateVariant(upper, op, false, n, n, (Float64)0.5, s1, n, s2, n, (Float64)0.5, s3, n);
+		Assert.IsTrue(success);
+
+		Marshal.FreeHGlobal((IntPtr)host1);
+		Marshal.FreeHGlobal((IntPtr)host2);
+		Marshal.FreeHGlobal((IntPtr)host3);
 	}
 }
