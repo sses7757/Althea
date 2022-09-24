@@ -17,10 +17,12 @@ public unsafe partial class Api
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private void ToComp<T>(T* real, T* comp, long n) where T : unmanaged, IBaseNumber<T>
 	{
+		if (real == comp)
+			return;
 		Storage.NativeMethods.cudaMemset(comp, 0, 2 * n * sizeof(T));
-		if (typeof(T) == typeof(Float32))
+		if (typeof(T) == typeof(Complex<Float32>))
 			NM.cublasScopy_v2(this.cublasHandle, (int)n, real, 1, comp, 2).Check();
-		else if (typeof(T) == typeof(Float64))
+		else if (typeof(T) == typeof(Complex<Float64>))
 			NM.cublasDcopy_v2(this.cublasHandle, (int)n, real, 1, comp, 2).Check();
 		else
 			Storage.Api.PointerStridedCopy(real, 1, comp, 2, MemoryCopyKind.DeviceToDevice, n);
@@ -45,8 +47,8 @@ public unsafe partial class Api
 		var mode = pV == null ? CuSolverEigMode.NoVector : CuSolverEigMode.Vector;
 		using var ppV = allowDestroy && pV == null ? CudaBuffer.Create(pA, lda, n) : CudaBuffer.Create(pV, ldvec, n);
 		if (!allowDestroy && pA != pV)
-			Storage.NativeMethods.cudaMemcpy2D(ppV, ppV.LD * sizeof(T), pA, lda * sizeof(T), n * sizeof(T), n, MemoryCopyKind.DeviceToDevice).Check();
-		using var ppx = T.IsComplexType ? CudaBuffer.Create<T>(n * sizeof(T) / 2) : CudaBuffer.Create(px);
+			Storage.Api.MemoryCopy2D(pA, lda, ppV, ppV.LD, n, n);
+		using var ppx = T.IsComplexType ? CudaBuffer.Create<T>((n + 1) / 2) : CudaBuffer.Create(px);
 		NM.cusolverDnXsyevd_bufferSize(this.cusolverHandle, null, mode, uplo, n, type, ppV, ppV.LD, type, ppx, type, out var workDevice, out var workHost).Check();
 		using var buffer = CudaBuffer.Create(workDevice, workHost);
 		NM.cusolverDnXsyevd(this.cusolverHandle, null, mode, uplo, n, type, ppV, ppV.LD, type, ppx, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
@@ -95,11 +97,11 @@ public unsafe partial class Api
 		var mode = pV == null ? CuSolverEigMode.NoVector : CuSolverEigMode.Vector;
 		using var ppV = allowDestroy && pV == null ? CudaBuffer.Create(pA, lda, n) : CudaBuffer.Create(pV, ldvec, n);
 		using var ppLU = allowDestroy && pLU == null ? CudaBuffer.Create(pB, ldb, n) : CudaBuffer.Create(pLU, ldLU, n);
-		using var ppx = T.IsComplexType ? CudaBuffer.Create<T>(n * sizeof(T) / 2) : CudaBuffer.Create(px);
+		using var ppx = T.IsComplexType ? CudaBuffer.Create<T>((n + 1) / 2) : CudaBuffer.Create(px);
 		if (pA != ppV)
-			Storage.NativeMethods.cudaMemcpy2D(ppV, ppV.LD, pA, lda, n * sizeof(T), n, MemoryCopyKind.DeviceToDevice).Check();
+			Storage.Api.MemoryCopy2D(pA, lda, ppV, ppV.LD, n, n);
 		if (pB != ppLU)
-			Storage.NativeMethods.cudaMemcpy2D(ppLU, ppLU.LD, pB, ldb, n * sizeof(T), n, MemoryCopyKind.DeviceToDevice).Check();
+			Storage.Api.MemoryCopy2D(pB, ldb, ppLU, ppLU.LD, n, n);
 		bufFunc(this.cusolverHandle, type, mode, uplo, nn, ppV, (int)ppV.LD, ppLU, (int)ppLU.LD, ppx, out var work).Check();
 		using var buffer = CudaBuffer.Create<T>(work);
 		calFunc(this.cusolverHandle, type, mode, uplo, nn, ppV, (int)ppV.LD, ppLU, (int)ppLU.LD, ppx, buffer.DeviceBuffer, work, buffer.ExtraDeviceInfo).Check();
@@ -133,8 +135,8 @@ public unsafe partial class Api
 		var type = T.Type.ToCudaDataType();
 		using var ppA = allowDestroy ? CudaBuffer.Create(pA, lda, n) : CudaBuffer.Create<T>(null, m, n);
 		if (pA != ppA)
-			Storage.NativeMethods.cudaMemcpy2D(ppA, ppA.LD, pA, lda, m * sizeof(T), n, MemoryCopyKind.DeviceToDevice).Check();
-		using var ppx = T.IsComplexType ? CudaBuffer.Create<T>(n * sizeof(T) / 2) : CudaBuffer.Create(px);
+			Storage.Api.MemoryCopy2D(ppA, ppA.LD * sizeof(T), pA, lda * sizeof(T), m * sizeof(T), n);
+		using var ppx = T.IsComplexType ? CudaBuffer.Create<T>((n + 1) / 2) : CudaBuffer.Create(px);
 		NM.cusolverDnXgesvd_bufferSize(this.cusolverHandle, null, Conversions.ToSvdChar(pA, pU, fullU), Conversions.ToSvdChar(pA, pV, fullV), m, n, type, ppA, ppA.LD, type, ppx, type, pU, ldu, type, pV, ldvct, type, out long workDevice, out long workHost).Check();
 		using var buffer = CudaBuffer.Create(workDevice, workHost);
 		NM.cusolverDnXgesvd(this.cusolverHandle, null, Conversions.ToSvdChar(pA, pU, fullU), Conversions.ToSvdChar(pA, pV, fullV), m, n, type, ppA, ppA.LD, type, ppx, type, pU, ldu, type, pV, ldvct, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
@@ -156,14 +158,17 @@ public unsafe partial class Api
 			return false;
 
 		var type = T.Type.ToCudaDataType();
+		using var ppA = allowDestroy ? CudaBuffer.Create(pA, lda, n) : CudaBuffer.Create<T>(null, n, n);
+		if (pA != ppA)
+			Storage.Api.MemoryCopy2D(pA, lda, ppA, ppA.LD, n, n);
 		// factorize
-		NM.cusolverDnXgetrf_bufferSize(this.cusolverHandle, null, n, n, type, pA, lda, type, out var workDevice, out var workHost).Check();
+		NM.cusolverDnXgetrf_bufferSize(this.cusolverHandle, null, n, n, type, ppA, ppA.LD, type, out var workDevice, out var workHost).Check();
 		using var buffer = CudaBuffer.Create(workDevice + n * sizeof(long), workHost);
 		void* pP = ((byte*)buffer.DeviceBuffer + workDevice);
-		NM.cusolverDnXgetrf(this.cusolverHandle, null, n, n, type, pA, lda, pP, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
+		NM.cusolverDnXgetrf(this.cusolverHandle, null, n, n, type, ppA, ppA.LD, pP, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
 		SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 		// solve
-		NM.cusolverDnXgetrs(this.cusolverHandle, null, CuBlasOperation.None, n, nrhs, type, pA, lda, pP, type, pB, ldb, buffer.ExtraDeviceInfo).Check();
+		NM.cusolverDnXgetrs(this.cusolverHandle, null, CuBlasOperation.None, n, nrhs, type, ppA, ppA.LD, pP, type, pB, ldb, buffer.ExtraDeviceInfo).Check();
 		SolveMethodKind.LU.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 		return true;
 	}
@@ -207,7 +212,7 @@ public unsafe partial class Api
 		NM.cusolverDnXgeqrf(this.cusolverHandle, null, m, n, type, pA, lda, type, tau.DeviceBuffer, type, buffer.DeviceBuffer, workDevice, buffer.HostBuffer, workHost, buffer.ExtraDeviceInfo).Check();
 		SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);
 		// copy A to Q
-		Storage.NativeMethods.cudaMemcpy2D(pQ, ldq, pA, lda, m, Math.Min(colsQ, n), MemoryCopyKind.DeviceToDevice);
+		Storage.Api.MemoryCopy2D(pA, lda, pQ, ldq, m, Math.Min(colsQ, n));
 		// form Q
 		calGetQFunc(this.cusolverHandle, mm, nnQ, kk, pQ, lldq, (T*)tau.DeviceBuffer, buffer.DeviceBuffer, workDevice2, buffer.ExtraDeviceInfo).Check();
 		SolveMethodKind.QR.CheckDeviceInfo(buffer.ExtraDeviceInfo);

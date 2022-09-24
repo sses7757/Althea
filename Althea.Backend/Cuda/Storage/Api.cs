@@ -384,6 +384,12 @@ public unsafe class Api : IAbstractApi, Althea.LinearAlgebra.Dense.ICopyAbstract
 	#endregion
 
 	#region 2D copy
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static void MemoryCopy2D<T>(T* src, long lds, T* dst, long ldd, long height, long width) where T : unmanaged, IBaseNumber<T>
+	{
+		NativeMethods.cudaMemcpy2D(dst, ldd * sizeof(T), src, lds * sizeof(T), height * sizeof(T), width, MemoryCopyKind.DeviceToDevice).Check();
+	}
+
 	/// <inheritdoc/>
 	public virtual bool MemoryCopy2D<T, TP1, TP2>(PointerSegment<TP1> source, long sourceLD, PointerSegment<TP2> destination, long destinationLD, long height, long width, out long copyWidth) where TP1 : notnull, IPointer<TP1> where TP2 : notnull, IPointer<TP2> where T : unmanaged, IBaseNumber<T>
 	{
