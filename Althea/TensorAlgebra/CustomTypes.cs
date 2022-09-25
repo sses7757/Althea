@@ -432,7 +432,7 @@ public readonly ref struct TensorContractInfo
 	/// <remarks>This method assumes that all labels are sets</remarks>
 	public static TensorContractInfo GetBinaryContractInfo(ReadOnlySpan<long> sizeA, ReadOnlySpan<char> labelA, ReadOnlySpan<long> sizeB, ReadOnlySpan<char> labelB, Span<int> concA, Span<int> concB, Span<int> freeCA, Span<int> freeCB, Span<long> outSize, Span<char> outLabels, ReadOnlySpan<char> outputLabels = default)
 	{
-		int commonRank = concA.Length, rankA = sizeA.Length, rankB = sizeB.Length, rankC = rankA + rankB - commonRank;
+		int commonRank = concA.Length, rankA = sizeA.Length, rankB = sizeB.Length, rankC = rankA + rankB - 2 * commonRank;
 		int freeARank = rankA - commonRank, freeBRank = rankB - commonRank;
 		// check sizes
 		if (labelA.Length != rankA)
@@ -457,6 +457,7 @@ public readonly ref struct TensorContractInfo
 		if (!outputLabels.IsEmpty && !simpleLabelC.SetEquals(outputLabels))
 			throw new ArgumentException(ParameterError.InvalidValue, nameof(outputLabels));
 		// check contraction size
+		// TODO: wrong
 		Span<char> commonLabel = stackalloc char[Math.Min(rankA, rankB)];
 		commonLabel = labelA.SetIntersect(labelB, commonLabel);
 		labelA.SetIntersectIndex(commonLabel, concA); labelB.SetIntersectIndex(commonLabel, concB);
@@ -819,7 +820,7 @@ public static class ContractInfoExtension
 	{
 		if (span.IsEmpty)
 			return span;
-		if (!EnglishLetters.Contains(from) || !GreekLetters.Contains(from))
+		if (!EnglishLetters.Contains(from) && !GreekLetters.Contains(from))
 			throw new ArgumentOutOfRangeException(nameof(from), from, ParameterError.InvalidValue);
 
 		int n = span.Length;

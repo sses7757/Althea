@@ -414,21 +414,6 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	[StructLayout(LayoutKind.Explicit, Size = 8 * 72)]
 	internal readonly struct TensorDescription
 	{
-		[FieldOffset(4 * 4)]
-		private readonly int rank;
-
-		[FieldOffset(5 * 4)]
-		internal readonly CudaDataType dataType;
-
-		[FieldOffset(6 * 4)]
-		private readonly FixedBuffer_64<int> size;
-
-		[FieldOffset(22 * 4)]
-		private readonly FixedBuffer_64<int> strides;
-
-		[FieldOffset(38 * 4)]
-		private readonly CuTensorUnary operation;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryCreate<T, TS>(in CudaTensorHandle handle, DenseTensorWrapper<T, TS> tensor, out TensorDescription descr) where T : unmanaged, IBaseNumber<T> where TS : class, IStorage<T, TS>
 		{
@@ -459,31 +444,6 @@ namespace Althea.Backend.Cuda.TensorAlgebra.Dense
 	[StructLayout(LayoutKind.Explicit, Size = 8 * 288)]
 	internal readonly unsafe record struct ContractDescription
 	{
-		// TODO: test fields
-		[FieldOffset(16)]
-		private readonly TensorDescription descrA;
-		[FieldOffset(8 * 72 + 16)]
-		private readonly TensorDescription descrB;
-		[FieldOffset(8 * 72 * 2 + 16)]
-		private readonly TensorDescription descrCD;
-
-		[FieldOffset(1168)]
-		private readonly int alignA;
-		[FieldOffset(1168 + 4)]
-		private readonly int alignB;
-		[FieldOffset(1168 + 4 * 2)]
-		private readonly int alignC;
-		[FieldOffset(1168 + 4 * 3)]
-		private readonly int alignD;
-
-		public readonly TensorDescription DescriptionA => this.descrA;
-		public readonly TensorDescription DescriptionB => this.descrB;
-		public readonly TensorDescription DescriptionCD => this.descrCD;
-		public readonly int AlignmentA => this.alignA;
-		public readonly int AlignmentB => this.alignB;
-		public readonly int AlignmentC => this.alignC;
-		public readonly int AlignmentD => this.alignD;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryCreate<T, TS1, TS2, TS3>(Api api, DenseTensorWrapper<T, TS1> A, DenseTensorWrapper<T, TS2> B, DenseTensorWrapper<T, TS3> C, DenseTensorWrapper<T, TS3> D, TensorContractInfo info, out ContractDescription descr, ComputeType computeType = 0) where T : unmanaged, IBaseNumber<T> where TS1 : class, IStorage<T, TS1> where TS2 : class, IStorage<T, TS2> where TS3 : class, IStorage<T, TS3>
 		{

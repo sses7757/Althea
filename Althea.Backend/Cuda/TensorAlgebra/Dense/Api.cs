@@ -247,11 +247,11 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		if (!TensorDescription.TryCreate<T, TS2>(this.handle, destination, out var descrB))
 			return false;
 		int r = source.Rank;
-		Span<int> modeA = stackalloc int[r].FillWithRange(1);
+		Span<int> modeA = stackalloc int[r].FillWithRange('a');
 		Span<int> modeB = stackalloc int[r];
 		modeA.ReOrderTo(modeB, permutationOrder);
 		T alpha = source.Scalar;
-		return NM.cutensorPermutation(this.handle, &alpha, pA, &descrA, modeA, pB, &descrB, modeB, descrA.dataType, null).Check();
+		return NM.cutensorPermutation(this.handle, &alpha, pA, &descrA, modeA, pB, &descrB, modeB, T.Type.ToCudaDataType(), null).Check();
 	}
 
 	/// <inheritdoc/>
@@ -273,14 +273,14 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 		if (!TensorDescription.TryCreate<T, TS3>(this.handle, destination, out var descrC))
 			return false;
 		int r = destination.Rank;
-		Span<int> modeC = stackalloc int[r].FillWithRange(1);
+		Span<int> modeC = stackalloc int[r].FillWithRange('a');
 		Span<int> modeA = stackalloc int[r], modeB = stackalloc int[r];
 		if (leftPerm.Length == r)
 			modeC.InverseOrderTo(modeA, leftPerm);
 		if (rightPerm.Length == r)
 			modeC.InverseOrderTo(modeB, rightPerm);
 		T alpha = left.Scalar, beta = right.Scalar;
-		return NM.cutensorElementwiseBinary(this.handle, &alpha, pA, &descrA, modeA, &beta, pB, &descrB, modeB, pC, &descrC, modeC, opAB, descrA.dataType, null).Check();
+		return NM.cutensorElementwiseBinary(this.handle, &alpha, pA, &descrA, modeA, &beta, pB, &descrB, modeB, pC, &descrC, modeC, opAB, T.Type.ToCudaDataType(), null).Check();
 	}
 
 	/// <inheritdoc/>
@@ -297,7 +297,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 			return false;
 		if (!TensorDescription.TryCreate(this.handle, destination, out var descrB))
 			return false;
-		Span<int> modeA = stackalloc int[source.Rank].FillWithRange(1);
+		Span<int> modeA = stackalloc int[source.Rank].FillWithRange('a');
 		Span<int> modeB = stackalloc int[destination.Rank];
 		int c = 0;
 		for (int i = 0; i < modeA.Length; i++)
@@ -305,7 +305,7 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 			if (!reduceDimensions.Contains(i))
 				modeB[c++] = modeA[i];
 		}
-		var computeType = descrA.dataType.ToComputeType();
+		var computeType = T.Type.ToCudaDataType().ToComputeType();
 		if (!NM.cutensorReductionGetWorkspace(this.handle, pA, &descrA, modeA, pB, &descrB, modeB, pB, &descrB, modeB, opRed, computeType, out long workspace).Check())
 			return false;
 		T alpha = source.Scalar, beta = destination.Scalar;
@@ -331,12 +331,13 @@ public unsafe class Api : IBindedDevice, IBaseAbstractApi
 				return false;
 			if (!ContractPlan.TryCreate(this.handle, &descr, in this._algorithmFind, out var plan0, out long workspace0))
 				return false;
-			this.cacher.Add(key, new(plan0, workspace0));
+			value = new(plan0, workspace0);
+			this.cacher.Add(key, value);
 		}
 		var (plan, workspace) = value;
 		using var buffer = CudaBuffer.Create(workspace);
 		T alpha = left.Scalar * right.Scalar, beta = destination.Scalar;
-		return NM.cutensorContraction(this.handle, in plan, &alpha, pA, pB, &beta, pC, pC, buffer, workspace, null).Check();
+		return NM.cutensorContraction(this.handle, plan, &alpha, pA, pB, &beta, pC, pC, buffer, workspace, null).Check();
 	}
 
 	// Ignore Spelling: bool stackalloc
