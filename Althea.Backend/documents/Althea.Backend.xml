@@ -6370,9 +6370,9 @@
         </member>
         <member name="M:Althea.Backend.Mkl.Runtime.GetDriverVersion">
             <summary>
-            Get the MKL version
+            Get the MKL version string
             </summary>
-            <returns>The MKL's major and minor version</returns>
+            <returns>The MKL's version string</returns>
         </member>
         <member name="P:Althea.Backend.Mkl.Runtime.NumberOfThreads">
             <summary>

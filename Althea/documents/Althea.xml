@@ -22674,15 +22674,15 @@
             <param name="type">input <see cref="T:Althea.Numerics.DataType"/></param>
             <returns>the corresponding complex type</returns>
         </member>
-        <member name="M:Althea.Numerics.DataTypeExtension.Class(Althea.Numerics.DataType)">
-            <summary>
-            Get the <see cref="T:Althea.Numerics.DataTypeClassification"/> of <paramref name="dataType"/>.
-            </summary>
-            <param name="dataType">The <see cref="T:Althea.Numerics.DataType"/> to get</param>
-        </member>
         <member name="M:Althea.Numerics.DataTypeExtension.Tuple(Althea.Numerics.DataType)">
             <summary>
             Get the <see cref="T:Althea.Numerics.DataTypeTuple"/> of <paramref name="dataType"/>.
+            </summary>
+            <param name="dataType">The <see cref="T:Althea.Numerics.DataType"/> to get</param>
+        </member>
+        <member name="M:Althea.Numerics.DataTypeExtension.Class(Althea.Numerics.DataType)">
+            <summary>
+            Get the <see cref="T:Althea.Numerics.DataTypeClassification"/> of <paramref name="dataType"/>.
             </summary>
             <param name="dataType">The <see cref="T:Althea.Numerics.DataType"/> to get</param>
         </member>

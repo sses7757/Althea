@@ -14,7 +14,7 @@ public unsafe class ApiTests
 	[DataRow(-0.5, 0.5)]
 	public void FillWithUniformTest(double low, double high)
 	{
-		using var array = UnitTests.Helpers.GenerateFloatData(-100, 100);
+		using var array = UnitTests.CpuHelpers.GenerateFloatData(-100, 100);
 
 		bool success = api.FillWithRandom<Float64, PureStorage<Float64, CpuMemoryPointer>, UniformDistribution<Float64>>(array, new(low, high, null));
 		Assert.IsTrue(success);

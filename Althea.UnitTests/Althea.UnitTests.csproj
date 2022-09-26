@@ -10,13 +10,16 @@
 
     <IsPackable>false</IsPackable>
 
-    <StartupObject>Althea.Backend.Cuda.LinearAlgebra.Dense.Tests.BlasApiTests</StartupObject>
+    <StartupObject></StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Cuda\**" />
+    <Compile Remove="Mkl\**" />
     <EmbeddedResource Remove="Cuda\**" />
+    <EmbeddedResource Remove="Mkl\**" />
     <None Remove="Cuda\**" />
+    <None Remove="Mkl\**" />
   </ItemGroup>
 
   <ItemGroup>

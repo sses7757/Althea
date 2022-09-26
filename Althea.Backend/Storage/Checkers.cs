@@ -235,7 +235,7 @@ namespace Althea.Backend.Mkl
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, outerSizeName);
 			if (s is not PureStorage<T, CpuMemoryPointer> ps)
 				return false; // not support
-			ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
+			pointer = ps.Pointer.Pointer.UnmangedPointer<T>(ps.Pointer.OffsetInBytes);
 			if (pointer == default)
 				throw new ArgumentException(Resources.ParameterError.InvalidValue, sName);
 			return true;

@@ -61,19 +61,15 @@ public static class Runtime
 	}
 
 	/// <summary>
-	/// Get the MKL version
+	/// Get the MKL version string
 	/// </summary>
-	/// <returns>The MKL's major and minor version</returns>
-	public static (int major, int minor) GetDriverVersion()
+	/// <returns>The MKL's version string</returns>
+	public static string GetDriverVersion()
 	{
 		const int STR_LEN = 198;
 		StringBuilder sb = new(STR_LEN);
 		NativeMethods.MKL_Get_Version_String(sb, STR_LEN);
-		string s = sb.ToString();
-		int versionStart = s.IndexOf("Version") + "Version".Length + 1;
-		s = s[versionStart..s.IndexOf("Product")];
-		var ss = s.Split('.');
-		return (Convert.ToInt32(ss[0]), Convert.ToInt32(ss[1]));
+		return sb.ToString();
 	}
 
 	/// <summary>
@@ -81,7 +77,8 @@ public static class Runtime
 	/// </summary>
 	public static int NumberOfThreads {
 		get => NativeMethods.MKL_Get_Max_Threads();
-		set {
+		set
+		{
 			if (value > 0 && value <= Environment.ProcessorCount)
 				NativeMethods.MKL_Set_Num_Threads(value);
 			else
@@ -96,14 +93,16 @@ public static class Runtime
 	/// Get or set the verbose mode of MKL
 	/// </summary>
 	public static bool Verbose {
-		get {
+		get
+		{
 			if (_verbose.HasValue)
 				return _verbose.Value;
 			_ = NativeMethods.MKL_Verbose(0);
 			_verbose = false;
 			return false;
 		}
-		set {
+		set
+		{
 			_ = NativeMethods.MKL_Verbose(value ? 1 : 0);
 			_verbose = value;
 		}
@@ -116,7 +115,8 @@ public static class Runtime
 	/// Get or set the instruction set(s) used by the MKL
 	/// </summary>
 	public static Instruction Instruction {
-		get {
+		get
+		{
 			if (_instrction.HasValue)
 				return _instrction.Value;
 			int err = NativeMethods.MKL_Enable_Instructions(Instruction.AVX512);
@@ -145,7 +145,8 @@ public static class Runtime
 			}
 			throw new InvalidOperationException();
 		}
-		set {
+		set
+		{
 			int err = NativeMethods.MKL_Enable_Instructions(value);
 			if (err == 0)
 				throw new NotSupportedException();

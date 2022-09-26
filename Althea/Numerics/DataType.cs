@@ -314,18 +314,18 @@ public static class DataTypeExtension
 	public static DataType ComplexCorrespond(this DataType type) => (DataType)((((uint)type >> 8) << 8) + (uint)DataTypeTuple.Complex);
 
 	/// <summary>
+	/// Get the <see cref="DataTypeTuple"/> of <paramref name="dataType"/>.
+	/// </summary>
+	/// <param name="dataType">The <see cref="DataType"/> to get</param>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static DataTypeTuple Tuple(this DataType dataType) => (DataTypeTuple)dataType;
+
+	/// <summary>
 	/// Get the <see cref="DataTypeClassification"/> of <paramref name="dataType"/>.
 	/// </summary>
 	/// <param name="dataType">The <see cref="DataType"/> to get</param>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static DataTypeClassification Class(this DataType dataType) => (DataTypeClassification)((int)dataType >> 8);
-
-	/// <summary>
-	/// Get the <see cref="DataTypeTuple"/> of <paramref name="dataType"/>.
-	/// </summary>
-	/// <param name="dataType">The <see cref="DataType"/> to get</param>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static DataTypeTuple Tuple(this DataType dataType) => (DataTypeTuple)(((uint)dataType >> 8) << 8);
 
 	/// <summary>
 	/// Get the number of bytes (or real part's bytes if it is a complex type) of <paramref name="dataType"/>.

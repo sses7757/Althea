@@ -1,13 +1,12 @@
 ﻿using System.Runtime.InteropServices;
 
-using Althea.UnitTests;
 using Althea.LinearAlgebra;
+using Althea.UnitTests;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using GpuMemF64 = Althea.Storage.PureStorage<Althea.Numerics.Float64, Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>>;
 using GpuMemC64 = Althea.Storage.PureStorage<Althea.Numerics.Complex<Althea.Numerics.Float64>, Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>>;
-using GpuMemI32 = Althea.Storage.PureStorage<Althea.Numerics.SignedInt32, Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>>;
+using GpuMemF64 = Althea.Storage.PureStorage<Althea.Numerics.Float64, Althea.Backend.Cuda.CudaMemoryPointer<Althea.Backend.Cuda.GpuId0>>;
 
 
 namespace Althea.Backend.Cuda.LinearAlgebra.Dense.Tests;
@@ -15,12 +14,6 @@ namespace Althea.Backend.Cuda.LinearAlgebra.Dense.Tests;
 [TestClass()]
 public unsafe class BlasApiTests
 {
-	static void Main(string[] args)
-	{
-		var test = new BlasApiTests();
-		test.AbsoluteValueArgMaxComplexTest(5);
-	}
-
 	private static readonly Api api = new();
 
 	[TestMethod()]

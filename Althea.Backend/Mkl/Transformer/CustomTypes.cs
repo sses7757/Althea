@@ -8,7 +8,7 @@ namespace Althea.Backend.Mkl.Transformer
 	/// <summary>
 	/// The returned status of the MKL discrete Fourier transform library APIs
 	/// </summary>
-	public enum MklDftError : long
+	public enum MklDftError : int
 	{
 		/// <summary>
 		/// No error
@@ -50,6 +50,62 @@ namespace Althea.Backend.Mkl.Transformer
 		/// The length of 1D DFT exceeds <see cref="uint.MaxValue"/>
 		/// </summary>
 		LengthExceedsInt32,
+	}
+
+	internal enum MKlDftParam
+	{
+		/* Domain for forward transform. No default value */
+		ForwardDomain = 0,
+		/* Dimensionality, or rank. No default value */
+		Dimension = 1,
+		/* Length(s) of transform. No default value */
+		Length = 2,
+		/* Floating point precision. No default value */
+		Precision = 3,
+		/* Scale factor for forward transform [1.0] */
+		ForwardScale = 4,
+		/* Scale factor for backward transform [1.0] */
+		BackwardScale = 5,
+		/* Number of data sets to be transformed [1] */
+		NumberOfTransforms = 7,
+		/* Storage of finite complex-valued sequences in complex domain [DFTI_COMPLEX_COMPLEX] */
+		ComplexStorage = 8,
+		/* Storage of finite real-valued sequences in real domain [DFTI_REAL_REAL] */
+		RealStorage = 9,
+		/* Storage of finite complex-valued sequences in conjugate-even domain [DFTI_COMPLEX_REAL] */
+		ConjugateEvenStorage = 10,
+		/* Placement of result [DFTI_INPLACE] */
+		Placement = 11,
+		/* Generalized strides for input data layout [tight, row-major for C] */
+		InputStride = 12,
+		/* Generalized strides for output data layout [tight, row-major for C] */
+		OutputStride = 13,
+		/* Distance between first input elements for multiple transforms [0] */
+		InputDistance = 14,
+		/* Distance between first output elements for multiple transforms [0] */
+		OutputDistance = 15,
+		/* Use of workspace during computation [DFTI_ALLOW] */
+		UseWorkSpace = 17,
+		/* Ordering of the result [DFTI_ORDERED] */
+		Ordering = 18,
+		/* Possible transposition of result [DFTI_NONE] */
+		Transpose = 19,
+		/* Packing format for DFTI_COMPLEX_REAL storage of finite conjugate-even sequences [DFTI_CCS_FORMAT] */
+		PackedFormat = 21,
+		/* Commit status of the descriptor - R/O parameter */
+		CommitStatus = 22,
+		/* Version string for this DFTI implementation - R/O parameter */
+		Version = 23,
+		/* Number of user threads that share the descriptor [1] */
+		NumberOfUserThreads = 26,
+		/* Limit the number of threads used by this descriptor [0 = don't care] */
+		ThreadLimit = 27,
+		/* Possible input data destruction [DFTI_AVOID = prevent input data]*/
+		DestroyInput = 28,
+		/* Distance between first input elements for multiple transforms [0] */
+		ForwardDistance = 58,
+		/* Distance between first input elements for multiple transforms [0] */
+		BackwardDistance = 59
 	}
 
 	/// <summary>

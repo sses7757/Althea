@@ -60,13 +60,13 @@ internal static class ValueAssert
 	}
 }
 
-internal static unsafe class Helpers
+internal static unsafe class CpuHelpers
 {
 	private static readonly Backend.CSharp.Storage.Api api = new();
 
 	private static readonly System.Random rand;
 
-	static Helpers()
+	static CpuHelpers()
 	{
 		Settings.SetImplementation<IAbstractApi>(api);
 		rand = new System.Random(0);
@@ -80,18 +80,6 @@ internal static unsafe class Helpers
 	public static void NoApiCopy<T>(this PureStorage<T, CpuMemoryPointer> source, PureStorage<T, CpuMemoryPointer> dest) where T : unmanaged, IBaseNumber<T>
 	{
 		api.MemoryCopy<T, CpuMemoryPointer, CpuMemoryPointer>(source.Pointer, dest.Pointer, out _);
-	}
-
-	public static PureStorage<Float64, CudaMemoryPointer<GpuId0>> GenerateGpuFloatData(double lower, double upper)
-	{
-		upper -= lower;
-		int length = rand.Next(1024) + 1024;
-		Float64* array = (Float64*)Marshal.AllocHGlobal(length * sizeof(Float64));
-		for (int i = 0; i < length; i++)
-		{
-			array[i] = rand.NextDouble() * upper + lower;
-		}
-		return new ActualPureStorage<Float64, CudaMemoryPointer<GpuId0>>(new((IntPtr)array, length * sizeof(Float64)));
 	}
 
 	public static PureStorage<Float64, CpuMemoryPointer> GenerateFloatData(double lower, double upper)

@@ -12,6 +12,9 @@ namespace Althea.Backend.Mkl
 		private MklInt(long v) => this.value = v;
 
 		public static readonly MklInt MaxValue = new(long.MaxValue);
+		
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static implicit operator MklInt(long v) => new(v);
 #else
 		public readonly int value;
 
@@ -19,9 +22,10 @@ namespace Althea.Backend.Mkl
 		private MklInt(int v) => this.value = v;
 
 		public static readonly MklInt MaxValue = new(int.MaxValue);
-#endif
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator MklInt(long v) => new((int)v);
+#endif
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static implicit operator long(MklInt v) => v.value;
