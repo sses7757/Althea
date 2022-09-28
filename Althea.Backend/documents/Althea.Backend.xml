@@ -5056,6 +5056,18 @@
             Whether this implementation shall use the Gauss complexity reduction routines ("GEMM3M") or the original complex-typed general matrices multiplications ("GEMM").
             </summary>
         </member>
+        <member name="P:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.Properties">
+            <inheritdoc/>
+        </member>
+        <member name="T:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.DynamicProperties">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.DynamicProperties.TryGetMember(System.Dynamic.GetMemberBinder,System.Object@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.DynamicProperties.TrySetMember(System.Dynamic.SetMemberBinder,System.Object)">
+            <inheritdoc/>
+        </member>
         <member name="M:Althea.Backend.Mkl.LinearAlgebra.Dense.Api.HorizontalAbsoluteValueArgMinMax``2(System.Boolean,``1,System.Int32,System.Int64@)">
             <summary>
             Get the index of the element with horizontal maximum/minimum absolute value (<c>abs(x[i].real) + abs(x[i].imag)</c>) in <paramref name="x"/>

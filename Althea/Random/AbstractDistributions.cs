@@ -41,8 +41,11 @@ public interface IRandomDistribution<TSelf> : ICheckValid where TSelf : struct, 
 /// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
 public interface IFloatingPointDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, IBaseNumber<T> where TSelf : struct, IFloatingPointDistribution<T, TSelf>
 {
+	/// <summary>
+	/// Statically check whether the <typeparamref name="T"/> is valid or not.
+	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.BinaryFloat_IEEE754, T.Type);
+	protected static new bool IsValid() => CheckTypeValid(DataTypeClassification.BinaryFloat_IEEE754, T.Type);
 }
 
 /// <summary>
@@ -52,8 +55,11 @@ public interface IFloatingPointDistribution<T, TSelf> : IRandomDistribution<TSel
 /// <typeparam name="TSelf">The type of actual implementation struct</typeparam>
 public interface IIntegralDistribution<T, TSelf> : IRandomDistribution<TSelf> where T : unmanaged, IBaseNumber<T> where TSelf : struct, IIntegralDistribution<T, TSelf>
 {
+	/// <summary>
+	/// Statically check whether the <typeparamref name="T"/> is valid or not.
+	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool ICheckValid.IsValid() => CheckTypeValid(DataTypeClassification.UnsignedInteger | DataTypeClassification.SignedInteger, T.Type);
+	protected static new bool IsValid() => CheckTypeValid(DataTypeClassification.UnsignedInteger | DataTypeClassification.SignedInteger, T.Type);
 }
 
 /// <summary>
@@ -73,8 +79,14 @@ public interface IDisplaceScaleDistribution<T, TSelf> : IFloatingPointDistributi
 	/// </summary>
 	public T ScaleFactor { get; }
 
+	/// <summary>
+	/// Check whether the values in <paramref name="self"/> defined by this interface is valid or not.
+	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool ICheckValid.IsValid() => this.IsValid() && this.ScaleFactor > T.Zero;
+	protected static bool IsValid(in TSelf self) => IsValid() && self.ScaleFactor > T.Zero;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	bool ICheckValid.IsValid() => IsValid((TSelf)this);
 }
 
 /// <summary>
@@ -104,8 +116,14 @@ public interface IDegreeOfFreedomDistribution<T, TSelf> : IFloatingPointDistribu
 	/// </summary>
 	public int DegreeOfFreedom { get; }
 
+	/// <summary>
+	/// Check whether the values in <paramref name="self"/> defined by this interface is valid or not.
+	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool ICheckValid.IsValid() => this.IsValid() && this.DegreeOfFreedom > 0;
+	protected static bool IsValid(in TSelf self) => IsValid() && self.DegreeOfFreedom > 0;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	bool ICheckValid.IsValid() => IsValid((TSelf)this);
 }
 
 /// <summary>
@@ -121,6 +139,13 @@ public interface IBernoulliBasedDistribution<T, TSelf> : IIntegralDistribution<T
 	/// </summary>
 	public decimal Probability { get; }
 
-	bool ICheckValid.IsValid() => this.IsValid() && this.Probability > 0 && this.Probability < 1;
+	/// <summary>
+	/// Check whether the values in <paramref name="self"/> defined by this interface is valid or not.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	protected static bool IsValid(in TSelf self) => IsValid() && self.Probability > 0 && self.Probability < 1;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	bool ICheckValid.IsValid() => IsValid((TSelf)this);
 }
 #endregion

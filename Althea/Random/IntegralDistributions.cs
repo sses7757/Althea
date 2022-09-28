@@ -17,7 +17,7 @@ public readonly record struct PoissonDistribution<T>(decimal Lambda, long? Rando
 	/// </summary>
 	public PoissonDistribution(long? seed = null) : this(1, seed) { }
 
-	bool ICheckValid.IsValid() => ((IIntegralDistribution<T, PoissonDistribution<T>>)this).IsValid() && this.Lambda > 0;
+	bool ICheckValid.IsValid() => IIntegralDistribution<T, PoissonDistribution<T>>.IsValid() && this.Lambda > 0;
 
 	static DataType IRandomDistribution<PoissonDistribution<T>>.DataTypeAt(int rank) => IRank1Distribution<T, PoissonDistribution<T>>.DataTypeAt(rank);
 }
@@ -74,7 +74,7 @@ public readonly record struct BinomialDistribution<T>(decimal Probability, int N
 	/// </summary>
 	public BinomialDistribution(long? seed = null) : this(0.5m, 2, seed) { }
 
-	bool ICheckValid.IsValid() => ((IBernoulliBasedDistribution<T, BinomialDistribution<T>>)this).IsValid() && this.NTrials > 1;
+	bool ICheckValid.IsValid() => IBernoulliBasedDistribution<T, BinomialDistribution<T>>.IsValid(this) && this.NTrials > 1;
 
 	static DataType IRandomDistribution<BinomialDistribution<T>>.DataTypeAt(int rank) => IRank1Distribution<T, BinomialDistribution<T>>.DataTypeAt(rank);
 }
@@ -96,7 +96,7 @@ public readonly record struct NegativeBinomialDistribution<T>(decimal Probabilit
 	/// </summary>
 	public NegativeBinomialDistribution(long? seed = null) : this(0.5m, 1, seed) { }
 
-	bool ICheckValid.IsValid() => ((IBernoulliBasedDistribution<T, NegativeBinomialDistribution<T>>)this).IsValid() && this.SuccessCount > 0;
+	bool ICheckValid.IsValid() => IBernoulliBasedDistribution<T, NegativeBinomialDistribution<T>>.IsValid(this) && this.SuccessCount > 0;
 
 	static DataType IRandomDistribution<NegativeBinomialDistribution<T>>.DataTypeAt(int rank) => IRank1Distribution<T, NegativeBinomialDistribution<T>>.DataTypeAt(rank);
 }
@@ -119,7 +119,7 @@ public readonly record struct HypergeometricDistribution<T>(int TotalSize, int M
 	/// </summary>
 	public HypergeometricDistribution(long? seed = null) : this(2, 1, 1, seed) { }
 
-	bool ICheckValid.IsValid() => ((IIntegralDistribution<T, HypergeometricDistribution<T>>)this).IsValid() && this.TotalSize > 0 && this.MarkSize > 0 && this.SampleSize > 0 && this.MarkSize <= this.TotalSize && this.SampleSize <= this.TotalSize;
+	bool ICheckValid.IsValid() => IIntegralDistribution<T, HypergeometricDistribution<T>>.IsValid() && this.TotalSize > 0 && this.MarkSize > 0 && this.SampleSize > 0 && this.MarkSize <= this.TotalSize && this.SampleSize <= this.TotalSize;
 
 	static DataType IRandomDistribution<HypergeometricDistribution<T>>.DataTypeAt(int rank) => IRank1Distribution<T, HypergeometricDistribution<T>>.DataTypeAt(rank);
 }

@@ -29,9 +29,9 @@ namespace Althea.Backend.Mkl.Random
 
 		// multidimensional Gaussian, covariance matrix = T Tᵀ, length(means) == dim
 		[LibraryImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static partial MklRngStatus vsRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, MklInt n, float** arrays, int dim, MklRngMatrixStorage storageT, ReadOnlySpan<float> means, ReadOnlySpan<float> matrixT);
+		internal static partial MklRngStatus vsRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, MklInt n, ReadOnlySpan<IntPtr> arrays, MklInt rank, MklRngMatrixStorage storageT, ReadOnlySpan<float> means, ReadOnlySpan<float> matrixT);
 		[LibraryImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static partial MklRngStatus vdRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, MklInt n, double** arrays, int dim, MklRngMatrixStorage storageT, ReadOnlySpan<double> means, ReadOnlySpan<double> matrixT);
+		internal static partial MklRngStatus vdRngGaussianMV(MklRngMethodGaussian method, IntPtr stream, MklInt n, ReadOnlySpan<IntPtr> arrays, MklInt rank, MklRngMatrixStorage storageT, ReadOnlySpan<double> means, ReadOnlySpan<double> matrixT);
 
 		[DllImport(Mkl.NativeMethods.MKL_DLL_NAME)]
 		internal static extern MklRngStatus vsRngExponential(MklRngMethodExponential method, IntPtr stream, MklInt n, float* array, float displacement, float beta);
@@ -120,7 +120,7 @@ namespace Althea.Backend.Mkl.Random
 
 		// multi-dimensional, length(p) == dim
 		[LibraryImport(Mkl.NativeMethods.MKL_DLL_NAME)]
-		internal static partial MklRngStatus viRngMultinomial(MklRngMethodMultinomial method, IntPtr stream, MklInt n, int** arrays, int nTrial, int dim, ReadOnlySpan<double> p);
+		internal static partial MklRngStatus viRngMultinomial(MklRngMethodMultinomial method, IntPtr stream, MklInt n, ReadOnlySpan<IntPtr> arrays, int nTrial, int dim, ReadOnlySpan<double> p);
 		#endregion
 	}
 }

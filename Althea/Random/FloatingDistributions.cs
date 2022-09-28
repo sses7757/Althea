@@ -253,7 +253,7 @@ public readonly record struct BetaDistribution<T>(T Displacement, T ScaleFactor,
 	/// </summary>
 	public BetaDistribution(long? seed = null) : this(T.Zero, T.One, T.One, T.One, seed) { }
 
-	bool ICheckValid.IsValid() => ((IDisplaceScaleDistribution<T, BetaDistribution<T>>)this).IsValid() && this.ShapeFactor > T.Zero && this.ShapeFactorOther > T.Zero;
+	bool ICheckValid.IsValid() => IDisplaceScaleDistribution<T, BetaDistribution<T>>.IsValid(this) && this.ShapeFactor > T.Zero && this.ShapeFactorOther > T.Zero;
 
 	static DataType IRandomDistribution<BetaDistribution<T>>.DataTypeAt(int rank) => IRank1Distribution<T, BetaDistribution<T>>.DataTypeAt(rank);
 }

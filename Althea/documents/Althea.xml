@@ -22886,12 +22886,22 @@
             <typeparam name="T">Any unmanaged floating point type for all dimensions</typeparam>
             <typeparam name="TSelf">The type of actual implementation struct</typeparam>
         </member>
+        <member name="M:Althea.Random.IFloatingPointDistribution`2.IsValid">
+            <summary>
+            Statically check whether the <typeparamref name="T"/> is valid or not.
+            </summary>
+        </member>
         <member name="T:Althea.Random.IIntegralDistribution`2">
             <summary>
             The abstract interface for any-dimensional distributions whose data type is an integral one, inherits <see cref="T:Althea.Random.IRandomDistribution`1"/>.
             </summary>
             <typeparam name="T">Any unmanaged floating point type for all dimensions</typeparam>
             <typeparam name="TSelf">The type of actual implementation struct</typeparam>
+        </member>
+        <member name="M:Althea.Random.IIntegralDistribution`2.IsValid">
+            <summary>
+            Statically check whether the <typeparamref name="T"/> is valid or not.
+            </summary>
         </member>
         <member name="T:Althea.Random.IDisplaceScaleDistribution`2">
             <summary>
@@ -22908,6 +22918,11 @@
         <member name="P:Althea.Random.IDisplaceScaleDistribution`2.ScaleFactor">
             <summary>
             The scaling factor (β)
+            </summary>
+        </member>
+        <member name="M:Althea.Random.IDisplaceScaleDistribution`2.IsValid(`1@)">
+            <summary>
+            Check whether the values in <paramref name="self"/> defined by this interface is valid or not.
             </summary>
         </member>
         <member name="T:Althea.Random.IDisplaceScaleShapeDistribution`2">
@@ -22934,6 +22949,11 @@
             The degree of freedom
             </summary>
         </member>
+        <member name="M:Althea.Random.IDegreeOfFreedomDistribution`2.IsValid(`1@)">
+            <summary>
+            Check whether the values in <paramref name="self"/> defined by this interface is valid or not.
+            </summary>
+        </member>
         <member name="T:Althea.Random.IBernoulliBasedDistribution`2">
             <summary>
             The abstract class for one-dimensional distributions based on the Bernoulli trial, inherits <see cref="T:Althea.Random.IIntegralDistribution`2"/>.
@@ -22944,6 +22964,11 @@
         <member name="P:Althea.Random.IBernoulliBasedDistribution`2.Probability">
             <summary>
             The probability of a Bernoulli trial succeeding (p)
+            </summary>
+        </member>
+        <member name="M:Althea.Random.IBernoulliBasedDistribution`2.IsValid(`1@)">
+            <summary>
+            Check whether the values in <paramref name="self"/> defined by this interface is valid or not.
             </summary>
         </member>
         <member name="T:Althea.Random.IAbstractApi">

@@ -100,16 +100,16 @@ public unsafe class Api : Althea.Random.IAbstractApi
 			GumbelDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Gumbel : INVALID,
 			LaplaceDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Laplace : INVALID,
 			LogNormalDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.LogNormal : INVALID,
-			NegativeBinomialDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.NegativeBinomial : INVALID,
 			NormalDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Normal : INVALID,
 			RayleighDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Rayleigh : INVALID,
 			WeibullDistribution<T> => typeof(T) == typeof(Float32) || typeof(T) == typeof(Float64) ? DistributionType.Weibull : INVALID,
 
-			BernoulliDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Bernoulli : INVALID,
-			BinomialDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Binomial : INVALID,
-			GeometricDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Geometric : INVALID,
-			HypergeometricDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Hypergeometric : INVALID,
-			PoissonDistribution<T> => typeof(T) == typeof(int) || typeof(T) == typeof(uint) ? DistributionType.Poisson : INVALID,
+			BernoulliDistribution<T> => typeof(T) == typeof(SignedInt32) || typeof(T) == typeof(UnsignedInt32) ? DistributionType.Bernoulli : INVALID,
+			BinomialDistribution<T> => typeof(T) == typeof(SignedInt32) || typeof(T) == typeof(UnsignedInt32) ? DistributionType.Binomial : INVALID,
+			GeometricDistribution<T> => typeof(T) == typeof(SignedInt32) || typeof(T) == typeof(UnsignedInt32) ? DistributionType.Geometric : INVALID,
+			HypergeometricDistribution<T> => typeof(T) == typeof(SignedInt32) || typeof(T) == typeof(UnsignedInt32) ? DistributionType.Hypergeometric : INVALID,
+			NegativeBinomialDistribution<T> => typeof(T) == typeof(SignedInt32) || typeof(T) == typeof(UnsignedInt32) ? DistributionType.NegativeBinomial : INVALID,
+			PoissonDistribution<T> => typeof(T) == typeof(SignedInt32) || typeof(T) == typeof(UnsignedInt32) ? DistributionType.Poisson : INVALID,
 			_ => INVALID,
 		};
 		return type >= 0;
@@ -118,42 +118,46 @@ public unsafe class Api : Althea.Random.IAbstractApi
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private static unsafe bool Check<TDist>(ReadOnlySpan<IStorage> storages, in TDist distribution, Span<IntPtr> pointers, Span<int> lengths, out DistributionType type) where TDist : struct, IRandomDistribution<TDist>
 	{
-		if (!distribution.IsValid())
-			throw new ArgumentNullException(nameof(distribution));
-		if (storages.Any(static s => s is null || !s.IsValid()))
-			throw new ArgumentNullException(nameof(storages));
-		if (distribution.Rank != storages.Length)
-			throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(storages));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool GetPointers<T>(ReadOnlySpan<IStorage> storages, Span<IntPtr> pointers, Span<int> lengths) where T : unmanaged, IBaseNumber<T>
-		{
-			if (!storages.All(static s => s is PureStorage<T, CpuMemoryPointer>))
-				return false;
-			for (int i = 0; i < storages.Length; i++)
-			{
-				var s = storages[i];
-				if (!GetPointer((PureStorage<T, CpuMemoryPointer>)s, out T* ptr, out var len))
-					return false;
-				pointers[i] = (IntPtr)ptr; lengths[i] = (int)len;
-			}
-			return true;
-		}
-
+		// TODO: since MKL uses 'length' vectors with 'rank' size each, thus 'pointers' shall be of 'length'
 		type = INVALID;
-		type = distribution switch
-		{
-			MultinomialDistribution<SignedInt32> => GetPointers<SignedInt32>(storages, pointers, lengths) ? DistributionType.Multinomial : INVALID,
-			MultinomialDistribution<UnsignedInt32> => GetPointers<UnsignedInt32>(storages, pointers, lengths) ? DistributionType.Multinomial : INVALID,
-			MultiNormalDistribution<Float32> => GetPointers<Float32>(storages, pointers, lengths) ? DistributionType.MultiNormal : INVALID,
-			MultiNormalDistribution<Float64> => GetPointers<Float64>(storages, pointers, lengths) ? DistributionType.MultiNormal : INVALID,
-			BinormalDistribution<Float32> => GetPointers<Float32>(storages, pointers, lengths) ? DistributionType.Binormal : INVALID,
-			BinormalDistribution<Float64> => GetPointers<Float64>(storages, pointers, lengths) ? DistributionType.Binormal : INVALID,
-			_ => INVALID,
-		};
-		if (!lengths.AllSame())
-			type = INVALID;
-		return type != INVALID;
+		return false;
+
+		////if (!distribution.IsValid())
+		////	throw new ArgumentNullException(nameof(distribution));
+		////if (storages.Any(static s => s is null || !s.IsValid()))
+		////	throw new ArgumentNullException(nameof(storages));
+		////if (distribution.Rank != storages.Length)
+		////	throw new ArgumentException(Resources.ParameterError.NotSameSize, nameof(storages));
+
+		////[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		////static bool GetPointers<T>(ReadOnlySpan<IStorage> storages, Span<IntPtr> pointers, Span<int> lengths) where T : unmanaged, IBaseNumber<T>
+		////{
+		////	if (!storages.All(static s => s is PureStorage<T, CpuMemoryPointer>))
+		////		return false;
+		////	for (int i = 0; i < storages.Length; i++)
+		////	{
+		////		var s = storages[i];
+		////		if (!GetPointer((PureStorage<T, CpuMemoryPointer>)s, out T* ptr, out var len))
+		////			return false;
+		////		pointers[i] = (IntPtr)ptr; lengths[i] = (int)len;
+		////	}
+		////	return true;
+		////}
+
+		////type = INVALID;
+		////type = distribution switch
+		////{
+		////	MultinomialDistribution<SignedInt32> => GetPointers<SignedInt32>(storages, pointers, lengths) ? DistributionType.Multinomial : INVALID,
+		////	MultinomialDistribution<UnsignedInt32> => GetPointers<UnsignedInt32>(storages, pointers, lengths) ? DistributionType.Multinomial : INVALID,
+		////	MultiNormalDistribution<Float32> => GetPointers<Float32>(storages, pointers, lengths) ? DistributionType.MultiNormal : INVALID,
+		////	MultiNormalDistribution<Float64> => GetPointers<Float64>(storages, pointers, lengths) ? DistributionType.MultiNormal : INVALID,
+		////	BinormalDistribution<Float32> => GetPointers<Float32>(storages, pointers, lengths) ? DistributionType.Binormal : INVALID,
+		////	BinormalDistribution<Float64> => GetPointers<Float64>(storages, pointers, lengths) ? DistributionType.Binormal : INVALID,
+		////	_ => INVALID,
+		////};
+		////if (lengths.AnyNonPositive())
+		////	type = INVALID;
+		////return type != INVALID;
 	}
 	#endregion
 
@@ -243,7 +247,7 @@ public unsafe class Api : Althea.Random.IAbstractApi
 				if (typeof(T) == typeof(Float32))
 					NM.vsRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF4(), mean.AsF4(), sigma.AsF4(), displace.AsF4(), scale.AsF4()).Check();
 				if (typeof(T) == typeof(Float64))
-					NM.vdRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF4(), displace.AsF8(), scale.AsF8()).Check();
+					NM.vdRngLognormal(MklRngMethodLogNormal.BoxMuller2, this.Stream, n, p.AsF8(), mean.AsF8(), sigma.AsF8(), displace.AsF8(), scale.AsF8()).Check();
 				break;
 			case DistributionType.Normal:
 				ref var normal = ref SpanHelper.As<TDist, NormalDistribution<T>>(distribution);
@@ -251,7 +255,7 @@ public unsafe class Api : Althea.Random.IAbstractApi
 				if (typeof(T) == typeof(Float32))
 					NM.vsRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF4(), mean.AsF4(), sigma.AsF4()).Check();
 				if (typeof(T) == typeof(Float64))
-					NM.vdRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF4()).Check();
+					NM.vdRngGaussian(MklRngMethodGaussian.BoxMuller, this.Stream, n, p.AsF8(), mean.AsF4(), sigma.AsF8()).Check();
 				break;
 			case DistributionType.Rayleigh:
 				ref var rayleigh = ref SpanHelper.As<TDist, RayleighDistribution<T>>(distribution);
@@ -295,13 +299,12 @@ public unsafe class Api : Althea.Random.IAbstractApi
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	private unsafe void FillND<TDist>(in TDist distribution, Span<IntPtr> pointers, int length) where TDist : struct, IRandomDistribution<TDist>
 	{
-		void* p = Unsafe.AsPointer(ref pointers[0]);
 		if (distribution is MultinomialDistribution<SignedInt32> or MultinomialDistribution<UnsignedInt32>)
 		{
 			ref var nomial = ref SpanHelper.As<TDist, MultinomialDistribution<SignedInt32>>(distribution);
 			Span<double> prob = stackalloc double[nomial.Rank];
 			nomial.Probabilities.CopyTo(prob, static d => (double)d);
-			NM.viRngMultinomial(MklRngMethodMultinomial.MultiPoisson, this.Stream, length, (int**)p, nomial.NTrials, nomial.Rank, prob).Check();
+			NM.viRngMultinomial(MklRngMethodMultinomial.MultiPoisson, this.Stream, length, pointers, nomial.NTrials, nomial.Rank, prob).Check();
 		}
 		else if (distribution is BinormalDistribution<Float32> binormal)
 		{
@@ -311,7 +314,8 @@ public unsafe class Api : Althea.Random.IAbstractApi
 					binormal.StandardDeviation1, 0f,
 					binormal.StandardDeviation2 * binormal.Correlation,
 					binormal.StandardDeviation2 * MathF.Sqrt(1.0f - binormal.Correlation * binormal.Correlation)
-			}, false, binormal.RandomSeed);
+				},
+				false, binormal.RandomSeed);
 			FillND(dist, pointers, length);
 			return;
 		}
@@ -328,13 +332,13 @@ public unsafe class Api : Althea.Random.IAbstractApi
 			{
 				sigma = MemoryMarshal.CreateSpan(ref normal.CovarianceMatrix.Ref(), rank * rank);
 			}
-			NM.vsRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (float**)p, rank, MklRngMatrixStorage.Full, normal.Means.UncheckAs<Float32, float>(), sigma.UncheckAs<Float32, float>()).Check();
+			NM.vsRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, pointers, rank, MklRngMatrixStorage.Full, normal.Means.UncheckAs<Float32, float>(), sigma.UncheckAs<Float32, float>()).Check();
 		}
 		else if (distribution is MultiNormalDistribution<Float64>)
 		{
 			ref var normal = ref SpanHelper.As<TDist, MultiNormalDistribution<Float64>>(in distribution);
 			int rank = normal.Rank;
-			Span<Float64> sigma = stackalloc Float64[rank * rank];
+			Span<Float64> sigma = new Float64[rank * rank];
 			if (normal.OriginalCovarianceStored)
 			{
 				normal.GetCholesky(sigma);
@@ -343,7 +347,7 @@ public unsafe class Api : Althea.Random.IAbstractApi
 			{
 				sigma = MemoryMarshal.CreateSpan(ref normal.CovarianceMatrix.Ref(), rank * rank);
 			}
-			NM.vdRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, (double**)p, rank, MklRngMatrixStorage.Full, normal.Means.UncheckAs<Float64, double>(), sigma.UncheckAs<Float64, double>()).Check();
+			NM.vdRngGaussianMV(MklRngMethodGaussian.BoxMuller, this.Stream, length, pointers, rank, MklRngMatrixStorage.Full, normal.Means.UncheckAs<Float64, double>(), sigma.UncheckAs<Float64, double>()).Check();
 		}
 	}
 
@@ -363,7 +367,7 @@ public unsafe class Api : Althea.Random.IAbstractApi
 		Span<IntPtr> ptrs = stackalloc IntPtr[2]; Span<int> lens = stackalloc int[2];
 		if (!Check(storages, distribution, ptrs, lens, out _))
 			return false;
-		FillND(distribution, ptrs, lens[0]);
+		FillND(distribution, ptrs, lens.Min());
 		return true;
 	}
 
@@ -374,7 +378,7 @@ public unsafe class Api : Althea.Random.IAbstractApi
 		Span<IntPtr> ptrs = stackalloc IntPtr[3]; Span<int> lens = stackalloc int[3];
 		if (!Check(storages, distribution, ptrs, lens, out _))
 			return false;
-		FillND(distribution, ptrs, lens[0]);
+		FillND(distribution, ptrs, lens.Min());
 		return true;
 	}
 
@@ -384,7 +388,7 @@ public unsafe class Api : Althea.Random.IAbstractApi
 		Span<IntPtr> ptrs = stackalloc IntPtr[distribution.Rank]; Span<int> lens = stackalloc int[distribution.Rank];
 		if (!Check(storages, distribution, ptrs, lens, out _))
 			return false;
-		FillND(distribution, ptrs, lens[0]);
+		FillND(distribution, ptrs, lens.Min());
 		return true;
 	}
 	#endregion

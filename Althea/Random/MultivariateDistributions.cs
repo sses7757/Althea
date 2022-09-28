@@ -3,7 +3,7 @@
 
 namespace Althea.Random;
 
-// Ignore Spelling: \det covar
+// Ignore Spelling: \det covar \frac \left \right \vec
 
 /// <summary>
 /// The struct for a two-dimensional normal distribution of type <typeparamref name="T"/>
@@ -25,7 +25,7 @@ public readonly record struct BinormalDistribution<T>(T Mean1, T Mean2, T Standa
 	/// </summary>
 	public BinormalDistribution(T correlation, long? seed = null) : this(T.Zero, T.Zero, T.One, T.One, correlation, seed) { }
 
-	bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, BinormalDistribution<T>>)this).IsValid() && this.StandardDeviation1 > T.Zero && this.StandardDeviation2 > T.Zero && this.Correlation >= -T.One && this.Correlation <= T.One;
+	bool ICheckValid.IsValid() => IFloatingPointDistribution<T, BinormalDistribution<T>>.IsValid() && this.StandardDeviation1 > T.Zero && this.StandardDeviation2 > T.Zero && this.Correlation >= -T.One && this.Correlation <= T.One;
 
 	static DataType IRandomDistribution<BinormalDistribution<T>>.DataTypeAt(int rank) => IRank2Distribution<T, T, BinormalDistribution<T>>.DataTypeAt(rank);
 }
@@ -62,7 +62,7 @@ public readonly record struct MultiNormalDistribution<T>(bool OriginalCovariance
 
 	static DataType IRandomDistribution<MultiNormalDistribution<T>>.DataTypeAt(int rank) => T.Type;
 
-	bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, MultiNormalDistribution<T>>)this).IsValid() && this.Rank >= 3 && (!this.OriginalCovarianceStored || IsSymmetricPositiveDefinite(this.CovarianceMatrix));
+	bool ICheckValid.IsValid() => IFloatingPointDistribution<T, MultiNormalDistribution<T>>.IsValid() && this.Rank >= 3 && (!this.OriginalCovarianceStored || IsSymmetricPositiveDefinite(this.CovarianceMatrix));
 
 	/// <summary>
 	/// Create a multi-normal distribution of given <paramref name="means"/> and <paramref name="covar"/>.
@@ -193,7 +193,7 @@ public readonly record struct MultinomialDistribution<T>(int NTrials, long? Rand
 
 	static DataType IRandomDistribution<MultinomialDistribution<T>>.DataTypeAt(int rank) => T.Type;
 
-	bool ICheckValid.IsValid() => ((IFloatingPointDistribution<T, MultinomialDistribution<T>>)this).IsValid() && this.Rank >= 3;
+	bool ICheckValid.IsValid() => IFloatingPointDistribution<T, MultinomialDistribution<T>>.IsValid() && this.Rank >= 3;
 
 	/// <summary>
 	/// Create a multinomial distribution of given <paramref name="probs"/>.

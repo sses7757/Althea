@@ -82,11 +82,23 @@ internal static unsafe class CpuHelpers
 		api.MemoryCopy<T, CpuMemoryPointer, CpuMemoryPointer>(source.Pointer, dest.Pointer, out _);
 	}
 
+	public static PureStorage<Float64, CpuMemoryPointer> GenerateFloatData(double lower, double upper, out double* array)
+	{
+		upper -= lower;
+		int length = rand.Next(1024) + 1024;
+		array = (double*)Marshal.AllocHGlobal(length * sizeof(Float64));
+		for (int i = 0; i < length; i++)
+		{
+			array[i] = rand.NextDouble() * upper + lower;
+		}
+		return new ActualPureStorage<Float64, CpuMemoryPointer>(new((IntPtr)array, length * sizeof(Float64)));
+	}
+
 	public static PureStorage<Float64, CpuMemoryPointer> GenerateFloatData(double lower, double upper)
 	{
 		upper -= lower;
 		int length = rand.Next(1024) + 1024;
-		Float64* array = (Float64*)Marshal.AllocHGlobal(length * sizeof(Float64));
+		double* array = (double*)Marshal.AllocHGlobal(length * sizeof(Float64));
 		for (int i = 0; i < length; i++)
 		{
 			array[i] = rand.NextDouble() * upper + lower;
@@ -98,7 +110,7 @@ internal static unsafe class CpuHelpers
 	{
 		upper -= lower;
 		int length = rand.Next(1024) + 1024;
-		SignedInt32* array = (SignedInt32*)Marshal.AllocHGlobal(length * sizeof(SignedInt32));
+		int* array = (int*)Marshal.AllocHGlobal(length * sizeof(SignedInt32));
 		for (int i = 0; i < length; i++)
 		{
 			array[i] = rand.Next(upper) + lower;

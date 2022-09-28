@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Dynamic;
+using System.Runtime.CompilerServices;
 
 using Althea.LinearAlgebra;
 using Althea.LinearAlgebra.Dense;
@@ -195,6 +196,7 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ILap
 	/// <param name="gemmJitThreshold">If this value ≤ 0, JIT will be disabled</param>
 	public Api(int gemmJitThreshold)
 	{
+		this.Properties = new DynamicProperties(this);
 		if (gemmJitThreshold <= 0)
 		{
 			this.cacher = default;
@@ -311,6 +313,70 @@ public unsafe partial class Api : IBlasAbstractApi, IExtendBlasAbstractApi, ILap
 			Storage.Api.PointerStridedCopy((Float32*)real, 1, (Float32*)comp, 2, n);
 		else
 			Storage.Api.PointerStridedCopy((Float64*)real, 1, (Float64*)comp, 2, n);
+	}
+	#endregion
+
+	#region dynamic
+	/// <inheritdoc/>
+	public dynamic Properties { get; }
+
+	/// <inheritdoc/>
+	protected sealed class DynamicProperties : IBlasAbstractApi.DynamicProperties
+	{
+		internal DynamicProperties(Api @this) : base(@this) { }
+
+		/// <inheritdoc/>
+		public override bool TryGetMember(GetMemberBinder binder, out object? result)
+		{
+			if (binder.Name == nameof(GemmJitCache) && binder.ReturnType == typeof(bool))
+			{
+				result = (this.api as Api)!.GemmJitCache;
+				return true;
+			}
+			if (binder.Name == nameof(GemmJitThreshold) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.GemmJitThreshold;
+				return true;
+			}
+			if (binder.Name == nameof(GemmJitCandidateSize) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.GemmJitCandidateSize;
+				return true;
+			}
+			if (binder.Name == nameof(GemmJitSize) && binder.ReturnType == typeof(int))
+			{
+				result = (this.api as Api)!.GemmJitSize;
+				return true;
+			}
+			if (binder.Name == nameof(ComplexGemmUseGemm3M) && binder.ReturnType == typeof(bool))
+			{
+				result = (this.api as Api)!.ComplexGemmUseGemm3M;
+				return true;
+			}
+			result = null;
+			return false;
+		}
+
+		/// <inheritdoc/>
+		public override bool TrySetMember(SetMemberBinder binder, object? value)
+		{
+			if (binder.Name == nameof(GemmJitCandidateSize) && value is int i1)
+			{
+				(this.api as Api)!.GemmJitCandidateSize = i1;
+				return true;
+			}
+			if (binder.Name == nameof(GemmJitSize) && value is int i2)
+			{
+				(this.api as Api)!.GemmJitSize = i2;
+				return true;
+			}
+			if (binder.Name == nameof(ComplexGemmUseGemm3M) && value is bool b)
+			{
+				(this.api as Api)!.ComplexGemmUseGemm3M = b;
+				return true;
+			}
+			return false;
+		}
 	}
 	#endregion
 }
